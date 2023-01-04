@@ -1,0 +1,34 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "npm run development",
+        "development": "mix",
+        "watch": "mix watch",
+        "watch-poll": "mix watch -- --watch-options-poll=1000",
+        "hot": "mix watch --hot",
+        "prod": "npm run production",
+        "production": "mix --production"
+    },
+    "devDependencies": {
+        "@tailwindcss/forms": "^0.4.0",
+        "alpinejs": "^3.4.2",
+        "autoprefixer": "^10.4.8",
+        "axios": "^0.25",
+        "flowbite": "^1.5.1",
+        "laravel-mix": "^6.0.43",
+        "lodash": "^4.17.19",
+        "postcss": "^8.4.14",
+        "postcss-custom-properties": "^12.1.7",
+        "postcss-import": "^14.0.2",
+        "tailwindcss": "^3.1.7",
+        "tailwindcss-animate": "^1.0.5"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^6.1.1",
+        "@themesberg/tailwind-datepicker": "^1.1.0",
+        "flowbite-datepicker": "^1.2.2",
+        "tw-elements": "^1.0.0-alpha12",
+        "vue": "^3.2.33",
+        "vue-router": "^4.0.14"
+    }
+}
