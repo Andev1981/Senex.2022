@@ -19,9 +19,7 @@
                             <x-nav-link :href="route('doctores')" :active="request()->routeIs(['doctores','doctor.show'])">
                                 {{ __('Kinesiólogos') }}
                             </x-nav-link>
-                             <x-nav-link :href="route('ayudaVideo')">
-                                {{ __('AYUDA?') }}
-                            </x-nav-link> 
+                           
                            {{--  <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
                                 {{ __('Cuentas de Usuarios') }}
                             </x-nav-link>
@@ -83,6 +81,10 @@
                         <x-dropdown-link :href="route('admin')">
                             {{ __('Inicio') }}
                         </x-dropdown-link>
+                        <x-dropdown-link :href="route('ayudaVideo')">
+                            {{ __('Ayuda') }}
+                        </x-dropdown-link>
+                     
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
 
