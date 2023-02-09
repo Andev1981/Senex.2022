@@ -54,5 +54,9 @@ class Card extends Component
             $this->mount($this->paciente);
 
     }
+    public function deleteApoderado($id){
+           $sd = Assign::findOrFail($id);
+           $sd->delete();
+    }
 
 }

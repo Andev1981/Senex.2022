@@ -61,6 +61,7 @@
                                   
                                     <th scope="col" class="px-6 py-3">Nombre</th>
                                     <th scope="col" class="px-6 py-3">Rut</th>
+                                    <th scope="col" class="px-6 py-3">Acción</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -69,7 +70,12 @@
                                         
                                         <td class="px-6 py-4">{{$assign->user->name}}</td>
                                         <td class="px-6 py-4">{{$assign->user->rut}}</td>
+                                        <td> 
+                                        <button wire:click="deleteApoderado({{$assign->id}})"  class="px-3 py-2 text-xs font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Eliminar</button>
+                                        </td> 
+                                    
                                     </tr>
+                                    
                                 @endforeach
                                 </tr>
                                 </tbody>

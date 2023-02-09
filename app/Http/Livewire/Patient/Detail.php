@@ -82,4 +82,6 @@ class Detail extends Component
         $this->closeModal();
     }
 
+   
+
 }

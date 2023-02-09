@@ -105,6 +105,8 @@ Route::group(['middleware' => ['auth']], function() {
 
     Route::get('ayuda',[VideoController::class, 'index'])->name('ayudaVideo');
 
+    Route::get('eliminar/apoderado/{id?}', \App\Http\Livewire\Patient\Card::class, 'deleteApoderado')->name('eliminar.apoderado');
+
 });
 
 //Transbank
