@@ -158,7 +158,7 @@
                                                 <div>
                                                     <div class="max-w-sm bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
 
-                                                            <div class="flex flex-col items-center pb-5">
+                                                            <div class="flex flex-col items-center pb-10 pt-4">
                                                                 @if ($doctor->user->avatar)
                                                                     <img class="mb-3 w-20 rounded-full shadow-lg" src="{{ Storage::url($doctor->user->avatar) }}">
                                                                 @else
@@ -176,25 +176,12 @@
                                         </div>
                                         
                                     @elseif ($currentPage == 2)
-                                    <h1 class="mb-2"></h1>
-                                        <div class="grid xl:grid-cols-2 xl:gap:6">
-
-                                            <div class="col-span-3">
-                                                <ol class="relative border-l border-gray-200 dark:border-gray-700">
-                                            
-                                                            <li class="mb-10 ml-4">
                                                                 <a href="#" wire:click="agendar()" class="inline-flex items-center py-2 px-4 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:outline-none focus:ring-gray-200 focus:text-blue-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700">
                                                                     continuar con la seleccion actual
                                                                     <svg class="ml-2 w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                                         <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                                                                     </svg>
                                                                 </a>
-                                                            </li>
-                                
-
-                                                </ol>
-                                            </div>
-                                        </div>
                                     @elseif ($currentPage == 3)
 
                                     <div class="grid xl:grid-cols-1 xl:gap-6">
@@ -202,81 +189,29 @@
 
                                              <hr class="py-2">
                                             <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                               1/8.- Indíquenos su sexo
+                                               1/5.- Medicamentos frecuentes
                                             </label>
-                                            <ul class="hidden text-sm mt-4 mb-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
-                                                <li class="w-full cursor-pointer" wire:click="sexo('Mujer')">
-                                                    <a class="@if($sexo == "Mujer") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-l-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">MUJER</a>
-                                                </li>
-                                                <li class="w-full cursor-pointer" wire:click="sexo('Hombre')">
-                                                    <a class="@if($sexo == "Hombre") border-2 border-azul @endif inline-block p-4 w-full bg-white hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">HOMBRE </a>
-                                                </li>
-                                                <li class="w-full cursor-pointer" wire:click="sexo('Otro')">
-                                                    <a class="@if($sexo == "Otro") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-r-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">OTRO </a>
-                                                </li>
-                                            </ul>
-                                            @if ($mensajeSexo !== "")
+                                            <ul class="hidden text-sm mt-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
+                                            <li class="w-full cursor-pointer" wire:click="cirugia('SI')">
+                                                <a class="@if($cirugias == "SI") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-l-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">SI</a>
+                                            </li>
+                                            <li class="w-full cursor-pointer" wire:click="cirugia('NO')">
+                                                <a class="@if($cirugias == "NO") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-r-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">NO</a>
+                                            </li>
+                                        </ul>
+
+                                                @if ($cirugiasVisible === 1)
+                                                        <textarea  wire:model="cirugiaSi" id="message1" rows="4" class="block p-2.5 w-full text-sm mt-2 text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cuales..."></textarea>
+                                                @endif
+                                               
+                                            <!-- <textarea   id="message1a" rows="4" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cuales..."></textarea>
+                                             -->
+                                            @if ($mensajePrimero !== "")
                                                 <div class="inline-block">
-                                                    <h4 class="text-red-500">{{$mensajeSexo}}</h4>
+                                                    <h4 class="text-red-500">{{$mensajePrimero}}</h4>
                                                 </div>
                                                 <br class="mb-5">
                                             @endif
-
-                                            <label for="first" class="mt-4 text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                                -Indique su peso actual.
-                                                </label>
-
-                                            <input type="number"  wire:model="peso" id="message1" class="mt-2 mb-5 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"/>
-                                            @if ($mensajePeso !== "")
-                                                <div class="inline-block">
-                                                    <h4 class="text-red-500">{{$mensajePeso}}</h4>
-                                                </div>
-                                                <br class="mb-5">
-                                            @endif
-
-                                            <label for="first" class="mt-4 text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                             -Indique patologías o enfermedades relevantes  (marca las que apliquen)
-                                             </label>
-                                        <fieldset wire:model="patologias" class="mt-4">
-
-                                            <div class="flex items-center mb-4">
-                                                <input id="checkbox-1" wire:click="limpiar" wire:model="hipertension" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" >
-                                                <label for="checkbox-1" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Hipertensión arterial</label>
-                                            </div>
-
-                                            <div class="flex items-center mb-4">
-                                                <input id="checkbox-1" wire:click="limpiar" wire:model="diabetes" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" >
-                                                <label for="checkbox-1" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Diabetes mellitus</label>
-                                            </div>
-
-                                            <div class="flex items-center mb-4">
-                                                <input id="checkbox-1" wire:click="limpiar"  wire:model="hipotiroidismo" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" >
-                                                <label for="checkbox-1" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Hipotiroidismo</label>
-                                            </div>
-
-                                            <div class="flex items-center mb-4">
-                                                <input wire:click="otraPatologia" id="checkbox-1" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" >
-                                                <label for="checkbox-1" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Otra</label>
-                                            </div>
-
-                                            <div class="flex items-center mb-4">
-                                                <input wire:click="limpiar"  wire:model="ningunaPatologia" id="checkbox-1" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" >
-                                                <label for="checkbox-1" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Ninguna</label>
-                                            </div>
-
-                                        </fieldset>
-
-                                                @if ($otraPatologiaVisible === 1)
-                                                        <textarea  wire:model="otraPatologia" id="message1" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cuales..."></textarea>
-
-                                                @endif
-
-                                                @if ($mensaje !== "")
-                                                    <div class="inline-block">
-                                                        <h4 class="text-red-500">{{$mensaje}}</h4>
-                                                    </div>
-                                                @endif
-
                                                     <div class="flex items-center justify-between mt-3">
                                                         <a type="button" href="{{route('/')}}" class="text-white bg-slate-600 hover:bg-slate-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right mr-52">Cancelar</a>
                                                         <button type="button" wire:click="goToNextPage" class="text-white bg-azul cursor-pointer hover:bg-azul-900 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right">Continuar</button>
@@ -290,7 +225,7 @@
 
                                     <div class="relative z-0 mb-6 w-full group">
                                         <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                            2/8.- ¿Se ha realizado cirugías anteriormente?
+                                        2/5.- Es alérgico a algún medicamento
                                         </label>
                                         <ul class="hidden text-sm mt-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
                                             <li class="w-full cursor-pointer" wire:click="cirugia('SI')">
@@ -321,7 +256,7 @@
 
                                     <div class="relative z-0 mb-6 w-full group">
                                         <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                            3/8.- ¿Es alérgico/a a algún medicamento?
+                                        3/5.- Indique patologías previas
                                         </label>
                                         <ul class="hidden text-sm mt-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
                                             <li class="w-full cursor-pointer" wire:click="alergia('SI')">
@@ -355,7 +290,7 @@
 
                                     <div class="relative z-0 mb-6 w-full group">
                                         <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                            4/8.- ¿Utiliza medicamentos frecuentemente?
+                                        4/5.- Se ha realizado cirugías anteriormente , indique cuales
                                         </label>
                                         <ul class="hidden text-sm mt-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
                                             <li class="w-full cursor-pointer" wire:click="medicamento('SI')">
@@ -368,7 +303,7 @@
 
 
                                                 @if ($medicamentosVisible === 1)
-                                                        <textarea  wire:model="medicamentoSi" id="message1" rows="4" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cuales...(incluya si consume vitaminas o suplementos alimenticios)"></textarea>
+                                                        <textarea  wire:model="medicamentoSi" id="message1" rows="4" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cuales..."></textarea>
 
                                                 @endif
                                                 @if ($mensajeMedicamento !== "")
@@ -388,7 +323,7 @@
 
                                     <div class="relative z-0 mb-6 w-full group">
                                         <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                            5/8.- ¿Utiliza algún método anticonceptivo?
+                                        5/5.- Tiene algunas observaciones ?…
                                         </label>
                                         <ul class="hidden text-sm mt-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
                                             <li class="w-full cursor-pointer" wire:click="anticonceptivo('SI')">
@@ -417,286 +352,9 @@
 
                                         </div>
 
-                                        @elseif ($currentPage == 8)
-
-                                    <div class="relative z-0 mb-6 w-full group">
-                                        <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                            6/8.- ¿Está embarazada?
-                                        </label>
-                                        <ul class="hidden text-sm mt-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
-                                            <li class="w-full cursor-pointer" wire:click="embarazo('SI')">
-                                                <a class="@if($embarazo == "SI") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-l-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">SI</a>
-                                            </li>
-                                            <li class="w-full cursor-pointer" wire:click="embarazo('NO')">
-                                                <a class="@if($embarazo == "NO") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-r-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">NO</a>
-                                            </li>
-                                        </ul>
-
-
-                                                @if ($embarazoVisible === 1)
-                                                        <textarea  wire:model="embarazoSi" id="message1" rows="4" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos ¿Cuantas semanas tienes?"></textarea>
-                                                        @if ($mensajeAnticonceptivo !== "")
-                                                            <h4 class="text-red-500">{{$mensajeEmbarazo}}</h4>
-                                                        @endif
-                                                @endif
-
-                                                @if ($mensajeEmbarazo !== "")
-                                                    <h4 class="text-red-500">{{$mensajeEmbarazo}}</h4>
-                                                @endif
-
-                                                    <div class="flex items-center justify-between mt-3">
-                                                        <a type="button" href="{{route('/')}}" class="text-white bg-slate-600 hover:bg-slate-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right mr-52">Cancelar</a>
-                                                        <button type="button" wire:click="goToNextPage" class="text-white bg-azul cursor-pointer hover:bg-azul-900 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right">Continuar</button>
-                                                    </div>
-
-                                        </div>
-
-                                        @elseif ($currentPage == 9)
-                                          <div class="relative z-0 mb-6 w-full group">
-                                            <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                                7/8.- ¿Está amamantando?
-                                            </label>
-                                            <ul class="hidden text-sm mt-4 font-medium text-center text-gray-500 rounded-lg divide-x divide-gray-200 shadow sm:flex dark:divide-gray-700 dark:text-gray-400">
-                                                <li class="w-full cursor-pointer" wire:click="amamanta('SI')">
-                                                    <a class="@if($amamanta == "SI") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-l-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">SI</a>
-                                                </li>
-                                                <li class="w-full cursor-pointer" wire:click="amamanta('NO')">
-                                                    <a class="@if($amamanta == "NO") border-2 border-azul @endif inline-block p-4 w-full bg-white rounded-r-lg hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">NO</a>
-                                                </li>
-                                            </ul>
-
-                                                    @if ($mensajeAmamanta !== "")
-                                                        <h4 class="text-red-500">{{$mensajeAmamanta}}</h4>
-                                                    @endif
-
-                                                        <div class="flex items-center justify-between mt-3">
-                                                            <a type="button" href="{{route('/')}}" class="text-white bg-slate-600 hover:bg-slate-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right mr-52">Cancelar</a>
-                                                            <button type="button" wire:click="goToNextPage" class="text-white bg-azul cursor-pointer hover:bg-azul-900 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right">Continuar</button>
-                                                        </div>
-                                            </div>
-
-                                        @elseif ($currentPage == 10)
-
-                                        <div class="relative z-0 mb-6 w-full group">
-                                            <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
-                                                8/8.- Cuéntanos con más detalle cual es el motivo de tu consulta.
-
-                                                    <textarea  wire:model="algoMas" id="message1" rows="4" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder=""></textarea>
-                                                    @if ($mensajeMotivo !== "")
-                                                        <h4 class="text-red-500">{{$mensajeMotivo}}</h4>
-                                                    @endif
-
-                                                        <div class="flex items-center justify-between mt-3">
-                                                            <a type="button" href="{{route('/')}}" class="text-white bg-slate-600 hover:bg-slate-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right mr-52">Cancelar</a>
-                                                            <button type="button" wire:click="goToNextPage" class="text-white bg-azul cursor-pointer hover:bg-azul-900 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right">Continuar</button>
-                                                        </div>
 
                                             </div>
-
-                                            @elseif ($currentPage == 11)
-                                            {{-- Subir imagenes --}}
-                                        {{--     <div class="relative z-0 mb-6 w-full group" id="button_visible">
-                                                <div class="flex items-center justify-between mt-3">
-                                                    <button class="text-white bg-azul cursor-pointer hover:bg-azul-900 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center" onclick="loadImgs()">
-                                                        + Imagen
-                                                    </button>
-                                                </div>
-                                            </div> --}}
-
-                                            <div class="relative z-0 mb-6 w-full group">
-                                                <div class="flex justify-center mt-8">
-                                                    <div class="rounded-lg shadow-xl bg-gray-50 lg:w-full">
-                                                        <div class="m-4">
-                                                            <form wire:submit.prevent="save">
-                                                            <label class="inline-block mb-2 text-gray-500">Necesitamos ingreses imágenes de tu patología, para un mejor diagnóstico.(jpg,png,svg,jpeg) mínimo de 3 imágenes y un máximo de 5 imágenes</label>
-                                                                {{-- Imagen 1 --}}
-                                                                <div class="flex items-center justify-center w-full">
-                                                                    <label class="flex flex-col w-full h-42 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
-                                                                        <div class="flex flex-col items-center justify-center pt-7">
-                                                                            <div wire:loading wire:target="img1" wire:click="img1" class="flex flex-col items-center justify-center text-center mt-5">
-                                                                                <i class="fa fa-spinner fa-spin"></i>
-                                                                                Subiendo Imágen
-                                                                            </div>
-                                                                        @if ($img1)
-                                                                        <div class="flex flex-col items-center justify-center">
-                                                                            <img  src="{{ $img1->temporaryUrl()}}" alt="" width="100%">
-                                                                            
-                                                                        </div>
-
-                                                                        @else
-
-                                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                                        class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
-                                                                        fill="currentColor">
-                                                                                <path fill-rule="evenodd"
-                                                                                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                                                                    clip-rule="evenodd" />
-                                                                            </svg>
-                                                                            <p class="pt-1 text-sm tracking-wider text-gray-400 h-auto group-hover:text-gray-600">
-                                                                                Subir imagen</p>
-
-                                                                        @endif
-
-                                                                    </div>
-                                                                        <input wire:model="img1" type="file" class="opacity-0" />
-                                                                    </label>
-                                                                </div>
-
-                                                                @if ($img1)
-                                                                    {{-- Imagen 2 --}}
-                                                                    <div class="flex items-center justify-center w-full">
-                                                                        <label class="flex flex-col w-full h-42 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
-                                                                            <div class="flex flex-col items-center justify-center pt-7">
-                                                                                <div wire:loading wire:target="img2" wire:click="img2" class="flex flex-col items-center justify-center text-center">
-                                                                                    <i class="fa fa-spinner fa-spin"></i>
-                                                                                    Subiendo Imágen
-                                                                                </div>
-                                                                            @if($img2)
-                                                                            <div class="flex flex-col items-center justify-center">
-                                                                                <img  src="{{ $img2->temporaryUrl()}}" alt="" width="100%">
-                                                                                
-                                                                            </div>
-
-
-
-                                                                            @else
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                            class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
-                                                                            fill="currentColor">
-                                                                                <path fill-rule="evenodd"
-                                                                                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                                                                    clip-rule="evenodd" />
-                                                                            </svg>
-                                                                            <p class="pt-1 text-sm tracking-wider text-gray-400 h-auto group-hover:text-gray-600">
-                                                                                Subir imagen</p>
-
-
-                                                                            @endif
-
-                                                                        </div>
-                                                                            <input wire:model="img2" type="file" class="opacity-0" />
-                                                                            
-                                                                        </label>
-                                                                    </div>
-                                                                    @if ($img2)
-                                                                        {{-- Imagen 3 --}}
-                                                                        <div class="flex items-center justify-center w-full">
-                                                                            <label class="flex flex-col w-full h-42 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
-                                                                                <div class="flex flex-col items-center justify-center pt-7">
-                                                                                    <div wire:loading wire:target="img3" wire:click="img3" class="flex flex-col items-center justify-center text-center">
-                                                                                        <i class="fa fa-spinner fa-spin"></i>
-                                                                                        Subiendo Imágen
-                                                                                    </div>
-                                                                                @if($img3)
-                                                                                <div class="flex flex-col items-center justify-center">
-                                                                                    <img  src="{{ $img3->temporaryUrl()}}" alt="" width="100%">
-                                                                                </div>
-
-
-                                                                                @else
-                                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
-                                                                                    fill="currentColor">
-                                                                                        <path fill-rule="evenodd"
-                                                                                            d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                                                                            clip-rule="evenodd" />
-                                                                                    </svg>
-                                                                                    <p class="pt-1 text-sm tracking-wider text-gray-400 h-auto group-hover:text-gray-600">
-                                                                                        Subir imagen</p>
-
-                                                                                @endif
-
-                                                                            </div>
-                                                                                <input wire:model="img3" type="file" class="opacity-0" />
-                                                                            </label>
-                                                                        </div>
-                                                                        @if ($img3)
-                                                                            {{-- Imagen 4 --}}
-                                                                            <div class="flex items-center justify-center w-full">
-                                                                                <label class="flex flex-col w-full h-42 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
-                                                                                    <div class="flex flex-col items-center justify-center pt-7">
-                                                                                        <div wire:loading wire:target="img4" wire:click="img4" class="flex flex-col items-center justify-center text-center">
-                                                                                            <i class="fa fa-spinner fa-spin"></i>
-                                                                                            Subiendo Imágen
-                                                                                        </div>
-                                                                                    @if($img4)
-
-                                                                                    <div class="flex flex-col items-center justify-center">
-                                                                                        <img  src="{{ $img4->temporaryUrl()}}" alt="" width="100%">
-                                                                                    </div>
-
-                                                                                    @else
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
-                                                                                    fill="currentColor">
-                                                                                        <path fill-rule="evenodd"
-                                                                                            d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                                                                            clip-rule="evenodd" />
-                                                                                    </svg>
-                                                                                    <p class="pt-1 text-sm tracking-wider text-gray-400 h-auto group-hover:text-gray-600">
-                                                                                        Subir imagen</p>
-
-                                                                                    @endif
-
-
-
-                                                                                </div>
-                                                                                    <input wire:model="img4" type="file" class="opacity-0" />
-                                                                                </label>
-                                                                            </div>
-                                                                            @if ($img4)
-                                                                                {{-- Imagen 5 --}}
-                                                                                <div class="flex items-center justify-center w-full">
-                                                                                    <label class="flex flex-col w-full h-42 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300">
-                                                                                        <div class="flex flex-col items-center justify-center pt-7">
-                                                                                            <div wire:loading wire:target="img5" wire:click="img5" class="flex flex-col items-center justify-center text-center">
-                                                                                                <i class="fa fa-spinner fa-spin"></i>
-                                                                                                Subiendo Imágen
-                                                                                            </div>
-                                                                                        @if($img5)
-
-                                                                                            <div class="flex flex-col items-center justify-center">
-                                                                                                <img  src="{{ $img5->temporaryUrl()}}" alt="" width="100%">
-                                                                                            </div>
-                                                                                            @else
-                                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                            class="w-12 h-12 text-gray-400 group-hover:text-gray-600" viewBox="0 0 20 20"
-                                                                                            fill="currentColor">
-                                                                                                <path fill-rule="evenodd"
-                                                                                                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                                                                                                    clip-rule="evenodd" />
-                                                                                            </svg>
-                                                                                            <p class="pt-1 text-sm tracking-wider text-gray-400 h-auto group-hover:text-gray-600">
-                                                                                                Subir imagen</p>
-
-                                                                                        @endif
-
-                                                                                    </div>
-                                                                                        <input  wire:model="img5" type="file" class="opacity-0" />
-                                                                                    </label>
-                                                                                </div>
-                                                                            @endif
-                                                                        @endif
-                                                                    @endif
-                                                                @endif
-                                                             
-                                                                <div class="flex items-center justify-between mt-3">
-                                                                    <a type="button" href="{{route('/')}}" class="text-white bg-slate-600 hover:bg-slate-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right mr-52">Cancelar</a>
-                                                                    <button type="submit" class="text-white bg-azul cursor-pointer hover:bg-azul-900 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right">Continuar</button>
-                                                                </div>
-                                                                @error(['img1','img2','img3'])
-                                                                    <span style="color: red">Debe ingresar al menos una imágen</span>
-                                                                @enderror
-                                                           
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                
-
-                                            </div>
-                                            @elseif ($currentPage == 12)
+                                            <!-- @elseif ($currentPage == 12)
                                             <form wire:submit.prevent="saveDocs">
                                                 Documentos adicionales relacionados con la consulta (Ej. Exámenes, recetas, etc...)
                                                 <div class="flex items-center justify-center w-full">
@@ -737,8 +395,8 @@
                                                             <button type="submit" class="text-white bg-azul cursor-pointer hover:bg-azul-900 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center float-right">Continuar</button>
                                                        </div>
 
-                                            </form>
-                                            @elseif ($currentPage == 13)
+                                            </form> -->
+                                            <!-- @elseif ($currentPage == 13)
 
                                                     <div class="relative z-0 mb-6 w-full group">
                                                         <label for="first" class="text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 mb-5">
@@ -749,7 +407,7 @@
                                                                                 Agregar Sesiones a esta solicitud
                                                                             </a>
                                                                       
-                                                    </div>
+                                                    </div> -->
 
                                             @endif
 

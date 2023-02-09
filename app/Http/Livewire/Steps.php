@@ -33,9 +33,8 @@ class Steps extends Component
     public $firstEnable = true;
     public $birthday = '';
     public $sexo = '';
-    public  $mensajeSexo = '';
     public $peso;
-    public $mensajePeso = '';
+    public $mensajePrimero = '';
 
     /* Variables pagina 3 */
     public $patologias = [];
@@ -230,59 +229,11 @@ class Steps extends Component
 
             //Indíquenos su sexo
             QuizzAnswer::create([
-                'answer' => $this->sexo,
+                'answer' => $this->mensajePrimero,
                 'solicitud_id' =>  $atencion,
                 'quizz_question_id' => 1
             ]);
-
-            //Indíquenos su peso actual
-            QuizzAnswer::create([
-                'answer' => $this->peso,
-                'solicitud_id' =>  $atencion,
-                'quizz_question_id' => 2
-            ]);
-
-            //Patologías
-            if($this->patologias == true){
-
-                if($this->hipertension){
-                    $pat1 = 'Hipertension';
-                    $resumen[] = $pat1;
-                }
-
-                if($this->diabetes){
-                    $pat2 = 'Diabetes';
-                    $resumen[] = $pat2;
-                }
-
-                 if($this->hipotiroidismo){
-                    $pat3 = 'Hipotiroidismo';
-                    $resumen[] = $pat3;
-                }
-
-                if($this->ningunaPatologia){
-                    $pat4 = 'Ninguna Patologia';
-                    $resumen[] = $pat4;
-                }
-
-
-
-                $json = json_encode($resumen);
-
-                QuizzAnswer::create([
-                    'answer' =>  $json,
-                    'solicitud_id' =>  $atencion,
-                    'quizz_question_id' => 3
-                ]);
-            }else{
-                QuizzAnswer::create([
-                    'answer' => $this->otraPatologia,
-                    'solicitud_id' =>  $atencion,
-                    'quizz_question_id' => 3
-                ]);
-            }
-
-
+            
 
             //Cirugía
             if($this->cirugias == "SI"){
@@ -348,37 +299,6 @@ class Steps extends Component
             }
 
 
-            //Embarazo
-            if($this->embarazo == "SI"){
-                QuizzAnswer::create([
-                    'answer' => $this->embarazoSi,
-                    'solicitud_id' =>  $atencion,
-                    'quizz_question_id' => 8
-                ]);
-            }else{
-                QuizzAnswer::create([
-                    'answer' => "NO",
-                    'solicitud_id' =>  $atencion,
-                    'quizz_question_id' => 8
-                ]);
-            }
-
-
-
-            //Amamanta
-            if($this->amamanta == "SI"){
-                QuizzAnswer::create([
-                    'answer' => $this->amamantaSi,
-                    'solicitud_id' =>  $atencion,
-                    'quizz_question_id' => 9
-                ]);
-            }else{
-                QuizzAnswer::create([
-                    'answer' => "NO",
-                    'solicitud_id' =>  $atencion,
-                    'quizz_question_id' => 9
-                ]);
-            }
 
 
             //Algo más
@@ -489,28 +409,7 @@ class Steps extends Component
 
             return $this->validateSiete();
 
-        }elseif($this->currentPage == 8){
-
-            return $this->validateOcho();
-
-        }elseif($this->currentPage == 9){
-
-            return $this->validateNueve();
-
-        }
-        elseif($this->currentPage == 10){
-
-            return $this->validateDiez();
-
-        }
-        elseif($this->currentPage == 11){
-
-            return $this->validateOnce();
-
-        }
-        elseif($this->currentPage == 12){
-
-            dd($this->currentPage);
+        }else{
 
         }
 
@@ -642,16 +541,16 @@ class Steps extends Component
        }
 
     /* Funciones pagina 3 */
-    public function otraPatologia(){
+    // public function otraPatologia(){
 
-        if($this->otraPatologiaVisible === 1 ){
-            $this->otraPatologiaVisible = 0;
-        }else{
-            $this->otraPatologiaVisible = 1;
-            $this->otraPatologia = '';
-        }
-        $this->errReset();
-    }
+    //     if($this->otraPatologiaVisible === 1 ){
+    //         $this->otraPatologiaVisible = 0;
+    //     }else{
+    //         $this->otraPatologiaVisible = 1;
+    //         $this->otraPatologia = '';
+    //     }
+    //     $this->errReset();
+    // }
 
     public function limpiar(){
         $this->errReset();
@@ -659,25 +558,8 @@ class Steps extends Component
 
     public function validarTres(){
 
-
-        if($this->sexo == ''){
-            $this->mensajeSexo = "*Seleccione su sexo";
-        }elseif($this->peso == ''){
-            $this->mensajePeso = "*Debe ingresar su peso actual";
-            $this->mensajeSexo = "";
-        }elseif($this->otraPatologiaVisible === 1){
-
-            if($this->otraPatologia === ''){
-                $this->mensaje = "*Campo Obligatorio";
-                }else{
-                    $this->currentPage++;
-                    $this->pages[3]['porcentaje'] = 12.5;
-                    $this->errReset();
-                }
-            }elseif($this->hipertension === false && $this->diabetes=== false && $this->hipotiroidismo === false && $this->ningunaPatologia == false){
-                $this->mensaje = "*Debe seleccionar alguna de la opciones";
-                $this->mensajePeso = "";
-                $this->mensajeSexo = "";
+        if($this->mensajePrimero == ''){
+            $this->mensajePrimero = "*Debe ingresar algun medicamento actual";
         }else{
                 $this->currentPage++;
                 $this->pages[3]['porcentaje'] = 12.5;
@@ -705,7 +587,7 @@ class Steps extends Component
 
     if($this->cirugias === 'SI'){
         if($this->cirugiaSi === ''){
-            $this->mensajeCirugia = "*Campo Obligatorio";
+            $this->mensajeCirugia = "*Campo Obligatorio alérgico a algún medicamento";
                 }else{
                     $this->currentPage++;
                     $this->pages[3]['porcentaje'] = 25;
@@ -740,7 +622,7 @@ class Steps extends Component
 
     if($this->alergias === 'SI'){
         if($this->alergiaSi === ''){
-            $this->mensajeAlergia = "*Campo Obligatorio";
+            $this->mensajeAlergia = "*Campo Obligatorio patologías ";
                 }else{
                     $this->currentPage++;
                     $this->pages[3]['porcentaje'] = 37.5;
@@ -774,7 +656,7 @@ class Steps extends Component
 
     if($this->medicamentos === 'SI'){
         if($this->medicamentoSi === ''){
-            $this->mensajeMedicamento = "*Campo Obligatorio";
+            $this->mensajeMedicamento = "*Campo Obligatorio Cirugías";
                 }else{
                     $this->currentPage++;
                     $this->pages[3]['porcentaje'] = 50;
@@ -815,7 +697,7 @@ class Steps extends Component
 
         if($this->anticonceptivos === 'SI'){
             if($this->anticonceptivoSi === ''){
-                $this->mensajeAnticonceptivo = "*Campo Obligatorio";
+                $this->mensajeAnticonceptivo = "*Indicar cual es la observacion porfavor";
                     }else{
                         $this->currentPage++;
                         $this->pages[3]['porcentaje'] = 62.5;
