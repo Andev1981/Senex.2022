@@ -44,6 +44,7 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
+        
         $this->validate($request, [
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
@@ -65,7 +66,7 @@ class PatientController extends Controller
             'direccion' => $request->get('direccion'),
             'comuna' => $request->get('comuna'),
          ]);
-
+         
         $success = $user->assignRole('Paciente');
 
         if($success){
@@ -74,8 +75,13 @@ class PatientController extends Controller
             toast('Ha ocurrido un problema, inténtelo nuevamente','danger');
         }
 
-        return redirect()->route('pacientes.index');
+        return view('admin.pacientes.preguntas',compact('paciente'));
         
+    }
+
+    public function preguntas(Patient $paciente)
+    {
+       dd($paciente);
     }
 
     /**

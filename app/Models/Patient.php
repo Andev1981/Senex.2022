@@ -14,7 +14,12 @@ class Patient extends Model
         'state',
         'direccion',
         'comuna',
-        'phone'
+        'phone',
+        'p1',
+        'p2',
+        'p3',
+        'p4',
+        'p5'
         ];
 
     public function user(){

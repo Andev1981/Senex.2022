@@ -17,6 +17,7 @@
                             <span class="ml-1 text-sm font-medium text-gray-400 md:ml-2 dark:text-gray-500">Crear nuevo</span>
                         </div>
                     </li>
+                 
                 </ol>
             </nav>
         </h2>
@@ -28,8 +29,8 @@
                 <div class=" bg-white border-b border-gray-200">
                     <div class="relative overflow-x-auto shadow-md sm:rounded-lg p-6">
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg p-6">
-                            {!! Form::open(array('route' => 'pacientes.store','method'=>'POST','autocomplete'=>'off')) !!}
-
+                            {!! Form::open(array('route' => 'pacientes.store', 'method'=>'POST','autocomplete'=>'off')) !!}
+                         
                             <div class="grid xl:grid-cols-2 xl:gap-6">
 
                                 <div class="relative z-0 mb-6 w-full group">
@@ -112,7 +113,7 @@
                          
                     </div>
 
-                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 mt-5 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Agregar paciente</button>
+                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 mt-5 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Completar ingreso de paciente</button>
                     {!! Form::close() !!}
                     </div>
                 </div>
