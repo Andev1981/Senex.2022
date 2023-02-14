@@ -50,22 +50,22 @@
                                 <br>
                                 <div class="col-sm-6">
                                     <label class="control-label">Pregunta 2 / 5 : Es alérgico a algún medicamento</label>
-                                    <textarea   id="p1" name="p1" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
+                                    <textarea   id="p2" name="p2" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
                                 </div>
                                 <br>
                                 <div class="col-sm-6">
                                     <label class="control-label">Pregunta 3 / 5 : Indique patologías previas</label>
-                                    <textarea   id="p1" name="p1" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
+                                    <textarea   id="p3" name="p3" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
                                 </div>
                                 <br>
                                 <div class="col-sm-6">
                                     <label class="control-label">Pregunta 4 / 5 : Se ha realizado cirugías anteriormente , indique cuales</label>
-                                    <textarea   id="p1" name="p1" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
+                                    <textarea   id="p4" name="p4" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
                                 </div>
                                 <br>
                                 <div class="col-sm-6">
                                     <label class="control-label">Pregunta 5 / 5 : Tiene algunas observaciones</label>
-                                    <textarea   id="p1" name="p1" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
+                                    <textarea   id="p5" name="p5" rows="2" class="mt-2 block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cuéntanos cual..."></textarea> 
                                 </div>
                                 </div>     
                                 </div>

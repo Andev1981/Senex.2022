@@ -79,9 +79,20 @@ class PatientController extends Controller
         
     }
 
-    public function preguntas(Patient $paciente)
+    public function preguntas(Request $request)
     {
-       dd($paciente);
+       
+       $usuarioqlo = Patient::where('id','=',$request->paciente)->first();
+       $profesor = $usuarioqlo->findOrFail($request->paciente);
+        $profesor->p1 = $request->p1;
+        $profesor->p2 = $request->p2;
+        $profesor->p3 = $request->p3;
+        $profesor->p4 = $request->p4;
+        $profesor->p5 = $request->p5;
+        $profesor->save();
+
+        return redirect()->route('pacientes.index');
+
     }
 
     /**

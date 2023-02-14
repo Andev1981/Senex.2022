@@ -20,6 +20,11 @@ class Detail extends Component
     public $direccion;
     public $comuna;
     public $patients;
+    public $p1;
+    public $p2;
+    public $p3;
+    public $p4;
+    public $p5;
     public $modal = false;
 
     public function mount($paciente){
@@ -33,6 +38,11 @@ class Detail extends Component
         $this->phone=$paciente->phone;
         $this->direccion=$paciente->direccion;
         $this->comuna=$paciente->comuna;
+        $this->p1=$paciente->p1;
+        $this->p2=$paciente->p2;
+        $this->p3=$paciente->p3;
+        $this->p4=$paciente->p4;
+        $this->p5=$paciente->p5;
         $this->emit('update',$paciente->id);
     }
 
@@ -57,6 +67,11 @@ class Detail extends Component
         $this->user->phone = $this->phone;
         $this->user->direccion = $this->direccion;
         $this->user->comuna = $this->comuna;
+        $this->user->p1= $this->p1;
+        $this->user->p2= $this->p2;
+        $this->user->p3=$this->p3;
+        $this->user->p4=$this->p4;
+        $this->user->p5=$this->p5;
         $this->user->user->save();
         $this->open = '';
         $this->mount($this->user);

@@ -83,7 +83,7 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('solicitudes',[SolicitudController::class, 'index'])->name('solicitudes');
     Route::get('pacientes/{id}/ver',[PatientController::class, 'show'])->name('paciente.show');
     Route::get('pacientes/crear',[PatientController::class, 'create'])->name('pacientes.create');
-    Route::get('pacientes/preguntas/{paciente?}',[PatientController::class, 'preguntas'])->name('pacientes.preguntas');
+    Route::get('pacientes/preguntas',[PatientController::class, 'preguntas'])->name('pacientes.preguntas');
     Route::post('pacientes/store',[PatientController::class, 'store'])->name('pacientes.store');
     /*     Route::get('doctores',[DoctorController::class, 'index'])->name('doctores'); */
     Route::get('kine/crear',[DoctorController::class, 'create'])->name('doctor.create');
