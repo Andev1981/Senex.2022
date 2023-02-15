@@ -145,7 +145,7 @@
                                     </td>
                                     <td class="px-6 py-4">
 
-                                        <button wire:click="asignarApoderado({{$patient->user->id}})"" type="button"class="font-medium text-blue-600 dark:text-blue-500 hover:underline">
+                                        <button wire:click="asignarApoderado({{$patient->user->id}})" type="button"class="font-medium text-blue-600 dark:text-blue-500 hover:underline">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-square" viewBox="0 0 16 16">
                                                 <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5H3z"/>
                                                 <path d="m8.354 10.354 7-7a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
@@ -164,3 +164,37 @@
         @endif
 
 </div>
+
+
+@section('scripts')
+<script type="text/javascript">
+
+$(function () {
+      $("#order_table").DataTable({
+        language: {
+            processing:     "Procesando...",
+            search:         "Buscar",
+            lengthMenu:     "Mostrando _MENU_ elementos",
+            info:           "Mostrando página _PAGE_ de  _PAGE_",
+            infoEmpty:      "No hay elementos para mostrar",
+            infoFiltered:   "(filtro de _MAX_ elementos en total)",
+            infoPostFix:    "",
+            loadingRecords: "Cargando datos...",
+            zeroRecords:    "No hay datos para mostrar",
+            emptyTable:     "La tabla no posee datos",
+            paginate: {
+                first:      "Primera",
+                previous:   "Anterior",
+                next:       "Siguiente",
+                last:       "Ultima"
+            },
+            aria: {
+                sortAscending:  ": active para ordenar la columna en orden ascendente",
+                sortDescending: ": active para ordenar la columna en orden descendente"
+            }
+        }
+      });
+    });
+
+</script>
+@endsection

@@ -146,87 +146,88 @@
                                 </div>
                           </div>
                           <div id="second" class="hidden p-4">
-                            <div class="overflow-x-auto relative">
-                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                        <tr>
-                                            <th>Tipo</th>
-                                            <th scope="col" class="py-3 px-6">
-                                                Monto
-                                            </th>
-                                            <th scope="col" class="py-3 px-6">
-                                                Estado
-                                            </th>
-                                            <th scope="col" class="py-3 px-6">
-                                                Fecha
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($pagos as $pago)
-                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                                <th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                   Webpay
+                                <div class="overflow-x-auto relative">
+                                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th scope="col" class="py-3 px-6">
+                                                    Monto
                                                 </th>
-                                                <td scope="row" >
-                                                    {{$pago->total}}
-                                                </td>
-                                                <td class="py-4 px-6">
-                                                    @if ($pago->status == 0)
-                                                        Pago no realizado
-                                                    @elseif($pago->status == 1)
-                                                        Pendiente
-                                                    @elseif($pago->status == 2)
-                                                        Aprobada
-                                                    @elseif($pago->status == 3)
-                                                        Pago cancelado o fallido
-                                                    @endif
-                                                </td>
-                                                <td class="py-4 px-6">
-                                                    {{$pago->created_at}}
-                                                </td>
+                                                <th scope="col" class="py-3 px-6">
+                                                    Estado
+                                                </th>
+                                                <th scope="col" class="py-3 px-6">
+                                                    Fecha
+                                                </th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($pagos as $pago)
+                                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                                    <th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                    Webpay
+                                                    </th>
+                                                    <td scope="row" >
+                                                        {{$pago->total}}
+                                                    </td>
+                                                    <td class="py-4 px-6">
+                                                        @if ($pago->status == 0)
+                                                            Pago no realizado
+                                                        @elseif($pago->status == 1)
+                                                            Pendiente
+                                                        @elseif($pago->status == 2)
+                                                            Aprobada
+                                                        @elseif($pago->status == 3)
+                                                            Pago cancelado o fallido
+                                                        @endif
+                                                    </td>
+                                                    <td class="py-4 px-6">
+                                                        {{$pago->created_at}}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                           </div>
 
                         </div>
-                      </div>
+                    </div>
                 </div>
                 <!-- End of profile tab -->
             </div>
 @section('scripts')
     <script>
-    let tabsContainer = document.querySelector("#tabs");
+        let tabsContainer = document.querySelector("#tabs");
 
-    let tabTogglers = tabsContainer.querySelectorAll("a");
-    console.log(tabTogglers);
+        let tabTogglers = tabsContainer.querySelectorAll("a");
+        console.log(tabTogglers);
 
-    tabTogglers.forEach(function(toggler) {
-    toggler.addEventListener("click", function(e) {
-        e.preventDefault();
+        tabTogglers.forEach(function(toggler) {
+        toggler.addEventListener("click", function(e) {
+            e.preventDefault();
 
-        let tabName = this.getAttribute("href");
+            let tabName = this.getAttribute("href");
 
-        let tabContents = document.querySelector("#tab-contents");
+            let tabContents = document.querySelector("#tab-contents");
 
-        for (let i = 0; i < tabContents.children.length; i++) {
+            for (let i = 0; i < tabContents.children.length; i++) {
 
-        tabTogglers[i].parentElement.classList.remove("border-blue-400", "border-b",  "-mb-px", "opacity-100");  tabContents.children[i].classList.remove("hidden");
-        if ("#" + tabContents.children[i].id === tabName) {
-            continue;
-        }
-        tabContents.children[i].classList.add("hidden");
+            tabTogglers[i].parentElement.classList.remove("border-blue-400", "border-b",  "-mb-px", "opacity-100");  tabContents.children[i].classList.remove("hidden");
+            if ("#" + tabContents.children[i].id === tabName) {
+                continue;
+            }
+            tabContents.children[i].classList.add("hidden");
 
-        }
-            e.target.parentElement.classList.add("border-blue-400", "border-b-4", "-mb-px", "opacity-100");
+            }
+                e.target.parentElement.classList.add("border-blue-400", "border-b-4", "-mb-px", "opacity-100");
+            });
         });
-    });
 
-    document.getElementById("default-tab").click();
+        document.getElementById("default-tab").click();
     </script>
 @endsection
 </x-admin-layout>
+
 

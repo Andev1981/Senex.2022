@@ -92,7 +92,7 @@ class Detail extends Component
                 'relation' => 0
             ]);
         }
-        $this->emit('render');
+        $this->emit('render',$this->user->id);
         $this->closeModal();
     }
 

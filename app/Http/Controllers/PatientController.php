@@ -82,15 +82,15 @@ class PatientController extends Controller
     public function preguntas(Request $request)
     {
        
-       $usuarioqlo = Patient::where('id','=',$request->paciente)->first();
-       $profesor = $usuarioqlo->findOrFail($request->paciente);
-        $profesor->p1 = $request->p1;
-        $profesor->p2 = $request->p2;
-        $profesor->p3 = $request->p3;
-        $profesor->p4 = $request->p4;
-        $profesor->p5 = $request->p5;
+       $pat = Patient::where('id','=',$request->paciente)->first();
+       $xsxsxs = $pat->findOrFail($request->paciente);
+        $xsxsxs->p1 = $request->p1;
+        $xsxsxs->p2 = $request->p2;
+        $xsxsxs->p3 = $request->p3;
+        $xsxsxs->p4 = $request->p4;
+        $xsxsxs->p5 = $request->p5;
     
-        $success = $profesor->save();
+        $success = $xsxsxs->save();
 
         if($success){
             toast('Paciente agregado correctamente !','success');

@@ -522,10 +522,10 @@ class Steps extends Component
 
      /* Funciones pagina 2 */
      public function agendar(){
-      
+       // $this->goToNextPage();
+
         $solicitud = Session::get('attention_id');
-        // $this->goToNextPage();
-        return redirect()->route('solicitud.show');
+        return redirect()->route('solicitud.show', $solicitud);
     }
 
     public function sexo($id){
