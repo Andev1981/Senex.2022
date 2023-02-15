@@ -39,7 +39,7 @@
                                 <li class="flex items-center py-3">
                                     <span>Ver preguntas</span>
                                     <span class="ml-auto float-right">
-                                    <button  wire:click="openModal"  class="px-3 py-2 text-xs font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Preguntas</button>
+                                    <button  wire:click="opens"  class="px-3 py-2 text-xs font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Preguntas</button>
                                
                                     </span>
                                 </li>
@@ -49,6 +49,7 @@
                                 </li>
                                 
             </ul>
+            
 
             <div class="relative p-5 overflow-x-auto shadow-md sm:rounded-lg">        
                                 <table class="w-full shadow-md text-sm text-left text-gray-500 dark:text-gray-400">
@@ -81,9 +82,10 @@
                                 </table>
             </div>
     
-
+            
+            <!-- card lateral  -->
             @if($open)
-                        <div tabindex="-1" class="bg-[#4d515dab] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full justify-center items-center flex" aria-modal="true" role="dialog">
+                <div tabindex="-1" class="bg-[#4d515dab] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full justify-center items-center flex" aria-modal="true" role="dialog">
                                     <!-- Modal content -->
                             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
                                     <!-- Modal header -->
@@ -131,99 +133,59 @@
                                         </div>
                                 </form>
                             </div>
-                        </div>
-            @endif
-
-            @if($modal)
-                <div tabindex="-1" class="bg-[#4d515dab] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full justify-center items-center flex" aria-modal="true" role="dialog">
-                            <!-- Modal content -->
-                    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-                            <!-- Modal header -->
-                            <div class="flex justify-between items-center p-5 rounded-t border-b dark:border-gray-600">
-                                <h3 class="text-xl font-medium text-gray-900 dark:text-white">
-                                Preguntas de {{ $paciente->user->name}}
-                                </h3>
-                                
-                                <button wire:click="closeModal" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="medium-modal">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                                </button>
-                            </div>
-                            <!-- Modal body -->
-                            <div class="relative p-5 overflow-x-auto shadow-md sm:rounded-lg">        
-                            <div class="grid grid-cols-2">
-                            
-                        
-                    </div>
-                
-                    <div class="grid grid-cols-2">
-                            <div class="px-4 py-2 font-bold">Medicamentos frecuentes </div>
-                            <div class="px-4 py-2">
-                                <a class="text-blue-800">{{$paciente->p1}}</a>
-                            </div>
-                    </div>
-                    <div class="grid grid-cols-2">
-                            <div class="px-4 py-2 font-bold">Es alérgico a algún medicamento </div>
-                            <div class="px-4 py-2">
-                                <a class="text-blue-800">{{$paciente->p2}}</a>
-                            </div>
-                    </div>
-                    <div class="grid grid-cols-2">
-                            <div class="px-4 py-2 font-bold">Indique patologías previas </div>
-                            <div class="px-4 py-2">
-                                <a class="text-blue-800">{{$paciente->p3}}</a>
-                            </div>
-                    </div>
-                    <div class="grid grid-cols-2">
-                            <div class="px-4 py-2 font-bold">Se ha realizado cirugías anteriormente , indique cuales </div>
-                            <div class="px-4 py-2">
-                                <a class="text-blue-800">{{$paciente->p4}}</a>
-                            </div>
-                    </div>
-                    <div class="grid grid-cols-2">
-                            <div class="px-4 py-2 font-bold">Tiene algunas observaciones </div>
-                            <div class="px-4 py-2">
-                                <a class="text-blue-800">{{$paciente->p5}}</a>
-                            </div>
-                    </div>
-                    <button wire:click="opens"
-                    class="block w-full text-blue-800 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Editar Información</button>
-            
                 </div>
             @endif
-            @if ($opens)
-                    <div class="text-gray-700">
-                        <div class="grid grid-cols-3 gap-2">
-
-                            <div class="grid grid-cols-1">
-                                <div class="px-4 py-2 font-bold">Medicamentos frecuentes</div>
-                                <input type="text" wire:model="p1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            </div>
+            @if($modal)
+                <div tabindex="1" class="bg-[#4d515dab] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full justify-center items-center flex" aria-modal="true" role="dialog">
+                                <!-- Modal content -->
+                        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                                <!-- Modal header -->
+                                <div class="flex justify-between items-center p-5 rounded-t border-b dark:border-gray-600">
+                                    <h3 class="text-xl font-medium text-gray-900 dark:text-white">
+                                    Preguntas de {{ $paciente->user->name}}
+                                    </h3>
+                                    
+                                    <button wire:click="closeModal" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-toggle="medium-modal">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                    </button>
+                                </div>
+                                <!-- Modal body -->
+                                <div class="relative p-5 overflow-x-auto shadow-md sm:rounded-lg">        
+                                <div class="grid grid-cols-2">
+                                
                             
-                            <div class="grid grid-cols-1">
-                                <div class="px-4 py-2 font-bold">Es alérgico</div>
-                                <input type="text"  wire:model="p2"  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            </div>
-                        
-                            <div class="grid grid-cols-1">
-                                <div class="px-4 py-2 font-bold">Indique patologías previas</div>
-                                <input type="text"  wire:model="p3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            </div>
-                        
-                            <div class="grid grid-cols-1">
-                                <div class="px-4 py-2 font-bold">Se ha realizado cirugías </div>
-                                <input type="text"  wire:model="p4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            </div>
-                    
-                            <div class="grid grid-cols-1">
-                                <div class="px-4 py-2 font-bold">Tiene algunas observaciones</div>
-                                <input type="text" wire:model="p5"  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                            </div>
                         </div>
-                    </div>
-                        <button wire:click="update"
-                        class="block w-full text-blue-800 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Actualizar</button>
-                        <button wire:click="cancel"
-                        class="block w-full text-yellow-500 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Cancelar</button>
+                    
+                        <div class="grid grid-cols-2">
+                                <div class="px-4 py-2 font-bold">Medicamentos frecuentes </div>
+                                <input type="text" wire:model="p1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                        <br>
+                        <div class="grid grid-cols-2">
+                                <div class="px-4 py-2 font-bold">Es alérgico a algún medicamento  </div>
+                                <input type="text" wire:model="p2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                        <br>
+                        <div class="grid grid-cols-2">
+                                <div class="px-4 py-2 font-bold">Indique patologías previas</div>
+                                <input type="text" wire:model="p3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                        <br>
+                        <div class="grid grid-cols-2">
+                                <div class="px-4 py-2 font-bold">Se ha realizado cirugías anteriormente</div>
+                                <input type="text" wire:model="p4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                        <br>
+                        <div class="grid grid-cols-2">
+                                <div class="px-4 py-2 font-bold">Tiene algunas observaciones </div>
+                                <input type="text" wire:model="p5" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+
+                            <button wire:click="update"
+                            class="block w-full text-blue-800 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Actualizar</button>
+                            <button wire:click="cancel"
+                            class="block w-full text-yellow-500 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Cancelar</button>
+                </div>
             @endif
     </div>
 </div>

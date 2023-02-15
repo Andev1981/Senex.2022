@@ -29,11 +29,8 @@ class Card extends Component
     public $parametro;  
 
     public function opens(){
-        $this->opens =true;
+        $this->modal =true;
       
-    }
-    public function openModal(){
-        $this->modal = true;
     }
     public function closeModal(){
         $this->modal = false;
@@ -98,12 +95,12 @@ class Card extends Component
         $this->paciente->p4=$this->p4;
         $this->paciente->p5=$this->p5;
         $this->paciente->save();
-        $this->open = '';
+        $this->modal = '';
         $this->mount($this->parametro);
         
     }
     public function cancel(){
-        $this->opens = '';
+        $this->modal = '';
     }
 
 }
