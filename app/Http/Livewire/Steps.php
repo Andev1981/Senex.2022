@@ -523,7 +523,8 @@ class Steps extends Component
      /* Funciones pagina 2 */
      public function agendar(){
         
-        $this->goToNextPage();
+        // $this->goToNextPage();
+        return view('admin.pacientes.show');
     }
 
     public function sexo($id){

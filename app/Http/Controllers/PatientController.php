@@ -70,7 +70,7 @@ class PatientController extends Controller
         $success = $user->assignRole('Paciente');
 
         if($success){
-            toast('Paciente agregado correctamente!','success');
+            toast('Recuerda responder las preguntar para finalizar !','warning');
         }else{
             toast('Ha ocurrido un problema, inténtelo nuevamente','danger');
         }
@@ -89,8 +89,15 @@ class PatientController extends Controller
         $profesor->p3 = $request->p3;
         $profesor->p4 = $request->p4;
         $profesor->p5 = $request->p5;
-        $profesor->save();
+    
+        $success = $profesor->save();
 
+        if($success){
+            toast('Paciente agregado correctamente !','success');
+        }else{
+            toast('Ha ocurrido un problema, inténtelo nuevamente','danger');
+        }
+       
         return redirect()->route('pacientes.index');
 
     }

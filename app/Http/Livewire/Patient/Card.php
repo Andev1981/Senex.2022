@@ -10,16 +10,36 @@ use Livewire\WithFileUploads;
 
 class Card extends Component
 {
-    protected $listeners = ['update' => 'mount'];
+    protected $listeners = ['update' => 'mount', 'render' => 'render'];
     use WithFileUploads;
     public $paciente;
     public $name;
     public $open;
+    public $opens = false;
     public $img;
     public $assignates;
+    public $modal = false;
+    public $p1;
+    public $p2;
+    public $p3;
+    public $p4;
+    public $p5;
+
+    public $parametro;
+
+    public function opens(){
+        $this->opens =true;
+    }
+    public function openModal(){
+        $this->modal = true;
+    }
+    public function closeModal(){
+        $this->modal = false;
+    }
 
     public function mount($paciente){
 
+        $this->parametro = $paciente;
         $this->paciente = Patient::find($paciente);
         $this->name = $this->paciente->user->name;
         $this->assignates = Assign::where('patient_id', $paciente)->get();
@@ -55,8 +75,27 @@ class Card extends Component
 
     }
     public function deleteApoderado($id){
+
            $sd = Assign::findOrFail($id);
            $sd->delete();
+
+           $this->mount($this->parametro);
+    }
+
+    public function update(){
+
+        $this->user->p1= $this->p1;
+        $this->user->p2= $this->p2;
+        $this->user->p3=$this->p3;
+        $this->user->p4=$this->p4;
+        $this->user->p5=$this->p5;
+        $this->user->user->save();
+        $this->open = '';
+        $this->mount($this->user);
+        
+    }
+    public function cancel(){
+        $this->opens = '';
     }
 
 }

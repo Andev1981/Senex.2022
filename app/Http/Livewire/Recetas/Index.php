@@ -12,6 +12,7 @@ class Index extends Component
     public $veces;
     public $detalle;
     public $open;
+    public $opens;
     public $first = 'true',$second='',$third='',$fourth='';
 
     public function mount($solicitud){
@@ -50,9 +51,15 @@ class Index extends Component
     public function cerrar(){
         $this->open = '';
     }
+    public function cerrar2(){
+        $this->opens = '';
+    }
 
     public function open(){
         $this->open = true;
+    }
+    public function opens(){
+        $this->opens = true;
     }
 
 

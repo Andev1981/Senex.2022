@@ -50,7 +50,7 @@
                         <input type="text" wire:model="comuna" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                   
-                    <div class="grid grid-cols-1">
+                    <!-- <div class="grid grid-cols-1">
                         <div class="px-4 py-2 font-bold">Medicamentos frecuentes</div>
                         <input type="text" wire:model="p1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
@@ -73,7 +73,7 @@
                     <div class="grid grid-cols-1">
                         <div class="px-4 py-2 font-bold">Tiene algunas observaciones</div>
                         <input type="text" wire:model="p5"  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <button wire:click="update"
@@ -117,36 +117,7 @@
                     </div>
                   
                 </div>
-                <div class="grid grid-cols-2">
-                        <div class="px-4 py-2 font-bold">Medicamentos frecuentes </div>
-                        <div class="px-4 py-2">
-                            <a class="text-blue-800">{{$p1}}</a>
-                        </div>
-                </div>
-                <div class="grid grid-cols-2">
-                        <div class="px-4 py-2 font-bold">Es alérgico a algún medicamento </div>
-                        <div class="px-4 py-2">
-                            <a class="text-blue-800">{{$p2}}</a>
-                        </div>
-                </div>
-                <div class="grid grid-cols-2">
-                        <div class="px-4 py-2 font-bold">Indique patologías previas </div>
-                        <div class="px-4 py-2">
-                            <a class="text-blue-800">{{$p3}}</a>
-                        </div>
-                </div>
-                <div class="grid grid-cols-2">
-                        <div class="px-4 py-2 font-bold">Se ha realizado cirugías anteriormente , indique cuales </div>
-                        <div class="px-4 py-2">
-                            <a class="text-blue-800">{{$p4}}</a>
-                        </div>
-                </div>
-                <div class="grid grid-cols-2">
-                        <div class="px-4 py-2 font-bold">Tiene algunas observaciones </div>
-                        <div class="px-4 py-2">
-                            <a class="text-blue-800">{{$p5}}</a>
-                        </div>
-                </div>
+             
             </div>
          
             <button wire:click="open"
