@@ -24,11 +24,13 @@ class Card extends Component
     public $p3;
     public $p4;
     public $p5;
+    public $user;
 
     public $parametro;
 
     public function opens(){
         $this->opens =true;
+      
     }
     public function openModal(){
         $this->modal = true;
@@ -84,14 +86,14 @@ class Card extends Component
 
     public function update(){
 
-        $this->user->p1= $this->p1;
-        $this->user->p2= $this->p2;
-        $this->user->p3=$this->p3;
-        $this->user->p4=$this->p4;
-        $this->user->p5=$this->p5;
-        $this->user->user->save();
+        $this->paciente->p1= $this->p1;
+        $this->paciente->p2= $this->p2;
+        $this->paciente->p3=$this->p3;
+        $this->paciente->p4=$this->p4;
+        $this->paciente->p5=$this->p5;
+        $this->paciente->save();
         $this->open = '';
-        $this->mount($this->user);
+        $this->mount($this->paciente);
         
     }
     public function cancel(){

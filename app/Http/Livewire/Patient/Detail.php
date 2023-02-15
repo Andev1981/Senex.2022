@@ -56,6 +56,8 @@ class Detail extends Component
     }
 
     public function update(){
+        // dd($this->direccion);
+     
         $this->user->user->name = $this->name;
         $this->user->user->rut = $this->rut;
         $this->user->user->email = $this->email;
@@ -63,12 +65,11 @@ class Detail extends Component
         $this->user->phone = $this->phone;
         $this->user->direccion = $this->direccion;
         $this->user->comuna = $this->comuna;
-        // $this->user->p1= $this->p1;
-        // $this->user->p2= $this->p2;
-        // $this->user->p3=$this->p3;
-        // $this->user->p4=$this->p4;
-        // $this->user->p5=$this->p5;
+        // guardar usuario
         $this->user->user->save();
+        //guardar paciente 
+        $this->user->save();
+        
         $this->open = '';
         $this->mount($this->user);
         

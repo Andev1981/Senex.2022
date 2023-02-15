@@ -4,7 +4,8 @@ namespace App\Http\Livewire\Recetas;
 
 use Livewire\Component;
 use App\Models\Solicitud;
-
+use App\Models\Doctor;
+use Illuminate\Http\Request;
 class Index extends Component
 {
     public $solicitud;
@@ -12,10 +13,13 @@ class Index extends Component
     public $veces;
     public $detalle;
     public $open;
-    public $opens;
+    public $opens = false;
     public $first = 'true',$second='',$third='',$fourth='';
+    public $doctors;
+
 
     public function mount($solicitud){
+        $this->doctors = Doctor::all();
         $this->solicitud = Solicitud::find($solicitud);
         $this->kine = $this->solicitud->doctor;
         $this->status = $this->solicitud->status;
@@ -60,6 +64,19 @@ class Index extends Component
     }
     public function opens(){
         $this->opens = true;
+    }
+    public function closeModal(){
+        $this->opens = false;
+    }
+
+    public function reasignarDoctor($solicitud,$id){
+
+        //encuentro la solicitud para encontrar al doctor
+        $soli = Solicitud::findOrFail($solicitud);
+        $soli->doctor_id = $id;
+        $soli->save();
+        $this->closeModal();
+        $this->mount($soli->id);
     }
 
 

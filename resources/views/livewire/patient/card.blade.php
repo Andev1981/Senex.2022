@@ -87,7 +87,7 @@
                             </div>
                         </div>
 
-                        @if($open)
+                    @if($open)
                         <div tabindex="-1" class="bg-[#4d515dab] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full justify-center items-center flex" aria-modal="true" role="dialog">
                                     <!-- Modal content -->
                             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
@@ -162,6 +162,7 @@
                             <a class="text-blue-800">{{$paciente->p1}}</a>
                         </div>
                 </div>
+            
                 <div class="grid grid-cols-2">
                         <div class="px-4 py-2 font-bold">Es alérgico a algún medicamento </div>
                         <div class="px-4 py-2">
@@ -190,52 +191,45 @@
             class="block w-full text-blue-800 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Editar Información</button>
            
                         </div>
+            @endif
             @if ($opens)
-            <div class="text-gray-700">
-                <div class="grid grid-cols-3 gap-1">
+                <div class="text-gray-700">
+                    <div class="grid grid-cols-3 gap-2">
 
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Medicamentos frecuentes</div>
-                        <input type="text" wire:model="p1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    </div>
+                        <div class="grid grid-cols-1">
+                            <div class="px-4 py-2 font-bold">Medicamentos frecuentes</div>
+                            <input type="text" wire:model="p1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                        
+                        <div class="grid grid-cols-1">
+                            <div class="px-4 py-2 font-bold">Es alérgico</div>
+                            <input type="text"  wire:model="p2"  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
                     
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Es alérgico</div>
-                        <input type="text"  wire:model="p2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    </div>
-                  
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Indique patologías previas</div>
-                        <input type="text"  wire:model="p3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    </div>
-                 
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Se ha realizado cirugías </div>
-                        <input type="text"  wire:model="p4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    </div>
-               
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Tiene algunas observaciones</div>
-                        <input type="text" wire:model="p5"  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    </div>
-                </div>
-            </div>
-            <button wire:click="update"
-            class="block w-full text-blue-800 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Actualizar</button>
-            <button wire:click="cancel"
-            class="block w-full text-yellow-500 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Cancelar</button>
-        @else
-            <div class="text-gray-700">
-                <div class="grid md:grid-cols-2 text-sm">
+                        <div class="grid grid-cols-1">
+                            <div class="px-4 py-2 font-bold">Indique patologías previas</div>
+                            <input type="text"  wire:model="p3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
+                    
+                        <div class="grid grid-cols-1">
+                            <div class="px-4 py-2 font-bold">Se ha realizado cirugías </div>
+                            <input type="text"  wire:model="p4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
                 
-                  
-                </div>
-                
-            </div>
-        @endif  
+                        <div class="grid grid-cols-1">
+                            <div class="px-4 py-2 font-bold">Tiene algunas observaciones</div>
+                            <input type="text" wire:model="p5"  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                        </div>
                     </div>
                 </div>
-        @endif
+                    <button wire:click="update"
+                    class="block w-full text-blue-800 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Actualizar</button>
+                    <button wire:click="cancel"
+                    class="block w-full text-yellow-500 text-sm font-semibold rounded-lg hover:bg-gray-300 bg-gray-200 focus:outline-none focus:shadow-outline focus:bg-gray-100 hover:shadow-xs p-3 my-4">Cancelar</button>
+        
+                    </div>
+                </div>
+         @endif
 
       
     </div>

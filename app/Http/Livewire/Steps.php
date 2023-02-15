@@ -522,9 +522,10 @@ class Steps extends Component
 
      /* Funciones pagina 2 */
      public function agendar(){
-        
+      
+        $solicitud = Session::get('attention_id');
         // $this->goToNextPage();
-        return view('admin.pacientes.show');
+        return redirect()->route('solicitud.show');
     }
 
     public function sexo($id){
