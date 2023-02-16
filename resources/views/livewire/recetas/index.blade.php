@@ -44,8 +44,7 @@
 
                                 <a wire:click="opens()" class="float-right px-3 py-1 text-xs rounded-lg bg-sky-700 text-white cursor-pointer">Cambiar Kine</a>
                                 <hr class="mt-2">
-                               
-
+                                
                                 <!-- Tabs -->
                                 <ul class="inline-flex w-full px-1 pt-2 ">
                                     <li @if($first == 'true') class="px-4 py-2 -mb-px font-semibold text-gray-800 border-b-2 border-blue-400 rounded-t opacity-50" @else class="px-4 py-2 font-semibold text-gray-800 rounded-t opacity-50" @endif><a class="cursor-pointer" wire:click="tabs(1)">Sesiones</a></li>
@@ -87,7 +86,7 @@
             </div>
         </div>
 
-        @if($open)
+    @if($open)
             <div tabindex="-1" class="bg-[#4d515dab] overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 w-full md:inset-0 h-modal md:h-full justify-center items-center flex" aria-modal="true" role="dialog">
                         <!-- Modal content -->
                 <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
@@ -101,7 +100,7 @@
                             </button>
                         </div>
                         
-                <!-- Modal body -->
+                        <!-- Modal body -->
                         <form wire:submit.prevent="save" >
                                 <div class="p-6 space-y-6">
                                     <div class="grid xl:grid-cols-1 xl:gap-1">
@@ -122,7 +121,7 @@
                         </form>
                 </div>
             </div>
-        @endif
+    @endif
 
 
     @if($opens)
@@ -149,28 +148,28 @@
                                             <th scope="col" class="px-6 py-3">Asignar</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        @foreach ($doctors as $doc)
-                                        <tr class="bg-white border-b text-center dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <tbody>
+                                            @foreach ($doctors as $doc)
+                                            <tr class="bg-white border-b text-center dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
 
-                                            <td class="px-6 py-4">{{$doc->id}}</td>
-                                            <td class="px-6 py-4">{{$doc->user->name}}</td>
-                                            <td class="px-6 py-4">{{$doc->user->rut}}</td>
-                                        
-                                            <td class="px-6 py-4">
+                                                <td class="px-6 py-4">{{$doc->id}}</td>
+                                                <td class="px-6 py-4">{{$doc->user->name}}</td>
+                                                <td class="px-6 py-4">{{$doc->user->rut}}</td>
+                                            
+                                                <td class="px-6 py-4">
 
-                                                <button wire:click="reasignarDoctor({{$solicitud->id}},{{$doc->id}})" type="button"class="font-medium text-blue-600 dark:text-blue-500 hover:underline">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-square" viewBox="0 0 16 16">
-                                                        <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5H3z"/>
-                                                        <path d="m8.354 10.354 7-7a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
-                                                    </svg>
-                                                </button>
+                                                    <button wire:click="reasignarDoctor({{$solicitud->id}},{{$doc->id}})" type="button"class="font-medium text-blue-600 dark:text-blue-500 hover:underline">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-square" viewBox="0 0 16 16">
+                                                            <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5H3z"/>
+                                                            <path d="m8.354 10.354 7-7a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
+                                                        </svg>
+                                                    </button>
 
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                        </tr>
-                                    </tbody>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                            
+                                        </tbody>
                                 </table>
                             </div>
                     </div>

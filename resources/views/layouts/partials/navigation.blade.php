@@ -2,6 +2,7 @@
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
+            
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
@@ -19,14 +20,6 @@
                             <x-nav-link :href="route('doctores')" :active="request()->routeIs(['doctores','doctor.show'])">
                                 {{ __('Kinesiólogos') }}
                             </x-nav-link>
-                           
-                           {{--  <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
-                                {{ __('Cuentas de Usuarios') }}
-                            </x-nav-link>
-                            <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.index')">
-                                {{ __('Roles y permisos') }}
-                            </x-nav-link> --}}
-
                         </div>
                 @elseif(auth()->user()->roles[0]->id === 2)
                         <!-- Navigation Links -->
@@ -37,9 +30,6 @@
                             <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
                                 {{ __('Usuarios') }}
                             </x-nav-link>
-                           {{--  <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.index')">
-                                {{ __('Roles') }}
-                            </x-nav-link> --}}
                         </div>
 
                 @elseif(auth()->user()->roles[0]->id === 3)
@@ -51,9 +41,6 @@
                             <x-nav-link :href="route('doctor.show')" :active="request()->routeIs(['doctores','doctor.show'])">
                                 {{ __('Mi perfil') }}
                             </x-nav-link>
-                        {{--  <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.index')">
-                                {{ __('Roles') }}
-                            </x-nav-link> --}}
                         </div>
                 @endif
                 @endauth
@@ -63,7 +50,7 @@
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ml-6">
                 @auth
-                <x-dropdown align="right" width="48">
+                <x-dropdown align="middle" width="48">
                     <x-slot name="trigger">
                         <button class="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
                             <div>{{ Auth::user()->name }}</div>
@@ -78,9 +65,9 @@
 
                     <x-slot name="content">
                         <!-- Authentication -->
-                        <x-dropdown-link :href="route('admin')">
+                        <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Inicio') }}
-                        </x-dropdown-link>
+                        </x-responsive-nav-link>
                         <x-dropdown-link :href="route('ayudaVideo')">
                             {{ __('Ayuda') }}
                         </x-dropdown-link>
@@ -117,9 +104,30 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
+            @if(!auth()->user())
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+                {{ __('Ingresar') }}
             </x-responsive-nav-link>
+            @else 
+           <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                {{ __('Inicio') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('ayudaVideo')" :active="request()->routeIs('ayudaVideo')">
+                {{ __('Ayuda') }}
+            </x-responsive-nav-link>
+            
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <x-dropdown-link :href="route('logout')"
+                         onclick="event.preventDefault();
+                          this.closest('form').submit();">
+                        {{ __('Cerrar sesión') }}
+                </x-dropdown-link>
+            </form>
+             
+            
+            @endif
+            
         </div>
 
         <!-- Responsive Settings Options -->
