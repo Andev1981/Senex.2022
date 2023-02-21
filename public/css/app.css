@@ -1228,6 +1228,12 @@ input:checked + .toggle-bg {
 .m-0 {
   margin: 0px;
 }
+.m-2 {
+  margin: 0.5rem;
+}
+.m-3 {
+  margin: 0.75rem;
+}
 .mx-2 {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
@@ -1455,6 +1461,9 @@ input:checked + .toggle-bg {
 }
 .h-modal {
   height: calc(100% - 2rem);
+}
+.h-56 {
+  height: 14rem;
 }
 .max-h-fit {
   max-height: -moz-fit-content;
@@ -1699,6 +1708,9 @@ input:checked + .toggle-bg {
 .items-center {
   align-items: center;
 }
+.items-stretch {
+  align-items: stretch;
+}
 .justify-start {
   justify-content: flex-start;
 }
@@ -1714,11 +1726,17 @@ input:checked + .toggle-bg {
 .justify-items-center {
   justify-items: center;
 }
+.justify-items-stretch {
+  justify-items: stretch;
+}
 .gap-1 {
   gap: 0.25rem;
 }
 .gap-10 {
   gap: 2.5rem;
+}
+.gap-2 {
+  gap: 0.5rem;
 }
 .gap-4 {
   gap: 1rem;
@@ -1729,8 +1747,8 @@ input:checked + .toggle-bg {
 .gap-6 {
   gap: 1.5rem;
 }
-.gap-2 {
-  gap: 0.5rem;
+.gap-3 {
+  gap: 0.75rem;
 }
 .space-x-1 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
@@ -2149,7 +2167,6 @@ input:checked + .toggle-bg {
 .px-3 {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
-  margin: 2px;
 }
 .px-3\.5 {
   padding-left: 0.875rem;
@@ -2222,6 +2239,10 @@ input:checked + .toggle-bg {
 .py-8 {
   padding-top: 2rem;
   padding-bottom: 2rem;
+}
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 .pb-1 {
   padding-bottom: 0.25rem;
@@ -3629,6 +3650,10 @@ input:checked + .toggle-bg {
 
   .md\:grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .md\:grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .md\:items-center {

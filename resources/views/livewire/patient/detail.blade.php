@@ -16,37 +16,37 @@
         </div>
         @if ($open)
             <div class="text-gray-700">
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="grid grid-cols-1">
-                        <div class="px-2 py-2 font-bold">Nombre</div>
+                <div class="grid md:grid-cols-2 text-sm">
+                    <div>
+                        <div class="font-bold">Nombre</div>
                         <input type="text" wire:model="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
-                
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Rut</div>
+                    
+                    <div>
+                        <div class="font-bold">Rut</div>
                         <input type="text" wire:model="rut" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                     
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Email</div>
+                    <div>
+                        <div class="font-bold">Email</div>
                             <input type="email" wire:model="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
                         </div>
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Fecha de Nacimiento</div>
+                    <div>
+                        <div class="font-bold">Fecha</div>
                         <input type="date" wire:model="birthday" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value="{{$user->birtday}}">
                     </div>
 
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Teléfono</div>
+                    <div>
+                        <div class=" font-bold">Teléfono</div>
                             <input type="text" wire:model="phone" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
                         </div>
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Dirección</div>
+                    <div>
+                        <div class="font-bold">Dirección</div>
                         <input type="text" wire:model="direccion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
 
-                    <div class="grid grid-cols-1">
-                        <div class="px-4 py-2 font-bold">Comuna</div>
+                    <div>
+                        <div class="font-bold">Comuna</div>
                         <input type="text" wire:model="comuna" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     </div>
                 </div>

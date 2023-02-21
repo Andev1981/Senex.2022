@@ -35,6 +35,7 @@ class Services extends Component
 
     public function mount($doctor){
 
+
         $this->fecha = Carbon::now();
         $this->doctor = Doctor::find($doctor->id);
         $this->services = SolicitudType::all();
@@ -113,11 +114,7 @@ class Services extends Component
             'doctor_id' => $this->doctor->id,
             'solicitud_type_id' => $this->service
          ]);
-
-         
-
-
-         $this->mount($this->doctor->id);
+         $this->mount($this->doctor);
          $this->cerrar();
      
      }
