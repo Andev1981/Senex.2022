@@ -15,13 +15,13 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->float('total',9,2);
+            $table->float('pay',9,2);
             $table->tinyInteger('status')->comment('0: Procesando. 1: Pendiente. 2: Aprobada. 3: Cancelada/Fallida')->default(1);
-            $table->text('session_id');
-            $table->unsignedBigInteger('user_id');
+            $table->tinyInteger('type')->comment('0: Mensual. 1: Cheque. 2: Efectivo. 3: Por Atencion,4:Tratamiento,5:Transferencia')->default(1);
+            $table->integer('paymenttable_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->string('paymenttable_type');
             $table->softDeletes();
             $table->timestamps();
-            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 

@@ -3,18 +3,22 @@
 namespace App\Http\Livewire;
 
 use App\Models\Patient;
+use App\Models\User;
 use Livewire\Component;
 
 class Paciente extends Component
 {
-    public $pacientes;
 
-    public function mount(){
-        $this->pacientes = Patient::orderBy('id', 'DESC')->get();
-    }
+    public $search;
 
     public function render()
     {
-        return view('livewire.paciente');
+       /*  $users = User::where('name', 'like', '%' . $this->search . '%')->orderBy('id', 'DESC')->get(); */
+        
+       $pacientes = User::query()->with(['roles'],['patients'],[''])->when($this->search, function($query){
+        return $query->where('name','like','%'. $this->search .'%');
+       })->paginate(5);
+
+        return view('livewire.paciente',compact('pacientes'));
     }
 }

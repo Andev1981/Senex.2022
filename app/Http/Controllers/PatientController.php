@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
+use App\Models\QuizzAnswer;
+use App\Models\QuizzQuestion;
 
 class PatientController extends Controller
 {
@@ -51,7 +53,7 @@ class PatientController extends Controller
             'rut' =>'required',
             'birthday' => 'required',
             'phone' => 'required|max:12',
-            'direccion' => 'required|max:150',
+            'direccion' => 'required|max:200',
             'comuna' => 'required|max:75',
         ]);
         $input = $request->all();
@@ -69,14 +71,21 @@ class PatientController extends Controller
          
         $success = $user->assignRole('Paciente');
 
+        $questions = QuizzQuestion::all();
+        foreach($questions as $question){
+            QuizzAnswer::create([
+                'quizz_question_id' => $question->id
+            ]);
+        }
+        
+
         if($success){
-            toast('Recuerda responder las preguntar para finalizar !','warning');
+            toast('Ha creado correctamente al paciente','success');
         }else{
             toast('Ha ocurrido un problema, inténtelo nuevamente','danger');
+            return back();
         }
-
-        return view('admin.pacientes.preguntas',compact('paciente'));
-        
+        return redirect()->route('pacientes.show',[$paciente]);        
     }
 
     public function preguntas(Request $request)
@@ -108,12 +117,12 @@ class PatientController extends Controller
      * @param  \App\Models\Patient  $patient
      * @return \Illuminate\Http\Response
      */
-    public function show(Patient $patient, $id)
+    public function show(Patient $patient)
     {
 
-        $paciente = Patient::find($id);
-        $solicitudes = Solicitud::where('patient_id',$id)->orderBy('id','DESC')->paginate(5);
-        $pagos = Payment::where('user_id',$paciente->user->id)->orderBy('id','DESC')->get();
+        dd($patient);
+        $solicitudes = Solicitud::where('patient_id',$patient)->orderBy('id','DESC')->paginate(5);
+        $pagos = Payment::where('user_id',$patient->user->id)->orderBy('id','DESC')->get();
 
         //dd($paciente, $solicitudes, $pagos);
 

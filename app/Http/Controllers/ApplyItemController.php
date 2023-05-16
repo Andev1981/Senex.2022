@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ApplyItem;
+use App\Http\Requests\StoreApplyItemRequest;
+use App\Http\Requests\UpdateApplyItemRequest;
+
+class ApplyItemController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \App\Http\Requests\StoreApplyItemRequest  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(StoreApplyItemRequest $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\ApplyItem  $applyItem
+     * @return \Illuminate\Http\Response
+     */
+    public function show(ApplyItem $applyItem)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\ApplyItem  $applyItem
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(ApplyItem $applyItem)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\UpdateApplyItemRequest  $request
+     * @param  \App\Models\ApplyItem  $applyItem
+     * @return \Illuminate\Http\Response
+     */
+    public function update(UpdateApplyItemRequest $request, ApplyItem $applyItem)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\ApplyItem  $applyItem
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(ApplyItem $applyItem)
+    {
+        //
+    }
+}

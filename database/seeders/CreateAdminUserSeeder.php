@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
+
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Patient;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Date;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -23,14 +22,17 @@ class CreateAdminUserSeeder extends Seeder
         $user = User::create([
             'name' => 'Juan Andres',
             'email' => 'javt1981@gmail.com',
-            'rut' => '15449806-0',
-            'birthday' => Carbon::parse('14-12-1981'),
-            'state' => 1,
+            'password' => bcrypt('Juan1981'),
+            'rut' => '12345678-9',
+            'birthday' => Carbon::parse('14-12-1990'),
             'avatar' => '',
-            'password' => bcrypt('Juan1981')
+            'phone' => '+569 12345637',
+            'direccion' => 'Direccion de calle #123',
+            'comuna' => 'Las Condes',
+            'state' => 1,
         ]);
 
-        $role = Role::create(['name' => 'Admin']);
+        $role = Role::create(['name' => 'super-admin']);
 
         $permissions = Permission::pluck('id','id')->all();
 
@@ -42,14 +44,19 @@ class CreateAdminUserSeeder extends Seeder
         $user = User::create([
             'name' => 'Mónica Fagres',
             'email' => 'mfagres@gmail.com',
-            'rut' => '9006869-5',
-            'birthday' => Carbon::parse('08-01-1963'),
-            'state' => 1,
+            'password' => bcrypt('9006'),
+            'rut' => '12345678-9',
+            'birthday' => Carbon::parse('14-12-1990'),
             'avatar' => '',
-            'password' => bcrypt('9006')
+            'phone' => '+569 12345637',
+            'direccion' => 'Direccion de calle #123',
+            'comuna' => 'Las Condes',
+            'state' => 1,
         ]);
 
         $permissions = Permission::pluck('id','id')->all();
+
+        $role = Role::create(['name' => 'admin']);
 
         $role->syncPermissions($permissions);
 
@@ -59,11 +66,14 @@ class CreateAdminUserSeeder extends Seeder
         $user = User::create([
             'name' => 'Marco Jadue',
             'email' => 'bravitos4j@hotmail.com',
-            'rut' => '6285558-4',
-            'birthday' => Carbon::parse('16-05-1954'),
-            'state' => 1,
+            'password' => bcrypt('9006'),
+            'rut' => '12345678-9',
+            'birthday' => Carbon::parse('14-12-1990'),
             'avatar' => '',
-            'password' => bcrypt('9006')
+            'phone' => '+569 12345637',
+            'direccion' => 'Direccion de calle #123',
+            'comuna' => 'Las Condes',
+            'state' => 1,
         ]);
 
         $permissions = Permission::pluck('id','id')->all();
@@ -72,40 +82,40 @@ class CreateAdminUserSeeder extends Seeder
 
         $user->assignRole([$role->id]);
          //#2
-         $user1 = User::create([
-            'name' => 'Paciente 1',
-            'email' => 'correo@paciente.com',
+
+         $user1 = User::create([ 
+            'name' => 'Nombre Paciente',
+            'email' => 'paciente@email.cl',
+            'password' => bcrypt('Juan1981'),
             'rut' => '12345678-9',
             'birthday' => Carbon::parse('14-12-1990'),
             'avatar' => '',
-            'state' => 1,
-            'password' => bcrypt('password')
-        ]);
-
-        Patient::create([ 
-            'user_id' => $user1->id,
             'phone' => '+569 12345637',
             'direccion' => 'Direccion de calle #123',
             'comuna' => 'Las Condes',
+            'state' => 1,
          ]);
 
-        $role = Role::create(['name' => 'Paciente']);
+        $role = Role::create(['name' => 'paciente']);
 
         $user1->assignRole([$role->id]);
 
 
-          //#3
-          $user2 = User::create([
-            'name' => 'Doctor 1',
-            'email' => 'correo@doctor.com',
+
+        $user2 = User::create([ 
+            'name' => 'Nombre Doctor',
+            'email' => 'doctor@email.cl',
+            'password' => bcrypt('Juan1981'),
             'rut' => '12345678-9',
             'birthday' => Carbon::parse('14-12-1990'),
             'avatar' => '',
+            'phone' => '+569 12345637',
+            'direccion' => 'Direccion de calle #123',
+            'comuna' => 'Las Condes',
             'state' => 1,
-            'password' => bcrypt('password')
-        ]);
+         ]);
 
-        $role = Role::create(['name' => 'Doctor']);
+        $role = Role::create(['name' => 'doctor']);
 
         $user2->assignRole([$role->id]);
 

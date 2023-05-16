@@ -45,6 +45,8 @@
                 @endif
                 @endauth
 
+             
+
             </div>
 
             <!-- Settings Dropdown -->
@@ -158,5 +160,40 @@
                     @endauth
                 </div>
         </div>
+        @auth
+        @if (auth()->user()->roles[0]->id === 1)
+                <!-- Navigation Links -->
+               
+                <div :class="{'block  space-x-8 sm:-my-px sm:ml-10': open, 'hidden': ! open}" class="hidden sm:hidden">
+                    <x-nav-link :href="route('pacientes.index')" :active="request()->routeIs(['pacientes','paciente.show'])">
+                        {{ __('Pacientes') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('doctores')" :active="request()->routeIs(['doctores','doctor.show'])">
+                        {{ __('Kinesiólogos') }}
+                    </x-nav-link>
+                </div>
+        @elseif(auth()->user()->roles[0]->id === 2)
+                <!-- Navigation Links -->
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10">
+                    <x-nav-link :href="route('admin')" :active="request()->routeIs('admin')">
+                        {{ __('Dashboard') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                        {{ __('Usuarios') }}
+                    </x-nav-link>
+                </div>
+
+        @elseif(auth()->user()->roles[0]->id === 3)
+                <!-- Navigation Links -->
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10">
+                    <x-nav-link :href="route('pacientes.index')" :active="request()->routeIs(['pacientes','paciente.show'])">
+                        {{ __('Mis Pacientes') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('doctor.show')" :active="request()->routeIs(['doctores','doctor.show'])">
+                        {{ __('Mi perfil') }}
+                    </x-nav-link>
+                </div>
+        @endif
+        @endauth
     </div>
 </nav>

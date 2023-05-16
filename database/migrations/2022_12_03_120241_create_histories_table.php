@@ -16,9 +16,8 @@ return new class extends Migration
         Schema::create('histories', function (Blueprint $table) {
             $table->id();
             $table->foreignID('user_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignID('sesion_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->string('actions');
-            $table->string('comments');
+            $table->string('action');
+            $table->string('detail');
             $table->timestamps();
         });
     }

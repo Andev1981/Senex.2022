@@ -15,10 +15,9 @@ return new class extends Migration
     {
         Schema::create('images', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->tinyInteger('type')->comment('0: Doctor. 1: Paciente.')->nullable();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->foreignId('solicitud_id')->nullable()->index();
+            $table->string('url');
+            $table->integer('imageable_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->string('imageable_type');
             $table->timestamps();
         });
     }

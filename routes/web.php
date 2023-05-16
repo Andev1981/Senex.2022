@@ -18,6 +18,8 @@ use App\Http\Controllers\ResumenController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\TransbankController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Livewire\Inicio;
+use App\Http\Livewire\Paciente;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,13 +61,8 @@ Route::group(['middleware' => ['auth']], function() {
         return view('welcome', compact('doctores'));
     })->name('/');
 
-    Route::get('/dashboard', function () {
-        if(auth()->user()->roles[0]->id == 2){
-
-            return redirect()->route('paciente.show', auth()->user()->patient->id);
-        }
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', Inicio::class)->name('dashboard');
+    Route::get('/', Inicio::class)->name('/');
 
     Route::post('to-step-two',[StepsController::class, 'toStepTwo'])->name('step.create.one');
     Route::middleware('guest')->group(function () {
@@ -81,10 +78,10 @@ Route::group(['middleware' => ['auth']], function() {
     Route::resource('roles', RoleController::class)->middleware(['role:Admin']);
     Route::resource('users', UserController::class)->middleware(['role:Admin']);
     Route::get('solicitudes',[SolicitudController::class, 'index'])->name('solicitudes');
-    Route::get('pacientes/{id}/ver',[PatientController::class, 'show'])->name('paciente.show');
+  /*   Route::get('pacientes/show',[PatientController::class, 'show'])->name('pacientes.show');
     Route::get('pacientes/crear',[PatientController::class, 'create'])->name('pacientes.create');
     Route::get('pacientes/preguntas',[PatientController::class, 'preguntas'])->name('pacientes.preguntas');
-    Route::post('pacientes/store',[PatientController::class, 'store'])->name('pacientes.store');
+    Route::post('pacientes/store',[PatientController::class, 'store'])->name('pacientes.store'); */
     /*     Route::get('doctores',[DoctorController::class, 'index'])->name('doctores'); */
     Route::get('kine/crear',[DoctorController::class, 'create'])->name('doctor.create');
     Route::get('kine',[DoctorController::class, 'index'])->name('doctor.index');
@@ -99,7 +96,7 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('repetir/{id}/receta',[SolicitudController::class, 'repetir'])->name('repetir.receta');
     
     //Livewire full page components
-    Route::get('pacientes',\App\Http\Livewire\Paciente::class)->name('pacientes.index');
+    Route::get('pacientes',Paciente::class)->name('pacientes');
     Route::get('solicitudes/{solicitud?}/ver',\App\Http\Livewire\Recetas\Index::class)->name('solicitud.show');
     Route::get('kines/{kine?}/ver/', \App\Http\Livewire\Doctor\Index::class)->name('doctor.show');
     Route::get('kines', \App\Http\Livewire\Doctor\Lista::class)->name('doctores');

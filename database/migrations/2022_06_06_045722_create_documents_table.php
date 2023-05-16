@@ -15,7 +15,9 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('url');
+            $table->integer('documentable_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->string('documentable_type');
             $table->timestamps();
         });
     }

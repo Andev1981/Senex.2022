@@ -47,7 +47,7 @@
                     </a>
                 @endif --}}
 
-                <x-button class="ml-3">
+                <x-button class="ml-3 bold bg-azul hover:bg-celeste">
                     Ingresar
                 </x-button>
             </div>

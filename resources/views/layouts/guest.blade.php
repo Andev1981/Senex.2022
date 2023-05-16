@@ -7,26 +7,15 @@
 
         <title>{{ config('app.name', 'Senex-App') }}</title>
 
-        <!-- Fonts -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
-
-        <!-- Styles -->
-        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
 
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
-            @include('layouts.partials.navigation')
-            <!-- Page Content -->
             <main>
                 {{ $slot }}
             </main>
         </div>
-        <script src="https://unpkg.com/flowbite@1.4.2/dist/flowbite.js"></script>
-        @include('sweetalert::alert')
     </body>
-     <!-- Scripts -->
-     <script src="{{ asset('js/app.js') }}" defer></script>
-    @stack('js')
 </html>
