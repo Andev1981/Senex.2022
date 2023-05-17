@@ -12,7 +12,7 @@ class ModalCrear extends Component
 {
     use WithFileUploads;
 
-    public $open = '';
+    public $open = 'hidden';
     public $name = "";
     public $last_name = "";
     public $phone = "";
