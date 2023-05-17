@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
+            $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
             $table->tinyInteger('status')->comment('0:Pendiente,1:En Proceso,2:Finalizada')->default(0);
             $table->timestamps();
         });

@@ -19,7 +19,9 @@ use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\TransbankController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Livewire\Inicio;
+use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Paciente;
+use App\Http\Livewire\Paciente\ListadoPacientes;
 
 /*
 |--------------------------------------------------------------------------
@@ -96,10 +98,10 @@ Route::group(['middleware' => ['auth']], function() {
     Route::get('repetir/{id}/receta',[SolicitudController::class, 'repetir'])->name('repetir.receta');
     
     //Livewire full page components
-    Route::get('pacientes',Paciente::class)->name('pacientes');
+    Route::get('pacientes',ListadoPacientes::class)->name('pacientes');
+    Route::get('kines',ListadoKines::class)->name('kines');
     Route::get('solicitudes/{solicitud?}/ver',\App\Http\Livewire\Recetas\Index::class)->name('solicitud.show');
     Route::get('kines/{kine?}/ver/', \App\Http\Livewire\Doctor\Index::class)->name('doctor.show');
-    Route::get('kines', \App\Http\Livewire\Doctor\Lista::class)->name('doctores');
 
     Route::get('ayuda',[VideoController::class, 'index'])->name('ayudaVideo');
 

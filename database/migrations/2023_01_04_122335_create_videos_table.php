@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('videos', function (Blueprint $table) {
             $table->id();
             $table->string('video');
+            $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }

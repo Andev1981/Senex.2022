@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('assigns', function (Blueprint $table) {
             $table->id();
-            $table->foreignID('apply_item_id')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignID('apply_item_id')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('name');
             $table->foreignID('solicitud_type_id')->onUpdate('cascade')->onDelete('cascade');
             $table->tinyInteger('status')->comment('0:Pendiente,1:En Proceso,2:Finalizada')->default(0);
-            $table->tinyInteger('payment_id')->comment('0:Pendiente,1:Atendida')->default(0);
             $table->text('comments')->nullable();
             $table->timestamps();
         });

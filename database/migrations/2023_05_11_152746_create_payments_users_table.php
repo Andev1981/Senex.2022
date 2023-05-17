@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('payments_users', function (Blueprint $table) {
             $table->id();
+        /*     $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade'); */
             $table->timestamps();
         });
     }

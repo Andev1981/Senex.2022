@@ -22,11 +22,16 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'last_name',
         'email',
         'password',
+        'avatar',
         'rut',
-        'birthday',
-        'state'
+        'birth',
+        'phone',
+        'address_id',
+        'status',
+        'user_type'
     ];
 
     /**
@@ -48,8 +53,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function doctor(){
-        return $this->hasOne(Doctor::class);
+    public function address(){
+        return $this->belongsTo(Address::class);
     }
 
     public function patient(){

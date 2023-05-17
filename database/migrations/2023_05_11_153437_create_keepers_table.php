@@ -15,12 +15,12 @@ return new class extends Migration
     {
         Schema::create('keepers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('last_name');
-            $table->string('email');
-            $table->string('phone');
+            $table->string('name',50);
+            $table->string('last_name',100)->nullable();
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
             $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
-            $table->tinyInteger('relationship')->comment('0:Madre,1:Padre,2:Hijo, 3:Hija, 4:SObrino, 5: Sobrina, 6:Nieto,7:Nieta, 8:Hermano, 9:Hermana')->default(0);
+            $table->tinyInteger('relationship')->nullable()->comment('0:Madre,1:Padre,2:Hijo, 3:Hija, 4:SObrino, 5: Sobrina, 6:Nieto,7:Nieta, 8:Hermano, 9:Hermana');
             $table->timestamps();
         });
     }
