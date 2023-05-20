@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('records', function (Blueprint $table) {
+        Schema::create('applications', function (Blueprint $table) {
             $table->id();
-            $table->text('description',300);
-            $table->text('detail',500)->nullable();
             $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
-            $table->softDeletes();
+            $table->foreignID('application_type_id')->onUpdate('cascade')->onDelete('cascade');
+            $table->float('price',9,0);
+            $table->tinyInteger('status')->comment('0:Pendiente,1:En Proceso,2:Finalizada')->default(0);
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('record');
+        Schema::dropIfExists('applications');
     }
 };

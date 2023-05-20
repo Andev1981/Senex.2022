@@ -3,10 +3,8 @@
 namespace App\Http\Livewire\Paciente;
 
 use App\Models\User;
-use Spatie\Permission\Models\Role;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Str;
 
 class ModalCrear extends Component
 {
@@ -22,28 +20,11 @@ class ModalCrear extends Component
 
 
     protected $rules = [
-        'name' => 'required|min:6|max:45',
-        'last_name' => 'required|min:6|max:45',
+        'name' => 'required|min:3|max:50',
+        'last_name' => 'required|min:3|max:50',
         'phone' => 'required|min:9|max:9',
         'email' => 'required|email|unique:users,email|min:10|max:200',
         'avatar' => 'mimes:png,jpg,jpeg'
-    ];
-
-    protected $messages = [
-        'name.required' => 'El campo nombre es obligatorio',
-        'name.min' => 'Nombre debe tener al menos 6 caracteres',
-        'name.max' => 'Nombre supera el límite permitido de caracteres',
-        'last_name.required' => 'Apellido es requerido',
-        'last_name.min' => 'Apellido debe tener al menos 6 caracteres',
-        'last_name.max' => 'Apellido supera el límite permitido de caracteres',
-        'phone.required' => 'Telefono es requerido',
-        'phone.max' => 'Teléfono supera el máximo',
-        'phone.min' => 'Ingrese número completo',
-        'email.required' => 'Correo es requerido',
-        'email.unique' => 'Correo ya está en uso',
-        'email.min' => 'Correo debe tener al menos 10 caracteres',
-        'email.max' => 'Correo ha superado el límite de caracteres',
-        'avatar.mimes:png,jpg,jpeg' => 'Formato incorrecto de la imágen'
     ];
 
     public function render()
@@ -91,8 +72,6 @@ class ModalCrear extends Component
              $this->resetValidation();
              $this->resetErrorBag();
              $this->reset(['name','last_name','email','phone', 'avatar','file_path']);
-           
-
          }
 
         

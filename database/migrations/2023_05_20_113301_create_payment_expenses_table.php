@@ -13,12 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('application_types', function (Blueprint $table) {
+        Schema::create('payment_expenses', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->foreignID('solicitud_type_id')->onUpdate('cascade')->onDelete('cascade');
-            $table->tinyInteger('status')->comment('0:Pendiente,1:En Proceso,2:Finalizada')->default(0);
-            $table->text('comments')->nullable();
+            $table->float('payment',9,0);
+            $table->dateTime('from_range');
+            $table->dateTime('to_range');
+            $table->string('reference');
+            $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('application_types');
+        Schema::dropIfExists('payment_expenses');
     }
 };

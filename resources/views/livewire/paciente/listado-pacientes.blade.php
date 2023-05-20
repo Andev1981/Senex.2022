@@ -39,7 +39,7 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <table class="w-full text-sm text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr class="text-center">
                                 <th scope="col" class="px-6 py-3">Nombre</th>
@@ -54,17 +54,18 @@
                         <tbody>
                             @foreach ($pacientes as $paciente)
                                 @if ($paciente->user_type === 'Paciente')
-                                    <tr class="text-center bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                        <td class="flex items-center py-4 pl-2 space-x-4">
+                                    <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                                        <td class="flex items-center py-2 pl-2 mx-2">
                                                 @if ($paciente->avatar)
-                                                <img class="w-10 h-10 rounded-full" src="{{ asset($paciente->avatar) }}" alt="">
+                                                <img class="w-10 h-auto rounded-full shadow-xl" src="{{ asset($paciente->avatar) }}" alt="">
                                                     @else
-                                                    <svg class="absolute w-10 h-10 text-gray-400 -left-1" fill="currentColor"
-                                                    viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg">
+                                                    <svg class="w-10 h-auto text-gray-400  rounded-full shadow-xl" fill="currentColor"
+                                                    viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                                         clip-rule="evenodd"></path>
+                                                    </svg>
                                                 @endif
-                                                <div class="font-medium dark:text-white">
+                                                <div class="font-medium dark:text-white ml-2">
                                                     <div class="">{{ $paciente->name }} {{ $paciente->last_name }}</div>
                                                     <div class="font-medium">{{ $paciente->email }}</div>
                                                     <div class="text-sm text-gray-500 dark:text-gray-400">{{ $paciente->rut }}</div>
@@ -88,11 +89,13 @@
                                             @endif
 
                                         </td>
-                                        <td class="flex px-4 py-4">
+                                        <td class="flex px-2 items-center">
 
+                                            <div class="px-2">
 
+                                                @livewire('paciente.show.index', ['paciente' => $paciente], key($paciente->id))
+                                            </div>
                                             @livewire('paciente.modal-editar', ['paciente' => $paciente], key($paciente->id))
-
                                         </td>
                                         <td colspan="2" class="px-6 py-4">
 

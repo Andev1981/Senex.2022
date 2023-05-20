@@ -66,9 +66,9 @@ class User extends Authenticatable
         return $this->hasMany(Prices::class);
     }
 
-    public function solicitudTypes()
+    public function applications()
     {
-        return $this->hasMany(SolicitudType::class);
+        return $this->hasMany(Application::class);
     }
     
 }

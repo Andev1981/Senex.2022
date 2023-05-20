@@ -13,10 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('applications', function (Blueprint $table) {
+        Schema::create('select_options', function (Blueprint $table) {
             $table->id();
-            $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
-            $table->tinyInteger('status')->comment('0:Pendiente,1:En Proceso,2:Finalizada')->default(0);
+            $table->integer('sort_order');
+            $table->string('name');
+            $table->integer('select_optionable_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->string('select_optionable_type');
             $table->timestamps();
         });
     }
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('applications');
+        Schema::dropIfExists('select_options');
     }
 };

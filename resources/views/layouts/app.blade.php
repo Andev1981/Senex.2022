@@ -8,8 +8,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
-    <body>
-        <div class="antialiased bg-gray-50 dark:bg-gray-900">
+    <body class="antialiased">
+        <section class="bg-gray-50 dark:bg-gray-900">
             @livewire('layout.navigation')
             @livewire('layout.sidebar')
 
@@ -18,6 +18,7 @@
                 {{ $slot }}
 
             </main>
+        </section>
 
             @livewireScripts
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

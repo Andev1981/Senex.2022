@@ -13,12 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('records', function (Blueprint $table) {
+        Schema::create('payment_incomes', function (Blueprint $table) {
             $table->id();
-            $table->text('description',300);
-            $table->text('detail',500)->nullable();
-            $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
-            $table->softDeletes();
+            $table->float('pay',9,0);
+            $table->foreignID('application_id')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignID('apply_item_id')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('record');
+        Schema::dropIfExists('payment_incomes');
     }
 };
