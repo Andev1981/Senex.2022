@@ -1,43 +1,14 @@
-@props(['align' => 'right', 'width' => '52', 'contentClasses' => 'py-1 bg-white'])
-
-@php
-switch ($align) {
-    case 'left':
-        $alignmentClasses = 'origin-top-left left-0';
-        break;
-    case 'top':
-        $alignmentClasses = 'origin-top';
-        break;
-    case 'right':
-    default:
-        $alignmentClasses = 'origin-top-right right-0';
-        break;
-}
-
-switch ($width) {
-    case '48':
-        $width = 'w-48';
-        break;
-}
-@endphp
-
-<div class="relative" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
-    <div @click="open = ! open">
-        {{ $trigger }}
-    </div>
-
-    <div x-show="open"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="transform opacity-0 scale-95"
-            x-transition:enter-end="transform opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-75"
-            x-transition:leave-start="transform opacity-100 scale-100"
-            x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute z-50 mt-2 {{ $width }} rounded-md shadow-lg {{ $alignmentClasses }}"
-            style="display: none;"
-            @click="open = false">
-        <div class="rounded-md ring-1 ring-black ring-opacity-5 {{ $contentClasses }}">
-            {{ $content }}
+<div>
+    <label for="{{ $name }}"
+        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ $label }}</label>
+    <div class="relative">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <img src="{{ asset('icons/family.png') }}" alt="falimiar" class="w-5 h-5 mr-2">
         </div>
+        <select id="{{ $name }}"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <option selected>-- seleccione una opción -</option>
+            {{ $slot }}
+        </select>
     </div>
 </div>

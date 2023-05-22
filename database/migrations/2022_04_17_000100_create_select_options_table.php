@@ -17,8 +17,7 @@ return new class extends Migration
             $table->id();
             $table->integer('sort_order');
             $table->string('name');
-            $table->integer('select_optionable_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->string('select_optionable_type');
+            $table->string('model_type');
             $table->timestamps();
         });
     }

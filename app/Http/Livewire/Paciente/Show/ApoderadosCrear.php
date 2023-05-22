@@ -2,21 +2,34 @@
 
 namespace App\Http\Livewire\Paciente\Show;
 
-use App\Models\Keeper;
-use App\Models\User;
 use Livewire\Component;
-use Livewire\WithFileUploads;
+use App\Models\Address;
+use App\Models\Comuna;
+use App\Models\Keeper;
+use App\Models\Region;
+use App\Models\SelectOption;
+use App\Models\User;
 
 class ApoderadosCrear extends Component
 {
-    use WithFileUploads;
 
     public User $paciente;
-    public $open = 'hidden';
-    public $name = "";
-    public $last_name = "";
-    public $phone = "";
-    public $email = "";
+    public $open = 'hidden', 
+           $name = "", 
+           $last_name = "",
+           $phone = "",
+           $email = "",
+           $paises = [],
+           $pais = "",
+           $regiones = [],
+           $region = 1,
+           $comunas = [],
+           $comuna,
+           $street = "",
+           $number,
+           $address = "",
+           $parentescos = [],
+           $parentesco;
 
 
     protected $rules = [
@@ -24,6 +37,11 @@ class ApoderadosCrear extends Component
         'last_name' => 'required|min:3|max:50',
         'phone' => 'required|min:9|max:9',
         'email' => 'required|email|unique:users,email|min:10|max:200',
+        'street' => 'required|max:150',
+        'number' => 'required|integer',
+        'address' => 'required|max:150',
+        'comuna' => 'required',
+        'parentesco' => 'required',
     ];
 
     public function render()
@@ -34,15 +52,30 @@ class ApoderadosCrear extends Component
     public function mount(User $paciente){
         $this->paciente = $paciente;
 
+       /*  $this->paises = Country::where('id',1)->first(); */
+        /* $this->regiones = Region::all(); */
+        $this->regiones = Region::where('id',1)->get();
+        $this->comunas = Comuna::where('region_id',1)->get();
+        $this->parentescos = SelectOption::where('model_type', 'Keepers')->get();
+        
+
     }
 
-    public function updated($phone){
-        $this->validateOnly($phone);
+    public function updated($propertyName)
+    {
+        $this->validateOnly($propertyName);
     }
 
     public function save(){
 
         $this->validate();
+        
+        $address = Address::create([
+            'street' => $this->street,
+            'number' => $this->number,
+            'address' => $this->address,
+            'comuna_id' => $this->comuna,
+        ]);
 
         $keeper = Keeper::create([
            'name' => $this->name ,
@@ -50,10 +83,12 @@ class ApoderadosCrear extends Component
            'email' => $this->email,
            'phone' => $this->phone,
            'user_id' => $this->paciente->id,
+           'address_id' => $address->id,
+           'parentesco' => $this->parentesco,
         ]);
 
 
-        $this->emit('success');
+        $this->emit('success-apoderado');
         $this->dispatchBrowserEvent('swal-success');
 
         $this->clear();
@@ -64,6 +99,20 @@ class ApoderadosCrear extends Component
     public function clear(){
         $this->resetValidation();
         $this->resetErrorBag();
-        $this->reset(['name','last_name','email','phone']);
+        $this->reset([
+                        'name',
+                        'last_name',
+                        'email',
+                        'phone',
+                        'parentesco',
+                        'comuna',
+                        'street',
+                        'number',
+                        'address',
+                    ]);
     }
+
+  /*   public function updatedRegion($id){
+        $this->comunas = Comuna::where('region_id',$id)->get();
+    } */
 }

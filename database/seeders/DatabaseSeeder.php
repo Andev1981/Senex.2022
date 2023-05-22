@@ -15,10 +15,14 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // \App\Models\User::factory(10)->create();
+        $this->call(CountrySeeder::class);
+        $this->call(RegionSeeder::class);
+        $this->call(ComunaSeeder::class);
         $this->call(PermissionTableSeeder::class);
         $this->call(CreateAdminUserSeeder::class);
         $this->call(QuizzQuestionSeeder::class);
         $this->call(SelectOptionSeeder::class);
+       
 
     }
 }

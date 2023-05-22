@@ -21,19 +21,7 @@ class CreateAdminUserSeeder extends Seeder
      */
     public function run()
     {
-        $country = Country::create([
-            'name' => 'Chile'
-        ]);
-
-        $region = Region::create([
-            "name"=> "Región Metropolitana",
-            "country_id" => $country->id
-        ]);
-
-        $comuna = Comuna::create([
-            "name"=> "Santiago",
-            "region_id" => $region->id
-        ]);
+       
 
         $address = Address::create([
             'street' => 'Calle prueba',
@@ -41,7 +29,7 @@ class CreateAdminUserSeeder extends Seeder
             'address' => 'Pasaje las pruebas #2023',
             'latitude' => null,
             'longitude' => null,
-            'comuna_id' => $comuna->id,
+            'comuna_id' => 1,
 
         ]);
         //#1

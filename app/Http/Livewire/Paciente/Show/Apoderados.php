@@ -11,6 +11,7 @@ class Apoderados extends Component
 {
     use WithPagination;
     public User $paciente;
+    protected $listeners = ['success-apoderado' => 'render'];
 
     public function render()
     {
