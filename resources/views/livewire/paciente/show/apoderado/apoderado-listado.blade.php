@@ -5,7 +5,7 @@
         <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
             <div class="flex flex-col items-center justify-end md:flex-row md:space-y-0 md:space-x-4">
                 <div class="flex justify-end pt-2 pr-2 -mb-5 shadow-xl">
-                    @livewire('paciente.show.apoderados-crear', ['paciente' => $paciente])
+                    @livewire('paciente.show.apoderado.apoderado-crear', ['paciente' => $paciente])
                 </div>
             </div>
             <div class="w-full overflow-x-auto">
@@ -13,12 +13,12 @@
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr class="text-center">
                             <th scope="col" class="px-6 py-3">Nombre</th>
+                            <th scope="col" class="px-6 py-3">Parentesco</th>
                             <th scope="col" class="px-6 py-3">Correo</th>
                             <th scope="col" class="px-6 py-3">Teléfono</th>
                             <th scope="col" class="px-6 py-3">Dirección</th>
-                            <th scope="col" class="px-6 py-3">Ciudad</th>
+                            <th scope="col" class="px-6 py-3">Región</th>
                             <th scope="col" class="px-6 py-3">Comuna</th>
-                            <th scope="col" class="px-6 py-3">Parentesco</th>
                             <th colspan="2" class="px-6 py-3">
                                 <span class="sr-only">Actions</span>
                             </th>
@@ -28,24 +28,25 @@
                         @foreach ($keepers as $keeper)
                             <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                 <td class="items-center flex-1 py-2 pl-2 mx-2 font-medium">
-                                    {{ $keeper->name . ' ' . $keeper->last_name }}
+                                    {!! $keeper->name . '&nbsp;' . $keeper->last_name !!}
                                 </td>
+                                <td class="px-6 py-4">{{ $keeper->parentesco }}</td>
                                 <td class="px-6 py-4">
                                     {{ $keeper->email }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    {{ '+56 ' . $keeper->phone }}
+                                    {!! '+56&nbsp;' . $keeper->phone !!}
                                 </td>
                                 <td class="px-6 py-4">
-                                    {{ $keeper->address->street . ' #' . $keeper->address->number }}
+                                    {!! $keeper->address->street . '&nbsp;#' . $keeper->address->number !!}
                                 </td>
                                 <td class="px-6 py-4">{{ $keeper->address->comuna->region->name }}
                                 </td>
                                 <td class="px-6 py-4">{{ $keeper->address->comuna->name }}
                                 </td>
-                                <td class="px-6 py-4">{{ $keeper->parentesco }}</td>
+
                                 <td colspan="2" class="px-6 py-4">
-                                    @livewire('paciente.show.apoderados-editar', ['keeper' => $keeper], key($keeper->id))
+                                    @livewire('paciente.show.apoderado.apoderado-editar', ['keeper' => $keeper], key($keeper->id))
                                 </td>
                             </tr>
                         @endforeach

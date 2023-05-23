@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Paciente\Show;
+namespace App\Http\Livewire\Paciente\Show\Apoderado;
 
 use Livewire\Component;
 use App\Models\Address;
@@ -9,8 +9,9 @@ use App\Models\Keeper;
 use App\Models\Region;
 use App\Models\SelectOption;
 
-class ApoderadosEditar extends Component
+class ApoderadoEditar extends Component
 {
+
     public Keeper $keeper;
     public Address $address;
     public $open = 'hidden', 
@@ -21,12 +22,7 @@ class ApoderadosEditar extends Component
            $comunas = [],
            $parentescos = [];
 
-    public function render()
-    {
-        return view('livewire.paciente.show.apoderados-editar');
-    }
 
-    
     protected $rules = [
         'keeper.name' => 'required|min:3|max:50',
         'keeper.last_name' => 'required|min:3|max:50',
@@ -47,6 +43,11 @@ class ApoderadosEditar extends Component
         $this->parentescos = SelectOption::where('model_type', 'Keepers')->get();
         
 
+    }
+
+    public function render()
+    {
+        return view('livewire.paciente.show.apoderado.apoderado-editar');
     }
 
      public function updated($propertyName)
@@ -82,5 +83,4 @@ class ApoderadosEditar extends Component
         $this->resetErrorBag();
 
     }
-
 }

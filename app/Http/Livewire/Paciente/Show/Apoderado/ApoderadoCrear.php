@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Paciente\Show;
+namespace App\Http\Livewire\Paciente\Show\Apoderado;
 
 use Livewire\Component;
 use App\Models\Address;
@@ -10,10 +10,9 @@ use App\Models\Region;
 use App\Models\SelectOption;
 use App\Models\User;
 
-class ApoderadosCrear extends Component
+class ApoderadoCrear extends Component
 {
-
-    public User $paciente;
+      public User $paciente;
     public $open = 'hidden', 
            $name = "", 
            $last_name = "",
@@ -31,7 +30,7 @@ class ApoderadosCrear extends Component
            $parentescos = [],
            $parentesco;
 
-
+           
     protected $rules = [
         'name' => 'required|min:3|max:50',
         'last_name' => 'required|min:3|max:50',
@@ -44,21 +43,18 @@ class ApoderadosCrear extends Component
         'parentesco' => 'required',
     ];
 
-    public function render()
-    {
-        return view('livewire.paciente.show.apoderados-crear');
-    }
-
     public function mount(User $paciente){
         $this->paciente = $paciente;
-
-       /*  $this->paises = Country::where('id',1)->first(); */
-        /* $this->regiones = Region::all(); */
         $this->regiones = Region::where('id',1)->get();
         $this->comunas = Comuna::where('region_id',1)->get();
         $this->parentescos = SelectOption::where('model_type', 'Keepers')->get();
         
 
+    }
+
+    public function render()
+    {
+        return view('livewire.paciente.show.apoderado.apoderado-crear');
     }
 
     public function updated($propertyName)
@@ -111,8 +107,4 @@ class ApoderadosCrear extends Component
                         'address',
                     ]);
     }
-
-  /*   public function updatedRegion($id){
-        $this->comunas = Comuna::where('region_id',$id)->get();
-    } */
 }

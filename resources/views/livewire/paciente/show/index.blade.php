@@ -1,8 +1,12 @@
 <div>
-    <button type="button" data-drawer-target="{{ $paciente->id }}" data-drawer-show="{{ $paciente->id }}" aria-controls="drawer-detail" class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+    <button type="button" data-drawer-target="{{ $paciente->id }}" data-drawer-show="{{ $paciente->id }}"
+        aria-controls="drawer-detail"
+        class="py-2 px-3 flex items-center text-sm font-medium text-center text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-2 -ml-0.5">
             <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"></path>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z"></path>
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z">
+            </path>
         </svg>
         Detalles
     </button>
@@ -49,47 +53,28 @@
                     <li class="mr-2" role="presentation">
                         <button
                             class="inline-block p-4 border-b-2 rounded-t-lg text-blue-600 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-500 border-blue-600 dark:border-blue-500"
-                            id="atenciones-tab" 
-                            data-tabs-target="#atenciones" 
-                            type="button" 
-                            role="tab"
-                            aria-controls="atenciones" 
-                            aria-selected="true">
+                            id="atenciones-tab" data-tabs-target="#atenciones" type="button" role="tab"
+                            aria-controls="atenciones" aria-selected="true">
                             Atenciones
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
-                        <button 
-                            class="inline-block p-4 border-b-2 rounded-t-lg" 
-                            id="pagos-tab"
-                            data-tabs-target="#pagos" 
-                            type="button" 
-                            role="tab" 
-                            aria-controls="pagos"
+                        <button class="inline-block p-4 border-b-2 rounded-t-lg" id="pagos-tab"
+                            data-tabs-target="#pagos" type="button" role="tab" aria-controls="pagos"
                             aria-selected="false">
                             Pagos y Cuentas
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
-                        <button 
-                            class="inline-block p-4 border-b-2 rounded-t-lg" 
-                            id="ficha-tab"
-                            data-tabs-target="#ficha" 
-                            type="button" 
-                            role="tab" 
-                            aria-controls="ficha"
+                        <button class="inline-block p-4 border-b-2 rounded-t-lg" id="ficha-tab"
+                            data-tabs-target="#ficha" type="button" role="tab" aria-controls="ficha"
                             aria-selected="false">
                             Ficha
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
-                        <button 
-                            class="inline-block p-4 border-b-2 rounded-t-lg" 
-                            id="apoderados-tab"
-                            data-tabs-target="#apoderados" 
-                            type="button" 
-                            role="tab" 
-                            aria-controls="apoderados"
+                        <button class="inline-block p-4 border-b-2 rounded-t-lg" id="apoderados-tab"
+                            data-tabs-target="#apoderados" type="button" role="tab" aria-controls="apoderados"
                             aria-selected="false">
                             Apoderados
                         </button>
@@ -99,21 +84,21 @@
             <div id="myTabContent">
                 <div class="p-4 rounded-lg bg-gray-200 dark:bg-gray-800" id="atenciones" role="tabpanel"
                     aria-labelledby="atenciones-tab">
-                    @livewire('paciente.show.listado-atenciones',['paciente' => $paciente], key($paciente->id))
+                    @livewire('paciente.show.atenciones.atenciones-listado', ['paciente' => $paciente], key($paciente->id))
                 </div>
                 <div class="hidden p-4 rounded-lg bg-gray-200 dark:bg-gray-800" id="pagos" role="tabpanel"
                     aria-labelledby="pagos-tab">
-                    @livewire('paciente.show.pagos',['paciente' => $paciente], key($paciente->id))
+                    @livewire('paciente.show.pagos', ['paciente' => $paciente], key($paciente->id))
 
                 </div>
                 <div class="hidden p-4 rounded-lg bg-gray-200 dark:bg-gray-800" id="ficha" role="tabpanel"
                     aria-labelledby="ficha-tab">
-                    @livewire('paciente.show.ficha',['paciente' => $paciente], key($paciente->id))
+                    @livewire('paciente.show.ficha', ['paciente' => $paciente], key($paciente->id))
 
                 </div>
                 <div class="hidden p-4 rounded-lg bg-gray-200 dark:bg-gray-800" id="apoderados" role="tabpanel"
                     aria-labelledby="apoderados-tab">
-                    @livewire('paciente.show.apoderados',['paciente' => $paciente], key($paciente->id))
+                    @livewire('paciente.show.apoderado.apoderado-listado', ['paciente' => $paciente], key($paciente->id))
                 </div>
             </div>
         </div>
@@ -121,7 +106,7 @@
         <h5 id="drawer-label"
             class="inline-flex items-center my-6 text-sm font-semibold text-gray-500 uppercase dark:text-gray-400">
         </h5>
-        <button  type="button" data-drawer-dismiss="{{ $paciente->id }}" aria-controls="{{ $paciente->id }}"
+        <button type="button" data-drawer-dismiss="{{ $paciente->id }}" aria-controls="{{ $paciente->id }}"
             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 right-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
             <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg">

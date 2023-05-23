@@ -1,5 +1,6 @@
 import './bootstrap';
 import 'flowbite';
+import 'flowbite-datepicker';
 
 import Alpine from 'alpinejs';
 
