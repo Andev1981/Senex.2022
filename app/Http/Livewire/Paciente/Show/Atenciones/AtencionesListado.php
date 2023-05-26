@@ -12,10 +12,11 @@ class AtencionesListado extends Component
 
     use WithPagination;
     public User $paciente;
+     protected $listeners = ['success-atencion' => 'render'];
     
     public function render()
     {
-         $atenciones = Application::where('user_id',$this->paciente->id)->paginate(5);
+         $atenciones = Application::where('user_id',$this->paciente->id)->orderBy('id','desc')->paginate(5);
 
         return view('livewire.paciente.show.atenciones.atenciones-listado', compact('atenciones'));
     }

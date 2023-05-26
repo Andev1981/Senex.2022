@@ -42,11 +42,10 @@
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr class="text-center">
-                                <th scope="col" class="px-6 py-3">Estado</th>
                                 <th scope="col" class="px-6 py-3">Nombre</th>
-                                <th scope="col" class="px-6 py-3">Rut</th>
+                                <th scope="col" class="px-6 py-3">Apellido</th>
                                 <th scope="col" class="px-6 py-3">Teléfono</th>
-                                <th scope="col" class="px-6 py-3">Direccion</th>
+                                <th scope="col" class="px-6 py-3">Email</th>
                                 <th scope="col" class="px-6 py-3">
                                     Estado
                                 </th>
@@ -59,15 +58,16 @@
                             @foreach ($doctores as $doctor)
                                 @if ($doctor->user_type === 'Doctor')
                                     <tr class="text-center bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                        <td class="px-6 py-4">{{ $doctor->email }}</td>
                                         <td scope="row"
                                             class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                             {{ $doctor->name }}
                                         </td>
-                                        <td class="px-6 py-4">{{ $doctor->last_name }}</td>
-                                        <td class="px-6 py-4">{{ $doctor->rut }}</td>
+                                        <td scope="row"
+                                            class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {{ $doctor->last_name }}
+                                        </td>
                                         <td class="px-6 py-4">{{ $doctor->phone }}</td>
-                                        <td class="px-6 py-4">{{ $doctor->address->street }}</td>
+                                        <td class="px-6 py-4">{{ $doctor->email }}</td>
                                         <td class="px-6 py-4">
                                             @if ($doctor->status === 1)
                                                 <span

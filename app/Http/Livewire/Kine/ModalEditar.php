@@ -4,20 +4,24 @@ namespace App\Http\Livewire\Kine;
 
 use App\Models\User;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ModalEditar extends Component
 {
+
+     use WithFileUploads;
 
     public $doctor;
 
     public $open = 'hidden';
     public $openDel = 'hidden';
+    public $file_path;
 
     
     protected $rules = [
         'doctor.name' => 'required|min:3|max:50',
         'doctor.last_name' => 'required|min:5|max:50',
-        'doctor.phone' => 'required|min:12|max:12',
+        'doctor.phone' => 'required|min:9|max:9',
     ];
 
     protected $messages = [
@@ -44,6 +48,10 @@ class ModalEditar extends Component
     public function save(){
 
         $this->validate();
+
+         if($this->file_path){
+            $this->doctor->avatar = 'storage/'. $this->file_path->store('avatars','public');
+        }
 
         $this->doctor->save();
 

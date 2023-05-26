@@ -2,40 +2,6 @@
     <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
         <!-- Start coding here -->
 
-        <div class="flex flex-col items-stretch">
-
-            <div date-rangepicker class="flex items-center">
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor"
-                            viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                    <input name="start" type="text"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="Select date start">
-                </div>
-                <span class="mx-4 text-gray-500">to</span>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor"
-                            viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                    <input name="end" type="text"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="Select date end">
-                </div>
-            </div>
-
-
-        </div>
         <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
             <div class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
                 <div class="w-full md:w-5/6">
@@ -56,10 +22,9 @@
                         </div>
                     </div>
                 </div>
-
                 <div
                     class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
-                    @livewire('paciente.modal-crear')
+                    @livewire('paciente.show.atenciones.atenciones-crear', ['paciente' => $paciente])
 
                 </div>
             </div>
@@ -67,9 +32,10 @@
                 <table class="w-full text-sm text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr class="text-center">
-                            <th scope="col" class="px-6 py-3">Nombre</th>
-                            <th scope="col" class="px-6 py-3">Teléfono</th>
-                            <th scope="col" class="px-6 py-3">Dirección</th>
+                            <th scope="col" class="px-6 py-3">Fecha&nbsp;Creación</th>
+                            <th scope="col" class="px-6 py-3">Derivado</th>
+                            <th scope="col" class="px-6 py-3">Desde</th>
+                            <th scope="col" class="px-6 py-3">Valor</th>
                             <th scope="col" class="px-6 py-3">Estado</th>
                             <th colspan="2" class="px-6 py-3">
                                 <span class="sr-only">Actions</span>
@@ -77,48 +43,47 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($atenciones as $atencion)
+                        @foreach ($atenciones as $application)
                             <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                <td class="flex items-center py-2 pl-2 mx-2">
-                                    @if ($paciente->avatar)
-                                        <img class="w-10 h-auto rounded-full shadow-xl"
-                                            src="{{ asset($paciente->avatar) }}" alt="">
-                                    @else
-                                        <svg class="w-10 h-auto text-gray-400  rounded-full shadow-xl"
-                                            fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill-rule="evenodd"
-                                                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                                clip-rule="evenodd"></path>
-                                        </svg>
-                                    @endif
-                                    <div class="font-medium dark:text-white ml-2">
-                                        <div class="">{{ $paciente->name }} {{ $paciente->last_name }}</div>
-                                        <div class="font-medium">{{ $paciente->email }}</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $paciente->rut }}</div>
-                                    </div>
-
-
-                                </td>
-                                <td class="px-6 py-4">{{ $paciente->phone }}</td>
-                                <td class="px-6 py-4">{{ $paciente->address->street }}</td>
                                 <td class="px-6 py-4">
-                                    @if ($paciente->status === 1)
+                                    {{ date('d-m-Y', strtotime($application->created_at)) }}
+                                </td>
+                                <td class="py-2 pl-2 mx-2">
+                                    {{ $application->derivado }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{ $application->desde }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    ${{ number_format($application->price, 0) }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if ($application->status === 0)
                                         <span
-                                            class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-green-600 rounded-full dark:bg-green-200 dark:text-green-900">
-                                            Activo
+                                            class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
+                                            <span class="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></span>
+                                            No&nbsp;iniciada
                                         </span>
-                                    @else
+                                    @elseif ($application->status === 1)
                                         <span
-                                            class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-red-600 rounded-full dark:bg-green-200 dark:text-red-900">
-                                            Deshabilitado
+                                            class="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
+                                            <span class="w-2 h-2 mr-1 bg-green-500 rounded-full"></span>
+                                            En&nbsp;proceso
+                                        </span>
+                                    @elseif ($application->status === 2)
+                                        <span
+                                            class="inline-flex items-center bg-teal-100 text-teal-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-teal-900 dark:text-teal-300">
+                                            <span class="w-2 h-2 mr-1 bg-teal-500 rounded-full"></span>
+                                            Finalizada
                                         </span>
                                     @endif
 
                                 </td>
-                                <td class="flex px-2 items-center">
-                                </td>
-                                <td colspan="2" class="px-6 py-4">
-
+                                <td colspan="2" class="flex px-6 py-4">
+                                    <div class="px-2">
+                                        @livewire('paciente.show.atenciones.atencion-items', ['application' => $application], key($application->id))
+                                    </div>
+                                    @livewire('paciente.show.atenciones.atenciones-editar', ['application' => $application], key($application->id))
                                 </td>
                             </tr>
                         @endforeach
@@ -128,58 +93,6 @@
             <nav class="flex flex-col items-start justify-between p-4 space-y-3 md:flex-row md:items-center md:space-y-0"
                 aria-label="Table navigation">
                 {{ $atenciones->links() }}
-                {{--   <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                            Showing
-                            <span class="font-semibold text-gray-900 dark:text-white">1-10</span>
-                            of
-                            <span class="font-semibold text-gray-900 dark:text-white">1000</span>
-                        </span>
-                        <ul class="inline-flex items-stretch -space-x-px">
-                            <li>
-                                <a href="#"
-                                    class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                    <span class="sr-only">Previous</span>
-                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd"
-                                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">2</a>
-                            </li>
-                            <li>
-                                <a href="#" aria-current="page"
-                                    class="z-10 flex items-center justify-center px-3 py-2 text-sm leading-tight border text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">3</a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">...</a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center justify-center px-3 py-2 text-sm leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">100</a>
-                            </li>
-                            <li>
-                                <a href="#"
-                                    class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                                    <span class="sr-only">Next</span>
-                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd"
-                                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                            </li>
-                        </ul> --}}
             </nav>
         </div>
     </div>

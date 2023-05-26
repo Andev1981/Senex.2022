@@ -1,38 +1,36 @@
 <div>
-    <div class="flex items-center space-x-2">
-        <button type="button" wire:click="$set('open','')"
-            class="flex items-center px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
-                aria-hidden="true">
-                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                <path fill-rule="evenodd"
-                    d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                    clip-rule="evenodd" />
-            </svg>
-            Editar
-        </button>
-           
-        <button type="button" wire:click="$set('openDel','')"
-            class="flex items-center px-2 py-1 text-sm font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
-                aria-hidden="true">
-                <path fill-rule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                    clip-rule="evenodd" />
-            </svg>
-            Eliminar
-        </button>
-    </div>
+    <button type="button" wire:click="$set('open','')"
+        class="flex items-center px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
+            aria-hidden="true">
+            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+            <path fill-rule="evenodd"
+                d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                clip-rule="evenodd" />
+        </svg>
+        Editar
+    </button>
 
-   
+    {{--    <button type="button" wire:click="$set('openDel','')"
+        class="flex items-center px-2 py-1 text-sm font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
+            aria-hidden="true">
+            <path fill-rule="evenodd"
+                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd" />
+        </svg>
+        Eliminar
+    </button> --}}
+
     <div
-    class="{{ $open }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
-    <div class="relative w-full h-full max-w-2xl p-4 md:h-auto">
+        class="{{ $open }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center w-full md:inset-0 h-modal md:h-full flex">
+        <div class="relative w-full h-full max-w-4xl p-4 md:h-auto">
 
             <!-- Modal content -->
             <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
                 <!-- Modal header -->
-                <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
+                <div
+                    class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                         Editando cliente
                     </h3>
@@ -65,16 +63,14 @@
                                             fill="currentColor" />
                                     </svg>
                                 </div>
-                                @if($paciente->avatar || $file_path)
+                                @if ($paciente->avatar || $file_path)
 
                                     @if ($file_path)
-                                    <img class="w-16 h-16 rounded" src="{{ $file_path->temporaryURL() }}"
-                                    alt="New Avatar">
+                                        <img class="w-16 h-16 rounded" src="{{ $file_path->temporaryURL() }}"
+                                            alt="New Avatar">
                                     @else
-                                    <img class="w-16 h-16 rounded" src="{{ $paciente->avatar }}"
-                                    alt="Old avatar">
+                                        <img class="w-16 h-16 rounded" src="{{ $paciente->avatar }}" alt="Old avatar">
                                     @endif
-                                   
                                 @else
                                     <svg wire:loading.remove wire:target='paciente.avatar'
                                         class="absolute w-16 h-16 text-gray-400 -left-1" fill="currentColor"
@@ -89,7 +85,8 @@
                             </div>
                             <input
                                 class="block mt-2 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                                aria-describedby="file_input_help" wire:model="file_path" id="file_input" type="file">
+                                aria-describedby="file_input_help" wire:model="file_path" id="file_input"
+                                type="file">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-300" id="file_input_help">SVG, PNG, JPG
                                 o GIF (MAX. 800x400px).</p>
                             @error('avatar')
@@ -100,7 +97,7 @@
 
                         </div>
                     </div>
-                    <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                    <div class="grid gap-4 mb-4 sm:grid-cols-3">
                         <div>
                             <label for="paciente.name"
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nombre</label>
@@ -172,8 +169,8 @@
                         <div>
                             <label for="paciente.phone"
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                Teléfono 
-                                <small class="italic text-gray-400">ej:(912345678)</small> 
+                                Teléfono
+                                <small class="italic text-gray-400">ej:(912345678)</small>
                             </label>
                             <div class="relative">
                                 <div
@@ -193,12 +190,183 @@
                                     <h5 class="pr-2 text-xs text-gray-500">56</h5>
                                 </div>
 
-                                <small class="absolute inset-y-0 right-0 flex pt-2 pr-6 italic text-gray-400 right">{{ strlen($paciente->phone) }} /9</small>
+                                <small
+                                    class="absolute inset-y-0 right-0 flex pt-2 pr-6 italic text-gray-400 right">{{ strlen($paciente->phone) }}
+                                    /9</small>
                                 <input wire:model="paciente.phone" type="number"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-16 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500">
-                                </div>
+                            </div>
 
                             @error('paciente.phone')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="paciente.rut"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rut
+                                <small class="italic text-gray-500">(ej: 12345678-9)</small>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor"
+                                        class="w-5 h-5 text-gray-500 dark:text-gray-400">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                                    </svg>
+
+                                </div>
+                                <input type="text" wire:model.defer="paciente.rut"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                                    placeholder="12345678-9">
+                            </div>
+                            @error('paciente.rut')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="paciente.fecha_nacimiento"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fecha&nbsp;Nacimiento</label>
+                            <div class="relative">
+                                <input type="date" wire:model.defer="paciente.fecha_nacimiento"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500">
+                            </div>
+                            @error('paciente.fecha_nacimiento')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="grid gap-4 mb-4 sm:grid-cols-1">
+                        <div class="relative">
+                            <div>
+                                <label for=""
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Región + Comuna
+
+                                    {{-- <small class="italic text-gray-400"></small> --}}
+                                </label>
+                                <div class="flex">
+                                    <button id="dropdown-button-2" data-dropdown-toggle="dropdown-search-city"
+                                        class="flex-shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center text-gray-500 bg-gray-100 border border-gray-300 rounded-l-lg hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700 dark:text-white dark:border-gray-600"
+                                        type="button">
+                                        <img src="{{ asset('icons/flags/area-with-pins.png') }}" alt="Flag chile"
+                                            class="w-4 h-4 mr-2">
+
+                                        {{ $regiones[0]->name }} <svg aria-hidden="true" class="w-4 h-4 ml-1"
+                                            fill="currentColor" viewBox="0 0 20 20"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="dropdown-search-city"
+                                        class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700"
+                                        wire:model.defer="regiones">
+                                        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200"
+                                            aria-labelledby="dropdown-button-2">
+                                            @foreach ($regiones as $region)
+                                                <li>
+                                                    <button type="button" {{--  wire:click="$set('selectedRegion', {{ $region->id }})" --}}
+                                                        class="inline-flex w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+                                                        role="menuitem">
+                                                        <div class="inline-flex items-center">
+                                                            {{ $region->name }}
+                                                        </div>
+                                                    </button>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+
+                                    <label for="comuna" class="sr-only">Seleccione comuna</label>
+                                    <select wire:model="address.comuna_id"
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        {{--  <option selected readonly> -- seleccione comuna --</option> --}}
+                                        @foreach ($comunas as $comuna)
+                                            <option value="{{ $comuna->id }}">
+                                                {{ $comuna->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            @error('comuna')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                        <div>
+                            <label for="street"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Calle /
+                                Pasaje</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <img src="{{ asset('icons/location-pin.png') }}" class="w-5 h-5" alt="">
+                                </div>
+                                <input type="text" name="address" wire:model.defer="address.street"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                                    placeholder="nombre de calle o pasaje">
+
+                            </div>
+                            @error('address.street')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label for="number"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Número</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5" />
+                                    </svg>
+
+                                </div>
+                                <input type="number" name="number" wire:model.defer="address.number"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                                    placeholder="numeración #12345">
+                            </div>
+                            @error('keeper.address.number')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                    </div>
+                    <div class="grid gap-4 mb-4 sm:grid-cols-1">
+                        <div>
+                            <label for="address"
+                                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dirección</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                                    </svg>
+
+                                </div>
+                                <input type="text" name="address" wire:model.defer="address.address"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                                    placeholder="detalle de la dirección">
+                            </div>
+                            @error('address.address')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
                                 </p>
@@ -235,41 +403,38 @@
         </div>
     </div>
 
-     {{-- Modal Eliminar --}}
-     <div
-     class="{{ $openDel }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
-     <div class="relative w-full h-full max-w-2xl p-4 md:h-auto">
-         <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-             <button type="button" wire:click="$set('openDel','hidden')"
-                 class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white">
-                 <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 20 20"
-                     xmlns="http://www.w3.org/2000/svg">
-                     <path fill-rule="evenodd"
-                         d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                         clip-rule="evenodd" />
-                 </svg>
-                 <span class="sr-only">Close modal</span>
-             </button>
-             <div class="p-6 text-center">
-                 <svg aria-hidden="true" class="mx-auto mb-4 text-gray-400 w-14 h-14 dark:text-gray-200"
-                     fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                         d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                 </svg>
-                 <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">Seguro que desea eliminar al
-                     al cliente?</h3>
-                 <button type="button" wire:click="delete"
-                     class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2">Si,
-                     Estoy Seguro</button>
-                 <button wire:click="$set('openDel','hidden')" type="button"
-                     class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">No,
-                     cancelar</button>
-             </div>
-         </div>
-     </div>
- </div>
- 
+    {{-- Modal Eliminar --}}
+    {{--  <div
+        class="{{ $openDel }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
+        <div class="relative w-full h-full max-w-2xl p-4 md:h-auto">
+            <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                <button type="button" wire:click="$set('openDel','hidden')"
+                    class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white">
+                    <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+                <div class="p-6 text-center">
+                    <svg aria-hidden="true" class="mx-auto mb-4 text-gray-400 w-14 h-14 dark:text-gray-200"
+                        fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">Seguro que desea eliminar al
+                        al cliente?</h3>
+                    <button type="button" wire:click="delete"
+                        class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2">Si,
+                        Estoy Seguro</button>
+                    <button wire:click="$set('openDel','hidden')" type="button"
+                        class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">No,
+                        cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div> --}}
+
 </div>
-@push('scripts')
-    <script></script>
-@endpush

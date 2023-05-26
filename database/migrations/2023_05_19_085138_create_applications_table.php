@@ -15,6 +15,9 @@ return new class extends Migration
     {
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
+            $table->string('derivado')->nullable();
+            $table->string('desde')->nullable();
+            $table->text('comments')->nullable();
             $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignID('application_type_id')->onUpdate('cascade')->onDelete('cascade');
             $table->float('price',9,0);

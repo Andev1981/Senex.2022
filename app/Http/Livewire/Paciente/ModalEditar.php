@@ -2,6 +2,9 @@
 
 namespace App\Http\Livewire\Paciente;
 
+use App\Models\Address;
+use App\Models\Comuna;
+use App\Models\Region;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -11,38 +14,34 @@ class ModalEditar extends Component
 
     use WithFileUploads;
     public User $paciente;
+     public Address $address;
 
     public $open = 'hidden';
     public $openDel = 'hidden';
     public $file_path;
+    public  $regiones = [];
+    public  $comunas = [];
 
     
     protected $rules = [
         'paciente.name' => 'required|min:3|max:50',
         'paciente.last_name' => 'required|min:3|max:50',
         'paciente.phone' => 'required|min:9|max:9',
+        'paciente.rut' => 'required|max:10|min:9',
+        'paciente.fecha_nacimiento' => 'required|date',
+        'paciente.number' => 'required|integer',
+        'address.street' => 'required|max:150',
+        'address.number' => 'required|integer',
+        'address.address' => 'required|max:150',
+        'address.comuna_id' => 'required',
     ];
-/* 
-    protected $messages = [
-        'paciente.name.required' => 'Nombre es requerido',
-        'paciente.name.min' => 'Nombre debe tener al menos 3 caracteres',
-        'paciente.name.max' => 'Nombre supera el límite permitido de caracteres',
-        'paciente.last_name.required' => 'Apellido es requerido',
-        'paciente.last_name.min' => 'Apellido debe tener al menos 3 caracteres',
-        'paciente.last_name.max' => 'Apellido supera el límite permitido de caracteres',
-        'paciente.phone.required' => 'Telefono es requerido',
-        'paciente.phone.max' => 'Teléfono supera el máximo',
-        'paciente.phone.min' => 'Ingrese número completo',
-        'name.required' => 'El campo nombre es obligatorio',
-    ]; */
 
     public function mount(User $paciente){
         $this->paciente = $paciente;
+        $this->address = $paciente->address;
+        $this->regiones = Region::where('id',1)->get();
+        $this->comunas = Comuna::where('region_id',1)->get();
 
-    }
-
-    public function updated($phone){
-        $this->validateOnly($phone);
     }
 
     public function render()
@@ -57,6 +56,8 @@ class ModalEditar extends Component
         if($this->file_path){
             $this->paciente->avatar = 'storage/'. $this->file_path->store('avatars','public');
         }
+
+        $this->address->save();
         $this->paciente->save();
 
         $this->emit('success');

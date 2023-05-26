@@ -8,6 +8,8 @@ use Livewire\Component;
 class Index extends Component
 {
 
+    protected $listeners = ['success' => 'render'];
+
     public User $paciente;
     public $doctores;
 

@@ -22,6 +22,6 @@ module.exports = {
         },
     },
     plugins: [
-        require('flowbite/plugin')
+        require('flowbite/plugin','flowbite-datepicker/js/Datepicker')
     ],
 };

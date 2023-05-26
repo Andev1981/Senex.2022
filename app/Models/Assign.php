@@ -8,11 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 class Assign extends Model
 {
     use HasFactory;
-    protected $guarded = [
-        'id'
+    protected $fillable = [
+        'user_id',
+        'application_id',
+        'apply_item_id',
     ];
 
     public function user(){
         return $this->belongsTo(User::class);
     }
+
+    public function application(){
+        return $this->belongsTo(Application::class);
+    }
+
+    public function applyItem(){
+        return $this->belongsTo(AppyItem::class);
+    }
+    
 }

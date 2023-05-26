@@ -277,9 +277,6 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="grid gap-4 mb-4 sm:grid-cols-1">
-
-                    </div>
                     <div class="flex items-center pt-5 space-x-4 border-t-2">
                         <button type="submit" wire:loading.remove wire:target="save"
                             class="inline-flex items-center px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
@@ -328,7 +325,4 @@
             </div>
         </div>
     </div>
-    @push('scripts')
-        <script></script>
-    @endpush
 </div>

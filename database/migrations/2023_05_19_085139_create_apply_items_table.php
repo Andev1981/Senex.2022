@@ -17,6 +17,9 @@ return new class extends Migration
             $table->id();
             $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignID('application_id')->onUpdate('cascade')->onDelete('cascade');
+            $table->tinyInteger('status')->comment('0:Pendiente de atención,1:Atendido,2:Cancelado,3:Reagendado')->default(0);
+            $table->dateTime('fecha_atencion')->nullable();
+            $table->text('comments')->nullable();
             $table->timestamps();
         });
     }

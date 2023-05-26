@@ -16,7 +16,8 @@ return new class extends Migration
         Schema::create('images', function (Blueprint $table) {
             $table->id();
             $table->string('url');
-            $table->integer('imageable_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->string('extencion');
+            $table->unsignedBigInteger('imageable_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('imageable_type');
             $table->timestamps();
         });

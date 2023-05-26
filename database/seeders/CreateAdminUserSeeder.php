@@ -43,7 +43,7 @@ class CreateAdminUserSeeder extends Seeder
             'birth' => null,
             'phone' => '',
             'address_id' => $address->id,
-            'status' => 0,
+            'status' => 1,
             'user_type' => 'Super-Administrador'
         ]);
 
@@ -66,7 +66,7 @@ class CreateAdminUserSeeder extends Seeder
             'birth' => null,
             'phone' => '',
             'address_id' => $address->id,
-            'status' => 0,
+            'status' => 1,
             'user_type' => 'Administrador'
         ]);
 
@@ -89,7 +89,7 @@ class CreateAdminUserSeeder extends Seeder
             'birth' => null,
             'phone' => '',
             'address_id' => $address->id,
-            'status' => 0,
+            'status' => 1,
             'user_type' => 'Administrador'
         ]);
 
@@ -110,7 +110,7 @@ class CreateAdminUserSeeder extends Seeder
             'birth' => null,
             'phone' => '',
             'address_id' => $address->id,
-            'status' => 0,
+            'status' => 1,
             'user_type' => 'Paciente'
          ]);
 
@@ -130,7 +130,7 @@ class CreateAdminUserSeeder extends Seeder
             'birth' => null,
             'phone' => '',
             'address_id' => $address->id,
-            'status' => 0,
+            'status' => 1,
             'user_type' => 'Doctor'
          ]);
 

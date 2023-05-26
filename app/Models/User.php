@@ -57,18 +57,12 @@ class User extends Authenticatable
         return $this->belongsTo(Address::class);
     }
 
-    public function patient(){
-        return $this->hasOne(Patient::class);
-    }
-
-    public function prices()
-    {
-        return $this->hasMany(Prices::class);
-    }
-
-    public function applications()
-    {
+    public function applications(){
         return $this->hasMany(Application::class);
+    }
+
+    public function images(){
+        return $this->morphMany(Image::class, 'imageable');
     }
     
 }

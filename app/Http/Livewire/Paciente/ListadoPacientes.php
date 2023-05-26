@@ -23,12 +23,12 @@ class ListadoPacientes extends Component
 
     public function render()
     {
-        return view('livewire.paciente.listado-pacientes', [
-            'pacientes' => User::where('name','like', '%'.$this->search.'%')
+        $pacientes = User::where('name','like', '%'.$this->search.'%')
             ->orWhere('last_name','like', '%'.$this->search.'%')
             ->orWhere('phone','like', '%'.$this->search.'%')
-            ->orderBy($this->sort, $this->direction)
-            ->paginate(5),
-        ]);
+            ->where('user_type','Paciente')
+            ->orderBy($this->sort, $this->direction)->paginate();
+
+        return view('livewire.paciente.listado-pacientes', compact('pacientes'));
     }
 }

@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CreateAdminUserSeeder::class);
         $this->call(QuizzQuestionSeeder::class);
         $this->call(SelectOptionSeeder::class);
+        $this->call(ApplicationTypeSeeder::class);
        
 
     }

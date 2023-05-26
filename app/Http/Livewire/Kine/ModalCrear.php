@@ -5,22 +5,25 @@ namespace App\Http\Livewire\Kine;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class ModalCrear extends Component
 {
 
+     use WithFileUploads;
     public $open = 'hidden';
     public $name = "";
     public $last_name = "";
     public $phone = "";
     public $email = "";
-    public $avatar= '';
+    public $avatar;
+    public $file_path;
 
 
     protected $rules = [
-        'name' => 'required|min:6|max:45',
-        'last_name' => 'required|min:6|max:45',
-        'phone' => 'required|min:12|max:12',
+        'name' => 'required|min:3|max:50',
+        'last_name' => 'required|min:3|max:50',
+        'phone' => 'required|min:9|max:9',
         'email' => 'required|email|unique:users,email|min:10|max:200',
     ];
 
@@ -51,10 +54,17 @@ class ModalCrear extends Component
 
              $this->validate();
 
+              if($this->avatar){
+                $file_name = $this->avatar->getClientOriginalName(); 
+                $file_extension = $this->avatar->extension(); 
+                $this->file_path = 'storage/'. $this->avatar->store('avatars','public'); 
+            }
+
              $user = User::create([
                 'name' => $this->name ,
                 'last_name' => $this->last_name,
                 'email' => $this->email,
+                'avatar' => $this->file_path,
                 'phone' => $this->phone,
                 'user_type' => 'Doctor',
                 'password' => bcrypt($this->name . '-SENEX2023'),
