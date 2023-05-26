@@ -133,4 +133,15 @@
       0 => 'Spatie\\Permission\\PermissionServiceProvider',
     ),
   ),
+  'victorybiz/laravel-simple-select' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Victorybiz\\SimpleSelect\\SimpleSelectServiceProvider',
+    ),
+    'aliases' => 
+    array (
+      'SimpleSelect' => 'Victorybiz\\SimpleSelect\\SimpleSelectFacade',
+    ),
+  ),
 );
