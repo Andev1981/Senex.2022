@@ -49,7 +49,6 @@
     45 => 'App\\Providers\\RouteServiceProvider',
     46 => 'Spatie\\Permission\\PermissionServiceProvider',
     47 => 'Laraveles\\Spanish\\SpanishServiceProvider',
-    48 => 'Barryvdh\\Debugbar\\ServiceProvider',
   ),
   'eager' => 
   array (
@@ -85,7 +84,6 @@
     29 => 'App\\Providers\\RouteServiceProvider',
     30 => 'Spatie\\Permission\\PermissionServiceProvider',
     31 => 'Laraveles\\Spanish\\SpanishServiceProvider',
-    32 => 'Barryvdh\\Debugbar\\ServiceProvider',
   ),
   'deferred' => 
   array (
