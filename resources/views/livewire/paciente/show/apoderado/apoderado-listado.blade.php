@@ -4,7 +4,7 @@
 
         <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
             <div class="flex flex-col items-center justify-end md:flex-row md:space-y-0 md:space-x-4">
-                <div class="flex justify-end pt-2 pr-2 -mb-5 shadow-xl">
+                <div class="flex justify-end pt-2 pr-2 shadow-xl">
                     @livewire('paciente.show.apoderado.apoderado-crear', ['paciente' => $paciente])
                 </div>
             </div>
@@ -26,37 +26,36 @@
                     </thead>
                     <tbody>
                         @foreach ($keepers as $keeper)
-                            <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                <td class="items-center flex-1 py-2 pl-2 mx-2 font-medium">
-                                    {!! $keeper->name . '&nbsp;' . $keeper->last_name !!}
-                                </td>
-                                <td class="px-6 py-4">{{ $keeper->parentesco }}</td>
-                                <td class="px-6 py-4">
-                                    {{ $keeper->email }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {!! '+56&nbsp;' . $keeper->phone !!}
-                                </td>
-                                <td class="px-6 py-4">
-                                    {!! $keeper->address->street . '&nbsp;#' . $keeper->address->number !!}
-                                </td>
-                                <td class="px-6 py-4">{{ $keeper->address->comuna->region->name }}
-                                </td>
-                                <td class="px-6 py-4">{{ $keeper->address->comuna->name }}
-                                </td>
+                        <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                            <td class="items-center flex-1 py-2 pl-2 mx-2 font-medium">
+                                {!! $keeper->name . '&nbsp;' . $keeper->last_name !!}
+                            </td>
+                            <td class="px-6 py-4">{{ $keeper->parentesco }}</td>
+                            <td class="px-6 py-4">
+                                {{ $keeper->email }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {!! '+56&nbsp;' . $keeper->phone !!}
+                            </td>
+                            <td class="px-6 py-4">
+                                {!! $keeper->address->street . '&nbsp;#' . $keeper->address->number !!}
+                            </td>
+                            <td class="px-6 py-4">{{ $keeper->address->comuna->region->name }}
+                            </td>
+                            <td class="px-6 py-4">{{ $keeper->address->comuna->name }}
+                            </td>
 
-                                <td colspan="2" class="px-6 py-4">
-                                    @livewire('paciente.show.apoderado.apoderado-editar', ['keeper' => $keeper], key($keeper->id))
-                                </td>
-                            </tr>
+                            <td colspan="2" class="px-6 py-4">
+                                @livewire('paciente.show.apoderado.apoderado-editar', ['keeper' => $keeper], key($keeper->id))
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
-            <nav class="flex flex-col items-start justify-between p-4 space-y-3 md:flex-row md:items-center md:space-y-0"
-                aria-label="Table navigation">
+            <nav class="flex flex-col items-start justify-between p-4 space-y-3 md:flex-row md:items-center md:space-y-0" aria-label="Table navigation">
                 {{ $keepers->links() }}
-                {{--   <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                {{-- <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
                             Showing
                             <span class="font-semibold text-gray-900 dark:text-white">1-10</span>
                             of

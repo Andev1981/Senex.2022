@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Paciente;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Spatie\Permission\Models\Role;
 
 class ListadoPacientes extends Component
 {
@@ -23,12 +24,29 @@ class ListadoPacientes extends Component
 
     public function render()
     {
-        $pacientes = User::where('name','like', '%'.$this->search.'%')
-            ->orWhere('last_name','like', '%'.$this->search.'%')
-            ->orWhere('phone','like', '%'.$this->search.'%')
-            ->where('user_type','Paciente')
-            ->orderBy($this->sort, $this->direction)->paginate();
+
+        $pacientes = User::where('user_type', 'Paciente')
+            ->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('rut', 'like', '%' . $this->search . '%')
+                    ->orWhere('email', 'like', '%' . $this->search . '%')
+                    ->orWhere('status', 'like', '%' . $this->search . '%');
+            })->orderBy($this->sort, $this->direction)->paginate(5);
 
         return view('livewire.paciente.listado-pacientes', compact('pacientes'));
+    }
+
+    public function order($sort)
+    {
+        if ($this->sort === $sort) {
+
+            if ($this->direction === 'desc') {
+                $this->direction = 'asc';
+            } else {
+                $this->direction = 'desc';
+            }
+        } else {
+            $this->sort = $sort;
+        }
     }
 }

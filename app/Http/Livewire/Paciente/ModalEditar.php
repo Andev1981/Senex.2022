@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Paciente;
 
 use App\Models\Address;
 use App\Models\Comuna;
+use App\Models\Question;
 use App\Models\Region;
 use App\Models\User;
 use Livewire\Component;
@@ -19,14 +20,14 @@ class ModalEditar extends Component
     public $open = 'hidden';
     public $openDel = 'hidden';
     public $file_path;
-    public  $regiones = [];
-    public  $comunas = [];
+    public $regiones = [];
+    public $comunas = [];
+    public $questions = [];
 
 
     protected $rules = [
         'paciente.name' => 'required|min:3|max:50',
         'paciente.last_name' => 'required|min:3|max:50',
-        'paciente.phone' => 'required|min:9|max:9',
         'paciente.rut' => 'required|max:10|min:9',
         'paciente.avatar' => 'mimes:png,jpg,jpeg|max:1024',
         'paciente.birth' => 'required|date',
@@ -39,6 +40,7 @@ class ModalEditar extends Component
     public function mount(User $paciente)
     {
         $this->paciente = $paciente;
+        $this->questions = Question::all();
         $this->address = $paciente->address;
         $this->regiones = Region::where('id', 1)->get();
         $this->comunas = Comuna::where('region_id', 1)->get();
@@ -58,7 +60,6 @@ class ModalEditar extends Component
     {
 
         $this->validate();
-
 
         if ($this->file_path) {
             $this->paciente->avatar = 'storage/' . $this->file_path->store('avatars', 'public');

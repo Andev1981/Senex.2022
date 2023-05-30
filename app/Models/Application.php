@@ -14,21 +14,25 @@ class Application extends Model
         'derivado',
         'desde',
         'application_type_id',
+        'type_value',
+        'type_payment',
         'price',
         'comments',
-        'status',
+        'status'
     ];
 
-    public function images(){
+    public function images()
+    {
         return $this->morphMany(Image::class, 'imageable');
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function items(){
+    public function items()
+    {
         return $this->hasMany(ApplyItem::class);
     }
-
 }

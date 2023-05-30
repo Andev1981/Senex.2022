@@ -1,4 +1,15 @@
 <?php return array (
+  'barryvdh/laravel-debugbar' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Barryvdh\\Debugbar\\ServiceProvider',
+    ),
+    'aliases' => 
+    array (
+      'Debugbar' => 'Barryvdh\\Debugbar\\Facades\\Debugbar',
+    ),
+  ),
   'barryvdh/laravel-dompdf' => 
   array (
     'providers' => 
@@ -9,6 +20,13 @@
     array (
       'Pdf' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
       'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
+    ),
+  ),
+  'kdion4891/laravel-livewire-tables' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Kdion4891\\LaravelLivewireTables\\Providers\\TableServiceProvider',
     ),
   ),
   'laravel/breeze' => 

@@ -10,10 +10,13 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles,SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -53,16 +56,29 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function address(){
+    public function address()
+    {
         return $this->belongsTo(Address::class);
     }
 
-    public function applications(){
+    public function applications()
+    {
         return $this->hasMany(Application::class);
     }
 
-    public function images(){
+    public function images()
+    {
         return $this->morphMany(Image::class, 'imageable');
     }
-    
+
+    public function roles_all()
+    {
+        return $this->morphToMany(
+            config('permission.models.role'),
+            'model',
+            config('permission.table_names.model_has_roles'),
+            config('permission.column_names.model_morph_key'),
+            PermissionRegistrar::$pivotRole
+        );
+    }
 }

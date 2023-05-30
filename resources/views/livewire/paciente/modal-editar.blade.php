@@ -1,12 +1,14 @@
 <div>
-    <button type="button" wire:click="$set('open','')" class="flex items-center px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-            <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-        </svg>
-        Editar
-    </button>
+    <div>
+        <button type="button" wire:click="$set('open','')" class="flex items-center w-full px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+            </svg>
+            Editar
+        </button>
 
+    </div>
     <!-- <button type="button" wire:click="$set('openDel','')"
         class="flex items-center px-2 py-1 text-sm font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
@@ -40,8 +42,9 @@
                     </button>
                 </div>
                 <form wire:submit.prevent="save">
-                    <div class="grid mb-4 sm:grid-cols-1">
-                        <div class="mb-4">
+                    <h4 class="pb-2 text-lg font-bold text-center">Datos personales</h4>
+                    <div class="flex justify-between gap-4 py-4">
+                        <div class="mb-4 basis-2/6">
 
                             <div class="relative w-16 h-16 overflow-hidden bg-gray-100 rounded-full shadow-xl dark:bg-gray-600">
                                 <div wire:loading wire:target='file_path'>
@@ -66,7 +69,7 @@
 
 
                             </div>
-                            <input class="block mt-2 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" aria-describedby="file_input_help" wire:model="file_path" id="file_input" type="file">
+                            <input class="block mt-1 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" aria-describedby="file_input_help" wire:model="file_path" id="file_input" type="file">
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-300" id="file_input_help">SVG, PNG, JPG
                                 o GIF (MAX. 800x400px).</p>
                             @error('paciente.avatar')
@@ -76,119 +79,123 @@
                             @enderror
 
                         </div>
+                        <div class="basis-2/6">
+                            <div>
+                                <label for="paciente.name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nombre</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" wire:model="paciente.name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="ingrese nombre">
+
+                                </div>
+                                @error('paciente.name')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="paciente.rut" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rut
+                                    <small class="italic text-gray-500">(ej: 12345678-9)</small>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                                        </svg>
+
+                                    </div>
+                                    <input type="text" wire:model.defer="paciente.rut" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="12345678-9">
+                                </div>
+                                @error('paciente.rut')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="paciente.email" class="block mb-2 text-sm font-medium text-gray-400 dark:text-white">Correo</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg aria-hidden="true" class="w-5 h-5 text-gray-400 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z">
+                                            </path>
+                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                                        </svg>
+                                    </div>
+                                    <input disabled type="email" wire:model="paciente.email" class="cursor-not-allowed bg-gray-100 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="{{ $paciente->email }}">
+                                </div>
+                                @error('paciente.email')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="basis-2/6">
+                            <div>
+                                <label for="paciente.last_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Apellido</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" wire:model="paciente.last_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="ingrese apellido">
+                                </div>
+                                @error('paciente.last_name')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="paciente.birth" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fecha&nbsp;Nacimiento</label>
+                                <div class="relative">
+                                    <input type="date" wire:model.defer="paciente.birth" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500">
+                                </div>
+                                @error('paciente.birth')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="paciente.phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Teléfono
+                                    <small class="italic text-gray-400">ej:(912345678)</small>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-2 mr-6 rounded-l-lg pointer-events-none bg-sky-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-3 h-3">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+
+                                        </svg>
+                                        <h5 class="pr-2 text-xs text-gray-500">56</h5>
+                                    </div>
+
+                                    <small class="absolute inset-y-0 right-0 flex pt-2 pr-6 italic text-gray-400 right">{{ strlen($paciente->phone) }}
+                                        /9</small>
+                                    <input wire:model="paciente.phone" type="number" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-16 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500">
+                                </div>
+
+                                @error('paciente.phone')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid gap-4 mb-4 sm:grid-cols-3">
-                        <div>
-                            <label for="paciente.name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nombre</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                </div>
-                                <input type="text" wire:model="paciente.name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="ingrese nombre">
-
-                            </div>
-                            @error('paciente.name')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-500">
-                                {{ $message }}
-                            </p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label for="paciente.last_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Apellido</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                    </svg>
-                                </div>
-                                <input type="text" wire:model="paciente.last_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="ingrese apellido">
-                            </div>
-                            @error('paciente.last_name')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-500">
-                                {{ $message }}
-                            </p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label for="paciente.email" class="block mb-2 text-sm font-medium text-gray-400 dark:text-white">Correo</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg aria-hidden="true" class="w-5 h-5 text-gray-400 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z">
-                                        </path>
-                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                                    </svg>
-                                </div>
-                                <input disabled type="email" wire:model="paciente.email" class="cursor-not-allowed bg-gray-100 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="{{ $paciente->email }}">
-                            </div>
-                            @error('paciente.email')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-500">
-                                {{ $message }}
-                            </p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label for="paciente.phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                Teléfono
-                                <small class="italic text-gray-400">ej:(912345678)</small>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-2 mr-6 rounded-l-lg pointer-events-none bg-sky-200">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-3 h-3">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-
-                                    </svg>
-                                    <h5 class="pr-2 text-xs text-gray-500">56</h5>
-                                </div>
-
-                                <small class="absolute inset-y-0 right-0 flex pt-2 pr-6 italic text-gray-400 right">{{ strlen($paciente->phone) }}
-                                    /9</small>
-                                <input wire:model="paciente.phone" type="number" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-16 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500">
-                            </div>
-
-                            @error('paciente.phone')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-500">
-                                {{ $message }}
-                            </p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label for="paciente.rut" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rut
-                                <small class="italic text-gray-500">(ej: 12345678-9)</small>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-400">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                                    </svg>
-
-                                </div>
-                                <input type="text" wire:model.defer="paciente.rut" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500" placeholder="12345678-9">
-                            </div>
-                            @error('paciente.rut')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-500">
-                                {{ $message }}
-                            </p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label for="paciente.birth" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Fecha&nbsp;Nacimiento</label>
-                            <div class="relative">
-                                <input type="date" wire:model.defer="paciente.birth" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500">
-                            </div>
-                            @error('paciente.birth')
-                            <p class="mt-2 text-xs text-red-600 dark:text-red-500">
-                                {{ $message }}
-                            </p>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="grid gap-4 mb-4 sm:grid-cols-1">
+                    <hr>
+                    <h4 class="pt-4 pb-2 text-lg font-bold text-center">Datos de ubicacion</h4>
+                    <div class="grid gap-4 py-2 mb-4 sm:grid-cols-1">
                         <div class="relative">
                             <div>
                                 <label for="" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -234,8 +241,7 @@
                             @enderror
                         </div>
                     </div>
-
-                    <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                    <div class="grid gap-4 mb-2 sm:grid-cols-2">
                         <div>
                             <label for="street" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Calle /
                                 Pasaje</label>
@@ -290,8 +296,16 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="flex items-center pt-5 space-x-4 border-t-2">
+                    <hr>
+                    <h4 class="pt-4 pb-2 text-lg font-bold text-center">Preguntas Generales</h4>
+                    <div class="grid grid-cols-3 gap-4 py-4">
+                        @foreach ($questions as $question)
 
+                        @livewire('paciente.show.preguntas',['paciente' => $paciente,'question' => $question],key($question->id))
+
+                        @endforeach
+                    </div>
+                    <div class="flex items-center pt-5 space-x-4 border-t-2">
                         <button type="submit" wire:click="save" wire:loading.remove wire:target="save" class="text-white inline-flex items-center bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
 
                             Actualizar

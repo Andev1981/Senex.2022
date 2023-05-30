@@ -16,24 +16,28 @@ class AtencionesCrear extends Component
     use WithFileUploads;
     public User $paciente;
     public $openCrearAtencion = 'hidden',
-           $tipo_atencion = "",
-           $applicationTypes = [],
-           $kine = "",
-           $doctors = [],
-           $valor,
-           $sesiones,
-           $profesional_derivacion = "",
-           $lugar_derivacion = "",
-           $mensaje = "",
-           $documentos = [];
+        $tipo_atencion = "",
+        $applicationTypes = [],
+        $kine = "",
+        $doctors = [],
+        $valor,
+        $sesiones,
+        $profesional_derivacion = "",
+        $lugar_derivacion = "",
+        $mensaje = "",
+        $documentos = [],
+        $tipo_de_valor = "",
+        $tipo_de_pago = "";
 
     protected $rules = [
         'valor' => 'required|integer|min:3|max:999999',
         'sesiones' => 'required|integer|min:1|max:99',
         'kine' => 'required',
         'tipo_atencion' => 'required',
-        'profesional_derivacion' => 'required',
-        'mensaje' => 'string',
+        'tipo_de_valor' => 'required',
+        'tipo_de_pago' => 'required',
+        'profesional_derivacion' => 'string|max:100',
+        'mensaje' => 'string|max:300',
         'documentos.*' => 'mimes:png,jpg,jpeg,pdf|max:1024'
     ];
 
@@ -42,41 +46,45 @@ class AtencionesCrear extends Component
         return view('livewire.paciente.show.atenciones.atenciones-crear');
     }
 
-     public function mount(User $paciente){
+    public function mount(User $paciente)
+    {
         $this->paciente = $paciente;
         $this->applicationTypes = ApplicationType::all();
-        $this->doctors = User::where('user_type','Doctor')->get();
+        $this->doctors = User::where('user_type', 'Kine')->get();
     }
 
-    public function save(){
+    public function save()
+    {
 
         $this->validate();
 
         $application = Application::create([
-           'derivado' => $this->profesional_derivacion,
-           'desde' => $this->lugar_derivacion,
-           'comments' => $this->mensaje,
-           'user_id' => $this->paciente->id,
-           'application_type_id' => $this->tipo_atencion,
-           'price' => $this->valor,
-           'status' => 0,
+            'derivado' => $this->profesional_derivacion,
+            'desde' => $this->lugar_derivacion,
+            'comments' => $this->mensaje,
+            'user_id' => $this->paciente->id,
+            'application_type_id' => $this->tipo_atencion,
+            'type_value' => $this->tipo_de_valor,
+            'type_payment' => $this->tipo_de_pago,
+            'price' => $this->valor,
+            'status' => 0,
         ]);
 
         foreach ($this->documentos as $file) {
-            
-            $fileExtension = $file->extension(); 
-            
-            $fileName = 'storage/'. $file->store('paciente/documentos/atencion-'.$application->id);
-            
+
+            $fileExtension = $file->extension();
+
+            $fileName = 'storage/' . $file->store('paciente/documentos/atencion-' . $application->id);
+
             $image = new Image([
                 'url' => $fileName,
                 'extencion' => $fileExtension
             ]);
-            
+
             $application->images()->save($image);
         }
 
-        for($i = 1; $i <= $this->sesiones; $i++){
+        for ($i = 1; $i <= $this->sesiones; $i++) {
             $apply = ApplyItem::create([
                 'user_id' => $this->kine,
                 'application_id' => $application->id,
@@ -96,20 +104,22 @@ class AtencionesCrear extends Component
 
         $this->clear();
         $this->openCrearAtencion = 'hidden';
-
     }
 
-    public function clear(){
+    public function clear()
+    {
         $this->resetValidation();
         $this->resetErrorBag();
         $this->reset([
-                        'profesional_derivacion',
-                        'lugar_derivacion',
-                        'mensaje',
-                        'tipo_atencion',
-                        'valor',
-                        'sesiones',
-                        'kine',
-                    ]);
+            'profesional_derivacion',
+            'lugar_derivacion',
+            'mensaje',
+            'tipo_atencion',
+            'tipo_de_valor',
+            'tipo_de_pago',
+            'valor',
+            'sesiones',
+            'kine',
+        ]);
     }
 }
