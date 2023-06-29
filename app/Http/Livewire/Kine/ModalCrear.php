@@ -66,7 +66,8 @@ class ModalCrear extends Component
                 'email' => $this->email,
                 'avatar' => $this->file_path,
                 'phone' => $this->phone,
-                'user_type' => 'Doctor',
+                'user_type' => 'Kine',
+                'address_id' => 1,
                 'password' => bcrypt($this->name . '-SENEX2023'),
              ]);
 
