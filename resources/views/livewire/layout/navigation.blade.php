@@ -19,7 +19,7 @@
                 </svg>
                 <span class="sr-only">Toggle sidebar</span>
             </button>
-            <a href="https://flowbite.com" class="flex items-center justify-between mr-4">
+            <a href="{{ route('/) }}" class="flex items-center justify-between mr-4">
                 <img src="{{ asset('img/logo-cabecera.png') }}" class="h-10 ml-3" alt="Senex Logo" />
                 <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white"></span>
             </a>
