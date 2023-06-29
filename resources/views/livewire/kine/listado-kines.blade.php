@@ -56,7 +56,7 @@
                         </thead>
                         <tbody>
                             @foreach ($doctores as $doctor)
-                                @if ($doctor->user_type === 'Doctor')
+                                @if ($doctor->user_type === 'Kine')
                                     <tr class="text-center bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                         <td scope="row"
                                             class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">

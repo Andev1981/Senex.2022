@@ -36,7 +36,7 @@ class ModalCrear extends Component
         'last_name' => 'required|min:3|max:50',
         'telefono' => 'required|min:9|max:9',
         'correo' => 'required|email|unique:users,email|min:10|max:200',
-        'avatar' => 'mimes:png,jpg,jpeg|max:1024',
+        'avatar' => 'max:1024|image',
         'calle' => 'required|max:150',
         'rut' => 'required|max:10|min:9',
         'fecha_nacimiento' => 'required|date',
