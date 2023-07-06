@@ -15,7 +15,7 @@
         @livewire('layout.navigation')
         @livewire('layout.sidebar')
 
-        <main class="h-auto p-4 pt-20 md:ml-56">
+        <main class="h-auto p-4 pt-20 ml-56">
 
             {{ $slot }}
 
