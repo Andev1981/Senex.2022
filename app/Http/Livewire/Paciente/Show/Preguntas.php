@@ -16,7 +16,7 @@ class Preguntas extends Component
 
 
     protected $rules = [
-        'answer.name' => '',
+        'answer.name' => 'required',
     ];
 
     public function mount(User $paciente, Question $question)
@@ -25,6 +25,13 @@ class Preguntas extends Component
         $user = $paciente;
         $this->question = $question;
         $this->answer = Answer::with(['question:id,name'])->whereBelongsTo($user)->where('question_id', $question->id)->first();
+
+        if(!$this->answer){
+            $this->answer = Answer::create(['user_id' => $this->paciente->id,'question_id' => $this->question->id]);
+        }
+
+       /*  dd($this->answer); */
+
     }
 
     public function render()
@@ -32,13 +39,9 @@ class Preguntas extends Component
         return view('livewire.paciente.show.preguntas');
     }
 
-    public function updated($propertyName)
-    {
-        $this->validateOnly($propertyName);
-    }
-
     public function guardar()
     {
+        $this->validate();
         $this->answer->save();
     }
 }

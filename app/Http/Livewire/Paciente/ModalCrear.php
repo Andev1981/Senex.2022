@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Paciente;
 
 use App\Models\Address;
+use App\Models\Answer;
 use App\Models\Comuna;
 use App\Models\Region;
 use App\Models\User;
@@ -20,7 +21,6 @@ class ModalCrear extends Component
     public $correo = "";
     public $rut = "";
     public $fecha_nacimiento;
-    public $avatar;
     public $file_path,
     $paises = [],
            $pais = "",
@@ -36,7 +36,6 @@ class ModalCrear extends Component
         'last_name' => 'required|min:3|max:50',
         'telefono' => 'required|min:9|max:9',
         'correo' => 'required|email|unique:users,email|min:10|max:200',
-        'avatar' => 'max:1024',
         'calle' => 'required|max:150',
         'rut' => 'required|max:10|min:9',
         'fecha_nacimiento' => 'required|date',
@@ -53,21 +52,11 @@ class ModalCrear extends Component
         return view('livewire.paciente.modal-crear', compact('regiones','comunas'));
     }
 
-    public function updated($telefono){
-        $this->validateOnly($telefono);
-    }
 
     public function save(){
 
              $this->validate();
 
-            if($this->avatar){
-                $file_name = $this->avatar->getClientOriginalName(); 
-                $file_extension = $this->avatar->extension(); 
-                $this->file_path = 'storage/'. $this->avatar->store('avatars','public'); 
-            }else{
-                $this->file_path = '';
-            }
             
             $address = Address::create([
                 'street' => $this->calle,
@@ -80,7 +69,6 @@ class ModalCrear extends Component
                 'name' => $this->name ,
                 'last_name' => $this->last_name,
                 'email' => $this->correo,
-                'avatar' => $this->file_path,
                 'phone' => $this->telefono,
                 'birth' => $this->fecha_nacimiento,
                 'rut' => $this->rut,
@@ -88,6 +76,8 @@ class ModalCrear extends Component
                 'address_id' => $address->id,
                 'password' => bcrypt($this->name . '-SENEX2023'),
              ]);
+
+            $this->cargaRespuestasBase($user);
 
              $user->assignRole([3]);
 
@@ -102,9 +92,20 @@ class ModalCrear extends Component
          public function clear(){
              $this->resetValidation();
              $this->resetErrorBag();
-             $this->reset(['name','last_name','correo','telefono', 'avatar','file_path']);
+             $this->reset(['name','last_name','correo','telefono','fecha_nacimiento','rut']);
          }
 
+
+         public function cargaRespuestasBase($user){
+            Answer::create(['user_id' => $user-> id,'question_id' => 1]);
+            Answer::create(['user_id' => $user-> id,'question_id' => 2]);
+            Answer::create(['user_id' => $user-> id,'question_id' => 3]);
+            Answer::create(['user_id' => $user-> id,'question_id' => 4]);
+            Answer::create(['user_id' => $user-> id,'question_id' => 5]);
+            Answer::create(['user_id' => $user-> id,'question_id' => 6]);
+            Answer::create(['user_id' => $user-> id,'question_id' => 7]);
+            Answer::create(['user_id' => $user-> id,'question_id' => 8]);
+         }
         
 
 }

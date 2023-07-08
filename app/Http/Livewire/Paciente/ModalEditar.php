@@ -19,7 +19,6 @@ class ModalEditar extends Component
 
     public $open = 'hidden';
     public $openDel = 'hidden';
-    public $file_path;
     public $regiones = [];
     public $comunas = [];
     public $questions = [];
@@ -29,8 +28,8 @@ class ModalEditar extends Component
         'paciente.name' => 'required|min:3|max:50',
         'paciente.last_name' => 'required|min:3|max:50',
         'paciente.rut' => 'required|max:10|min:9',
-        'paciente.avatar' => 'mimes:png,jpg,jpeg|max:1024',
         'paciente.birth' => 'required|date',
+        'paciente.phone' => 'required',
         'address.street' => 'required|max:150',
         'address.number' => 'required|integer',
         'address.address' => 'required|max:150',
@@ -51,21 +50,11 @@ class ModalEditar extends Component
         return view('livewire.paciente.modal-editar');
     }
 
-    public function updated($propertyName)
-    {
-        $this->validateOnly($propertyName);
-    }
 
     public function save()
     {
 
         $this->validate();
-
-        if ($this->file_path) {
-            $this->paciente->avatar = 'storage/' . $this->file_path->store('avatars', 'public');
-        }
-
-
 
         $this->address->save();
         $this->paciente->save();
