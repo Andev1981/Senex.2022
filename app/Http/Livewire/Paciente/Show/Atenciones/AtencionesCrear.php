@@ -21,7 +21,6 @@ class AtencionesCrear extends Component
         $kine = "",
         $doctors = [],
         $valor,
-        $sesiones,
         $profesional_derivacion = "",
         $lugar_derivacion = "",
         $mensaje = "",
@@ -30,13 +29,12 @@ class AtencionesCrear extends Component
         $tipo_de_pago = "";
 
     protected $rules = [
-        'valor' => 'required|integer|min:3|max:999999',
-        'sesiones' => 'required|integer|min:1|max:99',
         'kine' => 'required',
         'tipo_atencion' => 'required',
-        'tipo_de_valor' => 'required',
         'tipo_de_pago' => 'required',
+        'valor' => 'required|integer|min:3|max:999999',
         'profesional_derivacion' => 'string|max:100',
+        'lugar_derivacion' => 'string|max:150',
         'mensaje' => 'string|max:300',
         'documentos.*' => 'mimes:png,jpg,jpeg,pdf|max:1024'
     ];
@@ -63,11 +61,11 @@ class AtencionesCrear extends Component
             'desde' => $this->lugar_derivacion,
             'comments' => $this->mensaje,
             'user_id' => $this->paciente->id,
-            'application_type_id' => $this->tipo_atencion,
-            'type_value' => $this->tipo_de_valor,
-            'type_payment' => $this->tipo_de_pago,
+            'application_type_id' => (int)$this->tipo_atencion,
             'price' => $this->valor,
             'status' => 0,
+            'type_value' => (int)$this->tipo_de_valor,
+            'type_payment' => (int)$this->tipo_de_pago,
         ]);
 
         foreach ($this->documentos as $file) {
@@ -84,7 +82,7 @@ class AtencionesCrear extends Component
             $application->images()->save($image);
         }
 
-        for ($i = 1; $i <= $this->sesiones; $i++) {
+
             $apply = ApplyItem::create([
                 'user_id' => $this->kine,
                 'application_id' => $application->id,
@@ -95,7 +93,7 @@ class AtencionesCrear extends Component
                 'application_id' => $application->id,
                 'apply_item_id' => $apply->id,
             ]);
-        }
+     
 
 
 
@@ -118,7 +116,6 @@ class AtencionesCrear extends Component
             'tipo_de_valor',
             'tipo_de_pago',
             'valor',
-            'sesiones',
             'kine',
         ]);
     }

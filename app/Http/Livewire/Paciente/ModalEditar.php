@@ -30,6 +30,7 @@ class ModalEditar extends Component
         'paciente.rut' => 'required|max:10|min:9',
         'paciente.birth' => 'required|date',
         'paciente.phone' => 'required',
+        'paciente.status' => 'required',
         'address.street' => 'required|max:150',
         'address.number' => 'required|integer',
         'address.address' => 'required|max:150',

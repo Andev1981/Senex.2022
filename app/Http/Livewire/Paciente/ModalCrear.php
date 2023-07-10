@@ -73,6 +73,7 @@ class ModalCrear extends Component
                 'birth' => $this->fecha_nacimiento,
                 'rut' => $this->rut,
                 'user_type' => 'Paciente',
+                'status' => 1,
                 'address_id' => $address->id,
                 'password' => bcrypt($this->name . '-SENEX2023'),
              ]);

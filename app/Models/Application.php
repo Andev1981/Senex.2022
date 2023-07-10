@@ -21,6 +21,11 @@ class Application extends Model
         'status'
     ];
 
+    public function aplication_type()
+    {
+        return $this->hasOne(ApplicationType::class);
+    }
+
     public function images()
     {
         return $this->morphMany(Image::class, 'imageable');
