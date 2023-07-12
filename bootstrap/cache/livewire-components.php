@@ -28,6 +28,7 @@
   'paciente.show.atenciones.atenciones-editar' => 'App\\Http\\Livewire\\Paciente\\Show\\Atenciones\\AtencionesEditar',
   'paciente.show.atenciones.atenciones-items' => 'App\\Http\\Livewire\\Paciente\\Show\\Atenciones\\AtencionesItems',
   'paciente.show.atenciones.atenciones-listado' => 'App\\Http\\Livewire\\Paciente\\Show\\Atenciones\\AtencionesListado',
+  'paciente.show.atenciones.crear-item' => 'App\\Http\\Livewire\\Paciente\\Show\\Atenciones\\CrearItem',
   'paciente.show.atenciones.editar-item' => 'App\\Http\\Livewire\\Paciente\\Show\\Atenciones\\EditarItem',
   'paciente.show.ficha' => 'App\\Http\\Livewire\\Paciente\\Show\\Ficha',
   'paciente.show.index' => 'App\\Http\\Livewire\\Paciente\\Show\\Index',

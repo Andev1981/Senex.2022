@@ -27,14 +27,11 @@
                     <table class="w-full text-sm text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr class="text-center">
-                                <th scope="col" class="px-6 py-3">Fecha&nbsp;Creación</th>
-                                <th scope="col" class="px-6 py-3">Derivado</th>
-                                <th scope="col" class="px-6 py-3">Desde</th>
+                                <th scope="col" class="px-6 py-3">Kine</th>
                                 <th scope="col" class="px-6 py-3">Valor</th>
                                 <th scope="col" class="px-6 py-3">Estado</th>
-                                <th colspan="2" class="px-6 py-3">
-                                    <span class="sr-only">Actions</span>
-                                </th>
+                                <th scope="col" class="px-6 py-3">Fecha</th>
+                                <th colspan="3" scope="col" class="px-6 py-3 sr-only">ver</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -44,23 +41,17 @@
                                     @foreach ($atenciones as $application)
                                     <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                         <td class="px-6 py-4">
-                                            {{ date('d-m-Y', strtotime($application->created_at)) }}
-                                        </td>
-                                        <td class="py-2 pl-2 mx-2">
-                                            {{ $application->derivado }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ $application->desde }}
+                                            {{ $application->items[(count($application->items)-1)]->user->name }}
                                         </td>
                                         <td class="px-6 py-4">
                                             ${{ number_format($application->price, 0) }}
                                         </td>
-                                        <td class="px-6 py-4">
+                                        <td class="px-6 py-4 text-center">
                                             <div>
                                                 @if ($application->status === 0)
                                                 <span class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
                                                     <span class="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></span>
-                                                    No&nbsp;iniciada
+                                                    Pendiente
                                                 </span>
                                                 @elseif ($application->status === 1)
                                                 <span class="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
@@ -76,15 +67,13 @@
                                             </div>
 
                                         </td>
+                                        <td class="px-6 py-4">
+                                            {{ date('d-m-Y', strtotime($application->created_at)) }}
+                                        </td>
                                         <td class="flex px-6 py-4">
-                                            <div>
+                                            <div class="flex">
 
                                                 @livewire('paciente.show.atenciones.atenciones-items', ['application' => $application], key($application->id))
-
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>
 
                                                 @livewire('paciente.show.atenciones.atenciones-editar', ['application' => $application], key($application->id))
                                             </div>
