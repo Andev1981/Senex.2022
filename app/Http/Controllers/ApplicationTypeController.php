@@ -6,7 +6,7 @@ use App\Models\ApplicationType;
 use App\Http\Requests\StoreApplicationTypeRequest;
 use App\Http\Requests\UpdateApplicationTypeRequest;
 
-class ApplicationTypeController extends Controller
+class ApplicationsTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -31,7 +31,7 @@ class ApplicationTypeController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \App\Http\Requests\StoreApplicationTypeRequest  $request
+     * @param  \App\Http\Requests\StoreApplicationsTypeRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store(StoreApplicationTypeRequest $request)

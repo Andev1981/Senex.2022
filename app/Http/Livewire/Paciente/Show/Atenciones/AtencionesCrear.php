@@ -61,7 +61,7 @@ class AtencionesCrear extends Component
             'desde' => $this->lugar_derivacion,
             'comments' => $this->mensaje,
             'user_id' => $this->paciente->id,
-            'application_type_id' => (int)$this->tipo_atencion,
+            'application_type_id' => $this->tipo_atencion,
             'price' => $this->valor,
             'status' => 0,
             'type_value' => (int)$this->tipo_de_valor,

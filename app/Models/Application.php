@@ -21,9 +21,9 @@ class Application extends Model
         'status'
     ];
 
-    public function aplication_type()
+    public function type()
     {
-        return $this->hasOne(ApplicationType::class);
+        return $this->belongsTo(ApplicationType::class);
     }
 
     public function images()

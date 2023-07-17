@@ -12,4 +12,5 @@ class ApplicationType extends Model
         'name',
         'description',
     ];
+
 }

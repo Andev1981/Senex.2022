@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\ApplicationType;
+use App\Models\ApplicationsType;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ApplicationTypePolicy
+class ApplicationsTypePolicy
 {
     use HandlesAuthorization;
 
@@ -25,10 +25,10 @@ class ApplicationTypePolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ApplicationType  $applicationType
+     * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, ApplicationType $applicationType)
+    public function view(User $user, ApplicationsType $applicationsType)
     {
         //
     }
@@ -48,10 +48,10 @@ class ApplicationTypePolicy
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ApplicationType  $applicationType
+     * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, ApplicationType $applicationType)
+    public function update(User $user, ApplicationsType $applicationsType)
     {
         //
     }
@@ -60,10 +60,10 @@ class ApplicationTypePolicy
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ApplicationType  $applicationType
+     * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, ApplicationType $applicationType)
+    public function delete(User $user, ApplicationsType $applicationsType)
     {
         //
     }
@@ -72,10 +72,10 @@ class ApplicationTypePolicy
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ApplicationType  $applicationType
+     * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, ApplicationType $applicationType)
+    public function restore(User $user, ApplicationsType $applicationsType)
     {
         //
     }
@@ -84,10 +84,10 @@ class ApplicationTypePolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ApplicationType  $applicationType
+     * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, ApplicationType $applicationType)
+    public function forceDelete(User $user, ApplicationsType $applicationsType)
     {
         //
     }
