@@ -27,15 +27,7 @@
                 <div>
                     <div class="grid gap-4 mb-4 sm:grid-cols-4">
                         <div class="flex items-center shadow-lg rounded-xl">
-                            @if ($paciente->avatar)
-                            <img class="w-10 h-10 rounded-full" src="{{ $paciente->avatar }}" alt="Old avatar">
-                            @else
-                            <svg class="w-10 h-10 text-gray-400 rounded-full" fill="currentColor" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd">
-                                </path>
-                            </svg>
-                            @endif
-                            <div class="font-medium dark:text-white">
+                            <div class="font-medium dark:text-white pl-5">
                                 <div>{{ $paciente->name . ' ' . $paciente->last_name }}</div>
                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ $paciente->email }}</div>
                             </div>
