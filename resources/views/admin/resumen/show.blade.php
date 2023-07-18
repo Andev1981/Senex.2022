@@ -23,7 +23,7 @@
                 <!-- Profile Card -->
                 <div class="bg-white p-3 border-t-4 border-blue-600">
                     <div class="image overflow-hidden">
-                        <label for="">Tipo de solicitud: {{$solicitud->solicitud_type->name}}</label>
+                        <label>Tipo de solicitud: {{$solicitud->solicitud_type->name}}</label>
                         <img class="h-auto w-full mx-auto"
                             src="https://lavinephotography.com.au/wp-content/uploads/2017/01/PROFILE-Photography-112.jpg"
                             alt="">

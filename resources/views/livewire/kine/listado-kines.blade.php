@@ -16,7 +16,7 @@
                     class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
                     <div class="w-full md:w-5/6">
                         <div class="flex items-center">
-                            <label for="simple-search" class="sr-only">Buscar</label>
+                            <label  class="sr-only">Buscar</label>
                             <div class="relative w-full">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                     <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400"

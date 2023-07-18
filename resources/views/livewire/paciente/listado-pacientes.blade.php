@@ -9,14 +9,14 @@
                 <div class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
                     <div class="w-full md:w-5/6">
                         <div class="flex items-center">
-                            <label for="simple-search" class="sr-only">Buscar</label>
+                            <label  class="sr-only">Buscar</label>
                             <div class="relative w-full">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                     <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                                     </svg>
                                 </div>
-                                <input type="text" wire:model="search" class="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Buscar..." required="">
+                                <input type="text" wire:model="search" class="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 uppercase" placeholder="Buscar..." required="">
                             </div>
                         </div>
                     </div>
@@ -29,7 +29,7 @@
                         <thead class="text-xs font-bold text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
                                 <th wire:click="order('name')" scope="col" class="px-4 py-3 cursor-pointer">
-                                    Nombre
+                                    NOMBRE
                                     @if ($sort === 'name')
                                     @if ($direction === 'asc')
                                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
@@ -47,7 +47,7 @@
                                     @endif
                                 </th>
                                 <th wire:click="order('email')" scope="col" class="px-4 py-3 cursor-pointer">
-                                    Correo
+                                    CORREO
                                     @if ($sort === 'email')
                                     @if ($direction === 'asc')
                                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
@@ -65,7 +65,7 @@
                                     @endif
                                 </th>
                                 <th wire:click="order('rut')" scope="col" class="px-4 py-3 cursor-pointer">
-                                    Rut
+                                    RUT
                                     @if ($sort === 'rut')
                                     @if ($direction === 'asc')
                                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
@@ -83,7 +83,7 @@
                                     @endif
                                 </th>
                                 <th wire:click="order('phone')" scope="col" class="px-4 py-3 cursor-pointer">
-                                    Teléfono
+                                    TELÉFONO
                                     @if ($sort === 'phone')
                                     @if ($direction === 'asc')
                                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
@@ -101,7 +101,7 @@
                                     @endif
                                 </th>
                                 <th wire:click="order('status')" scope="col" class="items-center justify-between w-16 py-3 pl-3 cursor-pointer">
-                                    Estado
+                                    ESTADO
                                     @if ($sort === 'status')
                                     @if ($direction === 'asc')
                                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
@@ -129,18 +129,18 @@
                             <tr class="items-center justify-between bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                             
                                 <td class="flex items-center py-2 pl-2 mx-2">
-                                    <div class="ml-2 font-medium dark:text-white">
+                                    <div class="ml-2 font-medium dark:text-white uppercase">
                                         {{ $paciente->name }} {{ $paciente->last_name }}
                                        
                                        
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">{{ $paciente->email }}</td>
-                                <td class="px-6 py-4">{{ $paciente->rut }}</td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-4 uppercase">{{ $paciente->email }}</td>
+                                <td class="px-6 py-4 uppercase">{{ $paciente->rut }}</td>
+                                <td class="px-6 py-4 uppercase">
                                     {{ $paciente->phone }}
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-6 py-4 uppercase">
                                     @if ($paciente->status === "1")
                                     <span class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-green-600 rounded-full dark:bg-green-200 dark:text-green-900">
                                         Activo

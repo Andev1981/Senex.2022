@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\ApplicationsType;
+use App\Models\ApplicationType;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -28,7 +28,7 @@ class ApplicationsTypePolicy
      * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, ApplicationsType $applicationsType)
+    public function view(User $user, ApplicationType $applicationsType)
     {
         //
     }
@@ -51,7 +51,7 @@ class ApplicationsTypePolicy
      * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, ApplicationsType $applicationsType)
+    public function update(User $user, ApplicationType $applicationsType)
     {
         //
     }
@@ -63,7 +63,7 @@ class ApplicationsTypePolicy
      * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, ApplicationsType $applicationsType)
+    public function delete(User $user, ApplicationType $applicationsType)
     {
         //
     }
@@ -75,7 +75,7 @@ class ApplicationsTypePolicy
      * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, ApplicationsType $applicationsType)
+    public function restore(User $user, ApplicationType $applicationsType)
     {
         //
     }
@@ -87,7 +87,7 @@ class ApplicationsTypePolicy
      * @param  \App\Models\ApplicationsType  $applicationsType
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, ApplicationsType $applicationsType)
+    public function forceDelete(User $user, ApplicationType $applicationsType)
     {
         //
     }

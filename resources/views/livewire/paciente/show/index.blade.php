@@ -18,7 +18,7 @@
                 <!-- Modal header -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                        Detalles y resumen
+                        Detalles / Atenciones
                     </h3>
                     <button wire:click="$set('opendetalles','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -32,9 +32,10 @@
                 <div class="flex flex-row mb-5">
                     <div class="p-2 shadow-xl basis-1/4 rounded-xl">
                   
-                        <div class="mt-2">{{ $paciente->name . ' ' . $paciente->last_name }}</div>
-                        <div class="font-medium">{{ $paciente->email }}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $paciente->rut }}</div>
+                        <div class="mt-2 uppercase">{{ $paciente->name . ' ' . $paciente->last_name }}</div>
+                        <div class="font-medium uppercase">{{ $paciente->email }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400 uppercase">{{ $paciente->rut }}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400 uppercase">{{ $paciente->phone }}</div>
 
                         <hr class="mt-4">
 
@@ -58,20 +59,20 @@
                     </div>
                     <div class="ml-2 border border-gray-300 shadow-lg grow rounded-xl">
                         <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
-                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" data-tabs-toggle="#myTabContent" role="tablist">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" data-tabs-toggle="#myTabContent{{$paciente->id}}" role="tablist">
                                 <li class="mr-2" role="presentation">
-                                    <button class="inline-block p-4 text-blue-600 border-b-2 border-blue-600 rounded-t-lg hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-500 dark:border-blue-500" id="atenciones-tab" data-tabs-target="#atenciones" type="button" role="tab" aria-controls="atenciones" aria-selected="true">Atenciones</button>
+                                    <button class="inline-block p-4 text-blue-600 border-b-2 border-blue-600 rounded-t-lg hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-500 dark:border-blue-500" id="atenciones-tab" data-tabs-target="#atenciones{{$paciente->id}}" type="button" role="tab" aria-controls="atenciones" aria-selected="true">Atenciones</button>
                                 </li>
                                 <li class="mr-2" role="presentation">
-                                    <button class="inline-block p-4 text-gray-500 border-b-2 border-gray-100 rounded-t-lg dark:border-transparent hover:text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:border-gray-700 dark:hover:text-gray-300" id="apoderados-tab" data-tabs-target="#apoderados" type="button" role="tab" aria-controls="apoderados" aria-selected="false">Apoderados</button>
+                                    <button class="inline-block p-4 text-gray-500 border-b-2 border-gray-100 rounded-t-lg dark:border-transparent hover:text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:border-gray-700 dark:hover:text-gray-300" id="apoderados-tab" data-tabs-target="#apoderados{{$paciente->id}}" type="button" role="tab" aria-controls="apoderados" aria-selected="false">Apoderados</button>
                                 </li>
                             </ul>
                         </div>
-                        <div id="myTabContent">
-                            <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="atenciones" role="tabpanel" aria-labelledby="atenciones-tab">
+                        <div id="myTabContent{{$paciente->id}}">
+                            <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="atenciones{{$paciente->id}}" role="tabpanel" aria-labelledby="atenciones-tab">
                                 @livewire('paciente.show.atenciones.atenciones-listado', ['paciente' => $paciente])
                             </div>
-                            <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="apoderados" role="tabpanel" aria-labelledby="apoderados-tab">
+                            <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="apoderados{{$paciente->id}}" role="tabpanel" aria-labelledby="apoderados-tab">
                                 @livewire('paciente.show.apoderado.apoderado-listado', ['paciente' => $paciente])
                             </div>
                         </div>

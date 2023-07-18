@@ -24,18 +24,22 @@ class ModalEditar extends Component
     public $questions = [];
 
 
-    protected $rules = [
-        'paciente.name' => 'required|min:3|max:50',
-        'paciente.last_name' => 'required|min:3|max:50',
-        'paciente.rut' => 'required|max:10|min:9',
-        'paciente.birth' => 'required|date',
-        'paciente.phone' => 'required',
-        'paciente.status' => 'required',
-        'address.street' => 'required|max:150',
-        'address.number' => 'required|integer',
-        'address.address' => 'required|max:150',
-        'address.comuna_id' => 'required',
-    ];
+    protected function rules() {
+        
+        return [
+            'paciente.name' => 'required|min:3|max:50',
+            'paciente.last_name' => 'required|min:3|max:50',
+            'paciente.rut' => 'required|max:10|min:9',
+            'paciente.email' => 'required|email|max:255|unique:users,email,'.$this->paciente->id,
+            'paciente.birth' => 'required|date',
+            'paciente.phone' => 'required',
+            'paciente.status' => 'required',
+            'address.street' => 'required|max:150',
+            'address.number' => 'required|integer',
+            'address.address' => 'required|max:150',
+            'address.comuna_id' => 'required',
+        ];
+    } 
 
     public function mount(User $paciente)
     {
