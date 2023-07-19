@@ -17,21 +17,20 @@ class AtencionesCrear extends Component
     public User $paciente;
     public $openCrearAtencion = 'hidden',
         $tipo_atencion = "",
-        $applicationTypes = [],
-        $kine = "",
+        $tipo_atenciones = [],
         $doctors = [],
-        $valor,
         $profesional_derivacion = "",
         $lugar_derivacion = "",
         $mensaje = "",
         $documentos = [],
-        $tipo_de_valor = "",
-        $tipo_de_pago = "";
+        $kine = "",
+        $valor,
+        $forma_de_pago;
 
     protected $rules = [
         'kine' => 'required',
         'tipo_atencion' => 'required',
-        'tipo_de_pago' => 'required',
+        'forma_de_pago' => 'required',
         'valor' => 'required|integer|min:3|max:999999',
         'profesional_derivacion' => 'string|max:100',
         'lugar_derivacion' => 'string|max:150',
@@ -47,11 +46,11 @@ class AtencionesCrear extends Component
     public function mount(User $paciente)
     {
         $this->paciente = $paciente;
-        $this->applicationTypes = ApplicationType::all();
+        $this->tipo_atenciones = ApplicationType::all();
         $this->doctors = User::where('user_type', 'Kine')->get();
     }
 
-    public function save()
+    public function saveAtencion()
     {
 
         $this->validate();
@@ -61,11 +60,9 @@ class AtencionesCrear extends Component
             'desde' => $this->lugar_derivacion,
             'comments' => $this->mensaje,
             'user_id' => $this->paciente->id,
-            'application_type_id' => $this->tipo_atencion,
-            'price' => $this->valor,
             'status' => 0,
-            'type_value' => (int)$this->tipo_de_valor,
-            'type_payment' => (int)$this->tipo_de_pago,
+            'type_payment' => $this->forma_de_pago,
+            'type_value' => 0,
         ]);
 
         foreach ($this->documentos as $file) {
@@ -86,6 +83,8 @@ class AtencionesCrear extends Component
             $apply = ApplyItem::create([
                 'user_id' => $this->kine,
                 'application_id' => $application->id,
+                'application_type_id' => $this->tipo_atencion,
+                'price' => $this->valor,
             ]);
 
             Assign::create([
@@ -94,14 +93,10 @@ class AtencionesCrear extends Component
                 'apply_item_id' => $apply->id,
             ]);
      
-
-
-
-        $this->emit('success-atencion');
-        $this->dispatchBrowserEvent('swal-success');
-
-        $this->clear();
-        $this->openCrearAtencion = 'hidden';
+            $this->clear();
+            $this->dispatchBrowserEvent('swal-success');
+            $this->emit('success-atencion',$this->paciente->id);
+            $this->openCrearAtencion = 'hidden';
     }
 
     public function clear()
@@ -113,10 +108,8 @@ class AtencionesCrear extends Component
             'lugar_derivacion',
             'mensaje',
             'tipo_atencion',
-            'tipo_de_valor',
-            'tipo_de_pago',
+            'forma_de_pago',
             'valor',
-            'kine',
         ]);
     }
 }

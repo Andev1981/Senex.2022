@@ -10,21 +10,14 @@ class Application extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
         'derivado',
         'desde',
-        'application_type_id',
-        'type_value',
-        'type_payment',
-        'price',
         'comments',
-        'status'
+        'user_id',
+        'status',
+        'type_payment',
+        'type_value',
     ];
-
-    public function type()
-    {
-        return $this->belongsTo(ApplicationType::class);
-    }
 
     public function images()
     {

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('desde')->nullable();
             $table->text('comments')->nullable();
             $table->foreignID('user_id')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignID('application_type_id')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignID('applications_type_id')->onUpdate('cascade')->onDelete('cascade');
             $table->float('price', 9, 0);
             $table->tinyInteger('status')->comment('0:Pendiente,1:En Proceso,2:Finalizada')->default(0);
 

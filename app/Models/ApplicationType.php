@@ -13,4 +13,9 @@ class ApplicationType extends Model
         'description',
     ];
 
+    public function items()
+    {
+        return $this->hasMany(ApplyItem::class);
+    }
+
 }

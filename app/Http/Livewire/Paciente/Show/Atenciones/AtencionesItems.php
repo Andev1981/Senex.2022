@@ -13,12 +13,20 @@ class AtencionesItems extends Component
     public Application $application;
     public $openItem = 'hidden';
     public $paciente;
+    protected $listeners = ['success-item' => 'successItem','success-item-single' => 'successItem'];
 
     public function render()
     {
-        $items = ApplyItem::where('application_id', $this->application->id)->paginate(5);
+        $items = ApplyItem::where('application_id', $this->application->id)->with('applicationType')->orderBy('created_at','desc')->paginate(6);
         $atendidas = $items->where('status', 1);
         $pendientes = count($items) - count($atendidas);
+
+        $itemStatus = ApplyItem::where('application_id', $this->application->id)->where('status','>',0)->get();
+
+        if(count($itemStatus) > 0){
+            $this->application->status = 1;
+            $this->application->save();
+        }
 
         return view('livewire.paciente.show.atenciones.atenciones-items', compact('items', 'atendidas', 'pendientes'));
     }
@@ -28,4 +36,13 @@ class AtencionesItems extends Component
         $this->application = $application;
         $this->paciente = $this->application->user;
     }
+
+    public function successItem(Application $application){
+
+        $this->mount($application);
+
+    }
+
+   
+
 }

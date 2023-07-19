@@ -12,13 +12,12 @@ class AtencionesEditar extends Component
 
     public User $paciente;
     public Application $application;
-    public $openAtencion = 'hidden',
-        $openDelAtencion = 'hidden',
+    public $openDelAtencion = 'hidden',
         $tipo_atencion = '',
         $applicationTypes = [],
         $selectedApplicationType = "",
         $kine = '',
-        $doctors = [],
+        $kines = [],
         $valor = 0,
         $profesional_derivacion = "",
         $lugar_derivacion = "",
@@ -46,8 +45,8 @@ class AtencionesEditar extends Component
     {
         $this->application = $application;
         $this->applicationTypes = ApplicationType::all();
-        $this->kine = $application->user;
-        $this->doctors = User::where('user_type', 'Kine')->get();
+        $this->paciente = $application->user;
+        $this->kines = User::where('user_type', 'Kine')->get();
         $this->valor = $application->price;
         if($application->type){
             $this->selectedApplicationType = $application->type;
@@ -59,5 +58,12 @@ class AtencionesEditar extends Component
         if($this->validate()){
 
         }
+    }
+
+    public function delete(){
+        $this->application->delete();
+        $this->dispatchBrowserEvent('swal-success');
+        $this->emit('success-atencion',$this->paciente->id);
+        $this->openDelAtencion = 'hidden';
     }
 }

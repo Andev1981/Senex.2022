@@ -12,10 +12,17 @@ class ApplyItem extends Model
     protected $fillable = [
         'user_id',
         'application_id',
+        'application_type_id',
+        'price',
         'status',
         'fecha_atencion',
         'comments'
     ];
+
+    public function applicationType()
+    {
+        return $this->belongsTo(ApplicationType::class);
+    }
 
     public function images(){
         return $this->morphMany(Image::class, 'imageable');

@@ -23,17 +23,16 @@
                 </a>
             </li>
             <hr>
-            <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                        <li>
-                            <a href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                                {{ __('Cerrar sesión') }}
-                            </a>
-                        </li>
-            </form>
-
+            <li>
+                <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                    <a href="route('logout')" 
+                        onclick="event.preventDefault();
+                        this.closest('form').submit();" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                                    {{ __('Cerrar sesión') }}
+                    </a>
+                </form>
+            </li>
         </ul>
         <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
 
