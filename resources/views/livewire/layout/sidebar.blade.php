@@ -33,11 +33,11 @@
                     </a>
                 </form>
             </li>
-            <li>
+          <!--   <li>
                 <button wire:click="updateData">
                     Update list
                 </button>
-            </li>
+            </li> -->
         </ul>
         <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
 
