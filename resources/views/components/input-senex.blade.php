@@ -20,7 +20,7 @@
 @endphp
 
 <div>
-    <label for="{{$id}}" class="block text-sm font-medium leading-5 text-gray-700">{{$label}}
+    <label  class="block text-sm font-medium leading-5 text-gray-700">{{$label}}
     </label>
     <div class="relative mt-1 rounded-md shadow-sm">
         <input {{$wireModel}}

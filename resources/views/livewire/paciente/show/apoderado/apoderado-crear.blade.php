@@ -85,7 +85,7 @@
                     </div>
                     <div class="grid gap-4 mb-4 sm:grid-cols-2">
                         <div>
-                            <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                            <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                 Teléfono
                                 <small class="italic text-gray-400">ej:(912345678)</small>
                             </label>
@@ -121,7 +121,7 @@
                             @enderror
                         </div>
                         <div>
-                            <label for="parentesco"
+                            <label 
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Parentesco</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -148,7 +148,7 @@
                     <div class="grid gap-4 mb-4 sm:grid-cols-1">
                         <div class="relative">
                             <div>
-                                <label for="phone"
+                                <label 
                                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                     Región + Comuna
 
@@ -189,7 +189,7 @@
                                     </div>
 
 
-                                    <label for="comuna" class="sr-only">Seleccione comuna</label>
+                                    <label  class="sr-only">Seleccione comuna</label>
                                     <select wire:model="comuna"
                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                         <option selected readonly> -- seleccione comuna --</option>
@@ -211,7 +211,7 @@
 
                     <div class="grid gap-4 mb-4 sm:grid-cols-2">
                         <div>
-                            <label for="street"
+                            <label 
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Calle /
                                 Pasaje</label>
                             <div class="relative">
@@ -255,7 +255,7 @@
                     </div>
                     <div class="grid gap-4 mb-4 sm:grid-cols-1">
                         <div>
-                            <label for="address"
+                            <label 
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Dirección</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

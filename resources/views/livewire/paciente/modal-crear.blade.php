@@ -70,7 +70,7 @@
                     <div class="grid gap-4 mb-4 sm:grid-cols-1 md:grid-cols-3">
                    
                             <div>
-                                <label for="rut" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rut
+                                <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rut
                                     <small class="italic text-gray-500">(ej: 12345678-9)</small>
                                 </label>
                                 <div class="relative">

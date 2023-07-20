@@ -1,5 +1,5 @@
   <div>
-      <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+      <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
           Teléfono
           <small class="italic text-gray-400">ej:(912345678)</small>
       </label>

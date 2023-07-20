@@ -146,7 +146,7 @@
                     </div>
                     <div class="grid gap-4 mb-4 sm:grid-cols-2">
                         <div>
-                            <label for="name"
+                            <label 
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nombre</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -169,7 +169,7 @@
                             @enderror
                         </div>
                         <div>
-                            <label for="last_name"
+                            <label 
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Apellido</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -191,7 +191,7 @@
                             @enderror
                         </div>
                         <div>
-                            <label for="email"
+                            <label 
                                 class="block mb-2 text-sm font-medium text-gray-400 dark:text-white">Correo</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -214,7 +214,7 @@
                             @enderror
                         </div>
                         <div>
-                            <label for="doctor.phone"
+                            <label
                                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                 Teléfono
                                 <small class="italic text-gray-400">ej:(912345678)</small>

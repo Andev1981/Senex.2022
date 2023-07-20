@@ -172,7 +172,7 @@
                                         </ul>
                                     </div>
 
-                                    <label for="comuna" class="sr-only">Seleccione comuna</label>
+                                    <label  class="sr-only">Seleccione comuna</label>
                                     <select wire:model="address.comuna_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                         @foreach ($comunas as $comuna)
                                         <option class="uppercase" value="{{ $comuna->id }}">
@@ -227,7 +227,7 @@
                     </div>
                     <div class="grid gap-4 mb-4 sm:grid-cols-1">
                         <div>
-                            <label for="address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Detalles de Dirección</label>
+                            <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Detalles de Dirección</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">

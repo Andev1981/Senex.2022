@@ -48,7 +48,7 @@
                         <div class="grid grid-cols-1">
                             @foreach ($answers as $answer)
                             <div class="z-0 w-full my-2 group">
-                                <label for="message" class="block text-xs font-medium text-gray-400 dark:text-white">{{ $answer->question->name }}</label>
+                                <label  class="block text-xs font-medium text-gray-400 dark:text-white">{{ $answer->question->name }}</label>
                                 <div class="text-base text-gray-800">
                                     {{ $answer->name ?? '--' }}
                                 </div>
