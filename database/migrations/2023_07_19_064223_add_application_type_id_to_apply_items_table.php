@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('apply_items', function (Blueprint $table) {
             $table->foreignID('application_type_id')->onUpdate('cascade')->onDelete('cascade')->nullable();
-            $table->float('price', 9, 0);
+            $table->float('price', 9, 0)->nullable();
         });
     }
 
