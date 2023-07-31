@@ -79,7 +79,6 @@ Route::group(['middleware' => ['auth']], function () {
     //Livewire full page components
     Route::get('pacientes', ListadoPacientes::class)->name('pacientes');
     Route::get('kines', ListadoKines::class)->name('kines');
-    Route::get('solicitudes/{solicitud?}/ver', \App\Http\Livewire\Recetas\Index::class)->name('solicitud.show');
     Route::get('kines/{kine?}/ver/', \App\Http\Livewire\Doctor\Index::class)->name('doctor.show');
 
     Route::get('ayuda', [VideoController::class, 'index'])->name('ayudaVideo');
