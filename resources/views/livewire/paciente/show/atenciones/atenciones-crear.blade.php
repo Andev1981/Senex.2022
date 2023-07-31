@@ -26,7 +26,7 @@
                     </button>
                 </div>
                 <form wire:submit.prevent="saveAtencion">
-                    <div class="grid gap-4 mb-4 sm:grid-cols-4">
+                    <div class="grid gap-4 mb-4 sm:grid-cols-3">
                         <div>
                             <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Asignar a
                                 Kine <small class="text-gray-400 italic">(Obligatorio)</small> </label>
@@ -48,31 +48,6 @@
                                 </select>
                             </div>
                             @error('kine')
-                            <p class="mt-2 text-sm text-red-600 dark:text-red-500">
-                                {{ $message }}.
-                            </p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de
-                                Atención <small class="text-gray-400 italic">(Obligatorio)</small></label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-
-                                </div>
-                                <select wire:model.defer="tipo_atencion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                    <option selected>-- seleccione una opción -</option>
-                                    @foreach ($tipo_atenciones as $tipo)
-                                    <option value="{{ $tipo->id }}">
-                                        {{ $tipo->name }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @error('tipo_atencion')
                             <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                 {{ $message }}.
                             </p>

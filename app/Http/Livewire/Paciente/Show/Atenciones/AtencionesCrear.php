@@ -16,8 +16,6 @@ class AtencionesCrear extends Component
     use WithFileUploads;
     public User $paciente;
     public $openCrearAtencion = 'hidden',
-        $tipo_atencion = "",
-        $tipo_atenciones = [],
         $doctors = [],
         $profesional_derivacion = "",
         $lugar_derivacion = "",
@@ -29,7 +27,6 @@ class AtencionesCrear extends Component
 
     protected $rules = [
         'kine' => 'required',
-        'tipo_atencion' => 'required',
         'forma_de_pago' => 'required',
         'valor' => 'required|integer|min:3|max:999999',
         'profesional_derivacion' => 'string|max:100',
@@ -46,7 +43,6 @@ class AtencionesCrear extends Component
     public function mount(User $paciente)
     {
         $this->paciente = $paciente;
-        $this->tipo_atenciones = ApplicationType::all();
         $this->doctors = User::where('user_type', 'Kine')->get();
     }
 
@@ -83,7 +79,7 @@ class AtencionesCrear extends Component
             $apply = ApplyItem::create([
                 'user_id' => $this->kine,
                 'application_id' => $application->id,
-                'application_type_id' => $this->tipo_atencion,
+                'application_type_id' => 1,
                 'price' => $this->valor,
             ]);
 
@@ -107,7 +103,6 @@ class AtencionesCrear extends Component
             'profesional_derivacion',
             'lugar_derivacion',
             'mensaje',
-            'tipo_atencion',
             'forma_de_pago',
             'valor',
         ]);

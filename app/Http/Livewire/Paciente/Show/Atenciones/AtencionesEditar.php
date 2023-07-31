@@ -13,8 +13,7 @@ class AtencionesEditar extends Component
     public User $paciente;
     public Application $application;
     public $openDelAtencion = 'hidden',
-        $tipo_atencion = '',
-        $applicationTypes = [],
+        $openEditAtencion = 'hidden',
         $selectedApplicationType = "",
         $kine = '',
         $kines = [],
@@ -26,7 +25,6 @@ class AtencionesEditar extends Component
 
     protected $rules = [
             'kine' => 'required',
-            'tipo_atencion' => 'required',
             'tipo_de_pago' => 'required',
             'valor' => 'required|integer|min:3|max:999999',
             'profesional_derivacion' => 'string|max:100',
@@ -44,20 +42,38 @@ class AtencionesEditar extends Component
     public function mount(Application $application)
     {
         $this->application = $application;
-        $this->applicationTypes = ApplicationType::all();
         $this->paciente = $application->user;
         $this->kines = User::where('user_type', 'Kine')->get();
         $this->valor = $application->price;
-        if($application->type){
-            $this->selectedApplicationType = $application->type;
-        }
+   
 
     }
 
     public function save(){
         if($this->validate()){
-
+            $this->application->derivado = $this->profesional_derivacion;
+            $this->application->desde = $this->lugar_derivacion;
+            $this->application->comments = $this->mensaje;
+            $this->application->type_payment = $this->forma_de_pago;
         }
+    }
+
+    public function clear()
+    {
+        $this->resetValidation();
+        $this->resetErrorBag();
+        $this->reset([
+            'profesional_derivacion',
+            'lugar_derivacion',
+            'mensaje',
+            'forma_de_pago',
+            'valor',
+        ]);
+
+        $this->clear();
+            $this->dispatchBrowserEvent('swal-success');
+            $this->emit('success-atencion',$this->paciente->id);
+            $this->openEditAtencion = 'hidden';
     }
 
     public function delete(){
