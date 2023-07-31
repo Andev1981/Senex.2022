@@ -2,6 +2,9 @@
 
 namespace App\Http\Livewire\Kine;
 
+use App\Models\Address;
+use App\Models\Comuna;
+use App\Models\Region;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Livewire\Component;
@@ -11,21 +14,36 @@ class ModalCrear extends Component
 {
 
      use WithFileUploads;
-    public $open = 'hidden';
-    public $name = "";
-    public $last_name = "";
-    public $phone = "";
-    public $email = "";
-    public $avatar;
+    public User $paciente;
+    public Address $address;
+
     public $file_path;
+    public $open = 'hidden';
+    public $openDel = 'hidden';
+    public $regiones = [];
+    public $comunas = [];
+    public $questions = [];
+    public $avatar;
+    public $phone;
 
 
-    protected $rules = [
-        'name' => 'required|min:3|max:50',
-        'last_name' => 'required|min:3|max:50',
-        'phone' => 'required|min:9|max:9',
-        'email' => 'required|email|unique:users,email|min:10|max:200',
-    ];
+     protected function rules() {
+        
+        return [
+            'name' => 'required|min:3|max:50',
+            'last_name' => 'required|min:3|max:50',
+            'rut' => 'required|max:10|min:9',
+            'email' => 'required|email|max:255|unique:users,email',
+            'birth' => 'required|date',
+            'phone' => 'required',
+            'status' => 'required',
+            'street' => 'required|max:150',
+            'number' => 'required|integer',
+            'address' => 'required|max:150',
+            'avatar' => '',
+            'comuna_id' => 'required',
+        ];
+    } 
 
     protected $messages = [
         'name.required' => 'Nombre es requerido',
@@ -45,18 +63,17 @@ class ModalCrear extends Component
 
     public function render()
     {
+
         return view('livewire.kine.modal-crear');
     }
 
     public function save(){
 
-        /*      dd($this->name); */
-
              $this->validate();
 
               if($this->avatar){
-                $file_name = $this->avatar->getClientOriginalName(); 
-                $file_extension = $this->avatar->extension(); 
+                /* $file_name = $this->avatar->getClientOriginalName(); 
+                $file_extension = $this->avatar->extension();  */
                 $this->file_path = 'storage/'. $this->avatar->store('avatars','public'); 
             }
 
@@ -65,17 +82,18 @@ class ModalCrear extends Component
                 'last_name' => $this->last_name,
                 'email' => $this->email,
                 'avatar' => $this->file_path,
+                'rut' => $this->rut,
                 'phone' => $this->phone,
+                'status' => $this->status,
                 'user_type' => 'Kine',
                 'address_id' => 1,
                 'password' => bcrypt($this->name . '-SENEX2023'),
              ]);
 
-             $user->assignRole([4]);
+             $user->assignRole([3]);
 
-             $this->emit('success');
              $this->dispatchBrowserEvent('swal-success');
-
+             $this->emit('success-kine');
              $this->clear();
 
          }

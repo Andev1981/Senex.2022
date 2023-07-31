@@ -10,7 +10,7 @@ class ListadoKines extends Component
 {
     use WithPagination;
     public $search;
-    protected $listeners = ['success' => 'render'];
+    protected $listeners = ['success-kine' => 'render'];
     protected $queryString = ['search'];
     public $sort = 'name';
     public $direction = 'asc';

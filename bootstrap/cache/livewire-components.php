@@ -12,6 +12,7 @@
   'doctor.tabs.pendientes' => 'App\\Http\\Livewire\\Doctor\\Tabs\\Pendientes',
   'doctor.tabs.services' => 'App\\Http\\Livewire\\Doctor\\Tabs\\Services',
   'inicio' => 'App\\Http\\Livewire\\Inicio',
+  'kine.assign-index' => 'App\\Http\\Livewire\\Kine\\AssignIndex',
   'kine.listado-kines' => 'App\\Http\\Livewire\\Kine\\ListadoKines',
   'kine.modal-crear' => 'App\\Http\\Livewire\\Kine\\ModalCrear',
   'kine.modal-editar' => 'App\\Http\\Livewire\\Kine\\ModalEditar',

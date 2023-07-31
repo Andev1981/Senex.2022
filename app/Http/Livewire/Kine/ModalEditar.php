@@ -2,6 +2,8 @@
 
 namespace App\Http\Livewire\Kine;
 
+use App\Models\Comuna;
+use App\Models\Region;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -12,10 +14,12 @@ class ModalEditar extends Component
      use WithFileUploads;
 
     public $doctor;
-
+    public $regiones = [];
+    public $comunas = [];
     public $open = 'hidden';
     public $openDel = 'hidden';
     public $file_path;
+    public $status=0;
 
     
     protected $rules = [
@@ -31,13 +35,20 @@ class ModalEditar extends Component
         'doctor.last_name.required' => 'Apellido es requerido',
         'doctor.last_name.min' => 'Apellido debe tener al menos 5 caracteres',
         'doctor.last_name.max' => 'Apellido supera el límite permitido de caracteres',
-        'doctor.phone.required' => 'Telefono es requerido',
+        'doctor.phone.required' => 'Teléfono es requerido',
         'doctor.phone.max' => 'Teléfono supera el máximo',
         'doctor.phone.min' => 'Teléfono debe tener al menos 12 caracteres',
     ];
 
     public function mount(User $doctor){
-        $this->doctor = $doctor;
+        if($doctor){
+            $this->doctor = $doctor;
+            if($this->doctor->id){
+                $this->status = 1;
+            }
+        }
+        $this->regiones = Region::where('id',1)->get();
+        $this->comunas = Comuna::where('region_id',1)->get();
     }
 
     public function render()

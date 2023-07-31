@@ -1,7 +1,7 @@
 <div>
     <div class="flex items-center space-x-4">
         <button type="button" wire:click="$set('open','')"
-            class="flex items-center px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
+            class="flex items-center px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
                 aria-hidden="true">
                 <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
@@ -9,20 +9,15 @@
                     d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
                     clip-rule="evenodd" />
             </svg>
+        @if ($status===1)
             Editar
+        @else
+            Crear
+        @endif
         </button>
-        {{--        <button type="button"
-            class="flex items-center px-3 py-2 text-sm font-medium text-center text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-sky-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" fill="currentColor"
-                class="w-4 h-4 mr-2 -ml-0.5">
-                <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
-                <path fill-rule="evenodd" clip-rule="evenodd"
-                    d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" />
-            </svg>
-            Ver detalles
-        </button> --}}
+        @if ($status===1)
         <button type="button" wire:click="$set('openDel','')"
-            class="flex items-center px-3 py-2 text-sm font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+            class="flex items-center px-2 py-1 text-sm font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
                 aria-hidden="true">
                 <path fill-rule="evenodd"
@@ -31,6 +26,8 @@
             </svg>
             Eliminar
         </button>
+        @endif
+        
     </div>
 
     {{-- Modal Eliminar --}}
@@ -69,7 +66,7 @@
     </div>
     <div
         class="{{ $open }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
-        <div class="relative w-full h-full max-w-2xl p-4 md:h-auto">
+        <div class="relative w-full h-full max-w-3xl p-4 md:h-auto">
 
             <!-- Modal content -->
             <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -133,9 +130,6 @@
                                 class="block mt-2 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                                 aria-describedby="file_input_help" wire:model="file_path" id="file_input"
                                 type="file">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-300" id="file_input_help">SVG, PNG,
-                                JPG
-                                o GIF (MAX. 800x400px).</p>
                             @error('doctor.avatar')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
@@ -250,6 +244,44 @@
                                 </p>
                             @enderror
                         </div>
+                    </div>
+                        
+                    <div class="grid gap-4 mb-4 sm:grid-cols-1 md:grid-cols-2">
+                   
+                            <div>
+                                <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rut
+                                    <small class="italic text-gray-500">(ej: 12345678-9)</small>
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-500 dark:text-gray-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                                        </svg>
+
+                                    </div>
+                                    <input type="text" wire:model.defer="rut" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase" placeholder="">
+                                </div>
+                                @error('rut')
+                                <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                                    {{ $message }}
+                                </p>
+                                @enderror
+                            </div>
+                            <div>
+                            <x-input-field-required label="Fecha de nacimiento" type="date" wire:model.defer="fecha_nacimiento" placeholder="">
+                                    <svg xmlns="http://www.w3.org/2000/svg"  fill="none" class="w-5 h-5 text-gray-500 bi bi-calendar2-plus dark:text-gray-400" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H2z"/>
+                                    <path d="M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V4zM8 8a.5.5 0 0 1 .5.5V10H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V11H6a.5.5 0 0 1 0-1h1.5V8.5A.5.5 0 0 1 8 8z"/>
+                                    </svg>
+                            </x-input-field-required>
+                            @error('fecha_nacimiento')
+                            <p class="text-sm text-red-600 dark:text-red-500">
+                                {{ $message }}.
+                            </p>
+                            @enderror
+                        </div> 
+                
+                      
                     </div>
                     <div class="flex items-center pt-5 space-x-4 border-t-2">
 
