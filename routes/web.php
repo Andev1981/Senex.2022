@@ -16,6 +16,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Paciente\ListadoPacientes;
+use App\Http\Livewire\Types\Index;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +80,7 @@ Route::group(['middleware' => ['auth']], function () {
     //Livewire full page components
     Route::get('pacientes', ListadoPacientes::class)->name('pacientes');
     Route::get('kines', ListadoKines::class)->name('kines');
+    Route::get('types', Index::class)->name('types');
     Route::get('kines/{kine?}/ver/', \App\Http\Livewire\Doctor\Index::class)->name('doctor.show');
 
     Route::get('ayuda', [VideoController::class, 'index'])->name('ayudaVideo');

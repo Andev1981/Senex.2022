@@ -12,6 +12,7 @@ class Sidebar extends Component
         return view('livewire.layout.sidebar');
     }
 
+    /* Solo para actualizar información  */
     public function updateData(){
 
         SelectOption::create([

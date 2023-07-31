@@ -36,4 +36,6 @@
   'paciente.show.pago.pago-listado' => 'App\\Http\\Livewire\\Paciente\\Show\\Pago\\PagoListado',
   'paciente.show.pagos' => 'App\\Http\\Livewire\\Paciente\\Show\\Pagos',
   'paciente.show.preguntas' => 'App\\Http\\Livewire\\Paciente\\Show\\Preguntas',
+  'types.create-type' => 'App\\Http\\Livewire\\Types\\CreateType',
+  'types.index' => 'App\\Http\\Livewire\\Types\\Index',
 );
