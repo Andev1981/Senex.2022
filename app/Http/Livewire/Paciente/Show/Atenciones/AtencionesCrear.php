@@ -37,6 +37,8 @@ class AtencionesCrear extends Component
 
     public function render()
     {
+        $aplications = Application::all();
+        dd($aplications);
         return view('livewire.paciente.show.atenciones.atenciones-crear');
     }
 
