@@ -52,7 +52,7 @@
                     </button>
                 </div>
                 <form wire:submit.prevent="save">
-                    <div class="grid gap-4 mb-4 sm:grid-cols-3">
+                    <div class="grid gap-4 mb-4 sm:grid-cols-1 md:grid-cols-3">
                         <div>
                             <x-input-field label="Nombre" name="first_name" type="text"
                                 wire:model.defer="keeper.name" placeholder="ingrese nombre">
