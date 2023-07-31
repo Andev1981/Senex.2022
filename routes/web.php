@@ -1,26 +1,20 @@
 <?php
 
 use App\Models\Doctor;
-use Livewire\Component;
-use App\Http\Livewire\Steps;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\StepsController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\SesionController;
-use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ResumenController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\TransbankController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
-use App\Http\Livewire\Paciente;
 use App\Http\Livewire\Paciente\ListadoPacientes;
 
 /*
@@ -42,18 +36,6 @@ Route::get('storage-link', function () {
 
 
 
-/* Route::get('step-two',[StepsController::class, 'stepTwo'])->name('step.two');
-Route::get('step-three',[StepsController::class, 'stepThree'])->name('step.three');
-Route::get('step-four',[StepsController::class, 'stepFour'])->name('step.four');
-Route::get('step-five',[StepsController::class, 'stepFive'])->name('step.five');
-Route::get('step-six',[StepsController::class, 'stepSix'])->name('step.six');
-Route::get('step-seven',[StepsController::class, 'stepSeven'])->name('step.seven');
-Route::get('step-eight',[StepsController::class, 'stepEight'])->name('step.eight');
-Route::get('step-nine',[StepsController::class, 'stepNine'])->name('step.nine');
-Route::get('step-ten',[StepsController::class, 'stepTen'])->name('step.ten');
-Route::get('step-two',[StepsController::class, 'stepTwo'])->name('step.two'); */
-
-
 require __DIR__ . '/auth.php';
 
 Route::group(['middleware' => ['auth']], function () {
@@ -66,7 +48,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/dashboard', Inicio::class)->name('dashboard');
     Route::get('/', Inicio::class)->name('/');
 
-    Route::post('to-step-two', [StepsController::class, 'toStepTwo'])->name('step.create.one');
+  
     Route::middleware('guest')->group(function () {
 
         Route::get('register/doctor', [RegisteredUserController::class, 'create_doc'])
