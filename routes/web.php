@@ -55,9 +55,6 @@ Route::group(['middleware' => ['auth']], function () {
             ->name('register.doc');
     });
 
-    // Route::get('step-one',Steps::class)->middleware(['role:Patient'],['role:Admin'])->name('step.one');
-    Route::get('{paciente}/step-one', Steps::class)->name('step.one');
-
     Route::get('/admin', [HomeController::class, 'index'])->name('admin');
     Route::resource('roles', RoleController::class)->middleware(['role:Admin']);
     Route::resource('users', UserController::class)->middleware(['role:Admin']);
