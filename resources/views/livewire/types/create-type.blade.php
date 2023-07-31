@@ -1,6 +1,6 @@
 <div>
 
-    @if($type->id)
+    @if($status === 1)
         <button wire:click="$set('open','')" class="flex items-center text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-100 font-medium rounded-lg text-sm px-2 py-1.5 text-center dark:bg-yellow-400 dark:hover:bg-yellow-700 dark:focus:ring-yellow-600" type="button">
             Editar
         </button>
@@ -18,7 +18,7 @@
                 <!-- Modal header -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    @if($type->id)
+                    @if($status === 1)
                         Editando Tipo de Atención
                     @else
                         Creando Tipo de Atención
@@ -63,7 +63,7 @@
                             <svg class="w-6 h-6 mr-1 -ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
                             </svg>
-                             @if($type->id)
+                             @if($status === 1)
                                 Actualizar
                              @else
                                 Guardar
