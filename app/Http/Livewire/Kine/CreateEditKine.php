@@ -8,10 +8,9 @@ use App\Models\User;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class ModalEditar extends Component
+class CreateEditKine extends Component
 {
-
-     use WithFileUploads;
+    use WithFileUploads;
 
     public $doctor;
     public $regiones = [];
@@ -40,6 +39,11 @@ class ModalEditar extends Component
         'doctor.phone.min' => 'Teléfono debe tener al menos 12 caracteres',
     ];
 
+    public function render()
+    {
+        return view('livewire.kine.create-edit-kine');
+    }
+
     public function mount(User $doctor){
         if($doctor){
             $this->doctor = $doctor;
@@ -49,11 +53,6 @@ class ModalEditar extends Component
         }
         $this->regiones = Region::where('id',1)->get();
         $this->comunas = Comuna::where('region_id',1)->get();
-    }
-
-    public function render()
-    {
-        return view('livewire.kine.modal-editar');
     }
 
     public function save(){
@@ -66,7 +65,7 @@ class ModalEditar extends Component
 
         $this->doctor->save();
 
-        $this->emitUp('success');
+        $this->emitUp('success-kine');
 
         $this->dispatchBrowserEvent('swal-success');
         
@@ -88,5 +87,4 @@ class ModalEditar extends Component
 
 
     }
-
 }
