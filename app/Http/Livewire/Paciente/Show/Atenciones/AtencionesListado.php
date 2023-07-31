@@ -12,6 +12,7 @@ class AtencionesListado extends Component
 
   use WithPagination;
   public User $paciente;
+
   protected $listeners = ['success-atencion' => 'successAtention'];
 
   public function render()
