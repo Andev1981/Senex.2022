@@ -13,19 +13,24 @@ class CreateEditKine extends Component
     use WithFileUploads;
 
     public $doctor;
-    public $regiones = [];
-    public $comunas = [];
     public $open = 'hidden';
     public $openDel = 'hidden';
     public $file_path;
     public $status=0;
+    public $phoneLength=0;
 
     
-    protected $rules = [
-        'doctor.name' => 'required|min:3|max:50',
-        'doctor.last_name' => 'required|min:5|max:50',
-        'doctor.phone' => 'required|min:9|max:9',
-    ];
+    protected function rules() {
+        return [
+            'doctor.avatar' => '',
+            'doctor.name' => 'required|min:3|max:50',
+            'doctor.last_name' => 'required|min:5|max:50',
+            'doctor.rut' => 'required|max:10|min:9',
+            'doctor.email' => 'required|email|max:255|unique:users,email,'.$this->doctor->id,
+            'doctor.birth' => 'required|date',
+            'doctor.phone' => 'required|min:9|max:9',
+            ];
+    }
 
     protected $messages = [
         'doctor.name.required' => 'Nombre es requerido',
@@ -51,8 +56,6 @@ class CreateEditKine extends Component
                 $this->status = 1;
             }
         }
-        $this->regiones = Region::where('id',1)->get();
-        $this->comunas = Comuna::where('region_id',1)->get();
     }
 
     public function save(){

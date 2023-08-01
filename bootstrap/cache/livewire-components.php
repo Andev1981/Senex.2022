@@ -15,6 +15,7 @@
   'kine.assign-index' => 'App\\Http\\Livewire\\Kine\\AssignIndex',
   'kine.create-edit-kine' => 'App\\Http\\Livewire\\Kine\\CreateEditKine',
   'kine.listado-kines' => 'App\\Http\\Livewire\\Kine\\ListadoKines',
+  'kine.values-kine' => 'App\\Http\\Livewire\\Kine\\ValuesKine',
   'layout.navigation' => 'App\\Http\\Livewire\\Layout\\Navigation',
   'layout.sidebar' => 'App\\Http\\Livewire\\Layout\\Sidebar',
   'paciente.listado-pacientes' => 'App\\Http\\Livewire\\Paciente\\ListadoPacientes',

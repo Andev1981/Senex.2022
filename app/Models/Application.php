@@ -33,4 +33,9 @@ class Application extends Model
     {
         return $this->hasMany(ApplyItem::class);
     }
+
+    public function assigns()
+    {
+        return $this->hasMany(Assign::class);
+    }
 }

@@ -2,14 +2,34 @@
 
 namespace App\Http\Livewire\Kine;
 
+use App\Models\Assign;
 use Livewire\Component;
 use App\Models\User;
+use Carbon\Carbon;
 
 class AssignIndex extends Component
 {
     public $opendetalles= 'hidden';
-    public User $doctor;
+    public $kine;
+    public $year;
+    public $month;
+    public $statusFind = -1;
     public $status=0;
+    public $file_path;
+    public $listSessions = [];
+    public $buscarFecha;
+
+  protected function rules() {
+        return [
+            'kine.avatar' => '',
+            'kine.name' => 'required|min:3|max:50',
+            'kine.last_name' => 'required|min:5|max:50',
+            'kine.rut' => 'required|max:10|min:9',
+            'kine.email' => 'required|email|max:255|unique:users,email,'.$this->kine->id,
+            'kine.birth' => 'required|date',
+            'kine.phone' => 'required|min:9|max:9',
+            ];
+    }
 
     public function render()
     {
@@ -17,12 +37,42 @@ class AssignIndex extends Component
     }
 
     public function mount(User $doctor){
-        
         if($doctor){
-            $this->doctor = $doctor;
-            if($this->doctor->id){
+            $this->kine = $doctor;
+            if($this->kine->id){
                 $this->status = 1;
             }
         }
+
+        $this->buscarFecha = Carbon::now();
+        $this->month = $this->buscarFecha->format('m');
+        $this->year = $this->buscarFecha->format('Y');
+        $this->searchByItems();
+        
+
+    }
+
+    public function saveKine(){
+        $this->validate();
+
+         if($this->file_path){
+            $this->kine->avatar = 'storage/'. $this->file_path->store('avatars','public');
+        }
+
+        $this->kine->save();
+        $this->dispatchBrowserEvent('swal-success');
+    }
+
+    public function searchByItems(){
+
+
+            $this->buscarFecha = Carbon::parse($this->year.'-'.$this->month);
+
+            $this->listSessions = Assign::where('user_id',$this->kine->id)->with(['applyItem' => function ($query) {
+                $query->where('fecha_atencion', 'like',$this->buscarFecha.'%')->where('status',$this->statusFind);
+            }])->orderBy('id','desc')->get();
+        
+        
+
     }
 }

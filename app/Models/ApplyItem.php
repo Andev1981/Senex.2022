@@ -35,4 +35,8 @@ class ApplyItem extends Model
     public function user(){
         return $this->belongsTo(User::class);
     }
+
+    public function assign(){
+        return $this->hasOne(Assign::class);
+    }
 }

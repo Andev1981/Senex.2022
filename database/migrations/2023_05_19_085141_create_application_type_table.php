@@ -13,8 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('applications', function (Blueprint $table) {
-            $table->dropColumn(['applications_type_id','price']);
+        Schema::create('application_types', function (Blueprint $table) {
+            $table->id();
+            $table->string('name',150);
+            $table->text('description',300);
+            $table->timestamps();
         });
     }
 
@@ -25,8 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('applications', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('application_types');
     }
 };

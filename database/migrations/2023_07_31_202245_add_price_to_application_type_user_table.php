@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('applications', function (Blueprint $table) {
-            $table->dropColumn(['applications_type_id','price']);
+        Schema::table('application_type_user', function (Blueprint $table) {
+             $table->float('price', 9, 0)->nullable();
         });
     }
 
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('applications', function (Blueprint $table) {
+        Schema::table('application_type_user', function (Blueprint $table) {
             //
         });
     }

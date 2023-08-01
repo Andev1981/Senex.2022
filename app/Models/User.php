@@ -66,6 +66,11 @@ class User extends Authenticatable
         return $this->hasMany(Application::class);
     }
 
+     public function assigns()
+    {
+        return $this->hasMany(Assign::class);
+    }
+
     public function images()
     {
         return $this->morphMany(Image::class, 'imageable');
