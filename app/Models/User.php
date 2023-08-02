@@ -66,7 +66,12 @@ class User extends Authenticatable
         return $this->hasMany(Application::class);
     }
 
-     public function assigns()
+    public function application_type_users()
+    {
+        return $this->hasMany(ApplicationTypeUser::class);
+    }
+
+    public function assigns()
     {
         return $this->hasMany(Assign::class);
     }

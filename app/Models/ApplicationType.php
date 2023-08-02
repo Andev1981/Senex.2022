@@ -15,7 +15,7 @@ class ApplicationType extends Model
 
     public function items()
     {
-        return $this->hasMany(ApplyItem::class);
+        return $this->hasMany(ApplyItem::class,'application_type_id','id');
     }
 
     public function application_type_user()

@@ -9,7 +9,7 @@ class Assign extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'user_id',
+        'user_id', //Usuario Kine
         'application_id',
         'apply_item_id',
     ];

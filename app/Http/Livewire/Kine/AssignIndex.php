@@ -2,22 +2,36 @@
 
 namespace App\Http\Livewire\Kine;
 
+use App\Models\ApplicationType;
+use App\Models\ApplicationTypeUser;
+use App\Models\ApplyItem;
 use App\Models\Assign;
 use Livewire\Component;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Livewire\WithFileUploads;
 
 class AssignIndex extends Component
 {
-    public $opendetalles= 'hidden';
+    use WithFileUploads;
+
+    public $opendetalles = 'hidden';
+    public $openvalores = 'hidden';
     public $kine;
     public $year;
     public $month;
-    public $statusFind = -1;
+    public $statusFindView = -1;
+    public $statusFind = [0,1,2,3];
     public $status=0;
     public $file_path;
     public $listSessions = [];
     public $buscarFecha;
+    public $buscarFechaIn;
+    public $atenciones = [];
+    public $atencionSelected;
+    public $atencionValor;
+    public $applicationUsers=[];
 
   protected function rules() {
         return [
@@ -31,8 +45,7 @@ class AssignIndex extends Component
             ];
     }
 
-    public function render()
-    {
+    public function render(){
         return view('livewire.kine.assign-index');
     }
 
@@ -43,6 +56,9 @@ class AssignIndex extends Component
                 $this->status = 1;
             }
         }
+        $this->atenciones = ApplicationType::all();
+
+        $this->applicationUsers = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
 
         $this->buscarFecha = Carbon::now();
         $this->month = $this->buscarFecha->format('m');
@@ -61,18 +77,50 @@ class AssignIndex extends Component
 
         $this->kine->save();
         $this->dispatchBrowserEvent('swal-success');
+        
     }
 
     public function searchByItems(){
 
 
-            $this->buscarFecha = Carbon::parse($this->year.'-'.$this->month);
+            $this->buscarFecha =  $this->year.'-'.$this->month;
 
-            $this->listSessions = Assign::where('user_id',$this->kine->id)->with(['applyItem' => function ($query) {
-                $query->where('fecha_atencion', 'like',$this->buscarFecha.'%')->where('status',$this->statusFind);
-            }])->orderBy('id','desc')->get();
-        
-        
-
+            $this->listSessions = ApplyItem::with('assign')
+                    ->where('fecha_atencion', 'like', $this->buscarFecha.'%')
+                    ->where('status',1)->where('user_id', $this->kine->id)
+                    ->latest('id')
+                    ->get();
+                    
     }
+
+
+    public function saveValor(){
+
+
+        $applyBuscar = ApplicationTypeUser::where('user_id',$this->kine->id)->where('application_type_id',$this->atencionSelected)->first();
+
+        if($applyBuscar){
+           $applyBuscar->price = $this->atencionValor;
+           $applyBuscar->save();
+        }else{
+            ApplicationTypeUser::create([
+                'user_id' => $this->kine->id,
+                'application_type_id' => $this->atencionSelected,
+                'price' => $this->atencionValor,
+            ]);
+        }
+
+        $this->applicationUsers = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
+        
+        $this->dispatchBrowserEvent('swal-success');
+
+        
+    }
+
+    public function setValues(ApplicationTypeUser $apply){
+
+        $this->atencionSelected = $apply->application_type_id;
+        $this->atencionValor = $apply->price;
+
+    } 
 }
