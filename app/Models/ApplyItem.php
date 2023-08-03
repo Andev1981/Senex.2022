@@ -24,6 +24,10 @@ class ApplyItem extends Model
         return $this->belongsTo(ApplicationType::class);
     }
 
+    public function applicationTypeUser(){
+        return $this->hasOne(ApplicationTypeUser::class,'id','application_type_id');
+    }
+
     public function images(){
         return $this->morphMany(Image::class, 'imageable');
     }

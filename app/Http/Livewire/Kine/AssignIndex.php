@@ -22,7 +22,7 @@ class AssignIndex extends Component
     public $statusFind = [0,1,2,3];
     public $status=0;
     public $file_path;
-    public $listSessions = [];
+    public $applyItems = [];
     public $buscarFecha;
     public $buscarFechaIn;
 
@@ -51,7 +51,6 @@ class AssignIndex extends Component
             }
         }
         
-
         $this->buscarFecha = Carbon::now();
         $this->month = $this->buscarFecha->format('m');
         $this->year = $this->buscarFecha->format('Y');
@@ -77,7 +76,7 @@ class AssignIndex extends Component
 
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
-            $this->listSessions = ApplyItem::with('assign')
+            $this->applyItems = ApplyItem::with('assign')
                     ->where('fecha_atencion', 'like', $this->buscarFecha.'%')
                     ->where('status',1)->where('user_id', $this->kine->id)
                     ->latest('id')

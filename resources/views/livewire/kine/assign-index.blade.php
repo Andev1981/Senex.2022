@@ -283,6 +283,7 @@
                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr class="text-center">
                                             <th scope="col" class="px-6 py-3">Paciente</th>
+                                             <th scope="col" class="px-6 py-3">Tipo</th>
                                             <th scope="col" class="px-6 py-3">N°&nbsp;Sesión</th>
                                             <th scope="col" class="px-6 py-3">Valor&nbsp;Cliente</th>
                                             <th scope="col" class="px-6 py-3">
@@ -297,28 +298,30 @@
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        @forelse ($listSessions as $assigned)
+                                        @forelse ($applyItems as $applyItem)
                                                 <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                     <td scope="row"
                                                         class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
-                                                        {{ $assigned->application->user->name ?? '' }}
-                                                        {{ $assigned->application->user->last_name ?? '' }}
+                                                        {{ $applyItem->application->user->name ?? '' }}
+                                                        {{ $applyItem->application->user->last_name ?? '' }}
+                                                    </td class="px-1 py-1">
+                                                        
+                                                    <td>
+                                                    {{ $applyItem->applicationType->name }}
                                                     </td>
-                                                    <td class="px-1 py-1">{{ $assigned->id ?? ''}}</td>
+                                                    <td class="px-1 py-1">{{ $applyItem->id ?? ''}}</td>
                                                     <td class="px-1 py-1">
-                                                    {{ $assigned->price  ?? ''}}
+                                                    {{ $applyItem->price  ?? ''}}
                                                     </td>
                                                     <td class="px-1 py-1">
-
-                                                        {{ $assigned->price }}
-                                                        {{ $assigned->applyItem->fecha_atencion ?? '' }}
+                                                        {{ $applyItem->applicationTypeUser->price }}
                                                     </td>
                                                     <td  class="flex px-1 py-1">
-                                                    @if ($assigned->applyItem)
+                                                    @if ($applyItem)
                                                         
-                                                        @if ($assigned->applyItem->status === 0 )
+                                                        @if ($applyItem->status === 0 )
                                                             Pendiente
-                                                        @elseif($assigned->applyItem->status === 1)
+                                                        @elseif($applyItem->status === 1)
                                                             Atendido
                                                         @endif
                                                     @endif
