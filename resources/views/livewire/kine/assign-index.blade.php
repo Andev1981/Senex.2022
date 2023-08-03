@@ -290,6 +290,9 @@
                                             Valor&nbsp;Kine
                                             </th>
                                             <th scope="col" class="px-6 py-3">
+                                            A&nbsp;Favor 
+                                            </th>
+                                            <th scope="col" class="px-6 py-3">
                                                 Estado
                                             </th>
                                             <th colspan="2" class="px-6 py-3">
@@ -311,10 +314,13 @@
                                                     </td>
                                                     <td class="px-1 py-1">{{ $applyItem->id ?? ''}}</td>
                                                     <td class="px-1 py-1">
-                                                    {{ $applyItem->price  ?? ''}}
+                                                     ${{  number_format($applyItem->price,0,',','.') }}.-
                                                     </td>
                                                     <td class="px-1 py-1">
-                                                        {{ $applyItem->applicationTypeUser->price }}
+                                                        ${{  number_format($applyItem->applicationTypeUser->price,0,',','.') }}.-
+                                                    </td>
+                                                    <td>
+                                                    ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') }}.-
                                                     </td>
                                                     <td  class="flex px-1 py-1">
                                                     @if ($applyItem)
@@ -344,20 +350,14 @@
                        </div>
                     </div>
                     <div class="flex items-center pt-5 space-x-4 border-t-2">
-
+                                <a
+                                             href="reporte-pdf/{{ $this->buscarFecha }}/{{$this->kine->id}}"
+                                             target="_blank"
+                                             type="button"
+                                                class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800"
+                                                >Generar Reporte</a>
                     </div>
               
-
-            </div>
-        </div>
-    </div>
-
-
-                                                  
-                                </div>
-                       
-
-                    </div>
 
             </div>
         </div>

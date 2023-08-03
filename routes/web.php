@@ -13,6 +13,7 @@ use App\Http\Controllers\ResumenController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\TransbankController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Paciente\ListadoPacientes;
@@ -82,6 +83,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('kines', ListadoKines::class)->name('kines');
     Route::get('types', Index::class)->name('types');
     Route::get('kines/{kine?}/ver/', \App\Http\Livewire\Doctor\Index::class)->name('doctor.show');
+
+    Route::get('/reporte-pdf/{applyItems}/{kine}',[ReportePdfController::class,'generarReporte']);
 
     Route::get('ayuda', [VideoController::class, 'index'])->name('ayudaVideo');
 });

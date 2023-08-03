@@ -48,7 +48,7 @@ class ValuesKine extends Component
         
 
         $this->clear();
-
+        $this->emit('success-value');
         $this->dispatchBrowserEvent('swal-success');
 
         

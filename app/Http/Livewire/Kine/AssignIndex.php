@@ -9,6 +9,7 @@ use Livewire\Component;
 use App\Models\User;
 use Carbon\Carbon;
 use Livewire\WithFileUploads;
+use Dompdf\Dompdf;
 
 class AssignIndex extends Component
 {
@@ -25,6 +26,8 @@ class AssignIndex extends Component
     public $applyItems = [];
     public $buscarFecha;
     public $buscarFechaIn;
+
+    protected $listeners = ['success-value' => 'searchByItems'];
 
 
   protected function rules() {
@@ -83,6 +86,8 @@ class AssignIndex extends Component
                     ->get();
                     
     }
+
+
 
    public function clear(){
              $this->resetValidation();
