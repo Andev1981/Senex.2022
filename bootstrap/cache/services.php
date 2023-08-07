@@ -51,6 +51,7 @@
     47 => 'Spatie\\Permission\\PermissionServiceProvider',
     48 => 'Laraveles\\Spanish\\SpanishServiceProvider',
     49 => 'Maatwebsite\\Excel\\ExcelServiceProvider',
+    50 => 'Barryvdh\\DomPDF\\ServiceProvider',
   ),
   'eager' => 
   array (
@@ -88,6 +89,7 @@
     31 => 'Spatie\\Permission\\PermissionServiceProvider',
     32 => 'Laraveles\\Spanish\\SpanishServiceProvider',
     33 => 'Maatwebsite\\Excel\\ExcelServiceProvider',
+    34 => 'Barryvdh\\DomPDF\\ServiceProvider',
   ),
   'deferred' => 
   array (

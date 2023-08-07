@@ -1,18 +1,17 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\ApplyItem;
 use Illuminate\Http\Request;
-use Dompdf\Dompdf;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class ReportePdfController extends Controller
 {
+   
      public function generarReporte($buscarFecha, $kine)
     {
 
-         // Crear una instancia de DOMPDF
-        $dompdf = new Dompdf();
 
         // Obtener los datos
         $applyItems = ApplyItem::with('assign')
@@ -20,18 +19,18 @@ class ReportePdfController extends Controller
                     ->where('status',1)->where('user_id', $kine)
                     ->latest('id')
                     ->get();
+        
+
+        $nameUser = $applyItems[0]->user->name . ' ' . $applyItems[0]->user->last_name;
+        $total = $applyItems[0]->sum('price');
+        $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
+        $fecha = $fechaString->format('d/m/Y');
+        //dd($nameUser);
        
+       $pdf = Pdf::loadView('pdf.reporte',['applyItems' => $applyItems,'total' => $total,'nameUser' => $nameUser,'fecha' => $fecha]);
 
-        // Renderizar la vista y obtener su contenido
-        $html = view('reporte-pdf')->with('applyItems',$applyItems)->render();
+       return $pdf->download(rand(1,1000) .'-reporte-' . $nameUser . '.pdf');
 
-        // Cargar el contenido HTML en DOMPDF
-        $dompdf->loadHtml($html);
 
-   /*      // Configurar DOMPDF
-        $dompdf->setPaper('A4', 'portrait'); */
-
-        // Generar el archivo PDF y enviarlo al navegador
-        $dompdf->stream('reporte-pdf.pdf');
     }
 }
