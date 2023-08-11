@@ -258,10 +258,18 @@
                                                 ${{ number_format($applyItem->price,0,',','.') }}.-
                                             </td>
                                             <td class="px-1 py-1">
+                                            @if($applyItem->applicationTypeUser)
                                                 ${{ number_format($applyItem->applicationTypeUser->price,0,',','.') ?? '0'}}.-
+                                            @else
+                                                sin datos
+                                            @endif
                                             </td>
                                             <td>
-                                                ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') ?? '0' }}.-
+                                        @if($applyItem->applicationTypeUser)
+                                                      ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') ?? '0' }}.-
+                                            @else
+                                                sin datos
+                                            @endif
                                             </td>
                                             <td class="flex px-1 py-1">
                                                 @if ($applyItem)
