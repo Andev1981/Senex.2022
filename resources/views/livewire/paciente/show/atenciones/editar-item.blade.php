@@ -1,5 +1,5 @@
 <div>
-    <div class="flex items-center space-x-2 pl-2">
+    <div class="flex items-center pl-2 space-x-2">
         <button type="button" wire:click="$set('openItem','')" class="flex items-center px-2 py-1 text-xs font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
@@ -26,7 +26,7 @@
             <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
                 <!-- Modal header -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
-                    <h3 class="text-lg text-gray-700 dark:text-white font-semibold">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
                         Editando Sesión
                     </h3>
                     <button wire:click="$set('openItem','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
@@ -41,7 +41,7 @@
                             <div class="grid gap-4 mb-4 sm:grid-cols-2">
                                 
                                 <div>
-                                    <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">                        Kine</label>
+                                    <label  class="block text-sm font-medium text-gray-900 dark:text-white">                        Kine</label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -69,7 +69,7 @@
                                 </div>
 
                                 <div>
-                                    <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">                        Tipo de Atención</label>
+                                    <label  class="block text-sm font-medium text-gray-900 dark:text-white">                        Tipo de Atención</label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -95,7 +95,7 @@
                                 </div>
 
                                 <div>
-                                    <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">                        Estado</label>
+                                    <label  class="block text-sm font-medium text-gray-900 dark:text-white">                        Estado</label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                             
@@ -164,6 +164,37 @@
                             </p>
                             @enderror
                         </div>
+
+                         <div>
+                                    <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">                        Número de Sesión</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pb-2 pl-3 pointer-events-none">
+                                            
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="0.5" stroke="currentColor" class="w-6 h-6">
+                                                <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                                                <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z"/>
+                                                </svg>
+
+                                        </div>
+                                        <select wire:model.defer="applyItem.numero_sesion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+<!--                                         <option class="uppercase" value="0"
+                                                >
+                                                    0
+                                                </option> -->
+                                        @for ($i = 0; $i <= $countApplies; $i++)
+                                                <option class="uppercase" value="{{$i}}"
+                                                >
+                                                    {{ $i }}
+                                                </option>
+                                        @endfor    
+                                        </select>
+                                    </div>
+                                    @error('applyItem.status')
+                                    <p class="mt-2 text-sm text-red-600 dark:text-red-500">
+                                        {{ $message }}.
+                                    </p>
+                                    @enderror
+                                </div>
                             </div>
                             <div class="grid gap-4 mb-4 sm:grid-cols-1">
                             <div>

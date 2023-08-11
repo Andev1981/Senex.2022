@@ -233,7 +233,7 @@
                                                     Valor&nbsp;Kine
                                                 </th>
                                                 <th scope="col" class="px-6 py-3">
-                                                    A&nbsp;Favor
+                                                    Resultado
                                                 </th>
                                                 <th scope="col" class="px-6 py-3">
                                                     Estado
@@ -254,7 +254,7 @@
                                                 <td>
                                                     {{ $applyItem->applicationType->name }}
                                                 </td>
-                                                <td class="px-1 py-1">{{ $applyItem->id ?? ''}}</td>
+                                                <td class="px-1 py-1">{{ $applyItem->numero_sesion ?? ''}}</td>
                                                 <td class="px-1 py-1">
                                                     ${{ number_format($applyItem->price,0,',','.') }}.-
                                                 </td>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente\Show\Atenciones;
 
+use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
 use App\Models\User;
@@ -21,6 +22,7 @@ class EditarItem extends Component
     public $fecha_atencion;
     public $comments;
     public $application;
+    public $countApplies;
 
     protected $rules = [
         'applyItem.user_id' => 'required',
@@ -29,6 +31,7 @@ class EditarItem extends Component
         'applyItem.comments' => 'max:255',
         'applyItem.application_type_id' => 'required',
         'applyItem.price' => 'required',
+        'applyItem.numero_sesion' => 'required',
     ];
 
     public function render()
@@ -39,6 +42,7 @@ class EditarItem extends Component
     public function mount(ApplyItem $applyItem){
         $this->applyItem = $applyItem;
         $this->application = $this->applyItem->application->id;
+        $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
         $this->kines = User::where('user_type','Kine')->get();
         $this->types = ApplicationType::all();
 
@@ -46,8 +50,7 @@ class EditarItem extends Component
 
     public function save(){
 
-        $this->validate();
-        
+        $this->validate();        
         $this->applyItem->save();
         $this->clear();
         

@@ -22,7 +22,8 @@ class CrearItem extends Component
            $status,
            $valor,
            $fecha_atencion,
-           $mensaje;
+           $mensaje,
+           $numero_sesion;
     
     protected $rules = [
             'kine' => 'required',
@@ -30,6 +31,7 @@ class CrearItem extends Component
             'status' => 'required',
             'valor' => 'required|integer|min:1|max:999999',
             'mensaje' => 'max:255',
+            'numero_sesion' => 'required',
         ];
     
     public function render()
@@ -52,11 +54,12 @@ class CrearItem extends Component
             'user_id' => $this->kine,
             'application_id' => $this->application->id,
             'application_type_id' => $this->tipo_atencion,
-            'price' => $this->valor,
+            'price' => $this->numero_sesion,
+            'numero_sesion' => $this->numero_sesion,
         ]);
 
 
-        $assign = Assign::create([
+        Assign::create([
                 'user_id' => $this->kine,
                 'application_id' => $this->application->id,
                 'apply_item_id' => $apply->id,
@@ -78,6 +81,7 @@ class CrearItem extends Component
             'mensaje',
             'tipo_atencion',
             'valor',
+            'numero_sesion',
         ]);
     }
 

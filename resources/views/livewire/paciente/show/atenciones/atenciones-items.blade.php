@@ -11,10 +11,10 @@
         <div class="relative w-full h-full p-4 md:max-w-7xl md:h-auto">
 
             <!-- Modal content -->
-            <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5 h-screen">
+            <div class="relative h-screen p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
                 <!-- Modal header -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
-                    <h3 class="text-lg text-gray-700 dark:text-white font-semibold">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
                         Sesiones
                     </h3>
                     <button wire:click="$set('openItem','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
@@ -27,7 +27,7 @@
                 <div>
                     <div class="grid gap-4 mb-4 sm:grid-cols-3">
                         <div class="flex items-center shadow-lg rounded-xl">
-                            <div class="font-medium dark:text-white pl-5">
+                            <div class="pl-5 font-medium dark:text-white">
                                 <div>{{ $paciente->name . ' ' . $paciente->last_name }}</div>
                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ $paciente->email }}</div>
                             </div>
@@ -77,6 +77,7 @@
                                             <th scope="col" class="px-6 py-3">Estado</th>
                                             <th scope="col" class="px-6 py-3">Valor</th>
                                             <th scope="col" class="px-6 py-3">Tipo&nbsp;de&nbsp;Atención</th>
+                                            <th scope="col" class="px-6 py-3">Número&nbsp;de&nbsp;Sesión</th>
                                             <th scope="col" class="px-6 py-3">Fecha&nbsp;Atención</th>
                                             <th scope="col" class="px-6 py-3">
                                                 <span class="sr-only">Actions</span>
@@ -92,7 +93,7 @@
                                     <tbody>
                                    
                                             @forelse ($items as $item)
-                                            <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50 uppercase">
+                                            <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                 <td class="py-2 pl-2 mx-2">
                                                     {{ $item->user->name }}
                                                     {{ $item->user->last_name }}
@@ -105,17 +106,17 @@
                                                     </span>
                                                 @elseif ($item->status === 1)
                                                     <span class="inline-flex items-center bg-teal-100 text-teal-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-teal-900 dark:text-teal-300">
-                                                        <span class="w-2 h-2 mr-1 bg-teal-500 rounded-full text-white"></span>
+                                                        <span class="w-2 h-2 mr-1 text-white bg-teal-500 rounded-full"></span>
                                                         Atendida
                                                     </span>
                                                 @elseif ($item->status === 2)
                                                     <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
-                                                        <span class="w-2 h-2 mr-1 bg-red-500 rounded-full text-white"></span>
+                                                        <span class="w-2 h-2 mr-1 text-white bg-red-500 rounded-full"></span>
                                                         Cancelada
                                                     </span>
                                                 @elseif ($item->status === 3)
                                                     <span class="inline-flex items-center bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-gray-900 dark:text-gray-300">
-                                                        <span class="w-2 h-2 mr-1 bg-gray-500 rounded-full text-white"></span>
+                                                        <span class="w-2 h-2 mr-1 text-white bg-gray-500 rounded-full"></span>
                                                     Reagendada
                                                     </span>
                                                         
@@ -133,6 +134,14 @@
                                                     @if ($item->applicationType)
                                                         
                                                         {{$item->applicationType->name }}
+                                                    @else
+                                                        ---------
+                                                    @endif
+                                                </td>
+                                                <td class="px-6 py-4 uppercase">
+                                                    @if ($item->numero_sesion > 0)
+                                                        
+                                                        {{$item->numero_sesion }}
                                                     @else
                                                         ---------
                                                     @endif

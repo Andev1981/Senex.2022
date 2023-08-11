@@ -71,7 +71,7 @@
                                                     <td>
                                                     {{ $applyItem->applicationType->name }}
                                                     </td>
-                                                    <td>{{ $applyItem->id ?? ''}}</td>
+                                                    <td>{{ $applyItem->numero_sesion ?? ''}}</td>
                                                     <td>
                                                      ${{  number_format($applyItem->price,0,',','.') }}.-
                                                     </td>

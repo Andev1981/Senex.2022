@@ -16,6 +16,7 @@ class ApplyItem extends Model
         'price',
         'status',
         'fecha_atencion',
+        'numero_sesion',
         'comments'
     ];
 

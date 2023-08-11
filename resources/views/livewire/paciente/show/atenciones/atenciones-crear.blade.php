@@ -1,6 +1,6 @@
 <div>
     <div class="flex items-center space-x-2">
-        <button type="button" wire:click="$set('openCrearAtencion','')" class="flex items-center px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
+        <button type="button" wire:click="$set('openCrearAtencion','')" class="flex items-center px-2 py-1 text-sm font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v6m3-3H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
             </svg>
@@ -29,7 +29,7 @@
                     <div class="grid gap-4 mb-4 sm:grid-cols-3">
                         <div>
                             <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Asignar a
-                                Kine <small class="text-gray-400 italic">(Obligatorio)</small> </label>
+                                Kine <small class="italic text-gray-400">(Obligatorio)</small> </label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -54,7 +54,7 @@
                             @enderror
                         </div>
                         <div>
-                            <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Forma de Pago <small class="text-gray-400 italic">(Obligatorio)</small></label>
+                            <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Forma de Pago <small class="italic text-gray-400">(Obligatorio)</small></label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
