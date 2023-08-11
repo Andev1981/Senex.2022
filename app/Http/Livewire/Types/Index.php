@@ -17,4 +17,5 @@ class Index extends Component
         $types = ApplicationType::orderBy('id','desc')->paginate(5);
         return view('livewire.types.index', compact('types'));
     }
+
 }
