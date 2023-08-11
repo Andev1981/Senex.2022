@@ -185,7 +185,7 @@
                         </div>
                     </form>
 
-                    <div class="col-span-3 bg-white">
+                    <div class="bg-white">
 
                         <div class="flex items-center justify-between w-full p-2 font-medium text-left text-gray-500 bg-gray-100 border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800">
 
