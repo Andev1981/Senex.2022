@@ -15,6 +15,7 @@ class Index extends Component
     public $answers = [];
     public $doctores = [];
     public $opendetalles = 'hidden';
+    public $openDelPaciente = 'hidden';
 
     public function render()
     {
@@ -33,5 +34,17 @@ class Index extends Component
         dd($this->answers); */
 
         /*  dd($this->paciente); */
+    }
+
+    public function delete(){
+        $this->applyItem->delete();
+        $this->clear();
+    }
+
+    public function clear(){
+        $this->dispatchBrowserEvent('swal-success');
+        $this->emit('success-paciente');
+        $this->openDelPaciente = 'hidden';
+        $this->opendetalles = 'hidden';
     }
 }

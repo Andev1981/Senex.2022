@@ -12,7 +12,7 @@ class ListadoPacientes extends Component
 
     use WithPagination;
     public $search;
-    protected $listeners = ['success' => 'render'];
+    protected $listeners = ['success' => 'render','success-paciente' => 'render'];
     protected $queryString = ['search'];
     public $sort = 'name';
     public $direction = 'asc';
