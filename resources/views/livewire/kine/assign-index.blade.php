@@ -258,10 +258,10 @@
                                                 ${{ number_format($applyItem->price,0,',','.') }}.-
                                             </td>
                                             <td class="px-1 py-1">
-                                                ${{ number_format($applyItem->applicationTypeUser->price,0,',','.') }}.-
+                                                ${{ number_format($applyItem->applicationTypeUser->price,0,',','.') ?? '0'}}.-
                                             </td>
                                             <td>
-                                                ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') }}.-
+                                                ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') ?? '0' }}.-
                                             </td>
                                             <td class="flex px-1 py-1">
                                                 @if ($applyItem)
@@ -280,7 +280,7 @@
                                         <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                 <td colspan="6"></td>
                                                 <td>
-                                                    <a href="reporte-pdf/{{ $this->buscarFecha }}/{{$this->kine->id}}" target="_blank" type="button" class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800 my-2">Pdf</a>
+                                                    <a href="reporte-pdf/{{ $this->buscarFecha }}/{{$this->kine->id}}" target="_blank" type="button" class="inline-flex items-center px-2 py-1 my-2 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Pdf</a>
                                                 </td>
                                             </tr>
                                             @endif
