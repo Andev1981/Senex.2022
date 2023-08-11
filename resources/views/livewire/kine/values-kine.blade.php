@@ -33,7 +33,7 @@
                 </div>
                  <form wire:submit.prevent="save">                        
                     <div class="grid grid-cols-5 grid-rows-2 gap-4 border-b-2">
-                    <div class="text-left col-span-2">
+                    <div class="col-span-2 text-left">
                       <label 
                                 class="text-sm font-medium text-gray-900 dark:text-white">Atenciones</label>
                         <select  class="block w-full p-2 mr-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model.defer="atencionSelected" required>
@@ -83,7 +83,7 @@
                       </div>
                     </form>
                     </div>
-                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 mb-4 -mt-16">
+                     <table class="w-full mb-4 -mt-16 text-sm text-left text-gray-500 dark:text-gray-400">
                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr class="text-center">
                                             <th scope="col" class="px-6 py-3">Atención</th>
@@ -98,16 +98,22 @@
                                                 <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                     <td scope="row"
                                                         class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
+                                                        @if ($apply->application_type)
+                                                            
                                                         {{ $apply->application_type->name ?? '' }}
+                                                        @endif
                                                        
                                                     </td>
-                                                    <td class="px-1 py-1">${{ number_format($apply->price,0,',','.')}}.-
+                                                    <td class="px-1 py-1">
+                                                    @if ($apply->application_type)
+                                                    ${{ number_format($apply->price,0,',','.')}}.-
+                                                    @endif
                                                     </td>
                                                     <td>
                                                 <button
                                              wire:click="setValues({{ $apply }})"
                                              type="button"
-                                                class="inline-flex items-center px-2 py-1 my-2 ml-5 text-xs font-medium text-center text-white rounded-lg bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+                                                class="inline-flex items-center px-2 py-1 my-2 ml-5 text-xs font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
                                                 >Editar</button>
                                                     </td>
                                                 </tr>
