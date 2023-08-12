@@ -37,7 +37,7 @@ class Index extends Component
     }
 
     public function delete(){
-        $this->applyItem->delete();
+        $this->paciente->delete();
         $this->clear();
     }
 
