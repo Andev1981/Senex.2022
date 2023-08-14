@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente\Show\Atenciones;
 
+use App\Models\Activity;
 use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
@@ -89,6 +90,8 @@ class AtencionesCrear extends Component
                 'application_id' => $application->id,
                 'apply_item_id' => $apply->id,
             ]);
+
+            $this->saveActivity();
      
             $this->clear();
             $this->dispatchBrowserEvent('swal-success');
@@ -107,5 +110,13 @@ class AtencionesCrear extends Component
             'forma_de_pago',
             'valor',
         ]);
+    }
+
+    public function saveActivity(){
+
+         Activity::create([
+                'user_id' => auth()->user()->id,
+                'detail' => 'Se crea nueva atención para usuario ' .  $this->paciente->name .' ' . $this->paciente->last_name,
+            ]);
     }
 }

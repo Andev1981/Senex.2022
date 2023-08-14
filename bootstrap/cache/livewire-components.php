@@ -1,4 +1,5 @@
 <?php return array (
+  'activities' => 'App\\Http\\Livewire\\Activities',
   'doctor.card' => 'App\\Http\\Livewire\\Doctor\\Card',
   'doctor.detail' => 'App\\Http\\Livewire\\Doctor\\Detail',
   'doctor.index' => 'App\\Http\\Livewire\\Doctor\\Index',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente\Show\Atenciones;
 
+use App\Models\Activity;
 use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
@@ -23,6 +24,7 @@ class EditarItem extends Component
     public $comments;
     public $application;
     public $countApplies;
+    public $applypaciente;
 
     protected $rules = [
         'applyItem.user_id' => 'required',
@@ -42,6 +44,7 @@ class EditarItem extends Component
     public function mount(ApplyItem $applyItem){
         $this->applyItem = $applyItem;
         $this->application = $this->applyItem->application->id;
+        $this->applypaciente = Application::find($this->applyItem->application->id);
         $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
         $this->kines = User::where('user_type','Kine')->get();
         $this->types = ApplicationType::all();
@@ -49,6 +52,8 @@ class EditarItem extends Component
     }
 
     public function save(){
+
+        $this->saveActivity();
 
         $this->validate();        
         $this->applyItem->save();
@@ -65,5 +70,13 @@ class EditarItem extends Component
         $this->dispatchBrowserEvent('swal-success');
         $this->emit('success-item',$this->application);
         $this->openItem = 'hidden';
+    }
+
+    public function saveActivity(){
+
+         Activity::create([
+                'user_id' => auth()->user()->id,
+                'detail' => 'Se edita sesión de ' .  $this->applypaciente->user->name .' ' . $this->applypaciente->user->last_name,
+            ]);
     }
 }

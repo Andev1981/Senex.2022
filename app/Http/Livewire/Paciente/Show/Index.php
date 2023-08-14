@@ -29,11 +29,6 @@ class Index extends Component
 
         $this->answers = Answer::with(['question:id,name'])->whereBelongsTo($paciente)->get();
 
-        /*  $this->answers = Answer::with(['paciente', 'question'])->get(); */
-        /* 
-        dd($this->answers); */
-
-        /*  dd($this->paciente); */
     }
 
     public function delete(){

@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente\Show\Atenciones;
 
+use App\Models\Activity;
 use Livewire\Component;
 use App\Models\Application;
 use App\Models\ApplicationType;
@@ -23,7 +24,9 @@ class CrearItem extends Component
            $valor,
            $fecha_atencion,
            $mensaje,
-           $numero_sesion;
+           $numero_sesion,
+           $applypaciente;
+    public $countApplies;
     
     protected $rules = [
             'kine' => 'required',
@@ -31,7 +34,7 @@ class CrearItem extends Component
             'status' => 'required',
             'valor' => 'required|integer|min:1|max:999999',
             'mensaje' => 'max:255',
-            'numero_sesion' => 'required',
+            'numero_sesion' => '',
         ];
     
     public function render()
@@ -42,6 +45,8 @@ class CrearItem extends Component
     public function mount(Application $application)
     {
         $this->application = $application;
+/*         $this->applypaciente = Application::find($this->application); */
+        $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
         $this->tipo_atenciones = ApplicationType::all();
         $this->kines = User::where('user_type', 'Kine')->get();
     }
@@ -54,8 +59,8 @@ class CrearItem extends Component
             'user_id' => $this->kine,
             'application_id' => $this->application->id,
             'application_type_id' => $this->tipo_atencion,
-            'price' => $this->numero_sesion,
-            'numero_sesion' => $this->numero_sesion,
+            'price' => $this->valor,
+            'numero_sesion' =>$this->countApplies + 1,
         ]);
 
 
@@ -65,7 +70,7 @@ class CrearItem extends Component
                 'apply_item_id' => $apply->id,
             ]);
 
-        
+        $this->saveActivity();
         $this->clear();
         $this->dispatchBrowserEvent('swal-success');
         $this->emit('success-item-single',$this->application->id);
@@ -83,6 +88,15 @@ class CrearItem extends Component
             'valor',
             'numero_sesion',
         ]);
+    }
+
+    public function saveActivity(){
+
+ 
+         Activity::create([
+                'user_id' => auth()->user()->id,
+                'detail' => 'Se ingresa nueva sesión para ' .  $this->application->user->name .' ' . $this->application->user->last_name,
+            ]);
     }
 
 }

@@ -11,7 +11,7 @@
 </head>
 
 <body class="antialiased">
-    <section class="bg-gray-50 dark:bg-gray-900">
+    <div class="bg-gray-50 dark:bg-gray-900">
         @livewire('layout.navigation')
         @livewire('layout.sidebar')
 
@@ -20,7 +20,7 @@
             {{ $slot }}
 
         </main>
-    </section>
+    </div>
 
     @livewireScripts
 

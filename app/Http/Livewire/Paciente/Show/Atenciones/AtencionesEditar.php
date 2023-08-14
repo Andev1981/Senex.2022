@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente\Show\Atenciones;
 
+use App\Models\Activity;
 use App\Models\Application;
 use App\Models\User;
 use App\Models\ApplicationType;
@@ -56,10 +57,12 @@ class AtencionesEditar extends Component
             $this->application->comments = $this->mensaje;
             $this->application->type_payment = $this->forma_de_pago;
         }
+         $this->saveActivity();
     }
 
     public function clear()
     {
+       
         $this->resetValidation();
         $this->resetErrorBag();
         $this->reset([
@@ -81,5 +84,13 @@ class AtencionesEditar extends Component
         $this->dispatchBrowserEvent('swal-success');
         $this->emit('success-atencion',$this->paciente->id);
         $this->openDelAtencion = 'hidden';
+    }
+
+    public function saveActivity(){
+
+         Activity::create([
+                'user_id' => auth()->user()->id,
+                'detail' => 'Se actualiza atención de ' .  $this->paciente->name .' ' . $this->paciente->last_name,
+            ]);
     }
 }
