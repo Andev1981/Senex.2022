@@ -24,8 +24,7 @@ class CrearItem extends Component
            $valor,
            $fecha_atencion,
            $mensaje,
-           $numero_sesion,
-           $applypaciente;
+           $numero_sesion;
     public $countApplies;
     
     protected $rules = [
@@ -45,7 +44,6 @@ class CrearItem extends Component
     public function mount(Application $application)
     {
         $this->application = $application;
-/*         $this->applypaciente = Application::find($this->application); */
         $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
         $this->tipo_atenciones = ApplicationType::all();
         $this->kines = User::where('user_type', 'Kine')->get();
