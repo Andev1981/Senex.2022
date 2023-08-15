@@ -44,7 +44,7 @@ class CrearItem extends Component
     public function mount(Application $application)
     {
         $this->application = $application;
-        $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
+        $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
         $this->tipo_atenciones = ApplicationType::all();
         $this->kines = User::where('user_type', 'Kine')->get();
     }
