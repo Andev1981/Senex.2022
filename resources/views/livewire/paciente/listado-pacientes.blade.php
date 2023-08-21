@@ -83,7 +83,7 @@
                                     @endif
                                 </th>
                                 <th wire:click="order('phone')" scope="col" class="px-4 py-3 cursor-pointer">
-                                    ÚLTIMA&nbsp;EDICIÓN
+                                    FECHA&nbsp;EDICIÓN
                                     @if ($sort === 'updated_at')
                                     @if ($direction === 'asc')
                                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
