@@ -14,8 +14,8 @@ class ListadoPacientes extends Component
     public $search;
     protected $listeners = ['success' => 'render','success-paciente' => 'render'];
     protected $queryString = ['search'];
-    public $sort = 'name';
-    public $direction = 'asc';
+    public $sort = 'updated_at';
+    public $direction = 'desc';
 
     public function updatingSearch()
     {

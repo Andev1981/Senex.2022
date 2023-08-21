@@ -57,6 +57,9 @@ class EditarItem extends Component
 
         $this->validate();        
         $this->applyItem->save();
+        $this->applypaciente->user->updated_at = now();
+        $this->applypaciente->user->save();
+
         $this->clear();
         
     }
@@ -78,5 +81,6 @@ class EditarItem extends Component
                 'user_id' => auth()->user()->id,
                 'detail' => 'Se edita sesión de ' .  $this->applypaciente->user->name .' ' . $this->applypaciente->user->last_name,
             ]);
+
     }
 }

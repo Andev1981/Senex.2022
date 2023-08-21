@@ -63,6 +63,10 @@ class AtencionesCrear extends Component
             'type_value' => 0,
         ]);
 
+
+        $this->paciente->updated_at = now();
+        $this->paciente->save();
+
         foreach ($this->documentos as $file) {
 
             $fileExtension = $file->extension();

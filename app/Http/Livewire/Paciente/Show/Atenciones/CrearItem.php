@@ -24,8 +24,9 @@ class CrearItem extends Component
            $valor,
            $fecha_atencion,
            $mensaje,
-           $numero_sesion;
-    public $countApplies;
+           $numero_sesion,
+           $paciente,
+           $countApplies;
     
     protected $rules = [
             'kine' => 'required',
@@ -47,6 +48,7 @@ class CrearItem extends Component
         $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
         $this->tipo_atenciones = ApplicationType::all();
         $this->kines = User::where('user_type', 'Kine')->get();
+        $this->paciente = $this->application->user;
     }
 
     public function saveApply(){
@@ -60,6 +62,8 @@ class CrearItem extends Component
             'price' => $this->valor,
             'numero_sesion' =>$this->countApplies + 1,
         ]);
+        $this->application->updated_at = now();
+        $this->application->save();
 
 
         Assign::create([
@@ -95,6 +99,8 @@ class CrearItem extends Component
                 'user_id' => auth()->user()->id,
                 'detail' => 'Se ingresa nueva sesión para ' .  $this->application->user->name .' ' . $this->application->user->last_name,
             ]);
+        $this->paciente->updated_at = now();
+        $this->paciente->save();
     }
 
 }

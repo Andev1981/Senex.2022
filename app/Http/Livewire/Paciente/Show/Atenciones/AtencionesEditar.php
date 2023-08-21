@@ -92,5 +92,7 @@ class AtencionesEditar extends Component
                 'user_id' => auth()->user()->id,
                 'detail' => 'Se actualiza atención de ' .  $this->paciente->name .' ' . $this->paciente->last_name,
             ]);
+        $this->paciente->updated_at = now();
+        $this->paciente->save();
     }
 }
