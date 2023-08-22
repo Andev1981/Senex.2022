@@ -72,6 +72,8 @@ class EditarItem extends Component
     }
 
     public function clear(){
+        $this->resetValidation();
+        $this->resetErrorBag();
         $this->dispatchBrowserEvent('swal-success');
         $this->emit('success-item',$this->application);
         $this->openItem = 'hidden';

@@ -177,11 +177,8 @@
 
                                         </div>
                                         <select wire:model.defer="applyItem.numero_sesion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-<!--                                         <option class="uppercase" value="0"
-                                                >
-                                                    0
-                                                </option> -->
-                                        @for ($i = 0; $i <= $countApplies; $i++)
+<option>--</option>
+                                        @for ($i = 1; $i <= 100; $i++)
                                                 <option class="uppercase" value="{{$i}}"
                                                 >
                                                     {{ $i }}

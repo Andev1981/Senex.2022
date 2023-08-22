@@ -58,6 +58,9 @@ class CreateEditKine extends Component
         'doctor.phone.required' => 'Teléfono es requerido',
         'doctor.phone.max' => 'Teléfono supera el máximo',
         'doctor.phone.min' => 'Teléfono debe tener al menos 9 caracteres',
+        'doctor.email.required' => 'Correo es requerido',
+        'doctor.rut.required' => 'Rut es requerido',
+        'doctor.birth.required' => 'Fecha de nacimiento es requerida',
     ];
 
     public function render()
@@ -66,12 +69,12 @@ class CreateEditKine extends Component
     }
 
     public function mount(User $doctor){
-        $this->doctor = $doctor;
             if($doctor){
+        $this->doctor = $doctor;
                 if($this->doctor->id){
                     $this->status = 1;
-                }
         }
+                }
     }
 
     public function save(){
