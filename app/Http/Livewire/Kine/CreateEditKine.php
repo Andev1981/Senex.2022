@@ -23,7 +23,7 @@ class CreateEditKine extends Component
     
     protected function rules() {
 
-        if($this->status = 1){
+        if($this->status == 1){
 
             return [
                 'doctor.avatar' => '',
@@ -41,7 +41,7 @@ class CreateEditKine extends Component
                 'doctor.name' => 'required|min:3|max:50',
                 'doctor.last_name' => 'required|min:5|max:50',
                 'doctor.rut' => 'required|max:10|min:9',
-                'doctor.email' => 'required|email|max:255|unique:users,email,'.$this->doctor->id ? '' :'',
+                'doctor.email' => 'required|email|max:255|unique:users,email,'.$this->doctor->id,
                 'doctor.birth' => 'required|date',
                 'doctor.phone' => 'required|min:9|max:9',
             ];
