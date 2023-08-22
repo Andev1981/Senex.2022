@@ -55,7 +55,7 @@
                                                 {{ $applyItem->user->name }} {{ $applyItem->user->last_name }}
                                             </option>
                                             @foreach ($kines as $kine)
-                                            <option class="uppercase" value="{{ $kine }}">
+                                            <option class="uppercase" value="{{ $kine->id }}">
                                                 {{ $kine->name }} {{ $kine->last_name }}
                                             </option>
                                             @endforeach

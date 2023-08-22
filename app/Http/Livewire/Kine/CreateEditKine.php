@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Kine;
 use App\Models\Comuna;
 use App\Models\Region;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -21,15 +22,30 @@ class CreateEditKine extends Component
 
     
     protected function rules() {
-        return [
-            'doctor.avatar' => '',
-            'doctor.name' => 'required|min:3|max:50',
-            'doctor.last_name' => 'required|min:5|max:50',
-            'doctor.rut' => 'required|max:10|min:9',
-            'doctor.email' => 'required|email|max:255|unique:users,email,'.$this->doctor->id,
-            'doctor.birth' => 'required|date',
-            'doctor.phone' => 'required|min:9|max:9',
+
+        if($this->status = 1){
+
+            return [
+                'doctor.avatar' => '',
+                'doctor.name' => 'required|min:3|max:50',
+                'doctor.last_name' => 'required|min:5|max:50',
+                'doctor.rut' => 'required|max:10|min:9',
+                'doctor.birth' => 'required|date',
+                'doctor.email' => 'required|email|max:255|unique:users,email,',
+                'doctor.phone' => 'required|min:9|max:9',
             ];
+        }else{
+
+            return [
+                'doctor.avatar' => '',
+                'doctor.name' => 'required|min:3|max:50',
+                'doctor.last_name' => 'required|min:5|max:50',
+                'doctor.rut' => 'required|max:10|min:9',
+                'doctor.email' => 'required|email|max:255|unique:users,email,'.$this->doctor->id ? '' :'',
+                'doctor.birth' => 'required|date',
+                'doctor.phone' => 'required|min:9|max:9',
+            ];
+        }
     }
 
     protected $messages = [
@@ -41,7 +57,7 @@ class CreateEditKine extends Component
         'doctor.last_name.max' => 'Apellido supera el límite permitido de caracteres',
         'doctor.phone.required' => 'Teléfono es requerido',
         'doctor.phone.max' => 'Teléfono supera el máximo',
-        'doctor.phone.min' => 'Teléfono debe tener al menos 12 caracteres',
+        'doctor.phone.min' => 'Teléfono debe tener al menos 9 caracteres',
     ];
 
     public function render()
@@ -50,11 +66,11 @@ class CreateEditKine extends Component
     }
 
     public function mount(User $doctor){
-        if($doctor){
-            $this->doctor = $doctor;
-            if($this->doctor->id){
-                $this->status = 1;
-            }
+        $this->doctor = $doctor;
+            if($doctor){
+                if($this->doctor->id){
+                    $this->status = 1;
+                }
         }
     }
 
@@ -66,6 +82,10 @@ class CreateEditKine extends Component
             $this->doctor->avatar = 'storage/'. $this->file_path->store('avatars','public');
         }
 
+        $this->doctor->password = bcrypt('Senex2023');
+        $this->doctor->address_id = 1;
+        $this->doctor->status = 1;
+        $this->doctor->user_type = 'Kine';
         $this->doctor->save();
 
         $this->emitUp('success-kine');
@@ -85,6 +105,11 @@ class CreateEditKine extends Component
     public function clear(){
         $this->resetErrorBag();
         $this->resetValidation();
+        if($this->status == 0){
+            $this->reset([
+                'doctor'
+            ]);
+        }
         $this->open = 'hidden';
         $this->openDel = 'hidden';
 

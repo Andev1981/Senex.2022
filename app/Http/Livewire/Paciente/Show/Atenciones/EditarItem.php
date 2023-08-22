@@ -25,6 +25,7 @@ class EditarItem extends Component
     public $application;
     public $countApplies;
     public $applypaciente;
+    public $user;
 
     protected $rules = [
         'applyItem.user_id' => 'required',
@@ -43,23 +44,24 @@ class EditarItem extends Component
 
     public function mount(ApplyItem $applyItem){
         $this->applyItem = $applyItem;
+      
         $this->application = $this->applyItem->application->id;
         $this->applypaciente = Application::find($this->applyItem->application->id);
         $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
         $this->kines = User::where('user_type','Kine')->get();
+        $this->user = User::find($this->applypaciente->user_id);
         $this->types = ApplicationType::all();
 
     }
 
     public function save(){
 
-        $this->saveActivity();
 
-        $this->validate();        
+        $this->validate();     
         $this->applyItem->save();
-        $this->applypaciente->user->updated_at = now();
-        $this->applypaciente->user->save();
-
+        $this->user->updated_at = now();
+        $this->user->save();
+        $this->saveActivity();
         $this->clear();
         
     }
@@ -79,7 +81,7 @@ class EditarItem extends Component
 
          Activity::create([
                 'user_id' => auth()->user()->id,
-                'detail' => 'Se edita sesión de ' .  $this->applypaciente->user->name .' ' . $this->applypaciente->user->last_name,
+                'detail' => 'Se edita sesión de ' .  $this->user->name .' ' . $this->user->last_name,
             ]);
 
     }
