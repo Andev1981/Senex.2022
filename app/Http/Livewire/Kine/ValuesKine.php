@@ -65,5 +65,8 @@ class ValuesKine extends Component
              $this->resetErrorBag();
              $this->reset(['atencionSelected','atencionValor']);
               $this->applicationUsers = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
+
+            $this->kine->updated_at = now();
+            $this->kine->save();
          }
 }

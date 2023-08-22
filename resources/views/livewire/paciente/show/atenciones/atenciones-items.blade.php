@@ -148,6 +148,7 @@
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     @if ($item->fecha_atencion)
+                                                     {{ \Carbon\Carbon::parse(strtotime($item->fecha_atencion))->format('d/m/Y H:m') }}
                                                         
                                                     {{ $item->fecha_atencion }}
                                                     @else

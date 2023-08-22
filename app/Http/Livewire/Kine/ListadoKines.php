@@ -10,10 +10,10 @@ class ListadoKines extends Component
 {
     use WithPagination;
     public $search;
-    protected $listeners = ['success-kine' => 'render'];
+    protected $listeners = ['success-kine' => 'render', 'success' => 'render'];
     protected $queryString = ['search'];
-    public $sort = 'name';
-    public $direction = 'asc';
+    public $sort = 'updated_at';
+    public $direction = 'desc';
 
     public function updatingSearch()
     {
