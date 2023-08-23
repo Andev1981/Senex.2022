@@ -13,6 +13,7 @@ use App\Models\User;
 class ApoderadoCrear extends Component
 {
       public User $paciente;
+
     public $open = 'hidden', 
            $name = "", 
            $last_name = "",
@@ -26,7 +27,7 @@ class ApoderadoCrear extends Component
            $comuna,
            $street = "",
            $number,
-           $address = "",
+           $address="",
            $parentescos = [],
            $parentesco;
 
@@ -36,17 +37,11 @@ class ApoderadoCrear extends Component
         'last_name' => 'required|min:3|max:50',
         'phone' => 'required|min:9|max:9',
         'email' => 'required|email|unique:users,email|min:10|max:200',
-        'street' => 'required|max:150',
-        'number' => 'required|integer',
-        'address' => 'required|max:150',
-        'comuna' => 'required',
         'parentesco' => 'required',
     ];
 
     public function mount(User $paciente){
         $this->paciente = $paciente;
-        $this->regiones = Region::where('id',1)->get();
-        $this->comunas = Comuna::where('region_id',1)->get();
         $this->parentescos = SelectOption::where('model_type', 'Keepers')->get();
         
 
@@ -65,13 +60,10 @@ class ApoderadoCrear extends Component
     public function save(){
 
         $this->validate();
+
+        $this->address = 1;
         
-        $address = Address::create([
-            'street' => $this->street,
-            'number' => $this->number,
-            'address' => $this->address,
-            'comuna_id' => $this->comuna,
-        ]);
+
 
         $keeper = Keeper::create([
            'name' => $this->name ,
@@ -79,7 +71,7 @@ class ApoderadoCrear extends Component
            'email' => $this->email,
            'phone' => $this->phone,
            'user_id' => $this->paciente->id,
-           'address_id' => $address->id,
+           'address_id' => $this->address,
            'parentesco' => $this->parentesco,
         ]);
 

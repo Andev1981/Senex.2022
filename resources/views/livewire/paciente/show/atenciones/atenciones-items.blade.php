@@ -95,8 +95,8 @@
                                             @forelse ($items as $item)
                                             <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                 <td class="py-2 pl-2 mx-2">
-                                                    {{ $item->user->name }}
-                                                    {{ $item->user->last_name }}
+                                                    {{ $item->user->name ?? '' }}
+                                                    {{ $item->user->last_name ?? '' }}
                                                 </td>
                                                 <td class="px-6 py-4">
                                                 @if ($item->status === 0)    
@@ -125,7 +125,7 @@
                                                 <td class="px-6 py-4">
                                                     @if ($item->price)
                                                         
-                                                        ${{ number_format($item->price,0,',','.') }}
+                                                        ${{ number_format($item->price,0,',','.') }}.-
                                                     @else
                                                             ---------
                                                     @endif
@@ -148,9 +148,8 @@
                                                 </td>
                                                 <td class="px-6 py-4">
                                                     @if ($item->fecha_atencion)
-                                                     {{ \Carbon\Carbon::parse(strtotime($item->fecha_atencion))->format('d/m/Y H:m') }}
+                                                     {{ \Carbon\Carbon::parse(strtotime($item->fecha_atencion))->format('d/m/Y') }}
                                                         
-                                                    {{ $item->fecha_atencion }}
                                                     @else
                                                         ---------
                                                     @endif

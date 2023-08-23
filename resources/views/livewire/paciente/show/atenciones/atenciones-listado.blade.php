@@ -20,6 +20,7 @@
                                 <th scope="col" class="px-6 py-3">Kine</th>
 
                                 <th scope="col" class="px-6 py-3">Estado</th>
+                                <th scope="col" class="px-6 py-3">Comentarios</th>
                                 <th colspan="3" scope="col" class="px-6 py-3 sr-only">
                                     ver
                                 </th>
@@ -34,8 +35,8 @@
                                         <td class="px-6 py-4 text-center uppercase">
                                             @if (count($application->items) > 0)
                                                 
-                                                {{ $application->items[(count($application->items)-1)]->user->name }}
-                                                {{ $application->items[(count($application->items)-1)]->user->last_name }}
+                                                {{ $application->items[(count($application->items)-1)]->user->name ?? '' }}
+                                                {{ $application->items[(count($application->items)-1)]->user->last_name ?? '' }}
                                             @endif
                                         </td>
 
@@ -59,6 +60,9 @@
                                                 @endif
                                             </div>
 
+                                        </td>
+                                        <td class="px-6 py-4 text-center  uppercase">
+                                        {{ $application->comments }}
                                         </td>
                                         <td class="flex px-6 py-4  uppercase">
                                      
