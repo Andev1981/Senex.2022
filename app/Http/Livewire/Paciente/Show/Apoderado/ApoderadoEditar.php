@@ -29,19 +29,13 @@ class ApoderadoEditar extends Component
         'keeper.phone' => 'required|min:9|max:9',
         'keeper.email' => 'required|min:10|max:200|email',
         'keeper.parentesco' => 'required',
-        'address.street' => 'required|max:150',
-        'address.number' => 'required|integer',
-        'address.address' => 'required|max:150',
-        'address.comuna_id' => 'required',
     ];
 
     public function mount(Keeper $keeper){
         $this->keeper = $keeper;
-        $this->address = $keeper->address;
-        $this->regiones = Region::where('id',1)->get();
-        $this->comunas = Comuna::where('region_id',1)->get();
         $this->parentescos = SelectOption::where('model_type', 'Keepers')->get();
         
+
 
     }
 
@@ -58,8 +52,7 @@ class ApoderadoEditar extends Component
     public function save(){
         
         $this->validate();
-
-        $this->address->save();
+        
         $this->keeper->save();
 
         $this->emit('success-apoderado');
