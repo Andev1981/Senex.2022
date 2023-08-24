@@ -34,9 +34,9 @@ class ApoderadoCrear extends Component
            
     protected $rules = [
         'name' => 'required|min:3|max:50',
-        'last_name' => 'required|min:3|max:50',
-        'phone' => 'required|min:9|max:9',
-        'email' => 'required|email|unique:users,email|min:10|max:200',
+        'last_name' => 'min:3|max:50',
+        'phone' => 'min:9|max:9',
+        'email' => 'email|unique:users,email|min:10|max:200',
         'parentesco' => 'required',
     ];
 

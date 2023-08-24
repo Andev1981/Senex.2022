@@ -1,5 +1,5 @@
 <div>
-    <section class="p-2 dark:bg-gray-900 sm:p-5">
+    <section class="p-2 dark:bg-gray-900 p-5">
         <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
             <!-- Start coding here -->
 
@@ -43,8 +43,6 @@
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr class="text-center">
                                 <th scope="col" class="px-6 py-3">Nombre</th>
-                                <th scope="col" class="px-6 py-3">Email</th>
-                                <th scope="col" class="px-6 py-3">Teléfono</th>
                                 <th scope="col" class="px-6 py-3">Fecha&nbsp;Edición</th>
                                 <th scope="col" class="px-6 py-3">
                                     Estado
@@ -61,10 +59,9 @@
                                             class="px-4 py-3 text-gray-900 font-sm whitespace-nowrap dark:text-white">
                                             {{ $doctor->name }}  {{ $doctor->last_name }}
                                         </td>
-                                        <td class="px-6 py-4">{{ $doctor->email }}</td>
-                                        <td class="px-6 py-4">{{ $doctor->phone }}</td>
+                             
                                         <td class="px-6 py-4">
-                                        {{ \Carbon\Carbon::parse(strtotime($doctor->updated_at))->format('d/m/Y H:m') }}
+                                        {{ \Carbon\Carbon::parse(strtotime($doctor->updated_at))->format('d/m/Y') }}
                                         </td>
                                         <td class="px-6 py-4">
                                             @if ($doctor->status === 1)

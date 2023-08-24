@@ -25,9 +25,9 @@ class ApoderadoEditar extends Component
 
     protected $rules = [
         'keeper.name' => 'required|min:3|max:50',
-        'keeper.last_name' => 'required|min:3|max:50',
-        'keeper.phone' => 'required|min:9|max:9',
-        'keeper.email' => 'required|min:10|max:200|email',
+        'keeper.last_name' => 'min:3|max:50',
+        'keeper.phone' => 'min:9|max:9',
+        'keeper.email' => 'min:10|max:200|email',
         'keeper.parentesco' => 'required',
     ];
 

@@ -26,9 +26,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-    @stack('scripts')
     <script>
+    if (document.readyState === "loading") {
         window.addEventListener('swal-success', () => {
             Swal.fire({
                 title: 'Ok!',
@@ -69,6 +68,7 @@
                 confirmButtonText: 'Cool'
             })
         });
+    }
     </script>
 </body>
 
