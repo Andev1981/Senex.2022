@@ -38,7 +38,7 @@
                                 <table class="w-full text-sm text-gray-500 dark:text-gray-400">
                                     <thead class="text-xs text-gray-700 uppercase bg-teal-100 dark:bg-gray-700 dark:text-gray-400">
                                         <tr class="text-center text-white bg-sky-500">
-                                            <th colspan="3" class="px-6 py-1">Atenciones</th>
+                                            <th colspan="3" class="px-6 py-1">Sesiones</th>
                                         </tr>
                                         <tr class="text-center">
                                             <th scope="col" class="px-6 py-1">

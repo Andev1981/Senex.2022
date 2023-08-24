@@ -35,7 +35,7 @@
                     <div class="grid grid-cols-5 grid-rows-2 gap-4 border-b-2">
                     <div class="col-span-2 text-left">
                       <label 
-                                class="text-sm font-medium text-gray-900 dark:text-white">Atenciones</label>
+                                class="text-sm font-medium text-gray-900 dark:text-white">Tratamiento</label>
                         <select  class="block w-full p-2 mr-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model.defer="atencionSelected" required>
                         <option selected>Seleccione</option>
                             @foreach ( $atenciones as $atencion)          
