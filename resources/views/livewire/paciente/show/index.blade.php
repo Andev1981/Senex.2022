@@ -38,10 +38,10 @@
                 <div class="flex flex-row mb-5">
                     <div class="p-2 shadow-xl basis-1/4 rounded-xl">
                   
-                        <div class="mt-2 uppercase">{{ $paciente->name . ' ' . $paciente->last_name }}</div>
-                        <div class="font-medium uppercase">{{ $paciente->email }}</div>
-                        <div class="text-sm text-gray-500 uppercase dark:text-gray-400">{{ $paciente->rut }}</div>
-                        <div class="text-sm text-gray-500 uppercase dark:text-gray-400">{{ $paciente->phone }}</div>
+                        <div class="mt-2 uppercase">{{ $paciente->name ?? '' . ' ' . $paciente->last_name ?? '' }}</div>
+                        <div class="font-medium uppercase">{{ $paciente->email ?? '' }}</div>
+                        <div class="text-sm text-gray-500 uppercase dark:text-gray-400">{{ $paciente->rut ?? '' }}</div>
+                        <div class="text-sm text-gray-500 uppercase dark:text-gray-400">{{ $paciente->phone ?? '' }}</div>
 
                         <hr class="mt-4">
 
@@ -54,7 +54,7 @@
                         <div class="grid grid-cols-1">
                             @foreach ($answers as $answer)
                             <div class="z-0 w-full my-2 group">
-                                <label  class="block text-xs font-medium text-gray-400 dark:text-white">{{ $answer->question->name }}</label>
+                                <label  class="block text-xs font-medium text-gray-400 dark:text-white">{{ $answer->question->name  ?? '' }}</label>
                                 <div class="text-base text-gray-800">
                                     {{ $answer->name ?? '--' }}
                                 </div>

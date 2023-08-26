@@ -62,7 +62,7 @@
 
                                         </td>
                                         <td class="px-6 py-4 text-center  uppercase">
-                                        {{ $application->comments }}
+                                        {{ $application->comments ?? '' }}
                                         </td>
                                         <td class="flex px-6 py-4  uppercase">
                                      

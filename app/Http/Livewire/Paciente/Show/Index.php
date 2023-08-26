@@ -19,7 +19,7 @@ class Index extends Component
     public $tratamientos='';
     public $apoderados='hidden';
     public $cssTratamientos='';
-    public $cssApoderados='hidden';
+    public $cssApoderados='';
     public $active = 'inline-block p-4 text-blue-600 border-b-2 border-blue-600 rounded-t-lg hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-500 dark:border-blue-500';
     public $inactive = 'inline-block p-4 text-gray-500 border-b-2 border-gray-100 rounded-t-lg dark:border-transparent hover:text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:border-gray-700 dark:hover:text-gray-300';
 
