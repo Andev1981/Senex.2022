@@ -123,7 +123,7 @@
                                         <h5 class="pr-2 text-xs text-gray-500">56</h5>
                                     </div>
 
-                                    <small class="absolute inset-y-0 right-0 flex pt-2 pr-6 italic text-gray-400 right">{{ strlen($telefono) }}
+                                    <small class="absolute inset-y-0 right-0 flex pt-2 pr-6 italic text-gray-400 right">{{ strlen($telefono) ?? '' }}
                                         /9</small>
                                     <input wire:model="telefono" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-16 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase">
                                 </div>

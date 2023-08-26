@@ -76,14 +76,14 @@ class CrearItem extends Component
             ]);
 
        
+        $this->saveActivity();
         $this->clear();
     }
 
     public function clear()
     {
-        $this->saveActivity();
-        $this->resetValidation();
         $this->resetErrorBag();
+        $this->resetValidation();
         $this->dispatchBrowserEvent('swal-success');
         $this->emit('success-item-single',$this->application->id);
         $this->openItemCreate = 'hidden';

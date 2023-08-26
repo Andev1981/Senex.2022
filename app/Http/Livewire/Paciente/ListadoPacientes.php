@@ -5,7 +5,6 @@ namespace App\Http\Livewire\Paciente;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Spatie\Permission\Models\Role;
 
 class ListadoPacientes extends Component
 {

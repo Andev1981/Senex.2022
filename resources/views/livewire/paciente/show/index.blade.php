@@ -26,7 +26,7 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                         Detalles / Tratamientos
                     </h3>
-                    <a wire:click="$set('opendetalles','hidden')" href="{{ route('pacientes') }}" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                    <a wire:click="$set('opendetalles','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>
@@ -65,20 +65,20 @@
                     </div>
                     <div class="ml-2 border border-gray-300 shadow-lg grow rounded-xl">
                         <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
-                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" data-tabs-toggle="#myTabContent{{$paciente->id}}" role="tablist">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" data-tabs-toggle="#myTabContent{{$paciente->id ?? ''}}" role="tablist">
                                 <li class="mr-2" role="presentation">
-                                    <button class="inline-block p-4 text-blue-600 border-b-2 border-blue-600 rounded-t-lg hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-500 dark:border-blue-500" id="atenciones-tab" data-tabs-target="#atenciones{{$paciente->id}}" type="button" role="tab" aria-controls="atenciones" aria-selected="true">Tratamientos</button>
+                                    <button class="{{$cssTratamientos}}" id="atenciones-tab" data-tabs-target="#atenciones{{$paciente->id}}" wire:click="setTab(1)" type="button" role="tab" aria-controls="atenciones" aria-selected="true">Tratamientos</button>
                                 </li>
                                 <li class="mr-2" role="presentation">
-                                    <button class="inline-block p-4 text-gray-500 border-b-2 border-gray-100 rounded-t-lg dark:border-transparent hover:text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:border-gray-700 dark:hover:text-gray-300" id="apoderados-tab" data-tabs-target="#apoderados{{$paciente->id}}" type="button" role="tab" aria-controls="apoderados" aria-selected="false">Apoderados</button>
+                                    <button class="{{$cssApoderados}}" id="apoderados-tab" data-tabs-target="#apoderados{{$paciente->id}}" wire:click="setTab(2)" type="button" role="tab" aria-controls="apoderados" aria-selected="false">Apoderados</button>
                                 </li>
                             </ul>
                         </div>
-                        <div id="myTabContent{{$paciente->id}}">
-                            <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="atenciones{{$paciente->id}}" role="tabpanel" aria-labelledby="atenciones-tab">
+                        <div id="myTabContent{{$paciente->id ?? ''}}">
+                            <div class="{{$tratamientos}} p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="atenciones{{$paciente->id}}" role="tabpanel" aria-labelledby="atenciones-tab">
                                 @livewire('paciente.show.atenciones.atenciones-listado', ['paciente' => $paciente])
                             </div>
-                            <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="apoderados{{$paciente->id}}" role="tabpanel" aria-labelledby="apoderados-tab">
+                            <div class="{{$apoderados}} p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="apoderados{{$paciente->id}}" role="tabpanel" aria-labelledby="apoderados-tab">
                                 @livewire('paciente.show.apoderado.apoderado-listado', ['paciente' => $paciente])
                             </div>
                         </div>

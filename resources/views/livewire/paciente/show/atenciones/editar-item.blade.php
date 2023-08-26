@@ -26,11 +26,12 @@
             <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
                 <!-- Modal header -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
-                    <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
-                        Editando Sesión
-                    </h3>
-                    <br>
-                    <span>{{ $user->name }} {{ $user->last_name }}</span>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
+                            Editando Sesión
+                        </h3>
+                        <span>{{ $user->name }} {{ $user->last_name }}</span>
+                    </div>
                     <button wire:click="$set('openItem','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
@@ -52,7 +53,7 @@
 
 
                                         </div>
-                                        <select  wire:model.defer="applyItem.user_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <select  wire:model.defer="user_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                         <option class="uppercase" value="{{ $applyItem->user->id ?? ''}}">
                                                 {{ $applyItem->user->name ?? '' }} {{ $applyItem->user->last_name ?? '' }}
                                             </option>
@@ -63,7 +64,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    @error('applyItem.user_id')
+                                    @error('user_id')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                         {{ $message }}.
                                     </p>
@@ -80,7 +81,7 @@
 
 
                                         </div>
-                                        <select wire:model.defer="applyItem.application_type_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <select wire:model.defer="application_type_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                   
                                             @foreach ($types as $type)
                                             <option class="uppercase" value="{{ $type->id }}">
@@ -89,7 +90,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    @error('applyItem.application_type_id')
+                                    @error('application_type_id')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                         {{ $message }}.
                                     </p>
@@ -107,7 +108,7 @@
                                                 </svg>
 
                                         </div>
-                                        <select wire:model.defer="applyItem.status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <select wire:model.defer="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                         
                                             <option class="uppercase" value="0"
                                             @if ($applyItem->status === 0) selected @endif
@@ -129,7 +130,7 @@
                                             
                                         </select>
                                     </div>
-                                    @error('applyItem.status')
+                                    @error('status')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                         {{ $message }}.
                                     </p>
@@ -137,7 +138,7 @@
                                 </div>
 
                                 <div>
-                                    <x-input-field label="Fecha de la atención" name="fecha_atencion" type="date" wire:model.defer="applyItem.fecha_atencion" placeholder="" class="uppercase">
+                                    <x-input-field label="Fecha de la atención" name="fecha_atencion" type="date" wire:model.defer="fecha_atencion" placeholder="" class="uppercase">
 
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hospital" viewBox="0 0 16 16">
                                         <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
@@ -145,7 +146,7 @@
                                         </svg>
 
                                     </x-input-field>
-                                    @error('applyItem.fecha_atencion')
+                                    @error('fecha_atencion')
                                     <p class="text-sm text-red-600 dark:text-red-500">
                                         {{ $message }}.
                                     </p>
@@ -153,14 +154,14 @@
                                 </div>
                                
                                 <div>
-                            <x-input-field-required label="Valor de la sesión" type="float" wire:model.defer="applyItem.price" placeholder="">
+                            <x-input-field-required label="Valor de la sesión" type="float" wire:model.defer="price" placeholder="">
                                 <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z">
                                     </path>
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
                                 </svg>
                             </x-input-field-required>
-                            @error('applyItem.price')
+                            @error('price')
                             <p class="text-sm text-red-600 dark:text-red-500">
                                 {{ $message }}.
                             </p>
@@ -178,7 +179,7 @@
                                                 </svg>
 
                                         </div>
-                                        <select wire:model.defer="applyItem.numero_sesion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <select wire:model.defer="numero_sesion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 <option>--</option>
                                         @for ($i = 1; $i <= 100; $i++)
                                                 <option class="uppercase" value="{{$i}}"
@@ -188,7 +189,7 @@
                                         @endfor    
                                         </select>
                                     </div>
-                                    @error('applyItem.status')
+                                    @error('status')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                         {{ $message }}.
                                     </p>
@@ -199,7 +200,7 @@
                             <div>
                             <label  class="block text-sm font-medium text-gray-900 dark:text-white">Comentario o
                                 detalles</label>
-                            <textarea wire:model.defer="applyItem.comments" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase" placeholder="Si tiene algún comentario, ingreselo acá...">
+                            <textarea wire:model.defer="comments" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase" placeholder="Si tiene algún comentario, ingreselo acá...">
                                 {{ $applyItem->comments }}
                                     </textarea>
                         </div>
@@ -220,7 +221,6 @@
                             </svg>
                             Creando...
                         </button>
-
                     </div>
                 </form>
             </div>

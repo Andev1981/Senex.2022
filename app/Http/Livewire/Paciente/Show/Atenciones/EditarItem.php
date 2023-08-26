@@ -7,34 +7,39 @@ use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
 use App\Models\User;
+use Carbon\Carbon;
 use Livewire\Component;
 
 class EditarItem extends Component
 {
     public ApplyItem $applyItem;
-    public $selectedKine;
-    public $selectedStatus;
-    public $selectedType;
-    public $price;
-    public $kines = [];
-    public $types = [];
-    public $openItem = 'hidden';
-    public $openDelItem = 'hidden';
-    public $fecha_atencion;
-    public $comments;
-    public $application;
-    public $countApplies;
-    public $applypaciente;
-    public $user;
+    public  $types = [],
+            $kines = [],
+            $openItem = 'hidden',
+            $openDelItem = 'hidden',
+            $selectedKine,
+            $selectedStatus,
+            $selectedType,
+            $application,
+            $countApplies,
+            $applypaciente,
+            $user,
+            $user_id,
+            $status = '',
+            $fecha_atencion = '',
+            $comments = '',
+            $application_type_id,
+            $price,
+            $numero_sesion;
 
     protected $rules = [
-        'applyItem.user_id' => 'required',
-        'applyItem.status' => 'required',
-        'applyItem.fecha_atencion' => '',
-        'applyItem.comments' => 'max:255',
-        'applyItem.application_type_id' => 'required',
-        'applyItem.price' => 'required',
-        'applyItem.numero_sesion' => 'required',
+        'user_id' => 'required',
+        'status' => 'required',
+        'fecha_atencion' => '',
+        'comments' => 'max:255',
+        'application_type_id' => 'required',
+        'price' => 'required',
+        'numero_sesion' => 'required',
     ];
 
     public function render()
@@ -43,13 +48,21 @@ class EditarItem extends Component
     }
 
     public function mount(ApplyItem $applyItem){
-        $this->applyItem = $applyItem;
-      
-        $this->application = $this->applyItem->application->id;
-        $this->applypaciente = Application::find($this->applyItem->application->id);
+
+        $this->applyItem = $applyItem;      
+        $this->application = $applyItem->application;
+        $this->user = $applyItem->application->user;
+        $this->user_id = $applyItem->user_id;
+        $this->status = $applyItem->status;
+        if($applyItem->fecha_atencion){
+        $this->fecha_atencion = Carbon::parse(strtotime($applyItem->fecha_atencion))->format('Y-m-d');
+        }
+        $this->comments = $applyItem->comments;
+        $this->application_type_id = $applyItem->application_type_id;
+        $this->price = $applyItem->price;
+        $this->numero_sesion = $applyItem->numero_sesion;
         $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
         $this->kines = User::where('user_type','Kine')->get();
-        $this->user = User::find($this->applypaciente->user_id);
         $this->types = ApplicationType::all();
 
     }
@@ -58,6 +71,15 @@ class EditarItem extends Component
 
 
         $this->validate();     
+        $this->applyItem->user_id = $this->user_id;
+        $this->applyItem->status = $this->status;
+        if($this->fecha_atencion){
+            $this->applyItem->fecha_atencion = $this->fecha_atencion;
+        }
+        $this->applyItem->comments = $this->comments;
+        $this->applyItem->application_type_id = $this->application_type_id;
+        $this->applyItem->price = $this->price;
+        $this->applyItem->numero_sesion = $this->numero_sesion;
         $this->applyItem->save();
         $this->user->updated_at = now();
         $this->user->save();
