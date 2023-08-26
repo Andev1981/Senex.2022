@@ -61,7 +61,7 @@ class EditarItem extends Component
         $this->application_type_id = (int)$applyItem->application_type_id;
         $this->price = (int)$applyItem->price;
         $this->numero_sesion = (int)$applyItem->numero_sesion;
-        $this->countApplies = ApplyItem::where('application_id',$this->application)->count();
+        $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
         $this->kines = User::where('user_type','Kine')->get();
         $this->types = ApplicationType::all();
 
