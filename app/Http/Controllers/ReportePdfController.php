@@ -49,18 +49,47 @@ class ReportePdfController extends Controller
         dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems,$assigns[0]);
 
         foreach($kines as $kine){
-            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
 
+            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',1)->first();
             if(!$kineSearch1){
                 ApplicationTypeUser::create([
-
+                    'user_id' => $kine->id,
+                    'application_type_id' => 1
                 ]);
             }
 
-            $kineSearch2 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',2)->first();
+            $kineSearch2 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',2)->first();
+            if(!$kineSearch2){
+                ApplicationTypeUser::create([
+                    'user_id' => $kine->id,
+                    'application_type_id' => 2
+                ]);
+            }
+            
+            
             $kineSearch3 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',3)->first();
+            if(!$kineSearch3){
+                ApplicationTypeUser::create([
+                    'user_id' => $kine->id,
+                    'application_type_id' => 3
+                ]);
+            }
+            
             $kineSearch4 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',4)->first();
+            if(!$kineSearch4){
+                ApplicationTypeUser::create([
+                    'user_id' => $kine->id,
+                    'application_type_id' => 4
+                ]);
+            }
+
             $kineSearch5 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',5)->first();
+            if(!$kineSearch5){
+                ApplicationTypeUser::create([
+                    'user_id' => $kine->id,
+                    'application_type_id' => 5
+                ]);
+            }
             
         }
 
