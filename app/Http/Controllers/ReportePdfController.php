@@ -1,7 +1,10 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\ApplicationType;
+use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -32,5 +35,25 @@ class ReportePdfController extends Controller
        return $pdf->download(rand(1,1000) .'-reporte-' . $nameUser . '.pdf');
 
 
+    }
+
+    public function arreglo(){
+
+        $kines = User::where('user_type','Kine')->get();
+        $applicationTypeUsers = ApplicationTypeUser::all();
+        $applicationTypes = ApplicationType::all();
+        $applyItems = ApplyItem::all();
+
+        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems);
+
+        /* foreach($kines as $kine){
+            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
+            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
+            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
+            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
+            
+        } */
+
+        dd($kines);
     }
 }
