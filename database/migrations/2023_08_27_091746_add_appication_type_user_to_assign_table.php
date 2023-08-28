@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('assigns', function (Blueprint $table) {
-              $table->foreignID('application_type_user_id')->onUpdate('cascade')->onDelete('is null');
+              $table->foreignID('application_type_user_id')->onUpdate('cascade')->onDelete('is null')->default(0);
         });
     }
 
