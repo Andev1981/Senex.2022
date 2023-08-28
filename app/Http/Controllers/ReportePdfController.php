@@ -46,13 +46,15 @@ class ReportePdfController extends Controller
         $applyItems = ApplyItem::all();
         $assigns = Assign::all();
 
-        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems,$assigns);
+        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems,$assigns[0]);
 
         foreach($kines as $kine){
             $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
 
-            if($kineSearch1){
-                
+            if(!$kineSearch1){
+                ApplicationTypeUser::create([
+
+                ]);
             }
 
             $kineSearch2 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',2)->first();
