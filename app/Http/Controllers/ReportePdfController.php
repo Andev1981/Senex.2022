@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
+use App\Models\Assign;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -43,16 +44,23 @@ class ReportePdfController extends Controller
         $applicationTypeUsers = ApplicationTypeUser::all();
         $applicationTypes = ApplicationType::all();
         $applyItems = ApplyItem::all();
+        $assigns = Assign::all();
 
-        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems);
+        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems,$assigns);
 
-        /* foreach($kines as $kine){
+        foreach($kines as $kine){
             $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
-            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
-            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
-            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',1)->first();
+
+            if($kineSearch1){
+                
+            }
+
+            $kineSearch2 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',2)->first();
+            $kineSearch3 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',3)->first();
+            $kineSearch4 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',4)->first();
+            $kineSearch5 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',5)->first();
             
-        } */
+        }
 
         dd($kines);
     }
