@@ -6,6 +6,7 @@ use App\Models\Activity;
 use Livewire\Component;
 use App\Models\Application;
 use App\Models\ApplicationType;
+use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Assign;
 use App\Models\User;
@@ -69,11 +70,17 @@ class CrearItem extends Component
         ]);
 
 
+        $applicationTypeUser = ApplicationTypeUser::where('apply_item_id',$apply->id)->where('user_id',$this->kine)->first();
+
+
         Assign::create([
                 'user_id' => $this->kine,
                 'application_id' => $this->application->id,
                 'apply_item_id' => $apply->id,
-            ]);
+                'application_type_user_id' => $applicationTypeUser->id,
+        ]);
+
+
 
        
         $this->saveActivity();

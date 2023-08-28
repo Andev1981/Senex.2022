@@ -52,15 +52,15 @@ class EditarItem extends Component
         $this->applyItem = $applyItem;      
         $this->application = $applyItem->application;
         $this->user = $applyItem->application->user;
-        $this->user_id = (int)$applyItem->user_id;
-        $this->status = (int)$applyItem->status;
+        $this->user_id = $applyItem->user_id;
+        $this->status = $applyItem->status;
         if($applyItem->fecha_atencion){
         $this->fecha_atencion = Carbon::parse(strtotime($applyItem->fecha_atencion))->format('Y-m-d');
         }
         $this->comments = $applyItem->comments;
-        $this->application_type_id = (int)$applyItem->application_type_id;
-        $this->price = (int)$applyItem->price;
-        $this->numero_sesion = (int)$applyItem->numero_sesion;
+        $this->application_type_id = $applyItem->application_type_id;
+        $this->price = $applyItem->price;
+        $this->numero_sesion = $applyItem->numero_sesion;
         $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
         $this->kines = User::where('user_type','Kine')->get();
         $this->types = ApplicationType::all();

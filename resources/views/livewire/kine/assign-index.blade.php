@@ -245,6 +245,7 @@
                                         </thead>
                                         <tbody>
                                             @forelse ($applyItems as $applyItem)
+                                            
                                             <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                 <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
                                                     {{ $applyItem->application->user->name ?? '' }}
@@ -252,7 +253,7 @@
                                                 </td class="px-1 py-1">
 
                                                 <td>
-                                                    {{ $applyItem->applicationType->name }}
+                                                    {{ $applyItem->applicationTypeUser->applicationType->name ?? '' }}
                                                 </td>
                                                 <td class="px-1 py-1">{{ $applyItem->numero_sesion ?? ''}}</td>
                                                 <td class="px-1 py-1">

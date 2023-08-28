@@ -79,8 +79,7 @@ class AssignIndex extends Component
 
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
-            $this->applyItems = ApplyItem::with('assign')
-                    ->where('fecha_atencion', 'like', $this->buscarFecha.'%')
+            $this->applyItems = ApplyItem::where('fecha_atencion', 'like', $this->buscarFecha.'%')
                     ->where('status',1)->where('user_id', $this->kine->id)
                     ->latest('id')
                     ->get();

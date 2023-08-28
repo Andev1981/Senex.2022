@@ -64,6 +64,8 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('/reporte-pdf/{applyItems}/{kine}',[ReportePdfController::class,'generarReporte']);
 
+    Route::get('/andres',[ReportePdfController::class,'arreglo'])->name('andres');
+
     Route::get('ayuda', [VideoController::class, 'index'])->name('ayudaVideo');
 });
 

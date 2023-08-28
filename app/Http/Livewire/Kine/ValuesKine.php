@@ -32,31 +32,27 @@ class ValuesKine extends Component
         $this->kine = $doctor;
         $this->atenciones = ApplicationType::all();
 
-        $this->applicationUsers = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
+        $this->applicationUsers = ApplicationTypeUser::where('user_id',$this->kine->id)->orderBy('application_type_id','asc')->get();
 
     }
 
     public function save(){
 
         $this->validate();
-        
+        $applicationTypeUser = ApplicationTypeUser::where('user_id',$this->kine->id)->where('application_type_id', $this->atencionSelected)->first();
 
-            ApplicationTypeUser::updateOrCreate([ 'application_type_id' => $this->atencionSelected],[
-                'user_id' => $this->kine->id,
-                'price' => $this->atencionValor,
-            ]);
-        
+        $applicationTypeUser->price = $this->atencionValor;
+        $applicationTypeUser->save();        
 
         $this->clear();
         $this->emit('success-value');
         $this->dispatchBrowserEvent('swal-success');
-
         
     }
 
-    public function setValues(ApplicationTypeUser $apply){
-        $this->atencionSelected = $apply->application_type_id;
-        $this->atencionValor = $apply->price;
+    public function setValues(ApplicationTypeUser $applicationTypeUser){
+        $this->atencionSelected = $applicationTypeUser->application_type_id;
+        $this->atencionValor = $applicationTypeUser->price;
 
     } 
 

@@ -12,10 +12,15 @@ class Assign extends Model
         'user_id', //Usuario Kine
         'application_id',
         'apply_item_id',
+        'application_type_user_id',
     ];
 
     public function user(){
         return $this->belongsTo(User::class);
+    }
+
+     public function applicationTypeUsers(){
+        return $this->hasMany(ApplicationTypeUser::class,'id','application_type_user_id');
     }
 
     public function application(){
