@@ -43,10 +43,10 @@ class ReportePdfController extends Controller
         $kines = User::where('user_type','Kine')->get();
         $applicationTypeUsers = ApplicationTypeUser::all();
         $applicationTypes = ApplicationType::all();
-        $applyItems = ApplyItem::all();
+        $applyItems = ApplyItem::where('application_type_id','<>', null)->get();
         $assigns = Assign::all();
 
-        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems[0],$assigns[0]);
+        dd($applyItems);
 
         foreach($kines as $kine){
 
