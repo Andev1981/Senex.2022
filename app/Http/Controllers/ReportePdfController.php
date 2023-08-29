@@ -46,7 +46,7 @@ class ReportePdfController extends Controller
         $applyItems = ApplyItem::all();
         $assigns = Assign::all();
 
-        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems,$assigns[0]);
+        dd($kines, $applicationTypeUsers,$applicationTypes,$applyItems[0],$assigns[0]);
 
         foreach($kines as $kine){
 
@@ -54,7 +54,8 @@ class ReportePdfController extends Controller
             if(!$kineSearch1){
                 ApplicationTypeUser::create([
                     'user_id' => $kine->id,
-                    'application_type_id' => 1
+                    'application_type_id' => 1,
+                    'price' => 0,
                 ]);
             }
 
@@ -62,35 +63,48 @@ class ReportePdfController extends Controller
             if(!$kineSearch2){
                 ApplicationTypeUser::create([
                     'user_id' => $kine->id,
-                    'application_type_id' => 2
+                    'application_type_id' => 2,
+                    'price' => 0,
                 ]);
             }
             
             
-            $kineSearch3 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',3)->first();
+            $kineSearch3 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',3)->first();
             if(!$kineSearch3){
                 ApplicationTypeUser::create([
                     'user_id' => $kine->id,
-                    'application_type_id' => 3
+                    'application_type_id' => 3,
+                    'price' => 0,
                 ]);
             }
             
-            $kineSearch4 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',4)->first();
+            $kineSearch4 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',4)->first();
             if(!$kineSearch4){
                 ApplicationTypeUser::create([
                     'user_id' => $kine->id,
-                    'application_type_id' => 4
+                    'application_type_id' => 4,
+                    'price' => 0,
                 ]);
             }
 
-            $kineSearch5 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type',5)->first();
+            $kineSearch5 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',5)->first();
             if(!$kineSearch5){
                 ApplicationTypeUser::create([
                     'user_id' => $kine->id,
-                    'application_type_id' => 5
+                    'application_type_id' => 5,
+                    'price' => 0,
                 ]);
             }
+
             
+            
+        }
+
+         $secondkines = User::where('user_type','Kine')->get();
+
+        foreach($applyItems as $applyItem){
+            $findAssigns = ApplicationTypeUser::where('user_id',$applyItem->user_id)->get();
+            dd($applyItem, $applyItem->applicationTypeUser);
         }
 
         dd($kines);
