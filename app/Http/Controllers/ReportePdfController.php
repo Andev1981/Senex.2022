@@ -41,9 +41,7 @@ class ReportePdfController extends Controller
     public function arreglo(){
 
         $kines = User::where('user_type','Kine')->get();
-        $applicationTypeUsers = ApplicationTypeUser::all();
-        $applicationTypes = ApplicationType::all();
-        $applyItems = ApplyItem::where('application_type_id','<>', null)->get();
+        $applyItems = ApplyItem::where('application_type_id','<>', null)->take(20)->get();
         $assigns = Assign::all();
 
         dd($applyItems);
