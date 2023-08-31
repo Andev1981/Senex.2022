@@ -185,7 +185,7 @@
                         </div>
                     </form>
                     <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
-                    
+
                         <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
 
                             <div class="flex flex-row items-center p-4 bg-slate-200 md:flex-row md:space-y-0 md:space-x-4">
@@ -245,7 +245,7 @@
                                         </thead>
                                         <tbody>
                                             @forelse ($applyItems as $applyItem)
-                                            
+
                                             <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                 <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
                                                     {{ $applyItem->application->user->name ?? '' }}
@@ -253,25 +253,30 @@
                                                 </td class="px-1 py-1">
 
                                                 <td>
-                                                    {{ $applyItem->applicationTypeUser->applicationType->name ?? '' }}
+                                                    {{ $applyItem->applicationTypeUser->application_type->name ?? '' }}
                                                 </td>
                                                 <td class="px-1 py-1">{{ $applyItem->numero_sesion ?? ''}}</td>
                                                 <td class="px-1 py-1">
                                                     ${{ number_format($applyItem->price,0,',','.') }}.-
                                                 </td>
                                                 <td class="px-1 py-1">
-                                                @if($applyItem->applicationTypeUser)
+                                                    @if($applyItem->applicationTypeUser)
                                                     ${{ number_format($applyItem->applicationTypeUser->price,0,',','.') ?? '0'}}.-
-                                                @else
+                                                    @else
                                                     sin datos
-                                                @endif
+                                                    @endif
                                                 </td>
                                                 <td>
-                                            @if($applyItem->applicationTypeUser)
-                                                        ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') ?? '0' }}.-
-                                                @else
-                                                    sin datos
-                                                @endif
+                                                    @forelse ($kineValues as $kineValue)
+                                                    @if($kineValue->applycation_type_id == $applyItem->application_type_id)
+                                                    ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') ?? '0' }}.-
+                                                    @endif
+
+                                                    @empty
+                                                        Sin Datos
+                                                    @endforelse
+
+
                                                 </td>
                                                 <td class="flex px-1 py-1">
                                                     @if ($applyItem)
@@ -286,21 +291,24 @@
                                                 <td>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td>{{$applyItem->applicationTypeUser}}</td>
+                                            </tr>
                                             @if ($loop->last)
                                             <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                                    <td colspan="6"></td>
-                                                    <td>
-                                                        <a href="reporte-pdf/{{ $this->buscarFecha }}/{{$this->kine->id}}" target="_blank" type="button" class="inline-flex items-center px-2 py-1 my-2 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Pdf</a>
-                                                    </td>
-                                                </tr>
-                                                @endif
+                                                <td colspan="6"></td>
+                                                <td>
+                                                    <a href="reporte-pdf/{{ $this->buscarFecha }}/{{$this->kine->id}}" target="_blank" type="button" class="inline-flex items-center px-2 py-1 my-2 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Pdf</a>
+                                                </td>
+                                            </tr>
+                                            @endif
                                             @empty
                                             <tr class="text-center">
                                                 <td colspan="7" class="my-2">
                                                     Sin Datos
                                                 </td>
                                             </tr>
-                                        
+
                                             @endforelse
                                         </tbody>
                                     </table>

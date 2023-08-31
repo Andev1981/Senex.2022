@@ -19,8 +19,8 @@ class Assign extends Model
         return $this->belongsTo(User::class);
     }
 
-     public function applicationTypeUsers(){
-        return $this->hasMany(ApplicationTypeUser::class,'id','application_type_user_id');
+     public function applicationTypeUser(){
+        return $this->belongsTo(ApplicationTypeUser::class,'application_type_user_id','id');
     }
 
     public function application(){

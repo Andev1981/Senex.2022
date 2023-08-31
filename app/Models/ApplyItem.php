@@ -27,7 +27,7 @@ class ApplyItem extends Model
     }
 
     public function applicationTypeUser(){
-        return $this->hasOne(ApplicationTypeUser::class,'id','application_type_user_id');
+        return $this->belongsTo(ApplicationTypeUser::class);
     }
 
     public function images(){

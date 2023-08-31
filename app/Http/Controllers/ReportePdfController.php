@@ -41,10 +41,10 @@ class ReportePdfController extends Controller
     public function arreglo(){
 
         $kines = User::where('user_type','Kine')->get();
-        $applyItems = ApplyItem::where('application_type_id','<>', null)->take(20)->get();
+        $applyItems = ApplyItem::where('application_type_id','<>', null)->get();
         $assigns = Assign::all();
 
-        dd($applyItems);
+        /* dd($applyItems); */
 
         foreach($kines as $kine){
 
@@ -93,17 +93,22 @@ class ReportePdfController extends Controller
                     'price' => 0,
                 ]);
             }
-
-            
             
         }
 
-         $secondkines = User::where('user_type','Kine')->get();
+        foreach($kines as $kine){
+            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',5)->first();
 
-        foreach($applyItems as $applyItem){
-            $findAssigns = ApplicationTypeUser::where('user_id',$applyItem->user_id)->get();
-            dd($applyItem, $applyItem->applicationTypeUser);
+            if($kineSearch1){
+                foreach($applyItems as $applyItem){
+                    if($kineSearch1->application_type_id == $applyItem->application_type_id){
+                        $applyItem->application_type_user_id = $kineSearch1->id;
+                        $applyItem->save();
+                    }
+                }
+            }
         }
+        
 
         dd($kines);
     }

@@ -14,13 +14,15 @@ class ApplicationTypeUser extends Model
         'price',
     ];
 
-    protected $table = 'application_type_user';
-
     public function user(){
         return $this->belongsTo(User::class);
     }
 
     public function application_type(){
         return $this->belongsTo(ApplicationType::class);
+    }
+
+     public function applyItems(){
+        return $this->hasMany(ApplyItem::class);
     }
 }

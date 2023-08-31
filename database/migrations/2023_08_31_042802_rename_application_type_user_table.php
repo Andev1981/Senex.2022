@@ -13,9 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-       /*  Schema::table('apply_items', function (Blueprint $table) {
-            $table->foreignID('application_type_user_id')->onUpdate('cascade')->onDelete('is null')->default(0);
-        }); */
+                Schema::rename('application_type_user', 'application_type_users');
+
     }
 
     /**
@@ -25,8 +24,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('apply_items', function (Blueprint $table) {
-            //
-        });
+        Schema::rename('application_type_users', 'application_type_user');
+
     }
 };

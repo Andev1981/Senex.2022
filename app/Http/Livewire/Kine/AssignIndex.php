@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Kine;
 use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
+use App\Models\Assign;
 use Livewire\Component;
 use App\Models\User;
 use Carbon\Carbon;
@@ -17,6 +18,7 @@ class AssignIndex extends Component
 
     public $opendetalles = 'hidden';
     public $kine;
+    public $user;
     public $year;
     public $month;
     public $statusFindView = -1;
@@ -26,6 +28,7 @@ class AssignIndex extends Component
     public $applyItems = [];
     public $buscarFecha;
     public $buscarFechaIn;
+    public $kineValues;
 
     protected $listeners = ['success-value' => 'searchByItems'];
 
@@ -47,12 +50,12 @@ class AssignIndex extends Component
     }
 
     public function mount(User $doctor){
-        if($doctor){
+     
             $this->kine = $doctor;
             if($this->kine->id){
                 $this->status = 1;
             }
-        }
+        
         
         $this->buscarFecha = Carbon::now();
         $this->month = $this->buscarFecha->format('m');
@@ -79,11 +82,11 @@ class AssignIndex extends Component
 
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
-            $this->applyItems = ApplyItem::where('fecha_atencion', 'like', $this->buscarFecha.'%')
-                    ->where('status',1)->where('user_id', $this->kine->id)
-                    ->latest('id')
-                    ->get();
-                    
+            $this->applyItems = ApplyItem::where('user_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like','%'.$this->buscarFecha)->orderBy('fecha_atencion','desc')->get();
+
+
+            $this->kineValues = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
+
     }
 
 
@@ -91,7 +94,7 @@ class AssignIndex extends Component
    public function clear(){
              $this->resetValidation();
              $this->resetErrorBag();
-             $this->reset(['atencionSelected','atencionValor']);
+             $this->reset(['atencionSelected','atencionValor','kine']);
     }
 
     

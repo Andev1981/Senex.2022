@@ -78,6 +78,7 @@
 
                                         </td>
                                         <td  class="flex px-4 py-4">
+                                       
                                             @livewire('kine.assign-index', ['doctor' => $doctor], key($doctor->id))
 
                                         </td>
