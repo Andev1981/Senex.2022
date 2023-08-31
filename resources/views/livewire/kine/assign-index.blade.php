@@ -253,7 +253,7 @@
                                                 </td class="px-1 py-1">
 
                                                 <td>
-                                                    {{ $applyItem->applicationTypeUser->application_type->name ?? '' }}
+                                                    {{ $applyItem->applicationType->name ?? '' }}
                                                 </td>
                                                 <td class="px-1 py-1">{{ $applyItem->numero_sesion ?? ''}}</td>
                                                 <td class="px-1 py-1">
