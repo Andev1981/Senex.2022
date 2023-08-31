@@ -273,7 +273,7 @@
                                                 <td>
                                                     @forelse ($kineValues as $kineValue)
                                                         @if($kineValue->application_type_id == $applyItem->application_type_id)
-                                                        ${{ number_format($applyItem->price-$applyItem->applicationTypeUser->price,0,',','.') ?? '0' }}.-
+                                                        ${{ number_format($applyItem->price-$kineValue->price,0,',','.') ?? '0' }}.-
                                                         @endif
 
                                                     @empty
