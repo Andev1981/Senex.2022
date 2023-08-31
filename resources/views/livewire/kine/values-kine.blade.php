@@ -16,12 +16,10 @@
                 <!-- Modal header -->
                 <div
                     class="flex items-center justify-between py-2 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
-                    <div class="justify-center">
+                    <div class="justify-start">
                     <h3 class="text-lg font-semibold text-gray-900 uppercase dark:text-white">
                      Formulario de Valores
                     </h3>
-                    <span>{{$kine->name}}</span>
-                    <span>{{$kine->id}}</span>
                     </div>
                     <button wire:click="$set('openvalores','hidden')" type="button"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
