@@ -82,7 +82,7 @@ class AssignIndex extends Component
 
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
-            $this->applyItems = ApplyItem::where('user_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like','%'.$this->buscarFecha)->orderBy('fecha_atencion','desc')->get();
+            $this->applyItems = ApplyItem::where('user_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
 
 
             $this->kineValues = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
