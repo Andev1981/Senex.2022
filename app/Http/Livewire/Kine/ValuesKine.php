@@ -44,7 +44,7 @@ class ValuesKine extends Component
         if(!$applicationTypeUser){
             ApplicationTypeUser::create([
                 'user_id' => $this->kine->id,
-                'applucation_type_id' => $this->atencionSelected,
+                'application_type_id' => $this->atencionSelected,
                 'price' => $this->atencionValor,
             ]);
         }else{
