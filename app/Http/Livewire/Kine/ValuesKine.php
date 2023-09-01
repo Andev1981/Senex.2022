@@ -41,8 +41,17 @@ class ValuesKine extends Component
         $this->validate();
         $applicationTypeUser = ApplicationTypeUser::where('user_id',$this->kine->id)->where('application_type_id', $this->atencionSelected)->first();
 
-        $applicationTypeUser->price = $this->atencionValor;
-        $applicationTypeUser->save();        
+        if(!$applicationTypeUser){
+            ApplicationTypeUser::create([
+                'user_id' => $this->kine->id,
+                'applucation_type_id' => $this->atencionSelected,
+                'price' => $this->atencionValor,
+            ]);
+        }else{
+            $applicationTypeUser->price = $this->atencionValor;
+            $applicationTypeUser->save();        
+        }
+
 
         $this->clear();
         $this->emit('success-value');
