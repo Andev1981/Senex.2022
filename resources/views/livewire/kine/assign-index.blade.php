@@ -16,7 +16,7 @@
 
     </div>
     <!-- Main modal -->
-    <div class="{{ $opendetalles }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
+    <div tabindex="-1" data-modal-placement="top" aria-hidden="true" class="{{ $opendetalles }} bg-gray-600 bg-opacity-50  top-0 right-0 left-0 z-50 justify-center items-center  md:h-full  fixed w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="relative w-full h-full p-4 max-w-7xl md:h-auto">
 
             <!-- Modal content -->
