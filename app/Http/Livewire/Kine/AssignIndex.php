@@ -81,6 +81,8 @@ class AssignIndex extends Component
 
     public function searchByItems(){
 
+            $this->totalKine = 0;
+            $this->totalPacientes = 0;
 
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
