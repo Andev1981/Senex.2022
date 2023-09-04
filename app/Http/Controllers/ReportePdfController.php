@@ -28,7 +28,7 @@ class ReportePdfController extends Controller
         $nameUser = $applyItems[0]->user->name . ' ' . $applyItems[0]->user->last_name;
         $total = $applyItems[0]->sum('price');
         $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
-        $fecha = $fechaString->format('M/Y');
+        $fecha = $fechaString->format('F Y');
         //dd($nameUser);
        
 
