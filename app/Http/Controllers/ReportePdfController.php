@@ -41,7 +41,9 @@ class ReportePdfController extends Controller
                             $this->totalKine += $kineValue->price;
                         }
             }    
-       $pdf = Pdf::loadView('pdf.reporte',['applyItems' => $applyItems,'total' => $total,'nameUser' => $nameUser,'fecha' => $fecha,'totalKine' => $this->totalKine,'kineValues' => $kineValues]);
+       $pdf = Pdf::loadView('pdf.reporte',['applyItems' => $applyItems,'nameUser' => $nameUser,'fecha' => $fecha,'totalKine' => $this->totalKine,'kineValues' => $kineValues]);
+
+       $this->totalKine =0;
 
        return $pdf->download(rand(1,1000) .'-Reporte-Mensual-Atenciones' . $nameUser . '.pdf');
 
