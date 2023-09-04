@@ -51,7 +51,7 @@
 </head>
 <body>
     <header>
-        <img src="/public/img/logo-cabecera.png" alt="Logo Empresa" class="logo">
+        <img src="{{ asset('img/logo-cabecera.png')}}" alt="Logo Empresa" class="logo">
         <h1>Reporte Resumen Senex</h1>
         <p>Usuario: {{ $nameUser }}</p>
         <p>Fecha: {{ $fecha }}</p>
