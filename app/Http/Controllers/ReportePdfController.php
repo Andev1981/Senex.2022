@@ -43,7 +43,7 @@ class ReportePdfController extends Controller
             }    
        $pdf = Pdf::loadView('pdf.reporte',['applyItems' => $applyItems,'total' => $total,'nameUser' => $nameUser,'fecha' => $fecha,'totalKine' => $this->totalKine,'kineValues' => $kineValues]);
 
-       return $pdf->download(rand(1,1000) .'-reporte-' . $nameUser . '.pdf');
+       return $pdf->download(rand(1,1000) .'-Reporte-Mensual-Atenciones' . $nameUser . '.pdf');
 
     }
 
