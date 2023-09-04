@@ -185,7 +185,6 @@
                         </div>
                     </form>
                     <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
-
                         <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
 
                             <div class="flex flex-row items-center p-4 bg-slate-200 md:flex-row md:space-y-0 md:space-x-4">
@@ -296,12 +295,26 @@
                                                 </td>
                                             </tr>
                                             @if ($loop->last)
-                                            <!-- <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                                <td colspan="6"></td>
-                                                <td>
-                                                    <a href="reporte-pdf/{{ $this->buscarFecha }}/{{$this->kine->id}}" target="_blank" type="button" class="inline-flex items-center px-2 py-1 my-2 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Pdf</a>
-                                                </td>
-                                            </tr> -->
+                                            <tr class="text-center uppercase border-b dark:border-gray-700 hover:bg-cyan-50 bg-cyan-200">
+                                            <td colspan="3">
+                                            <span class="text-slate-900 font-semibold py-2">Totales</span>
+                                            </td>
+                                            <td class="text-slate-900 font-semibold py-2">
+                                            ${{ number_format($totalPacientes,0,',','.') ?? '0' }}.-
+                                            </td>
+                                            <td class="text-slate-900 font-semibold py-3">
+                                            ${{ number_format($totalKine,0,',','.') ?? '0' }}.-
+                                            </td>
+                                            <td class="text-slate-900 font-semibold py-3">
+                                              ${{ number_format($totalPacientes-$totalKine,0,',','.') ?? '0' }}.-
+                                            </td>
+                                            <td class="text-slate-900 font-semibold py-2 flex">
+                                            @if ($totalKine > 0)
+                                                
+                                            <a href="reporte-pdf/{{ $this->buscarFecha }}/{{$this->kine->id}}" target="_blank" type="button" class="inline-flex items-center px-2 py-1 my-2 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Pdf</a>
+                                            @endif
+                                            </td>
+                                            </tr>
                                             @endif
                                             @empty
                                             <tr class="text-center">

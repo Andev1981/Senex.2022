@@ -12,8 +12,8 @@ use Carbon\Carbon;
 
 class ReportePdfController extends Controller
 {
-   
-     public function generarReporte($buscarFecha, $kine)
+    public $totalKine = 0;
+    public function generarReporte($buscarFecha, $kine)
     {
 
 
@@ -31,85 +31,24 @@ class ReportePdfController extends Controller
         $fecha = $fechaString->format('d/m/Y');
         //dd($nameUser);
        
-       $pdf = Pdf::loadView('pdf.reporte',['applyItems' => $applyItems,'total' => $total,'nameUser' => $nameUser,'fecha' => $fecha]);
+
+        $kineValues = ApplicationTypeUser::where('user_id',$kine)->get();
+
+            foreach($applyItems as $applyItem){
+
+                foreach ($kineValues as $kineValue)
+                        if($kineValue->application_type_id == $applyItem->application_type_id){
+                            $this->totalKine += $kineValue->price;
+                        }
+            }    
+       $pdf = Pdf::loadView('pdf.reporte',['applyItems' => $applyItems,'total' => $total,'nameUser' => $nameUser,'fecha' => $fecha,'totalKine' => $this->totalKine,'kineValues' => $kineValues]);
 
        return $pdf->download(rand(1,1000) .'-reporte-' . $nameUser . '.pdf');
-
 
     }
 
     public function arreglo(){
 
-        $kines = User::where('user_type','Kine')->get();
-        $applyItems = ApplyItem::where('application_type_id','<>', null)->get();
-        $assigns = Assign::all();
-
-        /* dd($applyItems); */
-
-        foreach($kines as $kine){
-
-            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',1)->first();
-            if(!$kineSearch1){
-                ApplicationTypeUser::create([
-                    'user_id' => $kine->id,
-                    'application_type_id' => 1,
-                    'price' => 0,
-                ]);
-            }
-
-            $kineSearch2 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',2)->first();
-            if(!$kineSearch2){
-                ApplicationTypeUser::create([
-                    'user_id' => $kine->id,
-                    'application_type_id' => 2,
-                    'price' => 0,
-                ]);
-            }
-            
-            
-            $kineSearch3 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',3)->first();
-            if(!$kineSearch3){
-                ApplicationTypeUser::create([
-                    'user_id' => $kine->id,
-                    'application_type_id' => 3,
-                    'price' => 0,
-                ]);
-            }
-            
-            $kineSearch4 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',4)->first();
-            if(!$kineSearch4){
-                ApplicationTypeUser::create([
-                    'user_id' => $kine->id,
-                    'application_type_id' => 4,
-                    'price' => 0,
-                ]);
-            }
-
-            $kineSearch5 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',5)->first();
-            if(!$kineSearch5){
-                ApplicationTypeUser::create([
-                    'user_id' => $kine->id,
-                    'application_type_id' => 5,
-                    'price' => 0,
-                ]);
-            }
-            
-        }
-
-        foreach($kines as $kine){
-            $kineSearch1 = ApplicationTypeUser::where('user_id',$kine->id)->where('application_type_id',5)->first();
-
-            if($kineSearch1){
-                foreach($applyItems as $applyItem){
-                    if($kineSearch1->application_type_id == $applyItem->application_type_id){
-                        $applyItem->application_type_user_id = $kineSearch1->id;
-                        $applyItem->save();
-                    }
-                }
-            }
-        }
-        
-
-        dd($kines);
+      
     }
 }

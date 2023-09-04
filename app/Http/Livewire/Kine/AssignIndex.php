@@ -29,6 +29,8 @@ class AssignIndex extends Component
     public $buscarFecha;
     public $buscarFechaIn;
     public $kineValues;
+    public $totalPacientes = 0;
+    public $totalKine = 0;
 
     protected $listeners = ['success-value' => 'searchByItems'];
 
@@ -87,6 +89,15 @@ class AssignIndex extends Component
 
             $this->kineValues = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
 
+            foreach($this->applyItems as $applyItem){
+                $this->totalPacientes += $applyItem->price;
+
+                foreach ($this->kineValues as $kineValue)
+                        if($kineValue->application_type_id == $applyItem->application_type_id){
+                            $this->totalKine += $kineValue->price;
+                        }
+            }                           
+
     }
 
 
@@ -94,7 +105,7 @@ class AssignIndex extends Component
    public function clear(){
              $this->resetValidation();
              $this->resetErrorBag();
-             $this->reset(['atencionSelected','atencionValor','kine']);
+             $this->reset(['atencionSelected','atencionValor','kine','totalClientes','totalKine']);
     }
 
     

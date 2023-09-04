@@ -12,7 +12,7 @@
 
         .logo {
             width: 100px;
-            height: 100px;
+            height: auto;
             margin: 0 auto;
         }
 
@@ -41,11 +41,17 @@
             text-align: center;
             font-size: 12px;
         }
+        .totalText {
+            font-weight: 600;
+        }
+        .totalNumber{
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <header>
-        <img src="../../../public/img/logo-cabecera.png" alt="Logo Empresa" class="logo">
+        <img src="/public/img/logo-cabecera.png" alt="Logo Empresa" class="logo">
         <h1>Reporte Resumen Senex</h1>
         <p>Usuario: {{ $nameUser }}</p>
         <p>Fecha: {{ $fecha }}</p>
@@ -54,6 +60,7 @@
     <table>
         <thead>
             <tr>
+                <th>Fecha</th>
                 <th>Paciente</th>
                 <th>Tipo</th>
                 <th>Sesión</th>
@@ -64,6 +71,10 @@
            @forelse ($applyItems as $applyItem)
                                                 <tr>
                                                     <td scope="row">
+                                                        {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
+
+                                                    </td>
+                                                    <td >
                                                         {{ $applyItem->application->user->name ?? '' }}
                                                         {{ $applyItem->application->user->last_name ?? '' }}
                                                     </td>
@@ -73,20 +84,27 @@
                                                     </td>
                                                     <td>{{ $applyItem->numero_sesion ?? ''}}</td>
                                                     <td>
-                                                     ${{  number_format($applyItem->price,0,',','.') }}.-
+                                                     @forelse ($kineValues as $kineValue)
+                                                        @if($kineValue->application_type_id == $applyItem->application_type_id)
+                                                        ${{ number_format($kineValue->price,0,',','.') ?? '0' }}.-
+                                                        @endif
+
+                                                    @empty
+                                                        Sin Datos
+                                                    @endforelse
                                                     </td>
                                                 </tr>
                                                 @empty
                                                 <tr>
-                                                    <td col="4">
+                                                    <td col="5">
                                                        Sin Datos
                                                     </td>
                                                 </tr>
                                         @endforelse
                                         <tr>
-                                          <td colspan="2"></td>
-                                          <td>Total</td>
-                                          <td> ${{  number_format($total,0,',','.') }}.-</td>  
+                                          <td colspan="3"></td>
+                                          <td class="totalText">Total</td>
+                                          <td class="totalNumber"> ${{  number_format($totalKine,0,',','.') }}.-</td>  
                                         </tr>
         </tbody>
     </table>
