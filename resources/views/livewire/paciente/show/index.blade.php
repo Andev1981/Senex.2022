@@ -1,18 +1,26 @@
 <div>
     <div class="flex flex-row gap-4">
+        <a href="{{ route('pagos',$paciente) }}" class="flex items-center px-2 py-1 text-sm font-medium text-center text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+
+            Pagos
+        </a>
+
         <button wire:click="$set('opendetalles', '')" class="flex items-center px-2 py-1 text-sm font-medium text-center text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-2 -ml-0.5">
                 <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"></path>
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z">
                 </path>
             </svg>
-            Detalles
+            Ver
         </button>
+
         <button type="button" wire:click="$set('openDelPaciente','')" class="flex items-center px-2 py-1 text-xs font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
-            Eliminar
         </button>
 
     </div>
@@ -37,7 +45,7 @@
                 <!-- Modal Body -->
                 <div class="flex flex-row mb-5">
                     <div class="p-2 shadow-xl basis-1/4 rounded-xl">
-                  
+
                         <div class="mt-2 uppercase">{{ $paciente->name ?? '' . ' ' . $paciente->last_name ?? '' }}</div>
                         <div class="font-medium uppercase">{{ $paciente->email ?? '' }}</div>
                         <div class="text-sm text-gray-500 uppercase dark:text-gray-400">{{ $paciente->rut ?? '' }}</div>
@@ -45,7 +53,7 @@
 
                         <hr class="mt-4">
 
-                        
+
 
                         <hr>
                         <h4 class="mt-4 mb-2 text-lg font-bold text-gray-900 dark:text-white">Datos Generales</h4>
@@ -54,7 +62,7 @@
                         <div class="grid grid-cols-1">
                             @foreach ($answers as $answer)
                             <div class="z-0 w-full my-2 group">
-                                <label  class="block text-xs font-medium text-gray-400 dark:text-white">{{ $answer->question->name  ?? '' }}</label>
+                                <label class="block text-xs font-medium text-gray-400 dark:text-white">{{ $answer->question->name  ?? '' }}</label>
                                 <div class="text-base text-gray-800">
                                     {{ $answer->name ?? '--' }}
                                 </div>
@@ -88,7 +96,7 @@
         </div>
     </div>
 
-       <!-- Modal Eliminar -->
+    <!-- Modal Eliminar -->
     <div class="{{ $openDelPaciente }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
         <div class="relative w-full h-full max-w-2xl p-4 md:h-auto">
             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">

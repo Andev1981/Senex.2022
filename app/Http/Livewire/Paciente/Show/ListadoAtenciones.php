@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Paciente\Show;
 
 use App\Models\Application;
+use App\Models\ApplyItem;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -22,5 +23,10 @@ class ListadoAtenciones extends Component
 
     public function mount(User $paciente){
         $this->paciente = $paciente;
+    }
+
+    public function selectItem($selectedItem){
+        $selItem = ApplyItem::find($selectedItem);
+        dd($selItem);
     }
 }

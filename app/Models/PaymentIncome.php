@@ -8,4 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentIncome extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'pay',
+        'application_id',
+        'apply_item_id',
+    ];
+
+    public function application(){
+        return $this->belongsTo(Application::class);
+    }
+
+    public function item(){
+        return $this->belongsTo(ApplyItem::class);
+    }
 }

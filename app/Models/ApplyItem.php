@@ -45,4 +45,8 @@ class ApplyItem extends Model
     public function assign(){
         return $this->hasOne(Assign::class);
     }
+
+    public function payment(){
+        return $this->hasOne(PaymentIncome::class);
+    }
 }

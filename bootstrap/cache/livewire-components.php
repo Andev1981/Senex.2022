@@ -22,6 +22,8 @@
   'paciente.listado-pacientes' => 'App\\Http\\Livewire\\Paciente\\ListadoPacientes',
   'paciente.modal-crear' => 'App\\Http\\Livewire\\Paciente\\ModalCrear',
   'paciente.modal-editar' => 'App\\Http\\Livewire\\Paciente\\ModalEditar',
+  'paciente.pagos.index-pagos' => 'App\\Http\\Livewire\\Paciente\\Pagos\\IndexPagos',
+  'paciente.pagos.modal-pago' => 'App\\Http\\Livewire\\Paciente\\Pagos\\ModalPago',
   'paciente.show.apoderado.apoderado-crear' => 'App\\Http\\Livewire\\Paciente\\Show\\Apoderado\\ApoderadoCrear',
   'paciente.show.apoderado.apoderado-editar' => 'App\\Http\\Livewire\\Paciente\\Show\\Apoderado\\ApoderadoEditar',
   'paciente.show.apoderado.apoderado-listado' => 'App\\Http\\Livewire\\Paciente\\Show\\Apoderado\\ApoderadoListado',
