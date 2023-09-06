@@ -138,7 +138,7 @@
                                 
                                 <td>
 
-                                    @livewire('paciente.show.index', ['paciente' => $paciente], key($paciente->id))
+                                 
 
                                 </td>
                             </tr>
