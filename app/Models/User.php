@@ -34,7 +34,8 @@ class User extends Authenticatable
         'phone',
         'address_id',
         'status',
-        'user_type'
+        'user_type',
+        'payment_status',
     ];
 
     /**

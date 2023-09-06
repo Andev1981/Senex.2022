@@ -14,6 +14,7 @@ class ModalPago extends Component
     public $user;
     public $type;
     public $pay = 0;
+  
 
     public function mount(ApplyItem $item){
         $this->item = $item;
@@ -43,5 +44,6 @@ class ModalPago extends Component
         $this->emit('update-payment');
         $this->dispatchBrowserEvent('swal-success');
         $this->item = $singleItem;
+
     }
 }

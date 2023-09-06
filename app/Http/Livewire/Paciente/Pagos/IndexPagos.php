@@ -22,6 +22,7 @@ class IndexPagos extends Component
     public $totalAtendidas = 0;
     public $type = 1;
     public $itemsSuma = 0;
+    public $userPayStatus = 0;
 
     protected $listeners = ['update-payment' => 'render'];
 
@@ -38,17 +39,30 @@ class IndexPagos extends Component
         $this->countSuma = 0;
         $this->itemsSuma = 0;
         foreach($applications as $application){
+        
             $countSuma = ApplyItem::where('application_id',$application->id)->where('status',1)->get();
             $this->countSuma += count($countSuma);
+        
             $itemsSuma = PaymentIncome::where('application_id',$application->id)->get();
             $this->itemsSuma += count($itemsSuma);
+        
             foreach($itemsSuma as $suma){
                $this->totalAtenciones += $suma->pay;
             }
+        
             foreach($countSuma as $suma){
                $this->totalAtendidas += $suma->price;
             }
         }
+
+        if($this->totalAtenciones == $this->totalAtendidas){
+            $this->paciente->payment_status = 2;
+        }elseif($this->totalAtenciones < $this->totalAtendidas){
+            $this->paciente->payment_status = 1;
+        }
+
+        $this->paciente->save();
+
         return view('livewire.paciente.pagos.index-pagos',['applications' => $applications, 'totalAtenciones' => $this->totalAtenciones]);
     }
 }

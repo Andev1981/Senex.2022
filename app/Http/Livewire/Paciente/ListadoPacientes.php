@@ -27,7 +27,7 @@ class ListadoPacientes extends Component
         $pacientes = User::where('user_type', 'Paciente')
             ->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('rut', 'like', '%' . $this->search . '%')
+                    ->orWhere('payment_status', 'like', '%' . $this->search . '%')
                     ->orWhere('email', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate(5);
 
