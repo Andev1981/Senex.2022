@@ -18,6 +18,7 @@ use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Paciente\ListadoPacientes;
 use App\Http\Livewire\Paciente\Pagos\IndexPagos;
+use App\Http\Livewire\Paciente\Show\Index as ShowIndex;
 use App\Http\Livewire\Types\Index;
 
 /*
@@ -63,6 +64,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('kines', ListadoKines::class)->name('kines');
     Route::get('types', Index::class)->name('types');
     Route::get('{paciente}/pagos', IndexPagos::class)->name('pagos');
+    Route::get('{paciente}/detalles', ShowIndex::class)->name('detalles');
 
     Route::get('/reporte-pdf/{applyItems}/{kine}',[ReportePdfController::class,'generarReporte']);
 
