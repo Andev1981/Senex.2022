@@ -28,7 +28,12 @@ class IndexPagos extends Component
 
     public function mount(User $paciente){
         $this->paciente = $paciente;
-        
+
+        $users = User::where('user_type','Paciente')->get();
+        foreach($users as $user){
+            $user->payment_status = 1;
+            $user->save();
+        }
     }
 
     public function render()
