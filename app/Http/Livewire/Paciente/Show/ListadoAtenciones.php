@@ -27,6 +27,6 @@ class ListadoAtenciones extends Component
 
     public function selectItem($selectedItem){
         $selItem = ApplyItem::find($selectedItem);
-        dd($selItem);
+
     }
 }

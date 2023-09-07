@@ -2,11 +2,16 @@
     <section class="p-2 dark:bg-gray-900 sm:p-5">
         <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
             <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
-                <div class="flex flex-row items-center p-4 md:flex-row md:space-y-0 md:space-x-4">
-                    <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
-                    <label class="text-lg font-semibold">Listado de Pacientes</label>
-                    {!! $selectedPaciente['id'] ?? '' !!}
+                <div class="w-full flex flex-row align-middle justify-between items-center p-4 md:flex-row md:space-y-0 md:space-x-4">
+                    <div class="flex items-center">
+                        <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
+                        <label class="text-lg font-semibold">Listado de Pacientes</label>
+                    </div>
+                    <div class="flex justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
+                    @livewire('paciente.modal-crear')
+                    </div>
                 </div>
+                  
                 <div class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
                     <div class="w-full md:w-5/6">
                         <div class="flex items-center">
@@ -17,12 +22,19 @@
                                         <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                                     </svg>
                                 </div>
+                               
                                 <input type="text" wire:model="search" class="block w-full p-2 pl-10 text-sm text-gray-900 uppercase border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="Buscar..." required="">
                             </div>
                         </div>
                     </div>
-                    <div class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
-                    @livewire('paciente.modal-crear')
+                     <div>
+                            <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="quantity">
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="15">15</option>
+                                        <option value="20">20</option>
+                                        <option value="30">30</option>
+                                    </select>
                     </div>
                 </div>
                 <div class="mx-2 overflow-x-auto shadow-md">
