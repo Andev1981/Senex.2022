@@ -81,7 +81,7 @@ class EditarItem extends Component
         $this->applyItem->price = $this->price;
         $this->applyItem->numero_sesion = $this->numero_sesion;
         $this->applyItem->save();
-        $this->user->updated_at = now();
+        $this->user->updated_at = $this->fecha_atencion;
         $this->user->save();
         $this->saveActivity();
         $this->clear();

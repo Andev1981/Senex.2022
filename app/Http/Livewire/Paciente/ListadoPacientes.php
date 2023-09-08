@@ -27,11 +27,24 @@ class ListadoPacientes extends Component
     public function render()
     {
 
+
+
         $pacientes = User::where('user_type', 'Paciente')
             ->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%')
                     ->orWhere('updated_at', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+
+
+            foreach($pacientes as $paciente){
+                foreach($paciente->applications as $apply){
+                    $res = $apply->items->max('fecha_atencion');
+                    if($res){
+                        $paciente->updated_at = $res;
+                        $paciente->save();
+                    }
+                }
+            }
 
         return view('livewire.paciente.listado-pacientes', compact('pacientes'));
     }
