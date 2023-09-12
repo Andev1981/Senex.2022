@@ -1,5 +1,5 @@
 <div>
-    <section class="p-2 dark:bg-gray-900 p-5">
+    <section class="p-2 dark:bg-gray-900">
         <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
             <!-- Start coding here -->
 

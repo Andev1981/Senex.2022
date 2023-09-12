@@ -62,9 +62,6 @@
                                 <th scope="col" class="px-6 py-3 cursor-pointer">
                                     <span class="sr-only">Actions</span>
                                 </th>
-                                @if (auth()->user()->email == 'javt1981@gmail.com')
-                                <th></th>
-                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -87,13 +84,14 @@
                                                         @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
                                             </div>
                                         @endif
+                                         @if (auth()->user()->email == 'javt1981@gmail.com')
+                       
+                                         @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
+                            
+                                        @endif
                                     @endforeach
                                 </td>
-                                     @if (auth()->user()->email == 'javt1981@gmail.com')
-                                <td>
-                                         @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
-                                </td>
-                                    @endif
+                                    
                             </tr>
                             @empty
                             <tr>
