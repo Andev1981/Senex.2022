@@ -26,15 +26,7 @@
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <select class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="quantity">
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option value="30">30</option>
-                        </select>
-                    </div>
+                
                 </div>
                 <div class="mx-2 overflow-x-auto shadow-md">
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -76,17 +68,9 @@
 
                                     <div class="flex flex-row gap-4">
                                         @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
-                                        @if (auth()->user()->email == 'javt1981@gmail.com')
 
-                                        @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
-
-                                        @endif
                                     </div>
-
-
-
                                 </td>
-
                             </tr>
                             @empty
                             <tr>

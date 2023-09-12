@@ -17,7 +17,7 @@ class ListadoPacientes extends Component
     public $sort = 'updated_at';
     public $direction = 'desc';
     public $openDelPaciente = 'hidden';
-    public $quantity = 5;
+    public $quantity = 10;
 
     public function updatingSearch()
     {
@@ -30,7 +30,7 @@ class ListadoPacientes extends Component
         $pacientes = User::with('applications')->where('user_type', 'Paciente')
             ->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-            })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+            })->orderBy($this->sort, $this->direction)->paginate(10);
 
         return view('livewire.paciente.listado-pacientes', compact('pacientes'));
     }
