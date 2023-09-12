@@ -78,21 +78,14 @@
                                 <td>
                                     @foreach ($paciente->applications as $application)
                                    
-                                        @if ($loop->last)
-                                                @if ($application->status == 2)
+                                        @if ($application->status == 2)
                                             <div class="flex flex-row gap-4">
-                                             @if ($paciente)
                                                     @livewire('paciente.show.atenciones.atenciones-crear',['user' => $paciente], key($paciente->id))
-                                            @endif
                                             </div>
-                                                @else
-                                            <div class="flex flex-row gap-4">
-                                                    @if ($paciente)
+                                        @else
+                                            <div class="flex flex-row gap-4">      
                                                         @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
-                                                    @endif
                                             </div>
-
-                                                @endif
                                         @endif
                                     @endforeach
                                 </td>
