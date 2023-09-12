@@ -1,5 +1,4 @@
 <div>
-
     <section class="p-2 dark:bg-gray-900 sm:p-5">
         <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
             <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
@@ -63,6 +62,9 @@
                                 <th scope="col" class="px-6 py-3 cursor-pointer">
                                     <span class="sr-only">Actions</span>
                                 </th>
+                                @if (auth()->user()->email == 'javt1981@gmail.com')
+                                <th></th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -86,12 +88,15 @@
                                         @endif
                                         
                                     @endforeach
-                                    @if (auth()->user()->email == 'javt1981@gmail.com')
-                                         @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
-                                    @endif
+                                   
                                    
                                     </div>
                                 </td>
+                                     @if (auth()->user()->email == 'javt1981@gmail.com')
+                                <td>
+                                         @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
+                                </td>
+                                    @endif
                             </tr>
                             @empty
                             <tr>
