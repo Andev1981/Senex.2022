@@ -75,7 +75,7 @@ class CrearItem extends Component
     public function mount(User $user)
     {
 
-        $this->application = Application::where('user_id',$user->id)->where('status',2)->first();
+        $this->application = Application::where('user_id',$user->id)->where('status',1)->first();
 
         if(!$this->application){
             $this->countApplies = 0;
@@ -84,7 +84,11 @@ class CrearItem extends Component
         }else{
             $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
             $valor = ApplyItem::where('application_id',$this->application->id)->orderBy('id','desc')->first('price');
-            $this->valor = $valor->price;
+            if($valor){
+                $this->valor = $valor->price;
+            }else{
+                $this->valor = 0;
+            }
         }
 
         $this->tipo_atenciones = ApplicationType::all();
@@ -102,7 +106,7 @@ class CrearItem extends Component
                 'derivado' => $this->profesional_derivacion,
                 'desde' => $this->lugar_derivacion,
                 'comments' => $this->mensaje,
-                'user_id' => $this->user->id,
+                'user_id' => $this->paciente->id,
                 'status' => 1,
                 'type_payment' => $this->forma_de_pago,
             ]);
