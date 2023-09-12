@@ -2,43 +2,38 @@
 
 namespace App\Http\Livewire\Paciente;
 
-use App\Models\Application;
-use App\Models\ApplyItem;
 use App\Models\User;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ListadoPacientes extends Component
+class ListadoPagosPaciente extends Component
 {
 
     use WithPagination;
     public $selectedPaciente;
     public $search;
-    protected $listeners = ['success' => 'render', 'success-paciente' => 'render','success-item-single' => 'render','success-item' => 'render','success-atencion' => 'render'];
+    protected $listeners = ['success' => 'render','success-paciente' => 'render'];
     protected $queryString = ['search'];
     public $sort = 'updated_at';
     public $direction = 'desc';
     public $openDelPaciente = 'hidden';
-    public $quantity = 5;
+    public $quantity = 10;
+
 
     public function updatingSearch()
     {
         $this->resetPage();
     }
 
+
     public function render()
     {
-        $pacientes = [];
-
         $pacientes = User::where('user_type', 'Paciente')
             ->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-
-        return view('livewire.paciente.listado-pacientes', compact('pacientes'));
+        return view('livewire.paciente.listado-pagos-paciente', compact('pacientes'));
     }
-
 
     public function order($sort)
     {
@@ -54,5 +49,15 @@ class ListadoPacientes extends Component
         }
     }
 
+    public function openDeleteModal($paciente){
+        $this->selectedPaciente ='';
+        $this->selectedPaciente = $paciente;
+        $this->openDelPaciente = '';
+    }
 
+    public function deletePaciente(){
+        $pacienteDel = User::find($this->selectedPaciente['id']);
+        $pacienteDel->delete();
+        $this->openDelPaciente = 'hidden';
+    }
 }

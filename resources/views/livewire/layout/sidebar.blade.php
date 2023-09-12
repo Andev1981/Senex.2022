@@ -4,13 +4,21 @@
 
         </form>
         <ul class="space-y-2">
-            <li>
+        <li>
                 <a href="{{ route('pacientes') }}" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group {{ Request::path() == 'pacientes' ? 'border-2 border-sky-600' : ''}}">
                     <img class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" src="{{ asset('icons/usuario.gif') }}" alt="Icono Pacientes">
-                    <span class="ml-3">Pacientes</span>
+                    <span class="ml-3">Sesiones&nbsp;Pacientes</span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('pacientes.pagos') }}" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group {{ Request::path() == 'pagos' ? 'border-2 border-sky-600' : ''}}">
+                    <img class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" src="{{ asset('icons/devolucion-de-dinero.gif') }}" alt="Icono Pacientes">
+                    <span class="ml-3">Pagos&nbsp;Pacientes</span>
+                </a>
+            </li>
+
             
+            <hr>
             <li>
                 <a href="{{ route('kines') }}" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group {{ Request::path() == 'kines' ? 'border-2 border-sky-600' : ''}}">
                        <img class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" src="{{ asset('icons/medicamento.gif') }}" alt="Icono Kines">

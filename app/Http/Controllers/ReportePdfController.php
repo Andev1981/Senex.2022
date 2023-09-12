@@ -51,6 +51,18 @@ class ReportePdfController extends Controller
 
     public function arreglo(){
 
-      
+      $users = User::where('user_type','Paciente')->get();
+
+      foreach($users as $user){
+        foreach($user->applications as $application){
+         if(count($application->items) > 0){
+            echo $user->applications[0].'<br><br><br>';
+            foreach($application->items as $item){
+                $item->application_id = $user->applications[0]->id;
+                $item->save();
+            }
+         }
+        }
+      }
     }
 }

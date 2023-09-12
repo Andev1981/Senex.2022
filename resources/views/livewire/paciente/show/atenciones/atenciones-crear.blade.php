@@ -16,7 +16,7 @@
                 <!-- Modal header -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">
-                        Creando Tratamiento
+                        Creando Tratamiento y primera sesión
                     </h3>
                     <button wire:click="$set('openCrearAtencion','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -48,6 +48,33 @@
                                 </select>
                             </div>
                             @error('kine')
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-500">
+                                {{ $message }}.
+                            </p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"> Tipo de Atención</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                                    </svg>
+
+
+                                </div>
+                                <select wire:model.defer="tipo_atencion" require class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                    <option>
+                                        ---selecciona---
+                                    </option>
+                                    @foreach ($tipo_atenciones as $tipo_atencion)
+                                    <option class="uppercase" value="{{ $tipo_atencion->id }}">
+                                        {{ $tipo_atencion->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @error('tipo_atencion')
                             <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                 {{ $message }}.
                             </p>
@@ -91,8 +118,59 @@
                             </p>
                             @enderror
                         </div>
-                    </div>
-                    <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                          <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"> Estado</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="0.5" stroke="currentColor" class="w-6 h-6">
+                                        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z" />
+                                        <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z" />
+                                    </svg>
+
+                                </div>
+                                <select wire:model.defer="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500">
+                                    <option>
+                                        ---selecciona---
+                                    </option>
+                                    <option selected value="0">
+                                        Pendiente
+                                    </option>
+                                    <option value="1">
+                                        Atendida
+                                    </option>
+                                    <option value="1">
+                                        Cancelada
+                                    </option>
+                                    <option value="1">
+                                        Reagendado
+                                    </option>
+
+                                </select>
+                            </div>
+                            @error('status')
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-500">
+                                {{ $message }}.
+                            </p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <x-input-field label="Fecha de la atención" name="fecha_atencion" type="date" wire:model.defer="fecha_atencion" placeholder="">
+
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-hospital" viewBox="0 0 16 16">
+                                    <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z" />
+                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                                </svg>
+
+                            </x-input-field>
+                            @error('fecha_atencion')
+                            <p class="text-sm text-red-600 dark:text-red-500">
+                                {{ $message }}.
+                            </p>
+                            @enderror
+                        </div>
+
                         <div>
                             <x-input-field label="Profesional que deriva" type="text" obligatorio="Obligatorio" wire:model.defer="profesional_derivacion" placeholder="Ingrese nombre">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill-down" viewBox="0 0 16 16">

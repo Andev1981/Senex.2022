@@ -13,6 +13,7 @@ use Livewire\Component;
 class EditarItem extends Component
 {
     public ApplyItem $applyItem;
+    public User $user;
     public  $types = [],
             $kines = [],
             $openItem = 'hidden',
@@ -23,19 +24,19 @@ class EditarItem extends Component
             $application,
             $countApplies,
             $applypaciente,
-            $user,
             $user_id,
             $status,
             $fecha_atencion,
             $comments = '',
             $application_type_id,
             $price,
-            $numero_sesion;
+            $numero_sesion,
+            $errorNumSesion=false;
 
     protected $rules = [
         'user_id' => 'required',
         'status' => 'required',
-        'fecha_atencion' => '',
+        'fecha_atencion' => 'required',
         'comments' => 'max:255',
         'application_type_id' => 'required',
         'price' => 'required',
@@ -51,8 +52,8 @@ class EditarItem extends Component
 
         $this->applyItem = $applyItem;      
         $this->application = $applyItem->application;
-        $this->user = $applyItem->application->user;
-        $this->user_id = $applyItem->user_id;
+        $this->user = $this->application->user;
+        $this->user_id = $this->user->id;
         $this->status = $applyItem->status;
         if($applyItem->fecha_atencion){
         $this->fecha_atencion = Carbon::parse(strtotime($applyItem->fecha_atencion))->format('Y-m-d');
@@ -70,19 +71,33 @@ class EditarItem extends Component
     public function save(){
 
 
-        $this->validate();     
+        $this->validate();   
+
+        
+        
+        if($this->applyItem->numero_sesion != $this->numero_sesion){
+            $val = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();
+            if($val){
+                $this->errorNumSesion = true;
+                return;
+            }else{
+                $this->errorNumSesion = false;
+            }
+        }
+        
+
         $this->applyItem->user_id = $this->user_id;
         $this->applyItem->status = $this->status;
+
         if($this->fecha_atencion){
             $this->applyItem->fecha_atencion = $this->fecha_atencion;
         }
+
         $this->applyItem->comments = $this->comments;
         $this->applyItem->application_type_id = $this->application_type_id;
         $this->applyItem->price = $this->price;
         $this->applyItem->numero_sesion = $this->numero_sesion;
         $this->applyItem->save();
-        $this->user->updated_at = $this->fecha_atencion;
-        $this->user->save();
         $this->saveActivity();
         $this->clear();
         
@@ -97,8 +112,10 @@ class EditarItem extends Component
         $this->resetValidation();
         $this->resetErrorBag();
         $this->dispatchBrowserEvent('swal-success');
-        $this->emit('success-item',$this->application);
+        $this->emit('success-item');
         $this->openItem = 'hidden';
+        $this->openDelItem = 'hidden';
+        $this->errorNumSesion = false;
     }
 
     public function saveActivity(){

@@ -17,6 +17,8 @@ use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Paciente\ListadoPacientes;
+use App\Http\Livewire\Paciente\ListadoPagosPaciente;
+use App\Http\Livewire\Paciente\ListadosIndex;
 use App\Http\Livewire\Paciente\Pagos\IndexPagos;
 use App\Http\Livewire\Paciente\Show\Index as ShowIndex;
 use App\Http\Livewire\Types\Index;
@@ -60,7 +62,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('users', UserController::class)->middleware(['role:Admin']);
 
     //Livewire full page components
-    Route::get('pacientes', ListadoPacientes::class)->name('pacientes');
+    Route::get('pacientes', ListadosIndex::class)->name('pacientes');
+    Route::get('pagos', ListadoPagosPaciente::class)->name('pacientes.pagos');
     Route::get('kines', ListadoKines::class)->name('kines');
     Route::get('types', Index::class)->name('types');
     Route::get('{paciente}/pagos', IndexPagos::class)->name('pagos');

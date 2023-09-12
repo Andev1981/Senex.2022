@@ -332,11 +332,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center pt-5 space-x-4 border-t-2">
-
-                </div>
-
-
             </div>
         </div>
     </div>

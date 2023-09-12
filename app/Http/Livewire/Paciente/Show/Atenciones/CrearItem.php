@@ -10,7 +10,7 @@ use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Assign;
 use App\Models\User;
-
+use Carbon\Carbon;
 
 class CrearItem extends Component
 {
@@ -27,7 +27,8 @@ class CrearItem extends Component
            $mensaje ='',
            $numero_sesion,
            $paciente,
-           $countApplies;
+           $countApplies,
+           $errorNumSesion=false;
     
     protected function rules() {
         return [
@@ -37,6 +38,7 @@ class CrearItem extends Component
             'valor' => 'required|integer|min:1|max:999999',
             'mensaje' => 'max:255',
             'numero_sesion' => 'required',
+            'fecha_atencion' => 'required'
         ];
     }
     
@@ -45,33 +47,57 @@ class CrearItem extends Component
         return view('livewire.paciente.show.atenciones.crear-item');
     }
 
-    public function mount(Application $application)
+    public function mount(User $user)
     {
-        $this->application = $application;
+
+        $this->application = Application::where('user_id',$user->id)->first();
         $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
         $valor = ApplyItem::where('application_id',$this->application->id)->orderBy('id','desc')->first('price');
+
+        if(!$valor){
+        $this->valor = 0;
+        }else{
+
         $this->valor = $valor->price;
+        }
         $this->tipo_atenciones = ApplicationType::all();
         $this->kines = User::where('user_type', 'Kine')->get();
-        $this->paciente = $this->application->user;
+        $this->paciente = $user;
        
     }
 
     public function save(){
         
         $this->validate();
-        
+
+        $validador = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();
+        if($validador){
+            $this->errorNumSesion = true;
+            return;
+        }else{
+            $this->errorNumSesion = false;
+        }
+
         $apply = ApplyItem::create([
             'user_id' => $this->kine,
             'application_id' => $this->application->id,
             'application_type_id' => $this->tipo_atencion,
+            'application_type_user_id' => 0,
             'price' => $this->valor,
+            'fecha_atencion' => $this->fecha_atencion,
             'numero_sesion' =>$this->numero_sesion,
         ]);
 
 
-        $applicationTypeUser = ApplicationTypeUser::where('apply_item_id',$apply->id)->where('user_id',$this->kine)->first();
+        $applicationTypeUser = ApplicationTypeUser::where('application_type_id',$this->application->id)->where('user_id',$this->kine)->first();
 
+        if(!$applicationTypeUser){
+            $applicationTypeUser = ApplicationTypeUser::create([
+                'user_id' => $this->kine,
+                'application_type_id' => $this->tipo_atencion,
+                'price' => 0
+            ]);
+        }
 
         Assign::create([
                 'user_id' => $this->kine,
@@ -101,6 +127,7 @@ class CrearItem extends Component
             'mensaje',
             'numero_sesion'
         ]);
+         $this->errorNumSesion = false;
 
     }
 
