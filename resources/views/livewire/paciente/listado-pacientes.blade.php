@@ -73,23 +73,17 @@
                                     </div>
                                 </td>
                                 <td>
-                                    @foreach ($paciente->applications as $application)
                                    
-                                        @if ($application->status == 2)
-                                            <div class="flex flex-row gap-4">
-                                                    @livewire('paciente.show.atenciones.atenciones-crear',['user' => $paciente], key($paciente->id))
-                                            </div>
-                                        @else
-                                            <div class="flex flex-row gap-4">      
+                                    <div class="flex flex-row gap-4">      
                                                         @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
-                                            </div>
-                                        @endif
-                                         @if (auth()->user()->email == 'javt1981@gmail.com')
+                                    </div>
+                          
+
+                                    @if (auth()->user()->email == 'javt1981@gmail.com')
                        
                                          @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
                             
-                                        @endif
-                                    @endforeach
+                                    @endif
                                 </td>
                                     
                             </tr>
