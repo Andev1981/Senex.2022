@@ -27,7 +27,7 @@ class ListadoPacientes extends Component
     public function render()
     {
       
-        $pacientes = User::where('user_type', 'Paciente')
+        $pacientes = User::with('applications')->where('user_type', 'Paciente')
             ->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
