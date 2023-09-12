@@ -76,21 +76,22 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="flex flex-row gap-4">
                                     @foreach ($paciente->applications as $application)
-                                       
+                                   
                                         @if ($loop->last)
-                                            @if ($application->status == 2)
-                                             @livewire('paciente.show.atenciones.atenciones-crear',['user' => $paciente], key($paciente->id))
-                                            @else
-                                             @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
-                                            @endif
+                                                @if ($application->status == 2)
+                                            <div class="flex flex-row gap-4">
+                                                    @livewire('paciente.show.atenciones.atenciones-crear',['user' => $paciente], key($paciente->id))
+                                            </div>
+                                                @else
+                                            <div class="flex flex-row gap-4">
+
+                                                    @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
+                                            </div>
+
+                                                @endif
                                         @endif
-                                        
                                     @endforeach
-                                   
-                                   
-                                    </div>
                                 </td>
                                      @if (auth()->user()->email == 'javt1981@gmail.com')
                                 <td>
