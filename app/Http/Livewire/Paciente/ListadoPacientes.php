@@ -2,10 +2,7 @@
 
 namespace App\Http\Livewire\Paciente;
 
-use App\Models\Application;
-use App\Models\ApplyItem;
 use App\Models\User;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
