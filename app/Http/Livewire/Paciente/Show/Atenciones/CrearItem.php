@@ -28,18 +28,43 @@ class CrearItem extends Component
            $numero_sesion,
            $paciente,
            $countApplies,
-           $errorNumSesion=false;
+           $errorNumSesion=false,
+           $estado = 0,
+           $profesional_derivacion = "",
+           $lugar_derivacion = "",
+           $documentos = [],
+           $forma_de_pago,
+           $applyUser;
     
     protected function rules() {
-        return [
-            'kine' => 'required',
-            'tipo_atencion' => 'required',
-            'status' => 'required',
-            'valor' => 'required|integer|min:1|max:999999',
-            'mensaje' => 'max:255',
-            'numero_sesion' => 'required',
-            'fecha_atencion' => 'required'
-        ];
+        if($this->estado == 1){
+
+            return [
+                'kine' => 'required',
+                'tipo_atencion' => 'required',
+                'status' => 'required',
+                'valor' => 'required|integer|min:1|max:999999',
+                'mensaje' => 'max:255',
+                'numero_sesion' => 'required',
+                'fecha_atencion' => 'required',
+                'forma_de_pago' => 'required',
+                'profesional_derivacion' => 'string|max:100',
+                'lugar_derivacion' => 'string|max:150',
+                'documentos.*' => 'mimes:png,jpg,jpeg,pdf|max:1024',
+            ];
+
+        }else{
+            return [
+                'kine' => 'required',
+                'tipo_atencion' => 'required',
+                'status' => 'required',
+                'valor' => 'required|integer|min:1|max:999999',
+                'mensaje' => 'max:255',
+                'numero_sesion' => 'required',
+                'fecha_atencion' => 'required',
+            ];
+        }
+        
     }
     
     public function render()
@@ -50,16 +75,18 @@ class CrearItem extends Component
     public function mount(User $user)
     {
 
-        $this->application = Application::where('user_id',$user->id)->first();
-        $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
-        $valor = ApplyItem::where('application_id',$this->application->id)->orderBy('id','desc')->first('price');
+        $this->application = Application::where('user_id',$user->id)->where('status',2)->first();
 
-        if(!$valor){
-        $this->valor = 0;
+        if(!$this->application){
+            $this->countApplies = 0;
+            $this->valor = 0;
+            $this->estado = 1;
         }else{
-
-        $this->valor = $valor->price;
+            $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
+            $valor = ApplyItem::where('application_id',$this->application->id)->orderBy('id','desc')->first('price');
+            $this->valor = $valor->price;
         }
+
         $this->tipo_atenciones = ApplicationType::all();
         $this->kines = User::where('user_type', 'Kine')->get();
         $this->paciente = $user;
@@ -70,13 +97,27 @@ class CrearItem extends Component
         
         $this->validate();
 
-        $validador = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();
-        if($validador){
-            $this->errorNumSesion = true;
-            return;
+        if($this->estado == 1){
+            $this->application = Application::create([
+                'derivado' => $this->profesional_derivacion,
+                'desde' => $this->lugar_derivacion,
+                'comments' => $this->mensaje,
+                'user_id' => $this->user->id,
+                'status' => 1,
+                'type_payment' => $this->forma_de_pago,
+            ]);
+            $this->estado == 0;
         }else{
-            $this->errorNumSesion = false;
+            $validador = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();
+            if($validador){
+                $this->errorNumSesion = true;
+                return;
+            }else{
+                $this->errorNumSesion = false;
+            }
         }
+
+        
 
         $apply = ApplyItem::create([
             'user_id' => $this->kine,
@@ -118,14 +159,15 @@ class CrearItem extends Component
         $this->resetErrorBag();
         $this->resetValidation();
         $this->dispatchBrowserEvent('swal-success');
-        $this->emit('success-item-single',$this->application->id);
+        $this->emit('success-item-single');
         $this->openItemCreate = 'hidden';
          $this->reset([
             'kine',
             'tipo_atencion',
             'status',
             'mensaje',
-            'numero_sesion'
+            'numero_sesion',
+            'estado'
         ]);
          $this->errorNumSesion = false;
 

@@ -73,19 +73,20 @@
                                     </div>
                                 </td>
                                 <td>
-                                   
-                                    <div class="flex flex-row gap-4">      
-                                                        @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
-                                    </div>
-                          
 
-                                    @if (auth()->user()->email == 'javt1981@gmail.com')
-                       
-                                         @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
-                            
-                                    @endif
+                                    <div class="flex flex-row gap-4">
+                                        @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
+                                        @if (auth()->user()->email == 'javt1981@gmail.com')
+
+                                        @livewire('paciente.modal-fix',['user' => $paciente], key($paciente->id))
+
+                                        @endif
+                                    </div>
+
+
+
                                 </td>
-                                    
+
                             </tr>
                             @empty
                             <tr>

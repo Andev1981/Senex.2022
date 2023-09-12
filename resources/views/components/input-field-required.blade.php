@@ -1,5 +1,5 @@
 <div>
-    <label  class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{{ $label }} <small class="text-gray-400 italic">
+    <label  class="block text-sm font-medium text-gray-900 dark:text-white">{{ $label }} <small class="text-gray-400 italic">
         (Obligatorio)
     </small></label>
     <div class="relative mb-2">

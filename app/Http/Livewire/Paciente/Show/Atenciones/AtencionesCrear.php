@@ -43,7 +43,7 @@ class AtencionesCrear extends Component
         'documentos.*' => 'mimes:png,jpg,jpeg,pdf|max:1024',
         'tipo_atencion' => 'required',
         'status' => 'required',
-         'fecha_atencion' => 'date',
+        'fecha_atencion' => 'date',
     ];
 
     public function render()
