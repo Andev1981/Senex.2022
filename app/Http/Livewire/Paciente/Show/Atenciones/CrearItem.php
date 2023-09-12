@@ -131,6 +131,7 @@ class CrearItem extends Component
             'price' => $this->valor,
             'fecha_atencion' => $this->fecha_atencion,
             'numero_sesion' =>$this->numero_sesion,
+            'status' => $this->status,
         ]);
 
 
