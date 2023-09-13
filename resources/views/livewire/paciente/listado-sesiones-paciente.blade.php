@@ -60,7 +60,7 @@
                                                 <th scope="col" class="px-6 py-3">Paciente</th>
                                                 <th scope="col" class="px-6 py-3">Tipo</th>
                                                 <th scope="col" class="px-6 py-3">N°&nbsp;Sesión</th>
-                                                <th scope="col" class="px-6 py-3">Valor&nbsp;Cliente</th>
+                                                <th scope="col" class="px-6 py-3">Valor&nbsp;Paciente</th>
                                                 <th scope="col" class="px-6 py-3">
                                                     Estado
                                                 </th>
