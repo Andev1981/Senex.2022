@@ -38,6 +38,12 @@
                                     <option value="11">Noviembre</option>
                                     <option value="12">Diciembre</option>
                                 </select>
+                             
+                                <select class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="sort">
+                                    <option value="created_at">Fecha&nbsp;Creación</option>
+                                    <option value="fecha_atencion">Fecha&nbsp;Atención</option>
+                                </select>
+
 
                                 <button wire:click="searchByItems" type="button" class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Buscar</button>
         

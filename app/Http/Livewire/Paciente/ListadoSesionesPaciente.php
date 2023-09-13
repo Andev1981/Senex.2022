@@ -15,6 +15,8 @@ class ListadoSesionesPaciente extends Component
     public $month;
     public $applyItems = [];
     protected $listeners = ['success-item-single' => 'mount','success' => 'render','success-item' => 'mount','success-atencion' => 'mount'];
+    public $sort = 'created_at';
+    public $direction = 'desc';
 
     public function render()
     {
@@ -32,6 +34,6 @@ class ListadoSesionesPaciente extends Component
       public function searchByItems()
     {
         $this->buscarFecha =  $this->year . '-' . $this->month .'-';
-        $this->applyItems = ApplyItem::where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('created_at', 'desc')->get();
+        $this->applyItems = ApplyItem::where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->get();
     }
 }
