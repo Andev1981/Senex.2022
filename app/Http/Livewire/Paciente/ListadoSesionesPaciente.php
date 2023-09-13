@@ -32,6 +32,6 @@ class ListadoSesionesPaciente extends Component
       public function searchByItems()
     {
         $this->buscarFecha =  $this->year . '-' . $this->month .'-';
-        $this->applyItems = ApplyItem::where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('fecha_atencion', 'desc')->get();
+        $this->applyItems = ApplyItem::where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('created_at', 'desc')->get();
     }
 }
