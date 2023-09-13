@@ -16,6 +16,8 @@ class ValuesKine extends Component
     public $atencionValor;
     public $applicationUsers=[];
     public $openvalores = 'hidden';
+    public $openDelApply = 'hidden';
+    public $setApplyUser;
 
     protected $rules=[
         'atencionSelected' => 'required',
@@ -65,12 +67,24 @@ class ValuesKine extends Component
 
     } 
 
+    public function setValuesDelete(ApplicationTypeUser $applicationTypeUser){
+        $this->setApplyUser = $applicationTypeUser->id;
+        $this->openDelApply = '';
+
+    } 
+
+    public function deleteAtencion($applyUser){
+        $apply = ApplicationTypeUser::find($applyUser);
+        $apply->delete();
+        $this->clear();
+    }
+
      public function clear(){
              $this->resetValidation();
              $this->resetErrorBag();
              $this->reset(['atencionSelected','atencionValor']);
               $this->applicationUsers = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
-
+            $this->openDelApply = 'hidden';
             $this->kine->updated_at = now();
             $this->kine->save();
          }
