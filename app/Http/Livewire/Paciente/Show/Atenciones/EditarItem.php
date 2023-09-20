@@ -52,9 +52,9 @@ class EditarItem extends Component
 
         $this->applyItem = $applyItem;      
         $this->application = $applyItem->application;
-        if($this->application){
+        if($this->application->user){
             $this->user = $this->application->user;
-            $this->user_id = $this->user->id ?? '';
+            $this->user_id = $this->user->id;
         }else{
             $this->user = '';
             $this->user_id ='';
