@@ -52,8 +52,8 @@ class EditarItem extends Component
 
         $this->applyItem = $applyItem;      
         $this->application = $applyItem->application;
-        $this->user = $this->application->user;
-        $this->user_id = $this->user->id;
+        $this->user = $this->application->user ?? '';
+        $this->user_id = $this->user->id ?? '';
         $this->status = $applyItem->status;
         if($applyItem->fecha_atencion){
         $this->fecha_atencion = Carbon::parse(strtotime($applyItem->fecha_atencion))->format('Y-m-d');
