@@ -151,7 +151,10 @@
                                                  
                                                 </td>
                                                 <td> 
+                                                @if ($applyItem->application)
+                                                    
                                                 @livewire('paciente.show.atenciones.editar-item', ['applyItem' => $applyItem], key($applyItem->id))
+                                                @endif
                                              
                                                 </td>
                                             </tr>
