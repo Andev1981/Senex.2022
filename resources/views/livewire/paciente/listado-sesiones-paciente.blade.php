@@ -1,7 +1,7 @@
     <section class="p-2 dark:bg-gray-900 sm:p-5">
         <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
             <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
-                <div class="w-full flex flex-row align-middle justify-between items-center p-4 md:flex-row md:space-y-0 md:space-x-4">
+                <div class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
                     <div class="flex items-center">
                         <img src="{{ asset('icons/libro-medico.gif') }}" alt="" class="w-10 h-10">
                         <label class="text-lg font-semibold">Sesiones</label>
@@ -43,7 +43,16 @@
                                     <option value="created_at">Fecha&nbsp;Creación</option>
                                     <option value="fecha_atencion">Fecha&nbsp;Atención</option>
                                 </select>
-
+                                
+                                <select class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="selPaciente">
+                                <option  value="">
+                                    <span class="text-gray-500">--seleccion paciente--</span>
+                                </option>
+                                    @foreach ($pacientes as $paciente)
+                                        
+                                    <option value="{{$paciente->id}}">{{$paciente->name}}&nbsp;{{$paciente->last_name}}</option>
+                                    @endforeach
+                                </select>
 
                                 <button wire:click="searchByItems" type="button" class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Buscar</button>
         
@@ -72,7 +81,9 @@
                                         <tbody>
                                             @forelse ($applyItems as $applyItem)
 
-                                            <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                                            @if ($selPaciente != '')
+                                            @if ($applyItem->application->user_id == $selPaciente)
+                                                  <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                  <td class="px-1 py-1">{{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') ?? ''}}</td>
                                                 <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
                                                     {{ $applyItem->application->user->name ?? '' }}
@@ -107,6 +118,46 @@
                                              
                                                 </td>
                                             </tr>
+                                            @endif
+                                            @else
+                                              <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                                                 <td class="px-1 py-1">{{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') ?? ''}}</td>
+                                                <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
+                                                    {{ $applyItem->application->user->name ?? '' }}
+                                                    {{ $applyItem->application->user->last_name ?? '' }}
+                                                </td class="px-1 py-1">
+
+                                                <td>
+                                                    {{ $applyItem->applicationType->name ?? '' }}
+                                                </td>
+                                                <td class="px-1 py-1">{{ $applyItem->numero_sesion ?? ''}}</td>
+                                                <td class="px-1 py-1">
+                                                    ${{ number_format($applyItem->price,0,',','.') }}.-
+                                                </td>
+
+
+                                                <td class="flex px-1 py-1">
+                                                
+
+                                                    @if ($applyItem->status === 0 )
+                                                    Pendiente
+                                                    @elseif($applyItem->status == 1)
+                                                    Atendido
+                                                     @elseif($applyItem->status == 2)
+                                                    Cancelado
+                                                    @elseif($applyItem->status == 3)
+                                                    Reagendado
+                                                    @endif
+                                                 
+                                                </td>
+                                                <td> 
+                                                @livewire('paciente.show.atenciones.editar-item', ['applyItem' => $applyItem], key($applyItem->id))
+                                             
+                                                </td>
+                                            </tr>
+                                            @endif
+
+                                          
                                           
                                             @empty
                                             <tr class="text-center">

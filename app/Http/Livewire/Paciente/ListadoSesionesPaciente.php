@@ -14,6 +14,8 @@ class ListadoSesionesPaciente extends Component
     public $year;
     public $month;
     public $applyItems = [];
+    public $pacientes = [];
+    public $selPaciente ='';
     protected $listeners = ['success-item-single' => 'mount','success' => 'render','success-item' => 'mount','success-atencion' => 'mount'];
     public $sort = 'created_at';
     public $direction = 'desc';
@@ -26,6 +28,7 @@ class ListadoSesionesPaciente extends Component
      public function mount()
     {
         $this->buscarFecha = Carbon::now();
+        $this->pacientes = User::where('user_type','Paciente')->get();
         $this->month = $this->buscarFecha->format('m');
         $this->year = $this->buscarFecha->format('Y');
         $this->searchByItems();
@@ -34,6 +37,6 @@ class ListadoSesionesPaciente extends Component
       public function searchByItems()
     {
         $this->buscarFecha =  $this->year . '-' . $this->month .'-';
-        $this->applyItems = ApplyItem::where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->get();
+        $this->applyItems = ApplyItem::with('application')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->get();
     }
 }
