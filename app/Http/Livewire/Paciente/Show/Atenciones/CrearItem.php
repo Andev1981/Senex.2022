@@ -135,7 +135,7 @@ class CrearItem extends Component
         ]);
 
 
-        $applicationTypeUser = ApplicationTypeUser::where('application_type_id',$this->application->id)->where('user_id',$this->kine)->first();
+        $applicationTypeUser = ApplicationTypeUser::where('application_type_id',$this->tipo_atencion)->where('user_id',$this->kine)->first();
 
         if(!$applicationTypeUser){
             $applicationTypeUser = ApplicationTypeUser::create([
