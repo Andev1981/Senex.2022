@@ -13,8 +13,8 @@ use Livewire\Component;
 class EditarItem extends Component
 {
     public ApplyItem $applyItem;
-    public User $user;
-    public  $types = [],
+    public  $user, 
+            $types = [],
             $kines = [],
             $openItem = 'hidden',
             $openDelItem = 'hidden',
