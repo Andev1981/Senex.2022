@@ -8,6 +8,7 @@ use App\Models\ApplicationType;
 use App\Models\ApplyItem;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class EditarItem extends Component
@@ -56,8 +57,8 @@ class EditarItem extends Component
             $this->user = $this->application->user;
             $this->user_id = $this->user->id;
         }else{
-            $this->user = '';
-            $this->user_id ='';
+            $this->user = auth()->user();
+            $this->user_id = auth()->user()->id;
         }
         $this->status = $applyItem->status;
         if($applyItem->fecha_atencion){
