@@ -69,37 +69,43 @@
                                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                             <tr class="text-center">
-                                                <th scope="col" class="px-6 py-3">
-                                                Fecha&nbsp;Atención
-                                                </th>
-                                                <th scope="col" class="px-6 py-3">Paciente</th>
-                                                <th scope="col" class="px-6 py-3">Tipo</th>
-                                                <th scope="col" class="px-6 py-3">N°&nbsp;Sesión</th>
-                                                <th scope="col" class="px-6 py-3">Valor&nbsp;Paciente</th>
-                                                <th scope="col" class="px-6 py-3">
-                                                    Estado
-                                                </th>
-                                                <th colspan="2" class="px-6 py-3">
+                                             <th colspan="1" class="px-4 py-3">
                                                     <span class="sr-only">Actions</span>
                                                 </th>
+                                                <th scope="col" class="px-4 py-3">
+                                                Fecha&nbsp;Atención
+                                                </th>
+                                                <th scope="col" class="px-4 py-3">Paciente</th>
+                                                 <th scope="col" class="px-4 py-3">Kine</th>
+                                                <th scope="col" class="px-4 py-3">Tipo</th>
+                                        
+                                                <th scope="col" class="px-4 py-3">Valor&nbsp;Paciente</th>
+                                                <th scope="col" class="px-4 py-3">
+                                                    Estado
+                                                </th>
+                                               
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @forelse ($applyItems as $applyItem)
 
-                                            @if ($selPaciente != '')
-                                            @if ($applyItem->application->user_id == $selPaciente)
                                                   <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                                                  <td> 
+                                                @livewire('paciente.show.atenciones.editar-item', ['applyItem' => $applyItem], key($applyItem->id))
+                                             
+                                                </td>
                                                  <td class="px-1 py-1">{{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') ?? ''}}</td>
                                                 <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
-                                                    {{ $applyItem->application->user->name ?? '' }}
-                                                    {{ $applyItem->application->user->last_name ?? '' }}
-                                                </td class="px-1 py-1">
+                                                    {{ $applyItem->patient->name }} {{ $applyItem->patient->last_name }}
+                                                </td>
+                                                <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
+                                                    {{ $applyItem->doctor->name ?? '' }} {{ $applyItem->doctor->last_name ?? '' }}
+                                                </td>
 
-                                                <td>
+                                                <td class="px-1 py-1">
                                                     {{ $applyItem->applicationType->name ?? '' }}
                                                 </td>
-                                                <td class="px-1 py-1">{{ $applyItem->numero_sesion ?? ''}}</td>
+                                
                                                 <td class="px-1 py-1">
                                                     ${{ number_format($applyItem->price,0,',','.') }}.-
                                                 </td>
@@ -119,52 +125,8 @@
                                                     @endif
                                                  
                                                 </td>
-                                                <td> 
-                                                @livewire('paciente.show.atenciones.editar-item', ['applyItem' => $applyItem], key($applyItem->id))
-                                             
-                                                </td>
-                                            </tr>
-                                            @endif
-                                            @else
-                                              <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                                 <td class="px-1 py-1">{{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') ?? ''}}</td>
-                                                <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
-                                                    {{ $applyItem->application->user->name ?? '' }}
-                                                    {{ $applyItem->application->user->last_name ?? '' }}
-                                                </td class="px-1 py-1">
-
-                                                <td>
-                                                    {{ $applyItem->applicationType->name ?? '' }}
-                                                </td>
-                                                <td class="px-1 py-1">{{ $applyItem->numero_sesion ?? ''}}</td>
-                                                <td class="px-1 py-1">
-                                                    ${{ number_format($applyItem->price,0,',','.') }}.-
-                                                </td>
-
-
-                                                <td class="flex px-1 py-1">
                                                 
-
-                                                    @if ($applyItem->status === 0 )
-                                                    Pendiente
-                                                    @elseif($applyItem->status == 1)
-                                                    Atendido
-                                                     @elseif($applyItem->status == 2)
-                                                    Cancelado
-                                                    @elseif($applyItem->status == 3)
-                                                    Reagendado
-                                                    @endif
-                                                 
-                                                </td>
-                                                <td> 
-                                                @if ($applyItem->application)
-                                                    
-                                                @livewire('paciente.show.atenciones.editar-item', ['applyItem' => $applyItem], key($applyItem->id))
-                                                @endif
-                                             
-                                                </td>
                                             </tr>
-                                            @endif
 
                                           
                                           

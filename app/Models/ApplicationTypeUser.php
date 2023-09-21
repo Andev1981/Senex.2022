@@ -10,6 +10,7 @@ class ApplicationTypeUser extends Model
     use HasFactory;
     protected $fillable = [
         'user_id',
+        'doctor_id',
         'application_type_id',
         'price',
     ];

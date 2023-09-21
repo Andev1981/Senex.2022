@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Paciente;
 use App\Models\Address;
 use App\Models\Answer;
 use App\Models\Comuna;
+use App\Models\Patient;
 use App\Models\Region;
 use App\Models\User;
 use Livewire\Component;
@@ -65,22 +66,19 @@ class ModalCrear extends Component
                 'comuna_id' => $this->comuna,
             ]);
 
-             $user = User::create([
+             $patient = Patient::create([
+                'user_id' => 0,
                 'name' => $this->name ,
                 'last_name' => $this->last_name,
                 'email' => $this->correo,
                 'phone' => $this->telefono,
                 'birth' => $this->fecha_nacimiento,
                 'rut' => $this->rut,
-                'user_type' => 'Paciente',
                 'status' => 1,
                 'address_id' => $address->id,
-                'password' => bcrypt($this->name . '-SENEX2023'),
              ]);
 
-            $this->cargaRespuestasBase($user);
-
-             $user->assignRole([3]);
+            $this->cargaRespuestasBase($patient);
 
              $this->emit('success');
              $this->dispatchBrowserEvent('swal-success');
@@ -97,15 +95,47 @@ class ModalCrear extends Component
          }
 
 
-         public function cargaRespuestasBase($user){
-            Answer::create(['user_id' => $user-> id,'question_id' => 1]);
-            Answer::create(['user_id' => $user-> id,'question_id' => 2]);
-            Answer::create(['user_id' => $user-> id,'question_id' => 3]);
-            Answer::create(['user_id' => $user-> id,'question_id' => 4]);
-            Answer::create(['user_id' => $user-> id,'question_id' => 5]);
-            Answer::create(['user_id' => $user-> id,'question_id' => 6]);
-            Answer::create(['user_id' => $user-> id,'question_id' => 7]);
-            Answer::create(['user_id' => $user-> id,'question_id' => 8]);
+         public function cargaRespuestasBase($patient){
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 1]
+            );
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 2]
+            );
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 3]
+            );
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 4]
+            );
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 5]
+            );
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 6]
+            );
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 7]
+            );
+            Answer::create([
+                'user_id' => 0,
+                'patient_id' => $patient-> id,
+                'question_id' => 8]
+            );
          }
         
 

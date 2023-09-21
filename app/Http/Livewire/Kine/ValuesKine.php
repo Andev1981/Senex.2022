@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Kine;
 
 use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
+use App\Models\Doctor;
 use App\Models\User;
 use Livewire\Component;
 
@@ -29,7 +30,7 @@ class ValuesKine extends Component
         return view('livewire.kine.values-kine');
     }
 
-    public function mount(User $doctor){
+    public function mount(Doctor $doctor){
         
         $this->kine = $doctor;
         $this->atenciones = ApplicationType::all();

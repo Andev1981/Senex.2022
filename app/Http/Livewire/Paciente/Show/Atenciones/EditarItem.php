@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
+use App\Models\Doctor;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,7 @@ use Livewire\Component;
 class EditarItem extends Component
 {
     public ApplyItem $applyItem;
-    public  $user, 
+    public  $patient, 
             $types = [],
             $kines = [],
             $openItem = 'hidden',
@@ -25,21 +26,18 @@ class EditarItem extends Component
             $application,
             $countApplies,
             $applypaciente,
-            $user_id,
-            $status,
             $fecha_atencion,
             $comments = '',
-            $application_type_id,
             $price,
             $numero_sesion,
             $errorNumSesion=false;
 
     protected $rules = [
-        'user_id' => 'required',
-        'status' => 'required',
+        'selectedKine' => 'required',
+        'selectedStatus' => 'required',
         'fecha_atencion' => 'required',
         'comments' => 'max:255',
-        'application_type_id' => 'required',
+        'selectedType' => 'required',
         'price' => 'required',
         'numero_sesion' => 'required',
     ];
@@ -53,23 +51,18 @@ class EditarItem extends Component
 
         $this->applyItem = $applyItem;      
         $this->application = $applyItem->application;
-        if($this->application->user){
-            $this->user = $this->application->user;
-            $this->user_id = $this->user->id;
-        }else{
-            $this->user = auth()->user();
-            $this->user_id = auth()->user()->id;
-        }
-        $this->status = $applyItem->status;
+        $this->patient = $this->applyItem->patient;
+        $this->selectedKine = $applyItem->doctor->id;
+        $this->selectedStatus = $applyItem->status;
         if($applyItem->fecha_atencion){
         $this->fecha_atencion = Carbon::parse(strtotime($applyItem->fecha_atencion))->format('Y-m-d');
         }
         $this->comments = $applyItem->comments;
-        $this->application_type_id = $applyItem->application_type_id;
+        $this->selectedType = $applyItem->application_type_id;
         $this->price = $applyItem->price;
         $this->numero_sesion = $applyItem->numero_sesion;
         $this->countApplies = ApplyItem::where('application_id',$this->application->id)->count();
-        $this->kines = User::where('user_type','Kine')->get();
+        $this->kines = Doctor::all();
         $this->types = ApplicationType::all();
 
     }
@@ -90,21 +83,20 @@ class EditarItem extends Component
                 $this->errorNumSesion = false;
             }
         }
-        
 
-        $this->applyItem->user_id = $this->user_id;
-        $this->applyItem->status = $this->status;
+        $this->applyItem->user_id = $this->selectedKine;
+        $this->applyItem->doctor_id = $this->selectedKine;
+        $this->applyItem->status = $this->selectedStatus;
 
         if($this->fecha_atencion){
             $this->applyItem->fecha_atencion = $this->fecha_atencion;
         }
 
         $this->applyItem->comments = $this->comments;
-        $this->applyItem->application_type_id = $this->application_type_id;
+        $this->applyItem->application_type_id = $this->selectedType;
         $this->applyItem->price = $this->price;
         $this->applyItem->numero_sesion = $this->numero_sesion;
         $this->applyItem->save();
-        $this->saveActivity();
         $this->clear();
         
     }
@@ -122,14 +114,5 @@ class EditarItem extends Component
         $this->openItem = 'hidden';
         $this->openDelItem = 'hidden';
         $this->errorNumSesion = false;
-    }
-
-    public function saveActivity(){
-
-         Activity::create([
-                'user_id' => auth()->user()->id,
-                'detail' => 'Se edita sesión de ' .  $this->user->name .' ' . $this->user->last_name,
-            ]);
-
     }
 }

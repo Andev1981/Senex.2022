@@ -9,6 +9,8 @@ use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Assign;
+use App\Models\Doctor;
+use App\Models\Patient;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -72,10 +74,10 @@ class CrearItem extends Component
         return view('livewire.paciente.show.atenciones.crear-item');
     }
 
-    public function mount(User $user)
+    public function mount(Patient $patient)
     {
 
-        $this->application = Application::where('user_id',$user->id)->where('status',1)->first();
+        $this->application = Application::where('patient_id',$patient->id)->where('status',1)->first();
 
         if(!$this->application){
             $this->countApplies = 0;
@@ -89,11 +91,12 @@ class CrearItem extends Component
             }else{
                 $this->valor = 0;
             }
+
         }
 
         $this->tipo_atenciones = ApplicationType::all();
-        $this->kines = User::where('user_type', 'Kine')->get();
-        $this->paciente = $user;
+        $this->kines = Doctor::all();
+        $this->paciente = $patient;
        
     }
 

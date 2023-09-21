@@ -2,7 +2,7 @@
     <section class="p-2 dark:bg-gray-900 sm:p-5">
         <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
             <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
-                <div class="w-full flex flex-row align-middle justify-between items-center p-4 md:flex-row md:space-y-0 md:space-x-4">
+                <div class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
                     <div class="flex items-center">
                         <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
                         <label class="text-lg font-semibold">Pacientes</label>
@@ -67,7 +67,7 @@
                                 <td>
 
                                     <div class="flex flex-row gap-4">
-                                        @livewire('paciente.show.atenciones.crear-item',['user' => $paciente], key($paciente->id))
+                                        @livewire('paciente.show.atenciones.crear-item',['patient' => $paciente], key($paciente->id))
 
                                     </div>
                                 </td>

@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Paciente;
 
 use App\Models\Address;
 use App\Models\Comuna;
+use App\Models\Patient;
 use App\Models\Question;
 use App\Models\Region;
 use App\Models\User;
@@ -14,7 +15,7 @@ class ModalEditar extends Component
 {
 
     use WithFileUploads;
-    public User $paciente;
+    public Patient $paciente;
     public Address $address;
 
     public $open = 'hidden';
@@ -41,7 +42,7 @@ class ModalEditar extends Component
         ];
     } 
 
-    public function mount(User $paciente)
+    public function mount(Patient $paciente)
     {
         $this->paciente = $paciente;
         $this->questions = Question::all();

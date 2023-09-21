@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Kine;
 
+use App\Models\Doctor;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -22,11 +23,9 @@ class ListadoKines extends Component
 
     public function render()
     {
-        $doctores = User::where('user_type', 'Kine')
-            ->where(function ($query) {
+        $doctores = Doctor::where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%')
                     ->orWhere('rut', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%')
                     ->orWhere('status', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate(5);
 

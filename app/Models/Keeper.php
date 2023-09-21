@@ -16,12 +16,17 @@ class Keeper extends Model
            'email',
            'phone',
            'user_id',
+           'patient_id',
            'address_id',
            'parentesco',
         ];
 
         public function user(){
             return $this->belongsTo(User::class);
+        }
+
+        public function patient(){
+            return $this->belongsTo(Patient::class);
         }
 
         public function address(){

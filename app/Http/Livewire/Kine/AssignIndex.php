@@ -6,6 +6,7 @@ use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Assign;
+use App\Models\Doctor;
 use Livewire\Component;
 use App\Models\User;
 use Carbon\Carbon;
@@ -51,7 +52,7 @@ class AssignIndex extends Component
         return view('livewire.kine.assign-index');
     }
 
-    public function mount(User $doctor){
+    public function mount(Doctor $doctor){
      
             $this->kine = $doctor;
             if($this->kine->id){
@@ -86,7 +87,7 @@ class AssignIndex extends Component
 
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
-            $this->applyItems = ApplyItem::where('user_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
+            $this->applyItems = ApplyItem::where('doctor_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
 
 
             $this->kineValues = ApplicationTypeUser::where('user_id',$this->kine->id)->get();

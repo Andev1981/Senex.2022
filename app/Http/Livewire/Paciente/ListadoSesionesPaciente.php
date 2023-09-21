@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Paciente;
 
 use App\Models\ApplyItem;
+use App\Models\Patient;
 use App\Models\User;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -27,15 +28,20 @@ class ListadoSesionesPaciente extends Component
     {
         if($this->reloadStatus == 0){
             $this->buscarFecha = Carbon::now();
-            $this->pacientes = User::where('user_type','Paciente')->get();
+            $this->pacientes = Patient::all();
             $this->month = $this->buscarFecha->format('m');
             $this->year = $this->buscarFecha->format('Y');
             $this->reloadStatus = 1;
         }
        
-
         $this->buscarFecha =  $this->year . '-' . $this->month .'-';
-        $applyItems = ApplyItem::with('application')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+        if($this->selPaciente != ''){
+
+            $applyItems = ApplyItem::with('application','patient')->where('patient_id', $this->selPaciente)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+        }else{
+            $applyItems = ApplyItem::with('application','patient')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+
+        }
 
         return view('livewire.paciente.listado-sesiones-paciente', compact('applyItems'));
     }

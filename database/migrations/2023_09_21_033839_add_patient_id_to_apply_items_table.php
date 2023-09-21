@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-           /*   $table->tinyInteger('payment_status')->comment('0:Kine,1:Pagos Pendientes,2:Pagos Al dia')->default(0); */
+        Schema::table('apply_items', function (Blueprint $table) {
+            $table->foreignID('patient_id')->onUpdate('cascade')->onDelete('is null')->default(0);
         });
     }
 
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('apply_items', function (Blueprint $table) {
             //
         });
     }

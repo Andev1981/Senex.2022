@@ -1,19 +1,19 @@
 <div>
     <div class="flex items-center pl-2 space-x-2">
         <button type="button" wire:click="$set('openItem','')" class="flex items-center px-2 py-1 text-xs font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                 <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
             </svg>
-            Editar
+            
         </button>
 
         @if ($applyItem->status == 0 || $applyItem->status == 2 || $applyItem->status == 3)
             <button type="button" wire:click="$set('openDelItem','')" class="flex items-center px-2 py-1 text-xs font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                 </svg>
-                Eliminar
+                
             </button>
         @endif
 
@@ -30,7 +30,7 @@
                         <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
                             Editando Sesión
                         </h3>
-                        <span>{{ $user->name }} {{ $user->last_name }}</span>
+                        <span>{{ $patient->name }} {{ $patient->last_name }}</span>
                     </div>
                     <button wire:click="$set('openItem','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -53,9 +53,9 @@
 
 
                                         </div>
-                                        <select  wire:model.defer="user_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                        <option class="uppercase" value="{{ $applyItem->user->id ?? ''}}">
-                                                {{ $applyItem->user->name ?? '' }} {{ $applyItem->user->last_name ?? '' }}
+                                        <select  wire:model.defer="selectedKine" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <option class="uppercase" value="{{ $applyItem->doctor->id ?? ''}}">
+                                                {{ $applyItem->doctor->name ?? '' }} {{ $applyItem->doctor->last_name ?? '' }}
                                             </option>
                                             @foreach ($kines as $kine)
                                             <option class="uppercase" value="{{ $kine->id }}">
@@ -64,7 +64,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    @error('user_id')
+                                    @error('selectedKine')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                         {{ $message }}.
                                     </p>
@@ -108,7 +108,7 @@
                                                 </svg>
 
                                         </div>
-                                        <select wire:model.defer="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <select wire:model.defer="selectedStatus" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                         
                                             <option class="uppercase" value="0"
                                             @if ($applyItem->status === 0) selected @endif

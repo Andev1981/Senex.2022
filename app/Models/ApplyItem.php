@@ -11,6 +11,8 @@ class ApplyItem extends Model
 
     protected $fillable = [
         'user_id',
+        'doctor_id',
+        'patient_id',
         'application_id',
         'application_type_id',
         'application_type_user_id',
@@ -40,6 +42,14 @@ class ApplyItem extends Model
 
     public function user(){
         return $this->belongsTo(User::class);
+    }
+
+     public function patient(){
+        return $this->belongsTo(Patient::class);
+    }
+
+    public function doctor(){
+        return $this->belongsTo(Doctor::class);
     }
 
     public function assign(){

@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Kine;
 
 use App\Models\Comuna;
+use App\Models\Doctor;
 use App\Models\Region;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -68,7 +69,7 @@ class CreateEditKine extends Component
         return view('livewire.kine.create-edit-kine');
     }
 
-    public function mount(User $doctor){
+    public function mount(Doctor $doctor){
             if($doctor){
         $this->doctor = $doctor;
                 if($this->doctor->id){

@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente;
 
+use App\Models\Patient;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -27,8 +28,7 @@ class ListadoPacientes extends Component
     public function render()
     {
       
-        $pacientes = User::with('applications')->where('user_type', 'Paciente')
-            ->where(function ($query) {
+        $pacientes = Patient::with('applications')->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate(10);
 
