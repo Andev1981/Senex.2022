@@ -6,37 +6,38 @@ use App\Models\ApplyItem;
 use App\Models\User;
 use Carbon\Carbon;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ListadoSesionesPaciente extends Component
 {
 
+    use WithPagination;
     public $buscarFecha;
     public $year;
     public $month;
-    public $applyItems = [];
     public $pacientes = [];
     public $selPaciente ='';
     protected $listeners = ['success-item-single' => 'mount','success' => 'render','success-item' => 'mount','success-atencion' => 'mount'];
     public $sort = 'created_at';
     public $direction = 'desc';
+    public $reloadStatus = 0;
+    public $quantity = 10;
 
     public function render()
     {
-        return view('livewire.paciente.listado-sesiones-paciente');
-    }
+        if($this->reloadStatus == 0){
+            $this->buscarFecha = Carbon::now();
+            $this->pacientes = User::where('user_type','Paciente')->get();
+            $this->month = $this->buscarFecha->format('m');
+            $this->year = $this->buscarFecha->format('Y');
+            $this->reloadStatus = 1;
+        }
+       
 
-     public function mount()
-    {
-        $this->buscarFecha = Carbon::now();
-        $this->pacientes = User::where('user_type','Paciente')->get();
-        $this->month = $this->buscarFecha->format('m');
-        $this->year = $this->buscarFecha->format('Y');
-        $this->searchByItems();
-    }
-
-      public function searchByItems()
-    {
         $this->buscarFecha =  $this->year . '-' . $this->month .'-';
-        $this->applyItems = ApplyItem::with('application')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->get();
+        $applyItems = ApplyItem::with('application')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+
+        return view('livewire.paciente.listado-sesiones-paciente', compact('applyItems'));
     }
+
 }

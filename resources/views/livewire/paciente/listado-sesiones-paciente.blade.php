@@ -53,9 +53,15 @@
                                     <option value="{{$paciente->id}}">{{$paciente->name}}&nbsp;{{$paciente->last_name}}</option>
                                     @endforeach
                                 </select>
-
-                                <button wire:click="searchByItems" type="button" class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Buscar</button>
-        
+                                <select class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="quantity">
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="15">15</option>
+                                    <option value="20">20</option>
+                                    <option value="30">30</option>
+                                    <option value="40">40</option>
+                                    <option value="50">50</option>
+                                </select>
                             </div>
 
                             <div class="p-5 border border-gray-200 rounded-b-xl dark:border-gray-700 dark:bg-gray-900">
@@ -172,13 +178,16 @@
                                             @endforelse
                                         </tbody>
                                     </table>
+         
+                                       
+                              
                                 </div>
                             </div>
 
                         </div>
                     </div>
                 <nav class="flex flex-col items-start justify-between p-4 space-y-3 md:flex-row md:items-center md:space-y-0" aria-label="Table navigation">
-                  
+                   {{ $applyItems->links() }}
                 </nav>
             </div>
         </div>
