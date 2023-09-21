@@ -17,7 +17,7 @@ class ListadoSesionesPaciente extends Component
     public $month;
     public $pacientes = [];
     public $selPaciente ='';
-    protected $listeners = ['success-item-single' => 'mount','success' => 'render','success-item' => 'mount','success-atencion' => 'mount'];
+    protected $listeners = ['success-item-single' => 'render','success' => 'render','success-item' => 'render','success-atencion' => 'render'];
     public $sort = 'created_at';
     public $direction = 'desc';
     public $reloadStatus = 0;
