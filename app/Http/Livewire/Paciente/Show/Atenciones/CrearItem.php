@@ -110,6 +110,7 @@ class CrearItem extends Component
                 'desde' => $this->lugar_derivacion,
                 'comments' => $this->mensaje,
                 'user_id' => $this->paciente->id,
+                'patient_id' => $this->paciente->id,
                 'status' => 1,
                 'type_payment' => $this->forma_de_pago,
             ]);
@@ -128,6 +129,8 @@ class CrearItem extends Component
 
         $apply = ApplyItem::create([
             'user_id' => $this->kine,
+            'patient_id' => $this->paciente->id,
+            'doctor_id' => $this->kine,
             'application_id' => $this->application->id,
             'application_type_id' => $this->tipo_atencion,
             'application_type_user_id' => 0,

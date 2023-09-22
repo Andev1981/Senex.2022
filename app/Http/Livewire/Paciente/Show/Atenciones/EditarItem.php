@@ -52,7 +52,11 @@ class EditarItem extends Component
         $this->applyItem = $applyItem;      
         $this->application = $applyItem->application;
         $this->patient = $this->applyItem->patient;
-        $this->selectedKine = $applyItem->doctor->id;
+        if($applyItem->doctor){
+            $this->selectedKine = $applyItem->doctor->id;
+        }else{
+            $this->selectedKine = 1;
+        }
         $this->selectedStatus = $applyItem->status;
         if($applyItem->fecha_atencion){
         $this->fecha_atencion = Carbon::parse(strtotime($applyItem->fecha_atencion))->format('Y-m-d');
