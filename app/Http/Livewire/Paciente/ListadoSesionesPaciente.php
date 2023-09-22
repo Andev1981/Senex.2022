@@ -40,7 +40,7 @@ class ListadoSesionesPaciente extends Component
        
         $this->buscarFecha =  $this->year . '-' . $this->month .'-';
         if($this->selPaciente != null || $this->selKine != null){
-            
+            dump($this->selPaciente,$this->selKine);
             $applyItems = ApplyItem::with('application','patient','doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
      
 
