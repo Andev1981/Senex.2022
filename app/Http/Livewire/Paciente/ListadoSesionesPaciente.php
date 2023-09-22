@@ -31,8 +31,8 @@ class ListadoSesionesPaciente extends Component
     {
         if($this->reloadStatus == 0){
             $this->buscarFecha = Carbon::now();
-            $this->pacientes = Patient::all();
-            $this->kines = Doctor::all();
+            $this->pacientes = Patient::orderBy('name','asc')->get(['id','name','last_name']);
+            $this->kines = Doctor::orderBy('name','asc')->get(['id','name','last_name']);
             $this->month = $this->buscarFecha->format('m');
             $this->year = $this->buscarFecha->format('Y');
             $this->reloadStatus = 1;

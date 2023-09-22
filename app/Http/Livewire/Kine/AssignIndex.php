@@ -62,7 +62,7 @@ class AssignIndex extends Component
                 $this->status = 1;
             }
         
-        $this->pacientes = Patient::all();
+        $this->pacientes = Patient::orderBy('name','asc')->get();
         $this->buscarFecha = Carbon::now();
         $this->month = $this->buscarFecha->format('m');
         $this->year = $this->buscarFecha->format('Y');
@@ -79,9 +79,9 @@ class AssignIndex extends Component
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
                 if($this->selPaciente != 0){
-                    $this->applyItems = ApplyItem::where('doctor_id', $this->kine->id)->where('patient_id',$this->selPaciente)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
+                    $this->applyItems = ApplyItem::with('application','patient','doctor')->where('doctor_id', $this->kine->id)->where('patient_id',$this->selPaciente)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
                 }else{
-                     $this->applyItems = ApplyItem::where('doctor_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
+                     $this->applyItems = ApplyItem::with('application','patient','doctor')->where('doctor_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
                 }
            
 
