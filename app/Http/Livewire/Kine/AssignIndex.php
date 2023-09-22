@@ -68,18 +68,6 @@ class AssignIndex extends Component
 
     }
 
-    public function saveKine(){
-        $this->validate();
-
-         if($this->file_path){
-            $this->kine->avatar = 'storage/'. $this->file_path->store('avatars','public');
-        }
-
-        $this->kine->save();
-        $this->dispatchBrowserEvent('swal-success');
-        
-    }
-
     public function searchByItems(){
 
             $this->totalKine = 0;
@@ -90,7 +78,7 @@ class AssignIndex extends Component
             $this->applyItems = ApplyItem::where('doctor_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
 
 
-            $this->kineValues = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
+            $this->kineValues = ApplicationTypeUser::where('doctor_id',$this->kine->id)->get();
 
             foreach($this->applyItems as $applyItem){
                 $this->totalPacientes += $applyItem->price;

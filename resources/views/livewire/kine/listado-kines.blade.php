@@ -13,7 +13,7 @@
 
                 </div>
                 <div
-                    class="flex flex-col items-center justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
+                    class="flex flex-col justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
                     <div class="w-full md:w-5/6">
                         <div class="flex items-center">
                             <label  class="uppercase sr-only">Buscar</label>
