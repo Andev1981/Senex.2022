@@ -7,6 +7,7 @@ use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Assign;
 use App\Models\Doctor;
+use App\Models\Patient;
 use Livewire\Component;
 use App\Models\User;
 use Carbon\Carbon;
@@ -32,6 +33,8 @@ class AssignIndex extends Component
     public $kineValues;
     public $totalPacientes = 0;
     public $totalKine = 0;
+    public $pacientes = [];
+    public $selPaciente ='';
 
     protected $listeners = ['success-value' => 'searchByItems'];
 
@@ -59,7 +62,7 @@ class AssignIndex extends Component
                 $this->status = 1;
             }
         
-        
+        $this->pacientes = Patient::all();
         $this->buscarFecha = Carbon::now();
         $this->month = $this->buscarFecha->format('m');
         $this->year = $this->buscarFecha->format('Y');
@@ -75,7 +78,12 @@ class AssignIndex extends Component
 
             $this->buscarFecha =  $this->year.'-'.$this->month;
 
-            $this->applyItems = ApplyItem::where('doctor_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
+                if($this->selPaciente != ''){
+                    $this->applyItems = ApplyItem::where('doctor_id', $this->kine->id)->where('patient_id',$this->selPaciente)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
+                }else{
+                     $this->applyItems = ApplyItem::where('doctor_id', $this->kine->id)->where('status',1)->where('fecha_atencion','like',$this->buscarFecha .'%')->orderBy('fecha_atencion','desc')->get();
+                }
+           
 
 
             $this->kineValues = ApplicationTypeUser::where('doctor_id',$this->kine->id)->get();
