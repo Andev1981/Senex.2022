@@ -32,7 +32,17 @@
                         </div>
                          <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 font-medium dark:text-white py-4">
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Total Pagos</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Total Pagos
+                                    @if($typePayment)    
+                                        @if ($typePayment->type_payment == 1)
+                                            <span>(Pagos por Sesión)</span>
+                                        @elseif ($typePayment->type_payment == 2)
+                                            <span>(Pago por tratamiento)</span>
+                                        @elseif ($typePayment->type_payment == 3)
+                                            <span>(Pago por tratamiento)</span>
+                                        @endif
+                                    @endisset
+                                </div>
                                 <div>
                                  Pagado ${{ number_format($totalAtenciones,0,',','.') }}.- de un total de $ {{ number_format($totalAtendidas,0,',','.') }}.-
                                 </div>

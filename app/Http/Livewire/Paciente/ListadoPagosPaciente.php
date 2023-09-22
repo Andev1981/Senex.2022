@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente;
 
+use App\Models\Patient;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -28,8 +29,7 @@ class ListadoPagosPaciente extends Component
 
     public function render()
     {
-        $pacientes = User::where('user_type', 'Paciente')
-            ->where(function ($query) {
+        $pacientes = Patient::where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
         return view('livewire.paciente.listado-pagos-paciente', compact('pacientes'));
@@ -56,7 +56,7 @@ class ListadoPagosPaciente extends Component
     }
 
     public function deletePaciente(){
-        $pacienteDel = User::find($this->selectedPaciente['id']);
+        $pacienteDel = Patient::find($this->selectedPaciente['id']);
         $pacienteDel->delete();
         $this->openDelPaciente = 'hidden';
     }

@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Paciente\Pagos;
 
 use App\Models\Application;
 use App\Models\ApplyItem;
+use App\Models\Patient;
 use App\Models\PaymentIncome;
 use App\Models\User;
 use Livewire\Component;
@@ -12,7 +13,7 @@ use Livewire\WithPagination;
 class IndexPagos extends Component
 {
     use WithPagination;
-    public User $paciente;
+    public Patient $paciente;
     public $search;
     protected $queryString = ['search'];
     public $sort = 'updated_at';
@@ -26,14 +27,14 @@ class IndexPagos extends Component
 
     protected $listeners = ['update-payment' => 'render'];
 
-    public function mount(User $paciente){
+    public function mount(Patient $paciente){
         $this->paciente = $paciente;
 
     }
 
     public function render()
     {
-         $applications = Application::where('user_id', $this->paciente->id)->orderBy($this->sort, $this->direction)->paginate(5);
+         $applications = Application::where('patient_id', $this->paciente->id)->orderBy($this->sort, $this->direction)->paginate(5);
         $this->totalAtenciones = 0;
         $this->totalAtendidas = 0;
         $this->countSuma = 0;
@@ -55,14 +56,23 @@ class IndexPagos extends Component
             }
         }
 
+        $typePayment = $applications->take(1)->first();
+
         if($this->totalAtenciones == $this->totalAtendidas){
             $this->paciente->payment_status = 2;
         }elseif($this->totalAtenciones < $this->totalAtendidas){
             $this->paciente->payment_status = 1;
         }
+        dump($typePayment->type_payment);
 
         $this->paciente->save();
 
-        return view('livewire.paciente.pagos.index-pagos',['applications' => $applications, 'totalAtenciones' => $this->totalAtenciones]);
+        return view('livewire.paciente.pagos.index-pagos',
+                    [
+                        'applications' => $applications, 
+                        'totalAtenciones' => $this->totalAtenciones, 
+                        'typePayment' => $typePayment
+                    ]
+                );
     }
 }
