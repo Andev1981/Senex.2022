@@ -34,7 +34,7 @@ class AssignIndex extends Component
     public $totalPacientes = 0;
     public $totalKine = 0;
     public $pacientes = [];
-    public $selPaciente ='';
+    public $selPaciente;
 
     protected $listeners = ['success-value' => 'searchByItems'];
 

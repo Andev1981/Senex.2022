@@ -45,21 +45,21 @@
                                 </select>
                                 
                                 <select class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="selPaciente">
-                                <option  value="">
+                                <option>
                                     <span class="text-gray-500">--paciente--</span>
                                 </option>
                                     @foreach ($pacientes as $paciente)
                                         
-                                    <option value="{{$paciente->id}}">{{$paciente->name}}&nbsp;{{$paciente->last_name}}</option>
+                                    <option value='{{$paciente->id}}'>{{$paciente->name}}&nbsp;{{$paciente->last_name}}</option>
                                     @endforeach
                                 </select>
                                 <select class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="selKine">
-                                <option  value="">
+                                <option>
                                     <span class="text-gray-500">--kine--</span>
                                 </option>
                                     @foreach ($kines as $kine)
                                         
-                                    <option value="{{$kine->id}}">{{$kine->name}}&nbsp;{{$kine->last_name}}</option>
+                                    <option value='{{$kine->id}}'>{{$kine->name}}&nbsp;{{$kine->last_name}}</option>
                                     @endforeach
                                 </select>
                                 <select class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" wire:model="quantity">

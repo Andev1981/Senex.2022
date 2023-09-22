@@ -18,9 +18,9 @@ class ListadoSesionesPaciente extends Component
     public $year;
     public $month;
     public $pacientes = [];
-    public $selPaciente ='';
+    public $selPaciente;
     public $kines = [];
-    public $selKine ='';
+    public $selKine;
     protected $listeners = ['success-item-single' => 'render','success' => 'render','success-item' => 'render','success-atencion' => 'render'];
     public $sort = 'created_at';
     public $direction = 'desc';
@@ -39,7 +39,7 @@ class ListadoSesionesPaciente extends Component
         }
        
         $this->buscarFecha =  $this->year . '-' . $this->month .'-';
-        if($this->selPaciente != '' || $this->selKine != ''){
+        if($this->selPaciente != null || $this->selKine != null){
             
             $applyItems = ApplyItem::with('application','patient','doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
      
