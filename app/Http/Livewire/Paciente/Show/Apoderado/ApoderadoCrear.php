@@ -6,13 +6,14 @@ use Livewire\Component;
 use App\Models\Address;
 use App\Models\Comuna;
 use App\Models\Keeper;
+use App\Models\Patient;
 use App\Models\Region;
 use App\Models\SelectOption;
 use App\Models\User;
 
 class ApoderadoCrear extends Component
 {
-      public User $paciente;
+      public Patient $paciente;
 
     public $open = 'hidden', 
            $name = "", 
@@ -36,11 +37,11 @@ class ApoderadoCrear extends Component
         'name' => 'required|min:3|max:50',
         'last_name' => 'min:3|max:50',
         'phone' => 'min:9|max:9',
-        'email' => 'email|unique:users,email|min:10|max:200',
+        'email' => 'email|min:10|max:200',
         'parentesco' => 'required',
     ];
 
-    public function mount(User $paciente){
+    public function mount(Patient $paciente){
         $this->paciente = $paciente;
         $this->parentescos = SelectOption::where('model_type', 'Keepers')->get();
         
@@ -71,6 +72,7 @@ class ApoderadoCrear extends Component
            'email' => $this->email,
            'phone' => $this->phone,
            'user_id' => $this->paciente->id,
+           'patient_id' => $this->paciente->id,
            'address_id' => $this->address,
            'parentesco' => $this->parentesco,
         ]);

@@ -8,7 +8,9 @@ use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Assign;
+use App\Models\Doctor;
 use App\Models\Image;
+use App\Models\Patient;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -16,7 +18,7 @@ use Livewire\WithFileUploads;
 class AtencionesCrear extends Component
 {
     use WithFileUploads;
-    public User $paciente;
+    public Patient $paciente;
     public $openCrearAtencion = 'hidden',
         $tipo_atenciones = [],
         $tipo_atencion = '',
@@ -52,10 +54,10 @@ class AtencionesCrear extends Component
         return view('livewire.paciente.show.atenciones.atenciones-crear');
     }
 
-    public function mount(User $user)
+    public function mount(Patient $user)
     {
         $this->paciente = $user;
-        $this->doctors = User::where('user_type', 'Kine')->get();
+        $this->doctors = Doctor::orderBy('name','asc')->get();
         $this->tipo_atenciones = ApplicationType::all();
     }
 
@@ -64,11 +66,12 @@ class AtencionesCrear extends Component
 
         $this->validate();
 
-          $this->applyUser = ApplicationTypeUser::where('user_id',$this->kine)->where('application_type_id',$this->tipo_atencion)->first();
+          $this->applyUser = ApplicationTypeUser::where('doctor_id',$this->kine)->where('application_type_id',$this->tipo_atencion)->first();
 
           if(!$this->applyUser){
             $this->applyUser = ApplicationTypeUser::create([
                 'user_id' => $this->kine,
+                'doctor_id' => $this->kine,
                 'application_type_id' => $this->tipo_atencion,
                 'price' => $this->valor,
             ]);

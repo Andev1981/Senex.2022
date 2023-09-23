@@ -3,6 +3,8 @@
 namespace App\Http\Livewire\Paciente\Show;
 
 use App\Models\Answer;
+use App\Models\Doctor;
+use App\Models\Patient;
 use App\Models\User;
 use Livewire\Component;
 
@@ -11,7 +13,7 @@ class Index extends Component
 
     protected $listeners = ['success' => 'render'];
 
-    public User $paciente;
+    public Patient $paciente;
     public $answers = [];
     public $doctores = [];
     public $opendetalles = 'hidden';
@@ -28,10 +30,10 @@ class Index extends Component
         return view('livewire.paciente.show.index');
     }
 
-    public function mount(User $paciente)
+    public function mount(Patient $paciente)
     {
         $this->paciente = $paciente;
-        $this->doctores = User::where('user_type', 'Kine')->where('status', 1)->get();
+        $this->doctores = Doctor::orderBy('name','asc')->get();
 
         $this->answers = Answer::with(['question:id,name'])->whereBelongsTo($paciente)->get();
         $this->cssTratamientos = $this->active;

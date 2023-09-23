@@ -1,23 +1,10 @@
 <div>
     <div class="flex items-center pl-2 space-x-2">
-        <button type="button" wire:click="$set('openItem','')" class="flex items-center px-2 py-1 text-xs font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-            </svg>
-            
-        </button>
+        <x-button-edit wire:click="$set('openItem','')" innerText="" />
 
         @if ($applyItem->status == 0 || $applyItem->status == 2 || $applyItem->status == 3)
-            <button type="button" wire:click="$set('openDelItem','')" class="flex items-center px-2 py-1 text-xs font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-                
-            </button>
-        @endif
-
-        
+            <x-button-delete wire:click="$set('openDelItem','')" innerText=""/>
+        @endif 
     </div>
     <div class="{{ $openItem }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center w-full md:inset-0 h-modal md:h-full flex">
         <div class="relative w-full h-full p-4 md:max-w-3xl md:h-auto">
@@ -32,17 +19,10 @@
                         </h3>
                         <span>{{ $patient->name }} {{ $patient->last_name }}</span>
                     </div>
-                    <button wire:click="$set('openItem','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
+                <x-button-modal-close wire:click="$set('openItem','hidden')" />
                 </div>
                 <form wire:submit.prevent="save">
-           
-                            <div class="grid gap-4 mb-4 sm:grid-cols-2">
-                                
+                            <div class="grid gap-4 mb-4 sm:grid-cols-2">                             
                                 <div>
                                     <label  class="block text-sm font-medium text-gray-900 dark:text-white">                        Kine</label>
                                     <div class="relative">
@@ -81,7 +61,7 @@
 
 
                                         </div>
-                                        <select wire:model.defer="application_type_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <select wire:model.defer="selectedType" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                   
                                             @foreach ($types as $type)
                                             <option class="uppercase" value="{{ $type->id }}">
@@ -90,7 +70,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    @error('application_type_id')
+                                    @error('selectedType')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-500">
                                         {{ $message }}.
                                     </p>
@@ -180,7 +160,7 @@
 
                                         </div>
                                         <select wire:model.defer="numero_sesion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-<option>--</option>
+                                        <option>--</option>
                                         @for ($i = 1; $i <= 100; $i++)
                                                 <option class="uppercase" value="{{$i}}"
                                                 >
@@ -212,20 +192,19 @@
                             </div>
    
                             <hr>
-                    <div class="grid grid-cols-2 gap-4 mt-6 sm:w-1/2">
+                    <div class="mt-5">
 
-                        <button type="submit" wire:click="save" wire:loading.remove wire:target="save" class="text-white inline-flex items-center bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
+                          <x-button-update 
+                            wire:loading.remove 
+                            wire:click="save" 
+                            wire:target="save" 
+                            innerText="Actualizar" />
+                            
 
-                            Actualizar Sesión
-                        </button>
-
-                        <button wire:loading wire:target="save" role="status" disabled type="button" class="text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800 inline-flex items-center">
-                            <svg aria-hidden="true" role="status" class="inline w-4 h-4 mr-3 text-white animate-spin" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="#E5E7EB" />
-                                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentColor" />
-                            </svg>
-                            Creando...
-                        </button>
+                        <x-button-loading 
+                            wire:loading 
+                            wire:target="save" 
+                            innerText="Actualizando" />
                     </div>
                 </form>
             </div>

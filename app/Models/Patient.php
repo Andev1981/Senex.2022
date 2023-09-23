@@ -25,5 +25,18 @@ class Patient extends Model
     {
         return $this->hasMany(Application::class);
     }
+    public function address()
+    {
+        return $this->belongsTo(Address::class);
+    }
     
+    public function applyItems()
+    {
+        return $this->hasMany(ApplyItem::class);
+    }
+
+     public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable');
+    }
 }

@@ -63,7 +63,7 @@
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 font-medium dark:text-white py-4">
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Total Sesiones Atendidas</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Total Sesiones Pagadas</div>
                                 <div>
                                  {{ $itemsSuma }} de {{ $countSuma }}
                                 </div>

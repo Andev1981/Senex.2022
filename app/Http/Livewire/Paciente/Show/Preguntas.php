@@ -3,13 +3,14 @@
 namespace App\Http\Livewire\Paciente\Show;
 
 use App\Models\Answer;
+use App\Models\Patient;
 use App\Models\Question;
 use App\Models\User;
 use Livewire\Component;
 
 class Preguntas extends Component
 {
-    public User $paciente;
+    public Patient $paciente;
     public Question $question;
     public $answers;
     public $answer;
@@ -19,7 +20,7 @@ class Preguntas extends Component
         'answer.name' => 'required',
     ];
 
-    public function mount(User $paciente, Question $question)
+    public function mount(Patient $paciente, Question $question)
     {
         $this->paciente = $paciente;
         $user = $paciente;
@@ -27,7 +28,7 @@ class Preguntas extends Component
         $this->answer = Answer::with(['question:id,name'])->whereBelongsTo($user)->where('question_id', $question->id)->first();
 
         if(!$this->answer){
-            $this->answer = Answer::create(['user_id' => $this->paciente->id,'question_id' => $this->question->id]);
+            $this->answer = Answer::create(['patient_id' => $this->paciente->id,'question_id' => $this->question->id]);
         }
 
        /*  dd($this->answer); */

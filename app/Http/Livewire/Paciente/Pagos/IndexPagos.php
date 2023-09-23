@@ -34,7 +34,7 @@ class IndexPagos extends Component
 
     public function render()
     {
-         $applications = Application::where('patient_id', $this->paciente->id)->orderBy($this->sort, $this->direction)->paginate(5);
+        $applications = Application::where('patient_id', $this->paciente->id)->orderBy($this->sort, $this->direction)->paginate(5);
         $this->totalAtenciones = 0;
         $this->totalAtendidas = 0;
         $this->countSuma = 0;
@@ -63,7 +63,7 @@ class IndexPagos extends Component
         }elseif($this->totalAtenciones < $this->totalAtendidas){
             $this->paciente->payment_status = 1;
         }
-        dump($typePayment->type_payment);
+        
 
         $this->paciente->save();
 
