@@ -28,7 +28,7 @@ class Preguntas extends Component
         $this->answer = Answer::with(['question:id,name'])->whereBelongsTo($user)->where('question_id', $question->id)->first();
 
         if(!$this->answer){
-            $this->answer = Answer::create(['patient_id' => $this->paciente->id,'question_id' => $this->question->id]);
+            $this->answer = Answer::create(['user_id' => $this->paciente->id,'patient_id' => $this->paciente->id,'question_id' => $this->question->id]);
         }
 
        /*  dd($this->answer); */

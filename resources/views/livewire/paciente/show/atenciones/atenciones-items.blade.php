@@ -89,8 +89,8 @@
                                             @forelse ($items as $item)
                                             <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                                 <td class="py-2 pl-2 mx-2">
-                                                    {{ $item->user->name ?? '' }}
-                                                    {{ $item->user->last_name ?? '' }}
+                                                    {{ $item->doctor->name ?? '' }}
+                                                    {{ $item->doctor->last_name ?? '' }}
                                                 </td>
                                                 <td class="px-6 py-4">
                                                 @if ($item->status === 0)    

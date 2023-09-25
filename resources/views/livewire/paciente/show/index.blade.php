@@ -21,8 +21,7 @@
                 <!-- Modal Body -->
                 <div class="flex flex-row mb-5">
                     <div class="p-2 shadow-xl basis-1/4 rounded-xl">
-
-                        <div class="mt-2 uppercase">{{ $paciente->name ?? '' . ' ' . $paciente->last_name ?? '' }}</div>
+                        <div class="mt-2 uppercase">{{ $paciente->name ?? ''}}&nbsp;{{$paciente->last_name ?? ''}}</div>
                         <div class="font-medium uppercase">{{ $paciente->email ?? '' }}</div>
                         <div class="text-sm text-gray-500 uppercase dark:text-gray-400">{{ $paciente->rut ?? '' }}</div>
                         <div class="text-sm text-gray-500 uppercase dark:text-gray-400">{{ $paciente->phone ?? '' }}</div>

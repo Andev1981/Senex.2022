@@ -7,6 +7,7 @@ use App\Models\ApplyItem;
 use App\Models\Patient;
 use App\Models\PaymentIncome;
 use App\Models\User;
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,17 +15,21 @@ class IndexPagos extends Component
 {
     use WithPagination;
     public Patient $paciente;
-    public $search;
-    protected $queryString = ['search'];
-    public $sort = 'updated_at';
-    public $direction = 'desc';
-    public $totalAtenciones = 0;
-    public $countSuma = 0;
-    public $totalAtendidas = 0;
-    public $type = 1;
-    public $itemsSuma = 0;
-    public $userPayStatus = 0;
+    public $search,
+           $sort = 'updated_at',
+           $direction = 'desc',
+           $totalAtenciones = 0,
+           $countSuma = 0,
+           $totalAtendidas = 0,
+           $type = 1,
+           $itemsSuma = 0,
+           $userPayStatus = 0,
+           $buscarFecha,
+           $month,
+           $year,
+           $reloadStatus = 0;
 
+    protected $queryString = ['search','buscarFecha'];
     protected $listeners = ['update-payment' => 'render'];
 
     public function mount(Patient $paciente){
@@ -34,43 +39,61 @@ class IndexPagos extends Component
 
     public function render()
     {
-        $applications = Application::where('patient_id', $this->paciente->id)->orderBy($this->sort, $this->direction)->paginate(5);
+        if($this->reloadStatus == 0){
+          $this->buscarFecha = Carbon::now();
+          $this->month = $this->buscarFecha->format('m');
+          $this->year = $this->buscarFecha->format('Y');
+          $this->reloadStatus = 1;
+        }
+        $this->buscarFecha =  $this->year . '-' . $this->month .'-';
+
+        $typePayment = Application::where('patient_id', $this->paciente->id)->take(1)->first();
         $this->totalAtenciones = 0;
         $this->totalAtendidas = 0;
         $this->countSuma = 0;
         $this->itemsSuma = 0;
-        foreach($applications as $application){
+
         
-            $countSuma = ApplyItem::where('application_id',$application->id)->where('status',1)->get();
-            $this->countSuma += count($countSuma);
-        
-            $itemsSuma = PaymentIncome::where('application_id',$application->id)->get();
-            $this->itemsSuma += count($itemsSuma);
-        
-            foreach($itemsSuma as $suma){
-               $this->totalAtenciones += $suma->pay;
+        $applyItemsSum = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
+        $this->totalAtenciones = $applyItemsSum->sum('price');
+
+
+        $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->paginate(10);
+
+
+        foreach($applyItems as $applyItem){
+            $itemsSuma = PaymentIncome::where('apply_item_id',$applyItem->id)->where('status',1)->first();
+            $countSuma = PaymentIncome::where('apply_item_id',$applyItem->id)->where('status',2)->first();
+            if(!$itemsSuma){
+               $newItem =  PaymentIncome::create([
+                    'pay' => $applyItem->price,
+                    'application_id' => $applyItem->application_id,
+                    'apply_item_id' => $applyItem->id,
+                    'status' => 1
+                ]);
+                $itemsSuma = $newItem;
             }
-        
-            foreach($countSuma as $suma){
-               $this->totalAtendidas += $suma->price;
+
+            if($countSuma){
+               $this->countSuma += 1; 
+               $this->totalAtendidas += $countSuma->pay;
             }
+
+            $this->itemsSuma += 1;
         }
-
-        $typePayment = $applications->take(1)->first();
-
+               
         if($this->totalAtenciones == $this->totalAtendidas){
             $this->paciente->payment_status = 2;
         }elseif($this->totalAtenciones < $this->totalAtendidas){
             $this->paciente->payment_status = 1;
         }
         
-
         $this->paciente->save();
+
 
         return view('livewire.paciente.pagos.index-pagos',
                     [
-                        'applications' => $applications, 
-                        'totalAtenciones' => $this->totalAtenciones, 
+                        'applyItems' => $applyItems,
                         'typePayment' => $typePayment
                     ]
                 );

@@ -11,6 +11,7 @@ use App\Models\ApplyItem;
 use App\Models\Assign;
 use App\Models\Doctor;
 use App\Models\Patient;
+use App\Models\PaymentIncome;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -140,6 +141,12 @@ class CrearItem extends Component
             'status' => $this->status,
         ]);
 
+         PaymentIncome::create([
+                'pay' => $this->valor,
+                'application_id' => $this->application_id,
+                'apply_item_id' => $apply->id,
+            ]);
+
 
         $applicationTypeUser = ApplicationTypeUser::where('application_type_id',$this->tipo_atencion)->where('user_id',$this->kine)->first();
 
@@ -181,6 +188,7 @@ class CrearItem extends Component
             'estado'
         ]);
          $this->errorNumSesion = false;
+         $this->mount($this->paciente);
 
     }
 

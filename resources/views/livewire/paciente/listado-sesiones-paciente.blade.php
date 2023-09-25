@@ -78,8 +78,11 @@
                                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                             <tr class="text-center">
-                                             <th colspan="1" class="px-4 py-3">
+                                             <th colspan="1" class="px-3 py-2">
                                                     <span class="sr-only">Actions</span>
+                                                </th>
+                                                <th scope="col" class="px-4 py-3">
+                                                    #
                                                 </th>
                                                 <th scope="col" class="px-4 py-3">
                                                 Fecha&nbsp;Atención
@@ -102,6 +105,9 @@
                                                   <td> 
                                                 @livewire('paciente.show.atenciones.editar-item', ['applyItem' => $applyItem], key($applyItem->id))
                                              
+                                                </td>
+                                                <td class="px-1 py-1">
+                                                {{ $applyItem->numero_sesion }}
                                                 </td>
                                                  <td class="px-1 py-1">{{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') ?? ''}}</td>
                                                 <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">

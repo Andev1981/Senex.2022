@@ -35,8 +35,8 @@
                                         <td class="px-6 py-4 text-center uppercase">
                                             @if (count($application->items) > 0)
                                                 
-                                                {{ $application->items[(count($application->items)-1)]->user->name ?? '' }}
-                                                {{ $application->items[(count($application->items)-1)]->user->last_name ?? '' }}
+                                                {{ $application->items[(count($application->items)-1)]->doctor->name ?? '' }}
+                                                {{ $application->items[(count($application->items)-1)]->doctor->last_name ?? '' }}
                                             @endif
                                         </td>
 
