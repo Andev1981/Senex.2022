@@ -82,13 +82,13 @@ class IndexPagos extends Component
             $this->itemsSuma += 1;
         }
                
-        if($this->totalAtenciones == $this->totalAtendidas){
+       /*  if($this->totalAtenciones == $this->totalAtendidas){
             $this->paciente->payment_status = 2;
         }elseif($this->totalAtenciones < $this->totalAtendidas){
             $this->paciente->payment_status = 1;
         }
         
-        $this->paciente->save();
+        $this->paciente->save(); */
 
 
         return view('livewire.paciente.pagos.index-pagos',
