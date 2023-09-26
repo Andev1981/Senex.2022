@@ -211,8 +211,8 @@
                             </div>
                             
 
-                            <div wire:loading.remove>
-                                <table class="w-full text-sm text-gray-500 dark:text-gray-400 shadow-md rounded-xl">
+                            <div class="shadow-md rounded-xl" wire:loading.remove>
+                                <table class="w-full text-sm text-gray-500 dark:text-gray-400">
                                     <thead class="text-xs text-gray-700 uppercase bg-teal-100 dark:bg-gray-700 dark:text-gray-400 py-4">
                                         <tr class="">
                                             <th scope="col" class="px-6 py-2">Fecha&nbsp;Atención</th>
@@ -331,11 +331,11 @@
 
                                     </tbody>
                                 </table>
+                                <div class="mb-5">
+                                    {{ $applyItems->links() }}
+                                </div>
                             </div>
-                            <div class="mb-5">
-
-                                {{ $applyItems->links() }}
-                            </div>
+                            
                         </div>
                     </div>
                 </div>
