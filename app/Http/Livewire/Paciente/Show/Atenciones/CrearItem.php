@@ -143,7 +143,7 @@ class CrearItem extends Component
 
          PaymentIncome::create([
                 'pay' => $this->valor,
-                'application_id' => $this->application_id,
+                'application_id' => $this->application->id,
                 'apply_item_id' => $apply->id,
             ]);
 
@@ -166,9 +166,6 @@ class CrearItem extends Component
         ]);
 
 
-
-       
-        $this->saveActivity();
         $this->clear();
     }
 
@@ -192,15 +189,5 @@ class CrearItem extends Component
 
     }
 
-    public function saveActivity(){
-
- 
-         Activity::create([
-                'user_id' => auth()->user()->id,
-                'detail' => 'Se ingresa nueva sesión para ' .  $this->application->user->name .' ' . $this->application->user->last_name,
-            ]);
-        $this->paciente->updated_at = now();
-        $this->paciente->save();
-    }
 
 }
