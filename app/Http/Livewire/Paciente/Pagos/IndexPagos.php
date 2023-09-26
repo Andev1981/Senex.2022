@@ -27,7 +27,9 @@ class IndexPagos extends Component
            $buscarFecha,
            $month,
            $year,
-           $reloadStatus = 0;
+           $reloadStatus = 0,
+           $fechaActual,
+           $itemSumaPendiente = 0;
 
     protected $queryString = ['search','buscarFecha'];
     protected $listeners = ['update-payment' => 'render'];
@@ -41,6 +43,7 @@ class IndexPagos extends Component
     {
         if($this->reloadStatus == 0){
           $this->buscarFecha = Carbon::now();
+          $this->fechaActual = Carbon::now();
           $this->month = $this->buscarFecha->format('m');
           $this->year = $this->buscarFecha->format('Y');
           $this->reloadStatus = 1;
@@ -52,6 +55,7 @@ class IndexPagos extends Component
         $this->totalAtendidas = 0;
         $this->countSuma = 0;
         $this->itemsSuma = 0;
+        $this->itemSumaPendiente = 0;
 
         
         $applyItemsSum = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
@@ -81,6 +85,8 @@ class IndexPagos extends Component
 
             $this->itemsSuma += 1;
         }
+
+        $this->itemSumaPendiente = $this->itemsSuma - $this->countSuma;
                
        /*  if($this->totalAtenciones == $this->totalAtendidas){
             $this->paciente->payment_status = 2;

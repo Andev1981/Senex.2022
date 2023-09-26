@@ -19,7 +19,7 @@
 
                 </div>
                 <div>
-                    <div class="grid gap-4 mb-4 sm:grid-cols-3">
+                    <div class="grid gap-4 mb-4 sm:grid-cols-4">
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 font-medium dark:text-white py-4">
                                 <div>
@@ -31,26 +31,38 @@
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
-                            <div class="pl-5 font-medium dark:text-white py-4">
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Total Pagos {{ $typePayment->type_payment }}
+                           <div class="pl-5 text-sm text-gray-500 dark:text-gray-400">
+                                <div class="text-sm flex-col text-white bg-black rounded-full px-2 mb-2">
+                                   Tipo de pago y estado
+                                </div> 
+                                <div>
                                     @if($typePayment)
                                         @if ($typePayment->type_payment == 1)
-                                        <span>(Pagos por Sesión)</span>
+                                        <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">Pago por Sesión</span>
                                         @elseif ($typePayment->type_payment == 2)
-                                        <span>(Pago por tratamiento)</span>
+                                        <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">Pago por tratamiento</span>
                                         @elseif ($typePayment->type_payment == 3)
-                                        <span>(Pago Mensual)</span>
+                                        <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">Pago Mensual</span>
                                         @elseif ($typePayment->type_payment == 4)
-                                        <span>(Pago 50% / 50%)</span>
+                                        <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">Pago 50% / 50%</span>
                                         @elseif ($typePayment->type_payment == 5)
-                                        <span>(Pago Tarjeta Crédito)</span>
+                                        <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">Pago Tarjeta Crédito</span>
                                         @elseif ($typePayment->type_payment == 6)
-                                        <span>(Abonos Parciales)</span>
+                                        <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">Abonos Parciales</span>
                                         @endif
                                     @endisset
                                 </div>
-                                <div>
-                                    Pagado ${{ number_format($totalAtendidas,0,',','.') }}.- de un total de $ {{ number_format($totalAtenciones,0,',','.') }}.-
+                            </div>
+                        </div>
+                        <div class="flex items-center shadow-lg rounded-xl">
+                            <div class="pl-5 font-normal dark:text-white py-4">
+                                <div class="text-sm flex-col text-white bg-black rounded-full px-2 mb-2">Total Pagos del Mes 
+                                </div>
+                                    <div class="bg-green-400 rounded-full px-2 mb-1 text-base">
+                                    Pagado ${{ number_format($totalAtendidas,0,',','.') }}.-
+                                    </div>
+                                <div class="bg-red-400 rounded-full px-2 text-base">
+                                    Pendiente ${{ number_format($totalAtenciones-$totalAtendidas,0,',','.') }}.-
                                 </div>
                                 <div>
                                     @if ($totalAtenciones < $totalAtendidas) <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
@@ -67,10 +79,13 @@
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
-                            <div class="pl-5 font-medium dark:text-white py-4">
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Total Sesiones Pagadas</div>
-                                <div>
-                                    {{ $countSuma }} de {{ $itemsSuma }}
+                            <div class="pl-5 font-normal dark:text-white py-4">
+                                <div class="text-sm flex-col text-white bg-black rounded-full px-2 mb-2">Total Sesiones Pagadas</div>
+                                <div class="bg-green-400 rounded-full px-2 mb-1 text-base">
+                                   Pagadas {{ $countSuma }}
+                                </div>
+                                 <div class="bg-red-400 rounded-full px-2 text-base">
+                                    Pendientes {{ $itemSumaPendiente }}
                                 </div>
                             </div>
                         </div>
@@ -212,17 +227,17 @@
                                 <table class="w-full text-sm text-gray-500 dark:text-gray-400 shadow-md rounded-xl">
                                     <thead class="text-xs text-gray-700 uppercase bg-teal-100 dark:bg-gray-700 dark:text-gray-400 py-4">
                                         <tr class="">
-                                            <th scope="col" class="px-6 py-3">Fecha&nbsp;Atención</th>
-                                            <th scope="col" class="px-6 py-3">Kine</th>
-                                            <th scope="col" class="px-6 py-3">Estado</th>
+                                            <th scope="col" class="px-6 py-2">Fecha&nbsp;Atención</th>
+                                            <th scope="col" class="px-6 py-2">Kine</th>
+                                            <th scope="col" class="px-6 py-2">Estado</th>
 
-                                            <th scope="col" class="px-6 py-3">Tipo&nbsp;de&nbsp;Atención</th>
+                                            <th scope="col" class="px-6 py-2">Tipo&nbsp;de&nbsp;Atención</th>
                                             <th scope="col" class="px-6 py-3">N°</th>
-                                            <th scope="col" class="px-6 py-3">Valor</th>
+                                            <th scope="col" class="px-6 py-2">Valor</th>
 
-                                            <th scope="col" class="px-6 py-3">Pagos</th>
+                                            <th scope="col" class="px-6 py-2">Pagos</th>
 
-                                            <th scope="col" class="px-6 py-3">
+                                            <th scope="col" class="px-6 py-2">
                                                 <span class="sr-only">Actions</span>
                                                 <div class="justify-items-end">
 
@@ -235,7 +250,7 @@
                                         @forelse ($applyItems as $applyItem)
 
                                         <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                            <td class="px-6 py-4">
+                                            <td class="px-6 py-2">
                                                 @if ($applyItem->fecha_atencion)
                                                 {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
 
@@ -249,7 +264,7 @@
                                                 {{ $applyItem->doctor->last_name ?? '' }}
 
                                             </td>
-                                            <td class="px-6 py-4">
+                                            <td class="px-6 py-2">
                                                 @if ($applyItem->status == 0)
                                                 <span class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
                                                     <span class="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></span>
@@ -274,7 +289,7 @@
                                                 @endif
 
                                             </td>
-                                            <td class="px-6 py-4 uppercase">
+                                            <td class="px-6 py-2 uppercase">
                                                 @if ($applyItem->applicationType)
 
                                                 {{$applyItem->applicationType->name }}
@@ -282,7 +297,7 @@
                                                 ---------
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4 uppercase">
+                                            <td class="px-6 py-2 uppercase">
                                                 @if ($applyItem->numero_sesion > 0)
 
                                                 {{$applyItem->numero_sesion }}
@@ -290,7 +305,7 @@
                                                 ---------
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4">
+                                            <td class="px-6 py-2">
 
                                                 @if ($applyItem->price)
 
@@ -300,7 +315,7 @@
                                                 @endif
 
                                             </td>
-                                            <td class="px-6 py-4 uppercase">
+                                            <td class="px-6 py-2 uppercase">
                                                 @if ($applyItem->payment->status == 2)
 
                                                 ${{ number_format($applyItem->payment->pay,0,',','.') }}.-
@@ -308,7 +323,7 @@
                                                 ---------
                                                 @endif
                                             </td>
-                                            <td class="px-6 py-4">
+                                            <td class="px-6 py-2">
 
 
                                                 @livewire('paciente.pagos.modal-pago', ['item' => $applyItem], key($applyItem->id))
