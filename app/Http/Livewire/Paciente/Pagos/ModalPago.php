@@ -18,10 +18,6 @@ class ModalPago extends Component
   
     public function mount(ApplyItem $item){
         $this->item = $item;
-        $this->status = $item->payment->status;
-        $this->user = $item->application->user;
-        $this->type = $item->application->type_payment;
-        $this->items = ApplyItem::where('application_id',$item->application->id)->orderBy('fecha_atencion','desc')->get(); 
     }
 
     public function render()
