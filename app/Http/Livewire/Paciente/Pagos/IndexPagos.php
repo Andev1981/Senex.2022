@@ -62,7 +62,7 @@ class IndexPagos extends Component
         $this->totalAtenciones = $applyItemsSum->sum('price');
 
 
-        $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->paginate(10);
+        $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->paginate(5);
 
 
         foreach($applyItems as $applyItem){

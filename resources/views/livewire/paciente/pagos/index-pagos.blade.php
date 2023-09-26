@@ -64,18 +64,6 @@
                                 <div class="bg-red-400 rounded-full px-2 text-base">
                                     Pendiente ${{ number_format($totalAtenciones-$totalAtendidas,0,',','.') }}.-
                                 </div>
-                                <div>
-                                    @if ($totalAtenciones < $totalAtendidas) <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
-                                        <span class="w-3 h-2 mr-1 bg-red-500 rounded-full"></span>
-                                        - ${{ number_format($totalAtendidas-$totalAtenciones,0,',','.') }}.-
-                                        </span>
-                                        @elseif ($totalAtenciones == $totalAtendidas)
-                                        <span class="inline-flex items-center bg-teal-100 text-teal-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-teal-900 dark:text-teal-300">
-                                            <span class="w-2 h-2 mr-1 text-white bg-teal-500 rounded-full"></span>
-                                            OK
-                                        </span>
-                                        @endif
-                                </div>
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
