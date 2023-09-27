@@ -18,6 +18,7 @@
                     @endif
                     </h3>
                     <span class="font-semibold text-lg">{{ $paciente->name }} {{ $paciente->last_name}}</span>
+                    {{ $estado }}
                 </div>
                 <x-button-modal-close wire:click="$set('openItemCreate','hidden')" />
                 </div>
