@@ -27,7 +27,6 @@
                                 </div>
                                 <div class="text-sm text-gray-500 dark:text-gray-400">
                                     {{ $paciente->email }}
-                                    {{ $typePayment->type_payment }}
                                 </div>
                             </div>
                         </div>
@@ -59,7 +58,12 @@
                                     @endisset
                                 </div>
                                 <div>
-                                    <x-button-add wire:click="$set('openModalPago','')" innerText="Agregar Pago" class="gap-2 mt-2" />
+                                    @if ( $applyItemsCount != 0)
+                                        @if (($valorTotalAtenciones-$countSumaAplication) != 0 )
+                                        
+                                            <x-button-add wire:click="$set('openModalPago','')" innerText="Agregar Pago" class="gap-2 mt-2" />
+                                        @endif
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -67,12 +71,14 @@
                             <div class="pl-5 font-normal dark:text-white py-4">
                                 <div class="text-sm flex-col text-white bg-black rounded-full px-3 mb-2  py-1">Total Pagos del Mes
                                 </div>
-                                <div class="bg-green-400 rounded-full px-2 mb-1 text-sm">
-                                    Pagado ${{ number_format($countSumaAplication,0,',','.') }}.-
-                                </div>
-                                <div class="bg-red-400 rounded-full px-2 text-sm">
-                                    Pendiente ${{ number_format($valorTotalAtenciones-$countSumaAplication,0,',','.') }}.-
-                                </div>
+                                @if ($applyItemsCount > 0)    
+                                    <div class="bg-green-400 rounded-full px-2 mb-1 text-sm">
+                                        Pagado ${{ number_format($countSumaAplication,0,',','.') }}.-
+                                    </div>
+                                    <div class="bg-red-400 rounded-full px-2 text-sm">
+                                        Pendiente ${{ number_format($valorTotalAtenciones-$countSumaAplication,0,',','.') }}.-
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">

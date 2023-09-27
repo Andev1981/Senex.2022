@@ -75,26 +75,27 @@ class IndexPagos extends Component
         //Obtengo el tipo de Pago
         $typePayment = Application::where('patient_id', $this->paciente->id)->take(1)->first();
         
-        /*Obtengo en listado de sesiones con estado no pagada del mes seleccionado*/
+        /*Obtengo el listado de sesiones*/
         $applyItemsSum = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
         
         /*Asigno valor a la variable que almacena el valor total de las atenciones*/
         $this->valorTotalAtenciones = $applyItemsSum->sum('price');
 
 
-        $applyItems = ApplyItem::where('status',2)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->paginate(5);
+        $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->paginate(5);
 
+        if(count($applyItems) > 0){
+            $this->applyItemsCount = $applyItems->count();
+            $this->applyItem = $applyItems[0];
 
-        $this->applyItemsCount = $applyItems->count();
-        $this->applyItem = $applyItems[0];
+            $countSumaAplications = PaymentIncome::where('application_id',$applyItems[0]->application_id)->where('apply_item_id',$applyItems[0]->id)->where('status',2)->get();
 
-        $countSumaAplications = PaymentIncome::where('application_id',$applyItems[0]->application_id)->where('apply_item_id',$applyItems[0]->id)->where('status',2)->get();
-
-        if(count($countSumaAplications) > 0){
-            $this->payments = $countSumaAplications;
-            $this->countSumaAplication = $countSumaAplications->sum('pay');
-        }else{
-            $this->countSumaAplication = 0;
+            if(count($countSumaAplications) > 0){
+                $this->payments = $countSumaAplications;
+                $this->countSumaAplication = $countSumaAplications->sum('pay');
+            }else{
+                $this->countSumaAplication = 0;
+            }
         }
 
 
@@ -169,10 +170,6 @@ class IndexPagos extends Component
 
         $this->validate();
 
-        if($this->valor <= ($this->valorTotalAtenciones - $this->valorTotalAtendidas)){
-
-        }
-
         $newPayment = PaymentIncome::create([
             'pay' => $this->valor,
             'application_id' => $this->applyItem->application_id,
@@ -181,19 +178,27 @@ class IndexPagos extends Component
             'status' => 2,
         ]);
 
-        $this->mount($this->paciente);
-        $this->emit('success');
+        $this->reset(['valor','fecha_pago']);
+        $this->resetPage();
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->emit('update-payment');
         $this->dispatchBrowserEvent('swal-success');
     }
 
     public function deletePay($payment){
         $selPay = PaymentIncome::find($payment['id']);
         $selPay->delete();
-        $this->mount($this->paciente);
-        $this->emit('success');
+        $this->resetPage();
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->emit('update-payment');
         $this->dispatchBrowserEvent('swal-success');
 
     }
 
-   
+   public function paymentState(){
+        
+   }
+
 }
