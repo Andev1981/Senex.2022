@@ -76,7 +76,7 @@ class EditarItem extends Component
 
         $this->validate();   
 
-        
+         dd($this->forma_de_pago);
         
         if($this->applyItem->numero_sesion != $this->numero_sesion){
             $val = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();

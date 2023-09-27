@@ -59,7 +59,7 @@ class CrearItem extends Component
         }else{
             return [
                 'kine' => 'required',
-                'tipo_atencion' => 'required',
+                'forma_de_pago' => 'required',
                 'status' => 'required',
                 'valor' => 'required|integer|min:1|max:999999',
                 'mensaje' => 'max:255',
@@ -104,6 +104,8 @@ class CrearItem extends Component
     public function save(){
         
         $this->validate();
+
+        dd($this->forma_de_pago);
 
         if($this->estado == 1){
             $this->application = Application::create([

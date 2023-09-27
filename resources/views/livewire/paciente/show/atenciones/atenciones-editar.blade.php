@@ -45,12 +45,32 @@
                                     </svg>
                                 </div>
                                 <select wire:model.defer="forma_de_pago" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                    <option value="0">Por sesión</option>
-                                    <option value="1">Por tratamiento</option>
-                                    <option value="2">Mensual por sesiones</option>
-                                    <option value="2">50% y 50%</option>
-                                    <option value="3">Tarjeta de Crédito</option>
-                                    <option value="4">Abonos parciales</option>
+                                    <option value="0" 
+                                    @if ($forma_de_pago == 0)
+                                        selected
+                                    @endif>Por sesión</option>
+                                    <option value="1"
+                                    @if ($forma_de_pago == 1)
+                                        selected
+                                    @endif
+                                    >Por tratamiento</option>
+                                    <option value="2"
+                                    @if ($forma_de_pago == 2)
+                                        selected
+                                    @endif>Mensual por sesiones</option>
+                                    <option value="3" 
+                                    @if ($forma_de_pago == 3)
+                                        selected
+                                    @endif
+                                    >50% y 50%</option>
+                                    <option value="4"
+                                    @if ($forma_de_pago == 4)
+                                        selected
+                                    @endif>Tarjeta de Crédito</option>
+                                    <option value="5"
+                                    @if ($forma_de_pago == 5)
+                                        selected
+                                    @endif>Abonos parciales</option>
                                 </select>
                             </div>
                             @error('forma_de_pago')

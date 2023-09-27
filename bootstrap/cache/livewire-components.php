@@ -28,6 +28,7 @@
   'paciente.modal-fix' => 'App\\Http\\Livewire\\Paciente\\ModalFix',
   'paciente.pagos.index-pagos' => 'App\\Http\\Livewire\\Paciente\\Pagos\\IndexPagos',
   'paciente.pagos.modal-pago' => 'App\\Http\\Livewire\\Paciente\\Pagos\\ModalPago',
+  'paciente.pagos.modal-pago-mensual' => 'App\\Http\\Livewire\\Paciente\\Pagos\\ModalPagoMensual',
   'paciente.show.apoderado.apoderado-crear' => 'App\\Http\\Livewire\\Paciente\\Show\\Apoderado\\ApoderadoCrear',
   'paciente.show.apoderado.apoderado-editar' => 'App\\Http\\Livewire\\Paciente\\Show\\Apoderado\\ApoderadoEditar',
   'paciente.show.apoderado.apoderado-listado' => 'App\\Http\\Livewire\\Paciente\\Show\\Apoderado\\ApoderadoListado',

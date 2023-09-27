@@ -194,9 +194,9 @@
                                     <option value="0">Por sesión</option>
                                     <option value="1">Por tratamiento</option>
                                     <option value="2">Mensual por sesiones</option>
-                                    <option value="2">50% y 50%</option>
-                                    <option value="3">Tarjeta de Crédito</option>
-                                    <option value="4">Abonos parciales</option>
+                                    <option value="3">50% y 50%</option>
+                                    <option value="4">Tarjeta de Crédito</option>
+                                    <option value="5">Abonos parciales</option>
                                 </select>
                             </div>
                             @error('forma_de_pago')
