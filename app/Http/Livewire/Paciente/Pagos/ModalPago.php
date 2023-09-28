@@ -73,8 +73,6 @@ class ModalPago extends Component
         }elseif($payment->status == 2){
             $payment->status = 1;
             $payment->save();
-            $this->findSaldo->saldo += $this->item->price; 
-            $this->findSaldo->save();
         }
         
 
