@@ -76,7 +76,7 @@ class IndexPagos extends Component
         $typePayment = Application::where('patient_id', $this->paciente->id)->take(1)->first();
         
         /*Obtengo el listado de sesiones*/
-        $applyItemsSum = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
+        $applyItemsSum = ApplyItem::where('patient_id',$this->paciente->id)->where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('fecha_atencion','desc')->get();
         
         /*Asigno valor a la variable que almacena el valor total de las atenciones*/
         $this->valorTotalAtenciones = $applyItemsSum->sum('price');
