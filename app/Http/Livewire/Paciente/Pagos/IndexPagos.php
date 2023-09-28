@@ -85,6 +85,16 @@ class IndexPagos extends Component
         $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
 
         $saldoAFavor = PaymentIncome::where('application_id',$typePayment->id)->where('type',2)->first();
+        if(!$saldoAFavor){
+           $saldoAFavor = PaymentIncome::create([
+                'pay' => 0,
+                'saldo' => 0,
+                'application_id' => $typePayment->id,
+                'apply_item_id' => 0,
+                'status' => 2,
+                'type' => 2,
+            ]);
+        }
 
         $this->setSaldo = $saldoAFavor;
 
