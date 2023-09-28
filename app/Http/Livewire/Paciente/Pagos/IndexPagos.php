@@ -85,6 +85,10 @@ class IndexPagos extends Component
 
         $saldoAFavor = PaymentIncome::where('application_id',$typePayment->id)->where('type',2)->first();
 
+        if($saldoAFavor->saldo < 0){
+            $saldoAFavor->saldo = 0;
+        }
+
         if($saldoAFavor){
             $this->saldoAFavor = $saldoAFavor->saldo;
             $this->saldo = $this->saldoAFavor;
