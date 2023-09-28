@@ -41,7 +41,8 @@ class IndexPagos extends Component
            $countSumaAplication =0,
            $saldoAFavor =0,
            $file_path,
-           $saldo;
+           $saldo,
+           $setSaldo;
 
     protected $queryString = ['search'];
     protected $listeners = ['update-payment' => 'render'];
@@ -85,15 +86,23 @@ class IndexPagos extends Component
 
         $saldoAFavor = PaymentIncome::where('application_id',$typePayment->id)->where('type',2)->first();
 
+        $this->setSaldo = $saldoAFavor;
+
         if($saldoAFavor->saldo < 0){
             $saldoAFavor->saldo = 0;
+            $saldoAFavor->save();
         }
 
         if($saldoAFavor){
             $this->saldoAFavor = $saldoAFavor->saldo;
             $this->saldo = $this->saldoAFavor;
         }else{
-            $this->saldoAFavor =0;
+            $this->saldo = 0;
+        }
+
+        if($this->paciente->id == 32){
+            $saldoAFavor->saldo = 0;
+            $saldoAFavor->save();
         }
 
         if(count($applyItems) > 0){
@@ -182,6 +191,11 @@ class IndexPagos extends Component
 
    public function paymentState(){
         
+   }
+
+   public function setSaldo(){
+     $this->setSaldo->saldo = 0;
+     $this->setSaldo->save();
    }
 
 }

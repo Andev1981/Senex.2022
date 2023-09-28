@@ -60,6 +60,9 @@
                                 <div class="bg-green-500 text-white rounded-full px-2 mb-1 mt-2 text-sm">
                                         Saldo a favor ${{ number_format($saldoAFavor,0,',','.') }}.-
                                     </div>
+                                    @if (auth()->user()->email == 'javt1981@gmail.com')
+                                         <x-button-edit wire:click="setSaldo" />
+                                    @endif
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
