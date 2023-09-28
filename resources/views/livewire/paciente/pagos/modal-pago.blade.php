@@ -1,6 +1,6 @@
 <div>
 @if (auth()->user()->email == 'javt1981@gmail.com')
-    @dump($item->pay)
+    @dump($item->price)
     @dump($item->payment->pay)
     @dump($item->payment->status)
 @endif
