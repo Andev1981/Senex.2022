@@ -289,7 +289,7 @@
                                     </tbody>
                                 </table>
                                 <div class="mb-5 p-4">
-                                    {{ $applyItems->links() }}
+                                   
                                 </div>
                             </div>
 
