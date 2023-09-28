@@ -14,7 +14,10 @@ class PaymentIncome extends Model
         'application_id',
         'apply_item_id',
         'fecha_pago',
-        'status'
+        'status',
+        'type',
+        'file',
+        'mensaje',
     ];
 
     public function application(){

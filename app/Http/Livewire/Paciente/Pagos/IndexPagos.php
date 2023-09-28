@@ -38,15 +38,14 @@ class IndexPagos extends Component
            $fecha_pago,
            $applyItem,
            $applyItemsCount =0,
-           $countSumaAplication =0;
+           $countSumaAplication =0,
+           $saldoAFavor =0,
+           $file_path,
+           $saldo;
 
     protected $queryString = ['search'];
     protected $listeners = ['update-payment' => 'render'];
 
-     protected $rules = [
-        'valor' => 'required|min:4|max:99999',
-        'fecha_pago' => 'required|date',
-    ];
 
     public function mount(Patient $paciente){
         $this->paciente = $paciente;
@@ -57,7 +56,6 @@ class IndexPagos extends Component
     {
         if($this->reloadStatus == 0){
           $this->buscarFecha = Carbon::now();
-          $this->fechaActual = Carbon::now();
           $this->month = $this->buscarFecha->format('m');
           $this->year = $this->buscarFecha->format('Y');
           $this->reloadStatus = 1;
@@ -71,6 +69,7 @@ class IndexPagos extends Component
         $this->countSuma = 0;
         $this->itemsSuma = 0;
         $this->itemSumaPendiente = 0;
+        $this->saldoAFavor =0;
 
         //Obtengo el tipo de Pago
         $typePayment = Application::where('patient_id', $this->paciente->id)->take(1)->first();
@@ -83,6 +82,15 @@ class IndexPagos extends Component
 
 
         $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->paginate(5);
+
+        $saldoAFavor = PaymentIncome::where('application_id',$typePayment->id)->where('type',2)->first();
+
+        if($saldoAFavor){
+            $this->saldoAFavor = $saldoAFavor->saldo;
+            $this->saldo = $this->saldoAFavor;
+        }else{
+            $this->saldoAFavor =0;
+        }
 
         if(count($applyItems) > 0){
             $this->applyItemsCount = $applyItems->count();
@@ -166,36 +174,7 @@ class IndexPagos extends Component
         }
     }
 
-    public function savePay(){
 
-        $this->validate();
-
-        $newPayment = PaymentIncome::create([
-            'pay' => $this->valor,
-            'application_id' => $this->applyItem->application_id,
-            'apply_item_id' => $this->applyItem->id,
-            'fecha_pago' => $this->fecha_pago,
-            'status' => 2,
-        ]);
-
-        $this->reset(['valor','fecha_pago']);
-        $this->resetPage();
-        $this->resetErrorBag();
-        $this->resetValidation();
-        $this->emit('update-payment');
-        $this->dispatchBrowserEvent('swal-success');
-    }
-
-    public function deletePay($payment){
-        $selPay = PaymentIncome::find($payment['id']);
-        $selPay->delete();
-        $this->resetPage();
-        $this->resetErrorBag();
-        $this->resetValidation();
-        $this->emit('update-payment');
-        $this->dispatchBrowserEvent('swal-success');
-
-    }
 
    public function paymentState(){
         

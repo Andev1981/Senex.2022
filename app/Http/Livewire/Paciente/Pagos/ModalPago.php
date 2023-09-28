@@ -15,9 +15,25 @@ class ModalPago extends Component
     public $type;
     public $pay = 0;
     public $status;
+    public $findSaldo;
   
     public function mount(ApplyItem $item){
+
+        if(!$item->payment){
+            PaymentIncome::create([
+                'pay' => $item->price,
+                'application_id' => $item->application_id,
+                'apply_item_id' => $item->id,
+                'status' => 2,
+                'type' => 0,
+            ]);
+        }
+
         $this->item = $item;
+
+        $this->findSaldo = PaymentIncome::where('application_id',$this->item->application_id)->where('type',2)->first();
+
+
     }
 
     public function render()
@@ -30,7 +46,7 @@ class ModalPago extends Component
         $payment = PaymentIncome::find($id);
         
         if(!$payment){
-            PaymentIncome::create([
+           $payment = PaymentIncome::create([
                 'pay' => $this->item->price,
                 'application_id' => $this->item->application_id,
                 'apply_item_id' => $this->item->id,
@@ -38,14 +54,20 @@ class ModalPago extends Component
             ]);
         }
 
+
         if($payment->status == 1){
             $payment->status = 2;
             $payment->save();
+            $this->findSaldo->saldo -= $this->item->price; 
+            $this->findSaldo->save();
         }elseif($payment->status == 2){
             $payment->status = 1;
             $payment->save();
+            $this->findSaldo->saldo += $this->item->price; 
+            $this->findSaldo->save();
         }
         
+
         $this->emit('update-payment');
         $this->dispatchBrowserEvent('swal-success');
         $item = ApplyItem::find($this->item->id);
