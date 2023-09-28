@@ -1,4 +1,8 @@
 <div>
+@if (auth()->user()->email == 'javt1981@gmail.com')
+    @dump($item)
+    @dump($item->payment)
+@endif
     <div class="flex items-center pl-2 space-x-2">
         <label class="relative inline-flex items-center mr-5 cursor-pointer">
           <input type="checkbox" value="" class="sr-only peer" wire:click="selectItem({{$item->payment->id}})" 
