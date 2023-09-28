@@ -1,7 +1,8 @@
 <div>
 @if (auth()->user()->email == 'javt1981@gmail.com')
-    @dump($item)
-    @dump($item->payment)
+    @dump($item->pay)
+    @dump($item->payment->pay)
+    @dump($item->payment->status)
 @endif
     <div class="flex items-center pl-2 space-x-2">
         <label class="relative inline-flex items-center mr-5 cursor-pointer">
