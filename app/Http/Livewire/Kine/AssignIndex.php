@@ -86,7 +86,7 @@ class AssignIndex extends Component
            
 
 
-            $this->kineValues = ApplicationTypeUser::where('doctor_id',$this->kine->id)->get();
+            $this->kineValues = ApplicationTypeUser::where('user_id',$this->kine->id)->get();
 
             foreach($this->applyItems as $applyItem){
                 $this->totalPacientes += $applyItem->price;
