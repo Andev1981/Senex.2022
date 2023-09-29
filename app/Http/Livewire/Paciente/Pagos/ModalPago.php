@@ -25,7 +25,7 @@ class ModalPago extends Component
                 'pay' => $item->price,
                 'application_id' => $item->application_id,
                 'apply_item_id' => $item->id,
-                'status' => 2,
+                'status' => 1,
                 'type' => 0,
             ]);
         $this->payment = $payment;
