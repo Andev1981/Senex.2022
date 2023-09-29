@@ -12,7 +12,7 @@
 
         @endif
 
-        @livewire('kine.create-edit-kine', ['doctor' => $kine], key($kine->id))
+        @livewire('kine.modal-editar', ['doctor' => $kine], key($kine->id))
 
     </div>
     <!-- Main modal -->
