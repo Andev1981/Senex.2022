@@ -20,77 +20,75 @@ class CreateEditKine extends Component
     public $file_path;
     public $status=0;
     public $phoneLength=0;
+    public $avatar,
+           $name,
+           $last_name,
+           $rut,
+           $birth,
+           $email,
+           $phone;
 
     
     protected function rules() {
 
-        if($this->status == 0){
 
             return [
-                'doctor.avatar' => '',
-                'doctor.name' => 'required|min:3|max:50',
-                'doctor.last_name' => 'required|min:5|max:50',
-                'doctor.rut' => 'required|max:10|min:9',
-                'doctor.birth' => 'required|date',
-                'doctor.email' => 'required|email|max:255|unique:users,email',
-                'doctor.phone' => 'required|min:9|max:9',
+                'avatar' => '',
+                'name' => 'required|min:3|max:50',
+                'last_name' => 'required|min:5|max:50',
+                'rut' => 'required|max:10|min:9',
+                'birth' => 'required|date',
+                'email' => 'required|email|max:255|unique:users,email',
+                'phone' => 'required|min:9|max:9',
             ];
-        }else{
-
-            return [
-                'doctor.avatar' => '',
-                'doctor.name' => 'required|min:3|max:50',
-                'doctor.last_name' => 'required|min:5|max:50',
-                'doctor.rut' => 'required|max:10|min:9',
-                'doctor.email' => 'required|email|max:255|unique:users,email,'.$this->doctor->id,
-                'doctor.birth' => 'required|date',
-                'doctor.phone' => 'required|min:9|max:9',
-            ];
-        }
+     
     }
 
-    protected $messages = [
-        'doctor.name.required' => 'Nombre es requerido',
-        'doctor.name.min' => 'Nombre debe tener al menos 3 caracteres',
-        'doctor.name.max' => 'Nombre supera el límite permitido de caracteres',
-        'doctor.last_name.required' => 'Apellido es requerido',
-        'doctor.last_name.min' => 'Apellido debe tener al menos 5 caracteres',
-        'doctor.last_name.max' => 'Apellido supera el límite permitido de caracteres',
-        'doctor.phone.required' => 'Teléfono es requerido',
-        'doctor.phone.max' => 'Teléfono supera el máximo',
-        'doctor.phone.min' => 'Teléfono debe tener al menos 9 caracteres',
-        'doctor.email.required' => 'Correo es requerido',
-        'doctor.rut.required' => 'Rut es requerido',
-        'doctor.birth.required' => 'Fecha de nacimiento es requerida',
-    ];
+ 
 
     public function render()
     {
         return view('livewire.kine.create-edit-kine');
     }
 
-    public function mount(Doctor $doctor){
-            if($doctor){
-        $this->doctor = $doctor;
-                if($this->doctor->id){
-                    $this->status = 1;
-        }
-                }
-    }
 
     public function save(){
 
         $this->validate();
 
-         if($this->file_path){
-            $this->doctor->avatar = 'storage/'. $this->file_path->store('avatars','public');
+
+        if($this->file_path){
+            $this->avatar = 'storage/'. $this->file_path->store('avatars','public');
         }
 
-        $this->doctor->password = bcrypt('Senex2023');
-        $this->doctor->address_id = 1;
-        $this->doctor->status = 1;
-        $this->doctor->user_type = 'Kine';
-        $this->doctor->save();
+        
+        $newUser = User::create([
+            'name' => $this->name,
+            'last_name' => $this->last_name,
+            'email' => $this->email,
+            'password' => bcrypt('Senex2023'),
+            'avatar' => '',
+            'rut' => '',
+            'birth' => null,
+            'phone' => '',
+            'address_id' => 1,
+            'status' => 1,
+            'user_type' => 'Kine'
+        ]);
+    
+
+            $newDoctor = Doctor::create([
+                'user_id' => $newUser->id,
+                'avatar' => $this->avatar,
+                'name' => $this->name,
+                'last_name' => $this->last_name,
+                'rut' => $this->rut,
+                'phone' => $this->phone,
+                'address_id' => 1,
+                'status' => 1,
+            ]);
+
+     
 
         $this->emitUp('success-kine');
 

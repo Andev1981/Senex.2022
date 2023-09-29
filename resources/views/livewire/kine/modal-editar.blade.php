@@ -9,11 +9,18 @@
                     d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
                     clip-rule="evenodd" />
             </svg>
-     
-                Crear
-           
+            
+                Editar
+       
         </button>
-
+       
+            <button type="button" wire:click="$set('openDel','')" class="flex items-center px-2 py-1 text-xs font-medium text-center text-red-700 border border-red-700 rounded-lg hover:text-white hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                Eliminar
+            </button>
+     
         
     </div>
 
@@ -27,9 +34,11 @@
                 <div
                     class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-900 uppercase dark:text-white">
-              
+                     @if ($status===1)
+                        Editando kine
+                    @else
                         Crear kine 
-                 
+                    @endif
                     </h3>
                     <button wire:click="$set('open','hidden')" type="button"
                         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
@@ -60,18 +69,18 @@
                                             fill="currentColor" />
                                     </svg>
                                 </div>
-                                @isset($avatar)
+                                @isset($doctor)
                                     
-                                @if ($avatar || $file_path)
+                                @if ($doctor->avatar || $file_path)
 
                                     @if ($file_path)
                                         <img class="w-16 h-16 rounded" src="{{ $file_path->temporaryURL() }}"
                                             alt="New Avatar">
                                     @else
-                                        <img class="w-16 h-16 rounded" src="{{ $avatar }}" alt="Old avatar">
+                                        <img class="w-16 h-16 rounded" src="{{ $doctor->avatar }}" alt="Old avatar">
                                     @endif
                                 @else
-                                    <svg wire:loading.remove wire:target='avatar'
+                                    <svg wire:loading.remove wire:target='doctor.avatar'
                                         class="absolute w-16 h-16 text-gray-400 -left-1" fill="currentColor"
                                         viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd"
@@ -88,7 +97,7 @@
                                 class="block mt-2 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                                 aria-describedby="file_input_help" wire:model="file_path" id="file_input"
                                 type="file">
-                            @error('avatar')
+                            @error('doctor.avatar')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
                                 </p>
@@ -109,12 +118,12 @@
                                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
                                 </div>
-                                <input type="text" wire:model="name"
+                                <input type="text" wire:model="doctor.name"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
                                     placeholder="Nombre">
 
                             </div>
-                            @error('name')
+                            @error('doctor.name')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
                                 </p>
@@ -132,11 +141,11 @@
                                             d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                                     </svg>
                                 </div>
-                                <input type="text" wire:model="last_name"
+                                <input type="text" wire:model="doctor.last_name"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
                                     placeholder="Apellido">
                             </div>
-                            @error('last_name')
+                            @error('doctor.last_name')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
                                 </p>
@@ -155,11 +164,11 @@
                                         <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
                                     </svg>
                                 </div>
-                                <input type="email" wire:model="email"
+                                <input type="email" wire:model="doctor.user.email"
                                     class="bg-gray-100 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
                                     placeholder="Email">
                             </div>
-                            @error('email')
+                            @error('doctor.user.email')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
                                 </p>
@@ -192,12 +201,12 @@
                                 <small
                                     class="absolute inset-y-0 right-0 flex pt-2 pr-6 italic text-gray-400 right">{{ strlen($phoneLength) ?? '' }}
                                     /9</small>
-                                <input wire:model="phone" type="number"
+                                <input wire:model="doctor.phone" type="number"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-16 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
                                     placeholder="Teléfono">
                             </div>
 
-                            @error('phone')
+                            @error('doctor.phone')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
                                 </p>
@@ -218,22 +227,22 @@
                                         </svg>
 
                                     </div>
-                                    <input type="text" wire:model.defer="rut" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase" placeholder="12345678-9">
+                                    <input type="text" wire:model.defer="doctor.rut" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase" placeholder="12345678-9">
                                 </div>
-                                @error('rut')
+                                @error('doctor.rut')
                                 <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                                     {{ $message }}
                                 </p>
                                 @enderror
                             </div>
                             <div>
-                            <x-input-field-required label="Fecha de nacimiento" type="date" wire:model.defer="birth" placeholder="">
+                            <x-input-field-required label="Fecha de nacimiento" type="date" wire:model.defer="doctor.birth" placeholder="">
                                     <svg xmlns="http://www.w3.org/2000/svg"  fill="none" class="w-5 h-5 text-gray-500 bi bi-calendar2-plus dark:text-gray-400" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                                     <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM2 2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H2z"/>
                                     <path d="M2.5 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V4zM8 8a.5.5 0 0 1 .5.5V10H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V11H6a.5.5 0 0 1 0-1h1.5V8.5A.5.5 0 0 1 8 8z"/>
                                     </svg>
                             </x-input-field-required>
-                            @error('birth')
+                            @error('doctor.birth')
                             <p class="text-sm text-red-600 dark:text-red-500">
                                 {{ $message }}.
                             </p>
@@ -246,9 +255,11 @@
 
                         <button type="submit" wire:click="save" wire:loading.remove wire:target="save"
                             class="text-white inline-flex items-center bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
-            
+                            @if ($status==1)
+                              Actualizar
+                            @else
                               Crear
-                           
+                            @endif
                         </button>
 
                         <button wire:loading wire:target="save" role="status" disabled type="button"
@@ -263,9 +274,11 @@
                                     d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
                                     fill="currentColor" />
                             </svg>
-                 
+                            @if ($status==1)
+                               Actualizando...
+                            @else
                                Creando...
-                            
+                            @endif
                         </button>
 
                     </div>
@@ -274,6 +287,31 @@
             </div>
         </div>
     </div>
+  
 
+   <!-- Modal Eliminar -->
+    <div class="{{ $openDel }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
+        <div class="relative w-full h-full max-w-2xl p-4 md:h-auto">
+            <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                <button type="button" wire:click="$set('openDel','hidden')" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white">
+                    <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+                <div class="p-6 text-center">
+                    <svg aria-hidden="true" class="mx-auto mb-4 text-gray-400 w-14 h-14 dark:text-gray-200" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">Seguro que desea eliminar al
+                        el registro?</h3>
+                    <button type="button" wire:click="delete" class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2">Si,
+                        Estoy Seguro</button>
+                    <button wire:click="$set('openDel','hidden')" type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">No,
+                        cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>

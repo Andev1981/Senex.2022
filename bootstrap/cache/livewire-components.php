@@ -16,6 +16,7 @@
   'kine.assign-index' => 'App\\Http\\Livewire\\Kine\\AssignIndex',
   'kine.create-edit-kine' => 'App\\Http\\Livewire\\Kine\\CreateEditKine',
   'kine.listado-kines' => 'App\\Http\\Livewire\\Kine\\ListadoKines',
+  'kine.modal-editar' => 'App\\Http\\Livewire\\Kine\\ModalEditar',
   'kine.values-kine' => 'App\\Http\\Livewire\\Kine\\ValuesKine',
   'layout.navigation' => 'App\\Http\\Livewire\\Layout\\Navigation',
   'layout.sidebar' => 'App\\Http\\Livewire\\Layout\\Sidebar',

@@ -19,7 +19,11 @@ class Doctor extends Model
         'phone',
         'address_id',
         'status',
-        'payment_status',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
 }
