@@ -29,6 +29,7 @@ class ModalPago extends Component
                 'type' => 0,
             ]);
         $this->payment = $payment;
+        $this->item = $item;
 
         }else{
 
