@@ -16,20 +16,25 @@ class ModalPago extends Component
     public $pay = 0;
     public $status;
     public $findSaldo;
-  
+    public $payment;
+
     public function mount(ApplyItem $item){
 
         if(!$item->payment){
-          $item =  PaymentIncome::create([
+          $payment =  PaymentIncome::create([
                 'pay' => $item->price,
                 'application_id' => $item->application_id,
                 'apply_item_id' => $item->id,
                 'status' => 2,
                 'type' => 0,
             ]);
+        $this->payment = $payment;
+
+        }else{
+
+        $this->payment = $item->payment;
         }
 
-        $this->item = $item;
 
         $this->findSaldo = PaymentIncome::where('application_id',$this->item->application_id)->where('type',2)->first();
 
