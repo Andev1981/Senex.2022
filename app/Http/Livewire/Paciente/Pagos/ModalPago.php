@@ -20,7 +20,7 @@ class ModalPago extends Component
     public function mount(ApplyItem $item){
 
         if(!$item->payment){
-            PaymentIncome::create([
+          $item =  PaymentIncome::create([
                 'pay' => $item->price,
                 'application_id' => $item->application_id,
                 'apply_item_id' => $item->id,
