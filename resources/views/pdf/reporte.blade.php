@@ -75,8 +75,8 @@
 
                                                     </td>
                                                     <td >
-                                                        {{ $applyItem->application->doctor->name ?? '' }}
-                                                        {{ $applyItem->application->doctor->last_name ?? '' }}
+                                                        {{ $applyItem->application->user->name ?? '' }}
+                                                        {{ $applyItem->application->user->last_name ?? '' }}
                                                     </td>
                                                         
                                                     <td>
