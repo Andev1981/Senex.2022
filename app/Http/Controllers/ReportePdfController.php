@@ -18,6 +18,7 @@ use Carbon\Carbon;
 class ReportePdfController extends Controller
 {
     public $totalKine = 0;
+
     public function generarReporte($buscarFecha, $kine)
     {
 
@@ -25,19 +26,19 @@ class ReportePdfController extends Controller
         // Obtener los datos
         $applyItems = ApplyItem::with('assign')
                     ->where('fecha_atencion', 'like', $buscarFecha.'%')
-                    ->where('status',1)->where('user_id', $kine)
+                    ->where('status',1)->where('doctor_id', $kine)
                     ->latest('id')
                     ->get();
         
 
-        $nameUser = $applyItems[0]->user->name . ' ' . $applyItems[0]->user->last_name;
+        $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
         $total = $applyItems[0]->sum('price');
         $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
         $fecha = $fechaString->format('m-Y');
         //dd($nameUser);
        
 
-        $kineValues = ApplicationTypeUser::where('user_id',$kine)->get();
+        $kineValues = ApplicationTypeUser::where('doctor_id',$kine)->get();
 
             foreach($applyItems as $applyItem){
 
@@ -52,7 +53,14 @@ class ReportePdfController extends Controller
 
        return $pdf->download(rand(1,1000) .'-Reporte-Mensual-Atenciones' . $nameUser . '.pdf');
 
+
+
+
     }
+
+
+
+
 
     public function arreglo(){
 
