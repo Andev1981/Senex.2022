@@ -117,13 +117,13 @@ class CrearItem extends Component
             ]);
             $this->estado == 0;
         }else{
-            $validador = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();
+/*             $validador = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();
             if($validador){
                 $this->errorNumSesion = true;
                 return;
             }else{
                 $this->errorNumSesion = false;
-            }
+            } */
         }
 
         

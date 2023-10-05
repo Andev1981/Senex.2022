@@ -18,7 +18,6 @@
                     @endif
                     </h3>
                     <span class="font-semibold text-lg">{{ $paciente->name }} {{ $paciente->last_name}}</span>
-                    {{ $estado }}
                 </div>
                 <x-button-modal-close wire:click="$set('openItemCreate','hidden')" />
                 </div>
@@ -149,36 +148,9 @@
                             </p>
                             @enderror
                         </div>
-
                         <div>
-                            <label class="block text-sm font-medium text-gray-900 dark:text-white"> Número de Sesión</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 flex items-center pb-2 pl-3 pointer-events-none">
-
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="0.5" stroke="currentColor" class="w-6 h-6">
-                                        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z" />
-                                        <path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0zM7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0z" />
-                                    </svg>
-
-                                </div>
-                                <select wire:model.defer="numero_sesion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                    <option>--</option>
-                                    @for ($i = 1; $i <= 100; $i++) <option class="uppercase" value="{{$i}}">
-                                        {{ $i }}
-                                        </option>
-                                        @endfor
-                                </select>
-                            </div>
-                            @error('numero_sesion')
-                            <p class="mt-2 text-sm text-red-600 dark:text-red-500">
-                                {{ $message }}.
-                            </p>
-                            @enderror
-                            @if($errorNumSesion)
-                            <p class="mt-2 text-sm text-red-600 dark:text-red-500">
-                                Número de sesión duplicado.
-                            </p>
-                            @endif
+                            <x-input-field-required label="Número de Sesión" type="number"  wire:model.defer="numero_sesion" placeholder="">
+                            </x-input-field-required>
                         </div>
 
                         @if ($estado == 1)
