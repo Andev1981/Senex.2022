@@ -44,7 +44,7 @@ class ListadoPagosPaciente extends Component
                         $payment = $applyItem->payment;
 
                         if($payment->status == 1 && $payment->type == 0){
-                            dump($payment);
+
                             $pendiente = 1;
                         }
                     }
