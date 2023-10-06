@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente;
 
+use App\Models\ApplyItem;
 use App\Models\Patient;
 use App\Models\User;
 use Livewire\Component;
@@ -29,6 +30,40 @@ class ListadoPagosPaciente extends Component
 
     public function render()
     {
+
+        $allPacientes = Patient::with('applyItems')->get();
+
+        foreach($allPacientes as $paciente){
+            $pendiente = 0;
+            foreach($paciente->applyItems as $applyItem){
+                
+                if( $applyItem->payment ){
+                
+                    if($pendiente == 0){
+                
+                        $payment = $applyItem->payment;
+
+                        if($payment->status == 1 && $payment->type == 0){
+                            dump($payment);
+                            $pendiente = 1;
+                        }
+                    }
+                }
+            }
+            
+            if($pendiente == 1){
+                $paciente->payment_status = 1;
+            }else{
+                $paciente->payment_status = 2;
+            }
+            
+            $paciente->save();
+            $pendiente = 0;
+        }
+            
+
+      
+
         $pacientes = Patient::where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate($this->quantity);

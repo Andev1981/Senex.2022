@@ -19,6 +19,7 @@ class Patient extends Model
         'phone',
         'address_id',
         'status',
+        'payment_status',
     ];
 
     public function applications()
@@ -35,7 +36,7 @@ class Patient extends Model
         return $this->hasMany(ApplyItem::class);
     }
 
-     public function images()
+    public function images()
     {
         return $this->morphMany(Image::class, 'imageable');
     }

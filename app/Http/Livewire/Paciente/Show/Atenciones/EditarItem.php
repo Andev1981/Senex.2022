@@ -76,15 +76,6 @@ class EditarItem extends Component
 
         $this->validate();   
         
-      /*   if($this->applyItem->numero_sesion != $this->numero_sesion){
-            $val = ApplyItem::where('application_id',$this->application->id)->where('numero_sesion',$this->numero_sesion)->first();
-            if($val){
-                $this->errorNumSesion = true;
-                return;
-            }else{
-                $this->errorNumSesion = false;
-            }
-        } */
 
         $this->applyItem->user_id = $this->selectedKine;
         $this->applyItem->doctor_id = $this->selectedKine;

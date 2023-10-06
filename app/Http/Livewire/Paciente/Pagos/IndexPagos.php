@@ -85,6 +85,7 @@ class IndexPagos extends Component
         $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
 
         $saldoAFavor = PaymentIncome::where('application_id',$typePayment->id)->where('type',2)->first();
+        
         if(!$saldoAFavor){
            $saldoAFavor = PaymentIncome::create([
                 'pay' => 0,
@@ -109,11 +110,11 @@ class IndexPagos extends Component
         }else{
             $this->saldo = 0;
         }
-
+/* 
         if($this->paciente->id == 32){
             $saldoAFavor->saldo = 0;
             $saldoAFavor->save();
-        }
+        } */
 
         if(count($applyItems) > 0){
             $this->applyItemsCount = $applyItems->count();
