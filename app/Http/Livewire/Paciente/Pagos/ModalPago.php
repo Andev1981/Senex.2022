@@ -39,6 +39,17 @@ class ModalPago extends Component
 
         $this->findSaldo = PaymentIncome::where('application_id',$this->item->application_id)->where('type',2)->first();
 
+        if(!$this->findSaldo){
+
+             $this->findSaldo =  PaymentIncome::create([
+                'pay' => $item->price,
+                'application_id' => $item->application_id,
+                'apply_item_id' => $item->id,
+                'status' => 1,
+                'type' => 2,
+            ]);
+
+        }
 
     }
 
