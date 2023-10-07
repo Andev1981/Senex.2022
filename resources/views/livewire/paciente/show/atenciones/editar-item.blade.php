@@ -17,7 +17,7 @@
                         <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
                             Editando Sesión
                         </h3>
-                        <span>{{ $patient->name }} {{ $patient->last_name }}</span>
+                        <span>{{ $patient->name ?? '' }} {{ $patient->last_name ?? '' }}</span>
                     </div>
                 <x-button-modal-close wire:click="$set('openItem','hidden')" />
                 </div>
