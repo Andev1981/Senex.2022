@@ -16,8 +16,8 @@ class ListadoPagosPaciente extends Component
     public $search;
     protected $listeners = ['success' => 'render','success-paciente' => 'render'];
     protected $queryString = ['search'];
-    public $sort = 'updated_at';
-    public $direction = 'desc';
+    public $sort = 'payment_status';
+    public $direction = 'asc';
     public $openDelPaciente = 'hidden';
     public $quantity = 10;
 
@@ -51,10 +51,14 @@ class ListadoPagosPaciente extends Component
                 }
             }
             
-            if($pendiente == 1){
-                $paciente->payment_status = 1;
+            if(count($paciente->applyItems) > 0){
+                if($pendiente == 1){
+                    $paciente->payment_status = 1;
+                }else{
+                    $paciente->payment_status = 2;
+                }
             }else{
-                $paciente->payment_status = 2;
+                    $paciente->payment_status = 3;
             }
             
             $paciente->save();

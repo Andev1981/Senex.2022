@@ -74,8 +74,9 @@ class ModalCrear extends Component
                 'phone' => $this->telefono,
                 'birth' => $this->fecha_nacimiento,
                 'rut' => $this->rut,
-                'status' => 1,
                 'address_id' => $address->id,
+                'status' => 1,
+                'payment_status' => 3,
              ]);
 
             $this->cargaRespuestasBase($patient);
