@@ -2,9 +2,7 @@
 
 namespace App\Http\Livewire\Paciente;
 
-use App\Models\ApplyItem;
 use App\Models\Patient;
-use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -71,6 +69,7 @@ class ListadoPagosPaciente extends Component
         $pacientes = Patient::where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+            
         return view('livewire.paciente.listado-pagos-paciente', compact('pacientes'));
     }
 

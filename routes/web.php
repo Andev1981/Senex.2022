@@ -13,8 +13,11 @@ use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Paciente\ListadoPagosPaciente;
 use App\Http\Livewire\Paciente\ListadosIndex;
+use App\Http\Livewire\Paciente\Resumen;
 use App\Http\Livewire\PagosPaciente\IndexPagos;
 use App\Http\Livewire\Paciente\Show\Index as ShowIndex;
+use App\Http\Livewire\PagosPaciente\DetallePagos;
+use App\Http\Livewire\Sesiones\IndexSesiones;
 use App\Http\Livewire\Types\Index;
 
 
@@ -45,17 +48,28 @@ Route::group(['middleware' => ['auth']], function () {
 
     //Livewire full page components
     Route::get('pacientes', ListadosIndex::class)->name('pacientes');
-    Route::get('pagos', ListadoPagosPaciente::class)->name('pacientes.pagos');
+  
     Route::get('kines', ListadoKines::class)->name('kines');
     Route::get('types', Index::class)->name('types');
-    Route::get('{paciente}/pagos', IndexPagos::class)->name('pagos');
-    Route::get('{paciente}/detalles', ShowIndex::class)->name('detalles');
 
+
+    
+    /* RUTAS PARA PDF */
     Route::get('/reporte-pdf/{applyItems}/{kine}',[ReportePdfController::class,'generarReporte']);
 
     Route::get('/andres',[ReportePdfController::class,'arreglo'])->name('andres');
 
-    Route::get('ayuda', [VideoController::class, 'index'])->name('ayudaVideo');
+
+
+    /* RUTAS DE PRUEBA NORMALIZACION DE VISTAS LIVEWIRE */
+    Route::get('sesiones', IndexSesiones::class)->name('sesiones'); /* Revisar ruta en funcionalidad */
+
+    Route::get('pagos', IndexPagos::class)->name('pacientes.pagos');/* Revisar ruta en funcionalidad */
+
+    Route::get('{paciente}/pagos', DetallePagos::class)->name('pagos');/* Revisar ruta en funcionalidad */
+
+    Route::get('{paciente}/detalles', Resumen::class)->name('detalles');
+
 });
 
 //Transbank

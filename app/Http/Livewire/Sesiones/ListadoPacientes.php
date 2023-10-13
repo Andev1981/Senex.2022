@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Http\Livewire\Paciente;
+namespace App\Http\Livewire\Sesiones;
+
 
 use App\Models\Patient;
 use Livewire\Component;
@@ -26,15 +27,14 @@ class ListadoPacientes extends Component
 
     public function render()
     {
-      
-        $pacientes = Patient::with('applications')->where(function ($query) {
+         $pacientes = Patient::with('applications')->where(function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orderBy($this->sort, $this->direction)->paginate(10);
 
-        return view('livewire.paciente.listado-pacientes', compact('pacientes'));
+        return view('livewire.sesiones.listado-pacientes', compact('pacientes'));
     }
 
-
+    
     public function order($sort)
     {
         if ($this->sort === $sort) {
@@ -48,6 +48,4 @@ class ListadoPacientes extends Component
             $this->sort = $sort;
         }
     }
-
-
 }

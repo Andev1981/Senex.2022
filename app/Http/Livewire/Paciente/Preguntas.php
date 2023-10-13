@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Paciente\Show;
+namespace App\Http\Livewire\Paciente;
 
 use App\Models\Answer;
 use App\Models\Patient;
@@ -37,7 +37,7 @@ class Preguntas extends Component
 
     public function render()
     {
-        return view('livewire.paciente.show.preguntas');
+        return view('livewire.paciente.preguntas');
     }
 
     public function guardar()

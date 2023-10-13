@@ -2,195 +2,98 @@
 
 namespace App\Http\Livewire\PagosPaciente;
 
-use App\Models\Application;
-use App\Models\ApplyItem;
 use App\Models\Patient;
-use App\Models\Payment;
-use App\Models\PaymentIncome;
-use App\Models\User;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class IndexPagos extends Component
 {
     use WithPagination;
-    public Patient $paciente;
-    public $search,
-           $sort = 'updated_at',
-           $direction = 'desc',
-           $valorTotalAtenciones = 0,
-           $valorTotalAtendidas = 0,
-           $countSuma = 0,
-           $itemsSuma = 0,
-           $type = 1,
-           $userPayStatus = 0,
-           $buscarFecha,
-           $month = '',
-           $year,
-           $reloadStatus = 0,
-           $fechaActual,
-           $itemSumaPendiente = 0,
-           $openModalPago = 'hidden',
-           $payments = [],
-           $monthName = '',
-           $valor,
-           $fecha_pago,
-           $applyItem,
-           $applyItemsCount =0,
-           $countSumaAplication =0,
-           $saldoAFavor =0,
-           $file_path,
-           $saldo,
-           $setSaldo;
-
+    public $selectedPaciente;
+    public $search;
+    protected $listeners = ['success' => 'render','success-paciente' => 'render'];
     protected $queryString = ['search'];
-    protected $listeners = ['update-payment' => 'render'];
+    public $sort = 'payment_status';
+    public $direction = 'asc';
+    public $openDelPaciente = 'hidden';
+    public $quantity = 10;
 
-    public function mount(Patient $paciente){
-        $this->paciente = $paciente;
-
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
+
 
     public function render()
     {
 
-         if($this->reloadStatus == 0){
-          $this->buscarFecha = Carbon::now();
-          $this->month = $this->buscarFecha->format('m');
-          $this->year = $this->buscarFecha->format('Y');
-          $this->reloadStatus = 1;
-        }
-        
-        $this->buscarFecha =  $this->year . '-' . $this->month .'-';
+        $allPacientes = Patient::with('applyItems')->get();
 
-        $this->valorTotalAtenciones = 0;
-        $this->valorTotalAtendidas = 0;
-        $this->applyItemsCount = 0;
-        $this->countSuma = 0;
-        $this->itemsSuma = 0;
-        $this->itemSumaPendiente = 0;
-        $this->saldoAFavor =0;
+        foreach($allPacientes as $paciente){
+            $pendiente = 0;
+            foreach($paciente->applyItems as $applyItem){
+                
+                if( $applyItem->payment ){
+                
+                    if($pendiente == 0){
+                
+                        $payment = $applyItem->payment;
 
-        //Obtengo el tipo de Pago
-        $typePayment = Application::where('patient_id', $this->paciente->id)->take(1)->first();
-        
-        /*Obtengo el listado de sesiones*/
-        $applyItemsSum = ApplyItem::where('patient_id',$this->paciente->id)->where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('fecha_atencion','desc')->get();
-        
-        /*Asigno valor a la variable que almacena el valor total de las atenciones*/
-        $this->valorTotalAtenciones = $applyItemsSum->sum('price');
+                        if($payment->status == 1 && $payment->type == 0){
 
-
-        $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
-
-        $saldoAFavor = PaymentIncome::where('application_id',$typePayment->id)->where('type',2)->first();
-        
-        if(!$saldoAFavor){
-           $saldoAFavor = PaymentIncome::create([
-                'pay' => 0,
-                'saldo' => 0,
-                'application_id' => $typePayment->id,
-                'apply_item_id' => 0,
-                'status' => 2,
-                'type' => 2,
-            ]);
-        }
-
-        $this->setSaldo = $saldoAFavor;
-
-        if($saldoAFavor->saldo < 0){
-            $saldoAFavor->saldo = 0;
-            $saldoAFavor->save();
-        }
-
-        if($saldoAFavor){
-            $this->saldoAFavor = $saldoAFavor->saldo;
-            $this->saldo = $this->saldoAFavor;
-        }else{
-            $this->saldo = 0;
-        }
-
-
-        if(count($applyItems) > 0){
-            $this->applyItemsCount = $applyItems->count();
-            $this->applyItem = $applyItems[0];
-
-            $countSumaAplications = PaymentIncome::where('application_id',$applyItems[0]->application_id)->where('apply_item_id',$applyItems[0]->id)->where('status',2)->get();
-
-            if(count($countSumaAplications) > 0){
-                $this->payments = $countSumaAplications;
-                $this->countSumaAplication = $countSumaAplications->sum('pay');
-            }else{
-                $this->countSumaAplication = 0;
+                            $pendiente = 1;
+                        }
+                    }
+                }
             }
-        }
-
-
-        foreach($applyItems as $applyItem){
-
-            $paymentIncomePay = PaymentIncome::where('application_id',$applyItems[0]->application_id)->where('apply_item_id',$applyItem->id)->where('status',2)->first();
             
-            if($paymentIncomePay){
-               $this->valorTotalAtendidas += $paymentIncomePay->pay;
+            if(count($paciente->applyItems) > 0){
+                if($pendiente == 1){
+                    $paciente->payment_status = 1;
+                }else{
+                    $paciente->payment_status = 2;
+                }
+            }else{
+                    $paciente->payment_status = 3;
             }
-
-            $this->itemsSuma += 1;
+            
+            $paciente->save();
+            $pendiente = 0;
         }
+            
 
- 
+      
 
-        $this->setMonth($this->month);
-        return view('livewire.pagos-paciente.index-pagos',['applyItems' => $applyItems,'typePayment' => $typePayment]);
+        $pacientes = Patient::where(function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+            })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+
+        return view('livewire.pagos-paciente.index-pagos', compact('pacientes'));
     }
 
-    public function setMonth($month){
-        switch ($month) {
-            case '01':
-                $this->monthName = 'Enero';
-                break;
-            case '02':
-                $this->monthName = 'Febrero';
-                break;
-            case '03':
-                $this->monthName = 'Marzo';
-                break;
-            case '04':
-                $this->monthName = 'Abril';
-                break;
-            case '05':
-                $this->monthName = 'Mayo';
-                break;
-            case '06':
-                $this->monthName = 'Junio';
-                break;
-            case '07':
-                $this->monthName = 'Julio';
-                break;
-            case '08':
-                $this->monthName = 'Agosto';
-                break;
-            case '09':
-                $this->monthName = 'Septiembre';
-                break;
-            case '10':
-                $this->monthName = 'Octubre';
-                break;
-            case '11':
-                $this->monthName = 'Noviembre';
-                break;
-            case '12':
-                $this->monthName = 'Diciembre';
-                break;
-            default:
-                $this->monthName = '';
-                break;
+    public function order($sort)
+    {
+        if ($this->sort === $sort) {
+
+            if ($this->direction === 'desc') {
+                $this->direction = 'asc';
+            } else {
+                $this->direction = 'desc';
+            }
+        } else {
+            $this->sort = $sort;
         }
     }
 
+    public function openDeleteModal($paciente){
+        $this->selectedPaciente ='';
+        $this->selectedPaciente = $paciente;
+        $this->openDelPaciente = '';
+    }
 
- public function setSaldo(){
-     $this->setSaldo->saldo = 0;
-     $this->setSaldo->save();
-   }
+    public function deletePaciente(){
+        $pacienteDel = Patient::find($this->selectedPaciente['id']);
+        $pacienteDel->delete();
+        $this->openDelPaciente = 'hidden';
+    }
 }

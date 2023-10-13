@@ -242,7 +242,7 @@
                     <div class="grid grid-cols-3 gap-4 py-4 px-2">
                         @foreach ($questions as $question)
 
-                        @livewire('paciente.show.preguntas',['paciente' => $paciente,'question' => $question],key($question->id))
+                        @livewire('paciente.preguntas',['paciente' => $paciente,'question' => $question],key($question->id))
 
                         @endforeach
                     </div>

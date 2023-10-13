@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Paciente\Show;
+namespace App\Http\Livewire\Paciente;
 
 use App\Models\Answer;
 use App\Models\Doctor;
@@ -8,7 +8,7 @@ use App\Models\Patient;
 use App\Models\User;
 use Livewire\Component;
 
-class Index extends Component
+class Resumen extends Component
 {
 
     protected $listeners = ['success' => 'render'];
@@ -27,7 +27,7 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.paciente.show.index');
+        return view('livewire.paciente.resumen');
     }
 
     public function mount(Patient $paciente)

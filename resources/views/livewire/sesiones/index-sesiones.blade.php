@@ -1,3 +1,4 @@
 <div>
-    {{-- Do your work, then step back. --}}
+    @livewire('sesiones.listado-sesiones')
+    @livewire('sesiones.listado-pacientes')
 </div>

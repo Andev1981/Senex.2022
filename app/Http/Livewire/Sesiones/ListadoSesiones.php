@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Livewire\Paciente;
+namespace App\Http\Livewire\Sesiones;
 
 use App\Models\ApplyItem;
 use App\Models\Doctor;
 use App\Models\Patient;
+use App\Models\User;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ListadoSesionesPaciente extends Component
+class ListadoSesiones extends Component
 {
-
     use WithPagination;
     public $buscarFecha;
     public $year;
@@ -56,8 +56,6 @@ class ListadoSesionesPaciente extends Component
         }else{
             $applyItems = ApplyItem::with('application','patient','doctor')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
         }
-
-        return view('livewire.paciente.listado-sesiones-paciente', compact('applyItems'));
+        return view('livewire.sesiones.listado-sesiones', compact('applyItems'));
     }
-
 }
