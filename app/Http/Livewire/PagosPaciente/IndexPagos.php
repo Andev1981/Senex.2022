@@ -4,6 +4,7 @@ namespace App\Http\Livewire\PagosPaciente;
 
 use App\Models\ApplyItem;
 use App\Models\Patient;
+use App\Models\PaymentIncome;
 use Barryvdh\Debugbar\Twig\Extension\Dump;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -31,7 +32,11 @@ class IndexPagos extends Component
 
         $allPacientes = Patient::with('applyItems')->get();
         $res = ApplyItem::where('patient_id',51)->where('status',1)->get();
-        dump('Atencions => '. $res);
+        $res2 = ApplyItem::where('patient_id',51)->get();
+        dump('Atenciones => '. $res);
+        dump('AtencionesTotal => '. count($res));
+         dump('Atenciones => '. $res2);
+        dump('AtencionesTotal => '. count($res2));
 
         foreach($allPacientes as $paciente){
              $applyItems = ApplyItem::where('patient_id',$paciente->id)->where('status',1)->get();
@@ -50,6 +55,10 @@ class IndexPagos extends Component
                             $pendiente = 1;
                         }
                     }
+                }else{
+                    PaymentIncome::create([
+
+                    ]);
                 }
             }
        
