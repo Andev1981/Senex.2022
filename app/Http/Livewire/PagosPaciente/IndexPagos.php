@@ -49,7 +49,7 @@ class IndexPagos extends Component
                 }
             }
             
-            if(count($paciente->applyItems) > 0){
+            if(count($applyItems) > 0){
                 if($pendiente == 1){
                     $paciente->payment_status = 1;
                 }else{
