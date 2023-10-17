@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Paciente;
 
+use App\Models\ApplyItem;
 use App\Models\Patient;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -32,8 +33,12 @@ class ListadoPagosPaciente extends Component
         $allPacientes = Patient::with('applyItems')->get();
 
         foreach($allPacientes as $paciente){
+            $applyItems = ApplyItem::where('patient_id',$paciente->id)->where('status',1)->get();
             $pendiente = 0;
-            foreach($paciente->applyItems as $applyItem){
+
+            dd($applyItems);
+
+            foreach($applyItems as $applyItem){
                 
                 if( $applyItem->payment ){
                 

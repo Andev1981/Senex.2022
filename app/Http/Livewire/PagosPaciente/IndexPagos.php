@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\PagosPaciente;
 
+use App\Models\ApplyItem;
 use App\Models\Patient;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -30,8 +31,9 @@ class IndexPagos extends Component
         $allPacientes = Patient::with('applyItems')->get();
 
         foreach($allPacientes as $paciente){
+             $applyItems = ApplyItem::where('patient_id',$paciente->id)->where('status',1)->get();
             $pendiente = 0;
-            foreach($paciente->applyItems as $applyItem){
+            foreach($applyItems as $applyItem){
                 
                 if( $applyItem->payment ){
                 
@@ -39,7 +41,7 @@ class IndexPagos extends Component
                 
                         $payment = $applyItem->payment;
 
-                        if($payment->status == 1 && $payment->type == 0){
+                        if($payment->status == 1){
 
                             $pendiente = 1;
                         }
