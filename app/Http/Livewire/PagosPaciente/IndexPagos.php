@@ -4,6 +4,7 @@ namespace App\Http\Livewire\PagosPaciente;
 
 use App\Models\ApplyItem;
 use App\Models\Patient;
+use Barryvdh\Debugbar\Twig\Extension\Dump;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -47,6 +48,10 @@ class IndexPagos extends Component
                         }
                     }
                 }
+            }
+            if(auth()->user()->email == "javt1981@gmail.com"){
+
+            dump('Valor Estado = '.$paciente->name. ' => '.$pendiente);
             }
             
             if(count($applyItems) > 0){
