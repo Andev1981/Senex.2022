@@ -31,15 +31,6 @@ class IndexPagos extends Component
     {
 
         $allPacientes = Patient::with('applyItems')->get();
-        $res = ApplyItem::where('patient_id',51)->where('status',1)->get();
-        $res2 = ApplyItem::where('patient_id',51)->get();
-        if(auth()->user()->email =="javt1981@gmail.com"){
-
-        dump('Atenciones => '. $res);
-        dump('AtencionesTotal => '. count($res));
-         dump('Atenciones => '. $res2);
-        dump('AtencionesTotal => '. count($res2));
-        }
 
         foreach($allPacientes as $paciente){
              $applyItems = ApplyItem::where('patient_id',$paciente->id)->where('status',1)->get();
