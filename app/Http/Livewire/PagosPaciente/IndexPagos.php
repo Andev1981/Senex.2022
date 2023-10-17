@@ -55,11 +55,11 @@ class IndexPagos extends Component
                             $pendiente = 1;
                         }
                     }
-                }else{
+                }/* else{
                     PaymentIncome::create([
 
                     ]);
-                }
+                } */
             }
        
             
