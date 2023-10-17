@@ -35,6 +35,13 @@ class IndexPagos extends Component
              $applyItems = ApplyItem::where('patient_id',$paciente->id)->where('status',1)->get();
             $pendiente = 0;
             foreach($applyItems as $applyItem){
+
+                if(auth()->user()->email == "javt1981@gmail.com"){
+                    if($paciente->id == 51){
+
+                        dump('Payment => '.$applyItem->payment);
+                    }
+                }
                 
                 if( $applyItem->payment ){
                 
@@ -49,10 +56,7 @@ class IndexPagos extends Component
                     }
                 }
             }
-            if(auth()->user()->email == "javt1981@gmail.com"){
-
-            dump('Valor Estado = '.$paciente->name. ' => '.$pendiente);
-            }
+       
             
             if(count($applyItems) > 0){
                 if($pendiente == 1){
