@@ -37,7 +37,10 @@ class IndexPagos extends Component
             $pendiente = 0;
             foreach($applyItems as $applyItem){
 
-                
+                    if(auth()->user()->id == 1){
+                       dump($applyItem->payment); 
+                    }
+
                 if( $applyItem->payment ){
                 
                     if($pendiente == 0){
