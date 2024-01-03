@@ -80,8 +80,8 @@
 
                     </td>
                     <td>
-                        {{ $applyItem->paciente->name ?? '' }}
-                        {{ $applyItem->paciente->last_name ?? '' }}
+                        {{ $applyItem->patient->name ?? '' }}
+                        {{ $applyItem->patient->last_name ?? '' }}
                     </td>
 
                     <td>
