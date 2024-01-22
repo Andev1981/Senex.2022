@@ -13,17 +13,17 @@ class AtencionesItems extends Component
     public Application $application;
     public $openItem = 'hidden';
     public $paciente;
-    protected $listeners = ['success-item' => 'successItem','success-item-single' => 'successItem'];
+    protected $listeners = ['success-item' => 'successItem', 'success-item-single' => 'successItem'];
 
     public function render()
     {
-        $items = ApplyItem::where('application_id', $this->application->id)->with('applicationType')->orderBy('created_at','desc')->paginate(6);
+        $items = ApplyItem::where('application_id', $this->application->id)->with('applicationType')->orderBy('created_at', 'desc')->paginate(6);
         $atendidas = $items->where('status', 1);
         $pendientes = count($items) - count($atendidas);
 
-        $itemStatus = ApplyItem::where('application_id', $this->application->id)->where('status','>',0)->get();
+        $itemStatus = ApplyItem::where('application_id', $this->application->id)->where('status', '>', 0)->get();
 
-        if(count($itemStatus) > 0){
+        if (count($itemStatus) > 0) {
             $this->application->status = 1;
             $this->application->save();
         }
@@ -34,15 +34,14 @@ class AtencionesItems extends Component
     public function mount(Application $application)
     {
         $this->application = $application;
+        dump('Aplication: ', $this->application);
+        dump('User: ', $this->application->user);
         $this->paciente = $this->application->user;
     }
 
-    public function successItem(Application $application){
+    public function successItem(Application $application)
+    {
 
         $this->mount($application);
-
     }
-
-   
-
 }
