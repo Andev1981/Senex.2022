@@ -30,7 +30,7 @@ class Resumen extends Component
         return view('livewire.paciente.resumen');
     }
 
-    public function mount(Patient $paciente)
+    public function mount($paciente)
     {
         $this->paciente = $paciente;
         dump($paciente);
