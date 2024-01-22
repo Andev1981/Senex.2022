@@ -33,7 +33,6 @@ class Resumen extends Component
     public function mount($paciente)
     {
         $this->paciente = $paciente;
-        dump($paciente);
         $this->doctores = Doctor::orderBy('name', 'asc')->get();
 
         $this->answers = Answer::with(['question:id,name'])->whereBelongsTo($paciente)->get();
