@@ -96,7 +96,7 @@ class CrearSesion extends Component
         }
 
         $this->tipo_atenciones = ApplicationType::all();
-        $this->kines = Doctor::where('status', 1)->get();
+        $this->kines = Doctor::where('status', 1)->orderBy('name', 'ASC')->get();
         $this->paciente = $patient;
     }
 
