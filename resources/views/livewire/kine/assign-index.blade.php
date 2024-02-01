@@ -179,19 +179,24 @@
                                             @if ($loop->last && $selPaciente == '')
                                                 <tr
                                                     class="text-center uppercase border-b dark:border-gray-700 hover:bg-cyan-50 bg-cyan-200">
-                                                    <td colspan="3">
-                                                        <span class="text-slate-900 font-semibold py-2">Totales</span>
+                                                    <td colspan="2">
+                                                        <span class="py-2 font-semibold text-slate-900">Totales</span>
                                                     </td>
-                                                    <td class="text-slate-900 font-semibold py-2">
+                                                    <td>
+                                                        <span class="py-2 text-sm font-semibold text-slate-900">
+                                                            Total Atenciones : {{ count($applyItems) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-2 font-semibold text-slate-900">
                                                         ${{ number_format($totalPacientes, 0, ',', '.') ?? '0' }}.-
                                                     </td>
-                                                    <td class="text-slate-900 font-semibold py-3">
+                                                    <td class="py-3 font-semibold text-slate-900">
                                                         ${{ number_format($totalKine, 0, ',', '.') ?? '0' }}.-
                                                     </td>
-                                                    <td class="text-slate-900 font-semibold py-3">
+                                                    <td class="py-3 font-semibold text-slate-900">
                                                         ${{ number_format($totalPacientes - $totalKine, 0, ',', '.') ?? '0' }}.-
                                                     </td>
-                                                    <td class="text-slate-900 font-semibold py-2 flex">
+                                                    <td class="flex py-2 font-semibold text-slate-900">
                                                         @if ($totalKine > 0)
                                                             <a href="reporte-pdf/{{ $this->buscarFecha }}/{{ $this->kine->id }}"
                                                                 target="_blank" type="button"
