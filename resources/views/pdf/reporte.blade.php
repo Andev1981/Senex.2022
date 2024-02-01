@@ -107,7 +107,9 @@
                 </tr>
             @endforelse
             <tr>
-                <td colspan="3"></td>
+                <td colspan="3">
+                    Total Atenciones : {{ count($applyItems) }}
+                </td>
                 <td class="totalText">Total</td>
                 <td class="totalNumber"> ${{ number_format($totalKine, 0, ',', '.') }}.-</td>
             </tr>
