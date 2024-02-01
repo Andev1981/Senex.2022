@@ -111,7 +111,7 @@
                                                 </td>
                                                  <td class="px-1 py-1">{{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') ?? ''}}</td>
                                                 <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
-                                                    {{ $applyItem->patient->name }} {{ $applyItem->patient->last_name }}
+                                                    {{ $applyItem->patient->name ?? '' }} {{ $applyItem->patient->last_name ?? '' }}
                                                 </td>
                                                 <td scope="row" class="px-1 py-1 text-gray-900 font-sm text-['9px'] whitespace-nowrap dark:text-white">
                                                     {{ $applyItem->doctor->name ?? '' }} {{ $applyItem->doctor->last_name ?? '' }}
