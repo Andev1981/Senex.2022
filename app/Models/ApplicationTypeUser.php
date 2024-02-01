@@ -15,15 +15,23 @@ class ApplicationTypeUser extends Model
         'price',
     ];
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function application_type(){
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class);
+    }
+
+    public function application_type()
+    {
         return $this->belongsTo(ApplicationType::class);
     }
 
-     public function applyItems(){
+    public function applyItems()
+    {
         return $this->hasMany(ApplyItem::class);
     }
 }

@@ -2,9 +2,9 @@
     <div class="flex items-center pl-2 space-x-2">
         <x-button-edit wire:click="$set('openItem','')" innerText="" />
 
-        @if ($applyItem->status == 0 || $applyItem->status == 2 || $applyItem->status == 3)
-            <x-button-delete wire:click="$set('openDelItem','')" innerText=""/>
-        @endif 
+       {{--  @if ($applyItem->status == 0 || $applyItem->status == 2 || $applyItem->status == 3)
+        @endif  --}}
+        <x-button-delete wire:click="$set('openDelItem','')" innerText=""/>
     </div>
     <div class="{{ $openItem }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center w-full md:inset-0 h-modal md:h-full flex">
         <div class="relative w-full h-full p-4 md:max-w-3xl md:h-auto">
