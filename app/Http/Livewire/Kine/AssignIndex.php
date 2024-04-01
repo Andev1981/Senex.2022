@@ -81,20 +81,18 @@ class AssignIndex extends Component
 		$this->buscarFecha =  $this->year . '-' . $this->month;
 
 		if ($this->selPaciente != 0) {
-			$this->applyItems = ApplyItem::with(['patient' => function ($query) {
-				$query->orderBy('name', 'asc');
-			}], 'application', 'doctor')
+			$applyItems = ApplyItem::with('patient', 'application', 'doctor')
 				->where('doctor_id', $this->kine->id)
 				->where('patient_id', $this->selPaciente)
 				->where('status', 1)
 				->where('fecha_atencion', 'like', $this->buscarFecha . '%')->get();
+			$this->applyItems = $applyItems->orderBy('name', 'asc');
 		} else {
-			$this->applyItems = ApplyItem::with(['patient' => function ($query) {
-				$query->orderBy('name', 'asc');
-			}], 'application', 'doctor')
+			$applyItems = ApplyItem::with('patient', 'application', 'doctor')
 				->where('doctor_id', $this->kine->id)
 				->where('status', 1)
 				->where('fecha_atencion', 'like', $this->buscarFecha . '%')->get();
+			$this->applyItems = $applyItems->orderBy('name', 'asc');
 		}
 
 
