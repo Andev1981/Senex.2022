@@ -87,14 +87,24 @@ class AssignIndex extends Component
 				->where('doctor_id', $this->kine->id)
 				->where('patient_id', $this->selPaciente)
 				->where('status', 1)
-				->where('fecha_atencion', 'like', $this->buscarFecha . '%')->get();
+				->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
+					$query->from('patients')
+						->whereColumn('patients.id', '=', 'apply_items.patient_id')
+						->select('name')
+						->limit(1);
+				})->get();
 		} else {
 			$this->applyItems = ApplyItem::with(['patient' => function ($query) {
 				$query->orderBy('name', 'asc');
 			}], 'application', 'doctor')
 				->where('doctor_id', $this->kine->id)
 				->where('status', 1)
-				->where('fecha_atencion', 'like', $this->buscarFecha . '%')->get();
+				->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
+					$query->from('patients')
+						->whereColumn('patients.id', '=', 'apply_items.patient_id')
+						->select('name')
+						->limit(1);
+				})->get();
 		}
 
 
