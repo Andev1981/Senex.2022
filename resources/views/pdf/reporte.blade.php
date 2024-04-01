@@ -65,8 +65,8 @@
     <table>
         <thead>
             <tr>
-                <th>Fecha</th>
                 <th>Paciente</th>
+                <th>Fecha</th>
                 <th>Tipo</th>
                 <th>Sesión</th>
                 <th>Valor</th>
@@ -76,12 +76,12 @@
             @forelse ($applyItems as $applyItem)
                 <tr>
                     <td scope="row">
-                        {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
-
-                    </td>
-                    <td>
                         {{ $applyItem->patient->name ?? '' }}
                         {{ $applyItem->patient->last_name ?? '' }}
+                    </td>
+                    <td>
+                        {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
+
                     </td>
 
                     <td>

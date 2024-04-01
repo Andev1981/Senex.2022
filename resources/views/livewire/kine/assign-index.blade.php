@@ -133,6 +133,9 @@
                                                     {{ $applyItem->patient->name ?? '' }}
                                                     {{ $applyItem->patient->last_name ?? '' }}
                                                 </td class="px-1 py-1">
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') ?? '' }}
+                                                </td>
 
                                                 <td>
                                                     {{ $applyItem->applicationType->name ?? '' }}
