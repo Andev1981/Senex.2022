@@ -92,7 +92,7 @@ class AssignIndex extends Component
 						->whereColumn('patients.id', '=', 'apply_items.patient_id')
 						->select('name')
 						->limit(1);
-				})->get();
+				})->orderBy('fecha_atencion', 'asc')->get();
 		} else {
 			$this->applyItems = ApplyItem::with(['patient' => function ($query) {
 				$query->orderBy('name', 'asc');
@@ -104,7 +104,7 @@ class AssignIndex extends Component
 						->whereColumn('patients.id', '=', 'apply_items.patient_id')
 						->select('name')
 						->limit(1);
-				})->get();
+				})->orderBy('fecha_atencion', 'asc')->get();
 		}
 
 

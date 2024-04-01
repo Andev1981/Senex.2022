@@ -32,7 +32,7 @@ class ReportePdfController extends Controller
                 ->whereColumn('patients.id', '=', 'apply_items.patient_id')
                 ->select('name')
                 ->limit(1);
-        })->get();
+        })->orderBy('fecha_atencion', 'asc')->get();
 
 
         $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
