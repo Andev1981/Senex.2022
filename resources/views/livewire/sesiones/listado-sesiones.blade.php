@@ -95,7 +95,7 @@
                                                 <th scope="col" class="px-4 py-3">
                                                     Estado
                                                 </th>
-                                               
+                      
                                             </tr>
                                         </thead>
                                         <tbody>
