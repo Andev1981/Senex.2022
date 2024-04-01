@@ -82,11 +82,11 @@ class AssignIndex extends Component
 
         if ($this->selPaciente != 0) {
             $this->applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orerBy('name', 'asc');
+                $query->orderBy('name', 'asc');
             }], 'application', 'doctor')->where('doctor_id', $this->kine->id)->where('patient_id', $this->selPaciente)->where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('created_at', 'desc')->get();
         } else {
             $this->applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orerBy('name', 'asc');
+                $query->orderBy('name', 'asc');
             }], 'application', 'doctor')->where('doctor_id', $this->kine->id)->where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('created_at', 'desc')->get();
         }
 
