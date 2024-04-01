@@ -20,37 +20,37 @@
                         <tr class="text-left">
                             <th scope="col" class="px-4 py-3">Nombre</th>
                             <th scope="col" class="px-4 py-3">Descripción</th>
+                            <th scope="col" class="px-4 py-3">Estado</th>
                             <th colspan="2" class="px-4 py-3">
                                 <span class="sr-only">Actions</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                      
                         @if ($types->count())
-                              
-                        @foreach ($types as $type)
-                        <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                            <td class="items-center flex-1 py-2 pl-2 mx-2 font-medium uppercase">
-                               {{  $type->name  }}
-                            </td>
-                            <td class="px-6 py-4 uppercase">
-                            {{      $type->description }}
-                            </td>
-                            <td colspan="2" class="px-6 py-4">
-                            @livewire('types.create-type', ['type' => $type], key($type->id))
-                            </td>
-                        </tr>
-                        @endforeach
-                               
+                            @foreach ($types as $type)
+                            <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                                <td class="items-center flex-1 py-2 pl-2 mx-2 font-medium uppercase">
+                                {{  $type->name  }}
+                                </td>
+                                <td class="px-6 py-4 uppercase">
+                                {{      $type->description }}
+                                </td>
+                                <td class="px-6 py-4 uppercase">
+                                    {{      $type->estado == 1 ? 'Activo' : 'Inactivo' }}
+                                    </td>
+                                <td colspan="2" class="px-6 py-4">
+                                	@livewire('types.create-type', ['type' => $type], key($type->id))
+                                </td>
+                            </tr>
+                            @endforeach    
                         @else
-                        <tr class="text-center">
-                            <td colspan="6 uppercase">
-                                No hay datos aún...
-                            </td>
-                        </tr>
-                        @endif
-                            
+													<tr class="text-center">
+															<td colspan="6 uppercase">
+																	No hay datos aún...
+															</td>
+													</tr>
+                        @endif   
                     </tbody>
                 </table>
             </div>

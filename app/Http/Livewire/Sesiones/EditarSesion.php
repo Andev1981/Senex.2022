@@ -69,7 +69,7 @@ class EditarSesion extends Component
         $this->numero_sesion = $applyItem->numero_sesion;
         $this->countApplies = ApplyItem::where('application_id', $this->application->id)->count();
         $this->kines = Doctor::where('status', 1)->orderBy('name', 'ASC')->get();
-        $this->types = ApplicationType::all();
+        $this->types = ApplicationType::where('estado', 1)->get();
     }
 
     public function save()

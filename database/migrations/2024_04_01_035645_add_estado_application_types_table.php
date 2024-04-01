@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('application_types', function (Blueprint $table) {
-            $table->string('estado')->nullable();
+            $table->tinyInteger('estado')->default(1)->comment('0:Inactivo,1:Activo')->nullable();
         });
     }
 

@@ -11,16 +11,16 @@ class ApplicationType extends Model
     protected $fillable = [
         'name',
         'description',
+        'estado'
     ];
 
     public function items()
     {
-        return $this->hasMany(ApplyItem::class,'application_type_id','id');
+        return $this->hasMany(ApplyItem::class, 'application_type_id', 'id');
     }
 
     public function application_type_user()
     {
         return $this->hasMany(ApplicationTypeUser::class);
     }
-
 }
