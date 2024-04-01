@@ -27,8 +27,12 @@ class ReportePdfController extends Controller
         // Obtener los datos
         $applyItems = ApplyItem::with('assign', ['patient' => function ($query) {
             $query->orderBy('name', 'asc');
-        }])->where('fecha_atencion', 'like', $buscarFecha . '%')
-            ->where('status', 1)->where('doctor_id', $kine)->get();
+        }])->where('fecha_atencion', 'like', $buscarFecha . '%')->where('status', 1)->where('doctor_id', $kine)->orderByDesc(function ($query) {
+            $query->from('patients')
+                ->whereColumn('patients.id', '=', 'apply_items.patient_id')
+                ->select('name')
+                ->limit(1);
+        })->get();
 
 
         $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
