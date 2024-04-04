@@ -30,56 +30,9 @@ class IndexPagos extends Component
     public function render()
     {
 
-        $allPacientes = Patient::with('applyItems')->get();
-
-        foreach ($allPacientes as $paciente) {
-            $applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->get();
-            $pendiente = 0;
-            foreach ($applyItems as $applyItem) {
-
-                /*         if(auth()->user()->id == 1){
-                       dump($applyItem->payment); 
-                    } */
-
-                if ($applyItem->payment) {
-
-                    if ($pendiente == 0) {
-
-                        $payment = $applyItem->payment;
-
-                        if ($payment->status == 1) {
-
-                            $pendiente = 1;
-                        }
-                    }
-                }/* else{
-                    PaymentIncome::create([
-
-                    ]);
-                } */
-            }
-
-
-            if (count($applyItems) > 0) {
-                if ($pendiente == 1) {
-                    $paciente->payment_status = 1;
-                } else {
-                    $paciente->payment_status = 2;
-                }
-            } else {
-                $paciente->payment_status = 3;
-            }
-
-            $paciente->save();
-            $pendiente = 0;
-        }
-
-
-
-
         $pacientes = Patient::where(function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-        })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+        })->where('status', 1)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
 
         return view('livewire.pagos-paciente.index-pagos', compact('pacientes'));
     }

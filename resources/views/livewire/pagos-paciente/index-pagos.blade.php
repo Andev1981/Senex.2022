@@ -2,7 +2,7 @@
     <section class="p-2 dark:bg-gray-900 sm:p-5">
         <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
             <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
-                <div class="w-full flex flex-row align-middle justify-between items-center p-4 md:flex-row md:space-y-0 md:space-x-4">
+                <div class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
                     <div class="flex items-center">
                         <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
                         <label class="text-lg font-semibold">Listado de Pacientes</label>
@@ -129,6 +129,11 @@
                                     <span class="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
                                         <span class="w-2 h-2 mr-1 text-white bg-green-500 rounded-full"></span>
                                         Pagos&nbsp;Ok
+                                    </span>
+                                    @else
+                                    <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
+                                        <span class="w-2 h-2 mr-1 bg-red-500 rounded-full"></span>
+                                        -------
                                     </span>
                                     @endif
                                 </td>

@@ -13,7 +13,7 @@ class ListadoPagosPaciente extends Component
     use WithPagination;
     public $selectedPaciente;
     public $search;
-    protected $listeners = ['success' => 'render','success-paciente' => 'render'];
+    protected $listeners = ['success' => 'render', 'success-paciente' => 'render'];
     protected $queryString = ['search'];
     public $sort = 'payment_status';
     public $direction = 'asc';
@@ -30,51 +30,49 @@ class ListadoPagosPaciente extends Component
     public function render()
     {
 
-        $allPacientes = Patient::with('applyItems')->get();
+        /*  $allPacientes = Patient::with('applyItems')->where('status', 1)->get(); */
 
-        foreach($allPacientes as $paciente){
-            $applyItems = ApplyItem::where('patient_id',$paciente->id)->where('status',1)->get();
+        /*     foreach ($allPacientes as $paciente) {
+            $applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->get();
             $pendiente = 0;
 
-            dd($applyItems);
+            foreach ($applyItems as $applyItem) {
 
-            foreach($applyItems as $applyItem){
-                
-                if( $applyItem->payment ){
-                
-                    if($pendiente == 0){
-                
+                if ($applyItem->payment) {
+
+                    if ($pendiente == 0) {
+
                         $payment = $applyItem->payment;
 
-                        if($payment->status == 1 && $payment->type == 0){
+                        if ($payment->status == 1 && $payment->type == 0) {
 
                             $pendiente = 1;
                         }
                     }
                 }
             }
-            
-            if(count($paciente->applyItems) > 0){
-                if($pendiente == 1){
+
+            if (count($paciente->applyItems) > 0) {
+                if ($pendiente == 1) {
                     $paciente->payment_status = 1;
-                }else{
+                } else {
                     $paciente->payment_status = 2;
                 }
-            }else{
-                    $paciente->payment_status = 3;
+            } else {
+                $paciente->payment_status = 3;
             }
-            
+
             $paciente->save();
             $pendiente = 0;
-        }
-            
+        } */
 
-      
+
+
 
         $pacientes = Patient::where(function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-            })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            
+            $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+        })->where('status', 1)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+
         return view('livewire.paciente.listado-pagos-paciente', compact('pacientes'));
     }
 
@@ -92,13 +90,15 @@ class ListadoPagosPaciente extends Component
         }
     }
 
-    public function openDeleteModal($paciente){
-        $this->selectedPaciente ='';
+    public function openDeleteModal($paciente)
+    {
+        $this->selectedPaciente = '';
         $this->selectedPaciente = $paciente;
         $this->openDelPaciente = '';
     }
 
-    public function deletePaciente(){
+    public function deletePaciente()
+    {
         $pacienteDel = Patient::find($this->selectedPaciente['id']);
         $pacienteDel->delete();
         $this->openDelPaciente = 'hidden';
