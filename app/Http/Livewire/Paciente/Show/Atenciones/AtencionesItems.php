@@ -34,7 +34,7 @@ class AtencionesItems extends Component
     public function mount(Application $application)
     {
         $this->application = $application;
-        $this->paciente = $this->application->user;
+        $this->paciente = $this->application->patient;
     }
 
     public function successItem(Application $application)
