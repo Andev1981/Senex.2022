@@ -35,6 +35,8 @@ class Resumen extends Component
         $this->paciente = $paciente;
         $this->doctores = Doctor::orderBy('name', 'asc')->get();
 
+        dd($paciente, $this->doctores);
+
         $this->answers = Answer::with(['question:id,name'])->whereBelongsTo($paciente)->get();
         $this->cssTratamientos = $this->active;
         $this->cssApoderados = $this->inactive;
