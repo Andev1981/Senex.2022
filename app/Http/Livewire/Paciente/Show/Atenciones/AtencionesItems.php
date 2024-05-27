@@ -35,6 +35,8 @@ class AtencionesItems extends Component
     {
         $this->application = $application;
         $this->paciente = $this->application->user;
+
+        dump($this->application);
     }
 
     public function successItem(Application $application)
