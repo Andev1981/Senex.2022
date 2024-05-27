@@ -22,17 +22,6 @@
       'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
     ),
   ),
-  'freshwork/chilean-bundle' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Freshwork\\ChileanBundle\\Laravel\\ChileanBundleServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Rut' => 'Freshwork\\ChileanBundle\\Facades\\Rut',
-    ),
-  ),
   'kdion4891/laravel-livewire-tables' => 
   array (
     'providers' => 
