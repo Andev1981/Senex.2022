@@ -34,8 +34,6 @@ class AtencionesItems extends Component
     public function mount(Application $application)
     {
         $this->application = $application;
-        dump('Aplication 1: ', $this->application);
-        dump('User 2: ', $this->application->user);
         $this->paciente = $this->application->user;
     }
 
