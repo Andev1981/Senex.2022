@@ -5,7 +5,7 @@
                 <div class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
                     <div class="flex items-center">
                         <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
-                        <label class="text-lg font-semibold">Listado de Pacientes 1</label>
+                        <label class="text-lg font-semibold">Listado de Pacientes</label>
                     </div>
                     <div>
                         <button wire:loading.remove wire:target="verificarPagos" wire:click="verificarPagos" class="flex items-center text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-2 py-1.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800" type="button">
