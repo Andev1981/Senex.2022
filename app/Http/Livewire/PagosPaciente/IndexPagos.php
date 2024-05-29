@@ -24,13 +24,11 @@ class IndexPagos extends Component
 		$this->resetPage();
 	}
 
-
 	public function render()
 	{
-
 		$pacientes = Patient::where(function ($query) {
 			$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-		})->orderBy($this->sort, $this->direction)->orderBy('status', 'desc')->paginate($this->quantity);
+		})->where('status', 1)->orderBy($this->sort, $this->direction)->orderBy('status', 'desc')->paginate($this->quantity);
 
 		return view('livewire.pagos-paciente.index-pagos', compact('pacientes'));
 	}
@@ -60,6 +58,14 @@ class IndexPagos extends Component
 	{
 		$pacienteDel = Patient::find($this->selectedPaciente['id']);
 		$pacienteDel->status = 0;
+		$pacienteDel->save();
+		$this->openDelPaciente = 'hidden';
+	}
+
+	public function activarPaciente()
+	{
+		$pacienteDel = Patient::find($this->selectedPaciente['id']);
+		$pacienteDel->status = 1;
 		$pacienteDel->save();
 		$this->openDelPaciente = 'hidden';
 	}
