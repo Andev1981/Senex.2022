@@ -25,6 +25,8 @@ class ListadoSesiones extends Component
     public $direction = 'desc';
     public $reloadStatus = 0;
     public $quantity = 10;
+    public $dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+    public $dia = 0;
 
     public function render()
     {
@@ -37,8 +39,15 @@ class ListadoSesiones extends Component
             $this->reloadStatus = 1;
         }
 
-        $this->buscarFecha =  $this->year . '-' . $this->month . '-';
+        if ($this->dia == 0) {
+            $this->buscarFecha =  $this->year . '-' . $this->month . '-';
+        } else {
+
+            $this->buscarFecha =  $this->year . '-' . $this->month . '-' . $this->dia . '';
+        }
         if ($this->selPaciente != 0 && $this->selKine != 0) {
+
+            dd($this->buscarFecha);
 
             $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
         } elseif ($this->selPaciente != 0) {
