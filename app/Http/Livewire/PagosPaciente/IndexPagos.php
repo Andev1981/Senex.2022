@@ -18,17 +18,34 @@ class IndexPagos extends Component
 	public $direction = 'asc';
 	public $openDelPaciente = 'hidden';
 	public $quantity = 10;
+	public $inactivos = 0;
 
 	public function updatingSearch()
 	{
 		$this->resetPage();
 	}
 
+	public function selectItem()
+	{
+		if ($this->inactivos == 1) {
+			$this->inactivos = 0;
+		} else {
+			$this->inactivos = 1;
+		}
+	}
+
 	public function render()
 	{
-		$pacientes = Patient::where(function ($query) {
-			$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-		})->where('status', 1)->orderBy($this->sort, $this->direction)->orderBy('status', 'desc')->paginate($this->quantity);
+		if ($this->inactivos == 1) {
+			$pacientes = Patient::where(function ($query) {
+				$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+			})->where('status', 0)->orderBy($this->sort, $this->direction)->orderBy('status', 'asc')->paginate($this->quantity);
+		} else {
+			$pacientes = Patient::where(function ($query) {
+				$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+			})->where('status', 1)->orderBy($this->sort, $this->direction)->orderBy('status', 'desc')->paginate($this->quantity);
+		}
+
 
 		return view('livewire.pagos-paciente.index-pagos', compact('pacientes'));
 	}
