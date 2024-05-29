@@ -30,7 +30,7 @@ class IndexPagos extends Component
 
 		$pacientes = Patient::where(function ($query) {
 			$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-		})->where('status', 1)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+		})->orderBy($this->sort, $this->direction)->orderBy('updated_at', 'desc')->orderBy('status', 'desc')->paginate($this->quantity);
 
 		return view('livewire.pagos-paciente.index-pagos', compact('pacientes'));
 	}
