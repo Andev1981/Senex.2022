@@ -13,7 +13,7 @@ class ListadoPacientes extends Component
     use WithPagination;
     public $selectedPaciente;
     public $search;
-    protected $listeners = ['success' => 'render', 'success-paciente' => 'render','success-item-single' => 'render','success-item' => 'render','success-atencion' => 'render'];
+    protected $listeners = ['success' => 'render', 'success-paciente' => 'render', 'success-item-single' => 'render', 'success-item' => 'render', 'success-atencion' => 'render'];
     protected $queryString = ['search'];
     public $sort = 'updated_at';
     public $direction = 'desc';
@@ -27,14 +27,14 @@ class ListadoPacientes extends Component
 
     public function render()
     {
-         $pacientes = Patient::with('applications')->where(function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-            })->orderBy($this->sort, $this->direction)->paginate(10);
+        $pacientes = Patient::with('applications')->where(function ($query) {
+            $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+        })->where('status', 1)->orderBy($this->sort, $this->direction)->paginate(10);
 
         return view('livewire.sesiones.listado-pacientes', compact('pacientes'));
     }
 
-    
+
     public function order($sort)
     {
         if ($this->sort === $sort) {

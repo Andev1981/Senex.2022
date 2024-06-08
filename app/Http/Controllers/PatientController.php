@@ -20,11 +20,11 @@ class PatientController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-   
+
 
     public function index()
     {
-        $pacientes = Patient::orderBy('id', 'DESC')->get();
+        $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
         return view('admin.pacientes.index', compact('pacientes'));
     }
 
@@ -46,69 +46,68 @@ class PatientController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         $this->validate($request, [
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
-            'rut' =>'required',
+            'rut' => 'required',
             'birthday' => 'required',
             'phone' => 'required|max:12',
             'direccion' => 'required|max:200',
             'comuna' => 'required|max:75',
         ]);
         $input = $request->all();
-        
+
         $input['password'] = Hash::make($input['password']);
         $input['state'] = 1;
-        
-        $user = User::create($input);  
-        $paciente = Patient::create([ 
+
+        $user = User::create($input);
+        $paciente = Patient::create([
             'user_id' => $user->id,
             'phone' => $request->get('phone'),
             'direccion' => $request->get('direccion'),
             'comuna' => $request->get('comuna'),
-         ]);
-         
+        ]);
+
         $success = $user->assignRole('Paciente');
 
         $questions = QuizzQuestion::all();
-        foreach($questions as $question){
+        foreach ($questions as $question) {
             QuizzAnswer::create([
                 'quizz_question_id' => $question->id
             ]);
         }
-        
 
-        if($success){
-            toast('Ha creado correctamente al paciente','success');
-        }else{
-            toast('Ha ocurrido un problema, inténtelo nuevamente','danger');
+
+        if ($success) {
+            toast('Ha creado correctamente al paciente', 'success');
+        } else {
+            toast('Ha ocurrido un problema, inténtelo nuevamente', 'danger');
             return back();
         }
-        return redirect()->route('pacientes.show',[$paciente]);        
+        return redirect()->route('pacientes.show', [$paciente]);
     }
 
     public function preguntas(Request $request)
     {
-       
-       $pat = Patient::where('id','=',$request->paciente)->first();
-       $xsxsxs = $pat->findOrFail($request->paciente);
+
+        $pat = Patient::where('id', '=', $request->paciente)->first();
+        $xsxsxs = $pat->findOrFail($request->paciente);
         $xsxsxs->p1 = $request->p1;
         $xsxsxs->p2 = $request->p2;
         $xsxsxs->p3 = $request->p3;
         $xsxsxs->p4 = $request->p4;
         $xsxsxs->p5 = $request->p5;
-    
+
         $success = $xsxsxs->save();
 
-        if($success){
-            toast('Paciente agregado correctamente !','success');
-        }else{
-            toast('Ha ocurrido un problema, inténtelo nuevamente','danger');
+        if ($success) {
+            toast('Paciente agregado correctamente !', 'success');
+        } else {
+            toast('Ha ocurrido un problema, inténtelo nuevamente', 'danger');
         }
-       
-        return redirect()->route('pacientes.index');
 
+        return redirect()->route('pacientes.index');
     }
 
     /**
@@ -121,12 +120,12 @@ class PatientController extends Controller
     {
 
         dd($patient);
-        $solicitudes = Solicitud::where('patient_id',$patient)->orderBy('id','DESC')->paginate(5);
-        $pagos = Payment::where('user_id',$patient->user->id)->orderBy('id','DESC')->get();
+        $solicitudes = Solicitud::where('patient_id', $patient)->orderBy('id', 'DESC')->paginate(5);
+        $pagos = Payment::where('user_id', $patient->user->id)->orderBy('id', 'DESC')->get();
 
         //dd($paciente, $solicitudes, $pagos);
 
-        return view('admin.pacientes.show',compact('paciente', 'solicitudes','pagos'));
+        return view('admin.pacientes.show', compact('paciente', 'solicitudes', 'pagos'));
     }
 
     /**

@@ -65,7 +65,7 @@ class AssignIndex extends Component
 			$this->status = 1;
 		}
 
-		$this->pacientes = Patient::orderBy('name', 'asc')->get();
+		$this->pacientes = Patient::where('status', 1)->orderBy('name', 'asc')->get();
 		$this->buscarFecha = Carbon::now();
 		$this->month = $this->buscarFecha->format('m');
 		$this->year = $this->buscarFecha->format('Y');
