@@ -14,10 +14,10 @@
                     @if ($estado == 0)
                         Creando Sesión
                     @else
-                         Creando Tratamiento y primera sesión
+                         Creando Tratamiento y primera sesión...
                     @endif
                     </h3>
-                    <span class="font-semibold text-lg">{{ $paciente->name }} {{ $paciente->last_name}}</span>
+                    <span class="text-lg font-semibold">{{ $paciente->name }} {{ $paciente->last_name}}</span>
                 </div>
                 <x-button-modal-close wire:click="$set('openItemCreate','hidden')" />
                 </div>

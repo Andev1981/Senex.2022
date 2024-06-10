@@ -9,8 +9,7 @@
                         
                     </div>
                     <div class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
-                    @livewire('paciente.show.atenciones.atenciones-crear',['paciente' => $paciente])
-
+                   {{--  @livewire('paciente.show.atenciones.atenciones-crear',[$paciente]) --}}
                     </div>
                 </div>
                 <div class="w-full overflow-x-auto">
@@ -22,7 +21,6 @@
                                 <th scope="col" class="px-6 py-3">Estado</th>
                                 <th scope="col" class="px-6 py-3">Derivado</th>
                                 <th scope="col" class="px-6 py-3">Desde</th>
-                                <th scope="col" class="px-6 py-3">Comentarios</th>
                                 <th colspan="3" scope="col" class="px-6 py-3 sr-only">
                                     ver
                                 </th>
@@ -37,7 +35,7 @@
                                         <td class="px-6 py-4 text-center uppercase">
                                             @if (count($application->items) > 0)
                                                 
-                                                {{ $application->items[(count($application->items)-1)]->doctor->name ?? '' }}
+                                                {{ $application->items[(count($application->items)-1)]->doctor->name ?? 'Sin Sesiones creadas' }}
                                                 {{ $application->items[(count($application->items)-1)]->doctor->last_name ?? '' }}
                                             @endif
                                         </td>
@@ -69,12 +67,9 @@
                                         <td class="px-6 py-4 text-center uppercase">
                                             {{ $application->desde ?? '' }}
                                         </td>
-                                        <td class="px-6 py-4 text-center uppercase">
-                                        {{ $application->comments ?? '' }}
-                                        </td>
                                         <td class="flex px-6 py-4 uppercase">
                                      
-                                                @livewire('paciente.show.atenciones.atenciones-editar', ['application' => $application], key($application->id))
+                                                @livewire('paciente.show.atenciones.atenciones-editar', [$application], key($application->id))
                                             
                                         </td>
                                     </tr>

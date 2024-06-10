@@ -30,7 +30,7 @@ class AtencionesCrear extends Component
         $kine = "",
         $valor,
         $forma_de_pago,
-        $errorNumSesion=false,
+        $errorNumSesion = false,
         $status = '',
         $fecha_atencion,
         $applyUser;
@@ -50,14 +50,14 @@ class AtencionesCrear extends Component
 
     public function render()
     {
-      
+
         return view('livewire.paciente.show.atenciones.atenciones-crear');
     }
 
-    public function mount(Patient $user)
+    public function mount($user)
     {
         $this->paciente = $user;
-        $this->doctors = Doctor::orderBy('name','asc')->get();
+        $this->doctors = Doctor::orderBy('name', 'asc')->get();
         $this->tipo_atenciones = ApplicationType::all();
     }
 
@@ -66,24 +66,25 @@ class AtencionesCrear extends Component
 
         $this->validate();
 
-          $this->applyUser = ApplicationTypeUser::where('doctor_id',$this->kine)->where('application_type_id',$this->tipo_atencion)->first();
+        $this->applyUser = ApplicationTypeUser::where('doctor_id', $this->kine)->where('application_type_id', $this->tipo_atencion)->first();
 
-          if(!$this->applyUser){
+        if (!$this->applyUser) {
             $this->applyUser = ApplicationTypeUser::create([
                 'user_id' => $this->kine,
                 'doctor_id' => $this->kine,
                 'application_type_id' => $this->tipo_atencion,
                 'price' => $this->valor,
             ]);
-          }
+        }
 
-       
+
 
         $application = Application::create([
             'derivado' => $this->profesional_derivacion,
             'desde' => $this->lugar_derivacion,
             'comments' => $this->mensaje,
-            'user_id' => $this->paciente->id,
+            'user_id' => $this->kine,
+            'patient_id' => $this->paciente->id,
             'status' => $this->status,
             'type_payment' => $this->forma_de_pago,
             'type_value' => 0,
@@ -108,29 +109,29 @@ class AtencionesCrear extends Component
         }
 
 
-            $apply = ApplyItem::create([
-                'user_id' => $this->kine,
-                'application_id' => $application->id,
-                'fecha_atencion' => $this->fecha_atencion,
-                'application_type_id' => $this->tipo_atencion,
-                'application_type_user_id' => $this->applyUser->id,
-                'price' => $this->valor,
-                'numero_sesion' => 1,
-            ]);
+        $apply = ApplyItem::create([
+            'user_id' => $this->kine,
+            'application_id' => $application->id,
+            'fecha_atencion' => $this->fecha_atencion,
+            'application_type_id' => $this->tipo_atencion,
+            'application_type_user_id' => $this->applyUser->id,
+            'price' => $this->valor,
+            'numero_sesion' => 1,
+        ]);
 
-            Assign::create([
-                'user_id' => $this->kine,
-                'application_id' => $application->id,
-                'apply_item_id' => $apply->id,
-                'application_type_user_id' =>  $this->applyUser->id,
-            ]);
+        Assign::create([
+            'user_id' => $this->kine,
+            'application_id' => $application->id,
+            'apply_item_id' => $apply->id,
+            'application_type_user_id' =>  $this->applyUser->id,
+        ]);
 
-            $this->saveActivity();
-     
-            $this->clear();
-            $this->dispatchBrowserEvent('swal-success');
-            $this->emit('success-atencion');
-            $this->openCrearAtencion = 'hidden';
+        $this->saveActivity();
+
+        $this->clear();
+        $this->dispatchBrowserEvent('swal-success');
+        $this->emit('success-atencion');
+        $this->openCrearAtencion = 'hidden';
     }
 
     public function clear()
@@ -146,11 +147,12 @@ class AtencionesCrear extends Component
         ]);
     }
 
-    public function saveActivity(){
+    public function saveActivity()
+    {
 
-         Activity::create([
-                'user_id' => auth()->user()->id,
-                'detail' => 'Se crea nueva atención para usuario ' .  $this->paciente->name .' ' . $this->paciente->last_name,
-            ]);
+        Activity::create([
+            'user_id' => auth()->user()->id,
+            'detail' => 'Se crea nueva atención para usuario ' .  $this->paciente->name . ' ' . $this->paciente->last_name,
+        ]);
     }
 }

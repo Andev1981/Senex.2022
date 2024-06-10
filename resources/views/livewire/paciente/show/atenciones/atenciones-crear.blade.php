@@ -16,7 +16,7 @@
                 <!-- Modal header -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">
-                        Creando Tratamiento y primera sesión
+                        Creando Tratamiento y primera sesión.
                     </h3>
                     <button wire:click="$set('openCrearAtencion','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -93,9 +93,7 @@
                                     <option value="0">Por sesión</option>
                                     <option value="1">Por tratamiento</option>
                                     <option value="2">Mensual por sesiones</option>
-                                    <option value="2">50% y 50%</option>
-                                    <option value="3">Tarjeta de Crédito</option>
-                                    <option value="4">Abonos parciales</option>
+                                    <option value="3">Por Adelantado</option>
                                 </select>
                             </div>
                             @error('forma_de_pago')

@@ -1,5 +1,5 @@
 <div>
-    <div class="flex items-center space-x-2 pl-2">
+    <div class="flex items-center pl-2 space-x-2">
 
             @livewire('paciente.show.atenciones.atenciones-items', ['application' => $application], key($application->id))
 
@@ -62,15 +62,7 @@
                                     @if ($forma_de_pago == 3)
                                         selected
                                     @endif
-                                    >50% y 50%</option>
-                                    <option value="4"
-                                    @if ($forma_de_pago == 4)
-                                        selected
-                                    @endif>Tarjeta de Crédito</option>
-                                    <option value="5"
-                                    @if ($forma_de_pago == 5)
-                                        selected
-                                    @endif>Abonos parciales</option>
+                                    >Por adelantado</option>
                                 </select>
                             </div>
                             @error('forma_de_pago')

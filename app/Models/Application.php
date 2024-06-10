@@ -13,7 +13,7 @@ class Application extends Model
         'derivado',
         'desde',
         'comments',
-        'user_id',//User Paciente
+        'user_id', //User Doctor
         'patient_id',
         'status',
         'type_payment',
