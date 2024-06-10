@@ -20,6 +20,8 @@
                                 <th scope="col" class="px-6 py-3">Kine</th>
 
                                 <th scope="col" class="px-6 py-3">Estado</th>
+                                <th scope="col" class="px-6 py-3">Derivado</th>
+                                <th scope="col" class="px-6 py-3">Desde</th>
                                 <th scope="col" class="px-6 py-3">Comentarios</th>
                                 <th colspan="3" scope="col" class="px-6 py-3 sr-only">
                                     ver
@@ -40,7 +42,7 @@
                                             @endif
                                         </td>
 
-                                        <td class="px-6 py-4 text-center  uppercase">
+                                        <td class="px-6 py-4 text-center uppercase">
                                             <div>
                                                 @if ($application->status === 0)
                                                 <span class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
@@ -61,10 +63,16 @@
                                             </div>
 
                                         </td>
-                                        <td class="px-6 py-4 text-center  uppercase">
+                                        <td class="px-6 py-4 text-center uppercase">
+                                            {{ $application->derivado ?? '' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-center uppercase">
+                                            {{ $application->desde ?? '' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-center uppercase">
                                         {{ $application->comments ?? '' }}
                                         </td>
-                                        <td class="flex px-6 py-4  uppercase">
+                                        <td class="flex px-6 py-4 uppercase">
                                      
                                                 @livewire('paciente.show.atenciones.atenciones-editar', ['application' => $application], key($application->id))
                                             
