@@ -39,12 +39,12 @@ class AtencionesEditar extends Component
     public function mount($application)
     {
         dump($application);
-        $this->application = $application;
+        /*       $this->application = $application;
         $this->paciente = $application->patient;
         $this->status = $application->status;
         $this->lugar_derivacion = $application->desde;
         $this->profesional_derivacion = $application->derivado;
-        $this->forma_de_pago = $application->type_payment;
+        $this->forma_de_pago = $application->type_payment; */
     }
 
     public function saveAtencion()
