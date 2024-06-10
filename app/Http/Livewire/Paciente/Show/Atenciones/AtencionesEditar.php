@@ -38,6 +38,7 @@ class AtencionesEditar extends Component
 
     public function mount($application)
     {
+        dump($application);
         $this->application = $application;
         $this->paciente = $application->patient;
         $this->status = $application->status;
