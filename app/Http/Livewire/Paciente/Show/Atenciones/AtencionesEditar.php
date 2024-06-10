@@ -40,7 +40,7 @@ class AtencionesEditar extends Component
     {
 
         $this->application = $application;
-        $this->paciente = $application->patient ?? '';
+        $this->paciente = $application->patient;
         $this->status = $application->status;
         $this->lugar_derivacion = $application->desde;
         $this->profesional_derivacion = $application->derivado;
