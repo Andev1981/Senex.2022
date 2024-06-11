@@ -110,11 +110,11 @@ class IndexPagos extends Component
 				if ($applyItems->count() > 0) {
 					foreach ($applyItems as $applyItem) {
 						if ($applyItem->payment) {
-							dump('0: ', $applyItem->payment);
+
 							if ($applyItem->payment->status == 1) {
 								$paciente->payment_status = 1;
 								$paciente->save();
-								return;
+								break;
 							} else {
 								$paciente->payment_status = 2;
 								$paciente->save();
@@ -133,14 +133,14 @@ class IndexPagos extends Component
 			} else if ($buscarAplication->type_payment == 2) {
 				//Mensual por Sesiones
 				$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('fecha_atencion', '<', $this->fechaBuscar . '-05')->get();
-				dump('2: ', $applyItems);
+
 				if ($applyItems->count() > 0) {
 					foreach ($applyItems as $applyItem) {
 						if ($applyItem->payment) {
 							if ($applyItem->payment->status == 1) {
 								$paciente->payment_status = 1;
 								$paciente->save();
-								return;
+								break;
 							} else {
 								$paciente->payment_status = 2;
 								$paciente->save();
