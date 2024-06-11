@@ -106,20 +106,24 @@ class IndexPagos extends Component
 			if ($buscarAplication->type_payment == 0) {
 				//Por Sesión
 				$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->get();
+				if ($applyItems->count() > 0) {
+					foreach ($applyItems as $applyItem) {
 
-				foreach ($applyItems as $applyItem) {
+						if ($applyItem->payment) {
 
-					if ($applyItem->payment) {
-
-						if ($applyItem->payment->status == 1) {
-							$paciente->payment_status = 1;
-							$paciente->save();
-							exit;
+							if ($applyItem->payment->status == 1) {
+								$paciente->payment_status = 1;
+								$paciente->save();
+								exit;
+							}
 						}
 					}
-				}
 
-				$paciente->payment_status = 2;
+					$paciente->payment_status = 2;
+					$paciente->save();
+					exit;
+				}
+				$paciente->payment_status = 0;
 				$paciente->save();
 				exit;
 			} else if ($buscarAplication->type_payment == 1) {
@@ -128,21 +132,24 @@ class IndexPagos extends Component
 			} else if ($buscarAplication->type_payment == 2) {
 				//Mensual por Sesiones
 				$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('fecha_atencion', '<', $this->fechaBuscar . '%')->get();
-				dd('ApplyItems: ', $applyItems);
-				foreach ($applyItems as $applyItem) {
+				if ($applyItems->count() > 0) {
+					foreach ($applyItems as $applyItem) {
 
-					if ($applyItem->payment) {
-						if ($applyItem->payment->status == 1) {
-							$paciente->payment_status = 1;
-							$paciente->save();
-							exit;
+						if ($applyItem->payment) {
+							if ($applyItem->payment->status == 1) {
+								$paciente->payment_status = 1;
+								$paciente->save();
+								exit;
+							}
 						}
 					}
-				}
 
-				$paciente->payment_status = 2;
+					$paciente->payment_status = 2;
+					$paciente->save();
+					exit;
+				}
+				$paciente->payment_status = 0;
 				$paciente->save();
-				exit;
 			} else if ($buscarAplication->type_payment == 3) {
 				//Por Adelantado
 			}
