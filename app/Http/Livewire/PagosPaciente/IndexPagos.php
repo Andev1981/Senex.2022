@@ -114,18 +114,18 @@ class IndexPagos extends Component
 							if ($applyItem->payment->status == 1) {
 								$paciente->payment_status = 1;
 								$paciente->save();
-								exit;
+								return;
 							}
 						}
 					}
 
 					$paciente->payment_status = 2;
 					$paciente->save();
-					exit;
+					return;
 				}
 				$paciente->payment_status = 0;
 				$paciente->save();
-				exit;
+				return;
 			} else if ($buscarAplication->type_payment == 1) {
 				//Por Tratamiento
 
@@ -139,17 +139,18 @@ class IndexPagos extends Component
 							if ($applyItem->payment->status == 1) {
 								$paciente->payment_status = 1;
 								$paciente->save();
-								exit;
+								return;
 							}
 						}
 					}
 
 					$paciente->payment_status = 2;
 					$paciente->save();
-					exit;
+					return;
 				}
 				$paciente->payment_status = 0;
 				$paciente->save();
+				return;
 			} else if ($buscarAplication->type_payment == 3) {
 				//Por Adelantado
 			}
