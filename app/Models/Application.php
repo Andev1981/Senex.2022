@@ -16,7 +16,7 @@ class Application extends Model
         'user_id', //User Doctor
         'patient_id',
         'status',
-        'type_payment',
+        'type_payment', // 0 = Por sesión, 1 = Por tratamiento, 2= Mensual por sesiones, 3= Por adelantado  
         'type_value',
     ];
 

@@ -4,7 +4,6 @@ namespace App\Http\Livewire\Paciente\Show\Atenciones;
 
 use App\Models\Application;
 use App\Models\Patient;
-use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 

@@ -4,6 +4,7 @@ namespace App\Http\Livewire\PagosPaciente;
 
 use App\Models\ApplyItem;
 use App\Models\Patient;
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -19,6 +20,8 @@ class IndexPagos extends Component
 	public $openDelPaciente = 'hidden';
 	public $quantity = 10;
 	public $inactivos = 0;
+	public $fechaActual;
+	public $fechaBuscar = '';
 
 	public function updatingSearch()
 	{
@@ -36,6 +39,10 @@ class IndexPagos extends Component
 
 	public function render()
 	{
+		$this->fechaActual = Carbon::now();
+		$this->fechaBuscar = $this->fechaActual->format('Y-m');
+
+
 		if ($this->inactivos == 1) {
 			$pacientes = Patient::where(function ($query) {
 				$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
@@ -89,13 +96,59 @@ class IndexPagos extends Component
 
 	public function verificarPagos()
 	{
+
 		$allPacientes = Patient::with('applyItems')->where('status', 1)->get();
 
 		foreach ($allPacientes as $paciente) {
-			$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->get();
-			$pendiente = 0;
 
-			foreach ($applyItems as $applyItem) {
+			$buscarAplication = $paciente->applications[0];
+
+			if ($buscarAplication->type_payment == 0) {
+				//Por Sesión
+				$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->get();
+
+				foreach ($applyItems as $applyItem) {
+
+					if ($applyItem->payment) {
+
+						if ($applyItem->payment->status == 1) {
+							$paciente->payment_status = 1;
+							$paciente->save();
+							exit;
+						}
+					}
+				}
+
+				$paciente->payment_status = 2;
+				$paciente->save();
+				exit;
+			} else if ($buscarAplication->type_payment == 1) {
+				//Por Tratamiento
+
+			} else if ($buscarAplication->type_payment == 2) {
+				//Mensual por Sesiones
+				$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('fecha_atencion', '!==', $this->fechaBuscar . '%')->get();
+				dd('ApplyItems: ', $applyItems);
+				foreach ($applyItems as $applyItem) {
+
+					if ($applyItem->payment) {
+						if ($applyItem->payment->status == 1) {
+							$paciente->payment_status = 1;
+							$paciente->save();
+							exit;
+						}
+					}
+				}
+
+				$paciente->payment_status = 2;
+				$paciente->save();
+				exit;
+			} else if ($buscarAplication->type_payment == 3) {
+				//Por Adelantado
+			}
+
+
+			/* 		foreach ($applyItems as $applyItem) {
 
 				if ($applyItem->payment) {
 
@@ -109,20 +162,12 @@ class IndexPagos extends Component
 						}
 					}
 				}
-			}
+			} */
 
-			if (count($paciente->applyItems) > 0) {
-				if ($pendiente == 1) {
-					$paciente->payment_status = 1;
-				} else {
-					$paciente->payment_status = 2;
-				}
-			} else {
-				$paciente->payment_status = 3;
-			}
 
-			$paciente->save();
-			$pendiente = 0;
+
+			/* $paciente->save();
+			$pendiente = 0; */
 		}
 
 		$this->render();
