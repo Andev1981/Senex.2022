@@ -95,14 +95,16 @@ class IndexPagos extends Component
 		$this->openDelPaciente = 'hidden';
 	}
 
+	public $estado = 'Estado';
 	public function verificarPagos()
 	{
 
 		$allPacientes = Patient::with('applyItems')->where('status', 1)->get();
 
+
 		foreach ($allPacientes as $paciente) {
 
-			$buscarAplication = $paciente->applications[0];
+			$buscarAplication = $paciente->applications->first();
 
 			if ($buscarAplication->type_payment == 0) {
 				//Por Sesión
@@ -110,46 +112,73 @@ class IndexPagos extends Component
 				if ($applyItems->count() > 0) {
 					foreach ($applyItems as $applyItem) {
 						if ($applyItem->payment) {
-
 							if ($applyItem->payment->status == 1) {
-								$paciente->payment_status = 1;
+								$this->estado = 'Pagos Pendientes';
+								$paciente['payment_status']  = 1;
 								$paciente->save();
-								break;
+								return;
 							} else {
-								$paciente->payment_status = 2;
+								$this->estado = 'Pagos ok';
+								$paciente['payment_status']  = 2;
 								$paciente->save();
 							}
 						}
 					}
 					return;
 				} else {
-					$paciente->payment_status = 0;
+					$this->estado = 'no hay pagos';
+					$paciente['payment_status']  = 0;
 					$paciente->save();
 					return;
 				}
+				$this->estado = 'Final de Pagos';
 			} else if ($buscarAplication->type_payment == 1) {
-				//Por Tratamiento
-
-			} else if ($buscarAplication->type_payment == 2) {
-				//Mensual por Sesiones
-				$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('fecha_atencion', '<', $this->fechaBuscar . '-05')->get();
+				//Pago Mensual
+				$applyItems = ApplyItem::where('patient_id', 2)->where('status', 1)->where('fecha_atencion', '<', $this->fechaBuscar . '-05  00:00:00')->get();
 
 				if ($applyItems->count() > 0) {
 					foreach ($applyItems as $applyItem) {
 						if ($applyItem->payment) {
 							if ($applyItem->payment->status == 1) {
-								$paciente->payment_status = 1;
+								$this->estado = 'Pagos Pendientes 1';
+								$paciente['payment_status'] = 1;
 								$paciente->save();
-								break;
+								return;
 							} else {
-								$paciente->payment_status = 2;
+								$this->estado = 'Pagos ok 1';
+								$paciente['payment_status'] = 2;
 								$paciente->save();
 							}
 						}
 					}
 					return;
 				} else {
-					$paciente->payment_status = 0;
+					$this->estado = 'no hay pagos 1';
+					$paciente['payment_status']  = 0;
+					$paciente->save();
+					return;
+				}
+				$this->estado = 'Final de Pagos 1';
+			} else if ($buscarAplication->type_payment == 2) {
+				//Mensual por Sesiones
+				$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('fecha_atencion', '<', $this->fechaBuscar . '-05 00:00:00')->get();
+
+				if ($applyItems->count() > 0) {
+					foreach ($applyItems as $applyItem) {
+						if ($applyItem->payment) {
+							if ($applyItem->payment->status == 1) {
+								$paciente['payment_status']  = 1;
+								$paciente->save();
+								return;
+							} else {
+								$paciente['payment_status']  = 2;
+								$paciente->save();
+							}
+						}
+					}
+					return;
+				} else {
+					$paciente['payment_status']  = 0;
 					$paciente->save();
 					return;
 				}

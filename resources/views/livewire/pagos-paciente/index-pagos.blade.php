@@ -160,7 +160,7 @@
                         <tbody>
                             @forelse ( $pacientes as $paciente)
                             <tr class="items-center justify-between bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                <td class="px-6 py-4 uppercase">
+                                <td class="px-6 py-4 uppercase whitespace-nowrap">
                                     {{ \Carbon\Carbon::parse(strtotime($paciente->updated_at))->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="flex items-center py-2 pl-2 mx-2">
@@ -183,6 +183,7 @@
                                 </td>
 
                                 <td class="px-6 py-4 uppercase">
+                            
                                     @if ($paciente->payment_status == 0)
                                     <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
                                         <span class="w-2 h-2 mr-1 bg-red-500 rounded-full"></span>
@@ -201,7 +202,7 @@
                                     @else
                                     <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
                                         <span class="w-2 h-2 mr-1 bg-red-500 rounded-full"></span>
-                                        Sin Atenciones
+                                        Sin Atenciones.-
                                     </span>
                                     @endif
                                 </td>

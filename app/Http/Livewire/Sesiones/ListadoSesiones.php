@@ -47,7 +47,6 @@ class ListadoSesiones extends Component
         }
         if ($this->selPaciente != 0 && $this->selKine != 0) {
 
-            dd($this->buscarFecha);
 
             $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
         } elseif ($this->selPaciente != 0) {
