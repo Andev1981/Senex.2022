@@ -4,6 +4,7 @@ namespace App\Http\Livewire\PagosPaciente;
 
 use App\Models\ApplyItem;
 use App\Models\Patient;
+use Barryvdh\Debugbar\Twig\Extension\Dump;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -109,6 +110,7 @@ class IndexPagos extends Component
 				if ($applyItems->count() > 0) {
 					foreach ($applyItems as $applyItem) {
 						if ($applyItem->payment) {
+							dump('0: ', $applyItem->payment);
 							if ($applyItem->payment->status == 1) {
 								$paciente->payment_status = 1;
 								$paciente->save();
@@ -134,6 +136,7 @@ class IndexPagos extends Component
 				if ($applyItems->count() > 0) {
 					foreach ($applyItems as $applyItem) {
 						if ($applyItem->payment) {
+							dump('2: ', $applyItem->payment);
 							if ($applyItem->payment->status == 1) {
 								$paciente->payment_status = 1;
 								$paciente->save();
