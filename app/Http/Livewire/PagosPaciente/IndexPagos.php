@@ -136,7 +136,6 @@ class IndexPagos extends Component
 				if ($applyItems->count() > 0) {
 					foreach ($applyItems as $applyItem) {
 						if ($applyItem->payment) {
-							dump('2: ', $applyItem->payment);
 							if ($applyItem->payment->status == 1) {
 								$paciente->payment_status = 1;
 								$paciente->save();
@@ -147,6 +146,7 @@ class IndexPagos extends Component
 							}
 						}
 					}
+					dump('2: ', $paciente);
 					return;
 				} else {
 					$paciente->payment_status = 0;
