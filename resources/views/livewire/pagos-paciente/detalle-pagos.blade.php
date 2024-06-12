@@ -36,15 +36,18 @@
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 text-sm text-gray-500 dark:text-gray-400">
                                 <span class="inline-flex items-center bg-black text-white text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full mb-3">Tipo de Pago</span>
+                                @if (auth()->user()->email == 'javt1981@gmail.com')
+                                    {{ $typePayment->type_payment }}
+                                @endif
                                 <div>
                                     @if($typePayment)
 
                                     <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">
-                                        @if ($typePayment->type_payment == 0)
+                                        @if ($typePayment->type_payment == 1)
                                         Pago por Sesión
-                                        @elseif ($typePayment->type_payment == 1)
-                                        Pago por tratamiento
                                         @elseif ($typePayment->type_payment == 2)
+                                        Pago por tratamiento
+                                        @elseif ($typePayment->type_payment == 3)
                                         Pago Mensual
                                         @endif
                                     </span>
