@@ -5,16 +5,16 @@
                 <div class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
                     <div class="flex items-center">
                         <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
-                        <label class="text-lg font-semibold">Listado de Pacientes 2</label>
+                        <label class="text-lg font-semibold">Listado de Pacientes</label>
                     </div>
                     <div>
-                        <button wire:loading.remove wire:target="verificarPagos" wire:click="verificarPagos" class="flex items-center text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-2 py-1.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800" type="button">
+                        <a {{-- href="/verificar-pagos" --}} wire:loading.remove wire:target="verificarPagos" wire:click="verificarPagos" class="cursor-pointer flex items-center text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-2 py-1.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800" type="button">
 														<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16" class="w-5 h-5 mr-2">
 															<path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41m-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9"/>
 															<path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/>
 														</svg>
                             Verificar estado de pagos
-                        </button>
+                                                    </a>
 
                         <div wire:loading wire:target="verificarPagos">
                             <button disabled type="button" class="inline-flex items-center px-2 py-1 mr-2 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
@@ -183,7 +183,6 @@
                                 </td>
 
                                 <td class="px-6 py-4 uppercase">
-                            
                                     @if ($paciente->payment_status == 0)
                                     <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
                                         <span class="w-2 h-2 mr-1 bg-red-500 rounded-full"></span>

@@ -16,55 +16,55 @@ class DetallePagos extends Component
 {
 
 
-use WithPagination;
+    use WithPagination;
     public Patient $paciente;
     public $search,
-           $sort = 'updated_at',
-           $direction = 'desc',
-           $valorTotalAtenciones = 0,
-           $valorTotalAtendidas = 0,
-           $countSuma = 0,
-           $itemsSuma = 0,
-           $type = 1,
-           $userPayStatus = 0,
-           $buscarFecha,
-           $month = '',
-           $year,
-           $reloadStatus = 0,
-           $fechaActual,
-           $itemSumaPendiente = 0,
-           $openModalPago = 'hidden',
-           $payments = [],
-           $monthName = '',
-           $valor,
-           $fecha_pago,
-           $applyItem,
-           $applyItemsCount =0,
-           $countSumaAplication =0,
-           $saldoAFavor =0,
-           $file_path,
-           $saldo,
-           $setSaldo;
+        $sort = 'updated_at',
+        $direction = 'desc',
+        $valorTotalAtenciones = 0,
+        $valorTotalAtendidas = 0,
+        $countSuma = 0,
+        $itemsSuma = 0,
+        $type = 1,
+        $userPayStatus = 0,
+        $buscarFecha,
+        $month = '',
+        $year,
+        $reloadStatus = 0,
+        $fechaActual,
+        $itemSumaPendiente = 0,
+        $openModalPago = 'hidden',
+        $payments = [],
+        $monthName = '',
+        $valor,
+        $fecha_pago,
+        $applyItem,
+        $applyItemsCount = 0,
+        $countSumaAplication = 0,
+        $saldoAFavor = 0,
+        $file_path,
+        $saldo,
+        $setSaldo;
 
     protected $queryString = ['search'];
     protected $listeners = ['update-payment' => 'render'];
 
 
-     public function mount(Patient $paciente){
+    public function mount(Patient $paciente)
+    {
         $this->paciente = $paciente;
-
     }
     public function render()
     {
 
-         if($this->reloadStatus == 0){
-          $this->buscarFecha = Carbon::now();
-          $this->month = $this->buscarFecha->format('m');
-          $this->year = $this->buscarFecha->format('Y');
-          $this->reloadStatus = 1;
+        if ($this->reloadStatus == 0) {
+            $this->buscarFecha = Carbon::now();
+            $this->month = $this->buscarFecha->format('m');
+            $this->year = $this->buscarFecha->format('Y');
+            $this->reloadStatus = 1;
         }
-        
-        $this->buscarFecha =  $this->year . '-' . $this->month .'-';
+
+        $this->buscarFecha =  $this->year . '-' . $this->month . '-';
 
         $this->valorTotalAtenciones = 0;
         $this->valorTotalAtendidas = 0;
@@ -72,24 +72,24 @@ use WithPagination;
         $this->countSuma = 0;
         $this->itemsSuma = 0;
         $this->itemSumaPendiente = 0;
-        $this->saldoAFavor =0;
+        $this->saldoAFavor = 0;
 
         //Obtengo el tipo de Pago
         $typePayment = Application::where('patient_id', $this->paciente->id)->take(1)->first();
-        
+
         /*Obtengo el listado de sesiones*/
-        $applyItemsSum = ApplyItem::where('patient_id',$this->paciente->id)->where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('fecha_atencion','desc')->get();
-        
+        $applyItemsSum = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('fecha_atencion', 'desc')->get();
+
         /*Asigno valor a la variable que almacena el valor total de las atenciones*/
         $this->valorTotalAtenciones = $applyItemsSum->sum('price');
 
 
-        $applyItems = ApplyItem::where('status',1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id',$this->paciente->id)->get();
+        $applyItems = ApplyItem::where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id', $this->paciente->id)->get();
 
-        $saldoAFavor = PaymentIncome::where('application_id',$typePayment->id)->where('type',2)->first();
-        
-        if(!$saldoAFavor){
-           $saldoAFavor = PaymentIncome::create([
+        $saldoAFavor = PaymentIncome::where('application_id', $typePayment->id)->where('type', 2)->first();
+
+        if (!$saldoAFavor) {
+            $saldoAFavor = PaymentIncome::create([
                 'pay' => 0,
                 'saldo' => 0,
                 'application_id' => $typePayment->id,
@@ -101,60 +101,37 @@ use WithPagination;
 
         $this->setSaldo = $saldoAFavor;
 
-        if($saldoAFavor->saldo < 0){
+        if ($saldoAFavor->saldo < 0) {
             $saldoAFavor->saldo = 0;
             $saldoAFavor->save();
         }
 
-        if($saldoAFavor){
+        if ($saldoAFavor) {
             $this->saldoAFavor = $saldoAFavor->saldo;
             $this->saldo = $this->saldoAFavor;
-        }else{
+        } else {
             $this->saldo = 0;
         }
-/* 
-        if($this->paciente->id == 32){
-            $saldoAFavor->saldo = 0;
-            $saldoAFavor->save();
-        } */
 
-        if(count($applyItems) > 0){
+        if (count($applyItems) > 0) {
             $this->applyItemsCount = $applyItems->count();
             $this->applyItem = $applyItems[0];
 
-            $countSumaAplications = PaymentIncome::where('application_id',$applyItems[0]->application_id)->where('apply_item_id',$applyItems[0]->id)->where('status',2)->get();
-
-            if(count($countSumaAplications) > 0){
-                $this->payments = $countSumaAplications;
-                $this->countSumaAplication = $countSumaAplications->sum('pay');
-            }else{
-                $this->countSumaAplication = 0;
-            }
+            $this->countSumaAplication = ApplyItem::where('application_id', $typePayment->id)->where('estado_pago', 1)->count();
         }
 
-
-        foreach($applyItems as $applyItem){
-
-            $paymentIncomePay = PaymentIncome::where('application_id',$applyItems[0]->application_id)->where('apply_item_id',$applyItem->id)->where('status',2)->first();
-            
-            if($paymentIncomePay){
-               $this->valorTotalAtendidas += $paymentIncomePay->pay;
-            }
-
-            $this->itemsSuma += 1;
-        }
-
- 
+        $this->valorTotalAtendidas = ApplyItem::where('application_id', $typePayment->id)->where('estado_pago', 1)->sum("price");
 
         $this->setMonth($this->month);
 
         return view('livewire.pagos-paciente.detalle-pagos', [
-                        'applyItems' => $applyItems,
-                        'typePayment' => $typePayment
-                    ]);
+            'applyItems' => $applyItems,
+            'typePayment' => $typePayment
+        ]);
     }
 
-     public function setMonth($month){
+    public function setMonth($month)
+    {
         switch ($month) {
             case '01':
                 $this->monthName = 'Enero';
@@ -198,14 +175,13 @@ use WithPagination;
         }
     }
 
+    public function paymentState()
+    {
+    }
 
-
-   public function paymentState(){
-        
-   }
-
-   public function setSaldo(){
-     $this->setSaldo->saldo = 0;
-     $this->setSaldo->save();
-   }
+    public function setSaldo()
+    {
+        $this->setSaldo->saldo = 0;
+        $this->setSaldo->save();
+    }
 }

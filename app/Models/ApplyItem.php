@@ -20,7 +20,8 @@ class ApplyItem extends Model
         'status',
         'fecha_atencion',
         'numero_sesion',
-        'comments'
+        'comments',
+        'estado_pago',
     ];
 
     public function applicationType()
@@ -28,35 +29,43 @@ class ApplyItem extends Model
         return $this->belongsTo(ApplicationType::class);
     }
 
-    public function applicationTypeUser(){
+    public function applicationTypeUser()
+    {
         return $this->belongsTo(ApplicationTypeUser::class);
     }
 
-    public function images(){
+    public function images()
+    {
         return $this->morphMany(Image::class, 'imageable');
     }
 
-    public function application(){
+    public function application()
+    {
         return $this->belongsTo(Application::class);
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-     public function patient(){
+    public function patient()
+    {
         return $this->belongsTo(Patient::class);
     }
 
-    public function doctor(){
+    public function doctor()
+    {
         return $this->belongsTo(Doctor::class);
     }
 
-    public function assign(){
+    public function assign()
+    {
         return $this->hasOne(Assign::class);
     }
 
-    public function payment(){
+    public function payment()
+    {
         return $this->hasOne(PaymentIncome::class);
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Http\Livewire\PagosPaciente;
 
 use App\Models\ApplyItem;
+use App\Models\Patient;
 use App\Models\PaymentIncome;
+use Carbon\Carbon;
 use Livewire\Component;
 
 class SwitchPago extends Component
@@ -19,39 +21,32 @@ class SwitchPago extends Component
     public $findSaldo;
     public $payment;
 
-    public function mount(ApplyItem $item){
 
-        if(!$item->payment){
-          $payment =  PaymentIncome::create([
+    public function mount(ApplyItem $item)
+    {
+
+        if (!$item->payment) {
+            $payment =  PaymentIncome::create([
                 'pay' => $item->price,
                 'application_id' => $item->application_id,
                 'apply_item_id' => $item->id,
                 'status' => 1,
                 'type' => 0,
             ]);
-        $this->payment = $payment;
+            $this->payment = $payment;
+        } else {
+
+            $this->payment = $item->payment;
+        }
+
         $this->item = $item;
 
-        }else{
+        $this->findSaldo = ApplyItem::where('application_id', $this->item->application_id)->where('estado_pago', 1)->sum("price");
 
-        $this->payment = $item->payment;
+        if (!$this->findSaldo == 0) {
+
+            $this->findSaldo = 0;
         }
-
-
-        $this->findSaldo = PaymentIncome::where('application_id',$this->item->application_id)->where('type',2)->first();
-
-        if(!$this->findSaldo){
-
-             $this->findSaldo =  PaymentIncome::create([
-                'pay' => $item->price,
-                'application_id' => $item->application_id,
-                'apply_item_id' => $item->id,
-                'status' => 1,
-                'type' => 2,
-            ]);
-
-        }
-
     }
 
     public function render()
@@ -59,40 +54,16 @@ class SwitchPago extends Component
         return view('livewire.pagos-paciente.switch-pago');
     }
 
-     public function selectItem($id){
 
-        $payment = PaymentIncome::find($id);
-        
-        if(!$payment){
-           $payment = PaymentIncome::create([
-                'pay' => $this->item->price,
-                'application_id' => $this->item->application_id,
-                'apply_item_id' => $this->item->id,
-                'status' => 2
-            ]);
-        }
+    public function selectItem($id)
+    {
 
-        if($this->findSaldo->saldo < 0){
-            $this->findSaldo->saldo = 0;
-            $this->findSaldo->save();
-        }
-        
-        
-        
-        if($payment->status == 1 || $payment->status == 0){
-            
-            $payment->status = 2;
-            $payment->save();
-            
-        }elseif($payment->status == 2){
-            $payment->status = 1;
-            $payment->save();
-        }
-        
+        $item = ApplyItem::find($id);
+        $item->estado_pago = $this->item->estado_pago == 0 ? 1 : 0;
+        $item->save();
 
         $this->emit('update-payment');
         $this->dispatchBrowserEvent('swal-success');
-        $item = ApplyItem::find($this->item->id);
         $this->mount($item);
         $this->render();
     }

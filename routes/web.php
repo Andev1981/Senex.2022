@@ -8,6 +8,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\PaymentIncomeController;
 use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
@@ -35,7 +36,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/dashboard', Inicio::class)->name('dashboard');
     Route::get('/', Inicio::class)->name('/');
 
-  
+
     Route::middleware('guest')->group(function () {
 
         Route::get('register/doctor', [RegisteredUserController::class, 'create_doc'])
@@ -48,17 +49,20 @@ Route::group(['middleware' => ['auth']], function () {
 
     //Livewire full page components
     Route::get('pacientes', ListadosIndex::class)->name('pacientes');
-  
+
     Route::get('kines', ListadoKines::class)->name('kines');
     Route::get('types', Index::class)->name('types');
 
 
-    
+
     /* RUTAS PARA PDF */
-    Route::get('/reporte-pdf/{applyItems}/{kine}',[ReportePdfController::class,'generarReporte']);
+    Route::get('/reporte-pdf/{applyItems}/{kine}', [ReportePdfController::class, 'generarReporte']);
 
-    Route::get('/andres',[ReportePdfController::class,'arreglo'])->name('andres');
+    Route::get('/andres', [ReportePdfController::class, 'arreglo'])->name('andres');
 
+
+    /* Verificar Pagos */
+    Route::get('/verificar-pagos', [PaymentIncomeController::class, 'verifyPayment'])->name('verificar.pagos');
 
 
     /* RUTAS DE PRUEBA NORMALIZACION DE VISTAS LIVEWIRE */
@@ -69,7 +73,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('{paciente}/pagos', DetallePagos::class)->name('pagos');/* Revisar ruta en funcionalidad */
 
     Route::get('{paciente}/detalles', Resumen::class)->name('detalles');
-
 });
 
 //Transbank

@@ -18,7 +18,7 @@ class AtencionesListado extends Component
   public function render()
   {
 
-    $atenciones = Application::where('user_id', $this->paciente->id)->orderBy('updated_at', 'desc')->paginate(5);
+    $atenciones = Application::where('patient_id', $this->paciente->id)->orderBy('updated_at', 'desc')->paginate(5);
 
     return view('livewire.paciente.show.atenciones.atenciones-listado', compact('atenciones'));
   }

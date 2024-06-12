@@ -35,6 +35,7 @@
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 text-sm text-gray-500 dark:text-gray-400">
+                                <span class="inline-flex items-center bg-black text-white text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full mb-3">Tipo de Pago</span>
                                 <div>
                                     @if($typePayment)
 
@@ -45,24 +46,17 @@
                                         Pago por tratamiento
                                         @elseif ($typePayment->type_payment == 2)
                                         Pago Mensual
-                                        @elseif ($typePayment->type_payment == 3)
-                                        Pago 50% / 50%
-                                    </span>
-                                    @elseif ($typePayment->type_payment == 4)
-                                    Pago Tarjeta Crédito
-                                    @elseif ($typePayment->type_payment == 5)
-                                    Abonos Parciales
-                                    @endif
+                                        @endif
                                     </span>
 
                                     @endisset
                                 </div>
-                                <div class="bg-green-500 text-white rounded-full px-2 mb-1 mt-2 text-sm">
+                               {{--  <div class="bg-green-500 text-white rounded-full px-2 mb-1 mt-2 text-sm">
                                         Saldo a favor ${{ number_format($saldoAFavor,0,',','.') }}.-
-                                    </div>
-                                    @if (auth()->user()->email == 'javt1981@gmail.com')
+                                    </div> --}}
+                                 {{--    @if (auth()->user()->email == 'javt1981@gmail.com')
                                          <x-button-edit wire:click="setSaldo" />
-                                    @endif
+                                    @endif --}}
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
