@@ -104,9 +104,9 @@ class IndexPagos extends Component
 			$buscarAplication = $paciente->applications->first();
 
 			if ($buscarAplication) {
-				/* 1: Por sesion, 2: Por Tratamiento, 3: Mensual por sesión */
+				/* 0: Por sesion, 1: Por Tratamiento, 2: Mensual por sesión, 3: Por Adelantado */
 				if ($buscarAplication->type_payment == 0) {
-					//???
+					//Por Sesión
 					$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
 					if ($applyItems->count() > 0) {
 						$paciente = Patient::find($paciente->id);
@@ -120,7 +120,7 @@ class IndexPagos extends Component
 						return;
 					}
 				} else if ($buscarAplication->type_payment == 1) {
-					//Pago Sesión
+					//Pago Tratamiento
 					$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
 
 					if (count($applyItems) > 0) {
