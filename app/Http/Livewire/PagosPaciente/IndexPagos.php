@@ -122,7 +122,7 @@ class IndexPagos extends Component
 					}
 				} else if ($buscarAplication->type_payment == 1) {
 					//Pago Mensual
-					$applyItems = ApplyItem::where('patient_id', 2)->where('status', 1)->where('fecha_atencion', '<', $this->fechaBuscar . '-05  00:00:00')->where('estado_pago', 0)->get();
+					$applyItems = ApplyItem::where('patient_id', 2)->where('status', 1)->where('fecha_atencion', '<', $this->fechaBuscar . '-01  00:00:00')->where('estado_pago', 0)->get();
 
 					if (count($applyItems) > 0) {
 
@@ -136,7 +136,7 @@ class IndexPagos extends Component
 					}
 				} else if ($buscarAplication->type_payment == 2) {
 					//Mensual por Sesiones
-					$applyItems = ApplyItem::where('patient_id', 2)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->fechaBuscar . '-05  00:00:00')->get();
+					$applyItems = ApplyItem::where('patient_id', 2)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->fechaBuscar . '-01  00:00:00')->get();
 
 					if ($applyItems->count() > 0) {
 						$paciente = Patient::find($paciente->id);

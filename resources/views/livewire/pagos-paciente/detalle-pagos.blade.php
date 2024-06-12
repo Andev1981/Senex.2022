@@ -279,10 +279,7 @@
                                                 Sin datos
                                             </td>
                                         </tr>
-
                                         @endforelse
-
-
                                     </tbody>
                                 </table>
                                 <div class="mb-5 p-4">
