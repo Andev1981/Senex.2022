@@ -43,12 +43,14 @@
                                     @if($typePayment)
 
                                     <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">
-                                        @if ($typePayment->type_payment == 1)
+                                        @if ($typePayment->type_payment == 0)
                                         Pago por Sesión
-                                        @elseif ($typePayment->type_payment == 2)
+                                        @elseif ($typePayment->type_payment == 1)
                                         Pago por tratamiento
+                                        @elseif ($typePayment->type_payment == 2)
+                                        Mensual
                                         @elseif ($typePayment->type_payment == 3)
-                                        Pago Mensual
+                                        Por adelantado
                                         @endif
                                     </span>
 
