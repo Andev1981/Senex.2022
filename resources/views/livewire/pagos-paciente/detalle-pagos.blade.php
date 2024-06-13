@@ -29,7 +29,7 @@
                                     {{ $paciente->email }}
                                 </div>
                                 <div>
-                             
+                                    <x-button-update wire:click="verificarPagos" innerText="Verificar Pagos" />
                                 </div>
                             </div>
                         </div>
@@ -56,9 +56,15 @@
 
                                     @endisset
                                 </div>
-                               {{--  <div class="bg-green-500 text-white rounded-full px-2 mb-1 mt-2 text-sm">
+                                @if ($typePayment->type_payment == 3)
+                                <div class="flex items-between ">
+                                    <div class="bg-green-500 text-white rounded-full px-2 mb-1 mt-2 text-sm mr-2">
                                         Saldo a favor ${{ number_format($saldoAFavor,0,',','.') }}.-
-                                    </div> --}}
+                                    </div>
+                                <x-button-edit wire:click="setSaldo" />
+                                </div>
+                                @endif
+                               
                                  {{--    @if (auth()->user()->email == 'javt1981@gmail.com')
                                          <x-button-edit wire:click="setSaldo" />
                                     @endif --}}
@@ -291,7 +297,12 @@
                                     </tbody>
                                 </table>
                                 <div class="mb-5 p-4">
-                                   
+                                   @if (auth()->user()->email == 'javt1981@gmail.com')
+                                   <span>Items: </span>
+                                       @foreach ($itemsApllys as $item )
+                                           <li>{{ $item  }} || </li>
+                                       @endforeach
+                                   @endif
                                 </div>
                             </div>
 
