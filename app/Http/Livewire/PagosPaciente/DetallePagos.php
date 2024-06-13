@@ -44,7 +44,8 @@ class DetallePagos extends Component
         $saldoAFavor = 0,
         $file_path,
         $saldo,
-        $setSaldo;
+        $setSaldo,
+        $applyItems;
 
     protected $queryString = ['search'];
     protected $listeners = ['update-payment' => 'render'];
@@ -52,6 +53,7 @@ class DetallePagos extends Component
 
     public function mount(Patient $paciente)
     {
+        $this->applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
         $this->paciente = $paciente;
     }
     public function render()
