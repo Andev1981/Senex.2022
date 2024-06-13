@@ -205,7 +205,7 @@ class DetallePagos extends Component
                 }
             } else if ($buscarAplication->type_payment == 2) {
                 //Mensual por Sesiones
-                $applyItems = ApplyItem::where('patient_id',  $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->fechaBuscar . '-01  00:00:00')->get();
+                $applyItems = ApplyItem::where('patient_id',  $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->buscarFecha . '-01  00:00:00')->get();
 
                 $this->itemsApllys = $applyItems;
                 if ($applyItems->count() > 0) {
