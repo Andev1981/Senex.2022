@@ -45,7 +45,9 @@ class DetallePagos extends Component
         $file_path,
         $saldo,
         $setSaldo,
-        $applyItems;
+        $applyItems,
+        $fechaApplyItems,
+        $fechaBuscar = '';
 
     protected $queryString = ['search'];
     protected $listeners = ['update-payment' => 'render'];
@@ -53,7 +55,11 @@ class DetallePagos extends Component
 
     public function mount(Patient $paciente)
     {
+        $fechaActual = Carbon::now();
+        $this->fechaBuscar = $fechaActual->format('Y-m');
+
         $this->applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
+        $this->fechaApplyItems = ApplyItem::where('patient_id', 2)->where('status', 1)->where('estado_pago', 0)->where('created_at', '<', $this->fechaBuscar . '-01  00:00:00')->get();
         $this->paciente = $paciente;
     }
     public function render()

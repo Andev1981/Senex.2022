@@ -63,7 +63,7 @@
                                          <x-button-edit wire:click="setSaldo" />
                                     @endif --}}
                                     @if (auth()->user()->email == 'javt1981@gmail.com')
-                                        {{ $applyItems->count() }}
+                                        {{ $applyItems->count() }}|{{$fechaApplyItems->count()}}
                                         @endforeach
                                     @endif
                             </div>
