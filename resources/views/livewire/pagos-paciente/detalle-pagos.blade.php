@@ -62,10 +62,6 @@
                                  {{--    @if (auth()->user()->email == 'javt1981@gmail.com')
                                          <x-button-edit wire:click="setSaldo" />
                                     @endif --}}
-                                    @if (auth()->user()->email == 'javt1981@gmail.com')
-                                        {{ $applyItems->count() }}|{{$fechaApplyItems->count()}}
-                                    
-                                    @endif
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
