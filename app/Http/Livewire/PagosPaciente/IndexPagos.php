@@ -134,7 +134,7 @@ class IndexPagos extends Component
 					}
 				} else if ($buscarAplication->type_payment == 2) {
 					//Mensual por Sesiones
-					$applyItems = ApplyItem::where('patient_id',  $paciente->id)->where('status', 1)->where('estado_pago', 0)->where('created_at', '<', $this->fechaBuscar . '-01  00:00:00')->get();
+					$applyItems = ApplyItem::where('patient_id',  $paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->fechaBuscar . '-01  00:00:00')->get();
 
 					if ($applyItems->count() > 0) {
 						$paciente = Patient::find($paciente->id);

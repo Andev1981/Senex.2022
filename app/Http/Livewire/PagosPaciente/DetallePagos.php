@@ -83,7 +83,7 @@ class DetallePagos extends Component
         $applyItemsSum = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy('fecha_atencion', 'desc')->get();
 
         $this->items = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
-        $this->itemsFechas = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->where('created_at', '<', $this->buscarFecha . '-01  00:00:00')->get();
+        $this->itemsFechas = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->buscarFecha . '-01  00:00:00')->get();
 
         /*Asigno valor a la variable que almacena el valor total de las atenciones*/
         $this->valorTotalAtenciones = $applyItemsSum->sum('price');
