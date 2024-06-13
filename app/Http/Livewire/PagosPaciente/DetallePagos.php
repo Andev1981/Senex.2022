@@ -125,7 +125,7 @@ class DetallePagos extends Component
             $this->countSumaAplication = ApplyItem::where('application_id', $typePayment->id)->where('estado_pago', 1)->count();
         }
 
-        $this->valorTotalAtendidas = ApplyItem::where('application_id', $typePayment->id)->where('estado_pago', 1)->sum("price");
+        $this->valorTotalAtendidas = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('estado_pago', 1)->sum("price");
 
         $this->setMonth($this->month);
 
