@@ -105,6 +105,8 @@ class DetallePagos extends Component
 
         $this->setMonth($this->month);
 
+        $this->verificarPagos();
+
         return view('livewire.pagos-paciente.detalle-pagos', [
             'applyItems' => $applyItems,
             'typePayment' => $typePayment
@@ -168,7 +170,6 @@ class DetallePagos extends Component
 
     public function verificarPagos()
     {
-
 
         $buscarAplication = $this->paciente->applications->first();
 
