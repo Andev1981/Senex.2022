@@ -9,6 +9,9 @@
                     <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
                         Pagos Paciente
                     </h3>
+                    @if (auth()->user()->email == 'javt1981@gmail.com')
+                    {{ $items->count() }}|{{$itemsFechas->count()}}
+                @endif
 
                     <a href="{{ route('pacientes.pagos') }}" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                         <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -59,19 +62,20 @@
                                 @if ($typePayment->type_payment == 3)
                                 <div class="flex items-between ">
                                     <div class="bg-green-500 text-white rounded-full px-2 mb-1 mt-2 text-sm mr-2">
-                                        Saldo a favor ${{ number_format($saldoAFavor,0,',','.') }}.-
+                                        Saldo a favor ${{ number_format($wallet->balance,0,',','.') }}.-
                                     </div>
-                                <x-button-edit wire:click="setSaldo" />
+                                <x-button-edit wire:click="inputSaldo" />
                                 </div>
+                                   @if ($verSaldo)    
+                                   <div>
+                                       <x-input type="number" wire:model.defer="saldo" />
+                                   </div>
+                                   <x-button-update wire:click="saveSaldo" innerText="Guardar" class="my-2" />
+                                   @endif
                                 @endif
-                               
-                                 {{--    @if (auth()->user()->email == 'javt1981@gmail.com')
-                                         <x-button-edit wire:click="setSaldo" />
-                                    @endif --}}
-                                    @if (auth()->user()->email == 'javt1981@gmail.com')
-                                        {{ $items->count() }}|{{$itemsFechas->count()}}
-                                    @endif
+                                  
                             </div>
+                       
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 font-normal dark:text-white py-4">
@@ -103,6 +107,7 @@
                                     <select id="countries" wire:model="year" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                         <option class="pl-6" value="2023">2023</option>
                                         <option class="pl-6" value="2024">2024</option>
+                                        <option class="pl-6" value="2025">2025</option>
                                     </select>
 
                                 </li>

@@ -20,26 +20,13 @@ class SwitchPago extends Component
     public $status;
     public $findSaldo;
     public $payment;
-
+    public $application;
 
     public function mount(ApplyItem $item)
     {
 
-        if (!$item->payment) {
-            $payment =  PaymentIncome::create([
-                'pay' => $item->price,
-                'application_id' => $item->application_id,
-                'apply_item_id' => $item->id,
-                'status' => 1,
-                'type' => 0,
-            ]);
-            $this->payment = $payment;
-        } else {
-
-            $this->payment = $item->payment;
-        }
-
         $this->item = $item;
+        $this->application = $item->application;
 
         $this->findSaldo = ApplyItem::where('application_id', $this->item->application_id)->where('estado_pago', 1)->sum("price");
 
@@ -57,14 +44,20 @@ class SwitchPago extends Component
 
     public function selectItem($id)
     {
+        if ($this->application->type_payment < 3) {
+            $item = ApplyItem::find($id);
+            $item->estado_pago = $this->item->estado_pago == 0 ? 1 : 0;
+            $item->save();
 
-        $item = ApplyItem::find($id);
-        $item->estado_pago = $this->item->estado_pago == 0 ? 1 : 0;
-        $item->save();
+            $this->emit('update-payment');
+            $this->dispatchBrowserEvent('swal-success');
+            $this->mount($item);
+            $this->render();
+        } else {
 
-        $this->emit('update-payment');
-        $this->dispatchBrowserEvent('swal-success');
-        $this->mount($item);
-        $this->render();
+            $this->emit('update-payment');
+            $this->dispatchBrowserEvent('swal-error');
+            $this->render();
+        }
     }
 }

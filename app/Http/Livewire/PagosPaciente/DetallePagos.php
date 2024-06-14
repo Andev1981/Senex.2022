@@ -5,9 +5,7 @@ namespace App\Http\Livewire\PagosPaciente;
 use App\Models\Application;
 use App\Models\ApplyItem;
 use App\Models\Patient;
-use App\Models\Payment;
-use App\Models\PaymentIncome;
-use App\Models\User;
+use App\Models\Wallet;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -47,11 +45,10 @@ class DetallePagos extends Component
         $setSaldo,
         $items,
         $itemsFechas,
-        $itemsApllys = [];
+        $itemsApllys = [], $verSaldo = false, $wallet;
 
     protected $queryString = ['search'];
     protected $listeners = ['update-payment' => 'render'];
-
 
     public function mount(Patient $paciente)
     {
@@ -106,6 +103,17 @@ class DetallePagos extends Component
         $this->setMonth($this->month);
 
         /*   $this->verificarPagos(); */
+
+        $wallet = Wallet::where('patient_id', $this->paciente->id)->first();
+
+        if ($wallet == null) {
+            $this->wallet = Wallet::create([
+                'patient_id' => $this->paciente->id,
+                'balance' => 0,
+            ]);
+        } else {
+            $this->wallet = $wallet;
+        }
 
         return view('livewire.pagos-paciente.detalle-pagos', [
             'applyItems' => $applyItems,
@@ -168,6 +176,25 @@ class DetallePagos extends Component
         $this->setSaldo->save();
     }
 
+    public function inputSaldo()
+    {
+        if ($this->verSaldo == true) {
+            $this->verSaldo = false;
+            $this->saldo = 0;
+        } else {
+            $this->verSaldo = true;
+        }
+    }
+
+    public function saveSaldo()
+    {
+        $wallet = Wallet::where('patient_id', $this->paciente->id)->first();
+        $wallet->balance = $this->wallet->balance + $this->saldo;
+        $wallet->save();
+        $this->inputSaldo();
+        $this->render();
+    }
+
     public function verificarPagos()
     {
 
@@ -220,8 +247,28 @@ class DetallePagos extends Component
                 }
             } else if ($buscarAplication->type_payment == 3) {
                 //Por Adelantado
+                $applyItems = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
+
+                if ($applyItems->count() > 0) {
+
+                    foreach ($applyItems as $item) {
+                        if ($this->wallet->balance >= $item->price) {
+                            $item->estado_pago = 1;
+                            $item->save();
+                            $wallet = Wallet::where('patient_id', $this->paciente->id)->first();
+                            $wallet->balance = $wallet->balance - $item->price;
+                            $wallet->save();
+                        }
+                    }
+                }
             }
         }
-        $this->render();
+
+        return redirect($this->paciente->id . '/pagos/');
+        /* $this->wallet = Wallet::where('patient_id', $this->paciente->id)->first();
+        $this->emit('update-payment');
+        $this->dispatchBrowserEvent('swal-success');
+        $this->mount($this->paciente);
+        $this->render(); */
     }
 }

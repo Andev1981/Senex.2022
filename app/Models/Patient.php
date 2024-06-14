@@ -30,7 +30,7 @@ class Patient extends Model
     {
         return $this->belongsTo(Address::class);
     }
-    
+
     public function applyItems()
     {
         return $this->hasMany(ApplyItem::class);
@@ -39,5 +39,10 @@ class Patient extends Model
     public function images()
     {
         return $this->morphMany(Image::class, 'imageable');
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
     }
 }
