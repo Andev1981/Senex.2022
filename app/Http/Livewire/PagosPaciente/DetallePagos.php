@@ -105,7 +105,7 @@ class DetallePagos extends Component
 
         $this->setMonth($this->month);
 
-        $this->verificarPagos();
+        /*   $this->verificarPagos(); */
 
         return view('livewire.pagos-paciente.detalle-pagos', [
             'applyItems' => $applyItems,
