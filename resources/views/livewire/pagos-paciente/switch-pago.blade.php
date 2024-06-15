@@ -1,6 +1,6 @@
 <div>
     <div class="flex items-center pl-2 space-x-2">
-            @if ($application->type_payment < 3)
+            @if ($application->type_payment == 3)
                 <label class="relative inline-flex items-center mr-5 cursor-pointer">
                 <input type="checkbox" value="" class="sr-only peer" wire:click="selectItem({{$item->id}})" 
                 @if ($item->estado_pago == 1)

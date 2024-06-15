@@ -47,11 +47,11 @@ class IndexPagos extends Component
 		if ($this->inactivos == 1) {
 			$pacientes = Patient::where(function ($query) {
 				$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-			})->where('status', 0)->orderBy($this->sort, $this->direction)->orderBy('status', 'asc')->paginate($this->quantity);
+			})->where('status', 0)->orderBy($this->sort, $this->direction)->orderBy('status', 'asc')->orderBy('name', 'asc')->paginate($this->quantity);
 		} else {
 			$pacientes = Patient::where(function ($query) {
 				$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-			})->where('status', 1)->orderBy($this->sort, $this->direction)->orderBy('status', 'desc')->paginate($this->quantity);
+			})->where('status', 1)->orderBy($this->sort, $this->direction)->orderBy('status', 'desc')->orderBy('name', 'asc')->paginate($this->quantity);
 		}
 
 

@@ -218,19 +218,6 @@ class DetallePagos extends Component
                     return;
                 }
             } else if ($buscarAplication->type_payment == 1) {
-                //Pago Tratamiento
-                $applyItems = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
-
-                $this->itemsApllys = $applyItems;
-                if (count($applyItems) > 0) {
-                    $pac = Patient::find($this->paciente->id);
-                    $pac->payment_status = 1;/* Pagos Pendientes */
-                    $pac->save();
-                } else {
-                    $pac = Patient::find($this->paciente->id);
-                    $pac->payment_status = 2; /* Pagos al dia */
-                    $pac->save();
-                }
             } else if ($buscarAplication->type_payment == 2) {
                 //Mensual por Sesiones
                 $applyItems = ApplyItem::where('patient_id',  $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->buscarFecha . '-01  00:00:00')->get();
