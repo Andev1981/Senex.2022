@@ -25,13 +25,14 @@ class ModalEditar extends Component
     public $questions = [];
 
 
-    protected function rules() {
-        
+    protected function rules()
+    {
+
         return [
             'paciente.name' => 'required|min:3|max:50',
             'paciente.last_name' => 'required|min:3|max:50',
             'paciente.rut' => 'required|max:10|min:9',
-            'paciente.email' => 'required|email|max:255|unique:users,email,'.$this->paciente->id,
+            'paciente.email' => 'required|email|max:255',
             'paciente.birth' => 'required|date',
             'paciente.phone' => 'required',
             'paciente.status' => 'required',
@@ -40,7 +41,7 @@ class ModalEditar extends Component
             'address.address' => 'required|max:150',
             'address.comuna_id' => 'required',
         ];
-    } 
+    }
 
     public function mount(Patient $paciente)
     {

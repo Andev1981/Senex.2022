@@ -89,7 +89,7 @@ class DetallePagos extends Component
         /*Asigno valor a la variable que almacena el valor total de las atenciones*/
         $this->valorTotalAtenciones = $applyItemsSum->sum('price');
 
-        $applyItems = ApplyItem::where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id', $this->paciente->id)->get();
+        $applyItems = ApplyItem::where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id', $this->paciente->id)->orderBy('numero_sesion', 'asc')->get();
 
         if (count($applyItems) > 0) {
             $this->applyItemsCount = $applyItems->count();

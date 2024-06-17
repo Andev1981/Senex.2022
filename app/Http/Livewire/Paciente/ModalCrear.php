@@ -60,6 +60,8 @@ class ModalCrear extends Component
 
     public function save()
     {
+
+        dd($this->fecha_nacimiento);
         $buscarRut = User::where('rut', $this->rut)->first();
 
         if ($buscarRut != null) {

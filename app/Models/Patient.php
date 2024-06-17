@@ -13,6 +13,7 @@ class Patient extends Model
         'user_id',
         'name',
         'last_name',
+        'email',
         'avatar',
         'rut',
         'birth',
