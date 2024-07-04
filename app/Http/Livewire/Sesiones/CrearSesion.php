@@ -106,7 +106,7 @@ class CrearSesion extends Component
     {
         $this->validate();
 
-        if ($this->status === 1 && $this->wallet->balance > $this->valor) {
+        if ($this->status === 1 && $this->wallet->balance >= $this->valor) {
             $this->wallet->balance = $this->wallet->balance - $this->valor;
             $this->wallet->save();
         }

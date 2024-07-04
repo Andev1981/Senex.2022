@@ -51,7 +51,7 @@ class SwitchPago extends Component
         if ($this->wallet->balance > 0) {
             $tipo = $this->item->estado_pago == 0 ? 1 : 0;
 
-            if ($tipo === 1 && $this->wallet->balance > $item->price) {
+            if ($tipo === 1 && $this->wallet->balance >= $item->price) {
                 $this->wallet->balance = $this->wallet->balance - $item->price;
             }
 

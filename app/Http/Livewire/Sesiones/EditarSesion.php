@@ -96,7 +96,7 @@ class EditarSesion extends Component
         $this->applyItem->save();
         $this->clear();
 
-        if ($this->selectedStatus === 1 && $this->wallet->balance > $this->valor) {
+        if ($this->selectedStatus === 1 && $this->wallet->balance >= $this->valor) {
             $this->wallet->balance = $this->wallet->balance - $this->valor;
             $this->wallet->save();
         }
