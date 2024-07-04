@@ -48,15 +48,17 @@ class SwitchPago extends Component
         $item->estado_pago = $this->item->estado_pago == 0 ? 1 : 0;
         $item->save();
 
-        $tipo = $this->item->estado_pago == 0 ? 1 : 0;
+        if ($this->wallet->balance > 0) {
+            $tipo = $this->item->estado_pago == 0 ? 1 : 0;
 
-        if ($tipo === 1 && $this->wallet->balance > $item->price) {
-            $this->wallet->balance = $this->wallet->balance - $item->price;
-        } else {
-            $this->wallet->balance = $this->wallet->balance + $item->price;
+            if ($tipo === 1 && $this->wallet->balance > $item->price) {
+                $this->wallet->balance = $this->wallet->balance - $item->price;
+            }
+
+            $this->wallet->save();
         }
 
-        $this->wallet->save();
+
 
         $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('estado_pago', 1)->get();
 
