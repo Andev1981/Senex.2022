@@ -7,7 +7,9 @@ use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
 use App\Models\Doctor;
+use App\Models\Patient;
 use App\Models\User;
+use App\Models\Wallet;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -31,7 +33,8 @@ class EditarSesion extends Component
         $comments = '',
         $price,
         $numero_sesion,
-        $errorNumSesion = false;
+        $errorNumSesion = false,
+        $wallet;
 
     protected $rules = [
         'selectedKine' => 'required',
@@ -70,6 +73,7 @@ class EditarSesion extends Component
         $this->countApplies = ApplyItem::where('application_id', $this->application->id)->count();
         $this->kines = Doctor::where('status', 1)->orderBy('name', 'ASC')->get();
         $this->types = ApplicationType::where('estado', 1)->get();
+        $this->wallet = Wallet::where('patient_id', $this->patient->id)->first();
     }
 
     public function save()
@@ -91,6 +95,19 @@ class EditarSesion extends Component
         $this->applyItem->numero_sesion = $this->numero_sesion;
         $this->applyItem->save();
         $this->clear();
+
+        if ($this->selectedStatus === 1 && $this->wallet->balance > $this->valor) {
+            $this->wallet->balance = $this->wallet->balance - $this->valor;
+            $this->wallet->save();
+        }
+
+        $res = ApplyItem::where('patient_id', $this->paciente->id)->where('estado_pago', 1)->get();
+
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->paciente->id);
+            $paciente->payment_status = 2;
+            $paciente->save();
+        }
     }
 
     public function delete()

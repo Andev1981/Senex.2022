@@ -202,23 +202,24 @@ class DetallePagos extends Component
 
         if ($buscarAplication) {
             /* 0: Por sesion, 1: Por Tratamiento, 2: Mensual por sesión, 3: Por Adelantado */
-            if ($buscarAplication->type_payment == 0) {
-                //Por Sesión
+            /*  if ($buscarAplication->type_payment == 0) {
                 $applyItems = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
                 $this->itemsApllys = $applyItems;
                 if ($applyItems->count() > 0) {
                     $paciente = Patient::find($this->paciente->id);
-                    $paciente->payment_status = 1;/* Pagos Pendientes */
+                    $paciente->payment_status = 1;
                     $paciente->save();
-                    return;
+                    return; 
                 } else {
                     $paciente = Patient::find($this->paciente->id);
-                    $paciente->payment_status = 2; /* Pagos al dia */
+                    $paciente->payment_status = 2; 
                     $paciente->save();
                     return;
-                }
-            } else if ($buscarAplication->type_payment == 1) {
-            } else if ($buscarAplication->type_payment == 2) {
+                }*/
+            /*    } else if ($buscarAplication->type_payment == 1) {
+            } else  */
+
+            if ($buscarAplication->type_payment == 2) {
                 //Mensual por Sesiones
                 $applyItems = ApplyItem::where('patient_id',  $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->buscarFecha . '-01  00:00:00')->get();
 
@@ -232,7 +233,9 @@ class DetallePagos extends Component
                     $paciente->payment_status = 2; /* Pagos al dia */
                     $paciente->save();
                 }
-            } else if ($buscarAplication->type_payment == 3) {
+            }
+
+            if ($buscarAplication->type_payment == 3) {
                 //Por Adelantado
                 $applyItems = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
 
@@ -252,10 +255,5 @@ class DetallePagos extends Component
         }
 
         return redirect($this->paciente->id . '/pagos/');
-        /* $this->wallet = Wallet::where('patient_id', $this->paciente->id)->first();
-        $this->emit('update-payment');
-        $this->dispatchBrowserEvent('swal-success');
-        $this->mount($this->paciente);
-        $this->render(); */
     }
 }

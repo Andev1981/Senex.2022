@@ -13,6 +13,7 @@ use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\PaymentIncome;
 use App\Models\User;
+use App\Models\Wallet;
 use Carbon\Carbon;
 
 class CrearSesion extends Component
@@ -37,7 +38,8 @@ class CrearSesion extends Component
         $lugar_derivacion = "",
         $documentos = [],
         $forma_de_pago,
-        $applyUser;
+        $applyUser,
+        $wallet;
 
 
     protected function rules()
@@ -52,7 +54,6 @@ class CrearSesion extends Component
                 'valor' => 'required|integer|min:1|max:999999',
                 'mensaje' => 'max:255',
                 'numero_sesion' => 'required',
-                'forma_de_pago' => 'required',
                 'profesional_derivacion' => 'string|max:100',
                 'lugar_derivacion' => 'string|max:150',
                 'documentos.*' => 'mimes:png,jpg,jpeg,pdf|max:1024',
@@ -80,6 +81,7 @@ class CrearSesion extends Component
     {
 
         $this->application = Application::where('patient_id', $patient->id)->where('status', 1)->first();
+        $this->wallet = Wallet::where('patient_id', $patient->id)->first();
 
         if (!$this->application) {
             $this->countApplies = 0;
@@ -102,8 +104,12 @@ class CrearSesion extends Component
 
     public function save()
     {
-
         $this->validate();
+
+        if ($this->status === 1 && $this->wallet->balance > $this->valor) {
+            $this->wallet->balance = $this->wallet->balance - $this->valor;
+            $this->wallet->save();
+        }
 
         if ($this->estado == 1) {
             $this->application = Application::create([
@@ -113,7 +119,7 @@ class CrearSesion extends Component
                 'user_id' => $this->paciente->id,
                 'patient_id' => $this->paciente->id,
                 'status' => 1,
-                'type_payment' => $this->forma_de_pago,
+                'type_payment' => 2,
             ]);
             $this->estado == 0;
         }
@@ -146,6 +152,14 @@ class CrearSesion extends Component
                 'application_type_id' => $this->tipo_atencion,
                 'price' => 0
             ]);
+
+            $res = ApplyItem::where('patient_id', $this->paciente->id)->where('estado_pago', 1)->get();
+
+            if (count($res) === 0) {
+                $paciente = Patient::find($this->paciente->id);
+                $paciente->payment_status = 2;
+                $paciente->save();
+            }
         }
 
         Assign::create([

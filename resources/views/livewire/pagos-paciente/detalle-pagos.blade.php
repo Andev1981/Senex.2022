@@ -22,7 +22,7 @@
 
                 </div>
                 <div>
-                    <div class="grid gap-4 mb-4 sm:grid-cols-4">
+                    <div class="grid gap-4 mb-4 sm:grid-cols-2">
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 font-medium dark:text-white py-4">
                                 <div>
@@ -31,35 +31,20 @@
                                 <div class="text-sm text-gray-500 dark:text-gray-400">
                                     {{ $paciente->email }}
                                 </div>
-                                <div>
-                                    <x-button-update wire:click="verificarPagos" innerText="Verificar Pagos" />
-                                </div>
                             </div>
                         </div>
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 text-sm text-gray-500 dark:text-gray-400">
-                                <span class="inline-flex items-center bg-black text-white text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full mb-3">Tipo de Pago</span>
-                                @if (auth()->user()->email == 'javt1981@gmail.com')
-                                    {{ $typePayment->type_payment }}
-                                @endif
                                 <div>
                                     @if($typePayment)
 
                                     <span class="inline-flex items-center bg-sky-100 text-sky-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-sky-900 dark:text-sky-300">
-                                        @if ($typePayment->type_payment == 0)
-                                        Pago por Sesión
-                                        @elseif ($typePayment->type_payment == 1)
-                                        Pago por tratamiento
-                                        @elseif ($typePayment->type_payment == 2)
-                                        Mensual
-                                        @elseif ($typePayment->type_payment == 3)
-                                        Por adelantado
-                                        @endif
+                                       Billetera Paciente
                                     </span>
 
                                     @endisset
                                 </div>
-                                @if ($typePayment->type_payment == 3)
+                      
                                 <div class="flex items-between ">
                                     <div class="bg-green-500 text-white rounded-full px-2 mb-1 mt-2 text-sm mr-2">
                                         Saldo a favor ${{ number_format($wallet->balance,0,',','.') }}.-
@@ -72,11 +57,12 @@
                                    </div>
                                    <x-button-update wire:click="saveSaldo" innerText="Guardar" class="my-2" />
                                    @endif
-                                @endif
+            
                                   
                             </div>
                        
                         </div>
+                        @if (auth()->user()->email == 'javt1981@gmail.com')
                         <div class="flex items-center shadow-lg rounded-xl">
                             <div class="pl-5 font-normal dark:text-white py-4">
                                 <div class="text-sm flex-col text-white bg-black rounded-full px-3 mb-2  py-1">Total Pagos del Mes
@@ -99,6 +85,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
                     <div class="grid grid-flow-row-dense grid-cols-6">
                         <div class="col-span-1">

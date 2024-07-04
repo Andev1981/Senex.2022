@@ -154,7 +154,7 @@
                         </div>
 
                         @if ($estado == 1)
-                        <div>
+{{--                         <div>
                             <label  class="block text-sm font-medium text-gray-900 dark:text-white">Forma de Pago</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -175,7 +175,7 @@
                                 {{ $message }}.
                             </p>
                             @enderror
-                        </div>
+                        </div> --}}
 
                         <div>
                             <x-input-field label="Profesional que deriva" type="text" obligatorio="Obligatorio" wire:model.defer="profesional_derivacion" placeholder="Ingrese nombre">
