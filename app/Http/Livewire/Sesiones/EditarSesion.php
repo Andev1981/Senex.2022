@@ -101,13 +101,7 @@ class EditarSesion extends Component
             $this->wallet->save();
         }
 
-        $res = ApplyItem::where('patient_id', $this->paciente->id)->where('estado_pago', 1)->get();
-
-        if (count($res) === 0) {
-            $paciente = Patient::find($this->paciente->id);
-            $paciente->payment_status = 2;
-            $paciente->save();
-        }
+        $this->statusPaciente();
     }
 
     public function delete()
@@ -125,5 +119,19 @@ class EditarSesion extends Component
         $this->openItem = 'hidden';
         $this->openDelItem = 'hidden';
         $this->errorNumSesion = false;
+    }
+
+    public function statusPaciente()
+    {
+        $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('status', 1)->where('estado_pago', 0)->get();
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->patient);
+            $paciente->payment_status = 2;
+            $paciente->save();
+        } else {
+            $paciente = Patient::find($this->patient);
+            $paciente->payment_status = 1;
+            $paciente->save();
+        }
     }
 }

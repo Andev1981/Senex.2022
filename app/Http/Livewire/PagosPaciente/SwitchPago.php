@@ -26,14 +26,8 @@ class SwitchPago extends Component
     {
         $this->item = $item;
         $this->application = $item->application;
-
-        /* $this->findSaldo = ApplyItem::where('application_id', $this->item->application_id)->where('estado_pago', 1)->sum("price");
-
-        if (!$this->findSaldo == 0) {
-
-            $this->findSaldo = 0;
-        } */
         $this->wallet = Wallet::where('patient_id', $this->application->patient_id)->first();
+        $this->statusPaciente();
     }
 
     public function render()
@@ -58,19 +52,26 @@ class SwitchPago extends Component
             $this->wallet->save();
         }
 
-
-
-        $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('estado_pago', 1)->get();
-
-        if (count($res) === 0) {
-            $paciente = Patient::find($this->application->patient_id);
-            $paciente->payment_status = 2;
-            $paciente->save();
-        }
+        $this->statusPaciente();
 
         $this->emit('update-payment');
         $this->dispatchBrowserEvent('swal-success');
         $this->mount($item);
         $this->render();
+    }
+
+    public function statusPaciente()
+    {
+        $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('status', 1)->where('estado_pago', 0)->get();
+
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->application->patient_id);
+            $paciente->payment_status = 2;
+            $paciente->save();
+        } else {
+            $paciente = Patient::find($this->application->patient_id);
+            $paciente->payment_status = 1;
+            $paciente->save();
+        }
     }
 }

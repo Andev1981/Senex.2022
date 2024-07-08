@@ -102,7 +102,7 @@ class DetallePagos extends Component
 
         $this->setMonth($this->month);
 
-        /*   $this->verificarPagos(); */
+        $this->verificarPagos();
 
         $wallet = Wallet::where('patient_id', $this->paciente->id)->first();
 
@@ -198,62 +198,16 @@ class DetallePagos extends Component
     public function verificarPagos()
     {
 
-        $buscarAplication = $this->paciente->applications->first();
+        $res = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
 
-        if ($buscarAplication) {
-            /* 0: Por sesion, 1: Por Tratamiento, 2: Mensual por sesión, 3: Por Adelantado */
-            /*  if ($buscarAplication->type_payment == 0) {
-                $applyItems = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
-                $this->itemsApllys = $applyItems;
-                if ($applyItems->count() > 0) {
-                    $paciente = Patient::find($this->paciente->id);
-                    $paciente->payment_status = 1;
-                    $paciente->save();
-                    return; 
-                } else {
-                    $paciente = Patient::find($this->paciente->id);
-                    $paciente->payment_status = 2; 
-                    $paciente->save();
-                    return;
-                }*/
-            /*    } else if ($buscarAplication->type_payment == 1) {
-            } else  */
-
-            if ($buscarAplication->type_payment == 2) {
-                //Mensual por Sesiones
-                $applyItems = ApplyItem::where('patient_id',  $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->buscarFecha . '-01  00:00:00')->get();
-
-                $this->itemsApllys = $applyItems;
-                if ($applyItems->count() > 0) {
-                    $paciente = Patient::find($this->paciente->id);
-                    $paciente->payment_status = 1;/* Pagos Pendientes */
-                    $paciente->save();
-                } else {
-                    $paciente = Patient::find($this->paciente->id);
-                    $paciente->payment_status = 2; /* Pagos al dia */
-                    $paciente->save();
-                }
-            }
-
-            if ($buscarAplication->type_payment == 3) {
-                //Por Adelantado
-                $applyItems = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
-
-                if ($applyItems->count() > 0) {
-
-                    foreach ($applyItems as $item) {
-                        if ($this->wallet->balance >= $item->price) {
-                            $item->estado_pago = 1;
-                            $item->save();
-                            $wallet = Wallet::where('patient_id', $this->paciente->id)->first();
-                            $wallet->balance = $wallet->balance - $item->price;
-                            $wallet->save();
-                        }
-                    }
-                }
-            }
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->paciente->id);
+            $paciente->payment_status = 2;
+            $paciente->save();
+        } else {
+            $paciente = Patient::find($this->paciente->id);
+            $paciente->payment_status = 1;
+            $paciente->save();
         }
-
-        return redirect($this->paciente->id . '/pagos/');
     }
 }

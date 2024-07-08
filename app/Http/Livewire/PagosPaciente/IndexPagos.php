@@ -102,37 +102,16 @@ class IndexPagos extends Component
 		foreach ($allPacientes as $paciente) {
 			$buscarAplication = $paciente->applications->first();
 			if ($buscarAplication) {
-				/* 0: Por sesion, 1: Por Tratamiento, 2: Mensual por sesión, 3: Por Adelantado */
-				if ($buscarAplication->type_payment == 0) {
-					//Por Sesión
-					$applyItems = ApplyItem::where('patient_id', $paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
-					if ($applyItems->count() > 0) {
-						$paciente = Patient::find($paciente->id);
-						$paciente->payment_status = 1;/* Pagos Pendientes */
-						$paciente->save();
-						return;
-					} else {
-						$paciente = Patient::find($paciente->id);
-						$paciente->payment_status = 2; /* Pagos al dia */
-						$paciente->save();
-						return;
-					}
-				} else if ($buscarAplication->type_payment == 1) {
-				} else if ($buscarAplication->type_payment == 2) {
-					//Mensual por Sesiones
-					$applyItems = ApplyItem::where('patient_id',  $paciente->id)->where('status', 1)->where('estado_pago', 0)->where('fecha_atencion', '<', $this->fechaBuscar . '-01  00:00:00')->get();
+				$res = ApplyItem::where('patient_id', $paciente->id)->where('estado_pago', 0)->get();
+				if (count($res) === 0) {
 
-					if ($applyItems->count() > 0) {
-						$paciente = Patient::find($paciente->id);
-						$paciente->payment_status = 1;/* Pagos Pendientes */
-						$paciente->save();
-					} else {
-						$paciente = Patient::find($paciente->id);
-						$paciente->payment_status = 2; /* Pagos al dia */
-						$paciente->save();
-					}
-				} else if ($buscarAplication->type_payment == 3) {
-					//Por Adelantado
+					$paciente = Patient::find($paciente->id);
+					$paciente->payment_status = 2;
+					$paciente->save();
+				} else {
+					$paciente = Patient::find($paciente->id);
+					$paciente->payment_status = 1;
+					$paciente->save();
 				}
 			}
 		}

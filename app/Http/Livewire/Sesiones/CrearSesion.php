@@ -153,13 +153,7 @@ class CrearSesion extends Component
                 'price' => 0
             ]);
 
-            $res = ApplyItem::where('patient_id', $this->paciente->id)->where('estado_pago', 1)->get();
-
-            if (count($res) === 0) {
-                $paciente = Patient::find($this->paciente->id);
-                $paciente->payment_status = 2;
-                $paciente->save();
-            }
+            $this->statusPaciente();
         }
 
         Assign::create([
@@ -190,5 +184,19 @@ class CrearSesion extends Component
         ]);
         $this->errorNumSesion = false;
         $this->mount($this->paciente);
+    }
+
+    public function statusPaciente()
+    {
+        $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('status', 1)->where('estado_pago', 0)->get();
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->paciente);
+            $paciente->payment_status = 2;
+            $paciente->save();
+        } else {
+            $paciente = Patient::find($this->paciente);
+            $paciente->payment_status = 1;
+            $paciente->save();
+        }
     }
 }
