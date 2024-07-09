@@ -31,7 +31,11 @@ class IndexPagos extends Component
 
 	public function selectItem()
 	{
-		$this->inactivos = 0 ? 0 : 1;
+		if ($this->inactivos == 1) {
+			$this->inactivos = 0;
+		} else {
+			$this->inactivos = 1;
+		}
 	}
 
 	public function render()
@@ -39,9 +43,17 @@ class IndexPagos extends Component
 		$this->fechaActual = Carbon::now();
 		$this->fechaBuscar = $this->fechaActual->format('Y-m');
 
-		$pacientes = Patient::where(function ($query) {
-			$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-		})->where('status', $this->inactivos)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+
+		if ($this->inactivos == 1) {
+			$pacientes = Patient::where(function ($query) {
+				$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+			})->where('status', 0)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+		} else {
+			$pacientes = Patient::where(function ($query) {
+				$query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+			})->where('status', 1)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+		}
+
 
 		return view('livewire.pagos-paciente.index-pagos', compact('pacientes'));
 	}
