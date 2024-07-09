@@ -20,7 +20,7 @@ class IndexPagos extends Component
 	public $direction = 'desc';
 	public $openDelPaciente = 'hidden';
 	public $quantity = 10;
-	public $inactivos = 1;
+	public $inactivos = 0;
 	public $fechaActual;
 	public $fechaBuscar = '';
 
@@ -31,11 +31,7 @@ class IndexPagos extends Component
 
 	public function selectItem()
 	{
-		if ($this->inactivos == 1) {
-			$this->inactivos = 0;
-		} else {
-			$this->inactivos = 1;
-		}
+		$this->inactivos = 0 ? 0 : 1;
 	}
 
 	public function render()
