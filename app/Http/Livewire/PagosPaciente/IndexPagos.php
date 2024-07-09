@@ -16,7 +16,7 @@ class IndexPagos extends Component
 	public $search;
 	protected $listeners = ['success' => 'render', 'success-paciente' => 'render', 'update-payment' => 'render'];
 	protected $queryString = ['search'];
-	public $sort = 'payment_status';
+	public $sort = 'updated_at';
 	public $direction = 'asc';
 	public $openDelPaciente = 'hidden';
 	public $quantity = 10;
