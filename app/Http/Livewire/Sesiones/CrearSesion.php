@@ -190,11 +190,11 @@ class CrearSesion extends Component
     {
         $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('status', 1)->where('estado_pago', 0)->get();
         if (count($res) === 0) {
-            $paciente = Patient::find($this->paciente);
+            $paciente = Patient::find($this->application->patient_id);
             $paciente->payment_status = 2;
             $paciente->save();
         } else {
-            $paciente = Patient::find($this->paciente);
+            $paciente = Patient::find($this->application->patient_id);
             $paciente->payment_status = 1;
             $paciente->save();
         }

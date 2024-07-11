@@ -21,6 +21,7 @@ class Patient extends Model
         'address_id',
         'status',
         'payment_status',
+        'orden',
     ];
 
     public function applications()

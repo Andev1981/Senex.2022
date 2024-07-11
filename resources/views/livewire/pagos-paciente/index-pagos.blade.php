@@ -7,6 +7,7 @@
                         <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
                         <label class="text-lg font-semibold">Listado de Pacientes</label>
                     </div>
+                    @if (auth()->user()->email == 'javt1981@gmail.com')
                     <div>
                         <a {{-- href="/verificar-pagos" --}} wire:loading.remove wire:target="verificarPagos" wire:click="verificarPagos" class="cursor-pointer flex items-center text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-2 py-1.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800" type="button">
 														<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16" class="w-5 h-5 mr-2">
@@ -26,6 +27,7 @@
                             </button>
                         </div>
                     </div>
+                    @endif
                     <div class="flex justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
                         @livewire('paciente.modal-crear')
                     </div>

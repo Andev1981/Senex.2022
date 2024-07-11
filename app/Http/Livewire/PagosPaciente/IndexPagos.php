@@ -16,7 +16,7 @@ class IndexPagos extends Component
 	public $search;
 	protected $listeners = ['success' => 'render', 'success-paciente' => 'render', 'update-payment' => 'render'];
 	protected $queryString = ['search'];
-	public $sort = 'updated_at';
+	public $sort = 'orden';
 	public $direction = 'desc';
 	public $openDelPaciente = 'hidden';
 	public $quantity = 10;
@@ -95,22 +95,24 @@ class IndexPagos extends Component
 		$this->openDelPaciente = 'hidden';
 	}
 
+	public $orden = 1;
 	public function verificarPagos()
 	{
-		$allPacientes = Patient::with('applyItems')->where('status', 1)->get();
+		$allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
 
 		foreach ($allPacientes as $paciente) {
 			$buscarAplication = $paciente->applications->first();
 			if ($buscarAplication) {
 				$res = ApplyItem::where('patient_id', $paciente->id)->where('estado_pago', 0)->get();
 				if (count($res) === 0) {
-
 					$paciente = Patient::find($paciente->id);
 					$paciente->payment_status = 2;
+					$paciente->orden = $this->orden++;
 					$paciente->save();
 				} else {
 					$paciente = Patient::find($paciente->id);
 					$paciente->payment_status = 1;
+					$paciente->orden = $this->orden++;
 					$paciente->save();
 				}
 			}
