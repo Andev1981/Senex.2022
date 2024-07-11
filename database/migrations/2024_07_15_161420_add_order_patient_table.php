@@ -15,7 +15,7 @@ return new class extends Migration
     {
         //
         Schema::table('patients', function (Blueprint $table) {
-            $table->integer('order')->nullable()->comment('Orden de actualizacion de paciente');
+            $table->integer('orden')->nullable()->comment('Orden de actualizacion de paciente');
         });
     }
 
