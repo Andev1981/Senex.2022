@@ -21,12 +21,15 @@ class SwitchPago extends Component
     public $payment;
     public $application;
     public $wallet;
+    public $newOrden;
 
     public function mount(ApplyItem $item)
     {
         $this->item = $item;
         $this->application = $item->application;
         $this->wallet = Wallet::where('patient_id', $this->application->patient_id)->first();
+        $allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
+        $this->newOrden = $allPacientes->max('orden');
         $this->statusPaciente();
     }
 
@@ -67,10 +70,12 @@ class SwitchPago extends Component
         if (count($res) === 0) {
             $paciente = Patient::find($this->application->patient_id);
             $paciente->payment_status = 2;
+            $paciente->orden = $this->newOrden++;
             $paciente->save();
         } else {
             $paciente = Patient::find($this->application->patient_id);
             $paciente->payment_status = 1;
+            $paciente->orden = $this->newOrden++;
             $paciente->save();
         }
     }

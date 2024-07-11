@@ -40,6 +40,7 @@ class CrearSesion extends Component
         $forma_de_pago,
         $applyUser,
         $wallet;
+    public $newOrden;
 
 
     protected function rules()
@@ -100,6 +101,9 @@ class CrearSesion extends Component
         $this->tipo_atenciones = ApplicationType::where('estado', 1)->get();
         $this->kines = Doctor::where('status', 1)->orderBy('name', 'ASC')->get();
         $this->paciente = $patient;
+        $allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
+
+        $this->newOrden = $allPacientes->max('orden');
     }
 
     public function save()
@@ -192,10 +196,12 @@ class CrearSesion extends Component
         if (count($res) === 0) {
             $paciente = Patient::find($this->application->patient_id);
             $paciente->payment_status = 2;
+            $paciente->orden = $this->newOrden++;
             $paciente->save();
         } else {
             $paciente = Patient::find($this->application->patient_id);
             $paciente->payment_status = 1;
+            $paciente->orden = $this->newOrden++;
             $paciente->save();
         }
     }
