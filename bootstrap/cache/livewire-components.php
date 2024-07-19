@@ -21,6 +21,7 @@
   'kine.listado-kines' => 'App\\Http\\Livewire\\Kine\\ListadoKines',
   'kine.modal-editar' => 'App\\Http\\Livewire\\Kine\\ModalEditar',
   'kine.values-kine' => 'App\\Http\\Livewire\\Kine\\ValuesKine',
+  'kinesiologos.kine-index' => 'App\\Http\\Livewire\\Kinesiologos\\KineIndex',
   'layout.navigation' => 'App\\Http\\Livewire\\Layout\\Navigation',
   'layout.sidebar' => 'App\\Http\\Livewire\\Layout\\Sidebar',
   'paciente.listado-pacientes' => 'App\\Http\\Livewire\\Paciente\\ListadoPacientes',

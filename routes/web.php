@@ -20,6 +20,7 @@ use App\Http\Livewire\Paciente\Show\Index as ShowIndex;
 use App\Http\Livewire\PagosPaciente\DetallePagos;
 use App\Http\Livewire\Sesiones\IndexSesiones;
 use App\Http\Livewire\Types\Index;
+use App\Http\Livewire\Kinesiologos\KineIndex;
 
 
 Route::get('storage-link', function () {
@@ -52,6 +53,9 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('kines', ListadoKines::class)->name('kines');
     Route::get('types', Index::class)->name('types');
+
+    //Livewire componentes app kines
+    Route::get('kinesiologos', KineIndex::class)->name('kinesiologos');
 
 
 
