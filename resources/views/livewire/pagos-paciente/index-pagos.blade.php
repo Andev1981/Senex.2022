@@ -269,7 +269,7 @@
                                 <td>
 
                                     <div class="flex flex-row gap-4">
-                                        @if ($paciente->payment_status != 3)
+                                        {{-- @if ($paciente->payment_status != 3) --}}
 
                                         <a href="{{ route('pagos',$paciente) }}"
                                             class="flex items-center px-2 py-1 text-sm font-medium text-center text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
@@ -282,7 +282,7 @@
 
                                             Pagos
                                         </a>
-                                        @endif
+                                        {{-- @endif --}}
                                         <a href="{{ route('detalles',$paciente) }}"
                                             class="flex items-center px-2 py-1 text-sm font-medium text-center text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                                             type="button">
