@@ -46,6 +46,7 @@ class DetallePagos extends Component
         $items,
         $itemsFechas,
         $itemsApllys = [], $verSaldo = false, $wallet;
+    public $newOrden;
 
     protected $queryString = ['search'];
     protected $listeners = ['update-payment' => 'render'];
@@ -192,6 +193,7 @@ class DetallePagos extends Component
         $wallet->balance = $this->wallet->balance + $this->saldo;
         $wallet->save();
         $this->inputSaldo();
+        $this->statusPaciente();
         $this->render();
     }
 
@@ -207,6 +209,23 @@ class DetallePagos extends Component
         } else {
             $paciente = Patient::find($this->paciente->id);
             $paciente->payment_status = 1;
+            $paciente->save();
+        }
+    }
+
+    public function statusPaciente()
+    {
+        $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('status', 1)->where('estado_pago', 0)->get();
+
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->application->patient_id);
+            $paciente->payment_status = 2;
+            $paciente->orden = $this->newOrden++;
+            $paciente->save();
+        } else {
+            $paciente = Patient::find($this->application->patient_id);
+            $paciente->payment_status = 1;
+            $paciente->orden = $this->newOrden++;
             $paciente->save();
         }
     }

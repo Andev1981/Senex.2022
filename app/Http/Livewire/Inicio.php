@@ -10,6 +10,10 @@ class Inicio extends Component
     public function render()
     {
 
+        if (auth()->user()->user_type === "Super-Administrador") {
+            return view('livewire.kinesiologos.kine-index');
+        }
+
         return view('livewire.inicio');
     }
 }
