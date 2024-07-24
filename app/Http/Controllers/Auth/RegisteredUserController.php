@@ -42,8 +42,8 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
-        $kine =Role::find(3);
-        $paciente =Role::find(2);
+        $kine = Role::find(3);
+        $paciente = Role::find(2);
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'rut' => ['required', 'string', 'max:255'],
@@ -60,17 +60,17 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        if($request->has('doctor')){
+        if ($request->has('doctor')) {
             $doctor = Doctor::create([
                 'user_id' => $user->id,
                 'state' => 1
             ]);
             $user->assignRole($kine->name);
-
-        }else{
+        } else {
             $patient = Patient::create([
                 'user_id' => $user->id,
-                'state' => 1
+                'state' => 1,
+                'orden' => 0
             ]);
             $user->assignRole($paciente->name);
         }

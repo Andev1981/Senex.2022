@@ -56,7 +56,8 @@ class UserController extends Controller
         if ($request->role == 2) {
             $paciente = Patient::create([
                 'user_id' => $user->id,
-                'state' => 1
+                'state' => 1,
+                'orden' => 0
             ]);
         } elseif ($request->role == 3) {
             $doctor = Doctor::create([

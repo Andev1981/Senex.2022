@@ -130,6 +130,7 @@ class ReportePdfController extends Controller
                     'address_id'  => $paciente->address_id,
                     'status'  => $paciente->status,
                     'payment_status'  => $paciente->payment_status,
+                    'orden' => 0
                 ]);
             }
 

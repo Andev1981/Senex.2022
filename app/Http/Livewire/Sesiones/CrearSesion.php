@@ -2,7 +2,6 @@
 
 namespace App\Http\Livewire\Sesiones;
 
-use App\Models\Activity;
 use Livewire\Component;
 use App\Models\Application;
 use App\Models\ApplicationType;
@@ -12,9 +11,8 @@ use App\Models\Assign;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\PaymentIncome;
-use App\Models\User;
 use App\Models\Wallet;
-use Carbon\Carbon;
+
 
 class CrearSesion extends Component
 {
@@ -156,8 +154,6 @@ class CrearSesion extends Component
                 'application_type_id' => $this->tipo_atencion,
                 'price' => 0
             ]);
-
-            $this->statusPaciente();
         }
 
         Assign::create([
@@ -188,21 +184,5 @@ class CrearSesion extends Component
         ]);
         $this->errorNumSesion = false;
         $this->mount($this->paciente);
-    }
-
-    public function statusPaciente()
-    {
-        $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('status', 1)->where('estado_pago', 0)->get();
-        if (count($res) === 0) {
-            $paciente = Patient::find($this->application->patient_id);
-            $paciente->payment_status = 2;
-            $paciente->orden = $this->newOrden++;
-            $paciente->save();
-        } else {
-            $paciente = Patient::find($this->application->patient_id);
-            $paciente->payment_status = 1;
-            $paciente->orden = $this->newOrden++;
-            $paciente->save();
-        }
     }
 }

@@ -35,7 +35,6 @@ class EditarSesion extends Component
         $numero_sesion,
         $errorNumSesion = false,
         $wallet;
-    public $newOrden;
 
     protected $rules = [
         'selectedKine' => 'required',
@@ -76,8 +75,6 @@ class EditarSesion extends Component
         $this->types = ApplicationType::where('estado', 1)->get();
         $this->wallet = Wallet::where('patient_id', $this->patient->id)->first();
         $allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
-
-        $this->newOrden = $allPacientes->max('orden');
     }
 
     public function save()
@@ -123,21 +120,5 @@ class EditarSesion extends Component
         $this->openItem = 'hidden';
         $this->openDelItem = 'hidden';
         $this->errorNumSesion = false;
-    }
-
-    public function statusPaciente()
-    {
-        $res = ApplyItem::where('patient_id', $this->application->patient_id)->where('status', 1)->where('estado_pago', 0)->get();
-        if (count($res) === 0) {
-            $paciente = Patient::find($this->patient);
-            $paciente->payment_status = 2;
-            $paciente->orden = $this->newOrden++;
-            $paciente->save();
-        } else {
-            $paciente = Patient::find($this->patient);
-            $paciente->payment_status = 1;
-            $paciente->orden = $this->newOrden++;
-            $paciente->save();
-        }
     }
 }

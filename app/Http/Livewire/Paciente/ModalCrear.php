@@ -107,6 +107,7 @@ class ModalCrear extends Component
             'address_id' => $address->id,
             'status' => 1,
             'payment_status' => 3,
+            'orden' => 0,
         ]);
 
         $this->cargaRespuestasBase($patient);
