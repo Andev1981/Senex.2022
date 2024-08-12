@@ -6,8 +6,7 @@
           class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
           <div class="flex items-center">
             <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
-            <label class="text-lg font-semibold">Listado de Pacientes- {{ $inactivos }} - {{ $pagados
-              }}</label>
+            <label class="text-lg font-semibold">Listado de Pacientes</label>
           </div>
           @if (auth()->user()->email == 'javt1981@gmail.com')
           <div>
