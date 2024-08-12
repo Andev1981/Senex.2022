@@ -399,4 +399,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Eliminar -->
+
+    @livewire('pagos-paciente.listado-atenciones')
 </div>
