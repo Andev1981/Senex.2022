@@ -28,11 +28,13 @@ class ListadoAtenciones extends Component
             $this->month = $this->buscarFecha->format('m');
             $this->year = $this->buscarFecha->format('Y');
             $this->reloadStatus = 1;
+            $this->buscarFecha =  $this->year . '-' . $this->month . '-';
+
+            $applyItems = ApplyItem::where('status', 1)->where('estado_pago', 1)->where('updated_at', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate('30');
+        } else {
+            $this->buscarFecha =  $this->year . '-' . $this->month . '-';
+            $applyItems = ApplyItem::where('status', 1)->where('estado_pago', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate('30');
         }
-        $this->buscarFecha =  $this->year . '-' . $this->month . '-';
-
-        $applyItems = ApplyItem::where('status', 1)->where('estado_pago', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate('30');
-
 
         return view('livewire.pagos-paciente.listado-atenciones', compact('applyItems'));
     }
