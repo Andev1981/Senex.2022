@@ -30,7 +30,7 @@ class Patient extends Model
     }
     public function address()
     {
-        return $this->belongsTo(Address::class);
+        return $this->hasOne(Address::class, 'id', 'address_id');
     }
 
     public function applyItems()
@@ -46,5 +46,10 @@ class Patient extends Model
     public function wallet()
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    public function pacientes()
+    {
+        return $this->hasMany(PacienteKine::class);
     }
 }

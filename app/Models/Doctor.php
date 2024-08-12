@@ -9,7 +9,7 @@ class Doctor extends Model
 {
     use HasFactory;
 
-     protected $fillable = [
+    protected $fillable = [
         'user_id',
         'name',
         'last_name',
@@ -21,9 +21,15 @@ class Doctor extends Model
         'status',
     ];
 
+    protected $dates = ['birth'];
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    public function address()
+    {
+        return $this->belongsTo(Address::class);
+    }
 }

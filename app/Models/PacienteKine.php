@@ -9,18 +9,18 @@ class PacienteKine extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'doctor_id',
         'patient_id',
-        'kine_id',
     ];
 
 
     public function kine()
     {
-        return $this->belongsTo(Doctor::class);
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'id');
     }
 
     public function paciente()
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(Patient::class, 'patient_id', 'id');
     }
 }

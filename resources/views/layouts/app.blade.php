@@ -2,36 +2,36 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{{ config('app.name', 'Senex-App') }}</title>
-  @vite(['resources/css/app.css', 'resources/js/app.js'])
-  @livewireStyles
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ config('app.name', 'Senex-App') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 
 <body class="antialiased">
-  <div class="bg-gray-50 dark:bg-gray-900">
-    @livewire('layout.navigation')
-    @if (auth()->user()->user_type === "Super-Administrador")
+    <div class="bg-gray-50 dark:bg-gray-900">
+        @livewire('layout.navigation')
+        @if (auth()->user()->user_type === "Kine")
 
-    <main class="h-auto p-4 pt-20">
-      @else
-      @livewire('layout.sidebar')
-      <main class="h-auto p-4 pt-20 md:ml-64">
-        @endif
+        <main class="h-auto p-4 pt-20">
+            @else
+            @livewire('layout.sidebar')
+            <main class="h-auto p-4 pt-20 md:ml-64">
+                @endif
 
-        {{ $slot }}
+                {{ $slot }}
 
-      </main>
-  </div>
+            </main>
+    </div>
 
-  @livewireScripts
+    @livewireScripts
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script>
-    if (document.readyState === "loading") {
+    <script>
+        if (document.readyState === "loading") {
         window.addEventListener('swal-success', () => {
             Swal.fire({
                 title: 'Ok!',
@@ -73,7 +73,7 @@
             })
         });
     }
-  </script>
+    </script>
 </body>
 
 </html>

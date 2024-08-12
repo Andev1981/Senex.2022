@@ -1,18 +1,12 @@
 <div>
   <section class="p-2 dark:bg-gray-900">
     <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
-      <!-- Start coding here -->
-
-      <div class="relative overflow-hidden bg-white shadow-md dark:bg-gray-800 sm:rounded-lg">
-        <div class="flex flex-row items-center p-4 bg-slate-200 md:flex-row md:space-y-0 md:space-x-4">
-
-
+      <div class="relative overflow-hidden bg-white rounded-lg shadow-md">
+        <div class="flex flex-row items-center gap-2 p-4">
           <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
-
           <label class="text-lg font-semibold">Listado de Kines</label>
-
         </div>
-        <div class="flex flex-col justify-between p-4 space-y-3 md:flex-row md:space-y-0 md:space-x-4">
+        <div class="flex flex-col justify-between p-4 space-y-3 md:flex-row md:space-y-0">
           <div class="w-full md:w-5/6">
             <div class="flex items-center">
               <label class="uppercase sr-only">Buscar</label>
@@ -32,9 +26,8 @@
             </div>
           </div>
           <div
-            class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">
-            @livewire('kine.create-edit-kine')
-
+            class="flex flex-col items-stretch justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center">
+            @livewire('kine.crear')
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -42,11 +35,10 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr class="text-center">
                 <th scope="col" class="px-6 py-3">Nombre</th>
-                <th scope="col" class="px-6 py-3">Fecha&nbsp;Edición</th>
                 <th scope="col" class="px-6 py-3">
                   Estado
                 </th>
-                <th colspan="2" class="px-6 py-3">
+                <th colspan="4" class="px-6 py-3">
                   <span class="sr-only">Actions</span>
                 </th>
               </tr>
@@ -54,12 +46,10 @@
             <tbody>
               @foreach ($doctores as $doctor)
               <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                <td scope="row" class="px-4 py-3 text-gray-900 font-sm whitespace-nowrap dark:text-white">
+                <td scope="row"
+                  class="flex items-center gap-2 px-4 py-3 text-gray-900 font-sm whitespace-nowrap dark:text-white">
+                  @livewire('kine.kines-pacientes', ['doctor' => $doctor], key($doctor->id))
                   {{ $doctor->name }} {{ $doctor->last_name }}
-                </td>
-
-                <td class="px-6 py-4">
-                  {{ \Carbon\Carbon::parse(strtotime($doctor->updated_at))->format('d/m/Y') }}
                 </td>
                 <td class="px-6 py-4">
                   @if ($doctor->status === 1)
@@ -75,16 +65,24 @@
                   @endif
 
                 </td>
-                <td class="flex px-4 py-4">
-                  @livewire('kine.assign-index', ['doctor' => $doctor], key($doctor->id))
+                <td class="py-0">
+                  @livewire('kine.atenciones', ['doctor' => $doctor], key($doctor->id))
+                </td>
+                <td class="py-0">
+                  @livewire('kine.acceso-app', ['doctor' => $doctor], key($doctor->id))
+                </td>
+                <td class="py-0">
+                  @livewire('kine.editar', ['doctor' => $doctor], key($doctor->id))
+                </td>
+                <td class="py-0">
+                  @livewire('kine.eliminar', ['doctor' => $doctor], key($doctor->id))
                 </td>
               </tr>
               @endforeach
             </tbody>
           </table>
         </div>
-        <nav class="flex flex-col items-start justify-between p-4 space-y-3 md:flex-row md:items-center md:space-y-0"
-          aria-label="Table navigation">
+        <nav class="flex justify-between p-4" aria-label="Table navigation">
           {{ $doctores->links() }}
         </nav>
       </div>

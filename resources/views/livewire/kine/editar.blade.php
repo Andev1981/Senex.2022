@@ -1,24 +1,11 @@
 <div>
-  <div class="flex items-center space-x-4">
-    <button type="button" wire:click="$set('open','')"
-      class="flex items-center px-2 py-1 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 -ml-0.5" viewbox="0 0 20 20" fill="currentColor"
-        aria-hidden="true">
-        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-        <path fill-rule="evenodd"
-          d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-          clip-rule="evenodd" />
-      </svg>
+  <x-button-edit wire:click="openModal" innerText="Datos" />
 
-      Crear
-
-    </button>
-
-
-  </div>
-
-  <div
-    class="{{ $open }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full flex">
+  @if($isOpen)
+  {{-- Modal --}}
+  <div aria-hidden="true"
+    class="bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] flex"
+    aria-modal="true" aria-hidden="false" role="dialog">
     <div class="relative w-full h-full max-w-5xl p-4 md:h-auto">
 
       <!-- Modal content -->
@@ -26,11 +13,13 @@
         <!-- Modal header -->
         <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 uppercase dark:text-white">
-
+            @if ($status===1)
+            Editando kine
+            @else
             Crear kine
-
+            @endif
           </h3>
-          <button wire:click="$set('open','hidden')" type="button"
+          <button wire:click="closeModal" type="button"
             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
             <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
               xmlns="http://www.w3.org/2000/svg">
@@ -42,6 +31,7 @@
           </button>
         </div>
         <form wire:submit.prevent="save">
+
           <div class="grid gap-4 mb-4 sm:grid-cols-3">
             <div>
               <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nombre</label>
@@ -53,7 +43,7 @@
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <input type="text" wire:model="name"
+                <input type="text" wire:model.defer="name"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
                   placeholder="Nombre">
 
@@ -181,7 +171,6 @@
               @enderror
             </div>
           </div>
-
           <div class="grid gap-4 mb-4 sm:grid-cols-8">
             <div class="sm:col-span-4">
               <div>
@@ -221,7 +210,7 @@
 
 
                   <label class="sr-only">Seleccione comuna</label>
-                  <select wire:model="comuna"
+                  <select wire:model.defer="comuna_id"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     <option selected readonly> -- seleccione comuna --</option>
                     @foreach ($comunas as $comuna)
@@ -232,7 +221,7 @@
                   </select>
                 </div>
               </div>
-              @error('comuna')
+              @error('comuna_id')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>
@@ -245,12 +234,12 @@
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <img src="{{ asset('icons/location-pin.png') }}" class="w-5 h-5" alt="">
                 </div>
-                <input type="text" name="calle" wire:model.defer="calle"
+                <input type="text" name="calle" wire:model.defer="street"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="">
 
               </div>
-              @error('calle')
+              @error('street')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>
@@ -267,11 +256,11 @@
                   </svg>
 
                 </div>
-                <input type="number" name="numero" wire:model.defer="numero"
+                <input type="number" name="numero" wire:model.defer="number"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="">
               </div>
-              @error('numero')
+              @error('number')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>
@@ -279,37 +268,13 @@
             </div>
           </div>
 
-          <div class="grid gap-4 mb-4 sm:grid-cols-1">
-            <div>
-              <label class="block mb-1 ml-2 text-sm font-medium text-gray-900 dark:text-white">Detalles de
-                Dirección</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
-                  </svg>
-
-                </div>
-                <input type="detalle_direccion" wire:model.defer="detalle_direccion"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
-                  placeholder="">
-              </div>
-              @error('detalle_direccion')
-              <p class="mt-2 text-xs text-red-600 dark:text-red-500">
-                {{ $message }}
-              </p>
-              @enderror
-            </div>
-          </div>
 
           <div class="flex items-center pt-5 space-x-4 border-t-2">
 
             <button type="submit" wire:click="save" wire:loading.remove wire:target="save"
               class="text-white inline-flex items-center bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
 
-              Crear
+              Actualizar
 
             </button>
 
@@ -325,7 +290,7 @@
                   fill="currentColor" />
               </svg>
 
-              Creando...
+              Actualizando...
 
             </button>
 
@@ -335,6 +300,6 @@
       </div>
     </div>
   </div>
-
+  @endif
 
 </div>

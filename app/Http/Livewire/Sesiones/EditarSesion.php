@@ -2,16 +2,12 @@
 
 namespace App\Http\Livewire\Sesiones;
 
-use App\Models\Activity;
-use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
 use App\Models\Doctor;
 use App\Models\Patient;
-use App\Models\User;
 use App\Models\Wallet;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class EditarSesion extends Component
