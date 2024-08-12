@@ -13,7 +13,7 @@ class IndexPagos extends Component
 {
   use WithPagination;
   public $selectedPaciente;
-  public $search;
+  public $search = '';
   protected $listeners = ['success' => 'render', 'success-paciente' => 'render', 'update-payment' => 'render'];
   protected $queryString = ['search'];
   public $sort = 'orden';
@@ -74,6 +74,12 @@ class IndexPagos extends Component
           $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
         })->where('status', 1)->where('payment_status', 1)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
       }
+    }
+
+    if ($this->search !== '') {
+      $pacientes = Patient::where(function ($query) {
+        $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
+      })->orderBy($this->sort, $this->direction)->paginate($this->quantity);
     }
 
     /* if ($this->inactivos == 1) {
