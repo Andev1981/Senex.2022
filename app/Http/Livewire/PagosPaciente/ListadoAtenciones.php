@@ -31,7 +31,7 @@ class ListadoAtenciones extends Component
         }
         $this->buscarFecha =  $this->year . '-' . $this->month . '-';
 
-        $applyItems = ApplyItem::where('estado_pago', 1)->where('updated_at', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate('30');
+        $applyItems = ApplyItem::where('status', 1)->where('estado_pago', 1)->where('updated_at', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate('30');
 
 
         return view('livewire.pagos-paciente.listado-atenciones', compact('applyItems'));
