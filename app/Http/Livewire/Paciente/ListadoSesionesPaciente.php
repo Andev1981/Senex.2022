@@ -50,7 +50,6 @@ class ListadoSesionesPaciente extends Component
         } else {
             $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
         }
-
         return view('livewire.paciente.listado-sesiones-paciente', compact('applyItems'));
     }
 }

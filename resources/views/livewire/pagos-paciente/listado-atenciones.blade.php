@@ -205,9 +205,10 @@
                     </svg>
                     @endif
                   </th> --}}
-                  <th wire:click="order('doctor_id')" scope="col" class="px-4 py-3 cursor-pointer">
-                    KINE
-                    @if ($sort == 'doctor_id')
+
+                  <th wire:click="order('patient_id')" scope="col" class="px-4 py-3 cursor-pointer">
+                    PACIENTE
+                    @if ($sort == 'patient_id')
                     @if ($direction == 'asc')
                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
                       <path
@@ -226,9 +227,10 @@
                     </svg>
                     @endif
                   </th>
-                  <th wire:click="order('patient_id')" scope="col" class="px-4 py-3 cursor-pointer">
-                    PACIENTE
-                    @if ($sort == 'patient_id')
+
+                  <th wire:click="order('doctor_id')" scope="col" class="px-4 py-3 cursor-pointer">
+                    KINE
+                    @if ($sort == 'doctor_id')
                     @if ($direction == 'asc')
                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
                       <path
@@ -284,16 +286,19 @@
                     <span class="font-semibold text-gray-800">(#{{ $applyItem->numero_sesion }})</span>
                     {{-- {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }} --}}
                   </td>
-                  <td class="items-center py-2 pl-2 mx-2">
-                    <div class="ml-2 font-medium uppercase dark:text-white">
-                      {{ $applyItem->doctor->name ?? '' }} {{ $applyItem->doctor->last_name ?? '' }}
-                    </div>
-                  </td>
+
                   <td class="items-center py-2 pl-2 mx-2">
                     <div class="ml-2 font-medium uppercase dark:text-white">
                       {{ $applyItem->patient->name ?? '' }} {{ $applyItem->patient->last_name ?? '' }}
                     </div>
                   </td>
+
+                  <td class="items-center py-2 pl-2 mx-2">
+                    <div class="ml-2 font-medium uppercase dark:text-white">
+                      {{ $applyItem->doctor->name ?? '' }} {{ $applyItem->doctor->last_name ?? '' }}
+                    </div>
+                  </td>
+
                   <td class="px-6 py-4 uppercase">
                     {{ $applyItem->applicationType->name ?? '' }}
                   </td>

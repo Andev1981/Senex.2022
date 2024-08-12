@@ -44,6 +44,7 @@ class EditarSesion extends Component
 
     public function render()
     {
+
         return view('livewire.sesiones.editar-sesion');
     }
 
@@ -116,5 +117,22 @@ class EditarSesion extends Component
         $this->openItem = 'hidden';
         $this->openDelItem = 'hidden';
         $this->errorNumSesion = false;
+    }
+
+    public function statusPaciente()
+    {
+        $res = ApplyItem::where('patient_id', $this->patient->id)->where('status', 1)->where('estado_pago', 0)->get();
+
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->patient->id);
+            $paciente->payment_status = 2;
+
+            $paciente->save();
+        } else {
+            $paciente = Patient::find($this->patient->id);
+            $paciente->payment_status = 1;
+
+            $paciente->save();
+        }
     }
 }

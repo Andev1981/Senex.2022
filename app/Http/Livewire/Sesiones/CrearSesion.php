@@ -38,7 +38,6 @@ class CrearSesion extends Component
         $forma_de_pago,
         $applyUser,
         $wallet;
-    public $newOrden;
 
 
     protected function rules()
@@ -73,6 +72,7 @@ class CrearSesion extends Component
 
     public function render()
     {
+
         return view('livewire.sesiones.crear-sesion');
     }
 
@@ -100,8 +100,6 @@ class CrearSesion extends Component
         $this->kines = Doctor::where('status', 1)->orderBy('name', 'ASC')->get();
         $this->paciente = $patient;
         $allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
-
-        $this->newOrden = $allPacientes->max('orden');
     }
 
     public function save()
@@ -163,7 +161,7 @@ class CrearSesion extends Component
             'application_type_user_id' => $applicationTypeUser->id,
         ]);
 
-
+        $this->statusPaciente();
         $this->clear();
     }
 
@@ -184,5 +182,20 @@ class CrearSesion extends Component
         ]);
         $this->errorNumSesion = false;
         $this->mount($this->paciente);
+    }
+
+    public function statusPaciente()
+    {
+        $res = ApplyItem::where('patient_id', $this->paciente->id)->where('status', 1)->where('estado_pago', 0)->get();
+
+        if (count($res) === 0) {
+            $paciente = Patient::find($this->paciente->id);
+            $paciente->payment_status = 2;
+            $paciente->save();
+        } else {
+            $paciente = Patient::find($this->paciente->id);
+            $paciente->payment_status = 1;
+            $paciente->save();
+        }
     }
 }
