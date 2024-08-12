@@ -257,7 +257,7 @@
                 <tr class="items-center justify-between bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                   <td class="px-6 py-4 uppercase whitespace-nowrap">
                     {{ \Carbon\Carbon::parse(strtotime($applyItem->updated_at))->format('d/m/Y H:i') }}
-                    <span class="font-semibold text-gray-500">(#{{ $applyItem->numero_sesion }})</span>
+                    <span class="font-semibold text-gray-800">(#{{ $applyItem->numero_sesion }})</span>
                   </td>
                   <td class="items-center py-2 pl-2 mx-2">
                     <div class="ml-2 font-medium uppercase dark:text-white">
