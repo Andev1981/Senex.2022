@@ -51,7 +51,7 @@ class ApplyItem extends Model
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class . 'patient_id', 'id');
+        return $this->belongsTo(Patient::class, 'patient_id', 'id');
     }
 
     public function doctor()
