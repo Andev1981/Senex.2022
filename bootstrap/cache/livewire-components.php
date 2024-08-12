@@ -50,6 +50,7 @@
   'paciente.show.atenciones.editar-item' => 'App\\Http\\Livewire\\Paciente\\Show\\Atenciones\\EditarItem',
   'pagos-paciente.detalle-pagos' => 'App\\Http\\Livewire\\PagosPaciente\\DetallePagos',
   'pagos-paciente.index-pagos' => 'App\\Http\\Livewire\\PagosPaciente\\IndexPagos',
+  'pagos-paciente.listado-atenciones' => 'App\\Http\\Livewire\\PagosPaciente\\ListadoAtenciones',
   'pagos-paciente.switch-pago' => 'App\\Http\\Livewire\\PagosPaciente\\SwitchPago',
   'sesiones.crear-sesion' => 'App\\Http\\Livewire\\Sesiones\\CrearSesion',
   'sesiones.editar-sesion' => 'App\\Http\\Livewire\\Sesiones\\EditarSesion',
