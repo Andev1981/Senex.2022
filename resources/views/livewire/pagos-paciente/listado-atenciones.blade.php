@@ -5,7 +5,7 @@
         class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
         <div class="flex items-center">
           <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
-          <label class="text-lg font-semibold">Listado de Atenciones</label>
+          <label class="text-lg font-semibold">Listado de Atenciones Pagadas</label>
         </div>
 
         <div
@@ -163,7 +163,7 @@
               <thead class="text-xs font-bold text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                   <th wire:click="order('updated_at')" scope="col" class="px-4 py-3 cursor-pointer">
-                    FECHA&nbsp;EDICIÓN
+                    FECHA&nbsp;PAGO
                     @if ($sort == 'updated_at')
                     @if ($direction == 'asc')
                     <svg xmlns="http://www.w3.org/2000/svg" class="float-right w-4 h-4" viewBox="0 0 576 512">
@@ -183,7 +183,8 @@
                     </svg>
                     @endif
                   </th>
-                  <th wire:click="order('fecha_atencion')" scope="col" class="px-4 py-3 cursor-pointer">
+                  <th># SESIÓN</th>
+                  {{-- <th wire:click="order('fecha_atencion')" scope="col" class="px-4 py-3 cursor-pointer">
                     FECHA&nbsp;ATENCIÓN
                     @if ($sort == 'fecha_atencion')
                     @if ($direction == 'asc')
@@ -203,7 +204,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                     </svg>
                     @endif
-                  </th>
+                  </th> --}}
                   <th wire:click="order('doctor_id')" scope="col" class="px-4 py-3 cursor-pointer">
                     KINE
                     @if ($sort == 'doctor_id')
@@ -278,10 +279,10 @@
                 <tr class="items-center justify-between bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                   <td class="px-6 py-4 uppercase whitespace-nowrap">
                     {{ \Carbon\Carbon::parse(strtotime($applyItem->updated_at))->format('d/m/Y') }}
-                    <span class="font-semibold text-gray-800">(#{{ $applyItem->numero_sesion }})</span>
                   </td>
                   <td>
-                    {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
+                    <span class="font-semibold text-gray-800">(#{{ $applyItem->numero_sesion }})</span>
+                    {{-- {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }} --}}
                   </td>
                   <td class="items-center py-2 pl-2 mx-2">
                     <div class="ml-2 font-medium uppercase dark:text-white">
