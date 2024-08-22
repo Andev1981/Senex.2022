@@ -9,11 +9,19 @@ class Inicio extends Component
 {
     public function render()
     {
+        return view('livewire.inicio');
+    }
+
+    public function mount()
+    {
 
         if (auth()->user()->user_type === "Kine") {
-            return view('livewire.kinesiologos.kine-index');
-        }
+            if (auth()->user()->status === 0) {
 
-        return view('livewire.inicio');
+                return redirect('/no-autorizado');
+            }
+
+            return redirect('/my-app');
+        }
     }
 }

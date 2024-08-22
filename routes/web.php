@@ -10,6 +10,7 @@ use App\Http\Controllers\PaymentIncomeController;
 use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\ListadoKines;
+use App\Http\Livewire\Kinesiologos\AtencionDetalle;
 use App\Http\Livewire\Paciente\ListadosIndex;
 use App\Http\Livewire\Paciente\Resumen;
 use App\Http\Livewire\PagosPaciente\IndexPagos;
@@ -17,6 +18,11 @@ use App\Http\Livewire\PagosPaciente\DetallePagos;
 use App\Http\Livewire\Sesiones\IndexSesiones;
 use App\Http\Livewire\Types\Index;
 use App\Http\Livewire\Kinesiologos\KineIndex;
+use App\Http\Livewire\Kinesiologos\ListadoPacientes;
+use App\Http\Livewire\Kinesiologos\NoAutorizado;
+use App\Http\Livewire\Kinesiologos\Resumenes;
+use App\Http\Livewire\Prueba\Medikal;
+
 
 
 Route::get('storage-link', function () {
@@ -37,6 +43,12 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('/dashboard', Inicio::class)->name('dashboard');
   Route::get('/', Inicio::class)->name('/');
 
+
+  Route::get('/my-app', KineIndex::class)->name('my-app');
+  Route::get('/no-autorizado', NoAutorizado::class)->name('no-autorizado');
+  Route::get('/mis-pacientes', ListadoPacientes::class)->name('mis-pacientes');
+  Route::get('/mis-atenciones', Resumenes::class)->name('mis-atenciones');
+  Route::get('/kinesiologos/pacientes/{paciente}', AtencionDetalle::class);
 
 
 
@@ -80,6 +92,8 @@ Route::group(['middleware' => ['auth']], function () {
 
   Route::get('{paciente}/detalles', Resumen::class)->name('detalles');
 });
+
+
 
 //Transbank
 /* Route::post('iniciar-compra', [TransbankController::class, 'iniciarCompra'])->name('iniciar.compra');

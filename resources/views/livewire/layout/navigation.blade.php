@@ -2,7 +2,7 @@
     class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
     <div class="flex flex-wrap items-center justify-between">
         <div class="flex items-center justify-start">
-            @if (auth()->user()->user_type !== "Super-Administrador")
+            @if (auth()->user()->user_type !== "Kine")
 
             <button data-drawer-target="drawer-navigation" data-drawer-toggle="drawer-navigation"
                 aria-controls="drawer-navigation"
@@ -32,7 +32,7 @@
             <button type="button" class="flex mx-3 text-sm rounded-full md:mr-0 focus:ring-4 focus:ring-white"
                 id="user-menu-button" aria-expanded="false" data-dropdown-toggle="dropdown">
                 <span class="sr-only">Open user menu</span>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-azul"
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-sky-600"
                     stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
                     class="icon icon-tabler icons-tabler-outline icon-tabler-user-square-rounded">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />

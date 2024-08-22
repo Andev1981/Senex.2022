@@ -1,7 +1,7 @@
 <div>
 
   <button wire:click="openModal" type="button"
-    class="inline-flex items-center px-2 py-1 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out border border-transparent rounded-md bg-azul hover:bg-blue-800 active:bg-azul focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25">
+    class="inline-flex items-center px-2 py-1 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out border border-transparent rounded-md bg-sky-600 hover:bg-blue-800 active:bg-sky-600 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
       class="icon icon-tabler icons-tabler-outline icon-tabler-user-plus">
@@ -38,7 +38,7 @@
             <span class="sr-only">Close modal</span>
           </button>
         </div>
-        <form wire:submit.prevent="save">
+        <form wire:submit.prevent="save" autocomplete="off">
           <div class="grid gap-4 mb-4 sm:grid-cols-3">
             <div>
               <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nombre</label>
@@ -51,7 +51,7 @@
                   </svg>
                 </div>
                 <input type="text" wire:model="name"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="Nombre">
 
               </div>
@@ -72,7 +72,7 @@
                   </svg>
                 </div>
                 <input type="text" wire:model="last_name"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="Apellido">
               </div>
               @error('last_name')
@@ -93,7 +93,7 @@
                   </svg>
                 </div>
                 <input type="email" wire:model="email"
-                  class="bg-gray-100 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                  class="bg-gray-100 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="Email">
               </div>
               @error('email')
@@ -218,7 +218,7 @@
 
 
                   <label class="sr-only">Seleccione comuna</label>
-                  <select wire:model="comuna"
+                  <select wire:model="comuna_id"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     <option selected readonly> -- seleccione comuna --</option>
                     @foreach ($comunas as $comuna)
@@ -229,7 +229,7 @@
                   </select>
                 </div>
               </div>
-              @error('comuna')
+              @error('comuna_id')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>
@@ -242,12 +242,12 @@
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <img src="{{ asset('icons/location-pin.png') }}" class="w-5 h-5" alt="">
                 </div>
-                <input type="text" name="calle" wire:model.defer="calle"
+                <input type="text" name="street" wire:model.defer="street"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="">
 
               </div>
-              @error('calle')
+              @error('street')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>
@@ -264,11 +264,11 @@
                   </svg>
 
                 </div>
-                <input type="number" name="numero" wire:model.defer="numero"
+                <input type="number" name="number" wire:model.defer="number"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="">
               </div>
-              @error('numero')
+              @error('number')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>
@@ -289,17 +289,66 @@
                   </svg>
 
                 </div>
-                <input type="detalle_direccion" wire:model.defer="detalle_direccion"
+                <input type="text" wire:model.defer="detail"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="">
               </div>
-              @error('detalle_direccion')
+              @error('detail')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>
               @enderror
             </div>
           </div>
+
+          <div class="grid gap-4 mb-6 sm:grid-cols-4">
+            <div class="col-span-2">
+              <label class="block mb-1 ml-2 text-sm font-medium text-gray-900 dark:text-white">Contraseña</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-cloud-lock-open">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path
+                      d="M19 18a3.5 3.5 0 0 0 0 -7h-1c.397 -1.768 -.285 -3.593 -1.788 -4.787c-1.503 -1.193 -3.6 -1.575 -5.5 -1s-3.315 2.019 -3.712 3.787c-2.199 -.088 -4.155 1.326 -4.666 3.373c-.512 2.047 .564 4.154 2.566 5.027" />
+                    <path d="M8 15m0 1a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1z" />
+                    <path d="M10 15v-2a2 2 0 0 1 3.736 -1" />
+                  </svg>
+
+                </div>
+                <input type="password" wire:model="pass"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
+                  placeholder="">
+              </div>
+              @error('pass')
+              <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                {{ $message }}
+              </p>
+              @enderror
+            </div>
+            <div class="pt-4">
+              <label class="inline-flex items-center cursor-pointer">
+                <input wire:click="changeStatus" type="checkbox" wire:model.defer="status" value=""
+                  class="sr-only peer">
+                <div
+                  class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                </div>
+                <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">Kine</span>
+              </label>
+
+              <label class="inline-flex items-center cursor-pointer">
+                <input wire:click="changeStatusApp" type="checkbox" wire:model.defer="statusApp" value=""
+                  class="sr-only peer">
+                <div
+                  class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                </div>
+                <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">AccesoApp</span>
+              </label>
+
+            </div>
+          </div>
+
 
           <div class="flex items-center pt-5 space-x-4 border-t-2">
             <button type="submit" wire:click="save" wire:loading.remove wire:target="save"

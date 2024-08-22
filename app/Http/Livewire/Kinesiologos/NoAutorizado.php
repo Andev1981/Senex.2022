@@ -4,10 +4,10 @@ namespace App\Http\Livewire\Kinesiologos;
 
 use Livewire\Component;
 
-class KineIndex extends Component
+class NoAutorizado extends Component
 {
     public function render()
     {
-        return view('livewire.kinesiologos.kine-index');
+        return view('livewire.kinesiologos.no-autorizado');
     }
 }

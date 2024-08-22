@@ -17,7 +17,6 @@ class Crear extends Component
 
   public $doctor,
     $isOpen = false,
-    $status = 0,
     $phoneLength = 0,
     $name,
     $last_name,
@@ -28,7 +27,11 @@ class Crear extends Component
     $street = "",
     $number = "",
     $address = '',
-    $comuna_id = 1;
+    $comuna_id = 1,
+    $detail = '',
+    $status = 0,
+    $statusApp = 0,
+    $pass = '';
 
 
   protected function rules()
@@ -43,8 +46,29 @@ class Crear extends Component
       'street' => 'required',
       'number' => 'required',
       'comuna_id' => 'required',
+      'detail' => 'max:150',
+      'pass' => 'min:8|max:100',
     ];
   }
+
+  protected $messages = [
+    'name.required' => 'Nombre es requerido',
+    'name.min' => 'Nombre debe tener al menos 3 caracteres',
+    'name.max' => 'Nombre supera el límite permitido de caracteres',
+    'last_name.required' => 'Apellido es requerido',
+    'last_name.min' => 'Apellido debe tener al menos 5 caracteres',
+    'last_name.max' => 'Apellido supera el límite permitido de caracteres',
+    'phone.required' => 'Teléfono es requerido',
+    'phone.max' => 'Teléfono supera el máximo',
+    'phone.min' => 'Teléfono debe tener al menos 9 caracteres',
+    'detail.max' => 'Detalles deben tener menos 150 caracteres',
+    'email.required' => 'Correo es requerido',
+    'rut.required' => 'Rut es requerido',
+    'birth.required' => 'Fecha de nacimiento es requerida',
+    'comuna_id.required' => 'Comuna es requerida',
+    'pass.min' => 'Contrasena debe tener al menos 8 caracteres',
+    'pass.max' => 'Contrasena supera el límite permitido de caracteres',
+  ];
 
   public function render()
   {
@@ -63,18 +87,19 @@ class Crear extends Component
       'number' => $this->number,
       'address' => '',
       'comuna_id' => $this->comuna_id,
+      'detail' => $this->detail
     ]);
 
     $newUser = User::create([
       'name' => $this->name,
       'last_name' => $this->last_name,
       'email' => $this->email,
-      'password' => bcrypt('Senex2024'),
+      'password' => bcrypt($this->pass),
       'rut' => $this->rut,
       'birth' =>  $this->birth,
       'phone' => $this->phone,
       'address_id' => $address->id,
-      'status' => 1,
+      'status' => $this->statusApp == 1 ? 1 : 0,
       'user_type' => 'Kine'
     ]);
 
@@ -85,10 +110,8 @@ class Crear extends Component
       'rut' => $this->rut,
       'phone' => $this->phone,
       'address_id' => $address->id,
-      'status' => 1,
+      'status' => $this->status == 1 ? 1 : 0,
     ]);
-
-
 
     $this->emitUp('success-kine');
 
@@ -114,5 +137,17 @@ class Crear extends Component
   public function closeModal()
   {
     $this->isOpen = false;
+  }
+
+  public function changeStatus()
+  {
+
+    $this->status = $this->status == 1 ? 0 : 1;
+  }
+
+  public function changeStatusApp()
+  {
+
+    $this->statusApp = $this->statusApp == 1 ? 0 : 1;
   }
 }

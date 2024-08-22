@@ -24,7 +24,6 @@ class KinesPacientes extends Component
     public $search = '';
     public $error = "";
 
-    protected $listeners = ['success-value' => 'searchByItems'];
 
     public function render()
     {

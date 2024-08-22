@@ -33,23 +33,35 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-              <tr class="text-center">
+              <tr>
                 <th scope="col" class="px-6 py-3">Nombre</th>
                 <th scope="col" class="px-6 py-3">
                   Estado
                 </th>
-                <th colspan="4" class="px-6 py-3">
+                <th scope="col" class="px-6 py-3">
+                  AccesoApp
+                </th>
+                <th colspan="3" class="px-6 py-3">
                   <span class="sr-only">Actions</span>
                 </th>
               </tr>
             </thead>
             <tbody>
               @foreach ($doctores as $doctor)
-              <tr class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                <td scope="row"
-                  class="flex items-center gap-2 px-4 py-3 text-gray-900 font-sm whitespace-nowrap dark:text-white">
-                  @livewire('kine.kines-pacientes', ['doctor' => $doctor], key($doctor->id))
-                  {{ $doctor->name }} {{ $doctor->last_name }}
+              <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50"
+                wire:key="{{ time().$doctor->id.'-1' }}">
+                <td scope="row" class="flex items-center gap-2 px-4 py-3 text-gray-900 font-sm whitespace-nowrap">
+                  <livewire:kine.kines-pacientes :doctor="$doctor" :key="time().$doctor->id.'-2'" />
+                  <div class="">
+                    <div>
+                      {{ $doctor->name }} {{ $doctor->last_name }}
+                    </div>
+                    <span class="text-xs text-gray-400">
+                      {{ $doctor->address->street }} #{{ $doctor->address->number }} | {{
+                      $doctor->address->comuna->name
+                      }}
+                    </span>
+                  </div>
                 </td>
                 <td class="px-6 py-4">
                   @if ($doctor->status === 1)
@@ -65,17 +77,29 @@
                   @endif
 
                 </td>
-                <td class="py-0">
-                  @livewire('kine.atenciones', ['doctor' => $doctor], key($doctor->id))
+                <td class="px-6 py-4">
+                  @if ($doctor->user->status === 1)
+                  <span
+                    class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-green-600 rounded-full dark:bg-green-200 dark:text-green-900">
+                    Activo
+                  </span>
+                  @else
+                  <span
+                    class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-red-600 rounded-full dark:bg-green-200 dark:text-red-900">
+                    Deshabilitado
+                  </span>
+                  @endif
+
                 </td>
                 <td class="py-0">
-                  @livewire('kine.acceso-app', ['doctor' => $doctor], key($doctor->id))
+                  <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
+                </td>
+
+                <td class="py-0">
+                  <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
                 </td>
                 <td class="py-0">
-                  @livewire('kine.editar', ['doctor' => $doctor], key($doctor->id))
-                </td>
-                <td class="py-0">
-                  @livewire('kine.eliminar', ['doctor' => $doctor], key($doctor->id))
+                  <livewire:kine.eliminar :doctor="$doctor" :key="time().$doctor->id.'-6'" />
                 </td>
               </tr>
               @endforeach

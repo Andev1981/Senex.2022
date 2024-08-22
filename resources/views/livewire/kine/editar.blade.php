@@ -13,11 +13,7 @@
         <!-- Modal header -->
         <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 uppercase dark:text-white">
-            @if ($status===1)
             Editando kine
-            @else
-            Crear kine
-            @endif
           </h3>
           <button wire:click="closeModal" type="button"
             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
@@ -44,7 +40,7 @@
                   </svg>
                 </div>
                 <input type="text" wire:model.defer="name"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="Nombre">
 
               </div>
@@ -65,7 +61,7 @@
                   </svg>
                 </div>
                 <input type="text" wire:model="last_name"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="Apellido">
               </div>
               @error('last_name')
@@ -86,7 +82,7 @@
                   </svg>
                 </div>
                 <input type="email" wire:model="email"
-                  class="bg-gray-100 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                  class="bg-gray-100 border border-gray-300 text-gray-400 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="Email">
               </div>
               @error('email')
@@ -120,7 +116,7 @@
                   strlen($phoneLength) ?? '' }}
                   /9</small>
                 <input wire:model="phone" type="number"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-16 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-16 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
                   placeholder="Teléfono">
               </div>
 
@@ -199,7 +195,7 @@
                         <button type="button" {{-- wire:click="$set('selectedRegion', {{ $region->id }})" --}}
                           class="inline-flex w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
                           role="menuitem">
-                          <div class="inline-flex items-center">
+                          <div class="inline-flex items-center uppercase">
                             {{ $region->name }}
                           </div>
                         </button>
@@ -211,7 +207,7 @@
 
                   <label class="sr-only">Seleccione comuna</label>
                   <select wire:model.defer="comuna_id"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase">
                     <option selected readonly> -- seleccione comuna --</option>
                     @foreach ($comunas as $comuna)
                     <option class="uppercase" value="{{ $comuna->id }}">
@@ -254,7 +250,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                       d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5l-3.9 19.5m-2.1-19.5l-3.9 19.5" />
                   </svg>
-
                 </div>
                 <input type="number" name="numero" wire:model.defer="number"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
@@ -267,17 +262,99 @@
               @enderror
             </div>
           </div>
+          <div class="grid gap-4 mb-4 sm:grid-cols-1">
+            <div>
+              <label class="block mb-1 ml-2 text-sm font-medium text-gray-900 dark:text-white">Detalles de
+                Dirección</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                  </svg>
+                </div>
+                <input type="text" wire:model.defer="detail"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
+                  placeholder="">
+              </div>
+              @error('detail')
+              <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                {{ $message }}
+              </p>
+              @enderror
+            </div>
+          </div>
+          <div class="grid grid-cols-5 gap-4 mb-6">
+            <div class="col-span-3">
+              <label class="block mb-1 ml-2 text-sm font-medium text-gray-900 dark:text-white">Nueva Contraseña</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-cloud-lock-open">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path
+                      d="M19 18a3.5 3.5 0 0 0 0 -7h-1c.397 -1.768 -.285 -3.593 -1.788 -4.787c-1.503 -1.193 -3.6 -1.575 -5.5 -1s-3.315 2.019 -3.712 3.787c-2.199 -.088 -4.155 1.326 -4.666 3.373c-.512 2.047 .564 4.154 2.566 5.027" />
+                    <path d="M8 15m0 1a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1z" />
+                    <path d="M10 15v-2a2 2 0 0 1 3.736 -1" />
+                  </svg>
 
+                </div>
+                <input type="password" wire:model="pass"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-sky-500 focus:border-sky-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-sky-500 dark:focus:border-sky-500 uppercase"
+                  placeholder="">
+              </div>
+              @error('pass')
+              <p class="mt-2 text-xs text-red-600 dark:text-red-500">
+                {{ $message }}
+              </p>
+              @enderror
+            </div>
+            <div class="gap-4 lg:flex lg:items-center lg:justify-between">
+
+              @if ($doctor->status == 1)
+              <label class="inline-flex items-center cursor-pointer">
+                <input wire:click="changeStatus" type="checkbox" value="" class="sr-only peer" checked>
+                <div
+                  class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                </div>
+                <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">Kine</span>
+              </label>
+              @else
+              <label class="inline-flex items-center cursor-pointer">
+                <input wire:click="changeStatus" type="checkbox" value="" class="sr-only peer">
+                <div
+                  class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                </div>
+                <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">Kine</span>
+              </label>
+              @endif
+              @if ($doctor->user->status == 1)
+              <label class="inline-flex items-center cursor-pointer">
+                <input wire:click="changeStatusApp" type="checkbox" value="" class="sr-only peer" checked>
+                <div
+                  class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                </div>
+                <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">AccesoApp</span>
+              </label>
+              @else
+              <label class="inline-flex items-center cursor-pointer">
+                <input wire:click="changeStatusApp" type="checkbox" value="" class="sr-only peer">
+                <div
+                  class="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600">
+                </div>
+                <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">AccesoApp</span>
+              </label>
+              @endif
+            </div>
+          </div>
 
           <div class="flex items-center pt-5 space-x-4 border-t-2">
-
             <button type="submit" wire:click="save" wire:loading.remove wire:target="save"
               class="text-white inline-flex items-center bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">
-
               Actualizar
-
             </button>
-
             <button wire:loading wire:target="save" role="status" disabled type="button"
               class="text-white bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:ring-sky-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800 inline-flex items-center">
               <svg aria-hidden="true" role="status" class="inline w-4 h-4 mr-3 text-white animate-spin"
@@ -289,17 +366,12 @@
                   d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
                   fill="currentColor" />
               </svg>
-
               Actualizando...
-
             </button>
-
           </div>
         </form>
-
       </div>
     </div>
   </div>
   @endif
-
 </div>

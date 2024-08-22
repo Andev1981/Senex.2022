@@ -6,6 +6,7 @@ use App\Models\Address;
 use App\Models\Doctor;
 use App\Models\Comuna;
 use App\Models\Region;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -13,10 +14,9 @@ class Editar extends Component
 {
   use WithFileUploads;
 
-  public $isOpen = false;
-  public $status = 0;
-  public $phoneLength = 0;
-  public $doctor, $pass,
+  public $isOpen = false,
+    $phoneLength = 0,
+    $doctor,
     $name,
     $last_name,
     $rut,
@@ -26,7 +26,11 @@ class Editar extends Component
     $street = "",
     $number = "",
     $address = '',
-    $comuna_id = 1;
+    $comuna_id = 1,
+    $detail = '',
+    $status = 0,
+    $statusApp = 0,
+    $pass = '';
 
 
   public function openModal()
@@ -52,6 +56,9 @@ class Editar extends Component
       'number' => 'required',
       'email' => 'required|email|max:255',
       'comuna_id' => 'required',
+      'detail' => 'max:150',
+      'status' => 'boolean',
+
     ];
   }
 
@@ -65,9 +72,12 @@ class Editar extends Component
     'phone.required' => 'Teléfono es requerido',
     'phone.max' => 'Teléfono supera el máximo',
     'phone.min' => 'Teléfono debe tener al menos 9 caracteres',
+    'detail.max' => 'Detalles deben tener menos 150 caracteres',
     'email.required' => 'Correo es requerido',
     'rut.required' => 'Rut es requerido',
     'birth.required' => 'Fecha de nacimiento es requerida',
+    'comuna_id.required' => 'Comuna es requerida',
+
   ];
 
   public function render()
@@ -79,20 +89,21 @@ class Editar extends Component
 
   public function mount($doctor)
   {
-    if ($doctor) {
-      $this->doctor = Doctor::findOrFail($doctor->id);
-      $this->email = $doctor->user->email;
-      $this->name = $doctor->name;
-      $this->last_name = $doctor->last_name;
-      $this->rut = $doctor->rut;
-      $this->phone = $doctor->phone;
-      $this->birth = date('Y-m-d', strtotime($doctor->birth));
-      $address = Address::findOrFail($doctor->address_id);
-      $this->street = $address->street;
-      $this->number = $address->number;
-      $this->address = $address->address;
-      $this->comuna_id = $address->comuna_id;
-    }
+
+    $this->email = $doctor->user->email;
+    $this->name = $doctor->name;
+    $this->last_name = $doctor->last_name;
+    $this->rut = $doctor->rut;
+    $this->phone = $doctor->phone;
+    $this->birth = date('Y-m-d', strtotime($doctor->birth));
+    $address = Address::findOrFail($doctor->address_id);
+    $this->street = $address->street;
+    $this->number = $address->number;
+    $this->address = $address->address;
+    $this->comuna_id = $address->comuna_id;
+    $this->detail = $address->detail ?? '';
+    $this->statusApp = $doctor->user->status;
+    $this->status = $doctor->status;
   }
 
   public function save()
@@ -100,11 +111,25 @@ class Editar extends Component
     $this->validate();
 
     $doctor = Doctor::findOrFail($this->doctor->id);
+    $user = User::findOrFail($this->doctor->user_id);
+
+    if ($this->pass !== '') {
+      $user->update([
+        'password' => bcrypt($this->pass),
+        'status' => $this->statusApp == 1 ? 1 : 0,
+      ]);
+    } else {
+      $user->update([
+        'status' => $this->statusApp == 1 ? 1 : 0,
+      ]);
+    }
+
     $doctor->update([
       'name' => $this->name,
       'last_name' => $this->last_name,
       'rut' => $this->rut,
-      'phone' => $this->phone
+      'phone' => $this->phone,
+      'status' => $this->status
     ]);
     if ($this->doctor->address_id) {
       $product = Address::find($this->doctor->address_id);
@@ -113,6 +138,7 @@ class Editar extends Component
         'number' => $this->number,
         'address' => $this->address,
         'comuna_id' => $this->comuna_id,
+        'detail' => $this->detail,
       ]);
     }
 
@@ -120,7 +146,6 @@ class Editar extends Component
     $this->dispatchBrowserEvent('swal-success');
     $this->clear();
   }
-
 
   public function clear()
   {
@@ -134,6 +159,17 @@ class Editar extends Component
     }
 
     $this->isOpen = false;
-    return redirect('/kines');
+  }
+
+  public function changeStatus()
+  {
+
+    $this->status = $this->status == 1 ? 0 : 1;
+  }
+
+  public function changeStatusApp()
+  {
+
+    $this->statusApp = $this->statusApp == 1 ? 0 : 1;
   }
 }

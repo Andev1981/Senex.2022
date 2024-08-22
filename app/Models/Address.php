@@ -16,6 +16,7 @@ class Address extends Model
         'latitude',
         'longitude',
         'comuna_id',
+        'detail',
     ];
 
     public function comuna()

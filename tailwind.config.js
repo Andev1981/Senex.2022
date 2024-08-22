@@ -1,27 +1,25 @@
-const defaultTheme = require('tailwindcss/defaultTheme');
+const defaultTheme = require("tailwindcss/defaultTheme");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: [
-        './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
-        './storage/framework/views/*.php',
-        './resources/views/**/*.blade.php',
-    ],
+  content: [
+    "./vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php",
+    "./storage/framework/views/*.php",
+    "./resources/views/**/*.blade.php",
+  ],
 
-    theme: {
-        extend: {
+  theme: {
+    /*  extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors:{
-                azul:'#0291b3',
+                sky-600:'#0291b3',
                 celeste:'#68d0ec',
                 grisOscuro:'#111827',
                 grisClaro:'#989898',
             },
-        },
-    },
-    plugins: [
-        require('flowbite/plugin','flowbite-datepicker/js/Datepicker')
-    ],
+        }, */
+  },
+  plugins: [require("flowbite/plugin", "flowbite-datepicker/js/Datepicker")],
 };
