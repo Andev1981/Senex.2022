@@ -49,26 +49,26 @@ class ListadoSesiones extends Component
             if ($this->dia == 0) {
                 $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha  . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             }
         } elseif ($this->selPaciente != 0) {
 
             if ($this->dia == 0) {
                 $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->where('fecha_atencion', 'like', $this->buscarFecha)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->where('fecha_atencion', 'like', $this->buscarFecha  . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             }
         } elseif ($this->selKine != 0) {
             if ($this->dia == 0) {
                 $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha  . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             }
         } else {
             if ($this->dia == 0) {
                 $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('fecha_atencion', 'like', $this->buscarFecha)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('fecha_atencion', 'like', $this->buscarFecha . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             }
         }
         return view('livewire.sesiones.listado-sesiones', compact('applyItems'));
