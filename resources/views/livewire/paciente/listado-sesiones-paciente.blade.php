@@ -5,7 +5,7 @@
                 class="flex flex-row items-center justify-between w-full p-4 align-middle md:flex-row md:space-y-0 md:space-x-4">
                 <div class="flex items-center">
                     <img src="{{ asset('icons/libro-medico.gif') }}" alt="" class="w-10 h-10">
-                    <label class="text-lg font-semibold">Sesiones</label>
+                    <label class="text-lg font-semibold">Sesiones 1</label>
                 </div>
                 <div
                     class="flex justify-end flex-shrink-0 w-full space-y-2 md:w-auto md:flex-row md:space-y-0 md:items-center md:space-x-3">

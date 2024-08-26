@@ -1,19 +1,25 @@
 <div>
     <x-button-detail wire:click="$set('openItem','')" innerText="Sesiones" />
-        
-    <div class="{{ $openItem }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center w-full md:inset-0 h-modal md:h-full flex">
+
+    <div
+        class="{{ $openItem }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center w-full md:inset-0 h-modal md:h-full flex">
         <div class="relative w-full h-full p-4 md:max-w-7xl md:h-auto">
 
             <!-- Modal content -->
             <div class="relative h-screen p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
                 <!-- Modal header -->
-                <div class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
+                <div
+                    class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
-                        Sesiones
+                        Sesiones 2
                     </h3>
-                    <button wire:click="$set('openItem','hidden')" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    <button wire:click="$set('openItem','hidden')" type="button"
+                        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd"></path>
                         </svg>
                         <span class="sr-only">Close modal</span>
                     </button>
@@ -30,7 +36,8 @@
                             <div class="px-2">
 
                                 <table class="w-full text-sm text-gray-500 dark:text-gray-400">
-                                    <thead class="text-xs text-gray-700 uppercase bg-teal-100 dark:bg-gray-700 dark:text-gray-400">
+                                    <thead
+                                        class="text-xs text-gray-700 uppercase bg-teal-100 dark:bg-gray-700 dark:text-gray-400">
                                         <tr class="text-center text-white bg-sky-500">
                                             <th colspan="3" class="px-6 py-1">Sesiones</th>
                                         </tr>
@@ -65,7 +72,8 @@
 
                             <div class="w-full overflow-x-auto">
                                 <table class="w-full text-sm text-gray-500 dark:text-gray-400">
-                                    <thead class="text-xs text-gray-700 uppercase bg-teal-100 dark:bg-gray-700 dark:text-gray-400">
+                                    <thead
+                                        class="text-xs text-gray-700 uppercase bg-teal-100 dark:bg-gray-700 dark:text-gray-400">
                                         <tr class="">
                                             <th scope="col" class="px-6 py-3">Kine</th>
                                             <th scope="col" class="px-6 py-3">Estado</th>
@@ -77,93 +85,104 @@
                                                 <span class="sr-only">Actions</span>
                                                 <div class="justify-items-end">
 
-                                                    @livewire('paciente.show.atenciones.crear-item',['application' => $application])
-                                                    
+                                                    @livewire('paciente.show.atenciones.crear-item',['application' =>
+                                                    $application])
+
                                                 </div>
-                                                
+
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                   
-                                            @forelse ($items as $item)
-                                            <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                                <td class="py-2 pl-2 mx-2">
-                                                    {{ $item->doctor->name ?? '' }}
-                                                    {{ $item->doctor->last_name ?? '' }}
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                @if ($item->status === 0)    
-                                                    <span class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
-                                                        <span class="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></span>
-                                                        Pendiente
-                                                    </span>
+
+                                        @forelse ($items as $item)
+                                        <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                                            <td class="py-2 pl-2 mx-2">
+                                                {{ $item->doctor->name ?? '' }}
+                                                {{ $item->doctor->last_name ?? '' }}
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if ($item->status === 0)
+                                                <span
+                                                    class="inline-flex items-center bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
+                                                    <span class="w-2 h-2 mr-1 bg-yellow-500 rounded-full"></span>
+                                                    Pendiente
+                                                </span>
                                                 @elseif ($item->status === 1)
-                                                    <span class="inline-flex items-center bg-teal-100 text-teal-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-teal-900 dark:text-teal-300">
-                                                        <span class="w-2 h-2 mr-1 text-white bg-teal-500 rounded-full"></span>
-                                                        Atendida
-                                                    </span>
+                                                <span
+                                                    class="inline-flex items-center bg-teal-100 text-teal-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-teal-900 dark:text-teal-300">
+                                                    <span
+                                                        class="w-2 h-2 mr-1 text-white bg-teal-500 rounded-full"></span>
+                                                    Atendida
+                                                </span>
                                                 @elseif ($item->status === 2)
-                                                    <span class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
-                                                        <span class="w-2 h-2 mr-1 text-white bg-red-500 rounded-full"></span>
-                                                        Cancelada
-                                                    </span>
+                                                <span
+                                                    class="inline-flex items-center bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
+                                                    <span
+                                                        class="w-2 h-2 mr-1 text-white bg-red-500 rounded-full"></span>
+                                                    Cancelada
+                                                </span>
                                                 @elseif ($item->status === 3)
-                                                    <span class="inline-flex items-center bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-gray-900 dark:text-gray-300">
-                                                        <span class="w-2 h-2 mr-1 text-white bg-gray-500 rounded-full"></span>
+                                                <span
+                                                    class="inline-flex items-center bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-gray-900 dark:text-gray-300">
+                                                    <span
+                                                        class="w-2 h-2 mr-1 text-white bg-gray-500 rounded-full"></span>
                                                     Reagendada
-                                                    </span>
-                                                        
+                                                </span>
+
                                                 @endif
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                    @if ($item->price)
-                                                        
-                                                        ${{ number_format($item->price,0,',','.') }}.-
-                                                    @else
-                                                            ---------
-                                                    @endif
-                                                </td>
-                                                <td class="px-6 py-4 uppercase">
-                                                    @if ($item->applicationType)
-                                                        
-                                                        {{$item->applicationType->name }}
-                                                    @else
-                                                        ---------
-                                                    @endif
-                                                </td>
-                                                <td class="px-6 py-4 uppercase">
-                                                    @if ($item->numero_sesion > 0)
-                                                        
-                                                        {{$item->numero_sesion }}
-                                                    @else
-                                                        ---------
-                                                    @endif
-                                                </td>
-                                                <td class="px-6 py-4">
-                                                    @if ($item->fecha_atencion)
-                                                     {{ \Carbon\Carbon::parse(strtotime($item->fecha_atencion))->format('d/m/Y') }}
-                                                        
-                                                    @else
-                                                        ---------
-                                                    @endif
-                                                </td>
-                                                
-                                                <td class="px-6 py-4">
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if ($item->price)
 
-                                                    @livewire('paciente.show.atenciones.editar-item', ['applyItem' => $item], key($item->id))
+                                                ${{ number_format($item->price,0,',','.') }}.-
+                                                @else
+                                                ---------
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 uppercase">
+                                                @if ($item->applicationType)
+
+                                                {{$item->applicationType->name }}
+                                                @else
+                                                ---------
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 uppercase">
+                                                @if ($item->numero_sesion > 0)
+
+                                                {{$item->numero_sesion }}
+                                                @else
+                                                ---------
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if ($item->fecha_atencion)
+                                                {{
+                                                \Carbon\Carbon::parse(strtotime($item->fecha_atencion))->format('d/m/Y')
+                                                }}
+
+                                                @else
+                                                ---------
+                                                @endif
+                                            </td>
+
+                                            <td class="px-6 py-4">
+
+                                                @livewire('paciente.show.atenciones.editar-item', ['applyItem' =>
+                                                $item], key($item->id))
 
 
-                                                </td>
-                                            </tr>
-                                            @empty
-                                            <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
-                                                <td colspan="8" class="py-2 pl-2 mx-2 text-center">
-                                                    Sin sesiones agregadas
-                                                </td>
-                                            </tr>
-                                            @endforelse
-                                       
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr class="bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
+                                            <td colspan="8" class="py-2 pl-2 mx-2 text-center">
+                                                Sin sesiones agregadas
+                                            </td>
+                                        </tr>
+                                        @endforelse
+
                                     </tbody>
                                 </table>
                             </div>
