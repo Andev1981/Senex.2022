@@ -13,113 +13,103 @@ use Livewire\WithFileUploads;
 
 class Resumenes extends Component
 {
-    use WithFileUploads;
+  use WithFileUploads;
 
-    public $isOpen = false;
-    public $kine;
-    public $user;
-    public $year;
-    public $month;
-    public $statusFindView = -1;
-    public $statusFind = [0, 1, 2, 3];
-    public $status = 0;
-    public $file_path;
-    public $applyItems = [];
-    public $buscarFecha;
-    public $buscarFechaIn;
-    public $kineValues;
-    public $totalPacientes = 0;
-    public $totalKine = 0;
-    public $pacientes = [];
-    public $selPaciente;
+  public $isOpen = false;
+  public $kine;
+  public $user;
+  public $year;
+  public $month;
+  public $statusFindView = -1;
+  public $statusFind = [0, 1, 2, 3];
+  public $status = 0;
+  public $file_path;
+  public $applyItems = [];
+  public $buscarFecha;
+  public $buscarFechaIn;
+  public $kineValues;
+  public $totalPacientes = 0;
+  public $totalKine = 0;
+  public $selPaciente;
+  public $reloadStatus = 0;
+  public $dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+  public $dia = 0;
+  public $fechaBusquedaExtencion = '%';
 
-    protected $listeners = ['success-value' => 'searchByItems'];
+  public function render()
+  {
+    $this->kine = auth()->user()->doctor;
 
-    public function render()
-    {
-        return view('livewire.kinesiologos.resumenes');
+    if ($this->kine == null) {
+      return redirect()->route('/');
     }
 
-    public function mount()
-    {
-
-        $this->kine = auth()->user()->doctor;
-        if ($this->kine->id) {
-            $this->status = 1;
-        }
-
-        $items = PacienteKine::where('doctor_id', auth()->user()->doctor->id)->get();
-
-        $this->pacientes = $items;
-        $this->buscarFecha = Carbon::now();
-        $this->month = $this->buscarFecha->format('m');
-        $this->year = $this->buscarFecha->format('Y');
-        $this->searchByItems();
+    if ($this->kine->id) {
+      $this->status = 1;
     }
 
-    public function searchByItems()
-    {
+    if ($this->reloadStatus == 0) {
+      $this->buscarFecha = Carbon::now();
+      $this->month = $this->buscarFecha->format('m');
+      $this->year = $this->buscarFecha->format('Y');
+      $this->dia = $this->buscarFecha->format('d');
+      $this->reloadStatus = 1;
+    }
 
-        $this->totalKine = 0;
-        $this->totalPacientes = 0;
+    if ($this->dia == 0) {
+      $this->buscarFecha =  $this->year . '-' . $this->month . '-%';
+    } else {
 
-        $this->buscarFecha =  $this->year . '-' . $this->month;
+      $this->buscarFecha =  $this->year . '-' . $this->month . '-' . $this->dia . ' 00:00:00';
+    }
 
-        if ($this->selPaciente != 0) {
-            $this->applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orderBy('name', 'asc');
-            }], 'application', 'doctor')
-                ->where('doctor_id', $this->kine->id)
-                ->where('patient_id', $this->selPaciente)
-                ->where('status', 1)
-                ->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
-                    $query->from('patients')
-                        ->whereColumn('patients.id', '=', 'apply_items.patient_id')
-                        ->select('name')
-                        ->limit(1);
-                })->orderBy('fecha_atencion', 'asc')->get();
-        } else {
-            $this->applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orderBy('name', 'asc');
-            }], 'application', 'doctor')
-                ->where('doctor_id', $this->kine->id)
-                ->where('status', 1)
-                ->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
-                    $query->from('patients')
-                        ->whereColumn('patients.id', '=', 'apply_items.patient_id')
-                        ->select('name')
-                        ->limit(1);
-                })->orderBy('fecha_atencion', 'asc')->get();
-        }
+    if ($this->selPaciente != 0) {
+
+      $this->applyItems = ApplyItem::with('application', 'patient', 'doctor')
+        ->where('patient_id', $this->selPaciente)
+        ->where('doctor_id', $this->kine->id)
+        ->where('fecha_atencion', 'like', $this->buscarFecha)
+        ->orderBy('fecha_atencion', 'asc')->get();
+    } else {
+      $this->applyItems = ApplyItem::with('application', 'patient', 'doctor')->orWhere('doctor_id', $this->kine->id)->where('fecha_atencion', 'like', $this->buscarFecha)->orderBy('fecha_atencion', 'asc')->get();
+    }
 
 
+    $this->kineValues = ApplicationTypeUser::where('user_id', $this->kine->id)->get();
 
-        $this->kineValues = ApplicationTypeUser::where('user_id', $this->kine->id)->get();
+    $this->totalPacientes = 0;
+    $this->totalKine = 0;
 
-        foreach ($this->applyItems as $applyItem) {
-            $this->totalPacientes += $applyItem->price;
+    foreach ($this->applyItems as $applyItem) {
+      $this->totalPacientes += $applyItem->price;
 
-            foreach ($this->kineValues as $kineValue)
-                if ($kineValue->application_type_id == $applyItem->application_type_id) {
-                    $this->totalKine += $kineValue->price;
-                }
+      foreach ($this->kineValues as $kineValue)
+        if ($kineValue->application_type_id == $applyItem->application_type_id) {
+          $this->totalKine += $kineValue->price;
         }
     }
 
-    public function clear()
-    {
-        $this->resetValidation();
-        $this->resetErrorBag();
-        $this->reset(['atencionSelected', 'atencionValor', 'kine', 'totalClientes', 'totalKine']);
-    }
+    $pacientes = PacienteKine::where('doctor_id', auth()->user()->doctor->id)->get();
 
-    public function openModal()
-    {
-        $this->isOpen = true;
-    }
+    return view('livewire.kinesiologos.resumenes', compact('pacientes'));
+  }
 
-    public function closeModal()
-    {
-        $this->isOpen = false;
-    }
+
+
+  public function clear()
+  {
+    $this->resetValidation();
+    $this->resetErrorBag();
+    $this->reset(['atencionSelected', 'atencionValor', 'kine', 'totalClientes', 'totalKine']);
+  }
+
+  public function openModal()
+  {
+    $this->isOpen = true;
+  }
+
+  public function closeModal()
+  {
+    $this->isOpen = false;
+  }
 }

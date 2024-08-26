@@ -35,20 +35,8 @@ require __DIR__ . '/auth.php';
 
 Route::group(['middleware' => ['auth']], function () {
 
-  /* 
-    $appUser = auth();
-    dd(auth());
-    */
-
   Route::get('/dashboard', Inicio::class)->name('dashboard');
   Route::get('/', Inicio::class)->name('/');
-
-
-  Route::get('/my-app', KineIndex::class)->name('my-app');
-  Route::get('/no-autorizado', NoAutorizado::class)->name('no-autorizado');
-  Route::get('/mis-pacientes', ListadoPacientes::class)->name('mis-pacientes');
-  Route::get('/mis-atenciones', Resumenes::class)->name('mis-atenciones');
-  Route::get('/kinesiologos/pacientes/{paciente}', AtencionDetalle::class);
 
 
 
@@ -91,6 +79,14 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('{paciente}/pagos', DetallePagos::class)->name('pagos');/* Revisar ruta en funcionalidad */
 
   Route::get('{paciente}/detalles', Resumen::class)->name('detalles');
+
+
+  /* RUTAS DE KINESIOLOGOS */
+  Route::get('/my-app', KineIndex::class)->name('my-app');
+  Route::get('/no-autorizado', NoAutorizado::class)->name('no-autorizado');
+  Route::get('/mis-pacientes', ListadoPacientes::class)->name('mis-pacientes');
+  Route::get('/mis-atenciones', Resumenes::class)->name('mis-atenciones');
+  Route::get('/kinesiologos/pacientes/{paciente}', AtencionDetalle::class);
 });
 
 

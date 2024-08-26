@@ -21,7 +21,7 @@ class Inicio extends Component
                 return redirect('/no-autorizado');
             }
 
-            return redirect('/my-app');
+            return redirect('/mis-atenciones');
         }
     }
 }
