@@ -8,7 +8,7 @@ use Livewire\Component;
 
 class AtencionDetalle extends Component
 {
-    public $applyItem, $isOpen = false;
+    public $applyItem, $isOpen = false, $isOpenDelete = false;
 
     public function render()
     {
@@ -27,6 +27,7 @@ class AtencionDetalle extends Component
         $this->emitTo('kinesiologos.resumenes', 'delete-sesion');
         $this->dispatchBrowserEvent('swal-success');
         $this->isOpen = false;
+        $this->isOpenDelete = false;
     }
 
     public function openModal()
@@ -37,5 +38,15 @@ class AtencionDetalle extends Component
     public function closeModal()
     {
         $this->isOpen = false;
+    }
+
+    public function openDeleteModal()
+    {
+        $this->isOpenDelete = true;
+    }
+
+    public function closeDeleteModal()
+    {
+        $this->isOpenDelete = false;
     }
 }
