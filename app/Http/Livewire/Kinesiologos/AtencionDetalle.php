@@ -20,6 +20,15 @@ class AtencionDetalle extends Component
         $this->applyItem = $applyItem;
     }
 
+    public function deleteItem()
+    {
+        $item = ApplyItem::find($this->applyItem->id);
+        $item->delete();
+        $this->emitTo('kinesiologos.resumenes', 'delete-sesion');
+        $this->dispatchBrowserEvent('swal-success');
+        $this->isOpen = false;
+    }
+
     public function openModal()
     {
         $this->isOpen = true;

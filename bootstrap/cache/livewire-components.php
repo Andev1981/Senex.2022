@@ -28,6 +28,7 @@
   'kinesiologos.kine-index' => 'App\\Http\\Livewire\\Kinesiologos\\KineIndex',
   'kinesiologos.listado-pacientes' => 'App\\Http\\Livewire\\Kinesiologos\\ListadoPacientes',
   'kinesiologos.no-autorizado' => 'App\\Http\\Livewire\\Kinesiologos\\NoAutorizado',
+  'kinesiologos.nueva-atencion' => 'App\\Http\\Livewire\\Kinesiologos\\NuevaAtencion',
   'kinesiologos.resumenes' => 'App\\Http\\Livewire\\Kinesiologos\\Resumenes',
   'layout.navigation' => 'App\\Http\\Livewire\\Layout\\Navigation',
   'layout.sidebar' => 'App\\Http\\Livewire\\Layout\\Sidebar',

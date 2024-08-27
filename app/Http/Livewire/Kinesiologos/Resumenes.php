@@ -35,6 +35,7 @@ class Resumenes extends Component
   public $dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
   public $dia = 0;
   public $fechaBusquedaExtencion = '%';
+  protected $listeners = ['create-sesion' => 'render', 'delete-sesion' => 'render'];
 
   public function render()
   {
@@ -49,7 +50,7 @@ class Resumenes extends Component
     }
 
     if ($this->reloadStatus == 0) {
-      $this->buscarFecha = Carbon::now();
+      $this->buscarFecha = Carbon::now('America/Santiago');
       $this->month = $this->buscarFecha->format('m');
       $this->year = $this->buscarFecha->format('Y');
       $this->dia = $this->buscarFecha->format('d');
@@ -93,8 +94,6 @@ class Resumenes extends Component
 
     return view('livewire.kinesiologos.resumenes', compact('pacientes'));
   }
-
-
 
   public function clear()
   {
