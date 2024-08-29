@@ -30,6 +30,9 @@
                 <h3 class="text-base text-gray-700 dark:text-white">
                   Creando Sesión
                 </h3>
+                <div class="text-sm font-semibold">
+                  {{ \Carbon\Carbon::parse($fecha_atencion)->format('d/m/Y') }}
+                </div>
               </div>
               <x-button-modal-close wire:click="closeModal" />
             </div>
@@ -71,11 +74,12 @@
                     Atención</label>
                   <div class="relative">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                      <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 3v4a1 1 0 0 1-1 1H5m8-2h3m-3 3h3m-4 3v6m4-3H8M19 4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM8 12v6h8v-6H8Z" />
                       </svg>
+
                     </div>
                     <select required wire:model.defer="tipo_atencion"
                       class="bg-gray-50 border border-gray-300 text-gray-900 text-sm pl-10 pr-4 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
@@ -97,7 +101,8 @@
                 </div>
 
                 <div>
-                  <x-input-field label="Fecha de la atención" name="fecha_atencion" type="date"
+
+                  {{-- <x-input-field label="Fecha de la atención" name="fecha_atencion" type="date"
                     wire:model.defer="fecha_atencion" placeholder="" readonly>
 
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -108,12 +113,12 @@
                         d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
                     </svg>
 
-                  </x-input-field>
-                  @error('fecha_atencion')
+                  </x-input-field> --}}
+                  {{-- @error('fecha_atencion')
                   <p class="text-sm text-red-600 dark:text-red-500">
                     {{ $message }}.
                   </p>
-                  @enderror
+                  @enderror --}}
                 </div>
               </div>
 

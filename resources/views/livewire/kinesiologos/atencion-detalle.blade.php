@@ -1,6 +1,6 @@
 <div>
   <x-button-detail wire:click="openModal" innerText="Detalles" />
-  @if (auth()->user()->user_type === 'Kine')
+  @if (auth()->user()->user_type === 'SuperAdmin')
   <x-button-delete wire:click="openDeleteModal" innerText="Borrar" class="mt-2" />
   @endif
   @if($isOpen)
@@ -66,9 +66,8 @@
             <hr>
             <div class="text-sm text-left pt-2">
               <span class="font-semibold text-xs">Comentarios</span>
-              <div class="p-2 bg-gray-50 dark:bg-gray-700 rounded-md">
-                {{ $applyItem->comments }}
-              </div>
+              <textarea readonly disabled id="message" rows="4"
+                class="block p-2.5 w-full text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">{{ $applyItem->comments }}</textarea>
             </div>
             <hr>
           </div>
