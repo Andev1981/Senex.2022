@@ -1,6 +1,6 @@
 <div>
   <x-button-detail wire:click="openModal" innerText="Detalles" />
-  @if (auth()->user()->user_type === 'Kine')
+  @if (auth()->user()->user_type === 'SuperAdmin')
   <x-button-delete wire:click="openDeleteModal" innerText="Borrar" class="mt-2" />
   @endif
   @if($isOpen)
