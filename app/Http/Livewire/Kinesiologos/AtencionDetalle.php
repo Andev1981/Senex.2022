@@ -8,16 +8,17 @@ use Livewire\Component;
 
 class AtencionDetalle extends Component
 {
-    public $applyItem, $isOpen = false, $isOpenDelete = false;
+    public $applyItem, $isOpen = false, $isOpenDelete = false, $estadoEliminar = 0;
 
     public function render()
     {
         return view('livewire.kinesiologos.atencion-detalle');
     }
 
-    public function mount(ApplyItem $applyItem)
+    public function mount(ApplyItem $applyItem, $estadoEliminar)
     {
         $this->applyItem = $applyItem;
+        $this->estadoEliminar = $estadoEliminar;
     }
 
     public function deleteItem()

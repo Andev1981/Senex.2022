@@ -1,8 +1,10 @@
 <div>
   <x-button-detail wire:click="openModal" innerText="Detalles" />
-  @if (auth()->user()->user_type === 'SuperAdmin')
+
+  @if ($estadoEliminar === 0)
   <x-button-delete wire:click="openDeleteModal" innerText="Borrar" class="mt-2" />
   @endif
+
   @if($isOpen)
   <div aria-hidden="true"
     class="bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] flex"

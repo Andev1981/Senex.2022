@@ -4,10 +4,8 @@ namespace App\Http\Livewire\Kinesiologos;
 
 use App\Models\Application;
 use App\Models\ApplicationType;
-use App\Models\ApplicationTypeUser;
 use App\Models\PacienteKine;
 use App\Models\ApplyItem;
-use App\Models\Assign;
 use App\Models\PaymentIncome;
 use App\Models\Wallet;
 use Carbon\Carbon;
@@ -15,13 +13,15 @@ use Livewire\Component;
 
 class NuevaAtencion extends Component
 {
-  public $applyItem, $isOpen = false, $status = 0, $fecha_atencion, $mensaje, $application, $paciente, $wallet, $valor, $countApplies, $estado, $tipo_atencion;
+  public $applyItem, $isOpen = false, $status = 0, $fecha_atencion, $mensaje, $application, $paciente, $wallet, $valor, $countApplies, $estado, $tipo_atencion, $month;
 
   public function render()
   {
     $fecha = Carbon::now('America/Santiago')->subHours(4);
 
     $this->fecha_atencion = Carbon::parse(strtotime($fecha))->format('Y-m-d');
+
+    $this->month = $fecha->format('m');
 
     $tipo_atenciones = ApplicationType::where('estado', 1)->get();
 
@@ -71,6 +71,13 @@ class NuevaAtencion extends Component
       ->where('doctor_id', auth()->user()->doctor->id)
       ->latest('id')->first();
 
+    $fecha = Carbon::parse(strtotime($sesion->fecha_atencion))->format('m');
+
+    if ($fecha === $this->month) {
+      $numeroSesion = $sesion->numero_sesion + 1;
+    } else {
+      $numeroSesion = 1;
+    }
 
     if ($this->estado == 1) {
       $this->application = Application::create([
@@ -94,7 +101,7 @@ class NuevaAtencion extends Component
       'application_type_user_id' => 0,
       'price' => $this->valor,
       'fecha_atencion' => $this->fecha_atencion,
-      'numero_sesion' => $sesion->numero_sesion + 1,
+      'numero_sesion' => $numeroSesion,
       'status' => 1,
       'comments' => $this->mensaje,
     ]);

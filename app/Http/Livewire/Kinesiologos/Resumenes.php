@@ -4,9 +4,7 @@ namespace App\Http\Livewire\Kinesiologos;
 
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
-use App\Models\Doctor;
 use App\Models\PacienteKine;
-use App\Models\Patient;
 use Livewire\Component;
 use Carbon\Carbon;
 use Livewire\WithFileUploads;
@@ -32,8 +30,10 @@ class Resumenes extends Component
   public $totalKine = 0;
   public $selPaciente;
   public $reloadStatus = 0;
-  public $dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+  public $dias = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"];
   public $dia = 0;
+  public $estadoEliminar = 0;
+  public $hoy;
   public $fechaBusquedaExtencion = '%';
   protected $listeners = ['create-sesion' => 'render', 'delete-sesion' => 'render'];
 
@@ -54,7 +54,14 @@ class Resumenes extends Component
       $this->month = $this->buscarFecha->format('m');
       $this->year = $this->buscarFecha->format('Y');
       $this->dia = $this->buscarFecha->format('d');
+      $this->hoy = $this->buscarFecha->format('d');
       $this->reloadStatus = 1;
+    }
+
+    if ($this->hoy != $this->dia) {
+      $this->estadoEliminar = 1;
+    } else {
+      $this->estadoEliminar = 0;
     }
 
     if ($this->dia == 0) {
@@ -91,6 +98,7 @@ class Resumenes extends Component
     }
 
     $pacientes = PacienteKine::where('doctor_id', auth()->user()->doctor->id)->get();
+
 
     return view('livewire.kinesiologos.resumenes', compact('pacientes'));
   }

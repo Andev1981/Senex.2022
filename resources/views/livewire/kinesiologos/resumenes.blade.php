@@ -9,6 +9,7 @@
         <h4 class="text-xs font-semibold text-gray-500 dark:text-white">
           Mis Atenciones
         </h4>
+        {{ $year }}-{{ $month }}-{{ $dia }}
       </div>
       <livewire:kinesiologos.nueva-atencion />
     </div>
@@ -58,7 +59,7 @@
         class="block w-full p-1 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         wire:model="selPaciente">
         <option value="0">
-          <span class="text-gray-500">--paciente--</span>
+          <span class="text-gray-500">--Todos los paciente--</span>
         </option>
         @foreach ($pacientes as $paciente)
         <option value="{{ $paciente->paciente->id }}">
@@ -95,7 +96,8 @@
 
                     <div class="text-right">
                       <div>
-                        <livewire:kinesiologos.atencion-detalle :applyItem="$applyItem" :key="time().$applyItem->id">
+                        <livewire:kinesiologos.atencion-detalle :applyItem="$applyItem"
+                          :estadoEliminar="$estadoEliminar" :key="time().$applyItem->id">
                       </div>
                       <div class="pt-1 text-xs text-gray-500">
                         {{
