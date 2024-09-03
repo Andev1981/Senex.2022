@@ -13,7 +13,7 @@ class ListadoKines extends Component
   public $search;
   protected $listeners = ['success-kine' => 'updatingSearch', 'success' => 'render'];
   protected $queryString = ['search'];
-  public $sort = 'updated_at';
+  public $sort = 'status';
   public $direction = 'desc';
 
   public function updatingSearch()
