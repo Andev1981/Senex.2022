@@ -37,6 +37,7 @@
             <h4 class="text-xs font-semibold text-gray-500 dark:text-white">
               Resumen Mensual Atenciones Kine
             </h4>
+            {{ $selPaciente }}
           </div>
 
 
@@ -131,9 +132,6 @@
                   <th scope="col" class="px-6 py-3">
                     Estado
                   </th>
-                  <th colspan="2" class="px-6 py-3">
-                    <span class="sr-only">Actions</span>
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -191,12 +189,10 @@
                     @endif
                     @endif
                   </td>
-                  <td>
-                  </td>
                 </tr>
                 @if ($loop->last && $selPaciente == '')
                 <tr class="text-center uppercase border-b dark:border-gray-700 hover:bg-cyan-50 bg-cyan-200">
-                  <td colspan="2">
+                  <td colspan="3">
                     <span class="py-2 font-semibold text-slate-900">Totales</span>
                   </td>
                   <td>
