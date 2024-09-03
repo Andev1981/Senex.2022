@@ -74,3 +74,6 @@ class ListadoSesiones extends Component
         return view('livewire.sesiones.listado-sesiones', compact('applyItems'));
     }
 }
+
+/* JBRAVO@UDD.CL */
+/*  19610462 */
