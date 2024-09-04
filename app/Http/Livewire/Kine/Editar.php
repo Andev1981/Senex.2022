@@ -170,8 +170,6 @@ class Editar extends Component
     $this->reset();
     $this->resetErrorBag();
     $this->resetValidation();
-    $this->reset();
-
 
     $this->isOpen = false;
   }
