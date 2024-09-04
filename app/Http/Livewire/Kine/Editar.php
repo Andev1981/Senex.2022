@@ -135,7 +135,7 @@ class Editar extends Component
       'status' => $this->status
     ]);
 
-    /*  if ($this->address_id > 0) {
+    if ($this->address_id > 0) {
       $address = Address::find($this->address_id);
       $address->update([
         'street' => $this->street,
@@ -144,26 +144,6 @@ class Editar extends Component
         'comuna_id' => $this->comuna_id,
         'detail' => $this->detail,
       ]);
-    } */
-
-    if ($this->address_id == 1) {
-      $addressNew = Address::create([
-        'street' => $this->street,
-        'number' => $this->number,
-        'address' => '',
-        'comuna_id' => $this->comuna_id,
-        'detail' => $this->detail
-      ]);
-      $doctor->update([
-        'name' => $this->name,
-        'last_name' => $this->last_name,
-        'rut' => $this->rut,
-        'phone' => $this->phone,
-        'status' => $this->status,
-        'address_id' => $addressNew->id
-      ]);
-    } else {
-      dd('No actualizado');
     }
 
 
@@ -177,6 +157,8 @@ class Editar extends Component
     $this->reset();
     $this->resetErrorBag();
     $this->resetValidation();
+
+
 
     $this->isOpen = false;
   }
