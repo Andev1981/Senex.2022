@@ -147,7 +147,7 @@ class Editar extends Component
     } */
 
     if ($this->address_id == 1) {
-      $address = Address::create([
+      $addressNew = Address::create([
         'street' => $this->street,
         'number' => $this->number,
         'address' => '',
@@ -155,7 +155,12 @@ class Editar extends Component
         'detail' => $this->detail
       ]);
       $doctor->update([
-        'address_id' => $address->id
+        'name' => $this->name,
+        'last_name' => $this->last_name,
+        'rut' => $this->rut,
+        'phone' => $this->phone,
+        'status' => $this->status,
+        'address_id' => $addressNew->id
       ]);
     }
 
