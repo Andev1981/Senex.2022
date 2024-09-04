@@ -30,7 +30,8 @@ class Editar extends Component
     $detail = '',
     $status = 0,
     $statusApp = 0,
-    $pass = '';
+    $pass = '',
+    $address_id  = 0;
 
 
   public function openModal()
@@ -41,6 +42,7 @@ class Editar extends Component
   public function closeModal()
   {
     $this->isOpen = false;
+    $this->clear();
   }
 
   protected function rules()
@@ -87,7 +89,7 @@ class Editar extends Component
     return view('livewire.kine.editar', compact('regiones', 'comunas'));
   }
 
-  public function mount($doctor)
+  public function mount(Doctor $doctor)
   {
 
     $this->email = $doctor->user->email;
@@ -97,6 +99,7 @@ class Editar extends Component
     $this->phone = $doctor->phone;
     $this->birth = date('Y-m-d', strtotime($doctor->birth));
     $address = Address::findOrFail($doctor->address_id);
+    $this->address_id = $address->id;
     $this->street = $address->street;
     $this->number = $address->number;
     $this->address = $address->address;
@@ -131,16 +134,31 @@ class Editar extends Component
       'phone' => $this->phone,
       'status' => $this->status
     ]);
-    if ($this->doctor->address_id) {
-      $product = Address::find($this->doctor->address_id);
-      $product->update([
+
+    /*  if ($this->address_id > 0) {
+      $address = Address::find($this->address_id);
+      $address->update([
         'street' => $this->street,
         'number' => $this->number,
         'address' => $this->address,
         'comuna_id' => $this->comuna_id,
         'detail' => $this->detail,
       ]);
+    } */
+
+    if ($this->address_id == 1) {
+      $address = Address::create([
+        'street' => $this->street,
+        'number' => $this->number,
+        'address' => '',
+        'comuna_id' => $this->comuna_id,
+        'detail' => $this->detail
+      ]);
+      $doctor->update([
+        'address_id' => $address->id
+      ]);
     }
+
 
     $this->emitUp('success-kine');
     $this->dispatchBrowserEvent('swal-success');
@@ -152,11 +170,8 @@ class Editar extends Component
     $this->reset();
     $this->resetErrorBag();
     $this->resetValidation();
-    if ($this->status == 0) {
-      $this->reset([
-        'doctor'
-      ]);
-    }
+    $this->reset();
+
 
     $this->isOpen = false;
   }

@@ -1,6 +1,8 @@
 <div>
   <x-button-edit wire:click="openModal" innerText="Datos" />
 
+  {{ $address_id }}
+
   @if($isOpen)
   {{-- Modal --}}
   <div aria-hidden="true"
