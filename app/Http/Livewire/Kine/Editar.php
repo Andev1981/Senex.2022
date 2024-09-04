@@ -162,6 +162,8 @@ class Editar extends Component
         'status' => $this->status,
         'address_id' => $addressNew->id
       ]);
+    } else {
+      dd('No actualizado');
     }
 
 
