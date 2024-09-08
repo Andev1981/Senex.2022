@@ -71,13 +71,19 @@ class NuevaAtencion extends Component
       ->where('doctor_id', auth()->user()->doctor->id)
       ->latest('id')->first();
 
-    $fecha = Carbon::parse(strtotime($sesion->fecha_atencion))->format('m');
-
-    if ($fecha === $this->month) {
-      $numeroSesion = $sesion->numero_sesion + 1;
+    if ($sesion) {
+      $fecha = Carbon::parse(strtotime($sesion->fecha_atencion))->format('m');
+      if ($fecha === $this->month) {
+        $numeroSesion = $sesion->numero_sesion + 1;
+      } else {
+        $numeroSesion = 1;
+      }
     } else {
       $numeroSesion = 1;
     }
+
+
+
 
     if ($this->estado == 1) {
       $this->application = Application::create([
