@@ -71,6 +71,7 @@ class NuevaAtencion extends Component
       ->where('doctor_id', auth()->user()->doctor->id)
       ->latest('id')->first();
 
+
     if ($sesion) {
       $fecha = Carbon::parse(strtotime($sesion->fecha_atencion))->format('m');
       if ($fecha === $this->month) {
@@ -81,9 +82,6 @@ class NuevaAtencion extends Component
     } else {
       $numeroSesion = 1;
     }
-
-
-
 
     if ($this->estado == 1) {
       $this->application = Application::create([
