@@ -25,6 +25,7 @@ class Resumenes extends Component
   public $applyItems = [];
   public $buscarFecha;
   public $buscarFechaIn;
+  public $buscarFechaPdf;
   public $kineValues;
   public $totalPacientes = 0;
   public $totalKine = 0;
@@ -70,6 +71,7 @@ class Resumenes extends Component
 
       $this->buscarFecha =  $this->year . '-' . $this->month . '-' . $this->dia . ' 00:00:00';
     }
+    $this->buscarFechaPdf =  $this->year . '-' . $this->month;
 
     if ($this->selPaciente != 0) {
 
