@@ -49,7 +49,7 @@ class ReportePdfController extends Controller
         //dd($nameUser);
 
 
-        $kineValues = ApplicationTypeUser::where('user_id', $kine)->get();
+        $kineValues = ApplicationTypeUser::where('user_id', $kine->id)->get();
 
         foreach ($applyItems as $applyItem) {
 
