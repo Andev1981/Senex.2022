@@ -34,12 +34,14 @@ class ReportePdfController extends Controller
                 ->limit(1);
         })->orderBy('fecha_atencion', 'asc')->get();
 
-        if (count($applyItems) == 0) {
+        $kine = User::find($kine);
+
+        if ($kine != null) {
 
             $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
         } else {
 
-            $nameUser = "Sin datos";
+            $nameUser = "--";
         }
         $total = $applyItems[0]->sum('price');
         $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
