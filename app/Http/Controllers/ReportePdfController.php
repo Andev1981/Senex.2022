@@ -27,14 +27,20 @@ class ReportePdfController extends Controller
         // Obtener los datos
         $applyItems = ApplyItem::with(['patient' => function ($query) {
             $query->orderBy('name', 'asc');
-        }], 'assign')->where('fecha_atencion', 'like', $buscarFecha)->where('status', 1)->where('doctor_id', $kine)->orderByDesc(function ($query) {
+        }], 'assign')->where('fecha_atencion', 'like', $buscarFecha . '%')->where('status', 1)->where('doctor_id', $kine)->orderByDesc(function ($query) {
             $query->from('patients')
                 ->whereColumn('patients.id', '=', 'apply_items.patient_id')
                 ->select('name')
                 ->limit(1);
         })->orderBy('fecha_atencion', 'asc')->get();
 
-        $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
+        if (count($applyItems) == 0) {
+
+            $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
+        } else {
+
+            $nameUser = "Sin datos";
+        }
         $total = $applyItems[0]->sum('price');
         $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
         $fecha = $fechaString->format('m-Y');
