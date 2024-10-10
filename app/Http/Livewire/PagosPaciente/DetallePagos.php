@@ -100,7 +100,7 @@ class DetallePagos extends Component
 
     $applyItems = ApplyItem::where('status', 1)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->where('patient_id', $this->paciente->id)->orderBy('numero_sesion', 'desc')->get();
 
-    if (count($applyItems) > 0) {
+    if (count($applyItems) > 0 && $typePayment != null) {
       $this->applyItemsCount = $applyItems->count();
       $this->applyItem = $applyItems[0];
 

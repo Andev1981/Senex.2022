@@ -46,8 +46,6 @@ class ReportePdfController extends Controller
         $total = $applyItems[0]->sum('price');
         $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
         $fecha = $fechaString->format('m-Y');
-        //dd($nameUser);
-
 
         $kineValues = ApplicationTypeUser::where('user_id', $kine->id)->get();
 
