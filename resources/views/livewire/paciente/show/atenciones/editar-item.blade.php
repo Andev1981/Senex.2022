@@ -17,7 +17,7 @@
                     class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
-                            Editando Sesión -2
+                            Editando Sesión
                         </h3>
                         <span>{{ $patient->name ?? '' }} {{ $patient->last_name ?? '' }}</span>
                     </div>
