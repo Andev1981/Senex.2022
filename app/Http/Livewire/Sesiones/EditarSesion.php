@@ -51,6 +51,8 @@ class EditarSesion extends Component
     public function mount(ApplyItem $applyItem)
     {
 
+        dd($applyItem);
+
         $this->applyItem = $applyItem;
         $this->application = $applyItem->application;
         $this->patient = $this->applyItem->patient;
