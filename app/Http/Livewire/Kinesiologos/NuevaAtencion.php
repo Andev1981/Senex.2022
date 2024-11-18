@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\PacienteKine;
 use App\Models\ApplyItem;
+use App\Models\Patient;
 use App\Models\PaymentIncome;
 use App\Models\User;
 use App\Models\Wallet;
@@ -117,7 +118,7 @@ class NuevaAtencion extends Component
       'apply_item_id' => $apply->id,
     ]);
 
-    $cliente = User::where('id', $this->paciente)->first();
+    $cliente = Patient::where('id', $this->paciente)->first();
     $cliente->payment_status = 1;
     $cliente->save();
 
