@@ -34,7 +34,7 @@ class Inactivo extends Component
         $this->fechaBuscar = $this->fechaActual->format('Y-m');
         $pacientes = Patient::where(function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-        })->where('status', 0)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+        })->where('status', 0)->where('payment_status', 1)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
         return view('livewire.pagos-paciente.estados.pagado', compact('pacientes'));
     }
 
