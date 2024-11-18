@@ -7,6 +7,7 @@ use App\Models\ApplicationType;
 use App\Models\PacienteKine;
 use App\Models\ApplyItem;
 use App\Models\PaymentIncome;
+use App\Models\User;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -116,12 +117,10 @@ class NuevaAtencion extends Component
       'apply_item_id' => $apply->id,
     ]);
 
-    /*   Assign::create([
-      'user_id' => $this->kine,
-      'application_id' => $this->application->id,
-      'apply_item_id' => $apply->id,
-      'application_type_user_id' => $applicationTypeUser->id,
-    ]); */
+    $cliente = User::where('id', $this->paciente)->first();
+    $cliente->payment_status = 1;
+    $cliente->save();
+
     $this->clear();
   }
 
