@@ -119,8 +119,10 @@ class NuevaAtencion extends Component
     ]);
 
     $cliente = Patient::where('id', $this->paciente)->first();
-    $cliente->payment_status = 1;
-    $cliente->save();
+    if ($cliente) {
+      $cliente->payment_status = 1;
+      $cliente->save();
+    }
 
     $this->clear();
   }
