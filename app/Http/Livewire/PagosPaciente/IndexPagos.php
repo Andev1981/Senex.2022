@@ -137,7 +137,7 @@ class IndexPagos extends Component
   {
     $allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
 
-    $pac = $allPacientes->max('orden');
+    $this->orden = $allPacientes->max('orden');
 
     foreach ($allPacientes as $paciente) {
       $buscarAplication = $paciente->applications->first();
