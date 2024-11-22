@@ -32,4 +32,9 @@ class Doctor extends Model
     {
         return $this->belongsTo(Address::class);
     }
+
+    public function applyTypes()
+    {
+        return $this->hasMany(ApplicationTypeUser::class);
+    }
 }

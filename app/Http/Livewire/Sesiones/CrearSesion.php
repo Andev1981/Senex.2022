@@ -149,6 +149,7 @@ class CrearSesion extends Component
     if (!$applicationTypeUser) {
       $applicationTypeUser = ApplicationTypeUser::create([
         'user_id' => $this->kine,
+        'doctor_id' => $this->kine,
         'application_type_id' => $this->tipo_atencion,
         'price' => 0
       ]);
@@ -156,6 +157,7 @@ class CrearSesion extends Component
 
     Assign::create([
       'user_id' => $this->kine,
+      'doctor_id' => $this->kine,
       'application_id' => $this->application->id,
       'apply_item_id' => $apply->id,
       'application_type_user_id' => $applicationTypeUser->id,

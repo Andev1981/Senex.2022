@@ -15,6 +15,7 @@
   'doctor.tabs.pacientes' => 'App\\Http\\Livewire\\Doctor\\Tabs\\Pacientes',
   'doctor.tabs.pendientes' => 'App\\Http\\Livewire\\Doctor\\Tabs\\Pendientes',
   'doctor.tabs.services' => 'App\\Http\\Livewire\\Doctor\\Tabs\\Services',
+  'informes.index-informes' => 'App\\Http\\Livewire\\Informes\\IndexInformes',
   'inicio' => 'App\\Http\\Livewire\\Inicio',
   'kine.atenciones' => 'App\\Http\\Livewire\\Kine\\Atenciones',
   'kine.crear' => 'App\\Http\\Livewire\\Kine\\Crear',
