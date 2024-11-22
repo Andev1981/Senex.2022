@@ -81,8 +81,8 @@
                     </thead>
                     <thead class="pt-5 text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr class="text-center">
-                            <th scope="col" class="px-6 py-3">Kine</th>
                             <th scope="col" class="px-6 py-3">Paciente</th>
+                            <th scope="col" class="px-6 py-3">Kine</th>
                             <th scope="col" class="px-6 py-3">Fecha</th>
                             <th scope="col" class="px-6 py-3">Tipo</th>
                             <th scope="col" class="px-6 py-3">N°&nbsp;Sesión</th>
