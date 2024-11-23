@@ -90,7 +90,7 @@ class ReportePdfController extends Controller
         }
         $total = $applyItems[0]->sum('price');
         $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
-        $fecha = $fechaString->format('m-Y');
+        $fecha = $fechaString->format('MM-Y');
 
         //dd($total, $applyItems, $fecha, $this->totalKine, $this->totalPacientes);
 
