@@ -128,7 +128,7 @@
                             <td class="px-1 py-1">
 
                                 @forelse ($applyItem->doctor->applyTypes as $kineValue)
-                                @if ($kineValue->id == $applyItem->application_type_id)
+                                @if ($kineValue->application_type_id == $applyItem->application_type_id)
                                 ${{ number_format($kineValue->price, 0, ',', '.') ?? '0' }}.-
                                 @endif
 
