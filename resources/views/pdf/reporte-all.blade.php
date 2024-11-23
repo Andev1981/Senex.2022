@@ -63,7 +63,7 @@
   </header>
 
   <table>
-    <thead>
+    <thead style="background-color: #0291b3">
       <tr>
         <th>Kine</th>
         <th>Paciente</th>
@@ -77,7 +77,7 @@
     </thead>
     <tbody>
       @forelse ($applyItems as $applyItem)
-      <tr style="background-color: #ecfeff ">
+      <tr style="background-color: #f0f0f0">
         <td scope="row">
           {{ $applyItem->doctor->name ?? '' }}
           {{ $applyItem->doctor->last_name ?? '' }}
