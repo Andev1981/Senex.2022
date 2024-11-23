@@ -63,7 +63,41 @@ class ReportePdfController extends Controller
         return $pdf->download(rand(1, 1000) . '-Reporte-Mensual-Atenciones' . $nameUser . '.pdf');
     }
 
+    public $totalPacientes = 0;
 
+    public function generarReporteGeneral($buscarFecha)
+    {
+
+
+        $applyItems = ApplyItem::with(['patient' => function ($query) {
+            $query->orderBy('name', 'asc');
+        }], 'application', 'doctor')
+            ->where('status', 1)
+            ->where('fecha_atencion', 'like', $buscarFecha . '%')->orderByDesc(function ($query) {
+                $query->from('patients')
+                    ->select('name')
+                    ->limit(1);
+            })->orderBy('fecha_atencion', 'asc')->get();
+
+
+        foreach ($applyItems as $applyItem) {
+            $this->totalPacientes += $applyItem->price;
+
+            foreach ($applyItem->doctor->applyTypes as $kineValue)
+                if ($kineValue->application_type_id == $applyItem->application_type_id) {
+                    $this->totalKine += $kineValue->price;
+                }
+        }
+        $total = $applyItems[0]->sum('price');
+        $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
+        $fecha = $fechaString->format('m-Y');
+
+        //dd($total, $applyItems, $fecha, $this->totalKine, $this->totalPacientes);
+
+        $pdf = Pdf::loadView('pdf.reporte-all', ['total' => $total, 'applyItems' => $applyItems, 'fecha' => $fecha, 'totalKine' => $this->totalKine, 'totalPacientes' => $this->totalPacientes]);
+
+        return $pdf->download(rand(1, 1000) . '-Reporte-Mensual-Atenciones.pdf');
+    }
 
 
 

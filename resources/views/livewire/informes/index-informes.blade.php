@@ -181,8 +181,7 @@
                             </td>
                             <td class="flex py-2 font-semibold text-slate-900">
                                 @if ($totalKine > 0)
-                                <a href="reporte-pdf/{{ $this->buscarFecha }}/{{ $this->kine->id }}" target="_blank"
-                                    type="button"
+                                <a href="reporte-pdf-all/{{ $this->buscarFecha }}" target="_blank" type="button"
                                     class="inline-flex items-center px-2 py-1 my-2 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800">Pdf</a>
                                 @endif
                             </td>

@@ -74,37 +74,37 @@
         </thead>
         <tbody>
             @forelse ($applyItems as $applyItem)
-                <tr>
-                    <td scope="row">
-                        {{ $applyItem->patient->name ?? '' }}
-                        {{ $applyItem->patient->last_name ?? '' }}
-                    </td>
-                    <td>
-                        {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
+            <tr>
+                <td scope="row">
+                    {{ $applyItem->patient->name ?? '' }}
+                    {{ $applyItem->patient->last_name ?? '' }}
+                </td>
+                <td>
+                    {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
 
-                    </td>
+                </td>
 
-                    <td>
-                        {{ $applyItem->applicationType->name }}
-                    </td>
-                    <td>{{ $applyItem->numero_sesion ?? '' }}</td>
-                    <td>
-                        @forelse ($kineValues as $kineValue)
-                            @if ($kineValue->application_type_id == $applyItem->application_type_id)
-                                ${{ number_format($kineValue->price, 0, ',', '.') ?? '0' }}.-
-                            @endif
+                <td>
+                    {{ $applyItem->applicationType->name }}
+                </td>
+                <td>{{ $applyItem->numero_sesion ?? '' }}</td>
+                <td>
+                    @forelse ($kineValues as $kineValue)
+                    @if ($kineValue->application_type_id == $applyItem->application_type_id)
+                    ${{ number_format($kineValue->price, 0, ',', '.') ?? '0' }}.-
+                    @endif
 
-                        @empty
-                            Sin Datos
-                        @endforelse
-                    </td>
-                </tr>
+                    @empty
+                    Sin Datos
+                    @endforelse
+                </td>
+            </tr>
             @empty
-                <tr>
-                    <td col="5">
-                        Sin Datos
-                    </td>
-                </tr>
+            <tr>
+                <td col="5">
+                    Sin Datos
+                </td>
+            </tr>
             @endforelse
             <tr>
                 <td colspan="3">
