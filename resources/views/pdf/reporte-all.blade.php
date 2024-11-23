@@ -77,7 +77,7 @@
     </thead>
     <tbody>
       @forelse ($applyItems as $applyItem)
-      <tr>
+      <tr style="background-color: #ecfeff ">
         <td scope="row">
           {{ $applyItem->doctor->name ?? '' }}
           {{ $applyItem->doctor->last_name ?? '' }}
