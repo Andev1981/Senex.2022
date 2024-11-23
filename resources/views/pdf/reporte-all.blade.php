@@ -128,7 +128,7 @@
         </td>
       </tr>
       @endforelse
-      <tr>
+      <tr style="background-color: #8ae3e7">
         <td colspan="4">
           <span class="py-2 font-semibold text-slate-900">Totales</span>
         </td>
