@@ -63,8 +63,8 @@
   </header>
 
   <table>
-    <thead style="background-color: #0291b3">
-      <tr>
+    <thead>
+      <tr style="background-color: #0291b3">
         <th>Kine</th>
         <th>Paciente</th>
         <th>Fecha</th>
