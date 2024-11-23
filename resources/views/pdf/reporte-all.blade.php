@@ -28,6 +28,7 @@
     td {
       border: 1px solid black;
       padding: 4px;
+      font-size: 12px;
     }
 
     th {
