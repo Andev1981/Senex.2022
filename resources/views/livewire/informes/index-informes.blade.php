@@ -3,9 +3,19 @@
         <!-- Modal header -->
 
         <div class="flex items-center justify-between pb-2 mb-2 border-b rounded-t sm:mb-2 dark:border-gray-600">
-            <div class="justify-start">
-                <span class="text-base text-gray-700">{{ $kine->name }}&nbsp;{{ $kine->last_name }}</span>
-                <h4 class="text-xs font-semibold text-gray-500 dark:text-white">
+            <div class="flex">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-list-check">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3.5 5.5l1.5 1.5l2.5 -2.5" />
+                    <path d="M3.5 11.5l1.5 1.5l2.5 -2.5" />
+                    <path d="M3.5 17.5l1.5 1.5l2.5 -2.5" />
+                    <path d="M11 6l9 0" />
+                    <path d="M11 12l9 0" />
+                    <path d="M11 18l9 0" />
+                </svg>
+                <h4 class="ml-2 -mt-1 text-xl font-semibold text-gray-500 dark:text-white">
                     Resumen Mensual Atenciones Kine
                 </h4>
                 {{ $selPaciente }}

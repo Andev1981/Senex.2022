@@ -70,9 +70,9 @@
         <th>Fecha</th>
         <th>Tipo</th>
         <th>Sesión</th>
-        <th>ValorSesión</th>
         <th>ValorPaciente</th>
         <th>ValorKine</th>
+        <th>SaldoSenex</th>
       </tr>
     </thead>
     <tbody>
@@ -95,8 +95,8 @@
           {{ $applyItem->applicationType->name }}
         </td>
         <td>{{ $applyItem->numero_sesion ?? '' }}</td>
-        <td>
-          {{ $applyItem->applicationType->name ?? '' }}
+        <td class="px-1 py-1">
+          ${{ number_format($applyItem->price, 0, ',', '.') }}.-
         </td>
         <td>
           @forelse ($applyItem->doctor->applyTypes as $kineValue)
