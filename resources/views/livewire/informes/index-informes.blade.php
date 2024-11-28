@@ -65,17 +65,17 @@
                             </th>
 
                             <th scope="col" colspan="2">
-                                {{-- <select
+                                <select
                                     class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    wire:model="selPaciente">
+                                    wire:model="selTipo">
                                     <option value="0">
-                                        <span class="text-gray-500">--paciente--</span>
+                                        <span class="text-gray-500">--Todos los tipos--</span>
                                     </option>
-                                    @foreach ($pacientes as $paciente)
-                                    <option value="{{ $paciente->id }}">
-                                        {{ $paciente->name }}&nbsp;{{ $paciente->last_name }}</option>
+                                    @foreach ($tipos as $tipo)
+                                    <option value="{{ $tipo->id }}">
+                                        {{ $tipo->name }}</option>
                                     @endforeach
-                                </select> --}}
+                                </select>
                             </th>
 
                             <th scope="col">
@@ -170,7 +170,7 @@
                                 @endif
                             </td>
                         </tr>
-                        @if ($loop->last && $selPaciente == '')
+                        @if ($loop->last)
                         <tr class="text-center uppercase border-b dark:border-gray-700 hover:bg-cyan-50 bg-cyan-200">
                             <td colspan="4">
                                 <span class="py-2 font-semibold text-slate-900">Totales</span>

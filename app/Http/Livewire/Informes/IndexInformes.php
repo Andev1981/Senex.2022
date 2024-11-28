@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Informes;
 
+use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Doctor;
@@ -28,6 +29,8 @@ class IndexInformes extends Component
     public $totalKine = 0;
     public $pacientes = [];
     public $selPaciente;
+    public $tipos;
+    public $selTipo = 0;
 
     public function render()
     {
@@ -42,6 +45,7 @@ class IndexInformes extends Component
             $this->status = 1;
         }
 
+        $this->tipos = ApplicationType::all();
         $this->pacientes = Patient::where('status', 1)->orderBy('name', 'asc')->get();
         $this->buscarFecha = Carbon::now();
         $this->month = $this->buscarFecha->format('m');
@@ -57,16 +61,14 @@ class IndexInformes extends Component
 
         $this->buscarFecha =  $this->year . '-' . $this->month;
 
-        if ($this->selPaciente != 0) {
+        if ($this->selTipo > 0) {
             $this->applyItems = ApplyItem::with(['patient' => function ($query) {
                 $query->orderBy('name', 'asc');
             }], 'application', 'doctor')
-                /*     ->where('doctor_id', $this->kine->id)
-                ->where('patient_id', $this->selPaciente) */
+                ->where('application_type_id', $this->selTipo)
                 ->where('status', 1)
                 ->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
                     $query->from('patients')
-                        /* ->whereColumn('patients.id', '=', 'apply_items.patient_id') */
                         ->select('name')
                         ->limit(1);
                 })->orderBy('fecha_atencion', 'asc')->get();
@@ -74,11 +76,9 @@ class IndexInformes extends Component
             $this->applyItems = ApplyItem::with(['patient' => function ($query) {
                 $query->orderBy('name', 'asc');
             }], 'application', 'doctor')
-                /*     ->where('doctor_id', $this->kine->id) */
                 ->where('status', 1)
                 ->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
                     $query->from('patients')
-                        /* ->whereColumn('patients.id', '=', 'apply_items.patient_id') */
                         ->select('name')
                         ->limit(1);
                 })->orderBy('fecha_atencion', 'asc')->get();
