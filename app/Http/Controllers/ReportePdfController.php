@@ -65,19 +65,33 @@ class ReportePdfController extends Controller
 
     public $totalPacientes = 0;
 
-    public function generarReporteGeneral($buscarFecha)
+    public function generarReporteGeneral($buscarFecha, $selTipo)
     {
 
+        if ($selTipo > 0) {
+            $applyItems = ApplyItem::with(['patient' => function ($query) {
+                $query->orderBy('name', 'asc');
+            }], 'application', 'doctor')
+                ->where('application_type_id', $selTipo)
+                ->where('status', 1)
+                ->where('fecha_atencion', 'like', $buscarFecha . '%')->orderByDesc(function ($query) {
+                    $query->from('patients')
+                        ->select('name')
+                        ->limit(1);
+                })->orderBy('fecha_atencion', 'asc')->get();
+        } else {
+            $applyItems = ApplyItem::with(['patient' => function ($query) {
+                $query->orderBy('name', 'asc');
+            }], 'application', 'doctor')
+                ->where('status', 1)
+                ->where('fecha_atencion', 'like', $buscarFecha . '%')->orderByDesc(function ($query) {
+                    $query->from('patients')
+                        ->select('name')
+                        ->limit(1);
+                })->orderBy('fecha_atencion', 'asc')->get();
+        }
 
-        $applyItems = ApplyItem::with(['patient' => function ($query) {
-            $query->orderBy('name', 'asc');
-        }], 'application', 'doctor')
-            ->where('status', 1)
-            ->where('fecha_atencion', 'like', $buscarFecha . '%')->orderByDesc(function ($query) {
-                $query->from('patients')
-                    ->select('name')
-                    ->limit(1);
-            })->orderBy('fecha_atencion', 'asc')->get();
+
 
 
         foreach ($applyItems as $applyItem) {

@@ -103,7 +103,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   /* RUTAS PARA PDF */
-  Route::get('/reporte-pdf-all/{applyItems}', [ReportePdfController::class, 'generarReporteGeneral']);
+  Route::get('/reporte-pdf-all/{applyItems}/{selTipo}', [ReportePdfController::class, 'generarReporteGeneral']);
   Route::get('/reporte-pdf/{applyItems}/{kine}', [ReportePdfController::class, 'generarReporte']);
 
   Route::get('/andres', [ReportePdfController::class, 'arreglo'])->name('andres');
