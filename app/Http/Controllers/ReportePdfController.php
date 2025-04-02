@@ -23,6 +23,9 @@ class ReportePdfController extends Controller
     public function generarReporte($buscarFecha, $kine)
     {
 
+        if (auth()->user()->email == "javte1981@gmail.com") {
+            dd($buscarFecha, $kine);
+        }
 
         // Obtener los datos
         $applyItems = ApplyItem::with(['patient' => function ($query) {
