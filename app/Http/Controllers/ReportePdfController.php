@@ -33,7 +33,7 @@ class ReportePdfController extends Controller
                 ->limit(1);
         })->orderBy('fecha_atencion', 'asc')->get();
 
-        $kineFinded = User::find($kine);
+        $kineFinded = Doctor::find($kine);
 
         if ($kineFinded != null) {
 
