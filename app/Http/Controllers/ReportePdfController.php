@@ -23,10 +23,6 @@ class ReportePdfController extends Controller
     public function generarReporte($buscarFecha, $kine)
     {
 
-        if (auth()->user()->email == "javte1981@gmail.com") {
-            dd($buscarFecha, $kine);
-        }
-
         // Obtener los datos
         $applyItems = ApplyItem::with(['patient' => function ($query) {
             $query->orderBy('name', 'asc');
@@ -50,7 +46,7 @@ class ReportePdfController extends Controller
         $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
         $fecha = $fechaString->format('m-Y');
 
-        $kineValues = ApplicationTypeUser::where('user_id', $kine->id)->get();
+        $kineValues = ApplicationTypeUser::where('user_id', $kine)->get();
 
         foreach ($applyItems as $applyItem) {
 
