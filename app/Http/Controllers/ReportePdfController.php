@@ -33,9 +33,9 @@ class ReportePdfController extends Controller
                 ->limit(1);
         })->orderBy('fecha_atencion', 'asc')->get();
 
-        $kine = User::find($kine);
+        $kineFinded = User::find($kine);
 
-        if ($kine != null) {
+        if ($kineFinded != null) {
 
             $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
         } else {
