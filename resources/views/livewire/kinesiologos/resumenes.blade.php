@@ -95,10 +95,10 @@
                     </div>
 
                     <div class="text-right">
-                      <div>
+                      {{-- <div>
                         <livewire:kinesiologos.atencion-detalle :applyItem="$applyItem"
                           :estadoEliminar="$estadoEliminar" :key="time().$applyItem->id">
-                      </div>
+                      </div> --}}
                       <div class="pt-1 text-xs text-gray-500">
                         {{
                         \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y')
