@@ -136,10 +136,11 @@
               <hr>
               <div class="mt-5">
 
-                <x-button-update wire:loading.remove wire:click="save" wire:target="save" innerText="Guardar" />
+                <x-button-update wire:loading.remove wire:click="save" wire:target="save" wire:loading.attr="disabled" wire:loading.class="opacity-50" onclick="this.disabled = true;"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" innerText="Guardar" />
 
 
-                <x-button-loading wire:loading wire:target="save" innerText="Guardando" />
+                <x-button-loading wire:loading innerText="Guardando" />
               </div>
             </form>
           </div>
