@@ -25,7 +25,6 @@
         "@fortawesome/fontawesome-svg-core": "^6.1.1",
         "@headlessui/react": "^2.2.6",
         "@inertiajs/inertia": "^0.11.1",
-        "@inertiajs/inertia-react": "^0.8.1",
         "@inertiajs/react": "^2.0.17",
         "@themesberg/tailwind-datepicker": "^1.1.0",
         "flowbite-datepicker": "^1.2.2",
@@ -37,8 +36,6 @@
         "react-toastify": "^11.0.5",
         "styled-components": "^6.1.19",
         "tw-elements": "^1.0.0-alpha12",
-        "vue": "^3.2.33",
-        "vue-router": "^4.0.14",
         "xlsx": "^0.18.5",
         "ziggy-js": "^2.5.3"
     }

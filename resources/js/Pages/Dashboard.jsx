@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/inertia-react";
+import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import TablePacientes from "@/Pages/TablePacientes";
 export default function Dashboard({ user, pacientes }) {
