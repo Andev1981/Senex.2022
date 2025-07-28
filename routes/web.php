@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\InertiaHomeController;
 use App\Http\Controllers\PaymentIncomeController;
 use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Informes\IndexInformes;
@@ -131,6 +132,8 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('/kinesiologos/pacientes/{paciente}', AtencionDetalle::class);
 
   Route::get('informes', IndexInformes::class)->name('informes');
+
+  Route::get('listado-pacientes', [InertiaHomeController::class, 'inertiaHome'])->name('listado-pacientes');
 });
 
 

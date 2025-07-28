@@ -1,12 +1,51 @@
 {
-  "resources/css/app.css": {
-    "file": "assets/app-c87d2e29.css",
-    "isEntry": true,
-    "src": "resources/css/app.css"
+  "_TablePacientes-Cf915REO.js": {
+    "file": "assets/TablePacientes-Cf915REO.js",
+    "name": "TablePacientes",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
   },
-  "resources/js/app.js": {
-    "file": "assets/app-88ef806d.js",
+  "resources/css/app.css": {
+    "file": "assets/app-BhfSj3Wu.css",
+    "src": "resources/css/app.css",
     "isEntry": true,
-    "src": "resources/js/app.js"
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/Pages/Dashboard.jsx": {
+    "file": "assets/Dashboard-DsYFXIn6.js",
+    "name": "Dashboard",
+    "src": "resources/js/Pages/Dashboard.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TablePacientes-Cf915REO.js"
+    ],
+    "css": [
+      "assets/app-BhfSj3Wu.css"
+    ],
+    "assets": [
+      "assets/logo-BGOwjsqM.png"
+    ]
+  },
+  "resources/js/app.jsx": {
+    "file": "assets/app-DranFkhj.js",
+    "name": "app",
+    "src": "resources/js/app.jsx",
+    "isEntry": true,
+    "dynamicImports": [
+      "resources/js/Pages/Dashboard.jsx",
+      "_TablePacientes-Cf915REO.js"
+    ],
+    "css": [
+      "assets/app-BhfSj3Wu.css"
+    ]
+  },
+  "resources/js/assets/img/logo.png": {
+    "file": "assets/logo-BGOwjsqM.png",
+    "src": "resources/js/assets/img/logo.png"
   }
 }

@@ -14,6 +14,7 @@
         "dompdf/dompdf": "*",
         "enyo/dropzone": "^5.9",
         "guzzlehttp/guzzle": "^7.2",
+        "inertiajs/inertia-laravel": "^1.3",
         "kdion4891/laravel-livewire-tables": "^1.6",
         "laravel/framework": "^9.2",
         "laravel/sanctum": "^2.14.1",
