@@ -7,7 +7,7 @@
 
         <title>{{ config('app.name', 'Senex-App') }}</title>
 
-        @vite(['resources/css/app.css', 'resources/js/app.jsx'])
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     </head>
     <body class="font-sans antialiased">
