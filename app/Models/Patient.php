@@ -27,7 +27,7 @@ class Patient extends Model
 
 
 
-    /* public function applications()
+    public function applications()
     {
         return $this->hasMany(Application::class);
     }
@@ -102,5 +102,5 @@ class Patient extends Model
         'doctor_nombre',
         'age',
         'direccion',
-    ]; */
+    ];
 }
