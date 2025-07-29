@@ -35,9 +35,9 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
               <tr>
                 <th scope="col" class="px-6 py-3">Nombre</th>
-                <th scope="col" class="px-6 py-3">
+                {{-- <th scope="col" class="px-6 py-3">
                   Estado
-                </th>
+                </th> --}}
                 <th scope="col" class="px-6 py-3">
                   AccesoApp
                 </th>
@@ -63,7 +63,7 @@
                     </span>
                   </div>
                 </td>
-                <td class="px-6 py-4">
+                {{-- <td class="px-6 py-4">
                   @if ($doctor->status === 1)
                   <span
                     class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-green-600 rounded-full dark:bg-green-200 dark:text-green-900">
@@ -76,7 +76,7 @@
                   </span>
                   @endif
 
-                </td>
+                </td> --}}
                 <td class="px-6 py-4">
                   @if ($doctor->user->status === 1)
                   <span
