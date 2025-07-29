@@ -44,6 +44,8 @@ class Atenciones extends Component
   public function mount(Doctor $doctor)
   {
 
+    dd($doctor);
+
     $this->kine = $doctor;
     if ($this->kine->id) {
       $this->status = 1;
