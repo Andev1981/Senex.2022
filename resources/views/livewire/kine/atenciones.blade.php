@@ -4,7 +4,7 @@
       <div class="relative overflow-hidden bg-white rounded-lg shadow-md">
         <div class="flex flex-row items-center gap-2 p-4">
           <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
-          <label class="text-lg font-semibold">Listado de Kines</label>
+          <label class="text-lg font-semibold">Detalle de {{ $kine->name }}&nbsp;{{ $kine->last_name }}</label>
         </div>
         <div class="flex flex-col justify-between p-4 space-y-3 md:flex-row md:space-y-0">
           <div class="w-full md:w-5/6">
