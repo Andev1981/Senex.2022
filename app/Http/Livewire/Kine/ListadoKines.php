@@ -29,7 +29,7 @@ class ListadoKines extends Component
         ->orWhere('status', 'like', '%' . $this->search . '%');
     })->orderBy($this->sort, $this->direction)->paginate(5);
 
-    dd($doctores);
+    /* dd($doctores); */
 
     return view('livewire.kine.listado-kines', compact('doctores'));
   }
