@@ -32,7 +32,7 @@ class Atenciones extends Component
   public $pacientes = [];
   public $selPaciente;
 
-  protected $listeners = ['success-value' => 'searchByItems'];
+  /*   protected $listeners = ['success-value' => 'searchByItems']; */
 
 
 
@@ -44,8 +44,6 @@ class Atenciones extends Component
   public function mount(Doctor $doctor)
   {
 
-    dd($doctor);
-
     $this->kine = $doctor;
     if ($this->kine->id) {
       $this->status = 1;
@@ -55,7 +53,7 @@ class Atenciones extends Component
     $this->buscarFecha = Carbon::now();
     $this->month = $this->buscarFecha->format('m');
     $this->year = $this->buscarFecha->format('Y');
-    $this->searchByItems();
+    /*  $this->searchByItems(); */
   }
   public function searchByItems()
   {
