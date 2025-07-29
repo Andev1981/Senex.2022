@@ -78,7 +78,7 @@
 
                 </td>
                 <td class="px-6 py-4">
-                  {{-- @if ($doctor->user->status === 1)
+                  @if ($doctor->user->status === 1)
                   <span
                     class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-green-600 rounded-full dark:bg-green-200 dark:text-green-900">
                     Activo
@@ -88,7 +88,7 @@
                     class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-red-600 rounded-full dark:bg-green-200 dark:text-red-900">
                     Deshabilitado
                   </span>
-                  @endif --}}
+                  @endif 
 
                 </td>
                 <td class="py-0">
