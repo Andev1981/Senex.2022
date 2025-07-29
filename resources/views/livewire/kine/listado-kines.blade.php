@@ -95,7 +95,7 @@
                    <button
                   type="button"
                   onclick="window.location='{{ route('kines-detalles', ['id' => $doctor]) }}'"
-                  class="btn btn-primary"
+                 class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800"
                 >
                   Ver Atenciones
                 </button>
