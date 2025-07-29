@@ -1,27 +1,14 @@
 <div>
-  <div>
-    @if ($status === 1)
-    <button wire:click="openModal" type="button"
-      class="flex items-center gap-1 px-2 py-1 text-sm font-medium text-center text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-      type="button">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-        class="icon icon-tabler icons-tabler-outline icon-tabler-list-check">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M3.5 5.5l1.5 1.5l2.5 -2.5" />
-        <path d="M3.5 11.5l1.5 1.5l2.5 -2.5" />
-        <path d="M3.5 17.5l1.5 1.5l2.5 -2.5" />
-        <path d="M11 6l9 0" />
-        <path d="M11 12l9 0" />
-        <path d="M11 18l9 0" />
-      </svg>
-      Atenciones
-    </button>
-    @endif
-  </div>
-
-  @if ($isOpen)
-  <!-- Main modal -->
+  <section class="p-2 dark:bg-gray-900">
+    <div class="max-w-screen-xl px-1 mx-auto lg:px-2">
+      <div class="relative overflow-hidden bg-white rounded-lg shadow-md">
+        <div class="flex flex-row items-center gap-2 p-4">
+          <img src="{{ asset('icons/lista.gif') }}" alt="" class="w-10 h-10">
+          <label class="text-lg font-semibold">Listado de Kines</label>
+        </div>
+        <div class="flex flex-col justify-between p-4 space-y-3 md:flex-row md:space-y-0">
+          <div class="w-full md:w-5/6">
+            <div class="flex items-center">
   <div
     class="bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] flex"
     aria-modal="true" aria-hidden="false" role="dialog">
@@ -229,6 +216,7 @@
       </div>
     </div>
   </div>
-  @endif
-
+  </div>
+  </div>
+</section>
 </div>
