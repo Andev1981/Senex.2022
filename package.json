@@ -25,6 +25,7 @@
         "@themesberg/tailwind-datepicker": "^1.1.0",
         "@vitejs/plugin-react": "^4.7.0",
         "flowbite-datepicker": "^1.2.2",
+        "react": "^19.1.1",
         "tw-elements": "^1.0.0-alpha12",
         "vue": "^3.2.33",
         "vue-router": "^4.0.14"
