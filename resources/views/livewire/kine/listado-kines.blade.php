@@ -94,7 +94,7 @@
                 <td class="py-0">
                    <button
                   type="button"
-                  onclick="window.location='{{ route('kines-detalles', ['doctor' => $doctor->id]) }}'"
+                  onclick="window.location='{{ route('kines-detalles', ['id' => $doctor->id]) }}'"
                   class="btn btn-primary"
                 >
                   Ver Atenciones
