@@ -38,11 +38,7 @@ class Atenciones extends Component
 
   public function render()
   {
-    $this->pacientes = Patient::where('status', 1)->orderBy('name', 'asc')->get();
-    $this->buscarFecha = Carbon::now();
-    $this->month = $this->buscarFecha->format('m');
-    $this->year = $this->buscarFecha->format('Y');
-    $this->searchByItems();
+
 
     return view('livewire.kine.atenciones');
   }
@@ -54,6 +50,12 @@ class Atenciones extends Component
     if ($this->kine->id) {
       $this->status = 1;
     }
+
+    $this->pacientes = Patient::where('status', 1)->orderBy('name', 'asc')->get();
+    $this->buscarFecha = Carbon::now();
+    $this->month = $this->buscarFecha->format('m');
+    $this->year = $this->buscarFecha->format('Y');
+    $this->searchByItems();
   }
   public function searchByItems()
   {
