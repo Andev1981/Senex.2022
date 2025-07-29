@@ -51,7 +51,7 @@
               <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50"
                 wire:key="{{ time().$doctor->id.'-1' }}">
                 <td scope="row" class="flex items-center gap-2 px-4 py-3 text-gray-900 font-sm whitespace-nowrap">
-                  <livewire:kine.kines-pacientes :doctor="$doctor" :key="time().$doctor->id.'-2'" />
+                  {{-- <livewire:kine.kines-pacientes :doctor="$doctor" :key="time().$doctor->id.'-2'" /> --}}
                   <div class="">
                     <div>
                       {{ $doctor->name }} {{ $doctor->last_name }}
@@ -78,7 +78,7 @@
 
                 </td> --}}
                 <td class="px-6 py-4">
-                  @if ($doctor->user->status === 1)
+                  {{-- @if ($doctor->user->status === 1)
                   <span
                     class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-green-600 rounded-full dark:bg-green-200 dark:text-green-900">
                     Activo
@@ -88,26 +88,28 @@
                     class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-red-600 rounded-full dark:bg-green-200 dark:text-red-900">
                     Deshabilitado
                   </span>
-                  @endif
+                  @endif --}}
 
                 </td>
                 <td class="py-0">
-                  <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
-                </td>
+{{--                   <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
+ --}}                </td>
 
                 <td class="py-0">
-                  <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
-                </td>
+{{--                   <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
+ --}}                </td>
                 <td class="py-0">
-                  <livewire:kine.eliminar :doctor="$doctor" :key="time().$doctor->id.'-6'" />
-                </td>
+{{--                   <livewire:kine.eliminar :doctor="$doctor" :key="time().$doctor->id.'-6'" />
+ --}}                </td>
               </tr>
               @endforeach
             </tbody>
           </table>
         </div>
         <nav class="flex justify-between p-4" aria-label="Table navigation">
+          @if (count($doctores) > 0)
           {{ $doctores->links() }}
+          @endif
         </nav>
       </div>
     </div>

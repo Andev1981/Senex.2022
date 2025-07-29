@@ -15,7 +15,7 @@ function Side({ sidebarOpen }) {
         <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
           <li>
             <a
-              href="/"
+              href="/listado-pacientes"
               className={
                 location.pathname === "/listado-pacientes"
                   ? styleSelected
@@ -81,9 +81,9 @@ function Side({ sidebarOpen }) {
         <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
           <li>
             <a
-              href="/kines"
+              href="/listado-kines"
               className={
-                location.pathname === "/kines"
+                location.pathname === "/listado-kines"
                   ? styleSelected
                   : styleNotSelected
               }

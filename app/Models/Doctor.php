@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -37,4 +38,16 @@ class Doctor extends Model
     {
         return $this->hasMany(ApplicationTypeUser::class);
     }
+    public function getAgeAttribute()
+    {
+        if (!$this->birth || !Carbon::hasFormat($this->birth, 'Y-m-d')) {
+            return null;
+        }
+
+        return Carbon::parse($this->birth)->age . ' años';
+    }
+
+    protected $appends = [
+        'age',
+    ];
 }

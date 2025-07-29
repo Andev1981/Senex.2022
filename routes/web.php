@@ -134,6 +134,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('informes', IndexInformes::class)->name('informes');
 
   Route::get('listado-pacientes', [InertiaHomeController::class, 'inertiaHome'])->name('listado-pacientes');
+  Route::get('listado-kines', [InertiaHomeController::class, 'kines'])->name('listado-kines');
 });
 
 
