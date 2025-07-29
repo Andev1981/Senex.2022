@@ -117,6 +117,6 @@ class Atenciones extends Component
 
   public function closeModal()
   {
-    $this->isOpen = false;
+    return redirect()->route('kines');
   }
 }
