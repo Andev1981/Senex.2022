@@ -92,8 +92,8 @@
 
                 </td>
                 <td class="py-0">
-{{--                   <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
- --}}                </td>
+                  <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
+                </td>
 
                 <td class="py-0">
 {{--                   <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
