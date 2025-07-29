@@ -14,4 +14,10 @@ class InertiaHomeController extends Controller
 
     return Inertia::render('Dashboard', compact('user', 'pacientes'));
   }
+
+  public function base()
+  {
+    $pacientes = Patient::all();
+    return json_decode($pacientes->toJson());
+  }
 }
