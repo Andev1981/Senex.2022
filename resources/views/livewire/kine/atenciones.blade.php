@@ -62,10 +62,8 @@
                     <select
                       class="block w-full p-1 ml-4 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       wire:model="year">
-
-                      <option selected value="2023">2023</option>
                       <option value="2024">2024</option>
-                      <option value="2025">2025</option>
+                      <option selected value="2025">2025</option>
                       <option value="2026">2026</option>
                       <option value="2028">2028</option>
                       <option value="2029">2029</option>
