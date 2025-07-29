@@ -92,15 +92,15 @@
 
                 </td>
                 <td class="py-0">
-                  <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
-                </td>
+{{--                   <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
+ --}}                </td>
 
                 <td class="py-0">
-{{--                   <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
- --}}                </td>
+                   <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
+                 </td>
                 <td class="py-0">
-{{--                   <livewire:kine.eliminar :doctor="$doctor" :key="time().$doctor->id.'-6'" />
- --}}                </td>
+                   <livewire:kine.eliminar :doctor="$doctor" :key="time().$doctor->id.'-6'" />
+                </td>
               </tr>
               @endforeach
             </tbody>
