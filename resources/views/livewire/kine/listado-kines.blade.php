@@ -51,7 +51,7 @@
               <tr class="uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50"
                 wire:key="{{ time().$doctor->id.'-1' }}">
                 <td scope="row" class="flex items-center gap-2 px-4 py-3 text-gray-900 font-sm whitespace-nowrap">
-                  {{-- <livewire:kine.kines-pacientes :doctor="$doctor" :key="time().$doctor->id.'-2'" /> --}}
+                  <livewire:kine.kines-pacientes :doctor="$doctor" :key="time().$doctor->id.'-2'" />
                   <div class="">
                     <div>
                       {{ $doctor->name }} {{ $doctor->last_name }}
