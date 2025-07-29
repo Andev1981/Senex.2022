@@ -23,6 +23,7 @@
         "@fortawesome/fontawesome-free": "^6.4.0",
         "@fortawesome/fontawesome-svg-core": "^6.1.1",
         "@themesberg/tailwind-datepicker": "^1.1.0",
+        "@vitejs/plugin-react": "^3.1.0",
         "flowbite-datepicker": "^1.2.2",
         "tw-elements": "^1.0.0-alpha12",
         "vue": "^3.2.33",
