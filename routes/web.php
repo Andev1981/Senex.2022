@@ -97,7 +97,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('pacientes', ListadosIndex::class)->name('pacientes');
 
   Route::get('kines', ListadoKines::class)->name('kines');
-  Route::get('kines-detalle/{id}', Atenciones::class)->name('kines-detalles');
+  Route::get('kines-detalles/{id}', Atenciones::class)->name('kines-detalles');
   Route::get('types', Index::class)->name('types');
 
   //Livewire componentes app kines
