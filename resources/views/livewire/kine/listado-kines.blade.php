@@ -92,7 +92,13 @@
 
                 </td>
                 <td class="py-0">
-                   <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-4'" />
+                   <button
+                  type="button"
+                  onclick="window.location='{{ route('kines-detalles', ['doctor' => $doctor->id]) }}'"
+                  class="btn btn-primary"
+                >
+                  Ver Atenciones
+                </button>
                  </td>
 
                 <td class="py-0">

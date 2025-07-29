@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentIncomeController;
 use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Informes\IndexInformes;
 use App\Http\Livewire\Inicio;
+use App\Http\Livewire\Kine\Atenciones;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Kinesiologos\AtencionDetalle;
 use App\Http\Livewire\Paciente\ListadosIndex;
@@ -96,6 +97,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('pacientes', ListadosIndex::class)->name('pacientes');
 
   Route::get('kines', ListadoKines::class)->name('kines');
+  Route::get('kines-detalle/{id}', Atenciones::class)->name('kines-detalles');
   Route::get('types', Index::class)->name('types');
 
   //Livewire componentes app kines
