@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 import PrimaryButton from "@/Components/PrimaryButton";
-import { EllipsisVertical, Search, Users } from "lucide-react";
+import { MoreVertical, Search, Users } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function TablePacientes({
@@ -65,7 +65,7 @@ export default function TablePacientes({
               className="ms-2"
               onClick={() => handleOpenModalOptions(row)}
             >
-              <EllipsisVertical className="w-4 h-4" />
+              <MoreVertical className="w-4 h-4" />
             </PrimaryButton>
             <PrimaryButton
               className="ms-2"

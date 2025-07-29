@@ -1,55 +1,46 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-BhfSj3Wu.css",
-    "src": "resources/css/app.css",
-    "isEntry": true,
-    "names": [
-      "app.css"
-    ]
+    "file": "assets/app-f4418317.css",
+    "src": "resources/js/app.css"
   },
   "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-CthlQwnq.js",
-    "name": "Dashboard",
-    "src": "resources/js/Pages/Dashboard.jsx",
-    "isDynamicEntry": true,
+    "assets": [
+      "assets/logo-921f119d.png"
+    ],
+    "file": "assets/Dashboard-fce3c647.js",
     "imports": [
       "resources/js/app.jsx",
       "resources/js/Pages/TablePacientes.jsx"
     ],
-    "css": [
-      "assets/app-BhfSj3Wu.css"
-    ],
-    "assets": [
-      "assets/logo-BGOwjsqM.png"
-    ]
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/Dashboard.jsx"
   },
   "resources/js/Pages/TablePacientes.jsx": {
-    "file": "assets/TablePacientes-0VEXFeAJ.js",
-    "name": "TablePacientes",
-    "src": "resources/js/Pages/TablePacientes.jsx",
-    "isDynamicEntry": true,
+    "file": "assets/TablePacientes-de2e6108.js",
     "imports": [
       "resources/js/app.jsx"
     ],
-    "css": [
-      "assets/app-BhfSj3Wu.css"
-    ]
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/TablePacientes.jsx"
+  },
+  "resources/js/app.css": {
+    "file": "assets/app-f4418317.css",
+    "src": "resources/js/app.css"
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-CT0HGkLa.js",
-    "name": "app",
-    "src": "resources/js/app.jsx",
-    "isEntry": true,
+    "css": [
+      "assets/app-f4418317.css"
+    ],
     "dynamicImports": [
       "resources/js/Pages/Dashboard.jsx",
       "resources/js/Pages/TablePacientes.jsx"
     ],
-    "css": [
-      "assets/app-BhfSj3Wu.css"
-    ]
+    "file": "assets/app-493bcb10.js",
+    "isEntry": true,
+    "src": "resources/js/app.jsx"
   },
   "resources/js/assets/img/logo.png": {
-    "file": "assets/logo-BGOwjsqM.png",
+    "file": "assets/logo-921f119d.png",
     "src": "resources/js/assets/img/logo.png"
   }
 }

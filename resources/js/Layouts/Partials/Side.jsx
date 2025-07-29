@@ -1,18 +1,3 @@
-import { Link } from "@inertiajs/react";
-import {
-  Car,
-  Factory,
-  FileCheck,
-  FolderKanban,
-  History,
-  Home,
-  Library,
-  Radar,
-  Users,
-  VaultIcon,
-} from "lucide-react";
-import React from "react";
-
 function Side({ sidebarOpen }) {
   const styleSelected =
     "flex items-center p-2 text-base font-medium rounded-lg text-text-light dark:text-white dark:hover:bg-gray-700 group border border-primary/30 shadow border-2 border-sky-600";
