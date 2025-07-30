@@ -79,8 +79,8 @@ class CrearSesion extends Component
   public function mount(Patient $patient)
   {
 
-    $this->application = Application::where('patient_id', $patient->id)->where('status', 1)->first();
-    $this->wallet = Wallet::where('patient_id', $patient->id)->first();
+    $this->application = Application::select('id')->where('patient_id', $patient->id)->where('status', 1)->first();
+    $this->wallet = Wallet::select('id', 'balance')->where('patient_id', $patient->id)->first();
 
     if (!$this->application) {
       $this->countApplies = 0;
@@ -96,8 +96,8 @@ class CrearSesion extends Component
       }
     }
 
-    $this->tipo_atenciones = ApplicationType::where('estado', 1)->get();
-    $this->kines = Doctor::where('status', 1)->orderBy('name', 'ASC')->get();
+    $this->tipo_atenciones = ApplicationType::select('id', 'name')->where('estado', 1)->get();
+    $this->kines = Doctor::select('id', 'name', 'last_name')->where('status', 1)->orderBy('name', 'ASC')->get();
     $this->paciente = $patient;
     $allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
   }
