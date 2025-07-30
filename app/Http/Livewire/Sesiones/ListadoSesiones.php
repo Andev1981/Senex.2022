@@ -32,8 +32,8 @@ class ListadoSesiones extends Component
     {
         if ($this->reloadStatus == 0) {
             $this->buscarFecha = Carbon::now();
-            $this->pacientes = Patient::orderBy('name', 'asc')->get(['id', 'name', 'last_name']);
-            $this->kines = Doctor::where('status', 1)->orderBy('name', 'asc')->get(['id', 'name', 'last_name']);
+            $this->pacientes = Patient::select('id', 'name', 'last_name')->orderBy('name', 'asc')->get(['id', 'name', 'last_name']);
+            $this->kines = Doctor::select('id', 'name', 'last_name')->where('status', 1)->orderBy('name', 'asc')->get(['id', 'name', 'last_name']);
             $this->month = $this->buscarFecha->format('m');
             $this->year = $this->buscarFecha->format('Y');
             $this->reloadStatus = 1;
@@ -45,7 +45,7 @@ class ListadoSesiones extends Component
 
             $this->buscarFecha =  $this->year . '-' . $this->month . '-' . $this->dia . '';
         }
-        if ($this->selPaciente != 0 && $this->selKine != 0) {
+        /* if ($this->selPaciente != 0 && $this->selKine != 0) {
             if ($this->dia == 0) {
                 $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             } else {
@@ -70,7 +70,27 @@ class ListadoSesiones extends Component
             } else {
                 $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('fecha_atencion', 'like', $this->buscarFecha . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
             }
+        } */
+
+        $query = ApplyItem::with('application', 'patient', 'doctor');
+
+        // Filtros condicionales
+        if ($this->selPaciente != 0) {
+            $query->where('patient_id', $this->selPaciente);
         }
+
+        if ($this->selKine != 0) {
+            $query->where('doctor_id', $this->selKine);
+        }
+
+        // Filtro por fecha
+        $fecha = $this->dia == 0 ? $this->buscarFecha . '%' : $this->buscarFecha . ' 00:00:00';
+        $query->where('fecha_atencion', 'like', $fecha);
+
+        // Orden y paginación
+        $applyItems = $query->orderBy($this->sort, $this->direction)
+            ->paginate($this->quantity);
+
         return view('livewire.sesiones.listado-sesiones', compact('applyItems'));
     }
 }
