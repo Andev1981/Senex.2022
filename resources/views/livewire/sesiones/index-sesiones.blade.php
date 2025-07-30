@@ -1,4 +1,4 @@
 <div>
     @livewire('sesiones.listado-sesiones')
-    @livewire('sesiones.listado-pacientes')
+    {{-- @livewire('sesiones.listado-pacientes') --}}
 </div>
