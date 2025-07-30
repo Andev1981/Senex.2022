@@ -79,8 +79,6 @@ export default function TablePacientes({
     },
   ];
 
-  console.log(pacientes);
-
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredData.map((item) => ({
