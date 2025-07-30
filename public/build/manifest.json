@@ -1,70 +1,85 @@
 {
-  "_AuthenticatedLayout-11374f35.js": {
+  "_AuthenticatedLayout-179eac15.js": {
     "assets": [
       "assets/logo-921f119d.png"
     ],
-    "file": "assets/AuthenticatedLayout-11374f35.js",
+    "file": "assets/AuthenticatedLayout-179eac15.js",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_users-4e5d24f9.js": {
-    "file": "assets/users-4e5d24f9.js",
+  "_index-e9d17dae.js": {
+    "file": "assets/index-e9d17dae.js"
+  },
+  "_users-a36ab8b2.js": {
+    "file": "assets/users-a36ab8b2.js",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-f4418317.css",
+    "file": "assets/app-3e7f5105.css",
     "src": "resources/js/app.css"
   },
   "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-f17578e3.js",
+    "file": "assets/Dashboard-2bd2e35d.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-11374f35.js",
+      "_AuthenticatedLayout-179eac15.js",
       "resources/js/Pages/TablePacientes.jsx",
-      "_users-4e5d24f9.js"
+      "_index-e9d17dae.js",
+      "_users-a36ab8b2.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Dashboard.jsx"
   },
   "resources/js/Pages/Kines/KinesIndex.jsx": {
-    "file": "assets/KinesIndex-addd954e.js",
+    "file": "assets/KinesIndex-98c6ad02.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-11374f35.js",
+      "_AuthenticatedLayout-179eac15.js",
       "resources/js/Pages/Kines/TableKines.jsx",
-      "_users-4e5d24f9.js"
+      "_index-e9d17dae.js",
+      "_users-a36ab8b2.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/KinesIndex.jsx"
   },
   "resources/js/Pages/Kines/TableKines.jsx": {
-    "file": "assets/TableKines-731f392e.js",
+    "file": "assets/TableKines-a4e40330.js",
     "imports": [
       "resources/js/app.jsx",
-      "_users-4e5d24f9.js"
+      "_users-a36ab8b2.js",
+      "_index-e9d17dae.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/TableKines.jsx"
   },
   "resources/js/Pages/TablePacientes.jsx": {
-    "file": "assets/TablePacientes-e1ca9457.js",
+    "file": "assets/TablePacientes-f0abf45c.js",
     "imports": [
       "resources/js/app.jsx",
-      "_users-4e5d24f9.js"
+      "_users-a36ab8b2.js",
+      "_index-e9d17dae.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/TablePacientes.jsx"
   },
   "resources/js/app.css": {
-    "file": "assets/app-f4418317.css",
+    "file": "assets/app-3e7f5105.css",
     "src": "resources/js/app.css"
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-577560de.js",
+    "imports": [
+      "_index-e9d17dae.js"
+    ],
+    "isEntry": true,
+    "src": "resources/js/app.js"
   },
   "resources/js/app.jsx": {
     "css": [
-      "assets/app-f4418317.css"
+      "assets/app-3e7f5105.css"
     ],
     "dynamicImports": [
       "resources/js/Pages/Dashboard.jsx",
@@ -72,7 +87,10 @@
       "resources/js/Pages/Kines/TableKines.jsx",
       "resources/js/Pages/TablePacientes.jsx"
     ],
-    "file": "assets/app-edf555a5.js",
+    "file": "assets/app-321df529.js",
+    "imports": [
+      "_index-e9d17dae.js"
+    ],
     "isEntry": true,
     "src": "resources/js/app.jsx"
   },
