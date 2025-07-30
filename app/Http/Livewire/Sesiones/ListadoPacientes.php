@@ -27,10 +27,18 @@ class ListadoPacientes extends Component
 
     public function render()
     {
-        $pacientes = Patient::with('applications')->where(function ($query) {
+        /* $pacientes = Patient::with('applications')->where(function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
-        })->where('status', 1)->orderBy($this->sort, $this->direction)->paginate(10);
+        })->where('status', 1)->orderBy($this->sort, $this->direction)->paginate(10); */
 
+        $pacientes = Patient::select('id', 'name', 'last_name')
+            ->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%');
+            })
+            ->where('status', 1)
+            ->orderBy($this->sort, $this->direction)
+            ->paginate(10);
         return view('livewire.sesiones.listado-pacientes', compact('pacientes'));
     }
 

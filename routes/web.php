@@ -140,7 +140,6 @@ Route::group(['middleware' => ['auth']], function () {
 });
 
 
-
 //Transbank
 /* Route::post('iniciar-compra', [TransbankController::class, 'iniciarCompra'])->name('iniciar.compra');
 Route::match(array('GET', 'POST'), '/confirmar-pago', [TransbankController::class, 'confirmar_pago'])->name('confirmar.pago');
