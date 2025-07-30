@@ -129,8 +129,10 @@
                                     <tr
                                         class="text-center uppercase bg-white border-b dark:border-gray-700 hover:bg-cyan-50">
                                         <td>
-                                            @livewire('paciente.show.atenciones.editar-item', ['applyItem' =>
+                                            @livewire('sesiones.editar-sesion', ['applyItem' =>
                                             $applyItem], key($applyItem->id))
+                                        
+
 
                                         </td>
                                         <td class="px-1 py-1">

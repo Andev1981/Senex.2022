@@ -2,9 +2,9 @@
     <div class="flex items-center pl-2 space-x-2">
         <x-button-edit wire:click="$set('openItem','')" innerText="" />
 
-        {{-- @if ($applyItem->status == 0 || $applyItem->status == 2 || $applyItem->status == 3)
-        @endif --}}
+        @if ($applyItem->status == 0 || $applyItem->status == 2 || $applyItem->status == 3)
         <x-button-delete wire:click="$set('openDelItem','')" innerText="" />
+        @endif
     </div>
     <div
         class="{{ $openItem }} bg-gray-600 bg-opacity-50 overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center w-full md:inset-0 h-modal md:h-full flex">
@@ -17,7 +17,7 @@
                     class="flex items-center justify-between pb-4 mb-4 border-b rounded-t sm:mb-5 dark:border-gray-600">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-700 dark:text-white">
-                            Editando Sesión.
+                            Editando Sesión
                         </h3>
                         <span>{{ $patient->name ?? '' }} {{ $patient->last_name ?? '' }}</span>
                     </div>
@@ -166,6 +166,7 @@
                             @enderror
                         </div>
 
+
                         <div>
                             <x-input-field-required label="Número de Sesión" type="number"
                                 wire:model.defer="numero_sesion" placeholder="">
@@ -174,14 +175,8 @@
 
                     </div>
                     <div>
-                        <x-input-field-required label="Observaciones" type="text" wire:model.defer="comments"
-                            placeholder="Observaciones">
-                        </x-input-field-required>
-                        @error('comments')
-                        <p class="text-sm text-red-600 dark:text-red-500">
-                            {{ $message }}.
-                        </p>
-                        @enderror
+                        <textarea wire:model.defer="comments" placeholder="Observaciones" readonly
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{$comments}</textarea>
                     </div>
 
                     <hr>

@@ -2,14 +2,10 @@
 
 namespace App\Http\Livewire\Paciente\Show\Atenciones;
 
-use App\Models\Activity;
-use App\Models\Application;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
 use App\Models\Doctor;
-use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class EditarItem extends Component
