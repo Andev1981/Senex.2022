@@ -94,6 +94,7 @@ export default function TablePacientes({
         ? new Date().getFullYear() - new Date(item.birth).getFullYear()
         : "N/A",
       Email: item?.email,
+      Dirección: item?.direccion,
       Teléfono: item?.phone,
       Rut: item?.rut,
     }));

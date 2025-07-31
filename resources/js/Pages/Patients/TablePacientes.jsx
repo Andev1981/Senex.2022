@@ -39,7 +39,8 @@ export default function TablePacientes({
         cell: ({ getValue }) => {
           const birth = getValue();
           if (!birth) return "N/A";
-          const age = new Date().getFullYear() - new Date(birth).getFullYear();
+          const age =
+            new Date().getFullYear() - new Date(birth).getFullYear() + " años";
           return age + "años";
         },
         enableSorting: false,
