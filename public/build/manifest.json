@@ -1,15 +1,15 @@
 {
-  "_AuthenticatedLayout-cb894ddb.js": {
+  "_AuthenticatedLayout-cc4ba7c2.js": {
     "assets": [
       "assets/logo-921f119d.png"
     ],
-    "file": "assets/AuthenticatedLayout-cb894ddb.js",
+    "file": "assets/AuthenticatedLayout-cc4ba7c2.js",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_chevron-up-4c245b97.js": {
-    "file": "assets/chevron-up-4c245b97.js",
+  "_chevron-up-291dc9fb.js": {
+    "file": "assets/chevron-up-291dc9fb.js",
     "imports": [
       "resources/js/app.jsx"
     ]
@@ -22,44 +22,44 @@
     "src": "resources/js/app.css"
   },
   "resources/js/Pages/Kines/KinesIndex.jsx": {
-    "file": "assets/KinesIndex-c8acfd4b.js",
+    "file": "assets/KinesIndex-57e9797d.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-cb894ddb.js",
+      "_AuthenticatedLayout-cc4ba7c2.js",
       "resources/js/Pages/Kines/TableKines.jsx",
       "_index-7ac5b536.js",
-      "_chevron-up-4c245b97.js"
+      "_chevron-up-291dc9fb.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/KinesIndex.jsx"
   },
   "resources/js/Pages/Kines/TableKines.jsx": {
-    "file": "assets/TableKines-dee2ae83.js",
+    "file": "assets/TableKines-b491fd2a.js",
     "imports": [
       "resources/js/app.jsx",
-      "_chevron-up-4c245b97.js",
+      "_chevron-up-291dc9fb.js",
       "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/TableKines.jsx"
   },
   "resources/js/Pages/Patients/PatientsIndex.jsx": {
-    "file": "assets/PatientsIndex-99704d9d.js",
+    "file": "assets/PatientsIndex-76d78b88.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-cb894ddb.js",
+      "_AuthenticatedLayout-cc4ba7c2.js",
       "resources/js/Pages/Patients/TablePacientes.jsx",
       "_index-7ac5b536.js",
-      "_chevron-up-4c245b97.js"
+      "_chevron-up-291dc9fb.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Patients/PatientsIndex.jsx"
   },
   "resources/js/Pages/Patients/TablePacientes.jsx": {
-    "file": "assets/TablePacientes-cfd68b2b.js",
+    "file": "assets/TablePacientes-889772a5.js",
     "imports": [
       "resources/js/app.jsx",
-      "_chevron-up-4c245b97.js",
+      "_chevron-up-291dc9fb.js",
       "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
@@ -87,7 +87,7 @@
       "resources/js/Pages/Patients/PatientsIndex.jsx",
       "resources/js/Pages/Patients/TablePacientes.jsx"
     ],
-    "file": "assets/app-66128aec.js",
+    "file": "assets/app-a0955423.js",
     "imports": [
       "_index-7ac5b536.js"
     ],
