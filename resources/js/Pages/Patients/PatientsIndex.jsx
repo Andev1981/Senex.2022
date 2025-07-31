@@ -1,7 +1,7 @@
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import TablePacientes from "@/Pages/TablePacientes";
-export default function Dashboard({ user, pacientes }) {
+import TablePacientes from "./TablePacientes";
+export default function PatientsIndex({ user, pacientes }) {
   const handleOpenModalOptions = () => {};
   const handleOpenModalContactPersons = () => {};
 

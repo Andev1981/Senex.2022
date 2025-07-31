@@ -6,7 +6,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\InertiaHomeController;
 use App\Http\Controllers\PaymentIncomeController;
 use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Informes\IndexInformes;
@@ -24,6 +23,7 @@ use App\Http\Livewire\Kinesiologos\KineIndex;
 use App\Http\Livewire\Kinesiologos\ListadoPacientes;
 use App\Http\Livewire\Kinesiologos\NoAutorizado;
 use App\Http\Livewire\Kinesiologos\Resumenes;
+use App\Http\Controllers\Inertia\PatientController;
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -135,8 +135,8 @@ Route::group(['middleware' => ['auth']], function () {
 
   Route::get('informes', IndexInformes::class)->name('informes');
 
-  Route::get('listado-pacientes', [InertiaHomeController::class, 'inertiaHome'])->name('listado-pacientes');
-  Route::get('listado-kines', [InertiaHomeController::class, 'kines'])->name('listado-kines');
+  Route::get('listado-pacientes', [PatientController::class, 'index'])->name('listado.pacientes');
+  Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
 });
 
 

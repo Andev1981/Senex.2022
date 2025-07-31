@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function TablePacientes({
-  doctors,
+  pacientes,
   handleOpenModalOptions,
   handleOpenModalContactPersons,
 }) {
@@ -20,14 +20,14 @@ export default function TablePacientes({
 
   // Filtrado global simple (busca en todas las columnas)
   const filteredData = useMemo(() => {
-    if (!globalFilter) return doctors || [];
+    if (!globalFilter) return pacientes || [];
     const filter = globalFilter.toLowerCase();
-    return doctors.filter((row) =>
+    return pacientes.filter((row) =>
       Object.values(row).some(
         (val) => val && val.toString().toLowerCase().includes(filter)
       )
     );
-  }, [globalFilter, doctors]);
+  }, [globalFilter, pacientes]);
 
   const columns = useMemo(
     () => [
@@ -39,14 +39,15 @@ export default function TablePacientes({
         cell: ({ getValue }) => {
           const birth = getValue();
           if (!birth) return "N/A";
-          const age =
-            new Date().getFullYear() - new Date(birth).getFullYear() + " años";
-          return age;
+          const age = new Date().getFullYear() - new Date(birth).getFullYear();
+          return age + "años";
         },
         enableSorting: false,
       },
       { accessorKey: "email", header: "Email" },
       { accessorKey: "direccion", header: "Dirección" },
+      { accessorKey: "comuna_nombre", header: "Comuna" },
+      { accessorKey: "doctor_nombre", header: <p>Ultima&nbsp;atención</p> },
       { accessorKey: "phone", header: "Teléfono" },
       { accessorKey: "rut", header: "Rut" },
       {
@@ -94,6 +95,9 @@ export default function TablePacientes({
         ? new Date().getFullYear() - new Date(item.birth).getFullYear()
         : "N/A",
       Email: item?.email,
+      Direccion: item?.direccion,
+      Comuna: item?.comuna_nombre,
+      Ultima_atencion: item?.doctor_nombre,
       Teléfono: item?.phone,
       Rut: item?.rut,
     }));
@@ -106,11 +110,11 @@ export default function TablePacientes({
 
   return (
     <div className="max-w-full p-4">
-      <div className="flex flex-col w-full gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <input
           value={globalFilter ?? ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Buscar kines..."
+          placeholder="Buscar pacientes..."
           className="w-full px-3 py-2 transition border border-gray-300 rounded-md sm:w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button

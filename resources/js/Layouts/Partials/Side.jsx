@@ -1,3 +1,7 @@
+import React from "react";
+import { Link } from "@inertiajs/react";
+import { route } from "ziggy-js";
+
 function Side({ sidebarOpen }) {
   const styleSelected =
     "flex items-center p-2 text-base font-medium rounded-lg text-text-light dark:text-white dark:hover:bg-gray-700 group border border-primary/30 shadow border-2 border-sky-600";
@@ -14,8 +18,8 @@ function Side({ sidebarOpen }) {
       <div className="h-full px-3 py-5 overflow-y-auto bg-white dark:bg-gray-800">
         <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
           <li>
-            <a
-              href="/listado-pacientes"
+            <Link
+              href={route("listado.pacientes")}
               className={
                 location.pathname === "/listado-pacientes"
                   ? styleSelected
@@ -27,7 +31,7 @@ function Side({ sidebarOpen }) {
                 className="w-6 h-6"
               />
               <span className="ml-1 text-sm text-primary">Pacientes</span>
-            </a>
+            </Link>
           </li>
           <li>
             <a
@@ -63,8 +67,8 @@ function Side({ sidebarOpen }) {
             </a>
           </li>
           <li>
-            <a
-              href="/sesiones"
+            <Link
+              href={route("sesiones")}
               className={
                 location.pathname === "/sesiones"
                   ? styleSelected
@@ -75,13 +79,13 @@ function Side({ sidebarOpen }) {
               <span className="ml-1 text-sm text-primary">
                 Sesiones&nbsp;Pacientes
               </span>
-            </a>
+            </Link>
           </li>
         </ul>
         <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
           <li>
-            <a
-              href="/listado-kines"
+            <Link
+              href={route("listado.kines")}
               className={
                 location.pathname === "/listado-kines"
                   ? styleSelected
@@ -90,7 +94,7 @@ function Side({ sidebarOpen }) {
             >
               <img src={"./icons/medicamento.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">Kines</span>
-            </a>
+            </Link>
           </li>
 
           <li>

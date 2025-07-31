@@ -1,95 +1,95 @@
 {
-  "_AuthenticatedLayout-179eac15.js": {
+  "_AuthenticatedLayout-4745625b.js": {
     "assets": [
       "assets/logo-921f119d.png"
     ],
-    "file": "assets/AuthenticatedLayout-179eac15.js",
+    "file": "assets/AuthenticatedLayout-4745625b.js",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_index-e9d17dae.js": {
-    "file": "assets/index-e9d17dae.js"
-  },
-  "_users-a36ab8b2.js": {
-    "file": "assets/users-a36ab8b2.js",
+  "_chevron-up-3f15d963.js": {
+    "file": "assets/chevron-up-3f15d963.js",
     "imports": [
       "resources/js/app.jsx"
     ]
+  },
+  "_index-7ac5b536.js": {
+    "file": "assets/index-7ac5b536.js"
   },
   "resources/css/app.css": {
-    "file": "assets/app-3e7f5105.css",
+    "file": "assets/app-46f963ce.css",
     "src": "resources/js/app.css"
   },
-  "resources/js/Pages/Dashboard.jsx": {
-    "file": "assets/Dashboard-2bd2e35d.js",
-    "imports": [
-      "resources/js/app.jsx",
-      "_AuthenticatedLayout-179eac15.js",
-      "resources/js/Pages/TablePacientes.jsx",
-      "_index-e9d17dae.js",
-      "_users-a36ab8b2.js"
-    ],
-    "isDynamicEntry": true,
-    "src": "resources/js/Pages/Dashboard.jsx"
-  },
   "resources/js/Pages/Kines/KinesIndex.jsx": {
-    "file": "assets/KinesIndex-98c6ad02.js",
+    "file": "assets/KinesIndex-775af33e.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-179eac15.js",
+      "_AuthenticatedLayout-4745625b.js",
       "resources/js/Pages/Kines/TableKines.jsx",
-      "_index-e9d17dae.js",
-      "_users-a36ab8b2.js"
+      "_index-7ac5b536.js",
+      "_chevron-up-3f15d963.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/KinesIndex.jsx"
   },
   "resources/js/Pages/Kines/TableKines.jsx": {
-    "file": "assets/TableKines-a4e40330.js",
+    "file": "assets/TableKines-47c913ce.js",
     "imports": [
       "resources/js/app.jsx",
-      "_users-a36ab8b2.js",
-      "_index-e9d17dae.js"
+      "_chevron-up-3f15d963.js",
+      "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/TableKines.jsx"
   },
-  "resources/js/Pages/TablePacientes.jsx": {
-    "file": "assets/TablePacientes-f0abf45c.js",
+  "resources/js/Pages/Patients/PatientsIndex.jsx": {
+    "file": "assets/PatientsIndex-312a4019.js",
     "imports": [
       "resources/js/app.jsx",
-      "_users-a36ab8b2.js",
-      "_index-e9d17dae.js"
+      "_AuthenticatedLayout-4745625b.js",
+      "resources/js/Pages/Patients/TablePacientes.jsx",
+      "_index-7ac5b536.js",
+      "_chevron-up-3f15d963.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/TablePacientes.jsx"
+    "src": "resources/js/Pages/Patients/PatientsIndex.jsx"
+  },
+  "resources/js/Pages/Patients/TablePacientes.jsx": {
+    "file": "assets/TablePacientes-e8f39493.js",
+    "imports": [
+      "resources/js/app.jsx",
+      "_chevron-up-3f15d963.js",
+      "_index-7ac5b536.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/Patients/TablePacientes.jsx"
   },
   "resources/js/app.css": {
-    "file": "assets/app-3e7f5105.css",
+    "file": "assets/app-46f963ce.css",
     "src": "resources/js/app.css"
   },
   "resources/js/app.js": {
-    "file": "assets/app-577560de.js",
+    "file": "assets/app-9620ef42.js",
     "imports": [
-      "_index-e9d17dae.js"
+      "_index-7ac5b536.js"
     ],
     "isEntry": true,
     "src": "resources/js/app.js"
   },
   "resources/js/app.jsx": {
     "css": [
-      "assets/app-3e7f5105.css"
+      "assets/app-46f963ce.css"
     ],
     "dynamicImports": [
-      "resources/js/Pages/Dashboard.jsx",
       "resources/js/Pages/Kines/KinesIndex.jsx",
       "resources/js/Pages/Kines/TableKines.jsx",
-      "resources/js/Pages/TablePacientes.jsx"
+      "resources/js/Pages/Patients/PatientsIndex.jsx",
+      "resources/js/Pages/Patients/TablePacientes.jsx"
     ],
-    "file": "assets/app-321df529.js",
+    "file": "assets/app-1b575a89.js",
     "imports": [
-      "_index-e9d17dae.js"
+      "_index-7ac5b536.js"
     ],
     "isEntry": true,
     "src": "resources/js/app.jsx"

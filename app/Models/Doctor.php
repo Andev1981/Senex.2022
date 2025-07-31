@@ -47,7 +47,25 @@ class Doctor extends Model
         return Carbon::parse($this->birth)->age . ' años';
     }
 
+    public function getEmailAttribute()
+    {
+        return $this->user ? $this->user->email : null;
+    }
+
+    public function getDireccionAttribute()
+    {
+        if (!$this->address || !$this->address->address || !$this->address->number) {
+            return null;
+        }
+        if (!$this->address->number) {
+            return $this->address->address . ' ' . $this->address->number ?? null;
+        }
+        return $this->address->address ?? null;
+    }
+
     protected $appends = [
         'age',
+        'email',
+        'direccion',
     ];
 }
