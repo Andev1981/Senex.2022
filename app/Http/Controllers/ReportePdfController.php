@@ -34,7 +34,7 @@ class ReportePdfController extends Controller
         $kineFinded = Doctor::find($kine);
         $nameUser = $kineFinded ? ($kineFinded->name . ' ' . $kineFinded->last_name) : '--';
 
-        $total = $applyItems->sum('price');
+        //$total = $applyItems->sum('price');
         $fecha = Carbon::parse($applyItems->first()->fecha_atencion ?? now())->format('m-Y');
 
         $kineValues = ApplicationTypeUser::where('user_id', $kine)->get();
@@ -62,48 +62,60 @@ class ReportePdfController extends Controller
     public function generarReporteGeneral($buscarFecha, $selTipo)
     {
 
+        $this->totalPacientes = 0;
+        $this->totalKine = 0;
+
+        // Relaciones con carga anticipada optimizada
+        $relations = [
+            'patient' => fn($q) => $q->orderBy('name', 'asc'),
+            'application',
+            'doctor.applyTypes'
+        ];
+
+        // Base de la consulta
+        $query = ApplyItem::with($relations)
+            ->where('status', 1)
+            ->where('fecha_atencion', 'like', $buscarFecha . '%');
+
         if ($selTipo > 0) {
-            $applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orderBy('name', 'asc');
-            }], 'application', 'doctor')
-                ->where('application_type_id', $selTipo)
-                ->where('status', 1)
-                ->where('fecha_atencion', 'like', $buscarFecha . '%')->orderByDesc(function ($query) {
-                    $query->from('patients')
-                        ->select('name')
-                        ->limit(1);
-                })->orderBy('fecha_atencion', 'asc')->get();
-        } else {
-            $applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orderBy('name', 'asc');
-            }], 'application', 'doctor')
-                ->where('status', 1)
-                ->where('fecha_atencion', 'like', $buscarFecha . '%')->orderByDesc(function ($query) {
-                    $query->from('patients')
-                        ->select('name')
-                        ->limit(1);
-                })->orderBy('fecha_atencion', 'asc')->get();
+            $query->where('application_type_id', $selTipo);
         }
 
+        // Evitamos subquery innecesaria en orderByDesc
+        $applyItems = $query->orderBy('fecha_atencion', 'asc')->get();
 
+        // Validación para evitar errores si está vacío
+        if ($applyItems->isEmpty()) {
+            return response()->json(['error' => 'No se encontraron datos para el PDF.'], 404);
+        }
 
-
+        // Cálculo de totales de manera eficiente
         foreach ($applyItems as $applyItem) {
             $this->totalPacientes += $applyItem->price;
 
-            foreach ($applyItem->doctor->applyTypes as $kineValue)
+            foreach ($applyItem->doctor->applyTypes as $kineValue) {
                 if ($kineValue->application_type_id == $applyItem->application_type_id) {
                     $this->totalKine += $kineValue->price;
                 }
+            }
         }
-        $total = $applyItems[0]->sum('price');
-        $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
-        $fecha = $fechaString->format('m-Y');
 
-        //dd($total, $applyItems, $fecha, $this->totalKine, $this->totalPacientes);
+        // Total directo desde la colección
+        $total = $applyItems->sum('price');
 
-        $pdf = Pdf::loadView('pdf.reporte-all', ['total' => $total, 'applyItems' => $applyItems, 'fecha' => $fecha, 'totalKine' => $this->totalKine, 'totalPacientes' => $this->totalPacientes]);
+        // Parseo seguro de la fecha
+        $fecha = Carbon::parse($applyItems->first()->fecha_atencion)->format('m-Y');
 
+        // Generación del PDF
+        $pdf = Pdf::loadView('pdf.reporte-all', [
+            'total' => $total,
+            'applyItems' => $applyItems,
+            'fecha' => $fecha,
+            'totalKine' => $this->totalKine,
+            'totalPacientes' => $this->totalPacientes
+        ]);
+
+        // Descargar PDF
         return $pdf->download(rand(1, 1000) . '-Reporte-Mensual-Atenciones.pdf');
     }
 
