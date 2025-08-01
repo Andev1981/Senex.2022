@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
 use App\Models\Doctor;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use ZipArchive;
 
 class ReportePdfController extends Controller
 {
@@ -57,14 +60,12 @@ class ReportePdfController extends Controller
         $this->totalPacientes = 0;
         $this->totalKine = 0;
 
-        // Relaciones necesarias
         $relations = [
             'patient' => fn($q) => $q->orderBy('name', 'asc'),
             'applicationType',
             'doctor.applyTypes'
         ];
 
-        // Construcción de la consulta
         $query = ApplyItem::with($relations)
             ->where('status', 1)
             ->where('fecha_atencion', 'like', $buscarFecha . '%');
@@ -73,50 +74,80 @@ class ReportePdfController extends Controller
             $query->where('application_type_id', $selTipo);
         }
 
-        // Obtener resultados ordenados
         $applyItems = $query->orderBy('fecha_atencion', 'asc')->get();
 
         if ($applyItems->isEmpty()) {
-            return response()->json(['error' => 'No se encontraron datos para este período.'], 404);
+            return response()->json(['error' => 'No se encontraron datos.'], 404);
         }
 
-        // Preprocesar valores para evitar lógica pesada en Blade
-        foreach ($applyItems as $applyItem) {
-            $this->totalPacientes += $applyItem->price;
-
-            $kinePrice = 0;
-
-            foreach ($applyItem->doctor->applyTypes as $kineValue) {
-                if ($kineValue->application_type_id == $applyItem->application_type_id) {
-                    $kinePrice = $kineValue->price;
-                    break;
-                }
-            }
-
-            $applyItem->kine_price = $kinePrice;
-            $applyItem->saldo_senex = $applyItem->price - $kinePrice;
-            $this->totalKine += $kinePrice;
-        }
-
-        // Totales
-        $total = $applyItems->sum('price');
-        $fecha = Carbon::parse($applyItems->first()->fecha_atencion)->format('m-Y');
-
-        // Convertir logo a base64 para evitar errores
+        // Base64 del logo
         $logoPath = public_path('img/logo-cabecera.png');
         $logo = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
 
-        // Generar PDF
-        $pdf = Pdf::loadView('pdf.reporte-all', [
-            'total' => $total,
-            'applyItems' => $applyItems,
-            'fecha' => $fecha,
-            'totalKine' => $this->totalKine,
-            'totalPacientes' => $this->totalPacientes,
-            'logo' => $logo
-        ]);
+        // Preparar carpeta temporal
+        $tempDir = storage_path('app/pdf_chunks');
+        if (!File::exists($tempDir)) {
+            File::makeDirectory($tempDir, 0755, true);
+        }
 
-        return $pdf->download(rand(1, 1000) . '-Reporte-Mensual-Atenciones.pdf');
+        // Dividir en partes de 100
+        $chunks = $applyItems->chunk(100);
+        $chunkIndex = 1;
+        $pdfFiles = [];
+
+        foreach ($chunks as $chunk) {
+            $totalPacientes = 0;
+            $totalKine = 0;
+
+            foreach ($chunk as $item) {
+                $kinePrice = 0;
+                foreach ($item->doctor->applyTypes as $kineValue) {
+                    if ($kineValue->application_type_id == $item->application_type_id) {
+                        $kinePrice = $kineValue->price;
+                        break;
+                    }
+                }
+                $item->kine_price = $kinePrice;
+                $item->saldo_senex = $item->price - $kinePrice;
+
+                $totalPacientes += $item->price;
+                $totalKine += $kinePrice;
+            }
+
+            $fecha = Carbon::parse($chunk->first()->fecha_atencion)->format('m-Y');
+
+            $pdf = Pdf::loadView('pdf.reporte-all', [
+                'applyItems' => $chunk,
+                'fecha' => $fecha,
+                'totalPacientes' => $totalPacientes,
+                'totalKine' => $totalKine,
+                'total' => $chunk->sum('price'),
+                'logo' => $logo
+            ]);
+
+            $filename = "reporte-parte-{$chunkIndex}.pdf";
+            $filePath = $tempDir . '/' . $filename;
+            $pdf->save($filePath);
+            $pdfFiles[] = $filePath;
+            $chunkIndex++;
+        }
+
+        // Crear ZIP
+        $zipFileName = 'reporte-atenciones-' . now()->format('Ymd_His') . '.zip';
+        $zipPath = storage_path("app/{$zipFileName}");
+        $zip = new ZipArchive;
+
+        if ($zip->open($zipPath, ZipArchive::CREATE) === true) {
+            foreach ($pdfFiles as $file) {
+                $zip->addFile($file, basename($file));
+            }
+            $zip->close();
+        }
+
+        // Limpiar PDFs temporales
+        File::deleteDirectory($tempDir);
+
+        return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
 
