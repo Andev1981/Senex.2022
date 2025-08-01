@@ -24,42 +24,37 @@ class ReportePdfController extends Controller
     {
 
         // Obtener los datos
-        $applyItems = ApplyItem::with(['patient' => function ($query) {
-            $query->orderBy('name', 'asc');
-        }], 'assign')->where('fecha_atencion', 'like', $buscarFecha . '-%')->where('status', 1)->where('doctor_id', $kine)->orderByDesc(function ($query) {
-            $query->from('patients')
-                ->whereColumn('patients.id', '=', 'apply_items.patient_id')
-                ->select('name')
-                ->limit(1);
-        })->orderBy('fecha_atencion', 'asc')->get();
+        $applyItems = ApplyItem::with(['patient', 'assign', 'doctor'])
+            ->where('fecha_atencion', 'like', $buscarFecha . '-%')
+            ->where('status', 1)
+            ->where('doctor_id', $kine)
+            ->orderBy('fecha_atencion', 'asc')
+            ->get();
 
         $kineFinded = Doctor::find($kine);
+        $nameUser = $kineFinded ? ($kineFinded->name . ' ' . $kineFinded->last_name) : '--';
 
-        if ($kineFinded != null) {
-
-            $nameUser = $applyItems[0]->doctor->name . ' ' . $applyItems[0]->doctor->last_name;
-        } else {
-
-            $nameUser = "--";
-        }
-        $total = $applyItems[0]->sum('price');
-        $fechaString = Carbon::parse($applyItems[0]->fecha_atencion);
-        $fecha = $fechaString->format('m-Y');
+        $total = $applyItems->sum('price');
+        $fecha = Carbon::parse($applyItems->first()->fecha_atencion ?? now())->format('m-Y');
 
         $kineValues = ApplicationTypeUser::where('user_id', $kine)->get();
+        $kineValuesMap = $kineValues->pluck('price', 'application_type_id');
 
-        foreach ($applyItems as $applyItem) {
+        $this->totalKine = $applyItems->sum(function ($item) use ($kineValuesMap) {
+            return $kineValuesMap[$item->application_type_id] ?? 0;
+        });
 
-            foreach ($kineValues as $kineValue)
-                if ($kineValue->application_type_id == $applyItem->application_type_id) {
-                    $this->totalKine += $kineValue->price;
-                }
-        }
-        $pdf = Pdf::loadView('pdf.reporte', ['applyItems' => $applyItems, 'nameUser' => $nameUser, 'fecha' => $fecha, 'totalKine' => $this->totalKine, 'kineValues' => $kineValues]);
+        $pdf = Pdf::loadView('pdf.reporte', [
+            'applyItems' => $applyItems,
+            'nameUser' => $nameUser,
+            'fecha' => $fecha,
+            'totalKine' => $this->totalKine,
+            'kineValues' => $kineValues
+        ]);
 
         $this->totalKine = 0;
 
-        return $pdf->download(rand(1, 1000) . '-Reporte-Mensual-Atenciones' . $nameUser . '.pdf');
+        return $pdf->download(rand(1, 1000) . '-Reporte-Mensual-Atenciones.pdf');
     }
 
     public $totalPacientes = 0;

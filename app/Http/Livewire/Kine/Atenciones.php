@@ -38,8 +38,6 @@ class Atenciones extends Component
 
   public function render()
   {
-
-
     return view('livewire.kine.atenciones');
   }
 
