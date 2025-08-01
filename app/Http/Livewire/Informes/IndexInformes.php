@@ -76,7 +76,7 @@ class IndexInformes extends Component
         $applyItemsCollection = collect($this->applyItems);
         $this->totalPacientes = $applyItemsCollection->sum('price');
 
-        $this->totalKine = $this->applyItemsCollection->reduce(function ($carry, $item) {
+        $this->totalKine = $applyItemsCollection->reduce(function ($carry, $item) {
             $kinePrice = $item->doctor->applyTypes->firstWhere('application_type_id', $item->application_type_id)?->price ?? 0;
             return $carry + $kinePrice;
         }, 0);
