@@ -91,7 +91,7 @@ class ReportePdfController extends Controller
         }
 
         // Dividir en partes de 100
-        $chunks = $applyItems->chunk(350);
+        $chunks = $applyItems->chunk(500);
         $chunkIndex = 1;
         $pdfFiles = [];
 
