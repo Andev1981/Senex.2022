@@ -97,6 +97,11 @@ class Patient extends Model
         return Carbon::parse($this->birth)->age . ' años';
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
     protected $appends = [
         'comuna_nombre',
         'doctor_nombre',
