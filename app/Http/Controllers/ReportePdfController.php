@@ -2,17 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Answer;
-use App\Models\Application;
-use App\Models\ApplicationType;
 use App\Models\ApplicationTypeUser;
 use App\Models\ApplyItem;
-use App\Models\Assign;
 use App\Models\Doctor;
-use App\Models\Keeper;
-use App\Models\Patient;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -65,14 +57,14 @@ class ReportePdfController extends Controller
         $this->totalPacientes = 0;
         $this->totalKine = 0;
 
-        // Relaciones con carga anticipada optimizada
+        // Relaciones necesarias
         $relations = [
             'patient' => fn($q) => $q->orderBy('name', 'asc'),
-            'application',
+            'applicationType',
             'doctor.applyTypes'
         ];
 
-        // Base de la consulta
+        // Construcción de la consulta
         $query = ApplyItem::with($relations)
             ->where('status', 1)
             ->where('fecha_atencion', 'like', $buscarFecha . '%');
@@ -81,41 +73,49 @@ class ReportePdfController extends Controller
             $query->where('application_type_id', $selTipo);
         }
 
-        // Evitamos subquery innecesaria en orderByDesc
+        // Obtener resultados ordenados
         $applyItems = $query->orderBy('fecha_atencion', 'asc')->get();
 
-        // Validación para evitar errores si está vacío
         if ($applyItems->isEmpty()) {
-            return response()->json(['error' => 'No se encontraron datos para el PDF.'], 404);
+            return response()->json(['error' => 'No se encontraron datos para este período.'], 404);
         }
 
-        // Cálculo de totales de manera eficiente
+        // Preprocesar valores para evitar lógica pesada en Blade
         foreach ($applyItems as $applyItem) {
             $this->totalPacientes += $applyItem->price;
 
+            $kinePrice = 0;
+
             foreach ($applyItem->doctor->applyTypes as $kineValue) {
                 if ($kineValue->application_type_id == $applyItem->application_type_id) {
-                    $this->totalKine += $kineValue->price;
+                    $kinePrice = $kineValue->price;
+                    break;
                 }
             }
+
+            $applyItem->kine_price = $kinePrice;
+            $applyItem->saldo_senex = $applyItem->price - $kinePrice;
+            $this->totalKine += $kinePrice;
         }
 
-        // Total directo desde la colección
+        // Totales
         $total = $applyItems->sum('price');
-
-        // Parseo seguro de la fecha
         $fecha = Carbon::parse($applyItems->first()->fecha_atencion)->format('m-Y');
 
-        // Generación del PDF
+        // Convertir logo a base64 para evitar errores
+        $logoPath = public_path('img/logo-cabecera.png');
+        $logo = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+
+        // Generar PDF
         $pdf = Pdf::loadView('pdf.reporte-all', [
             'total' => $total,
             'applyItems' => $applyItems,
             'fecha' => $fecha,
             'totalKine' => $this->totalKine,
-            'totalPacientes' => $this->totalPacientes
+            'totalPacientes' => $this->totalPacientes,
+            'logo' => $logo
         ]);
 
-        // Descargar PDF
         return $pdf->download(rand(1, 1000) . '-Reporte-Mensual-Atenciones.pdf');
     }
 

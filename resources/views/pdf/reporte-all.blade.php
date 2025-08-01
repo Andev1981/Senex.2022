@@ -1,159 +1,89 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta charset="UTF-8">
   <title>Reporte Total PDF</title>
   <style>
-    /* Estilos para el header */
+    body {
+      font-family: sans-serif;
+      font-size: 12px;
+    }
     header {
       text-align: center;
       margin-bottom: 20px;
     }
-
     .logo {
       width: 100px;
       height: auto;
-      margin: 0 auto;
     }
-
-    /* Estilos para el cuerpo */
     table {
       border-collapse: collapse;
       width: 100%;
       margin-bottom: 20px;
     }
-
-    th,
-    td {
+    th, td {
       border: 1px solid black;
       padding: 4px;
-      font-size: 12px;
     }
-
     th {
-      background-color: #ccc;
-      text-align: left;
+      background-color: #ddd;
     }
-
-    /* Estilos para el footer */
     footer {
       margin-top: 20px;
       padding-top: 10px;
       border-top: 1px solid black;
       text-align: center;
-      font-size: 12px;
-    }
-
-    .totalText {
-      font-weight: 600;
-    }
-
-    .totalNumber {
-      font-weight: 600;
     }
   </style>
 </head>
-
 <body>
   <header>
-    <img src="{{ asset('img/logo-cabecera.png') }}" alt="Logo Empresa" class="logo">
-    <h1>Reporte Resumen Senex</h1>
+    @if($logo)
+      <img src="data:image/png;base64,{{ $logo }}" alt="Logo Empresa" class="logo">
+    @endif
+    <h2>Reporte Resumen Senex</h2>
     <p>Fecha: {{ $fecha }}</p>
   </header>
 
   <table>
     <thead>
-      <tr style="background-color: #0291b3">
+      <tr>
         <th>Kine</th>
         <th>Paciente</th>
         <th>Fecha</th>
         <th>Tipo</th>
         <th>Sesión</th>
-        <th>ValorPaciente</th>
-        <th>ValorKine</th>
-        <th>SaldoSenex</th>
+        <th>Valor Paciente</th>
+        <th>Valor Kine</th>
+        <th>Saldo Senex</th>
       </tr>
     </thead>
     <tbody>
-      @forelse ($applyItems as $applyItem)
-      <tr style="background-color: #f0f0f0">
-        <td scope="row">
-          {{ $applyItem->doctor->name ?? '' }}
-          {{ $applyItem->doctor->last_name ?? '' }}
-        </td>
-        <td scope="row">
-          {{ $applyItem->patient->name ?? '' }}
-          {{ $applyItem->patient->last_name ?? '' }}
-        </td>
-        <td>
-          {{ \Carbon\Carbon::parse(strtotime($applyItem->fecha_atencion))->format('d/m/Y') }}
-
-        </td>
-
-        <td>
-          {{ $applyItem->applicationType->name }}
-        </td>
-        <td>{{ $applyItem->numero_sesion ?? '' }}</td>
-        <td class="px-1 py-1">
-          ${{ number_format($applyItem->price, 0, ',', '.') }}.-
-        </td>
-        <td>
-          @forelse ($applyItem->doctor->applyTypes as $kineValue)
-          @if ($kineValue->application_type_id == $applyItem->application_type_id)
-          ${{ number_format($kineValue->price, 0, ',', '.') ?? '0' }}.-
-          @endif
-
-          @empty
-          Sin Datos
-          @endforelse
-
-        </td>
-        <td>
-          @forelse ($applyItem->doctor->applyTypes as $kineValue)
-          @if ($kineValue->application_type_id == $applyItem->application_type_id)
-          ${{ number_format($applyItem->price - $kineValue->price, 0, ',', '.') ??
-          '0' }}.-
-          @endif
-
-          @empty
-          Sin Datos
-          @endforelse
-        </td>
-      </tr>
-      @empty
+      @foreach ($applyItems as $item)
       <tr>
-        <td col="8">
-          Sin Datos
-        </td>
+        <td>{{ $item->doctor->name ?? '' }} {{ $item->doctor->last_name ?? '' }}</td>
+        <td>{{ $item->patient->name ?? '' }} {{ $item->patient->last_name ?? '' }}</td>
+        <td>{{ \Carbon\Carbon::parse($item->fecha_atencion)->format('d/m/Y') }}</td>
+        <td>{{ $item->applicationType->name ?? '' }}</td>
+        <td>{{ $item->numero_sesion ?? '' }}</td>
+        <td>${{ number_format($item->price, 0, ',', '.') }}</td>
+        <td>${{ number_format($item->kine_price ?? 0, 0, ',', '.') }}</td>
+        <td>${{ number_format($item->saldo_senex ?? 0, 0, ',', '.') }}</td>
       </tr>
-      @endforelse
-      <tr style="background-color: #8ae3e7">
-        <td colspan="4">
-          <span class="py-2 font-semibold text-slate-900">Totales</span>
-        </td>
-        <td>
-          <span class="py-2 text-sm font-semibold text-slate-900">
-            Total Atenciones : {{ count($applyItems) }}
-          </span>
-        </td>
-        <td class="py-2 font-semibold text-slate-900">
-          ${{ number_format($totalPacientes, 0, ',', '.') ?? '0' }}.-
-        </td>
-        <td class="py-3 font-semibold text-slate-900">
-          ${{ number_format($totalKine, 0, ',', '.') ?? '0' }}.-
-        </td>
-        <td class="py-3 font-semibold text-slate-900">
-          ${{ number_format($totalPacientes - $totalKine, 0, ',', '.') ?? '0' }}.-
-        </td>
+      @endforeach
 
+      <tr style="background-color: #e0f7f9">
+        <td colspan="4"><strong>Totales</strong></td>
+        <td>Total Atenciones: {{ count($applyItems) }}</td>
+        <td><strong>${{ number_format($totalPacientes, 0, ',', '.') }}</strong></td>
+        <td><strong>${{ number_format($totalKine, 0, ',', '.') }}</strong></td>
+        <td><strong>${{ number_format($totalPacientes - $totalKine, 0, ',', '.') }}</strong></td>
       </tr>
     </tbody>
   </table>
 
   <footer>
-    <p>Senex</p>
+    <p>Senex - Generado automáticamente</p>
   </footer>
 </body>
-
 </html>
