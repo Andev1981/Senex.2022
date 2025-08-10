@@ -41,7 +41,7 @@ export default function TablePacientes({
           if (!birth) return "N/A";
           const age =
             new Date().getFullYear() - new Date(birth).getFullYear() + " años";
-          return age + "años";
+          return age;
         },
         enableSorting: false,
       },
