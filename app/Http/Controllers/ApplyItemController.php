@@ -7,6 +7,7 @@ use App\Http\Requests\StoreApplyItemRequest;
 use App\Http\Requests\UpdateApplyItemRequest;
 use App\Models\Doctor;
 use App\Models\Patient;
+use Inertia\Inertia;
 
 class ApplyItemController extends Controller
 {
@@ -22,11 +23,7 @@ class ApplyItemController extends Controller
         $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
         $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();
 
-        return inertia('Sesiones/SesionesIndex', [
-            'sesiones' => $sesiones,
-            'pacientes' => $pacientes,
-            'kines' => $kines,
-        ]);
+        return Inertia::render('Sesiones/SesionesIndex', compact('sesiones', 'pacientes', 'kines'));
     }
 
     /**
