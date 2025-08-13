@@ -36,7 +36,7 @@ class ApplyItemController extends Controller
                 Carbon::now()->endOfMonth(),
             ])
             ->with(['patient:id,name,last_name', 'doctor:id,name,last_name', 'applicationType:id,name'])
-            ->get();
+            ->orderBy('id', 'DESC')->get();
 
         $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
         $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();

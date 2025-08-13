@@ -63,7 +63,16 @@ export default function TableSesiones({
         accessorFn: (row) => row?.doctor?.name + " " + row?.doctor?.last_name,
       },
       /*    { accessorKey: "tipo", header: "TIPO" }, */
-      { accessorKey: "price", header: "VALOR PACIENTE" },
+      {
+        header: "VALOR PACIENTE",
+        accessorFn: (row) =>
+          (formalizeNumber = (row) => {
+            return new Intl.NumberFormat("es-CL", {
+              style: "currency",
+              currency: "CLP",
+            }).format(row?.patient_value);
+          }),
+      },
       { accessorKey: "status", header: "ESTADO" },
     ],
     [handleOpenModalOptions, handleOpenModalContactPersons]
