@@ -20,7 +20,7 @@ class ApplyItemController extends Controller
      */
     public function index()
     {
-        $sesiones =  ApplyItem::select(
+        /* $sesiones =  ApplyItem::select(
             'id',
             'doctor_id',
             'patient_id',
@@ -36,7 +36,26 @@ class ApplyItemController extends Controller
                 Carbon::now()->endOfMonth(),
             ])
             ->with(['patient:id,name,last_name', 'doctor:id,name,last_name', 'applicationType:id,name'])
-            ->orderBy('id', 'DESC')->get();
+             ->orderBy('id', 'DESC')->get();*/
+
+        $sesiones = ApplyItem::select(
+            'apply_items.id',
+            'apply_items.status',
+            'apply_items.created_at',
+            'patients.name as patient_name',
+            'doctors.name as doctor_name',
+            'application_types.name as type_name'
+        )
+            ->join('patients', 'patients.id', '=', 'apply_items.patient_id')
+            ->join('doctors', 'doctors.id', '=', 'apply_items.doctor_id')
+            ->join('application_types', 'application_types.id', '=', 'apply_items.application_type_id')
+            ->where('apply_items.status', 1)
+            ->whereBetween('apply_items.created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth(),
+            ])
+            ->orderBy('apply_items.id', 'DESC')
+            ->get();
 
         $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
         $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();
