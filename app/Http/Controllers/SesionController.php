@@ -10,6 +10,15 @@ use Illuminate\Http\Request;
 
 class SesionController extends Controller
 {
+
+    public function sesiones()
+    {
+        $sesiones = Sesion::with('solicitud')->get();
+
+        return inertia('Sesiones/TableSesiones', [
+            'sesiones' => $sesiones,
+        ]);
+    }
     /**
      * Display a listing of the resource.
      *
@@ -24,7 +33,7 @@ class SesionController extends Controller
             'fecha_session' => $request->get('fecha_atencion'),
         ]);
 
-        $solicitudes = Sesion::where('solicitud_id',$sesion->solicitud_id)->count();
+        $solicitudes = Sesion::where('solicitud_id', $sesion->solicitud_id)->count();
         $solicitud = Solicitud::find($sesion->solicitud_id);
         $solicitud->sessions_count = $solicitudes;
         $solicitud->save();

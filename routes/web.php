@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApplyItemController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\HomeController;
@@ -24,6 +25,7 @@ use App\Http\Livewire\Kinesiologos\ListadoPacientes;
 use App\Http\Livewire\Kinesiologos\NoAutorizado;
 use App\Http\Livewire\Kinesiologos\Resumenes;
 use App\Http\Controllers\Inertia\PatientController;
+use App\Http\Controllers\SesionController;
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -135,8 +137,10 @@ Route::group(['middleware' => ['auth']], function () {
 
   Route::get('informes', IndexInformes::class)->name('informes');
 
+  /* Rutas React Inertia */
   Route::get('listado-pacientes', [PatientController::class, 'index'])->name('listado.pacientes');
   Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
+  Route::get('sesiones-pacientes', [ApplyItemController::class, 'index'])->name('sesiones.pacientes');
 });
 
 

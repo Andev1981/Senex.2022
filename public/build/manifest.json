@@ -1,15 +1,28 @@
 {
-  "_AuthenticatedLayout-d4a943cc.js": {
+  "_AuthenticatedLayout-3f815ba2.js": {
     "assets": [
       "assets/logo-921f119d.png"
     ],
-    "file": "assets/AuthenticatedLayout-d4a943cc.js",
+    "file": "assets/AuthenticatedLayout-3f815ba2.js",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_chevron-up-9967f6dc.js": {
-    "file": "assets/chevron-up-9967f6dc.js",
+  "_Modal-30c5ea1f.js": {
+    "file": "assets/Modal-30c5ea1f.js",
+    "imports": [
+      "resources/js/app.jsx",
+      "_AuthenticatedLayout-3f815ba2.js"
+    ]
+  },
+  "_PrimaryButton-e7864232.js": {
+    "file": "assets/PrimaryButton-e7864232.js",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_chevron-up-090d91ca.js": {
+    "file": "assets/chevron-up-090d91ca.js",
     "imports": [
       "resources/js/app.jsx"
     ]
@@ -18,55 +31,115 @@
     "file": "assets/index-7ac5b536.js"
   },
   "resources/css/app.css": {
-    "file": "assets/app-6c89c2ab.css",
+    "file": "assets/app-31437565.css",
     "src": "resources/js/app.css"
   },
   "resources/js/Pages/Kines/KinesIndex.jsx": {
-    "file": "assets/KinesIndex-48557673.js",
+    "file": "assets/KinesIndex-30508426.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-d4a943cc.js",
+      "_AuthenticatedLayout-3f815ba2.js",
       "resources/js/Pages/Kines/TableKines.jsx",
       "_index-7ac5b536.js",
-      "_chevron-up-9967f6dc.js"
+      "_chevron-up-090d91ca.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/KinesIndex.jsx"
   },
   "resources/js/Pages/Kines/TableKines.jsx": {
-    "file": "assets/TableKines-68ee14c4.js",
+    "file": "assets/TableKines-3e599894.js",
     "imports": [
       "resources/js/app.jsx",
-      "_chevron-up-9967f6dc.js",
+      "_chevron-up-090d91ca.js",
       "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/TableKines.jsx"
   },
-  "resources/js/Pages/Patients/PatientsIndex.jsx": {
-    "file": "assets/PatientsIndex-7a76c8d9.js",
+  "resources/js/Pages/Patients/Partials/PatientsModal.jsx": {
+    "file": "assets/PatientsModal-a0e066dd.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-d4a943cc.js",
+      "_index-7ac5b536.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/Patients/Partials/PatientsModal.jsx"
+  },
+  "resources/js/Pages/Patients/PatientsIndex.jsx": {
+    "file": "assets/PatientsIndex-4ad32cff.js",
+    "imports": [
+      "resources/js/app.jsx",
+      "_AuthenticatedLayout-3f815ba2.js",
       "resources/js/Pages/Patients/TablePacientes.jsx",
+      "_Modal-30c5ea1f.js",
+      "resources/js/Pages/Patients/Partials/PatientsModal.jsx",
       "_index-7ac5b536.js",
-      "_chevron-up-9967f6dc.js"
+      "_chevron-up-090d91ca.js",
+      "_PrimaryButton-e7864232.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Patients/PatientsIndex.jsx"
   },
   "resources/js/Pages/Patients/TablePacientes.jsx": {
-    "file": "assets/TablePacientes-b65a6591.js",
+    "file": "assets/TablePacientes-ecf9547c.js",
     "imports": [
       "resources/js/app.jsx",
-      "_chevron-up-9967f6dc.js",
+      "_chevron-up-090d91ca.js",
+      "_PrimaryButton-e7864232.js",
       "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Patients/TablePacientes.jsx"
   },
+  "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx": {
+    "file": "assets/SesionesModal-77b3e5c2.js",
+    "imports": [
+      "resources/js/app.jsx",
+      "_index-7ac5b536.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx"
+  },
+  "resources/js/Pages/Sesiones/SesionesIndex.jsx": {
+    "file": "assets/SesionesIndex-52a36cdf.js",
+    "imports": [
+      "resources/js/app.jsx",
+      "_AuthenticatedLayout-3f815ba2.js",
+      "_Modal-30c5ea1f.js",
+      "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx",
+      "resources/js/Pages/Sesiones/TableSesiones.jsx",
+      "resources/js/Pages/Sesiones/TablePacientesSesion.jsx",
+      "_index-7ac5b536.js",
+      "_chevron-up-090d91ca.js",
+      "_PrimaryButton-e7864232.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/Sesiones/SesionesIndex.jsx"
+  },
+  "resources/js/Pages/Sesiones/TablePacientesSesion.jsx": {
+    "file": "assets/TablePacientesSesion-e93f55f7.js",
+    "imports": [
+      "resources/js/app.jsx",
+      "_chevron-up-090d91ca.js",
+      "_PrimaryButton-e7864232.js",
+      "_index-7ac5b536.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/Sesiones/TablePacientesSesion.jsx"
+  },
+  "resources/js/Pages/Sesiones/TableSesiones.jsx": {
+    "file": "assets/TableSesiones-6ec766bb.js",
+    "imports": [
+      "resources/js/app.jsx",
+      "_chevron-up-090d91ca.js",
+      "_PrimaryButton-e7864232.js",
+      "_index-7ac5b536.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/Pages/Sesiones/TableSesiones.jsx"
+  },
   "resources/js/app.css": {
-    "file": "assets/app-6c89c2ab.css",
+    "file": "assets/app-31437565.css",
     "src": "resources/js/app.css"
   },
   "resources/js/app.js": {
@@ -79,15 +152,20 @@
   },
   "resources/js/app.jsx": {
     "css": [
-      "assets/app-6c89c2ab.css"
+      "assets/app-31437565.css"
     ],
     "dynamicImports": [
       "resources/js/Pages/Kines/KinesIndex.jsx",
       "resources/js/Pages/Kines/TableKines.jsx",
+      "resources/js/Pages/Patients/Partials/PatientsModal.jsx",
       "resources/js/Pages/Patients/PatientsIndex.jsx",
-      "resources/js/Pages/Patients/TablePacientes.jsx"
+      "resources/js/Pages/Patients/TablePacientes.jsx",
+      "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx",
+      "resources/js/Pages/Sesiones/SesionesIndex.jsx",
+      "resources/js/Pages/Sesiones/TablePacientesSesion.jsx",
+      "resources/js/Pages/Sesiones/TableSesiones.jsx"
     ],
-    "file": "assets/app-e9e67182.js",
+    "file": "assets/app-ea167976.js",
     "imports": [
       "_index-7ac5b536.js"
     ],

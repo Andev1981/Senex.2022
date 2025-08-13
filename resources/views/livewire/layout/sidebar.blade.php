@@ -3,7 +3,8 @@
 	aria-label="Sidenav" id="drawer-navigation">
 	<div class="h-full px-3 py-5 overflow-y-auto bg-white dark:bg-gray-800">
 		<ul class="space-y-2">
-			<li>
+			@if(Auth::user()->email === 'javt1981@gmail.com')
+				<li>
 				<a href="{{ route('listado.pacientes') }}"
 					class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group {{ Request::path() == 'listado-pacientes' ? 'border-2 border-sky-600' : ''}}">
 					<img
@@ -12,6 +13,8 @@
 					<span class="ml-3">Pacientes</span>
 				</a>
 			</li>
+			@endif
+			
 			<li>
 				<a href="{{ route('informes') }}"
 					class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group {{ Request::path() == 'informes' ? 'border-2 border-sky-600' : ''}}">

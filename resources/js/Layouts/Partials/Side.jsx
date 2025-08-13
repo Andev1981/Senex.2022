@@ -68,16 +68,16 @@ function Side({ sidebarOpen }) {
           </li>
           <li>
             <Link
-              href={route("sesiones")}
+              href={route("sesiones.pacientes")}
               className={
-                location.pathname === "/sesiones"
+                location.pathname === "/sesiones-pacientes"
                   ? styleSelected
                   : styleNotSelected
               }
             >
               <img src={"./icons/usuario.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">
-                Sesiones&nbsp;Pacientes
+                Sesiones&nbsp;Pacientes (*Prueba)
               </span>
             </Link>
           </li>

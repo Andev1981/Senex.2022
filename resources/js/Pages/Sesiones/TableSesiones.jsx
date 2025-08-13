@@ -7,11 +7,11 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import * as XLSX from "xlsx";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, PencilLine } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
-export default function TablePacientes({
-  pacientes,
+export default function TableSesiones({
+  sesiones,
   handleOpenModalOptions,
   handleOpenModalContactPersons,
 }) {
@@ -21,53 +21,51 @@ export default function TablePacientes({
 
   // Filtrado global simple (busca en todas las columnas)
   const filteredData = useMemo(() => {
-    if (!globalFilter) return pacientes || [];
+    if (!globalFilter) return sesiones || [];
     const filter = globalFilter.toLowerCase();
-    return pacientes.filter((row) =>
+    return sesiones.filter((row) =>
       Object.values(row).some(
         (val) => val && val.toString().toLowerCase().includes(filter)
       )
     );
-  }, [globalFilter, pacientes]);
+  }, [globalFilter, sesiones]);
 
   const columns = useMemo(
     () => [
-      { accessorKey: "name", header: "Nombre" },
-      { accessorKey: "last_name", header: "Apellido" },
-      {
-        accessorKey: "birth",
-        header: "Edad",
-        cell: ({ getValue }) => {
-          const birth = getValue();
-          if (!birth) return "N/A";
-          const age =
-            new Date().getFullYear() - new Date(birth).getFullYear() + " años";
-          return age;
-        },
-        enableSorting: false,
-      },
-      { accessorKey: "email", header: "Email" },
-      { accessorKey: "direccion", header: "Dirección" },
-      { accessorKey: "comuna_nombre", header: "Comuna" },
-      { accessorKey: "doctor_nombre", header: <p>Ultima&nbsp;atención</p> },
-      { accessorKey: "phone", header: "Teléfono" },
-      { accessorKey: "rut", header: "Rut" },
       {
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex gap-2">
+          <div className="flex">
             <PrimaryButton
               type="button"
               className="btn"
               onClick={() => handleOpenModalOptions(row?.original)}
             >
-              Opciones
+              <PencilLine className="w-4 h-4" />
             </PrimaryButton>
           </div>
         ),
         enableSorting: false,
       },
+      { accessorKey: "numero_sesion", header: "#" },
+      {
+        accessorKey: "fecha_atencion",
+        header: "Fecha de Atención",
+        cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+        enableSorting: true,
+      },
+      {
+        header: "PACIENTE",
+        accessorFn: (row) => row?.patient?.name + " " + row?.patient?.last_name,
+      },
+      {
+        header: "KINE",
+        accessorFn: (row) => row?.doctor?.name + " " + row?.doctor?.last_name,
+      },
+      /*    { accessorKey: "tipo", header: "TIPO" }, */
+      { accessorKey: "price", header: "VALOR PACIENTE" },
+      { accessorKey: "status", header: "ESTADO" },
     ],
     [handleOpenModalOptions, handleOpenModalContactPersons]
   );
@@ -101,8 +99,8 @@ export default function TablePacientes({
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Pacientes");
-    XLSX.writeFile(workbook, "pacientes.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sesiones");
+    XLSX.writeFile(workbook, "sesiones.xlsx");
   };
 
   return (
@@ -111,7 +109,7 @@ export default function TablePacientes({
         <input
           value={globalFilter ?? ""}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Buscar pacientes..."
+          placeholder="Buscar sesiones..."
           className="w-full px-3 py-2 transition border border-gray-300 rounded-md sm:w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button

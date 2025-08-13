@@ -10,7 +10,7 @@ import * as XLSX from "xlsx";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
-export default function TablePacientes({
+export default function TablePacientesSesion({
   pacientes,
   handleOpenModalOptions,
   handleOpenModalContactPersons,
@@ -47,10 +47,6 @@ export default function TablePacientes({
         enableSorting: false,
       },
       { accessorKey: "email", header: "Email" },
-      { accessorKey: "direccion", header: "Dirección" },
-      { accessorKey: "comuna_nombre", header: "Comuna" },
-      { accessorKey: "doctor_nombre", header: <p>Ultima&nbsp;atención</p> },
-      { accessorKey: "phone", header: "Teléfono" },
       { accessorKey: "rut", header: "Rut" },
       {
         id: "actions",
@@ -62,7 +58,7 @@ export default function TablePacientes({
               className="btn"
               onClick={() => handleOpenModalOptions(row?.original)}
             >
-              Opciones
+              + Sesión
             </PrimaryButton>
           </div>
         ),

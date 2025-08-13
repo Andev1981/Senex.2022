@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ApplyItem;
 use App\Http\Requests\StoreApplyItemRequest;
 use App\Http\Requests\UpdateApplyItemRequest;
+use App\Models\Doctor;
+use App\Models\Patient;
 
 class ApplyItemController extends Controller
 {
@@ -15,7 +17,16 @@ class ApplyItemController extends Controller
      */
     public function index()
     {
-        //
+        $sesiones = ApplyItem::where('status', 1)->with('patient', 'doctor', 'applicationType', 'application.user')->get();
+
+        $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
+        $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();
+
+        return inertia('Sesiones/SesionesIndex', [
+            'sesiones' => $sesiones,
+            'pacientes' => $pacientes,
+            'kines' => $kines,
+        ]);
     }
 
     /**

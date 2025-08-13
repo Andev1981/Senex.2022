@@ -1,8 +1,18 @@
+import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import TablePacientes from "./TablePacientes";
+import Modal from "@/Components/Modal";
+import PatientsModal from "./Partials/PatientsModal";
 export default function PatientsIndex({ user, pacientes }) {
-  const handleOpenModalOptions = () => {};
+  const [modalpatiensOpens, setModalPatientsOptions] = useState(false);
+  const [patient, setPatient] = useState(null);
+
+  const handleOpenModalOptions = (patient) => {
+    console.log("paciente=> ", patient);
+    setPatient(patient);
+    setModalPatientsOptions(true);
+  };
   const handleOpenModalContactPersons = () => {};
 
   return (
@@ -22,6 +32,12 @@ export default function PatientsIndex({ user, pacientes }) {
           </div>
         </div>
       </div>
+      <Modal
+        open={modalpatiensOpens}
+        onClose={() => setModalPatientsOptions(false)}
+      >
+        <PatientsModal patient={patient} />
+      </Modal>
     </AuthenticatedLayout>
   );
 }
