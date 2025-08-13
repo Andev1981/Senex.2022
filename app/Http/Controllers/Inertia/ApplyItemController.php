@@ -20,10 +20,18 @@ class ApplyItemController extends Controller
      */
     public function index()
     {
-        $sesiones =  ApplyItem::where('status', 1)
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->with('patient', 'doctor', 'applicationType')
+        $sesiones =  ApplyItem::select(
+            'id',
+            'price',
+            'fecha_atencion',
+            'numero_sesion',
+            'comments'
+        )->where('status', 1)
+            ->whereBetween('fecha_atencion', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth(),
+            ])
+            ->with(['patient:id,name,last_name', 'doctor:id,name,last_name', 'applicationType:id,name'])
             ->get();
 
         $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
