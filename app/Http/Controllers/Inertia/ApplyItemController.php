@@ -50,10 +50,10 @@ class ApplyItemController extends Controller
             ->join('doctors', 'doctors.id', '=', 'apply_items.doctor_id')
             ->join('application_types', 'application_types.id', '=', 'apply_items.application_type_id')
             ->where('apply_items.status', 1)
-            ->whereBetween('apply_items.created_at', [
+            /* ->whereBetween('apply_items.created_at', [
                 Carbon::now()->startOfMonth(),
                 Carbon::now()->endOfMonth(),
-            ])
+            ]) */
             ->orderBy('apply_items.id', 'DESC')
             ->get();
 

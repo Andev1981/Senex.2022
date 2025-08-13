@@ -65,12 +65,11 @@ export default function TableSesiones({
       /*    { accessorKey: "tipo", header: "TIPO" }, */
       {
         header: "VALOR PACIENTE",
-        accessorFn: (row) =>
-          (formalizeNumber = (row) => {
-            return new Intl.NumberFormat("es-CL", {
-              style: "currency",
-              currency: "CLP",
-            }).format(row?.patient_value);
+        accessorFn: (row) => row?.price, // guarda el valor numérico
+        cell: (info) =>
+          info.getValue()?.toLocaleString("es-CL", {
+            style: "currency",
+            currency: "CLP",
           }),
       },
       { accessorKey: "status", header: "ESTADO" },
