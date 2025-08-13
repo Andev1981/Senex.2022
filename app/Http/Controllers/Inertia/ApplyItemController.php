@@ -8,6 +8,7 @@ use App\Http\Requests\StoreApplyItemRequest;
 use App\Http\Requests\UpdateApplyItemRequest;
 use App\Models\Doctor;
 use App\Models\Patient;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class ApplyItemController extends Controller
@@ -19,12 +20,16 @@ class ApplyItemController extends Controller
      */
     public function index()
     {
-        $sesiones = ApplyItem::where('status', 1)->with('patient', 'doctor', 'applicationType', 'application.user')->get();
+        $sesiones =  ApplyItem::where('status', 1)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->with('patient', 'doctor', 'applicationType', 'application.user')
+            ->get();
 
         $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
         $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();
 
-        dd($sesiones, $pacientes, $kines);
+        /*  dd($sesiones, $pacientes, $kines); */
 
 
         return Inertia::render('Sesiones/SesionesIndex', compact('sesiones', 'pacientes', 'kines'));
