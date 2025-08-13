@@ -23,7 +23,7 @@ class ApplyItemController extends Controller
         $sesiones =  ApplyItem::where('status', 1)
             ->whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
-            ->with('patient', 'doctor', 'applicationType', 'application.user')
+            ->with('patient', 'doctor', 'applicationType')
             ->get();
 
         $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();

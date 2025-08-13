@@ -36,7 +36,7 @@ function SesionesIndex({ sesiones, pacientes, kines }) {
           </div>
         </div>
       </div>
-      <div className="py-6">
+      {/* <div className="py-6">
         <div className="mx-auto sm:px-2 lg:px-4">
           <div className="overflow-hidden bg-white shadow-xl sm:rounded-lg dark:bg-gray-800">
             <div className="p-6 text-gray-900 dark:text-gray-100">
@@ -52,7 +52,7 @@ function SesionesIndex({ sesiones, pacientes, kines }) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       <Modal
         open={modalpatiensOpen}
         onClose={() => setModalSesionesOption(false)}
