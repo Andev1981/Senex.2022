@@ -22,7 +22,11 @@ class ApplyItemController extends Controller
     {
         $sesiones =  ApplyItem::select(
             'id',
+            'doctor_id',
+            'patient_id',
             'price',
+            'status',
+            'application_type_id',
             'fecha_atencion',
             'numero_sesion',
             'comments'
