@@ -18,12 +18,7 @@ export default function AuthenticatedLayout({ user, children }) {
    */
   console.log(children);
   return (
-    <div
-      className="min-h-screen p-4 bg-center bg-no-repeat bg-cover"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1)), url('./../assets/img/bg.png')`,
-      }}
-    >
+    <div className="min-h-screen p-4 bg-center bg-no-repeat bg-cover bg-slate-50">
       <Nav
         user={user}
         sidebarOpen={sidebarOpen}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -6,7 +6,6 @@ import {
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import * as XLSX from "xlsx";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
@@ -80,27 +79,6 @@ export default function TablePacientesSesion({
     globalFilterFn: "includesString",
   });
 
-  const exportToExcel = () => {
-    const exportData = filteredData.map((item) => ({
-      Nombre: item?.name,
-      Apellido: item?.last_name,
-      Edad: item?.birth
-        ? new Date().getFullYear() - new Date(item.birth).getFullYear()
-        : "N/A",
-      Email: item?.email,
-      Direccion: item?.direccion,
-      Comuna: item?.comuna_nombre,
-      Ultima_atencion: item?.doctor_nombre,
-      Teléfono: item?.phone,
-      Rut: item?.rut,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Pacientes");
-    XLSX.writeFile(workbook, "pacientes.xlsx");
-  };
-
   return (
     <div className="max-w-full p-4">
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -110,12 +88,6 @@ export default function TablePacientesSesion({
           placeholder="Buscar pacientes..."
           className="w-full px-3 py-2 transition border border-gray-300 rounded-md sm:w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button
-          onClick={exportToExcel}
-          className="px-4 py-2 text-white transition bg-green-600 rounded-md hover:bg-green-700"
-        >
-          Exportar Excel
-        </button>
       </div>
       <div className="w-full overflow-x-auto ">
         <table className="min-w-[700px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden">

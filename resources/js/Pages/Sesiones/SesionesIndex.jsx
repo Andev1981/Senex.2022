@@ -22,7 +22,7 @@ function SesionesIndex({ sesiones, pacientes, kines }) {
       <Head title="Sesiones Pacientes" />
       <div className="py-6">
         <div className="mx-auto sm:px-2 lg:px-4">
-          <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+          <div className="overflow-hidden bg-white shadow-xl sm:rounded-lg dark:bg-gray-800">
             <div className="p-6 text-gray-900 dark:text-gray-100">
               <div className="flex items-center">
                 <img src={"icons/libro-medico.gif"} className="w-10 h-10" />
@@ -39,7 +39,7 @@ function SesionesIndex({ sesiones, pacientes, kines }) {
       </div>
       <div className="py-6">
         <div className="mx-auto sm:px-2 lg:px-4">
-          <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+          <div className="overflow-hidden bg-white shadow-xl sm:rounded-lg dark:bg-gray-800">
             <div className="p-6 text-gray-900 dark:text-gray-100">
               <div className="flex items-center">
                 <img src={"icons/lista.gif"} alt="" className="w-10 h-10" />

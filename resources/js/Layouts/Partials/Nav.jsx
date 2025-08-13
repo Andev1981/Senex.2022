@@ -1,6 +1,7 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import { Link } from "@inertiajs/react";
+import { UserCircle2 } from "lucide-react";
 import { route } from "ziggy-js";
 function Nav({ user, sidebarOpen, setSidebarOpen }) {
   return (
@@ -51,7 +52,7 @@ function Nav({ user, sidebarOpen, setSidebarOpen }) {
                   <span className="inline-flex rounded-md">
                     <button
                       type="button"
-                      className="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                      className="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0"
                     >
                       <span className="sr-only">Open user menu</span>
                       {user?.avatar ? (
@@ -61,10 +62,9 @@ function Nav({ user, sidebarOpen, setSidebarOpen }) {
                           src={"storage/" + user?.avatar}
                         />
                       ) : (
-                        <img
-                          className="w-8 h-8 rounded-full"
-                          src="./../assets/img/user.webp"
-                          alt="user photo"
+                        <UserCircle2
+                          className="w-8 h-8 text-blue-600 bg-white"
+                          strokeWidth={1.5}
                         />
                       )}
                     </button>
