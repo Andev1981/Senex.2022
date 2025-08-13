@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Inertia;
 
+use App\Http\Controllers\Controller;
 use App\Models\ApplyItem;
 use App\Http\Requests\StoreApplyItemRequest;
 use App\Http\Requests\UpdateApplyItemRequest;

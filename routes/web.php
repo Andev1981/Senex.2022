@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ApplyItemController;
+use App\Http\Controllers\Inertia\ApplyItemController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\HomeController;
@@ -25,7 +25,6 @@ use App\Http\Livewire\Kinesiologos\ListadoPacientes;
 use App\Http\Livewire\Kinesiologos\NoAutorizado;
 use App\Http\Livewire\Kinesiologos\Resumenes;
 use App\Http\Controllers\Inertia\PatientController;
-use App\Http\Controllers\SesionController;
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
