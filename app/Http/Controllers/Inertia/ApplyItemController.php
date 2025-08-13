@@ -24,6 +24,9 @@ class ApplyItemController extends Controller
         $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
         $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();
 
+        dd($sesiones, $pacientes, $kines);
+
+
         return Inertia::render('Sesiones/SesionesIndex', compact('sesiones', 'pacientes', 'kines'));
     }
 
