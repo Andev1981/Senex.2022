@@ -70,15 +70,17 @@ export default function TableSesiones({
         header: "KINE",
         accessorFn: (row) => row?.doctor_name + " " + row?.doctor_last_name,
       },
-      /*    { accessorKey: "tipo", header: "TIPO" }, */
       {
         header: "VALOR_PACIENTE",
-        accessorFn: (row) => row?.price, // guarda el valor numérico
-        cell: (info) =>
-          info.getValue()?.toLocaleString("es-CL", {
+        accessorFn: (row) => Number(row?.price) || 0, // garantiza número
+        cell: (info) => {
+          const value = info.getValue();
+          return value.toLocaleString("es-CL", {
             style: "currency",
             currency: "CLP",
-          }),
+            maximumFractionDigits: 0,
+          });
+        },
       },
       { accessorKey: "type_name", header: "TIPO" },
       {
