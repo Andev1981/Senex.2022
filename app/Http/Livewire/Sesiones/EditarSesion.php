@@ -49,7 +49,7 @@ class EditarSesion extends Component
     {
 
         $this->applyItem = $applyItem;
-        $this->application = $applyItem->application;
+        $this->application = $applyItem->application_id;
         $this->patient = $this->applyItem->patient;
         if ($applyItem->doctor) {
             $this->selectedKine = $applyItem->doctor->id;
@@ -64,7 +64,7 @@ class EditarSesion extends Component
         $this->selectedType = $applyItem->application_type_id;
         $this->price = $applyItem->price;
         $this->numero_sesion = $applyItem->numero_sesion;
-        $this->countApplies = ApplyItem::where('application_id', $this->application->id)->count();
+        $this->countApplies = ApplyItem::where('application_id', $this->application)->count();
         $this->kines = Doctor::select('id', 'name', 'last_name')->get();
         $this->types = ApplicationType::select('id', 'name',)->get();
     }

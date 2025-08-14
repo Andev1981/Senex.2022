@@ -96,7 +96,6 @@ class ListadoSesiones extends Component
         $applyItems = $query->orderBy($this->sort, $this->direction)
             ->paginate($this->quantity);
 
-        dd($applyItems[100]);
 
         return view('livewire.sesiones.listado-sesiones', compact('applyItems'));
     }
