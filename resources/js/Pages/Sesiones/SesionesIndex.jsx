@@ -6,12 +6,12 @@ import SesionesModal from "./Partials/SesionesModal";
 import TableSesiones from "./TableSesiones";
 import TablePacientesSesion from "./TablePacientesSesion";
 
-function SesionesIndex({ sesiones, pacientes, kines }) {
+function SesionesIndex({ sesiones, kines, apply_types }) {
   const [modalpatiensOpen, setModalSesionesOption] = useState(false);
   const [sesion, setSesion] = useState(null);
 
-  const handleOpenModalOptions = (sesion) => {
-    setSesion(sesion);
+  const handleOpenModalOptions = (data) => {
+    setSesion(data);
     setModalSesionesOption(true);
   };
   const handleOpenModalContactPersons = () => {};
@@ -23,7 +23,7 @@ function SesionesIndex({ sesiones, pacientes, kines }) {
         <div className="mx-auto sm:px-2 lg:px-4">
           <div className="overflow-hidden bg-white shadow-xl sm:rounded-lg dark:bg-gray-800">
             <div className="p-6 text-gray-900 dark:text-gray-100">
-              <div className="flex items-center">
+              <div className="flex items-center mb-2">
                 <img src={"icons/libro-medico.gif"} className="w-10 h-10" />
                 <label className="text-lg font-semibold">Sesiones</label>
               </div>
@@ -56,8 +56,16 @@ function SesionesIndex({ sesiones, pacientes, kines }) {
       <Modal
         open={modalpatiensOpen}
         onClose={() => setModalSesionesOption(false)}
+        title={"Sesión"}
+        description={"Aqui puedes crear o editar usa sesión"}
+        maxWidth="4xl"
       >
-        <SesionesModal sesion={sesion} />
+        <SesionesModal
+          sesion={sesion}
+          kines={kines}
+          apply_types={apply_types}
+          setModalSesionesOption={setModalSesionesOption}
+        />
       </Modal>
     </AuthenticatedLayout>
   );

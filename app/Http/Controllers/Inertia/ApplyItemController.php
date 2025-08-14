@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ApplyItem;
 use App\Http\Requests\StoreApplyItemRequest;
 use App\Http\Requests\UpdateApplyItemRequest;
+use App\Models\ApplicationType;
 use App\Models\Doctor;
 use App\Models\Patient;
 use Carbon\Carbon;
@@ -42,33 +43,39 @@ class ApplyItemController extends Controller
             'apply_items.id',
             'apply_items.status',
             'apply_items.created_at',
+            'apply_items.price',
+            'apply_items.fecha_atencion',
+            'apply_items.numero_sesion',
+            'apply_items.comments',
+            'apply_items.patient_id',
+            'apply_items.doctor_id',
+            'apply_items.application_id',
+            'apply_items.application_type_id',
             'patients.name as patient_name',
             'patients.last_name as patient_last_name',
             'doctors.name as doctor_name',
             'doctors.last_name as doctor_last_name',
             'application_types.name as type_name',
-            'apply_items.price',
-            'apply_items.fecha_atencion',
-            'apply_items.numero_sesion',
+
         )
             ->join('patients', 'patients.id', '=', 'apply_items.patient_id')
             ->join('doctors', 'doctors.id', '=', 'apply_items.doctor_id')
+            ->join('applications', 'applications.id', '=', 'apply_items.application_id')
             ->join('application_types', 'application_types.id', '=', 'apply_items.application_type_id')
             ->where('apply_items.status', 1)
-            ->whereBetween('apply_items.created_at', [
+            ->whereBetween('apply_items.fecha_atencion', [
                 Carbon::now()->startOfMonth(),
                 Carbon::now()->endOfMonth(),
             ])
             ->orderBy('apply_items.id', 'DESC')
             ->get();
 
-        $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get();
+        /* $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get(); */
         $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();
+        $apply_types = ApplicationType::where('estado', 1)->orderBy('id', 'DESC')->get();
 
-        /*  dd($sesiones, $pacientes, $kines); */
 
-
-        return Inertia::render('Sesiones/SesionesIndex', compact('sesiones', 'pacientes', 'kines'));
+        return Inertia::render('Sesiones/SesionesIndex', compact('sesiones', 'kines', 'apply_types'));
     }
 
     /**

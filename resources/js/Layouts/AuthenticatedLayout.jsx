@@ -16,7 +16,6 @@ export default function AuthenticatedLayout({ user, children }) {
 
   /* console.log("Usuario: ", user);
    */
-  console.log(children);
   return (
     <div className="min-h-screen p-4 bg-center bg-no-repeat bg-cover bg-slate-50">
       <Nav

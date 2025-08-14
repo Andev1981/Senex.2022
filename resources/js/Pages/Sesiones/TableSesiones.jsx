@@ -6,7 +6,15 @@ import {
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronUp, PencilLine } from "lucide-react";
+import {
+  Clock,
+  CheckCircle2,
+  XCircle,
+  CalendarClock,
+  ChevronDown,
+  ChevronUp,
+  PencilLine,
+} from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
 export default function TableSesiones({
@@ -50,7 +58,7 @@ export default function TableSesiones({
       { accessorKey: "numero_sesion", header: "#" },
       {
         accessorKey: "fecha_atencion",
-        header: "Fecha de Atención",
+        header: "FECHA_ATENCIÓN",
         cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
         enableSorting: true,
       },
@@ -64,7 +72,7 @@ export default function TableSesiones({
       },
       /*    { accessorKey: "tipo", header: "TIPO" }, */
       {
-        header: "VALOR PACIENTE",
+        header: "VALOR_PACIENTE",
         accessorFn: (row) => row?.price, // guarda el valor numérico
         cell: (info) =>
           info.getValue()?.toLocaleString("es-CL", {
@@ -72,7 +80,50 @@ export default function TableSesiones({
             currency: "CLP",
           }),
       },
-      { accessorKey: "status", header: "ESTADO" },
+      { accessorKey: "type_name", header: "TIPO" },
+      {
+        accessorKey: "status",
+        header: "ESTADO",
+        cell: ({ getValue }) => {
+          const statusMap = {
+            0: {
+              text: "Pendiente de Atención",
+              color: "bg-yellow-100 text-yellow-800",
+              icon: <Clock className="w-4 h-4" />,
+            },
+            1: {
+              text: "Atendido",
+              color: "bg-green-100 text-green-800",
+              icon: <CheckCircle2 className="w-4 h-4" />,
+            },
+            2: {
+              text: "Cancelado",
+              color: "bg-red-100 text-red-800",
+              icon: <XCircle className="w-4 h-4" />,
+            },
+            3: {
+              text: "Reagendado",
+              color: "bg-blue-100 text-blue-800",
+              icon: <CalendarClock className="w-4 h-4" />,
+            },
+          };
+
+          const status = statusMap[getValue()] ?? {
+            text: "Desconocido",
+            color: "bg-gray-100 text-gray-800",
+            icon: null,
+          };
+
+          return (
+            <span
+              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${status.color}`}
+            >
+              {status.icon}
+              {status.text}
+            </span>
+          );
+        },
+      },
     ],
     [handleOpenModalOptions, handleOpenModalContactPersons]
   );
@@ -90,7 +141,7 @@ export default function TableSesiones({
   });
 
   return (
-    <div className="max-w-full p-4">
+    <div className="max-w-full">
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <input
           value={globalFilter ?? ""}
@@ -99,7 +150,7 @@ export default function TableSesiones({
           className="w-full px-3 py-2 transition border border-gray-300 rounded-md sm:w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
-      <div className="w-full overflow-x-auto ">
+      <div className="w-full overflow-x-auto">
         <table className="min-w-[700px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden">
           <thead className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -108,7 +159,7 @@ export default function TableSesiones({
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
+                    className="px-2 py-1 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
                     scope="col"
                   >
                     {flexRender(
@@ -144,7 +195,7 @@ export default function TableSesiones({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3 text-gray-800 whitespace-nowrap"
+                      className="px-2 py-2 text-gray-800 whitespace-nowrap uppercase text-sm"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

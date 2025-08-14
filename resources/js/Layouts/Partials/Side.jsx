@@ -33,7 +33,7 @@ function Side({ sidebarOpen }) {
               <span className="ml-1 text-sm text-primary">Pacientes</span>
             </Link>
           </li>
-          <li>
+          {/*  <li>
             <a
               href="/informes"
               className={
@@ -45,10 +45,10 @@ function Side({ sidebarOpen }) {
               <img src={"./icons/controlar.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">Informes</span>
             </a>
-          </li>
+          </li> */}
         </ul>
         <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
-          <li>
+          {/* <li>
             <a
               href="/pagos"
               className={
@@ -65,19 +65,19 @@ function Side({ sidebarOpen }) {
                 Pacientes&nbsp;y&nbsp;Pagos
               </span>
             </a>
-          </li>
+          </li> */}
           <li>
             <Link
-              href="/sesiones"
+              href={route("sesiones.pacientes")}
               className={
-                location.pathname === "/sesiones"
+                location.pathname === "/sesiones-pacientes"
                   ? styleSelected
                   : styleNotSelected
               }
             >
               <img src={"./icons/usuario.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">
-                Sesiones&nbsp;Pacientes
+                Sesiones&nbsp;Pacientes (*Prueba)
               </span>
             </Link>
           </li>
@@ -97,7 +97,7 @@ function Side({ sidebarOpen }) {
             </Link>
           </li>
 
-          <li>
+          {/*  <li>
             <a
               href="/types"
               className={
@@ -111,9 +111,9 @@ function Side({ sidebarOpen }) {
                 Tipo&nbsp;Atenciones
               </span>
             </a>
-          </li>
+          </li> */}
         </ul>
-        <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
+        {/* <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
           <li>
             <a
               href="/"
@@ -127,7 +127,7 @@ function Side({ sidebarOpen }) {
               </span>
             </a>
           </li>
-        </ul>
+        </ul> */}
       </div>
     </aside>
   );
