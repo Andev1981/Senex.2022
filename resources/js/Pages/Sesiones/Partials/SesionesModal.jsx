@@ -57,12 +57,12 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
 
   return (
     <form onSubmit={handleSubmit} className="">
-      <div className="p-4 flex items-center gap-2 font-bold">
+      <div className="px-4 flex items-center gap-2 font-bold">
         <User className="w-5 h-5 text-primary shadow-xl border border-gray-400 rounded-xl" />
         {sesion.patient_name + " " + sesion.patient_last_name}
       </div>
-      <div className="grid grid-cols-2 gap-4 p-4">
-        <div className="mt-1 mb-4">
+      <div className="grid grid-cols-2 gap-4 px-4 pt-2">
+        <div>
           <InputLabel
             htmlFor="kine"
             value="Kine"
@@ -85,7 +85,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           </select>
           <InputError message={errors.doctor_id} className="mt-2" />
         </div>
-        <div className="mt-1 mb-4">
+        <div>
           <InputLabel
             htmlFor="tipo"
             value="Tipo de Atención"
@@ -108,7 +108,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           </select>
           <InputError message={errors.application_type_id} className="mt-2" />
         </div>
-        <div className="mt-1 mb-4">
+        <div>
           <InputLabel
             htmlFor="status"
             value="Estado de Atención"
@@ -131,7 +131,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           </select>
           <InputError message={errors?.status} className="mt-2" />
         </div>
-        <div className="mb-4">
+        <div>
           <InputLabel
             htmlFor="fecha"
             value="Fecha"
@@ -148,7 +148,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           />
           <InputError message={errors?.fecha_atencion} className="mt-2" />
         </div>
-        <div className="mb-4">
+        <div>
           <InputLabel
             htmlFor="price"
             value="Precio"
@@ -163,7 +163,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           />
           <InputError message={errors?.price} className="mt-2" />
         </div>
-        <div className="mb-4">
+        <div>
           <InputLabel
             htmlFor="numero_sesion"
             value="Numero de Sesión"
@@ -183,7 +183,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           <InputError message={errors?.numero_sesion} className="mt-2" />
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 px-4 pb-4">
+      <div className="grid grid-cols-1 gap-4 p-4 pb-4">
         <div className="mb-4">
           <InputLabel
             htmlFor="comments"
