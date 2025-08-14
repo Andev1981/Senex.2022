@@ -56,11 +56,11 @@ export default function TableSesiones({
       },
       {
         header: "PACIENTE",
-        accessorFn: (row) => row?.patient?.name + " " + row?.patient?.last_name,
+        accessorFn: (row) => row?.patient_name + " " + row?.patient_last_name,
       },
       {
         header: "KINE",
-        accessorFn: (row) => row?.doctor?.name + " " + row?.doctor?.last_name,
+        accessorFn: (row) => row?.doctor_name + " " + row?.doctor_last_name,
       },
       /*    { accessorKey: "tipo", header: "TIPO" }, */
       {

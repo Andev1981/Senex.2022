@@ -43,8 +43,13 @@ class ApplyItemController extends Controller
             'apply_items.status',
             'apply_items.created_at',
             'patients.name as patient_name',
+            'patients.last_name as patient_last_name',
             'doctors.name as doctor_name',
-            'application_types.name as type_name'
+            'doctors.last_name as doctor_last_name',
+            'application_types.name as type_name',
+            'apply_items.price',
+            'apply_items.fecha_atencion',
+            'apply_items.numero_sesion',
         )
             ->join('patients', 'patients.id', '=', 'apply_items.patient_id')
             ->join('doctors', 'doctors.id', '=', 'apply_items.doctor_id')
