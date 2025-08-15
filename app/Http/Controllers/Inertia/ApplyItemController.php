@@ -6,10 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\ApplyItem;
 use App\Http\Requests\StoreApplyItemRequest;
 use App\Http\Requests\UpdateApplyItemRequest;
+use App\Models\Application;
 use App\Models\ApplicationType;
+use App\Models\ApplicationTypeUser;
 use App\Models\Doctor;
 use App\Models\Patient;
+use App\Models\Wallet;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
 
 class ApplyItemController extends Controller
@@ -70,12 +74,18 @@ class ApplyItemController extends Controller
             ->orderBy('apply_items.id', 'DESC')
             ->get();
 
-        /* $pacientes = Patient::where('status', 1)->orderBy('id', 'DESC')->get(); */
+        $pacientes = Patient::select([
+            'patients.id as patient_id',
+            'patients.name as patient_name',
+            'patients.last_name as patient_last_name',
+            'patients.rut as rut',
+            'patients.email as email'
+        ])->where('status', 1)->orderBy('id', 'DESC')->get();
         $kines = Doctor::where('status', 1)->orderBy('id', 'DESC')->get();
         $apply_types = ApplicationType::where('estado', 1)->orderBy('id', 'DESC')->get();
 
 
-        return Inertia::render('Sesiones/SesionesIndex', compact('sesiones', 'kines', 'apply_types'));
+        return Inertia::render('Sesiones/SesionesIndex', compact('sesiones', 'kines', 'apply_types', 'pacientes'));
     }
 
     /**
@@ -96,7 +106,60 @@ class ApplyItemController extends Controller
      */
     public function store(StoreApplyItemRequest $request)
     {
-        //
+        $validatedData = $request->all();
+
+        if (!$validatedData["application_id"]) {
+            $application = Application::create([
+                'user_id' => auth()->user()->id,
+                'patient_id' => $validatedData["patient_id"],
+                'status' => 1,
+                'type_value' => 0,
+                'type_payment' => 2,
+                'derivado' => '',
+                'desde' => '',
+            ]);
+            $validatedData["application_id"] = $application->id;
+        }
+
+        $applicationTypeUser = ApplicationTypeUser::where('application_type_id', $validatedData["application_type_id"])->where('doctor_id', $validatedData["doctor_id"])->first();
+
+        if (!$applicationTypeUser) {
+            $applicationTypeUser = ApplicationTypeUser::create([
+                'user_id' => auth()->user()->id,
+                'doctor_id' =>  $validatedData["doctor_id"],
+                'application_type_id' => $validatedData["application_type_id"],
+                'price' => 0
+            ]);
+        }
+
+        $validatedData["application_type_user_id"] = $applicationTypeUser->id;
+        $validatedData["user_id"] = auth()->user()->id;
+        $validatedData["status"] = 1;
+
+        $patient = Patient::find($validatedData["patient_id"]);
+        $wallet = Wallet::where('patient_id', '=', $patient->id)->first();
+
+        if (!$wallet) {
+            $wallet = new Wallet();
+            $wallet->patient_id = $patient->id;
+            $wallet->balance = 0;
+            $wallet->save();
+        }
+
+        if ($validatedData["status"] === 1 && $wallet->balance < $validatedData["price"]) {
+            $wallet->balance = $wallet->balance + $validatedData["price"];
+            $wallet->save();
+        }
+
+        if ($validatedData["status"]  === 1) {
+            $patient->payment_status = 1;
+            $patient->save();
+        }
+
+
+        $applyItem = ApplyItem::create($validatedData);
+
+        return redirect()->route('sesiones.pacientes');
     }
 
     /**
@@ -130,7 +193,34 @@ class ApplyItemController extends Controller
      */
     public function update(UpdateApplyItemRequest $request, ApplyItem $applyItem)
     {
-        //
+        /*   dd($request->all(), $applyItem); */
+
+        $validatedData = $request->all();
+
+        $patient = Patient::find($applyItem->patient_id);
+        $wallet = Wallet::where('patient_id', '=', $patient->id)->first();
+
+        if (!$wallet) {
+            $wallet = new Wallet();
+            $wallet->patient_id = $patient->id;
+            $wallet->balance = 0;
+            $wallet->save();
+        }
+
+
+        if ($applyItem->status === 1 && $wallet->balance < $applyItem->price) {
+            $wallet->balance = $wallet->balance + $applyItem->price;
+            $wallet->save();
+        }
+
+        if ($applyItem->status === 1) {
+            $patient->payment_status = 1;
+            $patient->save();
+        }
+
+        $applyItem->update($validatedData);
+
+        return redirect()->route('sesiones.pacientes');
     }
 
     /**

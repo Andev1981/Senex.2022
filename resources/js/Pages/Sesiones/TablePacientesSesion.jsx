@@ -11,8 +11,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 
 export default function TablePacientesSesion({
   pacientes,
-  handleOpenModalOptions,
-  handleOpenModalContactPersons,
+  handleOpenModalNewSesion,
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -31,22 +30,6 @@ export default function TablePacientesSesion({
 
   const columns = useMemo(
     () => [
-      { accessorKey: "name", header: "Nombre" },
-      { accessorKey: "last_name", header: "Apellido" },
-      {
-        accessorKey: "birth",
-        header: "Edad",
-        cell: ({ getValue }) => {
-          const birth = getValue();
-          if (!birth) return "N/A";
-          const age =
-            new Date().getFullYear() - new Date(birth).getFullYear() + " años";
-          return age;
-        },
-        enableSorting: false,
-      },
-      { accessorKey: "email", header: "Email" },
-      { accessorKey: "rut", header: "Rut" },
       {
         id: "actions",
         header: "",
@@ -55,7 +38,7 @@ export default function TablePacientesSesion({
             <PrimaryButton
               type="button"
               className="btn"
-              onClick={() => handleOpenModalOptions(row?.original)}
+              onClick={() => handleOpenModalNewSesion(row?.original)}
             >
               + Sesión
             </PrimaryButton>
@@ -63,8 +46,12 @@ export default function TablePacientesSesion({
         ),
         enableSorting: false,
       },
+      { accessorKey: "patient_name", header: "Nombre" },
+      { accessorKey: "patient_last_name", header: "Apellido" },
+      { accessorKey: "email", header: "Email" },
+      { accessorKey: "rut", header: "Rut" },
     ],
-    [handleOpenModalOptions, handleOpenModalContactPersons]
+    [handleOpenModalNewSesion]
   );
 
   const table = useReactTable({
@@ -98,7 +85,7 @@ export default function TablePacientesSesion({
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
+                    className="px-2 py-2 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
                     scope="col"
                   >
                     {flexRender(
@@ -134,7 +121,7 @@ export default function TablePacientesSesion({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3 text-gray-800 whitespace-nowrap"
+                      className="px-2 py-2 text-gray-800 whitespace-nowrap"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,

@@ -13,26 +13,27 @@ import { User } from "lucide-react";
 
 function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
   const { data, setData, errors, post, put, reset, processing } = useForm({
-    id: sesion?.id || "",
-    doctor_id: sesion?.doctor_id || "",
+    id: sesion?.id,
+    doctor_id: Number(sesion?.doctor_id) || "",
     comments: sesion?.comments || "",
     patient_id: sesion?.patient_id || "",
     price: sesion?.price || 0,
     fecha_atencion: sesion?.fecha_atencion
       ? moment.utc(sesion.fecha_atencion).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
-    numero_sesion: sesion?.numero_sesion || 0,
+    numero_sesion: Number(sesion?.numero_sesion) || 0,
     application_type_id: sesion?.application_type_id || "",
+    application_id: sesion?.application_id || "",
     status: sesion?.status,
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (data.id !== null) {
+    if (data.id) {
       post(route("sesiones.update", data.id), {
         onSuccess: () => {
-          setOpenModal(false);
+          setModalSesionesOption(false);
           reset();
         },
         onError: (errors) => {},
@@ -40,7 +41,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
     } else {
       post(route("sesiones.store"), {
         onSuccess: () => {
-          setOpenModal(false);
+          setModalSesionesOption(false);
           reset();
         },
         onError: (errors) => {},
@@ -56,7 +57,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="">
+    <form onSubmit={handleSubmit}>
       <div className="px-4 flex items-center gap-2 font-bold">
         <User className="w-5 h-5 text-primary shadow-xl border border-gray-400 rounded-xl" />
         {sesion.patient_name + " " + sesion.patient_last_name}
@@ -95,7 +96,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
             id="application_type_id"
             name="application_type_id"
             value={data.application_type_id}
-            onChange={(e) => setData("doctor_id", e.target.value)}
+            onChange={(e) => setData("application_type_id", e.target.value)}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px] "
             required
           >

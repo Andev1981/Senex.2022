@@ -140,6 +140,8 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('listado-pacientes', [PatientController::class, 'index'])->name('listado.pacientes');
   Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
   Route::get('sesiones-pacientes', [ApplyItemController::class, 'index'])->name('sesiones.pacientes');
+  Route::post('sesiones-store', [ApplyItemController::class, 'store'])->name('sesiones.store');
+  Route::post('sesiones-update/{applyItem}', [ApplyItemController::class, 'update'])->name('sesiones.update');
 });
 
 

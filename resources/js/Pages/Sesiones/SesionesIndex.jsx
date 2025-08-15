@@ -6,15 +6,19 @@ import SesionesModal from "./Partials/SesionesModal";
 import TableSesiones from "./TableSesiones";
 import TablePacientesSesion from "./TablePacientesSesion";
 
-function SesionesIndex({ sesiones, kines, apply_types }) {
+function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
   const [modalpatiensOpen, setModalSesionesOption] = useState(false);
   const [sesion, setSesion] = useState(null);
+  const [paciente, setPaciente] = useState(null);
 
   const handleOpenModalOptions = (data) => {
     setSesion(data);
     setModalSesionesOption(true);
   };
-  const handleOpenModalContactPersons = () => {};
+  const handleOpenModalNewSesion = (data) => {
+    setSesion(data);
+    setModalSesionesOption(true);
+  };
 
   return (
     <AuthenticatedLayout>
@@ -30,13 +34,12 @@ function SesionesIndex({ sesiones, kines, apply_types }) {
               <TableSesiones
                 sesiones={sesiones}
                 handleOpenModalOptions={handleOpenModalOptions}
-                handleOpenModalContactPersons={handleOpenModalContactPersons}
               />
             </div>
           </div>
         </div>
       </div>
-      {/* <div className="py-6">
+      <div className="py-6">
         <div className="mx-auto sm:px-2 lg:px-4">
           <div className="overflow-hidden bg-white shadow-xl sm:rounded-lg dark:bg-gray-800">
             <div className="p-6 text-gray-900 dark:text-gray-100">
@@ -46,13 +49,12 @@ function SesionesIndex({ sesiones, kines, apply_types }) {
               </div>
               <TablePacientesSesion
                 pacientes={pacientes}
-                handleOpenModalOptions={handleOpenModalOptions}
-                handleOpenModalContactPersons={handleOpenModalContactPersons}
+                handleOpenModalNewSesion={handleOpenModalNewSesion}
               />
             </div>
           </div>
         </div>
-      </div> */}
+      </div>
       <Modal
         open={modalpatiensOpen}
         onClose={() => setModalSesionesOption(false)}

@@ -17,11 +17,7 @@ import {
 } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
-export default function TableSesiones({
-  sesiones,
-  handleOpenModalOptions,
-  handleOpenModalContactPersons,
-}) {
+export default function TableSesiones({ sesiones, handleOpenModalOptions }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
@@ -127,7 +123,7 @@ export default function TableSesiones({
         },
       },
     ],
-    [handleOpenModalOptions, handleOpenModalContactPersons]
+    [handleOpenModalOptions]
   );
 
   const table = useReactTable({
