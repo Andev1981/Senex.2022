@@ -68,9 +68,9 @@ function Side({ sidebarOpen }) {
           </li>
           <li>
             <Link
-              href={route("sesiones.pacientes")}
+              href={route("apply.items")}
               className={
-                location.pathname === "/sesiones-pacientes"
+                location.pathname === "/apply-items"
                   ? styleSelected
                   : styleNotSelected
               }

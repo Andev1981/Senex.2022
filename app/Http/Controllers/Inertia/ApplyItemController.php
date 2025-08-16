@@ -14,6 +14,7 @@ use App\Models\Patient;
 use App\Models\Wallet;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ApplyItemController extends Controller
@@ -25,23 +26,6 @@ class ApplyItemController extends Controller
      */
     public function index()
     {
-        /* $sesiones =  ApplyItem::select(
-            'id',
-            'doctor_id',
-            'patient_id',
-            'price',
-            'status',
-            'application_type_id',
-            'fecha_atencion',
-            'numero_sesion',
-            'comments'
-        )->where('status', 1)
-            ->whereBetween('fecha_atencion', [
-                Carbon::now()->startOfMonth(),
-                Carbon::now()->endOfMonth(),
-            ])
-            ->with(['patient:id,name,last_name', 'doctor:id,name,last_name', 'applicationType:id,name'])
-             ->orderBy('id', 'DESC')->get();*/
 
         $sesiones = ApplyItem::select(
             'apply_items.id',
@@ -55,10 +39,8 @@ class ApplyItemController extends Controller
             'apply_items.doctor_id',
             'apply_items.application_id',
             'apply_items.application_type_id',
-            'patients.name as patient_name',
-            'patients.last_name as patient_last_name',
-            'doctors.name as doctor_name',
-            'doctors.last_name as doctor_last_name',
+            DB::raw('CONCAT(patients.name, " ", patients.last_name) AS patient_full_name'),
+            DB::raw('CONCAT(doctors.name, " ", doctors.last_name) AS doctor_full_name'),
             'application_types.name as type_name',
 
         )
@@ -129,7 +111,7 @@ class ApplyItemController extends Controller
 
         $validatedData["application_type_user_id"] = $applicationTypeUser->id;
         $validatedData["user_id"] = auth()->user()->id;
-        $validatedData["status"] = 1;
+
 
         $patient = Patient::find($validatedData["patient_id"]);
         $wallet = Wallet::where('patient_id', '=', $patient->id)->first();
@@ -154,7 +136,7 @@ class ApplyItemController extends Controller
 
         $applyItem = ApplyItem::create($validatedData);
 
-        return redirect()->route('sesiones.pacientes');
+        return back();
     }
 
     /**
@@ -215,7 +197,7 @@ class ApplyItemController extends Controller
 
         $applyItem->update($validatedData);
 
-        return redirect()->route('sesiones.pacientes');
+        return back();
     }
 
     /**
@@ -226,6 +208,9 @@ class ApplyItemController extends Controller
      */
     public function destroy(ApplyItem $applyItem)
     {
-        //
+        /*    dd($applyItem); */
+        $success = $applyItem->delete();
+
+        return back();
     }
 }

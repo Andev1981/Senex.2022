@@ -5,10 +5,12 @@ import Modal from "@/Components/Modal";
 import SesionesModal from "./Partials/SesionesModal";
 import TableSesiones from "./TableSesiones";
 import TablePacientesSesion from "./TablePacientesSesion";
+import SesionModalDelete from "./Partials/SesionModalDelete";
 
 function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
   const [modalpatiensOpen, setModalSesionesOption] = useState(false);
   const [sesion, setSesion] = useState(null);
+  const [openModalDelete, setOpenModalDelete] = useState(false);
   const [paciente, setPaciente] = useState(null);
 
   const handleOpenModalOptions = (data) => {
@@ -18,6 +20,12 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
   const handleOpenModalNewSesion = (data) => {
     setSesion(data);
     setModalSesionesOption(true);
+  };
+
+  const handleOpenModalDelete = (data) => {
+    console.log("Data: ", data);
+    setSesion(data);
+    setOpenModalDelete(true);
   };
 
   return (
@@ -34,6 +42,7 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
               <TableSesiones
                 sesiones={sesiones}
                 handleOpenModalOptions={handleOpenModalOptions}
+                handleOpenModalDelete={handleOpenModalDelete}
               />
             </div>
           </div>
@@ -67,6 +76,19 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
           kines={kines}
           apply_types={apply_types}
           setModalSesionesOption={setModalSesionesOption}
+        />
+      </Modal>
+
+      <Modal
+        open={openModalDelete}
+        onClose={() => setOpenModalDelete(false)}
+        title={"Borrar Sesión"}
+        description={"¿Deseas borra la sesión seleccionada?"}
+        maxWidth="xl"
+      >
+        <SesionModalDelete
+          sesion={sesion}
+          setOpenModalDelete={setOpenModalDelete}
         />
       </Modal>
     </AuthenticatedLayout>

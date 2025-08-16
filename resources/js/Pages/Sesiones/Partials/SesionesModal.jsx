@@ -31,20 +31,24 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
     e.preventDefault();
 
     if (data.id) {
-      post(route("sesiones.update", data.id), {
+      post(route("apply.items.update", data.id), {
         onSuccess: () => {
           setModalSesionesOption(false);
           reset();
         },
-        onError: (errors) => {},
+        onError: (errors) => {
+          console.log("Errors: ", errors);
+        },
       });
     } else {
-      post(route("sesiones.store"), {
+      post(route("apply.items.store"), {
         onSuccess: () => {
           setModalSesionesOption(false);
           reset();
         },
-        onError: (errors) => {},
+        onError: (errors) => {
+          console.log("Errors: ", errors);
+        },
       });
     }
   };
@@ -56,14 +60,10 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
     }));
   };
 
-  const handlePrice = (e) => {
-    console.log("E: ", e);
-  };
-
   return (
     <form onSubmit={handleSubmit}>
-      <div className="px-4 flex items-center gap-2 font-bold">
-        <User className="w-5 h-5 text-primary shadow-xl border border-gray-400 rounded-xl" />
+      <div className="flex items-center gap-2 px-4 font-bold">
+        <User className="w-5 h-5 border border-gray-400 shadow-xl text-primary rounded-xl" />
         {sesion.patient_name + " " + sesion.patient_last_name}
       </div>
       <div className="grid grid-cols-3 gap-4 px-4 pt-2">
@@ -75,13 +75,12 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           />
           <select
             id="doctor_id"
-            name="doctor_id"
             value={data.doctor_id}
             onChange={(e) => setData("doctor_id", e.target.value)}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px] "
             required
           >
-            {!data?.doctor_id && <option>--Selecciona Kine--</option>}
+            {!data?.doctor_id && <option value="">--Selecciona Kine--</option>}
             {kines.map((kine) => (
               <option key={kine.id} value={kine.id}>
                 {kine.name + " " + kine.last_name}
@@ -98,16 +97,14 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           />
           <select
             id="application_type_id"
-            name="application_type_id"
             value={data?.application_type_id}
-            onChange={(e) => {
-              setData("application_type_id", e.target.value),
-                hadlePrice(e.target.value);
-            }}
+            onChange={(e) => setData("application_type_id", e.target.value)}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px] "
             required
           >
-            {!data?.application_type_id && <option>--Tipo Atención --</option>}
+            {!data?.application_type_id && (
+              <option value="">--Tipo Atención --</option>
+            )}
             {apply_types.map((apply_type) => (
               <option key={apply_type.id} value={apply_type.id}>
                 {apply_type.name}
@@ -124,12 +121,13 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           />
           <select
             id="status"
-            value={data.status ?? ""} // Mantiene controlado el valor
+            value={data?.status ?? ""} // Mantiene controlado el valor
             onChange={(e) => setData("status", parseInt(e.target.value))}
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
              focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
              dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 
              dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            required
           >
             <option value="">-- Seleccione estado --</option>
             <option value={0}>PENDIENTE</option>
@@ -164,7 +162,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           />
           <InputPesoChileno
             name="price"
-            price={data.price}
+            price={data?.price}
             onChange={handleChange} // funciona directo
             required
             className="w-full"
@@ -182,7 +180,7 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
             id="numero_sesion"
             name="numero_sesion"
             label="Número de Sesión"
-            value={data.numero_sesion}
+            value={data?.numero_sesion}
             onChange={(e) => handleChange(e)}
             required
             className="w-full"
@@ -201,12 +199,13 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           <textarea
             id="comments"
             name="comments"
-            value={data.comments}
+            value={data?.comments}
             onChange={(e) => setData("brecha", e.target.value)}
             rows="4"
             className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Ingrese comentario..."
           ></textarea>
+          <InputError message={errors?.comments} className="mt-2" />
         </div>
       </div>
       <hr />
