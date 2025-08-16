@@ -31,6 +31,7 @@ export default function TableSesiones({
   const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
+  const [pageIndex, setPageIndex] = useState(0);
 
   const filteredData = useMemo(() => {
     if (!globalFilter) return sesiones || [];
@@ -154,6 +155,15 @@ export default function TableSesiones({
               text: "Cancelado",
               color: "bg-red-100 text-red-800",
               icon: <XCircle className="w-4 h-4" />,
+              action: (
+                <PrimaryButton
+                  type="button"
+                  className="p-1 bg-red-600 btn"
+                  onClick={() => handleOpenModalDelete(row?.original)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </PrimaryButton>
+              ),
             },
             3: {
               text: "Reagendado",
@@ -165,6 +175,15 @@ export default function TableSesiones({
             text: "Desconocido",
             color: "bg-gray-100 text-gray-800",
             icon: null,
+            action: (
+              <PrimaryButton
+                type="button"
+                className="p-1 bg-red-600 btn"
+                onClick={() => handleOpenModalDelete(row?.original)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </PrimaryButton>
+            ),
           };
           return (
             <span
@@ -183,10 +202,23 @@ export default function TableSesiones({
   const table = useReactTable({
     data: filteredData,
     columns,
-    state: { sorting, globalFilter, columnFilters },
+    state: {
+      sorting,
+      globalFilter,
+      columnFilters,
+      pagination: { pageSize, pageIndex },
+    },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: (updater) => {
+      const newState =
+        typeof updater === "function"
+          ? updater({ pageIndex, pageSize })
+          : updater;
+      setPageIndex(newState.pageIndex);
+      setPageSize(newState.pageSize);
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -379,6 +411,58 @@ export default function TableSesiones({
             ))}
           </tbody>
         </table>
+      </div>
+      {/* Paginación */}
+      <div className="flex flex-col items-center justify-between gap-2 mt-4 sm:flex-row">
+        <div className="text-sm text-gray-700">
+          Página {table.getState().pagination.pageIndex + 1} de{" "}
+          {table.getPageCount()}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            {"<<"}
+          </button>
+          <button
+            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            {"<"}
+          </button>
+          <button
+            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            {">"}
+          </button>
+          <button
+            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            {">>"}
+          </button>
+        </div>
+
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            setPageSize(Number(e.target.value));
+            table.setPageSize(Number(e.target.value));
+          }}
+          className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {[5, 10, 15, 20, 30, 40, 50].map((size) => (
+            <option key={size} value={size}>
+              Mostrar {size}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );
