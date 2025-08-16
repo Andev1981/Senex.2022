@@ -39,8 +39,8 @@ class ApplyItemController extends Controller
             'apply_items.doctor_id',
             'apply_items.application_id',
             'apply_items.application_type_id',
-            DB::raw('CONCAT(patients.name, " ", patients.last_name) AS patient_full_name'),
-            DB::raw('CONCAT(doctors.name, " ", doctors.last_name) AS doctor_full_name'),
+            DB::raw("patients.name || ' ' || patients.last_name AS patient_full_name"),
+            DB::raw("doctors.name || ' ' || doctors.last_name AS doctor_full_name"),
             'application_types.name as type_name',
 
         )
