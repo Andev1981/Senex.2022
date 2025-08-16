@@ -56,13 +56,17 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
     }));
   };
 
+  const handlePrice = (e) => {
+    console.log("E: ", e);
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="px-4 flex items-center gap-2 font-bold">
         <User className="w-5 h-5 text-primary shadow-xl border border-gray-400 rounded-xl" />
         {sesion.patient_name + " " + sesion.patient_last_name}
       </div>
-      <div className="grid grid-cols-2 gap-4 px-4 pt-2">
+      <div className="grid grid-cols-3 gap-4 px-4 pt-2">
         <div>
           <InputLabel
             htmlFor="kine"
@@ -95,8 +99,11 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
           <select
             id="application_type_id"
             name="application_type_id"
-            value={data.application_type_id}
-            onChange={(e) => setData("application_type_id", e.target.value)}
+            value={data?.application_type_id}
+            onChange={(e) => {
+              setData("application_type_id", e.target.value),
+                hadlePrice(e.target.value);
+            }}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px] "
             required
           >
