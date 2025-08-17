@@ -7,13 +7,19 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import * as XLSX from "xlsx";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  PencilLineIcon,
+  Trash2,
+} from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 
 export default function TablePacientes({
   pacientes,
   handleOpenModalOptions,
-  handleOpenModalContactPersons,
+  handleOpenModalDelete,
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -62,14 +68,21 @@ export default function TablePacientes({
               className="btn"
               onClick={() => handleOpenModalOptions(row?.original)}
             >
-              Opciones
+              <PencilLineIcon className="w-4 h-4" />
+            </PrimaryButton>
+            <PrimaryButton
+              type="button"
+              className="bg-red-600 btn"
+              onClick={() => handleOpenModalDelete(row?.original)}
+            >
+              <Trash2 className="w-4 h-4" />
             </PrimaryButton>
           </div>
         ),
         enableSorting: false,
       },
     ],
-    [handleOpenModalOptions, handleOpenModalContactPersons]
+    [handleOpenModalOptions, handleOpenModalDelete]
   );
 
   const table = useReactTable({
@@ -106,7 +119,7 @@ export default function TablePacientes({
   };
 
   return (
-    <div className="max-w-full p-4">
+    <div className="max-w-full">
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <input
           value={globalFilter ?? ""}

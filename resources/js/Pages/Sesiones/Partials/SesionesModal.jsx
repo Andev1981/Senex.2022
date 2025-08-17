@@ -3,7 +3,6 @@ import { useForm } from "@inertiajs/react";
 import InputLabel from "@/Components/InputLabel";
 import InputError from "@/Components/InputError";
 import TextInput from "@/Components/TextInput";
-import { Switch } from "@headlessui/react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import InputPesoChileno from "@/Components/InputPesoChileno";

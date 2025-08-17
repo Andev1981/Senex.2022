@@ -137,8 +137,15 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('informes', IndexInformes::class)->name('informes');
 
   /* Rutas React Inertia */
+  /* pacientes */
   Route::get('listado-pacientes', [PatientController::class, 'index'])->name('listado.pacientes');
+  Route::post('pacientes-update/{patient}', [PatientController::class, 'update'])->name('pacientes.update');
+  Route::post('pacientes-store', [PatientController::class, 'store'])->name('pacientes.store');
+  Route::get('pacientes-destroy/{patient}', [PatientController::class, 'destroy'])->name('pacientes.destroy');
+
+  /* kines */
   Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
+  /* sesiones, applyitems */
   Route::get('apply-items', [ApplyItemController::class, 'index'])->name('apply.items');
   Route::post('apply-items-store', [ApplyItemController::class, 'store'])->name('apply.items.store');
   Route::post('apply-items-update/{applyItem}', [ApplyItemController::class, 'update'])->name('apply.items.update');
