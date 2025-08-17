@@ -11,7 +11,13 @@ import moment from "moment";
 import TextInputNumber from "@/Components/TextInputNumber";
 import { User } from "lucide-react";
 
-function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
+function SesionesModal({
+  sesion,
+  kines,
+  apply_types,
+  setModalSesionesOption,
+  paciente,
+}) {
   const { data, setData, errors, post, put, reset, processing } = useForm({
     id: sesion?.id,
     doctor_id: Number(sesion?.doctor_id) || "",
@@ -64,7 +70,9 @@ function SesionesModal({ sesion, kines, apply_types, setModalSesionesOption }) {
     <form onSubmit={handleSubmit}>
       <div className="flex items-center gap-2 px-4 font-bold">
         <User className="w-5 h-5 border border-gray-400 shadow-xl text-primary rounded-xl" />
-        {sesion.patient_name + " " + sesion.patient_last_name}
+        {sesion?.patient_full_name
+          ? sesion?.patient_full_name
+          : paciente?.patient_name + " " + paciente?.patient_last_name}
       </div>
       <div className="grid grid-cols-3 gap-4 px-4 pt-2">
         <div>

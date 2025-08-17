@@ -18,12 +18,11 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
     setModalSesionesOption(true);
   };
   const handleOpenModalNewSesion = (data) => {
-    setSesion(data);
+    setPaciente(data);
     setModalSesionesOption(true);
   };
 
   const handleOpenModalDelete = (data) => {
-    console.log("Data: ", data);
     setSesion(data);
     setOpenModalDelete(true);
   };
@@ -76,6 +75,7 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
           kines={kines}
           apply_types={apply_types}
           setModalSesionesOption={setModalSesionesOption}
+          paciente={paciente}
         />
       </Modal>
 
