@@ -57,6 +57,7 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
               </div>
               <TablePacientesSesion
                 pacientes={pacientes}
+                setSesion={setSesion}
                 handleOpenModalNewSesion={handleOpenModalNewSesion}
               />
             </div>

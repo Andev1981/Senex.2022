@@ -12,6 +12,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 export default function TablePacientesSesion({
   pacientes,
   handleOpenModalNewSesion,
+  setSesion,
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -38,7 +39,9 @@ export default function TablePacientesSesion({
             <PrimaryButton
               type="button"
               className="btn"
-              onClick={() => handleOpenModalNewSesion(row?.original)}
+              onClick={() => {
+                handleOpenModalNewSesion(row?.original), setSesion(null);
+              }}
             >
               + Sesión
             </PrimaryButton>
