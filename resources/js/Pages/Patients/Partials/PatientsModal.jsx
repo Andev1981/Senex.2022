@@ -12,15 +12,15 @@ import moment from "moment";
 
 function PatientsModal({ patient, setOpenModalPatient, comunas }) {
   const { data, setData, errors, post, put, reset, processing } = useForm({
-    id: patient?.id,
+    id: patient?.id || null,
     name: patient?.name || "",
     last_name: patient?.last_name || "",
     email: patient?.email || "",
-    rut: patient?.rut,
+    rut: patient?.rut || "",
     birth: patient?.birth
       ? moment.utc(patient.birth).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
-    phone: patient?.phone,
+    phone: patient?.phone || "",
     address_id: patient?.address_id || "",
     street: patient?.address?.street || "",
     number: patient?.address?.number || "",

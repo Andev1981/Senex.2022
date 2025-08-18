@@ -68,19 +68,29 @@ class PatientController extends Controller
     {
         $validatedData = $request->all();
 
+        $buscarRutPaciente = Patient::where('rut', $validatedData['rut'])->first();
+
+        if ($buscarRutPaciente != null) {
+            if ($validatedData['rut'] != '16094552-4' && $validatedData['rut'] != '16.094.552-4') {
+                return back()->with('error', 'El rut ya se encuentra registrado');
+            }
+        }
+
         $patient = new Patient();
+        $patient->user_name = auth()->user()->id;
         $patient->name = $validatedData['name'];
         $patient->last_name = $validatedData['last_name'];
         $patient->email = $validatedData['email'];
         $patient->rut = $validatedData['rut'];
         $patient->birth = $validatedData['birth'];
-        $patient->phone = $validatedData['phone'];
+        $patient->phone = $validatedData['phone'] ? $validatedData['phone'] : '';
+        $patient->status = 1;
         $patient->save();
 
         $address = new Address();
-        $address->street = $validatedData['street'];
-        $address->number = $validatedData['number'];
-        $address->detail = $validatedData['detail'];
+        $address->street = $validatedData['street'] || '';
+        $address->number = $validatedData['number'] || '';
+        $address->detail = $validatedData['detail'] || '';
         $address->comuna_id = $validatedData['comuna_id'];
         $address->save();
 
