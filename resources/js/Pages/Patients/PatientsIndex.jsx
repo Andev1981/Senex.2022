@@ -8,16 +8,16 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import PatientModalDelete from "./Partials/PatientModalDelete";
 export default function PatientsIndex({ user, pacientes, comunas }) {
   const [openModalPatient, setOpenModalPatient] = useState(false);
-  const [patient, setPatient] = useState(null);
+  const [patient, setPatient] = useState({});
   const [openModalDelete, setOpenModalDelete] = useState(false);
 
-  const handleOpenModalOptions = (patient) => {
-    setPatient(patient);
+  const handleOpenModalOptions = (data) => {
+    setPatient(data);
     setOpenModalPatient(true);
   };
 
-  const handleOpenModalDelete = (patient) => {
-    setPatient(patient);
+  const handleOpenModalDelete = (data) => {
+    setPatient(data);
     setOpenModalDelete(true);
   };
 
@@ -33,7 +33,11 @@ export default function PatientsIndex({ user, pacientes, comunas }) {
                   <img src={"icons/usuario.gif"} className="w-10 h-10" />
                   <label className="text-lg font-semibold">Pacientes</label>
                 </div>
-                <PrimaryButton onClick={() => setOpenModalPatient(true)}>
+                <PrimaryButton
+                  onClick={() => {
+                    setPatient(null), setOpenModalPatient(true);
+                  }}
+                >
                   Paciente +
                 </PrimaryButton>
               </div>

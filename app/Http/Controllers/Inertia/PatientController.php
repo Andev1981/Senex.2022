@@ -30,25 +30,25 @@ class PatientController extends Controller
 
     public function update(Request $request, Patient $patient)
     {
-        $validatedData = $request->validate([
-            'name' => 'required',
-            'last_name' => 'required',
-            'email' => 'required',
-            'rut' => 'required',
-            'birth' => 'required',
-            'phone' => 'required',
-            'address_id' => 'required',
-            'street' => 'required',
-            'number' => 'required',
-            'detail' => 'required',
-            'comuna_id' => 'required',
-        ]);
+        $validatedData = $request->all();
 
-        $address = Address::find($validatedData['address_id']);
+        $buscarRutPaciente = Patient::where('rut', $validatedData['rut'])->first();
 
-        $address->street = $validatedData['street'];
-        $address->number = $validatedData['number'];
-        $address->detail = $validatedData['detail'];
+        if ($buscarRutPaciente != null) {
+            if ($validatedData['rut'] !== $buscarRutPaciente->rut) {
+                if ($validatedData['rut'] != '16094552-4' && $validatedData['rut'] != '16.094.552-4') {
+                    dd('Primer if');
+                    return back()->with('error', 'El rut ya se encuentra registrado');
+                }
+            }
+        }
+
+
+        $address = Address::findOrFail($validatedData['address_id']);
+
+        $address->street = $validatedData['street'] || '';
+        $address->number = $validatedData['number'] || '';
+        $address->detail = $validatedData['detail'] || '';
         $address->comuna_id = $validatedData['comuna_id'];
         $address->save();
 
@@ -77,7 +77,7 @@ class PatientController extends Controller
         }
 
         $patient = new Patient();
-        $patient->user_name = auth()->user()->id;
+        $patient->user_id = auth()->user()->id;
         $patient->name = $validatedData['name'];
         $patient->last_name = $validatedData['last_name'];
         $patient->email = $validatedData['email'];
