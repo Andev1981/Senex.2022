@@ -139,8 +139,8 @@ export default function TablePacientes({
         ),
       },
       {
-        header: "DIRECCIÓN",
-        accessorFn: (row) => row?.direccion,
+        header: "COMUNA",
+        accessorFn: (row) => row?.comuna_nombre,
         cell: ({ getValue }) => (
           <div
             className="overflow-hidden uppercase truncate whitespace-nowrap"
@@ -151,8 +151,8 @@ export default function TablePacientes({
         ),
       },
       {
-        header: "TELÉFONO",
-        accessorFn: (row) => row?.phone,
+        header: "DIRECCIÓN",
+        accessorFn: (row) => row?.direccion,
         cell: ({ getValue }) => (
           <div
             className="overflow-hidden uppercase truncate whitespace-nowrap"
@@ -175,8 +175,8 @@ export default function TablePacientes({
         ),
       },
       {
-        header: "COMUNA",
-        accessorFn: (row) => row?.comuna_nombre,
+        header: "TELÉFONO",
+        accessorFn: (row) => row?.phone,
         cell: ({ getValue }) => (
           <div
             className="overflow-hidden uppercase truncate whitespace-nowrap"

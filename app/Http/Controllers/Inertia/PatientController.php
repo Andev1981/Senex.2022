@@ -15,7 +15,7 @@ class PatientController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $pacientes = Patient::with('address', 'address.comuna', 'lastAttention', 'lastAttention.doctor')->where('status', 1)->get();
+        $pacientes = Patient::with('address', 'address.comuna', 'lastAttention', 'lastAttention.doctor')->where('status', 1)->orderBy('birth', 'desc')->get();
 
         $comunas = Comuna::where('region_id', 1)->get();
 
