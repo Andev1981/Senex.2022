@@ -70,63 +70,6 @@ export default function TableSesiones({
         ),
         enableSorting: false,
       },
-      { accessorKey: "numero_sesion", header: "#" },
-      {
-        accessorKey: "fecha_atencion",
-        header: "FECHA_ATENCIÓN",
-        cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
-        enableSorting: true,
-        filterFn: "betweenDates",
-      },
-      {
-        header: "PACIENTE",
-        accessorFn: (row) => row?.patient_full_name,
-        cell: ({ getValue }) => (
-          <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            {getValue()}
-          </div>
-        ),
-      },
-      {
-        header: "KINE",
-        accessorFn: (row) => row?.doctor_full_name,
-        cell: ({ getValue }) => (
-          <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            {getValue()}
-          </div>
-        ),
-      },
-      {
-        header: "VALOR_PACIENTE",
-        accessorFn: (row) => Number(row?.price) || 0,
-        cell: (info) => {
-          const value = info.getValue();
-          return value.toLocaleString("es-CL", {
-            style: "currency",
-            currency: "CLP",
-            maximumFractionDigits: 0,
-          });
-        },
-        filterFn: "betweenNumbers",
-      },
-      {
-        header: "TIPO",
-        accessorFn: (row) => row?.type_name,
-        cell: ({ getValue }) => (
-          <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            {getValue()}
-          </div>
-        ),
-      },
       {
         accessorKey: "status",
         header: "ESTADO",
@@ -194,6 +137,63 @@ export default function TableSesiones({
           );
         },
         filterFn: "equals",
+      },
+      { accessorKey: "numero_sesion", header: "#" },
+      {
+        accessorKey: "fecha_atencion",
+        header: "FECHA_ATENCIÓN",
+        cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+        enableSorting: true,
+        filterFn: "betweenDates",
+      },
+      {
+        header: "PACIENTE",
+        accessorFn: (row) => row?.patient_full_name,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "KINE",
+        accessorFn: (row) => row?.doctor_full_name,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "VALOR_PACIENTE",
+        accessorFn: (row) => Number(row?.price) || 0,
+        cell: (info) => {
+          const value = info.getValue();
+          return value.toLocaleString("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            maximumFractionDigits: 0,
+          });
+        },
+        filterFn: "betweenNumbers",
+      },
+      {
+        header: "TIPO",
+        accessorFn: (row) => row?.type_name,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
       },
     ],
     [handleOpenModalOptions]

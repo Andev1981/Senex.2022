@@ -48,8 +48,6 @@ export default function TablePacientes({
     return Array.from(set);
   }, [pacientes]); */
 
-  console.log("Data: ", pacientes[0]);
-
   // Definición de columnas
   const columns = useMemo(
     () => [
@@ -101,10 +99,53 @@ export default function TablePacientes({
         header: "FECHA NACIMIENTO",
         accessorFn: (row) => row?.birth,
         id: "birth",
-        filterFn: "betweenDates",
         cell: ({ getValue }) =>
           getValue() ? new Date(getValue()).toLocaleDateString("es-CL") : "-",
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true; // si no hay filtro, mostrar todo
+          const value = row.getValue(columnId);
+          if (!value) return false;
+          const date = new Date(value);
+          const month = date.getMonth() + 1; // enero = 0 → sumamos 1
+          return month === Number(filterValue);
+        },
+        Filter: ({ column }) => {
+          const meses = [
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre",
+          ];
+
+          return (
+            <select
+              value={column.getFilterValue() ?? ""}
+              onChange={(e) =>
+                column.setFilterValue(
+                  e.target.value ? Number(e.target.value) : undefined
+                )
+              }
+              className="overflow-hidden uppercase truncate whitespace-nowrap"
+            >
+              <option value="">Todos</option>
+              {meses.map((mes, i) => (
+                <option key={i} value={i + 1}>
+                  {mes}
+                </option>
+              ))}
+            </select>
+          );
+        },
       },
+
       {
         header: "EDAD",
         accessorFn: (row) => {
@@ -215,6 +256,21 @@ export default function TablePacientes({
     [handleOpenModalOptions]
   );
 
+  const meses = [
+    { name: "Enero", value: 1 },
+    { name: "Febrero", value: 2 },
+    { name: "Marzo", value: 3 },
+    { name: "Abril", value: 4 },
+    { name: "Mayo", value: 5 },
+    { name: "Junio", value: 6 },
+    { name: "Julio", value: 7 },
+    { name: "Agosto", value: 8 },
+    { name: "Septiembre", value: 9 },
+    { name: "Octubre", value: 10 },
+    { name: "Noviembre", value: 11 },
+    { name: "Diciembre", value: 12 },
+  ];
+
   // Configuración de la tabla
   const table = useReactTable({
     data: filteredData,
@@ -324,49 +380,44 @@ export default function TablePacientes({
                     className="px-2 py-1 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
                     scope="col"
                   >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    <span>
-                      {header.column.getIsSorted() === "asc" ? (
-                        <ChevronUp className="inline w-4 h-4 ml-1" />
-                      ) : header.column.getIsSorted() === "desc" ? (
-                        <ChevronDown className="inline w-4 h-4 ml-1" />
-                      ) : null}
-                    </span>
-
+                    <div className="flex">
+                      <div className="overflow-hidden uppercase truncate whitespace-nowrap">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </div>
+                      <span>
+                        {header.column.getIsSorted() === "asc" ? (
+                          <ChevronUp className="inline w-4 h-4 ml-1" />
+                        ) : header.column.getIsSorted() === "desc" ? (
+                          <ChevronDown className="inline w-4 h-4 ml-1" />
+                        ) : null}
+                      </span>
+                    </div>
                     {/* Filtros por columna */}
                     {header.column.getCanFilter() && (
-                      <div className="flex flex-col gap-1 mt-1">
+                      <div className="flex gap-1 mt-1">
                         {/* Filtro rango de fechas */}
                         {["FECHA NACIMIENTO"].includes(
                           header.column.columnDef.header
                         ) ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="date"
-                              value={header.column.getFilterValue()?.[0] ?? ""}
-                              onChange={(e) =>
-                                header.column.setFilterValue([
-                                  e.target.value || undefined,
-                                  header.column.getFilterValue()?.[1],
-                                ])
-                              }
-                              className="w-28 py-1 px-1 text-sm border border-gray-300 rounded-md"
-                            />
-                            <input
-                              type="date"
-                              value={header.column.getFilterValue()?.[1] ?? ""}
-                              onChange={(e) =>
-                                header.column.setFilterValue([
-                                  header.column.getFilterValue()?.[0],
-                                  e.target.value || undefined,
-                                ])
-                              }
-                              className="w-28 py-1 px-1 text-sm border border-gray-300 rounded-md"
-                            />
-                          </div>
+                          <select
+                            value={header.column.getFilterValue() ?? ""}
+                            onChange={(e) =>
+                              header.column.setFilterValue(
+                                e.target.value || undefined
+                              )
+                            }
+                            className="w-full py-1 px-2 text-sm border border-gray-300 rounded-md"
+                          >
+                            <option value="">Todos</option>
+                            {meses.map((c) => (
+                              <option key={c.value} value={c.value}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
                         ) : header.column.columnDef.header === "EDAD" ? (
                           <div className="flex gap-2">
                             <input
@@ -425,6 +476,10 @@ export default function TablePacientes({
                             className="w-full py-1 px-2 text-sm border border-gray-300 rounded-md"
                           />
                         )}
+                        {header.column.getCanFilter() &&
+                          header.column.columnDef.meta?.filterComponent?.({
+                            column: header.column,
+                          })}
                       </div>
                     )}
                   </th>
