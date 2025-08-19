@@ -250,7 +250,7 @@ export default function TablePacientes({
 
   const exportToExcel = () => {
     // Solo exportar filas visibles (filtradas y paginadas)
-    const dataToExport = table.getRowModel().rows.map((row) => {
+    const dataToExport = table.getPrePaginationRowModel().rows.map((row) => {
       const obj = {};
       row.getVisibleCells().forEach((cell) => {
         const header = cell.column.columnDef.header;
