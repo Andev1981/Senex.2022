@@ -122,9 +122,22 @@ export default function TablePacientes({
           return age;
         },
         id: "age",
-        filterFn: "betweenNumbers",
-        cell: ({ getValue }) =>
-          getValue() != null ? `${getValue()} años` : "-",
+        filterFn: {
+          betweenDates: (row, columnId, filterValue) => {
+            const [from, to] = filterValue || [];
+            const value = row.getValue(columnId);
+            if (!value) return false;
+
+            const rowDate = new Date(value);
+
+            let fromDate = from ? parseDateString(from) : null;
+            let toDate = to ? parseDateString(to) : null;
+
+            if (fromDate && rowDate < fromDate) return false;
+            if (toDate && rowDate > toDate) return false;
+            return true;
+          },
+        },
       },
       {
         header: "RUT",
@@ -247,6 +260,13 @@ export default function TablePacientes({
       },
     },
   });
+
+  // Función auxiliar
+  function parseDateString(dateString) {
+    if (!dateString) return null;
+    const [year, month, day] = dateString.split("-").map(Number);
+    return new Date(year, month - 1, day); // mes es 0-indexed
+  }
 
   const exportToExcel = () => {
     // Solo exportar filas visibles (filtradas y paginadas)
