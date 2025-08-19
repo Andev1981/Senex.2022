@@ -1,31 +1,37 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   getPaginationRowModel,
+  getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import * as XLSX from "xlsx";
 import {
   ChevronDown,
   ChevronUp,
-  Pencil,
-  PencilLineIcon,
+  Search,
+  Calendar,
+  PencilLine,
   Trash2,
 } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function TablePacientes({
   pacientes,
   handleOpenModalOptions,
   handleOpenModalDelete,
+  comunas,
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
+  const [columnFilters, setColumnFilters] = useState([]);
+  const [pageIndex, setPageIndex] = useState(0);
 
-  // Filtrado global simple (busca en todas las columnas)
+  // Filtro global
   const filteredData = useMemo(() => {
     if (!globalFilter) return pacientes || [];
     const filter = globalFilter.toLowerCase();
@@ -36,43 +42,32 @@ export default function TablePacientes({
     );
   }, [globalFilter, pacientes]);
 
+  // Obtener comunas únicas
+  /* const comunas = useMemo(() => {
+    const set = new Set(pacientes.map((p) => p.comuna).filter(Boolean));
+    return Array.from(set);
+  }, [pacientes]); */
+
+  console.log("Data: ", pacientes[0]);
+
+  // Definición de columnas
   const columns = useMemo(
     () => [
-      { accessorKey: "name", header: "Nombre" },
-      { accessorKey: "last_name", header: "Apellido" },
-      {
-        accessorKey: "birth",
-        header: "Edad",
-        cell: ({ getValue }) => {
-          const birth = getValue();
-          if (!birth) return "N/A";
-          const age =
-            new Date().getFullYear() - new Date(birth).getFullYear() + " años";
-          return age;
-        },
-        enableSorting: false,
-      },
-      { accessorKey: "email", header: "Email" },
-      { accessorKey: "direccion", header: "Dirección" },
-      { accessorKey: "comuna_nombre", header: "Comuna" },
-      { accessorKey: "doctor_nombre", header: <p>Ultima&nbsp;atención</p> },
-      { accessorKey: "phone", header: "Teléfono" },
-      { accessorKey: "rut", header: "Rut" },
       {
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex gap-2">
+          <div className="flex">
             <PrimaryButton
               type="button"
-              className="btn"
+              className="mr-1 btn"
               onClick={() => handleOpenModalOptions(row?.original)}
             >
-              <PencilLineIcon className="w-4 h-4" />
+              <PencilLine className="w-4 h-4 mr-1" />
             </PrimaryButton>
             <PrimaryButton
               type="button"
-              className="bg-red-600 btn"
+              className="mr-1 btn bg-red-600"
               onClick={() => handleOpenModalDelete(row?.original)}
             >
               <Trash2 className="w-4 h-4" />
@@ -81,61 +76,224 @@ export default function TablePacientes({
         ),
         enableSorting: false,
       },
+      {
+        header: "NOMBRE",
+        accessorFn: (row) => row?.name,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "APELLIDO",
+        accessorFn: (row) => row?.last_name,
+        cell: ({ getValue }) => (
+          <span className="overflow-hidden uppercase runcate whitespace-nowrap">
+            {getValue()}
+          </span>
+        ),
+      },
+      {
+        header: "FECHA NACIMIENTO",
+        accessorFn: (row) => row?.birth,
+        id: "birth",
+        filterFn: "betweenDates",
+        cell: ({ getValue }) =>
+          getValue() ? new Date(getValue()).toLocaleDateString("es-CL") : "-",
+      },
+      {
+        header: "EDAD",
+        accessorFn: (row) => {
+          if (!row?.birth) return null;
+          const birthDate = new Date(row.birth);
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+          ) {
+            age--;
+          }
+          return age;
+        },
+        id: "age",
+        filterFn: "betweenNumbers",
+        cell: ({ getValue }) =>
+          getValue() != null ? `${getValue()} años` : "-",
+      },
+      {
+        header: "RUT",
+        accessorFn: (row) => row?.rut,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "DIRECCIÓN",
+        accessorFn: (row) => row?.direccion,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "TELÉFONO",
+        accessorFn: (row) => row?.phone,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "CORREO",
+        accessorFn: (row) => row?.email,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "COMUNA",
+        accessorFn: (row) => row?.comuna_nombre,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
+      {
+        header: "ÚLTIMA ATENCIÓN",
+        accessorFn: (row) => row?.doctor_nombre,
+        cell: ({ getValue }) => (
+          <div
+            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            {getValue()}
+          </div>
+        ),
+      },
     ],
-    [handleOpenModalOptions, handleOpenModalDelete]
+    [handleOpenModalOptions]
   );
 
+  // Configuración de la tabla
   const table = useReactTable({
     data: filteredData,
     columns,
-    state: { sorting, globalFilter },
+    state: {
+      sorting,
+      globalFilter,
+      columnFilters,
+      pagination: { pageSize, pageIndex },
+    },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: (updater) => {
+      const newState =
+        typeof updater === "function"
+          ? updater({ pageIndex, pageSize })
+          : updater;
+      setPageIndex(newState.pageIndex);
+      setPageSize(newState.pageSize);
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
+    getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: "includesString",
+    filterFns: {
+      betweenNumbers: (row, columnId, filterValue) => {
+        const [min, max] = filterValue || [];
+        const value = row.getValue(columnId);
+        if (min !== undefined && value < min) return false;
+        if (max !== undefined && value > max) return false;
+        return true;
+      },
+      betweenDates: (row, columnId, filterValue) => {
+        const [from, to] = filterValue || [];
+        const value = row.getValue(columnId);
+        if (!value) return false;
+        const date = new Date(value);
+        if (from && date < new Date(from)) return false;
+        if (to && date > new Date(to)) return false;
+        return true;
+      },
+    },
   });
 
   const exportToExcel = () => {
-    const exportData = filteredData.map((item) => ({
-      Nombre: item?.name,
-      Apellido: item?.last_name,
-      Edad: item?.birth
-        ? new Date().getFullYear() - new Date(item.birth).getFullYear()
-        : "N/A",
-      Email: item?.email,
-      Direccion: item?.direccion,
-      Comuna: item?.comuna_nombre,
-      Ultima_atencion: item?.doctor_nombre,
-      Teléfono: item?.phone,
-      Rut: item?.rut,
-    }));
+    // Solo exportar filas visibles (filtradas y paginadas)
+    const dataToExport = table.getRowModel().rows.map((row) => {
+      const obj = {};
+      row.getVisibleCells().forEach((cell) => {
+        const header = cell.column.columnDef.header;
+        obj[header] = cell.getValue();
+      });
+      return obj;
+    });
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Pacientes");
-    XLSX.writeFile(workbook, "pacientes.xlsx");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "pacientes.xlsx");
   };
 
   return (
     <div className="max-w-full">
+      {/* Filtro global */}
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          value={globalFilter ?? ""}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Buscar pacientes..."
-          className="w-full px-3 py-2 transition border border-gray-300 rounded-md sm:w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={exportToExcel}
-          className="px-4 py-2 text-white transition bg-green-600 rounded-md hover:bg-green-700"
-        >
-          Exportar Excel
-        </button>
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute w-4 h-4 text-gray-400 top-2 left-2" />
+          <input
+            value={globalFilter ?? ""}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Buscar pacientes..."
+            className="w-full py-2 pl-8 pr-3 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex justify-end mb-2">
+          <PrimaryButton type="button" onClick={exportToExcel}>
+            Exportar a Excel
+          </PrimaryButton>
+        </div>
       </div>
-      <div className="w-full overflow-x-auto ">
-        <table className="min-w-[700px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden">
+
+      {/* Tabla */}
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-[900px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden">
           <thead className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -143,56 +301,137 @@ export default function TablePacientes({
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="px-4 py-3 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
+                    className="px-2 py-1 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
                     scope="col"
                   >
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext()
                     )}
-                    {{
-                      asc: <ChevronDown className="inline w-4 h-4 ml-1" />,
-                      desc: <ChevronUp className="inline ml-1" />,
-                    }[header.column.getIsSorted()] ?? null}
+                    <span>
+                      {header.column.getIsSorted() === "asc" ? (
+                        <ChevronUp className="inline w-4 h-4 ml-1" />
+                      ) : header.column.getIsSorted() === "desc" ? (
+                        <ChevronDown className="inline w-4 h-4 ml-1" />
+                      ) : null}
+                    </span>
+
+                    {/* Filtros por columna */}
+                    {header.column.getCanFilter() && (
+                      <div className="flex flex-col gap-1 mt-1">
+                        {/* Filtro rango de fechas */}
+                        {["FECHA NACIMIENTO"].includes(
+                          header.column.columnDef.header
+                        ) ? (
+                          <div className="flex gap-2">
+                            <input
+                              type="date"
+                              value={header.column.getFilterValue()?.[0] ?? ""}
+                              onChange={(e) =>
+                                header.column.setFilterValue([
+                                  e.target.value || undefined,
+                                  header.column.getFilterValue()?.[1],
+                                ])
+                              }
+                              className="w-28 py-1 px-1 text-sm border border-gray-300 rounded-md"
+                            />
+                            <input
+                              type="date"
+                              value={header.column.getFilterValue()?.[1] ?? ""}
+                              onChange={(e) =>
+                                header.column.setFilterValue([
+                                  header.column.getFilterValue()?.[0],
+                                  e.target.value || undefined,
+                                ])
+                              }
+                              className="w-28 py-1 px-1 text-sm border border-gray-300 rounded-md"
+                            />
+                          </div>
+                        ) : header.column.columnDef.header === "EDAD" ? (
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="Min"
+                              value={header.column.getFilterValue()?.[0] ?? ""}
+                              onChange={(e) =>
+                                header.column.setFilterValue([
+                                  e.target.value
+                                    ? Number(e.target.value)
+                                    : undefined,
+                                  header.column.getFilterValue()?.[1],
+                                ])
+                              }
+                              className="w-20 py-1 px-1 text-sm border border-gray-300 rounded-md"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Max"
+                              value={header.column.getFilterValue()?.[1] ?? ""}
+                              onChange={(e) =>
+                                header.column.setFilterValue([
+                                  header.column.getFilterValue()?.[0],
+                                  e.target.value
+                                    ? Number(e.target.value)
+                                    : undefined,
+                                ])
+                              }
+                              className="w-20 py-1 px-1 text-sm border border-gray-300 rounded-md"
+                            />
+                          </div>
+                        ) : header.column.columnDef.header === "COMUNA" ? (
+                          <select
+                            value={header.column.getFilterValue() ?? ""}
+                            onChange={(e) =>
+                              header.column.setFilterValue(
+                                e.target.value || undefined
+                              )
+                            }
+                            className="w-full py-1 px-2 text-sm border border-gray-300 rounded-md"
+                          >
+                            <option value="">Todas</option>
+                            {comunas.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            value={header.column.getFilterValue() ?? ""}
+                            onChange={(e) =>
+                              header.column.setFilterValue(e.target.value)
+                            }
+                            placeholder="Filtrar..."
+                            className="w-full py-1 px-2 text-sm border border-gray-300 rounded-md"
+                          />
+                        )}
+                      </div>
+                    )}
                   </th>
                 ))}
               </tr>
             ))}
           </thead>
-
           <tbody>
-            {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="py-6 text-center text-gray-500"
-                >
-                  No se han encontrado datos
-                </td>
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className="transition even:bg-gray-50 hover:bg-gray-100"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-2 py-1 text-sm border border-gray-200"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="transition border-b border-gray-200 hover:bg-gray-50"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-4 py-3 text-gray-800 whitespace-nowrap"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>
+
       {/* Paginación */}
       <div className="flex flex-col items-center justify-between gap-2 mt-4 sm:flex-row">
         <div className="text-sm text-gray-700">

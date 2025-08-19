@@ -45,6 +45,7 @@ export default function PatientsIndex({ user, pacientes, comunas }) {
                 pacientes={pacientes}
                 handleOpenModalOptions={handleOpenModalOptions}
                 handleOpenModalDelete={handleOpenModalDelete}
+                comunas={comunas}
               />
             </div>
           </div>
