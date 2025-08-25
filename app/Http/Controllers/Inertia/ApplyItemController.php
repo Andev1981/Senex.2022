@@ -85,7 +85,7 @@ class ApplyItemController extends Controller
     {
         $validatedData = $request->all();
 
-        /*     dd($validatedData); */
+        /* dd($validatedData); */
 
         if (!$validatedData["application_id"]) {
             $application = Application::create([

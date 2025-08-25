@@ -21,7 +21,7 @@ function SesionesModal({
     id: sesion?.id,
     doctor_id: Number(sesion?.doctor_id) || "",
     comments: sesion?.comments || "",
-    patient_id: paciente?.id || "",
+    patient_id: paciente?.patient_id || "",
     price: sesion?.price || 0,
     fecha_atencion: sesion?.fecha_atencion
       ? moment.utc(sesion.fecha_atencion).format("YYYY-MM-DD")
@@ -64,6 +64,8 @@ function SesionesModal({
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+
+  console.log("Paciente: ", paciente);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -207,7 +209,7 @@ function SesionesModal({
             id="comments"
             name="comments"
             value={data?.comments}
-            onChange={(e) => setData("brecha", e.target.value)}
+            onChange={(e) => setData("comments", e.target.value)}
             rows="4"
             className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Ingrese comentario..."
