@@ -21,7 +21,7 @@ function SesionesModal({
     id: sesion?.id,
     doctor_id: Number(sesion?.doctor_id) || "",
     comments: sesion?.comments || "",
-    patient_id: sesion?.patient_id || "",
+    patient_id: paciente?.id || "",
     price: sesion?.price || 0,
     fecha_atencion: sesion?.fecha_atencion
       ? moment.utc(sesion.fecha_atencion).format("YYYY-MM-DD")

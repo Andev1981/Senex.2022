@@ -85,6 +85,8 @@ class ApplyItemController extends Controller
     {
         $validatedData = $request->all();
 
+        /*     dd($validatedData); */
+
         if (!$validatedData["application_id"]) {
             $application = Application::create([
                 'user_id' => auth()->user()->id,
