@@ -42,6 +42,7 @@ class ApplyItemController extends Controller
             DB::raw("CONCAT(COALESCE(patients.name, ''), ' ', COALESCE(patients.last_name, '')) AS patient_full_name"),
             DB::raw("CONCAT(COALESCE(doctors.name, ''), ' ', COALESCE(doctors.last_name, '')) AS doctor_full_name"),
             'application_types.name as type_name',
+            'apply_items.patient_id as patient_id',
 
         )
             ->join('patients', 'patients.id', '=', 'apply_items.patient_id')

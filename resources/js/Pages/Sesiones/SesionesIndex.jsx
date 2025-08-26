@@ -14,6 +14,7 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
   const [paciente, setPaciente] = useState(null);
 
   const handleOpenModalOptions = (data) => {
+    setPaciente(data);
     setSesion(data);
     setModalSesionesOption(true);
   };
