@@ -107,15 +107,15 @@ class DteService
     $dteData = [
       'Encabezado' => [
         'IdDoc' => [
-          'TipoDTE' => 39,
+          'TipoDTE' => 41, // Boleta Exenta Electrónica
           'Folio' => $folio,
           'FchEmis' => date('Y-m-d'),
         ],
         'Emisor' => [
           'RUTEmisor' => $this->emisorRut,
-          'RznSoc' => 'Mi Empresa Ltda.',
-          'GiroEmis' => 'Asesoría exenta',
-          'DirOrigen' => 'Av. Ejemplo 123',
+          'RznSoc' => config('app.name'),
+          'GiroEmis' => 'Servicios de salud exentos',
+          'DirOrigen' => 'Dirección de la empresa',
           'CmnaOrigen' => 'Santiago',
         ],
         'Receptor' => [
@@ -148,14 +148,16 @@ class DteService
     }
 
     $xml = $dte->getXML();
-    $nombre = "boleta_exenta_{$folio}.xml";
-    Storage::put("dtes/xml/{$nombre}", $xml);
+    $nombreArchivo = "boleta_exenta_{$folio}.xml";
+    Storage::put("dtes/xml/{$nombreArchivo}", $xml);
 
     return [
       'folio' => $folio,
+      'tipo' => 41,
+      'total' => $dteData['Totales']['MntTotal'],
       'xml' => $xml,
-      'archivo_xml' => $nombre,
-      'url_xml' => Storage::url("dtes/xml/{$nombre}"),
+      'archivo_xml' => $nombreArchivo,
+      'url_xml' => Storage::url("dtes/xml/{$nombreArchivo}"),
     ];
   }
 
@@ -186,4 +188,337 @@ class DteService
     cache(['ultimo_folio_boleta' => $nuevo], now()->addYear());
     return $nuevo;
   }
+
+  /**
+   * Emite una factura electrónica
+   *
+   * @param array $datos
+   * @return array
+   */
+  public function emitirFacturaElectronica(array $datos): array
+  {
+    $folio = $this->obtenerSiguienteFolio();
+
+    $dteData = [
+      'Encabezado' => [
+        'IdDoc' => [
+          'TipoDTE' => 33, // Factura Electrónica
+          'Folio' => $folio,
+          'FchEmis' => date('Y-m-d'),
+        ],
+        'Emisor' => [
+          'RUTEmisor' => $this->emisorRut,
+          'RznSoc' => config('app.name'),
+          'GiroEmis' => 'Servicios de salud',
+          'DirOrigen' => 'Dirección de la empresa',
+          'CmnaOrigen' => 'Santiago',
+        ],
+        'Receptor' => [
+          'RUTRecep' => $datos['receptor']['rut'],
+          'RznSocRecep' => $datos['receptor']['nombre'],
+          'GiroRecep' => $datos['receptor']['giro'] ?? 'Servicios',
+          'DirRecep' => $datos['receptor']['direccion'] ?? 'Sin dirección',
+          'CmnaRecep' => $datos['receptor']['comuna'] ?? 'Santiago',
+        ],
+      ],
+      'Detalle' => $this->prepararDetalles($datos['detalles']),
+      'Totales' => [
+        'MntNeto' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')),
+        'TasaIVA' => 19,
+        'IVA' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')) * 0.19,
+        'MntTotal' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')) * 1.19
+      ]
+    ];
+
+    $dte = new Dte($dteData);
+    $dte->setFirma($this->firma);
+
+    if (config('libredte.ambiente') === 'homologacion') {
+      $dte->setModelo(1);
+    }
+
+    $xml = $dte->getXML();
+    $nombreArchivo = "factura_{$folio}.xml";
+    Storage::put("dtes/xml/{$nombreArchivo}", $xml);
+
+    return [
+      'folio' => $folio,
+      'tipo' => 33,
+      'total' => $dteData['Totales']['MntTotal'],
+      'xml' => $xml,
+      'archivo_xml' => $nombreArchivo,
+      'url_xml' => Storage::url("dtes/xml/{$nombreArchivo}"),
+    ];
+  }
+
+  /**
+   * Emite una factura exenta electrónica
+   *
+   * @param array $datos
+   * @return array
+   */
+  public function emitirFacturaExenta(array $datos): array
+  {
+    $folio = $this->obtenerSiguienteFolio();
+
+    $dteData = [
+      'Encabezado' => [
+        'IdDoc' => [
+          'TipoDTE' => 34, // Factura Exenta Electrónica
+          'Folio' => $folio,
+          'FchEmis' => date('Y-m-d'),
+        ],
+        'Emisor' => [
+          'RUTEmisor' => $this->emisorRut,
+          'RznSoc' => config('app.name'),
+          'GiroEmis' => 'Servicios de salud exentos',
+          'DirOrigen' => 'Dirección de la empresa',
+          'CmnaOrigen' => 'Santiago',
+        ],
+        'Receptor' => [
+          'RUTRecep' => $datos['receptor']['rut'],
+          'RznSocRecep' => $datos['receptor']['nombre'],
+          'GiroRecep' => $datos['receptor']['giro'] ?? 'Servicios',
+          'DirRecep' => $datos['receptor']['direccion'] ?? 'Sin dirección',
+          'CmnaRecep' => $datos['receptor']['comuna'] ?? 'Santiago',
+        ],
+      ],
+      'Detalle' => [
+        [
+          'NmbItem' => $datos['detalles'][0]['nombre'],
+          'QtyItem' => $datos['detalles'][0]['cantidad'] ?? 1,
+          'PrcItem' => $datos['detalles'][0]['precio'],
+          'MontoItem' => $datos['detalles'][0]['precio'] * ($datos['detalles'][0]['cantidad'] ?? 1),
+          'IndExe' => 1, // ✅ Indica que es exento
+        ]
+      ],
+      'Totales' => [
+        'MntTotal' => $datos['detalles'][0]['precio'] * ($datos['detalles'][0]['cantidad'] ?? 1),
+      ]
+    ];
+
+    $dte = new Dte($dteData);
+    $dte->setFirma($this->firma);
+
+    if (config('libredte.ambiente') === 'homologacion') {
+      $dte->setModelo(1);
+    }
+
+    $xml = $dte->getXML();
+    $nombreArchivo = "factura_exenta_{$folio}.xml";
+    Storage::put("dtes/xml/{$nombreArchivo}", $xml);
+
+    return [
+      'folio' => $folio,
+      'tipo' => 34,
+      'total' => $dteData['Totales']['MntTotal'],
+      'xml' => $xml,
+      'archivo_xml' => $nombreArchivo,
+      'url_xml' => Storage::url("dtes/xml/{$nombreArchivo}"),
+    ];
+  }
+
+  /**
+   * Emite una guía de despacho electrónica
+   *
+   * @param array $datos
+   * @return array
+   */
+  public function emitirGuiaDespacho(array $datos): array
+  {
+    $folio = $this->obtenerSiguienteFolio();
+
+    $dteData = [
+      'Encabezado' => [
+        'IdDoc' => [
+          'TipoDTE' => 52, // Guía de Despacho Electrónica
+          'Folio' => $folio,
+          'FchEmis' => date('Y-m-d'),
+        ],
+        'Emisor' => [
+          'RUTEmisor' => $this->emisorRut,
+          'RznSoc' => config('app.name'),
+          'GiroEmis' => 'Servicios de salud',
+          'DirOrigen' => 'Dirección de la empresa',
+          'CmnaOrigen' => 'Santiago',
+        ],
+        'Receptor' => [
+          'RUTRecep' => $datos['receptor']['rut'] ?? '66.666.666-6',
+          'RznSocRecep' => $datos['receptor']['nombre'],
+          'GiroRecep' => $datos['receptor']['giro'] ?? 'Consumo Final',
+          'DirRecep' => $datos['receptor']['direccion'] ?? 'Sin dirección',
+          'CmnaRecep' => $datos['receptor']['comuna'] ?? 'Santiago',
+        ],
+        'Transporte' => [
+          'DirDest' => $datos['direccion_entrega'] ?? $datos['receptor']['direccion'],
+          'CmnaDest' => $datos['receptor']['comuna'] ?? 'Santiago',
+          'FchTraslado' => $datos['fecha_entrega'] ?? date('Y-m-d'),
+          'Patente' => 'XXXX00', // Patente del vehículo (opcional)
+          'RUTTrans' => '66.666.666-6', // RUT del transportista (opcional)
+          'NomTrans' => $datos['transportista'] ?? 'Sin especificar',
+        ],
+      ],
+      'Detalle' => $this->prepararDetalles($datos['detalles']),
+      'Totales' => [
+        'MntTotal' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem'))
+      ]
+    ];
+
+    $dte = new Dte($dteData);
+    $dte->setFirma($this->firma);
+
+    if (config('libredte.ambiente') === 'homologacion') {
+      $dte->setModelo(1);
+    }
+
+    $xml = $dte->getXML();
+    $nombreArchivo = "guia_despacho_{$folio}.xml";
+    Storage::put("dtes/xml/{$nombreArchivo}", $xml);
+
+    return [
+      'folio' => $folio,
+      'tipo' => 52,
+      'total' => $dteData['Totales']['MntTotal'],
+      'xml' => $xml,
+      'archivo_xml' => $nombreArchivo,
+      'url_xml' => Storage::url("dtes/xml/{$nombreArchivo}"),
+    ];
+  }
+
+  /**
+   * Emite una nota de débito electrónica
+   *
+   * @param array $datos
+   * @return array
+   */
+  public function emitirNotaDebito(array $datos): array
+  {
+    $folio = $this->obtenerSiguienteFolio();
+
+    $dteData = [
+      'Encabezado' => [
+        'IdDoc' => [
+          'TipoDTE' => 56, // Nota de Débito Electrónica
+          'Folio' => $folio,
+          'FchEmis' => date('Y-m-d'),
+        ],
+        'Emisor' => [
+          'RUTEmisor' => $this->emisorRut,
+          'RznSoc' => config('app.name'),
+          'GiroEmis' => 'Servicios de salud',
+          'DirOrigen' => 'Dirección de la empresa',
+          'CmnaOrigen' => 'Santiago',
+        ],
+        'Receptor' => [
+          'RUTRecep' => $datos['receptor']['rut'],
+          'RznSocRecep' => $datos['receptor']['nombre'],
+          'GiroRecep' => $datos['receptor']['giro'] ?? 'Servicios',
+          'DirRecep' => $datos['receptor']['direccion'] ?? 'Sin dirección',
+          'CmnaRecep' => $datos['receptor']['comuna'] ?? 'Santiago',
+        ],
+        'Referencia' => [
+          'TpoDocRef' => 33, // Tipo de documento referenciado (Factura)
+          'FolioRef' => $datos['folio_referencia'],
+          'FchRef' => $datos['fecha_referencia'] ?? date('Y-m-d'),
+          'RazonRef' => $datos['motivo'] ?? 'Cargo adicional',
+        ],
+      ],
+      'Detalle' => $this->prepararDetalles($datos['detalles']),
+      'Totales' => [
+        'MntNeto' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')),
+        'TasaIVA' => 19,
+        'IVA' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')) * 0.19,
+        'MntTotal' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')) * 1.19
+      ]
+    ];
+
+    $dte = new Dte($dteData);
+    $dte->setFirma($this->firma);
+
+    if (config('libredte.ambiente') === 'homologacion') {
+      $dte->setModelo(1);
+    }
+
+    $xml = $dte->getXML();
+    $nombreArchivo = "nota_debito_{$folio}.xml";
+    Storage::put("dtes/xml/{$nombreArchivo}", $xml);
+
+    return [
+      'folio' => $folio,
+      'tipo' => 56,
+      'total' => $dteData['Totales']['MntTotal'],
+      'xml' => $xml,
+      'archivo_xml' => $nombreArchivo,
+      'url_xml' => Storage::url("dtes/xml/{$nombreArchivo}"),
+    ];
+  }
+
+  /**
+   * Emite una nota de crédito electrónica
+   *
+   * @param array $datos
+   * @return array
+   */
+  public function emitirNotaCredito(array $datos): array
+  {
+    $folio = $this->obtenerSiguienteFolio();
+
+    $dteData = [
+      'Encabezado' => [
+        'IdDoc' => [
+          'TipoDTE' => 61, // Nota de Crédito Electrónica
+          'Folio' => $folio,
+          'FchEmis' => date('Y-m-d'),
+        ],
+        'Emisor' => [
+          'RUTEmisor' => $this->emisorRut,
+          'RznSoc' => config('app.name'),
+          'GiroEmis' => 'Servicios de salud',
+          'DirOrigen' => 'Dirección de la empresa',
+          'CmnaOrigen' => 'Santiago',
+        ],
+        'Receptor' => [
+          'RUTRecep' => $datos['receptor']['rut'],
+          'RznSocRecep' => $datos['receptor']['nombre'],
+          'GiroRecep' => $datos['receptor']['giro'] ?? 'Servicios',
+          'DirRecep' => $datos['receptor']['direccion'] ?? 'Sin dirección',
+          'CmnaRecep' => $datos['receptor']['comuna'] ?? 'Santiago',
+        ],
+        'Referencia' => [
+          'TpoDocRef' => 33, // Tipo de documento referenciado (Factura)
+          'FolioRef' => $datos['folio_referencia'],
+          'FchRef' => $datos['fecha_referencia'] ?? date('Y-m-d'),
+          'RazonRef' => $datos['motivo'] ?? 'Descuento o devolución',
+        ],
+      ],
+      'Detalle' => $this->prepararDetalles($datos['detalles']),
+      'Totales' => [
+        'MntNeto' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')),
+        'TasaIVA' => 19,
+        'IVA' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')) * 0.19,
+        'MntTotal' => array_sum(array_column($this->prepararDetalles($datos['detalles']), 'MontoItem')) * 1.19
+      ]
+    ];
+
+    $dte = new Dte($dteData);
+    $dte->setFirma($this->firma);
+
+    if (config('libredte.ambiente') === 'homologacion') {
+      $dte->setModelo(1);
+    }
+
+    $xml = $dte->getXML();
+    $nombreArchivo = "nota_credito_{$folio}.xml";
+    Storage::put("dtes/xml/{$nombreArchivo}", $xml);
+
+    return [
+      'folio' => $folio,
+      'tipo' => 61,
+      'total' => $dteData['Totales']['MntTotal'],
+      'xml' => $xml,
+      'archivo_xml' => $nombreArchivo,
+      'url_xml' => Storage::url("dtes/xml/{$nombreArchivo}"),
+    ];
+  }
+
 }
