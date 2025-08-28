@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Inertia\ApplyItemController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\HomeController;
@@ -10,7 +9,6 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\PaymentIncomeController;
 use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Informes\IndexInformes;
-use App\Http\Livewire\Inicio;
 use App\Http\Livewire\Kine\Atenciones;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Kinesiologos\AtencionDetalle;
@@ -24,6 +22,9 @@ use App\Http\Livewire\Kinesiologos\KineIndex;
 use App\Http\Livewire\Kinesiologos\ListadoPacientes;
 use App\Http\Livewire\Kinesiologos\NoAutorizado;
 use App\Http\Livewire\Kinesiologos\Resumenes;
+/* Inertia */
+use App\Http\Controllers\Inertia\ApplyItemController;
+use App\Http\Controllers\Inertia\DteController;
 use App\Http\Controllers\Inertia\PatientController;
 
 //Reoptimized class loader:
@@ -79,10 +80,8 @@ require __DIR__ . '/auth.php';
 
 Route::group(['middleware' => ['auth']], function () {
 
-  Route::get('/dashboard', Inicio::class)->name('dashboard');
-  Route::get('/', Inicio::class)->name('/');
-
-
+  Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+  Route::get('/', [HomeController::class, 'index'])->name('/');
 
   Route::middleware('guest')->group(function () {
 
@@ -150,6 +149,10 @@ Route::group(['middleware' => ['auth']], function () {
   Route::post('apply-items-store', [ApplyItemController::class, 'store'])->name('apply.items.store');
   Route::post('apply-items-update/{applyItem}', [ApplyItemController::class, 'update'])->name('apply.items.update');
   Route::get('apply-items-borrar/{applyItem}', [ApplyItemController::class, 'destroy'])->name('apply.items.destroy');
+
+  /* DTE */
+  Route::get('/boleta-crear', [DteController::class, 'crear'])->name('boleta');
+  Route::post('/boleta-emitir', [DteController::class, 'emitir'])->name('boleta.emitir');
 });
 
 

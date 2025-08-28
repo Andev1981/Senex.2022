@@ -21,7 +21,8 @@ function Side({ sidebarOpen }) {
             <Link
               href={route("listado.pacientes")}
               className={
-                location.pathname === "/listado-pacientes"
+                location.pathname === "/listado-pacientes" ||
+                location.pathname === "/"
                   ? styleSelected
                   : styleNotSelected
               }
@@ -31,6 +32,19 @@ function Side({ sidebarOpen }) {
                 className="w-6 h-6"
               />
               <span className="ml-1 text-sm text-primary">Pacientes(*)</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={route("boleta")}
+              className={
+                location.pathname === "/boleta/crear"
+                  ? styleSelected
+                  : styleNotSelected
+              }
+            >
+              <img src={"./icons/libro-medico.gif"} className="w-6 h-6" />
+              <span className="ml-1 text-sm text-primary">Boleta(*)</span>
             </Link>
           </li>
           <li>

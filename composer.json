@@ -22,7 +22,7 @@
         "laravel/ui": "^4.0",
         "laravelcollective/html": "^6.3",
         "laraveles/spanish": "^1.5",
-        "libredte/libredte-lib-core": "*",
+        "libredte/libredte-lib-core": "^21.10",
         "livewire/livewire": "^2.10",
         "maatwebsite/excel": "3.1.48",
         "rappasoft/laravel-livewire-tables": "^2.8",
