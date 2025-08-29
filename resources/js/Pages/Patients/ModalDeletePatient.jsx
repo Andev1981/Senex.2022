@@ -1,7 +1,7 @@
 import { useForm } from "@inertiajs/react";
 import React from "react";
 
-function PatientModalDelete({ patient, setOpenModalDelete }) {
+function ModalDeletePatient({ patient, setOpenModalDelete }) {
   const {
     data,
     reset,
@@ -57,4 +57,4 @@ function PatientModalDelete({ patient, setOpenModalDelete }) {
   );
 }
 
-export default PatientModalDelete;
+export default ModalDeletePatient;

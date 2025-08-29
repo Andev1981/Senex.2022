@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import TablePacientes from "./TablePacientes";
+import TablePatients from "./TablePatients";
 import Modal from "@/Components/Modal";
-import PatientsModal from "./Partials/PatientsModal";
 import PrimaryButton from "@/Components/PrimaryButton";
-import PatientModalDelete from "./Partials/PatientModalDelete";
-export default function PatientsIndex({ user, pacientes, comunas }) {
+import ModalCreateEditPatient from "./ModalCreateEditPatient";
+import ModalDeletePatient from "./ModalDeletePatient";
+
+export default function IndexPatients({ user, pacientes, comunas }) {
   const [openModalPatient, setOpenModalPatient] = useState(false);
   const [patient, setPatient] = useState({});
   const [openModalDelete, setOpenModalDelete] = useState(false);
@@ -30,7 +31,11 @@ export default function PatientsIndex({ user, pacientes, comunas }) {
             <div className="p-6 text-gray-900 dark:text-gray-100">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
-                  <img src={"icons/usuario.gif"} className="w-10 h-10" />
+                  <img
+                    src={"/icons/resolucion-de-problemas.gif"}
+                    className="w-10 h-10"
+                  />
+
                   <label className="text-lg font-semibold">Pacientes</label>
                 </div>
                 <PrimaryButton
@@ -41,7 +46,7 @@ export default function PatientsIndex({ user, pacientes, comunas }) {
                   Paciente +
                 </PrimaryButton>
               </div>
-              <TablePacientes
+              <TablePatients
                 pacientes={pacientes}
                 handleOpenModalOptions={handleOpenModalOptions}
                 handleOpenModalDelete={handleOpenModalDelete}
@@ -58,7 +63,7 @@ export default function PatientsIndex({ user, pacientes, comunas }) {
         description={"Aqui puedes crear o editar un usuario"}
         maxWidth="4xl"
       >
-        <PatientsModal
+        <ModalCreateEditPatient
           patient={patient}
           setOpenModalPatient={setOpenModalPatient}
           comunas={comunas}
@@ -71,7 +76,7 @@ export default function PatientsIndex({ user, pacientes, comunas }) {
         description={"¿Deseas borra la sesión seleccionada?"}
         maxWidth="xl"
       >
-        <PatientModalDelete
+        <ModalDeletePatient
           patient={patient}
           setOpenModalDelete={setOpenModalDelete}
         />

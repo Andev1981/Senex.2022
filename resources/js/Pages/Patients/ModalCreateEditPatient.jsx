@@ -10,7 +10,7 @@ import ChilePhoneInput from "@/Components/ChilePhoneInput";
 import RutInput from "@/Components/RutInput";
 import moment from "moment";
 
-function PatientsModal({ patient, setOpenModalPatient, comunas }) {
+function ModalCreateEditPatient({ patient, setOpenModalPatient, comunas }) {
   const { data, setData, errors, post, put, reset, processing } = useForm({
     id: patient?.id || null,
     name: patient?.name || "",
@@ -271,4 +271,4 @@ function PatientsModal({ patient, setOpenModalPatient, comunas }) {
   );
 }
 
-export default PatientsModal;
+export default ModalCreateEditPatient;

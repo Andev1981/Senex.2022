@@ -26,6 +26,7 @@ use App\Http\Livewire\Kinesiologos\Resumenes;
 use App\Http\Controllers\Inertia\ApplyItemController;
 use App\Http\Controllers\Inertia\DteController;
 use App\Http\Controllers\Inertia\PatientController;
+use App\Http\Controllers\Inertia\SessionTypeController;
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -153,6 +154,14 @@ Route::group(['middleware' => ['auth']], function () {
   /* DTE */
   Route::get('/boleta-crear', [DteController::class, 'crear'])->name('boleta');
   Route::post('/boleta-emitir', [DteController::class, 'emitir'])->name('boleta.emitir');
+
+  /* Nuevos tratamientos */
+  Route::get('/admin/session-types',              [SessionTypeController::class, 'index'])->name('session-types.index');
+  Route::post('/admin/session-types',              [SessionTypeController::class, 'store'])->name('session-types.store');
+  Route::put('/admin/session-types/{sessionType}', [SessionTypeController::class, 'update'])->name('session-types.update');
+  Route::delete('/admin/session-types/{sessionType}', [SessionTypeController::class, 'destroy'])->name('session-types.destroy');
+
+  Route::get('/fix', [HomeController::class, 'fix']);
 });
 
 

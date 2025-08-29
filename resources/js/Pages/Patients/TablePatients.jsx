@@ -19,7 +19,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-export default function TablePacientes({
+export default function TablePatients({
   pacientes,
   handleOpenModalOptions,
   handleOpenModalDelete,

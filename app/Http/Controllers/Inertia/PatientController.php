@@ -19,7 +19,7 @@ class PatientController extends Controller
 
         $comunas = Comuna::where('region_id', 1)->get();
 
-        return Inertia::render('Patients/PatientsIndex', compact('user', 'pacientes', 'comunas'));
+        return Inertia::render('Patients/IndexPatients', compact('user', 'pacientes', 'comunas'));
     }
 
     public function kines()
