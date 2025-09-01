@@ -39,12 +39,12 @@ class ReportePdfController extends Controller
             ->where('apply_items.fecha_atencion', 'like', $buscarFecha . '-%')
             ->where('apply_items.status', 1)
             ->where('apply_items.doctor_id', $kine)
-            // Orden por apellido y nombre (normalizando y con collation española)
-            ->orderByRaw("TRIM(LOWER(p.last_name)) COLLATE utf8mb4_spanish_ci ASC")
-            ->orderByRaw("TRIM(LOWER(p.name)) COLLATE utf8mb4_spanish_ci ASC")
-            ->select('apply_items.*')   // importante
+            ->orderByRaw("unaccent(lower(p.last_name)) ASC")
+            ->orderByRaw("unaccent(lower(p.name)) ASC")
+            ->select('apply_items.*')
             ->with(['patient', 'assign', 'doctor'])
             ->get();
+
 
 
 
