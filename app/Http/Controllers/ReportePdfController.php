@@ -26,13 +26,26 @@ class ReportePdfController extends Controller
             ->orderBy('fecha_atencion', 'asc')
             ->get(); */
 
-        $applyItems = ApplyItem::with(['patient', 'assign', 'doctor' => function ($q) {
+        /* $applyItems = ApplyItem::with(['patient', 'assign', 'doctor' => function ($q) {
             $q->orderBy('name', 'asc')->orderBy('last_name', 'asc');
         }])
             ->where('fecha_atencion', 'like', $buscarFecha . '-%')
             ->where('status', 1)
             ->where('doctor_id', $kine)
+            ->get(); */
+
+        $applyItems = ApplyItem::query()
+            ->join('patients as p', 'p.id', '=', 'apply_items.patient_id')
+            ->where('apply_items.fecha_atencion', 'like', $buscarFecha . '-%')
+            ->where('apply_items.status', 1)
+            ->where('apply_items.doctor_id', $kine)
+            // Orden por apellido y nombre (normalizando y con collation española)
+            ->orderByRaw("TRIM(LOWER(p.last_name)) COLLATE utf8mb4_spanish_ci ASC")
+            ->orderByRaw("TRIM(LOWER(p.name)) COLLATE utf8mb4_spanish_ci ASC")
+            ->select('apply_items.*')   // importante
+            ->with(['patient', 'assign', 'doctor'])
             ->get();
+
 
 
         $kineFinded = Doctor::find($kine);
