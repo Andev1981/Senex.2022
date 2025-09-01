@@ -39,8 +39,8 @@ class ReportePdfController extends Controller
             ->where('apply_items.fecha_atencion', 'like', $buscarFecha . '-%')
             ->where('apply_items.status', 1)
             ->where('apply_items.doctor_id', $kine)
-            ->orderByRaw("LOWER(p.last_name) DESC")
-            ->orderByRaw("LOWER(p.name) DESC")
+            ->orderByRaw("LOWER(p.last_name) ASC")
+            ->orderByRaw("LOWER(p.name) ASC")
             ->select('apply_items.*')
             ->with(['patient', 'assign', 'doctor'])
             ->get();
