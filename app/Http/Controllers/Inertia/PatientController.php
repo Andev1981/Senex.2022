@@ -131,7 +131,7 @@ class PatientController extends Controller
             ->where('ai.doctor_id', $doctor->id)
             ->where('ai.status', 1)
             ->whereYear('ai.fecha_atencion', now()->year) // <-- año en curso
-            ->orderByAsc('p.name')
+            ->orderBy('p.name', 'asc')
             ->orderBy('ai.fecha_atencion', 'asc')
             ->select([
                 'ai.id',
