@@ -11,6 +11,7 @@ use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class PatientController extends Controller
 {
@@ -122,14 +123,14 @@ class PatientController extends Controller
         $atenciones = DB::table('apply_items as ai')
             ->leftJoin('patients as p', 'p.id', '=', 'ai.patient_id')
             ->leftJoin('doctors as d', 'd.id', '=', 'ai.doctor_id')
-            ->leftJoin('application_types as appt', 'appt.id', '=', 'ai.application_type_id')
+            ->leftJoin('application_types as appt', 'appt.id', '=', 'ai.application_type_id') // <-- faltaba
             ->leftJoin('application_type_users as apptu', function ($join) use ($doctor) {
-                $join->on('apptu.id', '=', 'ai.application_type_user_id')
-                    ->where('apptu.user_id', '=', $doctor->id); // <- filtra por el user del doctor
-                // si la columna fuera apptu.doctor_id, cámbiala aquí
+                $join->on('apptu.application_type_id', '=', 'ai.application_type_id')
+                    ->where('apptu.user_id', $doctor->id); // filtra por el user del doctor
             })
             ->where('ai.doctor_id', $doctor->id)
             ->where('ai.status', 1)
+            ->whereYear('ai.fecha_atencion', now()->year) // <-- año en curso
             ->orderByDesc('p.name')
             ->orderBy('ai.fecha_atencion', 'asc')
             ->select([
@@ -138,8 +139,8 @@ class PatientController extends Controller
                 'ai.status',
                 DB::raw("CONCAT(p.name,' ',p.last_name) as patient_full"),
                 'appt.name as application_type_name',
-                'apptu.price as valor_kine',
-                'ai.price as valor_senex',
+                DB::raw('COALESCE(apptu.price,0) as valor_kine'),   // desde pivot
+                DB::raw('COALESCE(ai.price,0) as valor_senex'),     // precio cobrado al cliente
                 'ai.numero_sesion',
             ])
             ->selectRaw('(COALESCE(ai.price,0) - COALESCE(apptu.price,0)) as total_senex')
@@ -148,7 +149,7 @@ class PatientController extends Controller
 
         $user = auth()->user();
 
-        /*       dd($atenciones); */
+        dd($atenciones);
 
 
         return Inertia::render('Kines/KineDetalles', compact('doctor', 'atenciones', 'user'));
