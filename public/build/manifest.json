@@ -1,85 +1,85 @@
 {
-  "_AuthenticatedLayout-0f7bcd0e.js": {
+  "_AuthenticatedLayout-bd22588e.js": {
     "assets": [
       "assets/logo-921f119d.png"
     ],
-    "file": "assets/AuthenticatedLayout-0f7bcd0e.js",
+    "file": "assets/AuthenticatedLayout-bd22588e.js",
     "imports": [
       "resources/js/app.jsx",
-      "_createLucideIcon-cd9ab746.js"
+      "_createLucideIcon-1bb6d2f5.js"
     ]
   },
-  "_Modal-d08f962a.js": {
-    "file": "assets/Modal-d08f962a.js",
+  "_Modal-03634ff1.js": {
+    "file": "assets/Modal-03634ff1.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-0f7bcd0e.js"
+      "_AuthenticatedLayout-bd22588e.js"
     ]
   },
-  "_PrimaryButton-e0f06e90.js": {
-    "file": "assets/PrimaryButton-e0f06e90.js",
+  "_PrimaryButton-387c4c79.js": {
+    "file": "assets/PrimaryButton-387c4c79.js",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_TableAtenciones-00759e68.js": {
+  "_TableAtenciones-e12884f8.js": {
     "dynamicImports": [
       "node_modules/html2canvas/dist/html2canvas.esm.js",
       "node_modules/dompurify/dist/purify.es.mjs",
       "node_modules/canvg/lib/index.es.js"
     ],
-    "file": "assets/TableAtenciones-00759e68.js",
+    "file": "assets/TableAtenciones-e12884f8.js",
     "imports": [
       "resources/js/app.jsx",
-      "_index-60292b64.js"
+      "_index-978b12b6.js"
     ],
     "isDynamicEntry": true
   },
-  "_check-circle-2-a6dfe20c.js": {
-    "file": "assets/check-circle-2-a6dfe20c.js",
+  "_check-circle-2-3358e1c6.js": {
+    "file": "assets/check-circle-2-3358e1c6.js",
     "imports": [
-      "_createLucideIcon-cd9ab746.js"
+      "_createLucideIcon-1bb6d2f5.js"
     ]
   },
-  "_createLucideIcon-cd9ab746.js": {
-    "file": "assets/createLucideIcon-cd9ab746.js",
+  "_createLucideIcon-1bb6d2f5.js": {
+    "file": "assets/createLucideIcon-1bb6d2f5.js",
     "imports": [
-      "resources/js/app.jsx"
-    ]
-  },
-  "_index-60292b64.js": {
-    "file": "assets/index-60292b64.js",
-    "imports": [
-      "_createLucideIcon-cd9ab746.js",
       "resources/js/app.jsx"
     ]
   },
   "_index-7ac5b536.js": {
     "file": "assets/index-7ac5b536.js"
   },
-  "_moment-a13510fb.js": {
-    "file": "assets/moment-a13510fb.js",
+  "_index-978b12b6.js": {
+    "file": "assets/index-978b12b6.js",
+    "imports": [
+      "_createLucideIcon-1bb6d2f5.js",
+      "resources/js/app.jsx"
+    ]
+  },
+  "_moment-78d61742.js": {
+    "file": "assets/moment-78d61742.js",
     "imports": [
       "resources/js/app.jsx"
     ]
   },
-  "_trash-2-51208db0.js": {
-    "file": "assets/trash-2-51208db0.js",
+  "_trash-2-c7acc403.js": {
+    "file": "assets/trash-2-c7acc403.js",
     "imports": [
-      "_createLucideIcon-cd9ab746.js"
+      "_createLucideIcon-1bb6d2f5.js"
     ]
   },
   "_xlsx-1ed496b9.js": {
     "file": "assets/xlsx-1ed496b9.js"
   },
   "node_modules/canvg/lib/index.es.js": {
-    "file": "assets/index.es-f4e60565.js",
+    "file": "assets/index.es-6400915a.js",
     "imports": [
       "_index-7ac5b536.js",
-      "_TableAtenciones-00759e68.js",
+      "_TableAtenciones-e12884f8.js",
       "resources/js/app.jsx",
-      "_index-60292b64.js",
-      "_createLucideIcon-cd9ab746.js"
+      "_index-978b12b6.js",
+      "_createLucideIcon-1bb6d2f5.js"
     ],
     "isDynamicEntry": true,
     "src": "node_modules/canvg/lib/index.es.js"
@@ -99,46 +99,46 @@
     "src": "resources/js/app.css"
   },
   "resources/js/Pages/Kines/KineDetalles.jsx": {
-    "file": "assets/KineDetalles-e0a191f5.js",
+    "file": "assets/KineDetalles-e3bfa87e.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-0f7bcd0e.js",
-      "_TableAtenciones-00759e68.js",
+      "_AuthenticatedLayout-bd22588e.js",
+      "_TableAtenciones-e12884f8.js",
       "_index-7ac5b536.js",
-      "_createLucideIcon-cd9ab746.js",
-      "_index-60292b64.js"
+      "_createLucideIcon-1bb6d2f5.js",
+      "_index-978b12b6.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/KineDetalles.jsx"
   },
   "resources/js/Pages/Kines/KinesIndex.jsx": {
-    "file": "assets/KinesIndex-af5fef35.js",
+    "file": "assets/KinesIndex-094b1b58.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-0f7bcd0e.js",
+      "_AuthenticatedLayout-bd22588e.js",
       "resources/js/Pages/Kines/TableKines.jsx",
       "_index-7ac5b536.js",
-      "_createLucideIcon-cd9ab746.js",
-      "_index-60292b64.js",
+      "_createLucideIcon-1bb6d2f5.js",
+      "_index-978b12b6.js",
       "_xlsx-1ed496b9.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/KinesIndex.jsx"
   },
   "resources/js/Pages/Kines/TableKines.jsx": {
-    "file": "assets/TableKines-9a1efdec.js",
+    "file": "assets/TableKines-c0758f5b.js",
     "imports": [
       "resources/js/app.jsx",
-      "_index-60292b64.js",
+      "_index-978b12b6.js",
       "_xlsx-1ed496b9.js",
       "_index-7ac5b536.js",
-      "_createLucideIcon-cd9ab746.js"
+      "_createLucideIcon-1bb6d2f5.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Kines/TableKines.jsx"
   },
   "resources/js/Pages/Patients/Partials/PatientModalDelete.jsx": {
-    "file": "assets/PatientModalDelete-7eee410e.js",
+    "file": "assets/PatientModalDelete-405df533.js",
     "imports": [
       "resources/js/app.jsx",
       "_index-7ac5b536.js"
@@ -147,55 +147,55 @@
     "src": "resources/js/Pages/Patients/Partials/PatientModalDelete.jsx"
   },
   "resources/js/Pages/Patients/Partials/PatientsModal.jsx": {
-    "file": "assets/PatientsModal-3db2d349.js",
+    "file": "assets/PatientsModal-32b42680.js",
     "imports": [
       "resources/js/app.jsx",
-      "_moment-a13510fb.js",
-      "_PrimaryButton-e0f06e90.js",
-      "_check-circle-2-a6dfe20c.js",
-      "_createLucideIcon-cd9ab746.js",
+      "_moment-78d61742.js",
+      "_PrimaryButton-387c4c79.js",
+      "_check-circle-2-3358e1c6.js",
+      "_createLucideIcon-1bb6d2f5.js",
       "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Patients/Partials/PatientsModal.jsx"
   },
   "resources/js/Pages/Patients/PatientsIndex.jsx": {
-    "file": "assets/PatientsIndex-c24fc3b5.js",
+    "file": "assets/PatientsIndex-9019e18f.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-0f7bcd0e.js",
+      "_AuthenticatedLayout-bd22588e.js",
       "resources/js/Pages/Patients/TablePacientes.jsx",
-      "_Modal-d08f962a.js",
+      "_Modal-03634ff1.js",
       "resources/js/Pages/Patients/Partials/PatientsModal.jsx",
-      "_PrimaryButton-e0f06e90.js",
+      "_PrimaryButton-387c4c79.js",
       "resources/js/Pages/Patients/Partials/PatientModalDelete.jsx",
       "_index-7ac5b536.js",
-      "_createLucideIcon-cd9ab746.js",
-      "_index-60292b64.js",
+      "_createLucideIcon-1bb6d2f5.js",
+      "_index-978b12b6.js",
       "_xlsx-1ed496b9.js",
-      "_trash-2-51208db0.js",
-      "_moment-a13510fb.js",
-      "_check-circle-2-a6dfe20c.js"
+      "_trash-2-c7acc403.js",
+      "_moment-78d61742.js",
+      "_check-circle-2-3358e1c6.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Patients/PatientsIndex.jsx"
   },
   "resources/js/Pages/Patients/TablePacientes.jsx": {
-    "file": "assets/TablePacientes-28183acb.js",
+    "file": "assets/TablePacientes-f260ba3d.js",
     "imports": [
       "resources/js/app.jsx",
-      "_index-60292b64.js",
-      "_PrimaryButton-e0f06e90.js",
+      "_index-978b12b6.js",
+      "_PrimaryButton-387c4c79.js",
       "_xlsx-1ed496b9.js",
       "_index-7ac5b536.js",
-      "_trash-2-51208db0.js",
-      "_createLucideIcon-cd9ab746.js"
+      "_trash-2-c7acc403.js",
+      "_createLucideIcon-1bb6d2f5.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Patients/TablePacientes.jsx"
   },
   "resources/js/Pages/Sesiones/Partials/SesionModalDelete.jsx": {
-    "file": "assets/SesionModalDelete-0a375358.js",
+    "file": "assets/SesionModalDelete-6f9621a0.js",
     "imports": [
       "resources/js/app.jsx",
       "_index-7ac5b536.js"
@@ -204,59 +204,59 @@
     "src": "resources/js/Pages/Sesiones/Partials/SesionModalDelete.jsx"
   },
   "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx": {
-    "file": "assets/SesionesModal-2df7459f.js",
+    "file": "assets/SesionesModal-61dbc980.js",
     "imports": [
       "resources/js/app.jsx",
-      "_moment-a13510fb.js",
-      "_PrimaryButton-e0f06e90.js",
-      "_createLucideIcon-cd9ab746.js",
+      "_moment-78d61742.js",
+      "_PrimaryButton-387c4c79.js",
+      "_createLucideIcon-1bb6d2f5.js",
       "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx"
   },
   "resources/js/Pages/Sesiones/SesionesIndex.jsx": {
-    "file": "assets/SesionesIndex-7dcfa615.js",
+    "file": "assets/SesionesIndex-8726f33e.js",
     "imports": [
       "resources/js/app.jsx",
-      "_AuthenticatedLayout-0f7bcd0e.js",
-      "_Modal-d08f962a.js",
+      "_AuthenticatedLayout-bd22588e.js",
+      "_Modal-03634ff1.js",
       "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx",
       "resources/js/Pages/Sesiones/TableSesiones.jsx",
       "resources/js/Pages/Sesiones/TablePacientesSesion.jsx",
       "resources/js/Pages/Sesiones/Partials/SesionModalDelete.jsx",
       "_index-7ac5b536.js",
-      "_createLucideIcon-cd9ab746.js",
-      "_moment-a13510fb.js",
-      "_PrimaryButton-e0f06e90.js",
-      "_index-60292b64.js",
-      "_trash-2-51208db0.js",
-      "_check-circle-2-a6dfe20c.js"
+      "_createLucideIcon-1bb6d2f5.js",
+      "_moment-78d61742.js",
+      "_PrimaryButton-387c4c79.js",
+      "_index-978b12b6.js",
+      "_trash-2-c7acc403.js",
+      "_check-circle-2-3358e1c6.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Sesiones/SesionesIndex.jsx"
   },
   "resources/js/Pages/Sesiones/TablePacientesSesion.jsx": {
-    "file": "assets/TablePacientesSesion-fb2151aa.js",
+    "file": "assets/TablePacientesSesion-68072560.js",
     "imports": [
       "resources/js/app.jsx",
-      "_index-60292b64.js",
-      "_PrimaryButton-e0f06e90.js",
+      "_index-978b12b6.js",
+      "_PrimaryButton-387c4c79.js",
       "_index-7ac5b536.js",
-      "_createLucideIcon-cd9ab746.js"
+      "_createLucideIcon-1bb6d2f5.js"
     ],
     "isDynamicEntry": true,
     "src": "resources/js/Pages/Sesiones/TablePacientesSesion.jsx"
   },
   "resources/js/Pages/Sesiones/TableSesiones.jsx": {
-    "file": "assets/TableSesiones-f7fd704e.js",
+    "file": "assets/TableSesiones-dfad6c0e.js",
     "imports": [
       "resources/js/app.jsx",
-      "_index-60292b64.js",
-      "_PrimaryButton-e0f06e90.js",
-      "_trash-2-51208db0.js",
-      "_createLucideIcon-cd9ab746.js",
-      "_check-circle-2-a6dfe20c.js",
+      "_index-978b12b6.js",
+      "_PrimaryButton-387c4c79.js",
+      "_trash-2-c7acc403.js",
+      "_createLucideIcon-1bb6d2f5.js",
+      "_check-circle-2-3358e1c6.js",
       "_index-7ac5b536.js"
     ],
     "isDynamicEntry": true,
@@ -281,7 +281,7 @@
     "dynamicImports": [
       "resources/js/Pages/Kines/KineDetalles.jsx",
       "resources/js/Pages/Kines/KinesIndex.jsx",
-      "_TableAtenciones-00759e68.js",
+      "_TableAtenciones-e12884f8.js",
       "resources/js/Pages/Kines/TableKines.jsx",
       "resources/js/Pages/Patients/Partials/PatientModalDelete.jsx",
       "resources/js/Pages/Patients/Partials/PatientsModal.jsx",
@@ -293,7 +293,7 @@
       "resources/js/Pages/Sesiones/TablePacientesSesion.jsx",
       "resources/js/Pages/Sesiones/TableSesiones.jsx"
     ],
-    "file": "assets/app-d69b1863.js",
+    "file": "assets/app-98fb6671.js",
     "imports": [
       "_index-7ac5b536.js"
     ],

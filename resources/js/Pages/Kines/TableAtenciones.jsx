@@ -490,21 +490,17 @@ export default function TableAtenciones({
           <tfoot>
             <tr className="font-semibold bg-gray-100">
               {/* Paciente, Fecha, Tipo, N° Sesión */}
-              <td className="px-4 py-3" colSpan={4}>
+              <td className="px-4 py-3" colSpan={3}>
                 Totales (Atenciones: {totalAtenciones})
               </td>
               {/* Valor */}
-              <td className="px-4 py-3 text-right">{clp(totals.valor)}</td>
+              <td className="px-4 py-3 text-right"></td>
               {/* Valor Cliente */}
-              <td className="px-4 py-3 text-right">
-                {clp(totals.valor_senex)}
-              </td>
+              <td className="px-4 py-3 text-left">{clp(totals.valor_senex)}</td>
               {/* Valor Kine */}
-              <td className="px-4 py-3 text-right">{clp(totals.valor_kine)}</td>
+              <td className="px-4 py-3 text-left">{clp(totals.valor_kine)}</td>
               {/* Total Senex */}
-              <td className="px-4 py-3 text-right">
-                {clp(totals.total_senex)}
-              </td>
+              <td className="px-4 py-3 text-left">{clp(totals.total_senex)}</td>
               {/* Estado (vacío) */}
               <td className="px-4 py-3"></td>
             </tr>
