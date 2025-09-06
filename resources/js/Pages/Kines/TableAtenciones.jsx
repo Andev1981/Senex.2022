@@ -124,17 +124,6 @@ export default function TableAtenciones({
       },
       { accessorKey: "application_type_name", header: "Tipo" },
       { accessorKey: "numero_sesion", header: "Número de Sesión" },
-      // NUEVA COLUMNA: Valor (apply_item_price o valor)
-      {
-        header: "Valor",
-        accessorFn: (row) =>
-          row?.apply_item_price != null ? row.apply_item_price : row?.valor,
-        id: "valor",
-        cell: ({ getValue }) => {
-          const v = getValue();
-          return v != null && v !== "" ? v : "-";
-        },
-      },
       { accessorKey: "valor_senex", header: "Valor Cliente" },
       { accessorKey: "valor_kine", header: "Valor Kine" },
       { accessorKey: "total_senex", header: "Total Senex" },
