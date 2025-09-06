@@ -34,10 +34,21 @@ class Doctor extends Model
         return $this->belongsTo(Address::class);
     }
 
+    public function sessions_items()
+    {
+        return $this->hasMany(ApplyItem::class);
+    }
+
     public function applyTypes()
     {
         return $this->hasMany(ApplicationTypeUser::class);
     }
+
+    public function apply_types()
+    {
+        return $this->hasMany(ApplicationTypeUser::class);
+    }
+
     public function getAgeAttribute()
     {
         if (!$this->birth || !Carbon::hasFormat($this->birth, 'Y-m-d')) {

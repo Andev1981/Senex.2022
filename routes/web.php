@@ -98,7 +98,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('pacientes', ListadosIndex::class)->name('pacientes');
 
   Route::get('kines', ListadoKines::class)->name('kines');
-  Route::get('kines-detalles/{id}', Atenciones::class)->name('kines-detalles');
+  //Route::get('kines-detalles/{id}', Atenciones::class)->name('kines-detalles');
   Route::get('types', Index::class)->name('types');
 
   //Livewire componentes app kines
@@ -145,6 +145,8 @@ Route::group(['middleware' => ['auth']], function () {
 
   /* kines */
   Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
+  Route::get('kines-detalles/{id}', [PatientController::class, 'kineDetalles'])->name('kines-detalles');
+
   /* sesiones, applyitems */
   Route::get('apply-items', [ApplyItemController::class, 'index'])->name('apply.items');
   Route::post('apply-items-store', [ApplyItemController::class, 'store'])->name('apply.items.store');

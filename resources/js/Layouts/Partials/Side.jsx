@@ -27,7 +27,7 @@ function Side({ sidebarOpen }) {
               }
             >
               <img
-                src={"./icons/resolucion-de-problemas.gif"}
+                src={"/icons/resolucion-de-problemas.gif"}
                 className="w-6 h-6"
               />
               <span className="ml-1 text-sm text-primary">Pacientes(*)</span>
@@ -42,7 +42,7 @@ function Side({ sidebarOpen }) {
                   : styleNotSelected
               }
             >
-              <img src={"./icons/controlar.gif"} className="w-6 h-6" />
+              <img src={"/icons/controlar.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">Informes</span>
             </a>
           </li>
@@ -58,7 +58,7 @@ function Side({ sidebarOpen }) {
               }
             >
               <img
-                src={"./icons/devolucion-de-dinero.gif"}
+                src={"/icons/devolucion-de-dinero.gif"}
                 className="w-6 h-6"
               />
               <span className="ml-1 text-sm text-primary">
@@ -75,7 +75,7 @@ function Side({ sidebarOpen }) {
                   : styleNotSelected
               }
             >
-              <img src={"./icons/usuario.gif"} className="w-6 h-6" />
+              <img src={"/icons/usuario.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">
                 Sesiones&nbsp;Pacientes(*)
               </span>
@@ -92,7 +92,7 @@ function Side({ sidebarOpen }) {
                   : styleNotSelected
               }
             >
-              <img src={"./icons/medicamento.gif"} className="w-6 h-6" />
+              <img src={"/icons/medicamento.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">Kines</span>
             </a>
           </li>
@@ -106,7 +106,7 @@ function Side({ sidebarOpen }) {
                   : styleNotSelected
               }
             >
-              <img src={"./icons/controlar.gif"} className="w-6 h-6" />
+              <img src={"/icons/controlar.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">
                 Tipo&nbsp;Atenciones
               </span>

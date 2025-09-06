@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
 use App\Models\Address;
+use App\Models\ApplyItem;
 use App\Models\Comuna;
 use App\Models\Doctor;
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PatientController extends Controller
@@ -107,5 +109,42 @@ class PatientController extends Controller
         $patient->save();
 
         return back();
+    }
+
+    public function kineDetalles($id)
+    {
+        $doctor = Doctor::find($id);
+        if (!$doctor) {
+            return redirect()->route('listado.kines')->with('error', 'Kinesiólogo no encontrado.');
+        }
+        //$atenciones = ApplyItem::with('patient', 'application')->where('doctor_id', $doctor->id)->where('status', 1)->orderBy('fecha_atencion', 'desc')->get();
+
+        $atenciones = DB::table('apply_items as ai')
+            ->leftJoin('patients as p', 'p.id', '=', 'ai.patient_id')
+            ->leftJoin('doctors as d', 'd.id', '=', 'ai.doctor_id')
+            ->leftJoin('application_type_users as apptu', 'apptu.id', '=', 'ai.application_type_user_id')
+            ->leftJoin('application_types as appt', 'appt.id', '=', 'ai.application_type_id')
+            ->where('ai.doctor_id', $doctor->id)
+            ->where('ai.status', 1)
+            ->orderByDesc('p.name')                 // ✅ más simple/rápido que subquery
+            ->orderBy('ai.fecha_atencion', 'asc')
+            ->select([
+                'ai.id',
+                'ai.fecha_atencion',
+                'ai.status',
+                DB::raw("CONCAT(p.name,' ',p.last_name) as patient_full"),
+                'appt.name as application_type_name',
+                'apptu.price as valor_kine',
+                'ai.price as valor_senex',
+                'ai.numero_sesion',
+            ])
+            // ✅ Resta segura (maneja NULL); si tus prices son string, usa la variante con CAST de abajo
+            ->selectRaw('(COALESCE(ai.price,0) - COALESCE(apptu.price,0)) as total_senex')
+            ->get();
+
+        $user = auth()->user();
+
+
+        return Inertia::render('Kines/KineDetalles', compact('doctor', 'atenciones', 'user'));
     }
 }
