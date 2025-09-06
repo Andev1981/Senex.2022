@@ -144,6 +144,8 @@ class PatientController extends Controller
 
         $user = auth()->user();
 
+        dd($atenciones);
+
 
         return Inertia::render('Kines/KineDetalles', compact('doctor', 'atenciones', 'user'));
     }
