@@ -122,11 +122,15 @@ class PatientController extends Controller
         $atenciones = DB::table('apply_items as ai')
             ->leftJoin('patients as p', 'p.id', '=', 'ai.patient_id')
             ->leftJoin('doctors as d', 'd.id', '=', 'ai.doctor_id')
-            ->leftJoin('application_type_users as apptu', 'apptu.id', '=', 'ai.application_type_user_id')
             ->leftJoin('application_types as appt', 'appt.id', '=', 'ai.application_type_id')
+            ->leftJoin('application_type_users as apptu', function ($join) use ($doctor) {
+                $join->on('apptu.id', '=', 'ai.application_type_user_id')
+                    ->where('apptu.user_id', '=', $doctor->id); // <- filtra por el user del doctor
+                // si la columna fuera apptu.doctor_id, cámbiala aquí
+            })
             ->where('ai.doctor_id', $doctor->id)
             ->where('ai.status', 1)
-            ->orderByDesc('p.name')                 // ✅ más simple/rápido que subquery
+            ->orderByDesc('p.name')
             ->orderBy('ai.fecha_atencion', 'asc')
             ->select([
                 'ai.id',
@@ -138,13 +142,13 @@ class PatientController extends Controller
                 'ai.price as valor_senex',
                 'ai.numero_sesion',
             ])
-            // ✅ Resta segura (maneja NULL); si tus prices son string, usa la variante con CAST de abajo
             ->selectRaw('(COALESCE(ai.price,0) - COALESCE(apptu.price,0)) as total_senex')
             ->get();
 
+
         $user = auth()->user();
 
-        dd($atenciones);
+        /*       dd($atenciones); */
 
 
         return Inertia::render('Kines/KineDetalles', compact('doctor', 'atenciones', 'user'));
