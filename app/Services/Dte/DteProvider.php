@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Services\Dte;
+
+interface DteProvider
+{
+  /**
+   * Emite un DTE (boleta/factura/nota) y retorna identificadores y estado.
+   * @param array $payload  Datos normalizados (emisor, receptor, items, totales, refs)
+   * @param array $options  e.g. ['type' => 33, 'send_to_sii' => true]
+   * @return array{folio:int|null, track_id:int|null, status:string, raw:mixed}
+   */
+  public function issue(array $payload, array $options = []): array;
+  public function status(int|string $trackId): array;
+}

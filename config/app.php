@@ -182,7 +182,7 @@ return [
         Laraveles\Spanish\SpanishServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
         Barryvdh\DomPDF\ServiceProvider::class,
-
+        App\Providers\DteServiceProvider::class,
     ],
 
     /*

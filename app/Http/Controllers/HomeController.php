@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
+use App\Models\Commune;
 use App\Models\Comuna;
 use App\Models\Patient;
 use App\Models\SessionType;
@@ -26,11 +27,14 @@ class HomeController extends Controller
         return view('admin.index'); */
 
         $user = auth()->user();
-        $pacientes = Patient::with('address', 'address.comuna', 'lastAttention', 'lastAttention.doctor')->where('status', 1)->orderBy('birth', 'desc')->get();
+        /* $pacientes = Patient::with('address', 'address.comuna', 'lastAttention', 'lastAttention.doctor')->where('status', 1)->orderBy('birth_date', 'desc')->get(); */
+        $patients = Patient::with('treatments')->get();
+        $communes = Commune::whereBetween('province_id', [2401, 2406])->get();
 
-        $comunas = Comuna::where('region_id', 1)->get();
 
-        return Inertia::render('Patients/IndexPatients', compact('user', 'pacientes', 'comunas'));
+        /*  dd($patients, $communes); */
+
+        return Inertia::render('Patients/IndexPatients', compact('user', 'patients', 'communes'));
     }
 
 

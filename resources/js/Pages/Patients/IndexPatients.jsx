@@ -7,7 +7,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import ModalCreateEditPatient from "./ModalCreateEditPatient";
 import ModalDeletePatient from "./ModalDeletePatient";
 
-export default function IndexPatients({ user, pacientes, comunas }) {
+export default function IndexPatients({ user, patients, communes }) {
   const [openModalPatient, setOpenModalPatient] = useState(false);
   const [patient, setPatient] = useState({});
   const [openModalDelete, setOpenModalDelete] = useState(false);
@@ -47,10 +47,10 @@ export default function IndexPatients({ user, pacientes, comunas }) {
                 </PrimaryButton>
               </div>
               <TablePatients
-                pacientes={pacientes}
+                patients={patients}
                 handleOpenModalOptions={handleOpenModalOptions}
                 handleOpenModalDelete={handleOpenModalDelete}
-                comunas={comunas}
+                communes={communes}
               />
             </div>
           </div>
@@ -66,7 +66,7 @@ export default function IndexPatients({ user, pacientes, comunas }) {
         <ModalCreateEditPatient
           patient={patient}
           setOpenModalPatient={setOpenModalPatient}
-          comunas={comunas}
+          communes={communes}
         />
       </Modal>
       <Modal

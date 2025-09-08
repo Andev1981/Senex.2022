@@ -9,12 +9,11 @@ class Region extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'country_id'
-    ];
-
-    public function country(){
-        return $this->belongsTo(Country::class);
+    public $incrementing = false;
+    protected $keyType = 'int';
+    protected $fillable = ['id', 'code', 'name', 'roman'];
+    public function provinces()
+    {
+        return $this->hasMany(Province::class);
     }
 }

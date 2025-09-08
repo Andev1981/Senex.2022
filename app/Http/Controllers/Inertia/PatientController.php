@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
 use App\Models\Address;
+use App\Models\Commune;
 use App\Models\Comuna;
 use App\Models\Doctor;
 use App\Models\Patient;
@@ -15,11 +16,10 @@ class PatientController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $pacientes = Patient::with('address', 'address.comuna', 'lastAttention', 'lastAttention.doctor')->where('status', 1)->orderBy('birth', 'desc')->get();
+        $patients = Patient::with('treatments')->get();
+        $communes = Commune::whereBetween('province_id', [2401, 2406])->get();
 
-        $comunas = Comuna::where('region_id', 1)->get();
-
-        return Inertia::render('Patients/IndexPatients', compact('user', 'pacientes', 'comunas'));
+        return Inertia::render('Patients/IndexPatients', compact('user', 'patients', 'communes'));
     }
 
     public function kines()

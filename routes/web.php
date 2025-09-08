@@ -2,31 +2,47 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\PaymentIncomeController;
-use App\Http\Controllers\ReportePdfController;
-use App\Http\Livewire\Informes\IndexInformes;
-use App\Http\Livewire\Kine\Atenciones;
-use App\Http\Livewire\Kine\ListadoKines;
-use App\Http\Livewire\Kinesiologos\AtencionDetalle;
-use App\Http\Livewire\Paciente\ListadosIndex;
-use App\Http\Livewire\Paciente\Resumen;
-use App\Http\Livewire\PagosPaciente\IndexPagos;
-use App\Http\Livewire\PagosPaciente\DetallePagos;
-use App\Http\Livewire\Sesiones\IndexSesiones;
-use App\Http\Livewire\Types\Index;
-use App\Http\Livewire\Kinesiologos\KineIndex;
-use App\Http\Livewire\Kinesiologos\ListadoPacientes;
-use App\Http\Livewire\Kinesiologos\NoAutorizado;
-use App\Http\Livewire\Kinesiologos\Resumenes;
+
+
+/* Livewire */
+use App\Http\Livewire\{
+  Informes\IndexInformes,
+  Kine\Atenciones,
+  Kine\ListadoKines,
+  Kinesiologos\AtencionDetalle,
+  Paciente\ListadosIndex,
+  Paciente\Resumen,
+  PagosPaciente\IndexPagos,
+  PagosPaciente\DetallePagos,
+  Sesiones\IndexSesiones,
+  Types\Index,
+  Kinesiologos\KineIndex,
+  Kinesiologos\ListadoPacientes,
+  Kinesiologos\NoAutorizado,
+  Kinesiologos\Resumenes
+};
+
 /* Inertia */
-use App\Http\Controllers\Inertia\ApplyItemController;
-use App\Http\Controllers\Inertia\DteController;
-use App\Http\Controllers\Inertia\PatientController;
-use App\Http\Controllers\Inertia\SessionTypeController;
+use App\Http\Controllers\Inertia\{
+  ApplyItemController,
+  DteController,
+  SessionTypeController,
+  PatientController,
+  PaymentsController,
+  InvoicesController,
+  AttendancesController,
+};
+
+
+use App\Http\Controllers\{
+  HomeController,
+  RoleController,
+  UserController,
+  PaymentIncomeController,
+  ReportePdfController,
+  Auth\RegisteredUserController
+};
+
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -146,14 +162,16 @@ Route::group(['middleware' => ['auth']], function () {
   /* kines */
   Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
   /* sesiones, applyitems */
-  Route::get('apply-items', [ApplyItemController::class, 'index'])->name('apply.items');
+  /* Route::get('apply-items', [ApplyItemController::class, 'index'])->name('apply.items');
   Route::post('apply-items-store', [ApplyItemController::class, 'store'])->name('apply.items.store');
   Route::post('apply-items-update/{applyItem}', [ApplyItemController::class, 'update'])->name('apply.items.update');
   Route::get('apply-items-borrar/{applyItem}', [ApplyItemController::class, 'destroy'])->name('apply.items.destroy');
+ */
 
   /* DTE */
   Route::get('/boleta-crear', [DteController::class, 'crear'])->name('boleta');
-  Route::post('/boleta-emitir', [DteController::class, 'emitir'])->name('boleta.emitir');
+  Route::post('/dte/emit', [DteController::class, 'emit'])->name('dte.emit');
+  Route::post('/dte/check', [DteController::class, 'check'])->name('dte.check');
 
   /* Nuevos tratamientos */
   Route::get('/admin/session-types',              [SessionTypeController::class, 'index'])->name('session-types.index');
@@ -162,12 +180,37 @@ Route::group(['middleware' => ['auth']], function () {
   Route::delete('/admin/session-types/{sessionType}', [SessionTypeController::class, 'destroy'])->name('session-types.destroy');
 
   Route::get('/fix', [HomeController::class, 'fix']);
+
+
+  /* SeniorSenex */
+  // Gestión de atenciones (presencial)
+  Route::get('/attendances', [AttendancesController::class, 'index'])->name('attendances.index');
+  Route::post('/attendances', [AttendancesController::class, 'store'])->name('attendances.store');
+
+  // Check-in de citas
+  Route::post('/appointments/{appointment}/check-in', [AttendancesController::class, 'checkInAppointment'])
+    ->name('appointments.checkin');
+
+  // Pagos
+  Route::post('/sessions/{session}/pay/now', [PaymentsController::class, 'chargeNowForSession'])->name('sessions.pay.now');
+  Route::post('/sessions/{session}/pay/webpay', [PaymentsController::class, 'createWebpay'])->name('sessions.pay.webpay');
+
+  // Callback/return de WebPay (debe estar sin CSRF si es externo, usualmente en routes/web con except en VerifyCsrfToken)
+  Route::match(['GET', 'POST'], '/payments/webpay/confPaymentsControllerirm', [PaymentsController::class, 'confirmWebpay'])->name('payments.webpay.confirm');
+
+  // Asignaciones de pagos
+  Route::post('/invoices/{invoice}/allocate', [PaymentsController::class, 'allocateToInvoice'])->name('invoices.allocate');
+  Route::post('/debts/{debt}/settle', [PaymentsController::class, 'settleDebt'])->name('debts.settle');
+
+  // DTE / Documentos
+  Route::get('/invoices', [InvoicesController::class, 'index'])->name('invoices.index');
+  Route::get('/invoices/{invoice}', [InvoicesController::class, 'show'])->name('invoices.show');
+  Route::post('/invoices/sessions/{session}/issue', [InvoicesController::class, 'issueForSession'])
+    ->name('invoices.issue.session');
+  Route::post('/invoices/plans/{patientPlan}/issue', [InvoicesController::class, 'issueForPlan'])
+    ->name('invoices.issue.plan');
+  Route::post('/invoices/{invoice}/cancel', [InvoicesController::class, 'cancel'])
+    ->name('invoices.cancel');
+  Route::get('/invoices/{invoice}/pdf', [InvoicesController::class, 'downloadPdf'])
+    ->name('invoices.pdf');
 });
-
-
-//Transbank
-/* Route::post('iniciar-compra', [TransbankController::class, 'iniciarCompra'])->name('iniciar.compra');
-Route::match(array('GET', 'POST'), '/confirmar-pago', [TransbankController::class, 'confirmar_pago'])->name('confirmar.pago');
-
-Route::get('/pago-ok/{id_transaccion}', [TransbankController::class, 'pago_ok'])->name('pago.ok');
-Route::get('/pago-fallido', [TransbankController::class, 'pago_fallido'])->name('pago.fallido'); */

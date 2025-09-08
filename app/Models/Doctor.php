@@ -2,27 +2,36 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAddresses;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Doctor extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAddresses;
 
     protected $fillable = [
-        'user_id',
-        'name',
-        'last_name',
         'avatar',
         'rut',
         'birth',
         'phone',
         'address_id',
         'status',
+        'user_id',
+        'branch_id',
+        'name',
+        'last_name',
+        'rut',
+        'specialty',
+        'is_active',
     ];
 
     protected $dates = ['birth'];
+
+    protected $casts = [
+        'is_active' => 'bool',
+    ];
 
     public function user()
     {
@@ -32,6 +41,16 @@ class Doctor extends Model
     public function address()
     {
         return $this->belongsTo(Address::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function commissionRates()
+    {
+        return $this->hasMany(DoctorCommissionRate::class);
     }
 
     public function applyTypes()

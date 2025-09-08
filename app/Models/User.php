@@ -102,4 +102,9 @@ class User extends Authenticatable
             PermissionRegistrar::$pivotRole
         );
     }
+
+    public function doctorProfile()
+    {
+        return $this->hasOne(Doctor::class);
+    }
 }

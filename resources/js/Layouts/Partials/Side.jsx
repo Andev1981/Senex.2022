@@ -31,23 +31,25 @@ function Side({ sidebarOpen }) {
                 src={"/icons/resolucion-de-problemas.gif"}
                 className="w-6 h-6"
               />
-              <span className="ml-1 text-sm text-primary">Pacientes(*)</span>
+              <span className="ml-1 text-sm text-primary">
+                Pacientes(*Nuevo)
+              </span>
             </Link>
           </li>
           <li>
             <Link
               href={route("boleta")}
               className={
-                location.pathname === "/boleta/crear"
+                location.pathname === "/boleta-crear"
                   ? styleSelected
                   : styleNotSelected
               }
             >
               <img src={"/icons/libro-medico.gif"} className="w-6 h-6" />
-              <span className="ml-1 text-sm text-primary">Boleta(*)</span>
+              <span className="ml-1 text-sm text-primary">Boleta(*Nuevo)</span>
             </Link>
           </li>
-          <li>
+          {/* <li>
             <a
               href="/informes"
               className={
@@ -59,9 +61,9 @@ function Side({ sidebarOpen }) {
               <img src={"/icons/controlar.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">Informes</span>
             </a>
-          </li>
+          </li> */}
         </ul>
-        <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
+        {/* <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
           <li>
             <a
               href="/pagos"
@@ -94,7 +96,7 @@ function Side({ sidebarOpen }) {
                 Sesiones&nbsp;Pacientes(*)
               </span>
             </Link>
-          </li>
+          </li> 
         </ul>
         <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
           <li>
@@ -141,7 +143,7 @@ function Side({ sidebarOpen }) {
               </span>
             </Link>
           </li>
-        </ul>
+        </ul> */}
       </div>
     </aside>
   );

@@ -16,21 +16,21 @@ class SessionType extends Model
     ];
 
     protected $casts = [
-        'base_price'        => 'decimal:2',
-        'plan_eligible'     => 'boolean',
+        'base_price' => 'decimal:2',
+        'plan_eligible' => 'boolean',
         'plan_session_value' => 'integer',
-        'is_active'         => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     // Relaciones sugeridas (ajusta nombres de modelos si difieren)
     public function treatmentSessions()
     {
-        return $this->hasMany(\App\Models\TreatmentSession::class);
+        return $this->hasMany(TreatmentSession::class);
     }
 
     public function defaultForTreatments()
     {
-        return $this->hasMany(\App\Models\Treatment::class, 'default_session_type_id');
+        return $this->hasMany(Treatment::class, 'default_session_type_id');
     }
 
     // Scopes útiles

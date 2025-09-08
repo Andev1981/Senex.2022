@@ -1,64 +1,124 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Senex — Plataforma Kinesiológica SaaS
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 🚀 Stack Técnico
 
-## About Laravel
+- **Backend:** Laravel 9.2 + Sanctum
+- **Frontend:** React 18 + Inertia.js
+- **Base de datos:** MySQL local / PostgreSQL producción
+- **Arquitectura:** Multi-tenant por fila (`tenant_id` en todas las tablas)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🏗️ Arquitectura de Módulos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Core
 
-## Learning Laravel
+- `tenants`, `users`, `tenant_users`
+- `branches`, `rooms`
+- `doctors`, `patients`
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Agenda
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- `availabilities`
+- `appointments`
 
-## Laravel Sponsors
+### Clínica
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+- `session_types`
+- `treatments`
+- `treatment_sessions`
 
-### Premium Partners
+### Pagos
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+- `payment_transactions`
+- `debts`
+- `payment_allocations`
+- `webhook_events`
 
-## Contributing
+### Facturación (DTE)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- `company_settings`
+- `invoices`
+- `invoice_items`
 
-## Code of Conduct
+### Planes
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- `plans`
+- `patient_plans`
+- `plan_session_consumptions`
 
-## Security Vulnerabilities
+### Comisiones y Liquidaciones
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- `doctor_commission_rates`
+- `payrolls`
+- `payroll_details`
 
-## License
+### Ficha Médica
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `medical_records` (1:1 con paciente)
+- `clinical_notes` (N por sesión/consulta)
+- `medical_attachments`
+- `vitals`
+
+### Auditoría
+
+- `activity_logs`
+
+---
+
+## 📋 Migraciones
+
+- Todas las tablas usan **BIGINT UNSIGNED** para IDs.
+- Índices compuestos `(tenant_id, id)` en tablas padre para soportar FKs multi-tenant.
+- Orden de migraciones dividido en packs (core, agenda, clínica, pagos, DTE, planes, comisiones, ficha).
+
+---
+
+## 🌱 Seeders
+
+Seeder principal: `TenantWithDemoDataSeeder`
+
+- 1 tenant demo
+- 4 usuarios (admin, recepción, kine, finanzas)
+- 3 rooms, 4 doctores, 50 pacientes
+- 5 tipos de sesión
+- Comisiones por doctor/tipo
+- Company settings demo (DTE/WebPay)
+- Disponibilidades, citas, tratamientos, atenciones (80+)
+- Pagos, deudas, boletas emitidas
+- Planes y consumo
+- Notas clínicas SOAP y vitales
+- Payrolls y webhook de ejemplo
+
+---
+
+## 🏭 Factories
+
+- Trait `ForTenant` para setear `tenant_id`
+- Factories para todos los modelos (tenant, user, doctor, patient, session_type, treatment, treatment_session, appointment, plan, invoice, etc.)
+- Permiten generar un tenant completo con datos consistentes para testing automatizado
+
+---
+
+## 🔑 Próximos Pasos
+
+- Endpoints REST/Controllers para agenda, atenciones, pagos y facturación
+- Vistas Inertia/React para:
+  - Agenda visual (calendario)
+  - Gestión presencial (check-in, atenciones del día)
+  - Pagos en línea (WebPay)
+  - Planes y convenios
+  - Ficha médica
+- Integraciones externas:
+  - **WebPay**: pagos en línea
+  - **DTE (SII/LibreDTE)**: boletas y facturas
+  - **IMED** (futuro): convenios médicos
+
+---
+
+## 👩‍💻 Desarrollo
+
+- Migrar con:
+  ```bash
+  php artisan migrate --seed
+  ```

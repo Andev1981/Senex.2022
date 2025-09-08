@@ -80,19 +80,16 @@ function Nav({ user, sidebarOpen, setSidebarOpen }) {
                       {user?.email}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-2 px-4 py-3">
-                    <a href="dashboard" className="align-middle">
-                      Perfil
-                    </a>
-                    <a
-                      href="logout"
-                      className="align-middle"
-                      method="post"
-                      as="button"
-                    >
-                      Cerrar Sesión
-                    </a>
-                  </div>
+                  {/*   <Dropdown.Link href={route("users.profile.edit")}>
+                    Perfil
+                  </Dropdown.Link> */}
+                  <Dropdown.Link
+                    href={route("logout")}
+                    method="post"
+                    as="button"
+                  >
+                    Cerrar Sesión
+                  </Dropdown.Link>
                 </Dropdown.Content>
               </Dropdown>
             </div>

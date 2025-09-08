@@ -11,6 +11,7 @@
         "php": "^8.0.2",
         "ext-gd": "*",
         "barryvdh/laravel-dompdf": "^2.0",
+        "doctrine/dbal": "^4.3",
         "dompdf/dompdf": "*",
         "enyo/dropzone": "^5.9",
         "guzzlehttp/guzzle": "^7.2",
@@ -22,6 +23,7 @@
         "laravel/ui": "^4.0",
         "laravelcollective/html": "^6.3",
         "laraveles/spanish": "^1.5",
+        "libredte/libredte-api-client": "2.0",
         "libredte/libredte-lib-core": "^21.10",
         "livewire/livewire": "^2.10",
         "maatwebsite/excel": "3.1.48",
@@ -29,7 +31,7 @@
         "realrashid/sweet-alert": "^5.1",
         "spatie/laravel-permission": "^5.5",
         "tightenco/ziggy": "^2.5",
-        "transbank/transbank-sdk": "2.0",
+        "transbank/transbank-sdk": "^5.1",
         "victorybiz/laravel-simple-select": "^1.5"
     },
     "require-dev": {
@@ -39,6 +41,8 @@
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.1",
+        "pestphp/pest": "^1.23",
+        "pestphp/pest-plugin-laravel": "^1.4",
         "phpunit/phpunit": "^9.5.10",
         "spatie/laravel-ignition": "^1.0"
     },
@@ -77,7 +81,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true

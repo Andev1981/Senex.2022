@@ -5,6 +5,9 @@ namespace App\Providers;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use App\Services\Dte\DteProvider;
+use App\Services\Dte\LibreDteProvider;
+
 
 class AppServiceProvider extends ServiceProvider
 {

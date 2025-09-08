@@ -20,10 +20,10 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
 export default function TablePatients({
-  pacientes,
+  patients,
   handleOpenModalOptions,
   handleOpenModalDelete,
-  comunas,
+  communes,
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -33,20 +33,20 @@ export default function TablePatients({
 
   // Filtro global
   const filteredData = useMemo(() => {
-    if (!globalFilter) return pacientes || [];
+    if (!globalFilter) return patients || [];
     const filter = globalFilter.toLowerCase();
-    return pacientes.filter((row) =>
+    return patients.filter((row) =>
       Object.values(row).some(
         (val) => val && val.toString().toLowerCase().includes(filter)
       )
     );
-  }, [globalFilter, pacientes]);
+  }, [globalFilter, patients]);
 
   // Obtener comunas únicas
-  /* const comunas = useMemo(() => {
-    const set = new Set(pacientes.map((p) => p.comuna).filter(Boolean));
+  /* const communes = useMemo(() => {
+    const set = new Set(patients.map((p) => p.comuna).filter(Boolean));
     return Array.from(set);
-  }, [pacientes]); */
+  }, [patients]); */
 
   // Definición de columnas
   const columns = useMemo(
@@ -97,8 +97,8 @@ export default function TablePatients({
       },
       {
         header: "FECHA NACIMIENTO",
-        accessorFn: (row) => row?.birth,
-        id: "birth",
+        accessorFn: (row) => row?.birth_date,
+        id: "birth_date",
         cell: ({ getValue }) =>
           getValue() ? new Date(getValue()).toLocaleDateString("es-CL") : "-",
         filterFn: (row, columnId, filterValue) => {
@@ -149,8 +149,8 @@ export default function TablePatients({
       {
         header: "EDAD",
         accessorFn: (row) => {
-          if (!row?.birth) return null;
-          const birthDate = new Date(row.birth);
+          if (!row?.birth_date) return null;
+          const birthDate = new Date(row.birth_date);
           const today = new Date();
           let age = today.getFullYear() - birthDate.getFullYear();
           const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -192,7 +192,7 @@ export default function TablePatients({
           </div>
         ),
       },
-      {
+      /*  {
         header: "COMUNA",
         accessorFn: (row) => row?.comuna_nombre,
         cell: ({ getValue }) => (
@@ -203,8 +203,8 @@ export default function TablePatients({
             {getValue()}
           </div>
         ),
-      },
-      {
+      }, */
+      /* {
         header: "DIRECCIÓN",
         accessorFn: (row) => row?.direccion,
         cell: ({ getValue }) => (
@@ -215,7 +215,7 @@ export default function TablePatients({
             {getValue()}
           </div>
         ),
-      },
+      }, */
       {
         header: "CORREO",
         accessorFn: (row) => row?.email,
@@ -242,7 +242,7 @@ export default function TablePatients({
       },
       {
         header: "ÚLTIMA ATENCIÓN",
-        accessorFn: (row) => row?.doctor_nombre,
+        accessorFn: (row) => row?.gender,
         cell: ({ getValue }) => (
           <div
             className="overflow-hidden uppercase truncate whitespace-nowrap"

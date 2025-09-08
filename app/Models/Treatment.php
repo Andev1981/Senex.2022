@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Treatment extends Model
 {
+
     use SoftDeletes;
 
     protected $fillable = [

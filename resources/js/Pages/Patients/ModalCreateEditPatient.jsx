@@ -10,15 +10,15 @@ import ChilePhoneInput from "@/Components/ChilePhoneInput";
 import RutInput from "@/Components/RutInput";
 import moment from "moment";
 
-function ModalCreateEditPatient({ patient, setOpenModalPatient, comunas }) {
+function ModalCreateEditPatient({ patient, setOpenModalPatient, communes }) {
   const { data, setData, errors, post, put, reset, processing } = useForm({
     id: patient?.id || null,
     name: patient?.name || "",
     last_name: patient?.last_name || "",
     email: patient?.email || "",
     rut: patient?.rut || "",
-    birth: patient?.birth
-      ? moment.utc(patient.birth).format("YYYY-MM-DD")
+    birth: patient?.birth_date
+      ? moment.utc(patient.birth_date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
     phone: patient?.phone || "",
     address_id: patient?.address_id || "",
@@ -172,7 +172,7 @@ function ModalCreateEditPatient({ patient, setOpenModalPatient, comunas }) {
             required
           >
             {!data?.comuna_id && <option value="">-- Comuna --</option>}
-            {comunas.map((comuna) => (
+            {communes.map((comuna) => (
               <option key={comuna.id} value={comuna.id}>
                 {comuna.name}
               </option>
