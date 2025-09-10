@@ -21,6 +21,8 @@ import {
   Calendar,
 } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 export default function TableSesiones({
   sesiones,
@@ -236,6 +238,29 @@ export default function TableSesiones({
     },
   });
 
+  const exportToExcel = () => {
+    // Solo exportar filas visibles (filtradas y paginadas)
+    const dataToExport = table.getPrePaginationRowModel().rows.map((row) => {
+      const obj = {};
+      row.getVisibleCells().forEach((cell) => {
+        const header = cell.column.columnDef.header;
+        obj[header] = cell.getValue();
+      });
+      return obj;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Atenciones");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "atenciones.xlsx");
+  };
+
   return (
     <div className="max-w-full">
       {/* Filtro global */}
@@ -248,6 +273,11 @@ export default function TableSesiones({
             placeholder="Buscar sesiones..."
             className="w-full py-2 pl-8 pr-3 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
+        </div>
+        <div className="flex justify-end mb-2">
+          <PrimaryButton type="button" onClick={exportToExcel}>
+            Exportar a Excel
+          </PrimaryButton>
         </div>
       </div>
 
