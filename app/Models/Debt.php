@@ -71,4 +71,9 @@ class Debt extends Model
     }
     $this->save();
   }
+
+  public function scopeOpen($q)
+  {
+    return $q->whereIn('debts.status', [self::STATUS_PENDING, self::STATUS_PARTIAL, self::STATUS_OVERDUE]);
+  }
 }

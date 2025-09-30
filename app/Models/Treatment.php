@@ -13,7 +13,7 @@ class Treatment extends Model
     protected $fillable = [
         'patient_id',
         'doctor_id',
-        'default_session_type_id',
+        'session_type_id',
         'diagnosis',
         'planned_sessions',
         'is_indefinite',
@@ -21,7 +21,7 @@ class Treatment extends Model
         'status',
         'start_date',
         'end_date',
-        'meta',
+        'notes',
     ];
 
     protected $casts = [
@@ -29,7 +29,7 @@ class Treatment extends Model
         'evaluation_required' => 'boolean',
         'start_date'          => 'date',
         'end_date'            => 'date',
-        'meta'                => 'array',
+        'notes'                => 'array',
     ];
 
     /** Estados sugeridos */
@@ -52,7 +52,7 @@ class Treatment extends Model
 
     public function defaultSessionType()
     {
-        return $this->belongsTo(SessionType::class, 'default_session_type_id');
+        return $this->belongsTo(SessionType::class, 'session_type_id');
     }
 
     public function sessions()

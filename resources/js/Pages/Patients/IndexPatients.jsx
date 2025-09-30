@@ -7,15 +7,15 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import ModalCreateEditPatient from "./ModalCreateEditPatient";
 import ModalDeletePatient from "./ModalDeletePatient";
 
-export default function IndexPatients({ user, patients, communes }) {
+export default function IndexPatients({
+  patients,
+  communes,
+  regions,
+  provinces,
+}) {
   const [openModalPatient, setOpenModalPatient] = useState(false);
   const [patient, setPatient] = useState({});
   const [openModalDelete, setOpenModalDelete] = useState(false);
-
-  const handleOpenModalOptions = (data) => {
-    setPatient(data);
-    setOpenModalPatient(true);
-  };
 
   const handleOpenModalDelete = (data) => {
     setPatient(data);
@@ -23,7 +23,7 @@ export default function IndexPatients({ user, patients, communes }) {
   };
 
   return (
-    <AuthenticatedLayout user={user}>
+    <AuthenticatedLayout>
       <Head title="Dashboard" />
       <div className="py-6">
         <div className="mx-auto sm:px-2 lg:px-4">
@@ -48,7 +48,6 @@ export default function IndexPatients({ user, patients, communes }) {
               </div>
               <TablePatients
                 patients={patients}
-                handleOpenModalOptions={handleOpenModalOptions}
                 handleOpenModalDelete={handleOpenModalDelete}
                 communes={communes}
               />
@@ -67,6 +66,8 @@ export default function IndexPatients({ user, patients, communes }) {
           patient={patient}
           setOpenModalPatient={setOpenModalPatient}
           communes={communes}
+          regions={regions}
+          provinces={provinces}
         />
       </Modal>
       <Modal

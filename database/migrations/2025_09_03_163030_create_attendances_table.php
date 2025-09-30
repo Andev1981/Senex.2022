@@ -15,6 +15,10 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
+            $table->timestamp('attended_at')->useCurrent();
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

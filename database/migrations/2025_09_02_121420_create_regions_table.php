@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('regions', function (Blueprint $table) {
-            $table->unsignedSmallInteger('id')->primary();  // 1..16
+            $table->id();  // 1..16
             $table->string('code', 4)->unique();
             $table->string('name', 80);
             $table->string('roman', 8)->nullable();

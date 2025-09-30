@@ -206,7 +206,7 @@
 
 
                   <label class="sr-only">Seleccione comuna</label>
-                  <select wire:model.defer="comuna_id"
+                  <select wire:model.defer="commune_id"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-r-lg border-l-gray-100 dark:border-l-gray-700 border-l-2 focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase">
                     <option selected readonly> -- seleccione comuna --</option>
                     @foreach ($comunas as $comuna)
@@ -217,7 +217,7 @@
                   </select>
                 </div>
               </div>
-              @error('comuna_id')
+              @error('commune_id')
               <p class="mt-2 text-xs text-red-600 dark:text-red-500">
                 {{ $message }}
               </p>

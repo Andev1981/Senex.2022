@@ -36,7 +36,10 @@ class TreatmentSessionController extends Controller
      */
     public function store(StoreTreatmentSessionRequest $request)
     {
-        //
+        $validatedData = $request->all();
+
+
+        dd($request->all());
     }
 
     /**

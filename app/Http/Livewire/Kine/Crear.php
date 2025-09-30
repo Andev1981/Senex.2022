@@ -27,7 +27,7 @@ class Crear extends Component
     $street = "",
     $number = "",
     $address = '',
-    $comuna_id = 1,
+    $commune_id = 1,
     $detail = '',
     $status = 0,
     $statusApp = 0,
@@ -45,7 +45,7 @@ class Crear extends Component
       'phone' => 'required|min:9|max:9',
       'street' => 'required',
       'number' => 'required',
-      'comuna_id' => 'required',
+      'commune_id' => 'required',
       'detail' => 'max:150',
       'pass' => 'min:8|max:100',
     ];
@@ -65,7 +65,7 @@ class Crear extends Component
     'email.required' => 'Correo es requerido',
     'rut.required' => 'Rut es requerido',
     'birth.required' => 'Fecha de nacimiento es requerida',
-    'comuna_id.required' => 'Comuna es requerida',
+    'commune_id.required' => 'Comuna es requerida',
     'pass.min' => 'Contrasena debe tener al menos 8 caracteres',
     'pass.max' => 'Contrasena supera el límite permitido de caracteres',
   ];
@@ -86,7 +86,7 @@ class Crear extends Component
       'street' => $this->street,
       'number' => $this->number,
       'address' => '',
-      'comuna_id' => $this->comuna_id,
+      'commune_id' => $this->commune_id,
       'detail' => $this->detail
     ]);
 

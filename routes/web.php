@@ -31,6 +31,8 @@ use App\Http\Controllers\Inertia\{
   PaymentsController,
   InvoicesController,
   AttendancesController,
+  DoctorController,
+  TreatmentController,
 };
 
 
@@ -40,9 +42,9 @@ use App\Http\Controllers\{
   UserController,
   PaymentIncomeController,
   ReportePdfController,
-  Auth\RegisteredUserController
+  Auth\RegisteredUserController,
+  TreatmentSessionController
 };
-
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -150,34 +152,60 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('/mis-atenciones', Resumenes::class)->name('mis-atenciones');
   Route::get('/kinesiologos/pacientes/{paciente}', AtencionDetalle::class);
 
-  Route::get('informes', IndexInformes::class)->name('informes');
+
+
+
+
+
+
+
 
   /* Rutas React Inertia */
   /* pacientes */
   Route::get('listado-pacientes', [PatientController::class, 'index'])->name('listado.pacientes');
+  Route::get('pacientes/{patient}', [PatientController::class, 'show'])->name('pacientes.show');
   Route::post('pacientes-update/{patient}', [PatientController::class, 'update'])->name('pacientes.update');
   Route::post('pacientes-store', [PatientController::class, 'store'])->name('pacientes.store');
   Route::get('pacientes-destroy/{patient}', [PatientController::class, 'destroy'])->name('pacientes.destroy');
+  Route::get('informes', [PatientController::class, 'informes'])->name('informes');
+  Route::get('pos', [PatientController::class, 'pos'])->name('pos');
 
   /* kines */
-  Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
-  /* sesiones, applyitems */
-  /* Route::get('apply-items', [ApplyItemController::class, 'index'])->name('apply.items');
-  Route::post('apply-items-store', [ApplyItemController::class, 'store'])->name('apply.items.store');
-  Route::post('apply-items-update/{applyItem}', [ApplyItemController::class, 'update'])->name('apply.items.update');
-  Route::get('apply-items-borrar/{applyItem}', [ApplyItemController::class, 'destroy'])->name('apply.items.destroy');
- */
+  Route::get('doctors', [DoctorController::class, 'index'])->name('doctors.index');
+  Route::get('doctors/{id}', [DoctorController::class, 'edit'])->name('doctors.edit');
 
   /* DTE */
   Route::get('/boleta-crear', [DteController::class, 'crear'])->name('boleta');
   Route::post('/dte/emit', [DteController::class, 'emit'])->name('dte.emit');
   Route::post('/dte/check', [DteController::class, 'check'])->name('dte.check');
 
+
+  /* Treatments */
+  Route::resource('treatments', TreatmentController::class)->names('treatments');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   /* Nuevos tratamientos */
   Route::get('/admin/session-types',              [SessionTypeController::class, 'index'])->name('session-types.index');
   Route::post('/admin/session-types',              [SessionTypeController::class, 'store'])->name('session-types.store');
   Route::put('/admin/session-types/{sessionType}', [SessionTypeController::class, 'update'])->name('session-types.update');
   Route::delete('/admin/session-types/{sessionType}', [SessionTypeController::class, 'destroy'])->name('session-types.destroy');
+
 
   Route::get('/fix', [HomeController::class, 'fix']);
 

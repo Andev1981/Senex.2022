@@ -49,18 +49,44 @@ function Side({ sidebarOpen }) {
               <span className="ml-1 text-sm text-primary">Boleta(*Nuevo)</span>
             </Link>
           </li>
-          {/* <li>
-            <a
-              href="/informes"
+          <li>
+            <Link
+              href={route("attendances.index")}
               className={
-                location.pathname === "/informes"
+                location.pathname === "/attendances"
                   ? styleSelected
                   : styleNotSelected
               }
             >
               <img src={"/icons/controlar.gif"} className="w-6 h-6" />
               <span className="ml-1 text-sm text-primary">Informes</span>
-            </a>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={route("pos")}
+              className={
+                location.pathname === "/pos" ? styleSelected : styleNotSelected
+              }
+            >
+              <img src={"/icons/controlar.gif"} className="w-6 h-6" />
+              <span className="ml-1 text-sm text-primary">POS</span>
+            </Link>
+          </li>
+          {/* <li>
+            <Link
+              href={route("attendances.index")}
+              className={
+                location.pathname === "/attendances"
+                  ? styleSelected
+                  : styleNotSelected
+              }
+            >
+              <img src={"/icons/usuario.gif"} className="w-6 h-6" />
+              <span className="ml-1 text-sm text-primary">
+                Sesiones&nbsp;Pacientes(*)
+              </span>
+            </Link>
           </li> */}
         </ul>
         {/* <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">

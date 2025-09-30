@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Services\Dte\DteProvider;
 use App\Services\Dte\LibreDteProvider;
+use App\Models\PaymentAllocation;
+use App\Observers\PaymentAllocationObserver;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -33,5 +35,6 @@ class AppServiceProvider extends ServiceProvider
         // Configuración para fechas en español
         Carbon::setLocale(config('app.locale'));
         /*      setlocale(LC_ALL, 'es_CL', 'es', 'ES'); */
+        PaymentAllocation::observe(PaymentAllocationObserver::class);
     }
 }

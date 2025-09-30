@@ -13,7 +13,7 @@ class UpdateTreatmentSessionRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +24,21 @@ class UpdateTreatmentSessionRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'patient_id' => ['required', 'max:255', 'exists:patients,id'],
+            'doctor_id' => ['required', 'max:255', 'exists:doctors,id'],
+            'session_type_id' => ['nullable', 'exists:session_types,id'],
+            'planned_sessions' => ['nullable', 'numeric', 'max:100'],
+            'is_indefinite' => ['nullable', 'boolean'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:500']
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'patient_id.required' => "Debe tener un paciente seleccionado",
         ];
     }
 }

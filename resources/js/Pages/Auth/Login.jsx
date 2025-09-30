@@ -18,9 +18,7 @@ export default function Login({ status, canResetPassword }) {
   const submit = (e) => {
     e.preventDefault();
 
-    post(route("login"), {
-      onFinish: () => reset("password"),
-    });
+    post(route("login"), { onFinish: () => reset("password") });
   };
 
   return (
@@ -58,10 +56,9 @@ export default function Login({ status, canResetPassword }) {
               isFocused={true}
               onChange={(e) => setData("email", e.target.value)}
             />
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <div className="absolute inset-y-0 left-0 z-20 flex items-center pl-3 pointer-events-none">
               <Mail className="w-5 h-5 text-gray-600" />
             </div>
-            <InputError message={errors.email} className="mt-2" />
           </div>
         </div>
 
@@ -77,10 +74,9 @@ export default function Login({ status, canResetPassword }) {
               autoComplete="current-password"
               onChange={(e) => setData("password", e.target.value)}
             />
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <div className="absolute inset-y-0 left-0 z-20 flex items-center pl-3 pointer-events-none">
               <Lock className="w-5 h-5 text-gray-600" />
             </div>
-            <InputError message={errors.password} className="mt-2" />
           </div>
         </div>
 
@@ -95,6 +91,19 @@ export default function Login({ status, canResetPassword }) {
               Recordar
             </span>
           </label>
+        </div>
+        <div>
+          {errors.email ? (
+            <div className="mt-4 text-sm font-medium text-red-600">
+              {errors.email}
+            </div>
+          ) : (
+            errors.password && (
+              <div className="mt-4 text-sm font-medium text-red-600">
+                {errors.password}
+              </div>
+            )
+          )}
         </div>
 
         <div className="flex items-center justify-end mt-4">

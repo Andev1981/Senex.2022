@@ -93,7 +93,7 @@ class ModalCrear extends Component
             'street' => $this->calle,
             'number' => $this->numero,
             'address' => $this->detalle_direccion,
-            'comuna_id' => $this->comuna,
+            'commune_id' => $this->comuna,
         ]);
 
         $patient = Patient::create([

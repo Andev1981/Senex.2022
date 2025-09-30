@@ -39,7 +39,7 @@ class ModalEditar extends Component
             'address.street' => 'required|max:150',
             'address.number' => 'required|integer',
             'address.address' => 'required|max:150',
-            'address.comuna_id' => 'required',
+            'address.commune_id' => 'required',
         ];
     }
 

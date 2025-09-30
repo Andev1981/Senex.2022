@@ -14,78 +14,149 @@ class CommunesTableSeeder extends Seeder
 {
     public function run(): void
     {
-        $rows = $this->loadFromLocal();
-        if (empty($rows)) {
-            $rows = $this->loadFromGovApi();
-        }
+
+        $rows = $this->loadFromGovApi();
+
 
         if (empty($rows)) {
             $this->command->error('No se pudieron cargar comunas (sin dataset local ni API disponible).');
             return;
         }
 
-        // Normalizador de nombres (siempre retorna string)
+        // Normalizador
         $norm = static function ($s): string {
-            $s = (string) $s;                           // fuerza string
-            $s = preg_replace('/\s+/u', ' ', $s ?? ''); // squish
+            $s = (string) $s;
+            $s = preg_replace('/\s+/u', ' ', $s ?? '');
             $s = trim($s);
             $s = Str::lower($s);
             $s = Str::ascii($s);
-            return (string) $s;                         // asegurar string plano
+            $s = preg_replace('/\bprovincia(?:\s+de)?\s+/u', '', $s);
+            return (string) $s;
         };
 
-        // Índice de provincias por nombre normalizado
-        $provinces = Province::query()->get(['id', 'name']);
-        $provIndex = [];
+        // Helper para aliases
+        $pick = static function (array $row, array $keys, $default = null) {
+            foreach ($keys as $k) {
+                if (array_key_exists($k, $row) && $row[$k] !== null && $row[$k] !== '') {
+                    return $row[$k];
+                }
+            }
+            return $default;
+        };
+
+        // Índices de provincias
+        $provinces = Province::query()->get(['id', 'name', 'code']);
+        $provByName = [];
+        $provByCode = [];
         foreach ($provinces as $p) {
             $key = $norm($p->name);
-            if ($key === '') {
-                // evita llave vacía accidental
-                $this->command->warn("Provincia con nombre vacío (id={$p->id}), saltando del índice.");
-                continue;
+            if ($key !== '' && !array_key_exists($key, $provByName)) {
+                $provByName[$key] = (int) $p->id;
             }
-            // si hay duplicados tras normalizar, conserva el primero
-            if (!array_key_exists($key, $provIndex)) {
-                $provIndex[$key] = (int) $p->id;
+            if (isset($p->code) && $p->code !== '' && !array_key_exists((string)$p->code, $provByCode)) {
+                $provByCode[(string)$p->code] = (int) $p->id;
+            }
+        }
+
+        // Si la DB no tiene code en provincias pero el dataset trae códigos, armar mapa desde API
+        $needsProvCodeLookup = empty($provByCode) && $this->datasetHasAny($rows, ['province_code', 'codigo_provincia', 'codigo_padre']);
+
+        $govProvCodeToName = [];
+        if ($needsProvCodeLookup) {
+            $govProv = $this->firstOkJson(['https://apis.digital.gob.cl/dpa/provincias']);
+            if (is_array($govProv)) {
+                foreach ($govProv as $p) {
+                    if (isset($p['codigo'], $p['nombre'])) {
+                        $govProvCodeToName[(string)$p['codigo']] = (string)$p['nombre'];
+                    }
+                }
             }
         }
 
         $created = 0;
         $updated = 0;
-        $skipped = 0;
+        $skipReasons = ['missing_name' => 0, 'missing_province' => 0, 'prov_not_found' => 0];
+        $skipSamples = ['missing_name' => [], 'missing_province' => [], 'prov_not_found' => []];
 
         foreach ($rows as $r) {
-            // Se espera: ['id'?, 'province' (nombre) o 'province_id'?, 'code'?, 'name', 'lat'?, 'lng'?]
-            $name = trim((string)($r['name'] ?? ''));
-            $provinceName = $r['province'] ?? null;
+            // Aliases de campos
+            $name = trim((string)($pick($r, ['name', 'nombre', 'comuna'], '')));
+            $provinceIdRaw = $pick($r, ['province_id']);
+            $provinceName  = $pick($r, ['province', 'provincia']);
+            $provinceCode  = $pick($r, ['province_code', 'codigo_provincia', 'codigo_padre']); // <-- aquí
+            $code          = $pick($r, ['code', 'codigo', 'ine_code']);
+            $lat           = $pick($r, ['lat', 'latitud']);
+            $lng           = $pick($r, ['lng', 'longitud']);
 
-            if ($name === '' || (!$provinceName && empty($r['province_id']))) {
-                $skipped++;
+            if ($name === '') {
+                $skipReasons['missing_name']++;
+                if (count($skipSamples['missing_name']) < 5) $skipSamples['missing_name'][] = $r;
                 continue;
             }
 
-            $provinceId = $r['province_id'] ?? ($provIndex[$norm($provinceName)] ?? null);
+            // Resolver province_id
+            $provinceId = null;
+
+            if ($provinceIdRaw !== null && (int)$provinceIdRaw > 0) {
+                $provinceId = (int) $provinceIdRaw;
+            }
+
+            if (!$provinceId && $provinceName) {
+                $provinceId = $provByName[$norm($provinceName)] ?? null;
+            }
+
+            if (!$provinceId && $provinceCode) {
+                if (!empty($provByCode)) {
+                    $provinceId = $provByCode[(string)$provinceCode] ?? null;
+                } else {
+                    $pName = $govProvCodeToName[(string)$provinceCode] ?? null;
+                    if ($pName) {
+                        $provinceId = $provByName[$norm($pName)] ?? null;
+                    }
+                }
+            }
+
+            if (!$provinceId && !$provinceName && !$provinceCode && !$provinceIdRaw) {
+                $skipReasons['missing_province']++;
+                if (count($skipSamples['missing_province']) < 5) $skipSamples['missing_province'][] = ['name' => $name] + $r;
+                continue;
+            }
+
             if (!$provinceId) {
-                $this->command->warn("Saltando comuna '{$name}': no se encontró provincia '{$provinceName}'.");
-                $skipped++;
+                $skipReasons['prov_not_found']++;
+                if (count($skipSamples['prov_not_found']) < 5) {
+                    $skipSamples['prov_not_found'][] = [
+                        'name' => $name,
+                        'province' => $provinceName,
+                        'province_code' => $provinceCode,
+                        'province_id_raw' => $provinceIdRaw,
+                    ];
+                }
                 continue;
             }
 
-            // Si no viene id oficial, generamos uno determinístico a partir del nombre+provincia
-            $id = isset($r['id']) && (int)$r['id'] > 0
-                ? (int)$r['id']
+            // ID
+            $idRaw = $pick($r, ['id']);
+            $id = isset($idRaw) && (int)$idRaw > 0
+                ? (int)$idRaw
                 : $this->deterministicId($name, (string)$provinceId);
+
+            $code = isset($code) && $code !== '' ? (string)$code : null;
 
             $payload = [
                 'id'          => $id,
                 'province_id' => (int)$provinceId,
-                'code'        => (string)($r['code'] ?? $id), // si no viene code, usamos el id
+                'code'        => $code ?? (string)$id,
                 'name'        => $name,
-                'lat'         => isset($r['lat']) ? (float)$r['lat'] : null,
-                'lng'         => isset($r['lng']) ? (float)$r['lng'] : null,
+                'lat'         => isset($lat) ? (float)$lat : null,
+                'lng'         => isset($lng) ? (float)$lng : null,
             ];
 
             $existing = Commune::find($id);
+            if (!$existing && $payload['code']) {
+                $existing = Commune::where('code', $payload['code'])->first();
+            }
+
             if ($existing) {
                 $existing->update(Arr::except($payload, ['id']));
                 $updated++;
@@ -95,30 +166,28 @@ class CommunesTableSeeder extends Seeder
             }
         }
 
+        $skipped = array_sum($skipReasons);
         $this->command->info("Comunas: creadas {$created}, actualizadas {$updated}, omitidas {$skipped}.");
-    }
 
-    /**
-     * Intenta cargar desde dataset local: database/seeders/data/communes.php
-     * Estructura esperada: array de filas con (name, province ó province_id, code?, id?, lat?, lng?)
-     */
-    protected function loadFromLocal(): array
-    {
-        $path = database_path('seeders/data/communes.php');
-        if (File::exists($path)) {
-            $data = include $path;
-            if (is_array($data) && !empty($data)) {
-                $this->command->info('Cargando comunas desde dataset local.');
-                return $data;
-            }
+        if ($skipped > 0) {
+            $this->command->warn('Detalle de omisiones: ' . json_encode($skipReasons, JSON_UNESCAPED_UNICODE));
+
+            $printSample = function (string $title, array $rows) {
+                if (empty($rows)) return;
+                echo PHP_EOL . "Ejemplos {$title} (máx 5):" . PHP_EOL;
+                foreach ($rows as $i => $row) {
+                    echo '  - ' . ($i + 1) . ') ' . json_encode($row, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+                }
+            };
+
+            $printSample('missing_name', $skipSamples['missing_name']);
+            $printSample('missing_province', $skipSamples['missing_province']);
+            $printSample('prov_not_found', $skipSamples['prov_not_found']);
         }
-        return [];
     }
 
-    /**
-     * Carga desde API DPA (Gobierno). Combina comunas + provincias para mapear por nombre.
-     * Documentación: https://apis.digital.gob.cl/dpa
-     */
+
+
     protected function loadFromGovApi(): array
     {
         $this->command->warn('Intentando descargar comunas desde API DPA (Gobierno)...');
@@ -138,7 +207,6 @@ class CommunesTableSeeder extends Seeder
             return [];
         }
 
-        // Índice provinciaCodigo -> nombreProvincia
         $provByCode = [];
         foreach ($provinces as $p) {
             if (!isset($p['codigo'], $p['nombre'])) continue;
@@ -154,10 +222,11 @@ class CommunesTableSeeder extends Seeder
 
             $provinceName = $provByCode[$pcode] ?? null;
             $rows[] = [
-                'id'       => $code !== '' ? (int)$code : null, // si el código es numérico, úsalo como id
+                'id'       => $code !== '' ? (int)$code : null,
                 'code'     => $code !== '' ? $code : null,
                 'name'     => $name,
-                'province' => $provinceName, // lo mapearemos por nombre a tu tabla
+                'province' => $provinceName,
+                'province_code' => $pcode ?: null,
             ];
         }
 
@@ -169,23 +238,40 @@ class CommunesTableSeeder extends Seeder
     {
         foreach ($urls as $u) {
             try {
-                $resp = Http::timeout(20)->get($u);
+                $resp = Http::timeout(20)
+                    ->withOptions(['verify' => false]) // 🚨 Desactiva verificación SSL
+                    ->get($u);
                 if ($resp->ok()) {
                     $json = $resp->json();
-                    if (is_array($json) && !empty($json)) return $json;
+                    if (is_array($json) && !empty($json)) {
+                        return $json;
+                    }
+                } else {
+                    $this->command->warn("HTTP {$resp->status()} al llamar {$u}");
                 }
             } catch (\Throwable $e) {
-                // continuar con la siguiente URL
+                $this->command->error("Error al llamar {$u}: " . $e->getMessage());
             }
         }
         return null;
     }
 
-    /**
-     * Genera un ID estable (entero positivo) desde (nombre + provinceId)
-     */
+
+    protected function datasetHasAny(array $rows, array $keys): bool
+    {
+        foreach ($rows as $r) {
+            foreach ($keys as $k) {
+                if (array_key_exists($k, $r)) return true;
+            }
+        }
+        return false;
+    }
+
     protected function deterministicId(string $name, string $provinceId): int
     {
-        return abs(crc32(Str::ascii(Str::lower(trim($name . '|' . $provinceId))))) ?: random_int(100000, 999999);
+        $base = Str::ascii(Str::lower(trim($name . '|' . $provinceId)));
+        $h = crc32($base);
+        $n = $h & 0x7fffffff;
+        return $n === 0 ? 1 : $n;
     }
 }

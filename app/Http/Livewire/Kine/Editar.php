@@ -26,7 +26,7 @@ class Editar extends Component
     $street = "",
     $number = "",
     $address = '',
-    $comuna_id = 1,
+    $commune_id = 1,
     $detail = '',
     $status = 0,
     $statusApp = 0,
@@ -57,7 +57,7 @@ class Editar extends Component
       'street' => 'required',
       'number' => 'required',
       'email' => 'required|email|max:255',
-      'comuna_id' => 'required',
+      'commune_id' => 'required',
       'detail' => 'max:150',
       'status' => 'boolean',
 
@@ -78,7 +78,7 @@ class Editar extends Component
     'email.required' => 'Correo es requerido',
     'rut.required' => 'Rut es requerido',
     'birth.required' => 'Fecha de nacimiento es requerida',
-    'comuna_id.required' => 'Comuna es requerida',
+    'commune_id.required' => 'Comuna es requerida',
 
   ];
 
@@ -103,7 +103,7 @@ class Editar extends Component
     $this->street = $address->street;
     $this->number = $address->number;
     $this->address = $address->address;
-    $this->comuna_id = $address->comuna_id;
+    $this->commune_id = $address->commune_id;
     $this->detail = $address->detail ?? '';
     $this->statusApp = $doctor->user->status;
     $this->status = $doctor->status;
@@ -141,7 +141,7 @@ class Editar extends Component
         'street' => $this->street,
         'number' => $this->number,
         'address' => $this->address,
-        'comuna_id' => $this->comuna_id,
+        'commune_id' => $this->commune_id,
         'detail' => $this->detail,
       ]);
     }

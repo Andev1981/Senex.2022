@@ -14,15 +14,20 @@ class Address extends Model
         'addressable_type',
         'type',
         'is_primary',
+        'lat',
+        'lng',
         'line1',
         'line2',
         'city',
-        'region',
-        'country',
+        'state',
+        'commune_id',
+        'region_id',
+        'province_id',
         'postal_code',
-        'lat',
-        'lng',
-        'notes',
+        'country',
+        'street',
+        'number',
+        'details',
     ];
 
     protected $casts = [
@@ -36,10 +41,6 @@ class Address extends Model
         return $this->morphTo();
     }
 
-    public function comuna()
-    {
-        return $this->belongsTo(Comuna::class);
-    }
     public function commune()
     {
         return $this->belongsTo(Commune::class);

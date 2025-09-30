@@ -11,20 +11,30 @@ import {
   ChevronDown,
   ChevronUp,
   Search,
-  Calendar,
   PencilLine,
   Trash2,
+  Eye,
 } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import TablePagination from "@/Components/TablePagination";
+import { route } from "ziggy-js";
+import { useForm } from "@inertiajs/react";
+import {
+  meses,
+  patientStatuses,
+  debtStatuses,
+  DEBT_STATUS_OPTIONS,
+  PATIENT_STATUS_OPTIONS,
+} from "@/utils/status";
 
 export default function TablePatients({
   patients,
-  handleOpenModalOptions,
   handleOpenModalDelete,
   communes,
 }) {
+  const { get } = useForm();
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
@@ -42,12 +52,6 @@ export default function TablePatients({
     );
   }, [globalFilter, patients]);
 
-  // Obtener comunas únicas
-  /* const communes = useMemo(() => {
-    const set = new Set(patients.map((p) => p.comuna).filter(Boolean));
-    return Array.from(set);
-  }, [patients]); */
-
   // Definición de columnas
   const columns = useMemo(
     () => [
@@ -56,23 +60,76 @@ export default function TablePatients({
         header: "",
         cell: ({ row }) => (
           <div className="flex">
-            <PrimaryButton
+            <a
               type="button"
-              className="mr-1 btn"
-              onClick={() => handleOpenModalOptions(row?.original)}
+              className="mr-1 hover:cursor-pointer btn"
+              onClick={() => detailPatient(row?.original)}
             >
-              <PencilLine className="w-4 h-4 mr-1" />
-            </PrimaryButton>
-            <PrimaryButton
+              <Eye className="w-4 h-4 text-green-600" />
+            </a>
+            <a
               type="button"
-              className="mr-1 btn bg-red-600"
+              className="mr-1 hover:cursor-pointer btn"
               onClick={() => handleOpenModalDelete(row?.original)}
             >
-              <Trash2 className="w-4 h-4" />
-            </PrimaryButton>
+              <Trash2 className="w-4 h-4 text-red-700" />
+            </a>
           </div>
         ),
         enableSorting: false,
+      },
+      {
+        id: "status", // si usas accessorFn, deja este id
+        accessorKey: "status", // recomendado
+        header: "ESTADO",
+        cell: ({ getValue }) => {
+          const v = String(getValue() ?? "");
+          const cfg = patientStatuses[v] ?? {
+            label: v,
+            className: "bg-gray-400 text-white",
+          };
+          return (
+            <span
+              className={`px-2 py-0.5 text-xs rounded-xl border text-white ${cfg.className}`}
+            >
+              {cfg.label}
+            </span>
+          );
+        },
+        // filtro: acepta múltiples estados (array de strings)
+        filterFn: (row, id, filterValue) => {
+          if (!filterValue) return true; // sin filtro
+          return String(row.getValue(id) ?? "") === String(filterValue);
+        },
+      },
+      {
+        id: "payment_status",
+        accessorKey: "payment_status", // 'ok' | 'due' | 'overdue'
+        header: "ESTADO DE PAGO",
+        filterFn: (row, id, filterValue) => {
+          if (!filterValue) return true; // sin filtro
+          const cell = row.getValue(id);
+          return String(cell) === String(filterValue);
+        },
+        cell: ({ getValue }) => {
+          const v = String(getValue() ?? "");
+          const cfg = debtStatuses[v] ?? {
+            label: v,
+            className: "bg-gray-400 text-white",
+          };
+          return (
+            <span
+              className={`px-2 py-0.5 text-xs rounded-xl border truncate whitespace-nowrap ${cfg.className}`}
+            >
+              {cfg.label}
+            </span>
+          );
+        },
+        // filtro: acepta múltiples estados (array de strings)
+        filterFn: (row, id, filterValue) => {
+          if (!filterValue) return true; // sin filtro
+          return String(row.getValue(id) ?? "") === String(filterValue);
+        },
       },
       {
         header: "NOMBRE",
@@ -110,21 +167,6 @@ export default function TablePatients({
           return month === Number(filterValue);
         },
         Filter: ({ column }) => {
-          const meses = [
-            "Enero",
-            "Febrero",
-            "Marzo",
-            "Abril",
-            "Mayo",
-            "Junio",
-            "Julio",
-            "Agosto",
-            "Septiembre",
-            "Octubre",
-            "Noviembre",
-            "Diciembre",
-          ];
-
           return (
             <select
               value={column.getFilterValue() ?? ""}
@@ -145,7 +187,6 @@ export default function TablePatients({
           );
         },
       },
-
       {
         header: "EDAD",
         accessorFn: (row) => {
@@ -160,7 +201,7 @@ export default function TablePatients({
           ) {
             age--;
           }
-          return age;
+          return age + " años";
         },
         id: "age",
         filterFn: {
@@ -192,9 +233,9 @@ export default function TablePatients({
           </div>
         ),
       },
-      /*  {
+      {
         header: "COMUNA",
-        accessorFn: (row) => row?.comuna_nombre,
+        accessorFn: (row) => row?.comuna_name,
         cell: ({ getValue }) => (
           <div
             className="overflow-hidden uppercase truncate whitespace-nowrap"
@@ -203,10 +244,10 @@ export default function TablePatients({
             {getValue()}
           </div>
         ),
-      }, */
-      /* {
+      },
+      {
         header: "DIRECCIÓN",
-        accessorFn: (row) => row?.direccion,
+        accessorFn: (row) => row?.full_address,
         cell: ({ getValue }) => (
           <div
             className="overflow-hidden uppercase truncate whitespace-nowrap"
@@ -215,7 +256,7 @@ export default function TablePatients({
             {getValue()}
           </div>
         ),
-      }, */
+      },
       {
         header: "CORREO",
         accessorFn: (row) => row?.email,
@@ -242,7 +283,7 @@ export default function TablePatients({
       },
       {
         header: "ÚLTIMA ATENCIÓN",
-        accessorFn: (row) => row?.gender,
+        accessorFn: (row) => row?.last_doctor_name,
         cell: ({ getValue }) => (
           <div
             className="overflow-hidden uppercase truncate whitespace-nowrap"
@@ -253,23 +294,8 @@ export default function TablePatients({
         ),
       },
     ],
-    [handleOpenModalOptions]
+    [handleOpenModalDelete, communes]
   );
-
-  const meses = [
-    { name: "Enero", value: 1 },
-    { name: "Febrero", value: 2 },
-    { name: "Marzo", value: 3 },
-    { name: "Abril", value: 4 },
-    { name: "Mayo", value: 5 },
-    { name: "Junio", value: 6 },
-    { name: "Julio", value: 7 },
-    { name: "Agosto", value: 8 },
-    { name: "Septiembre", value: 9 },
-    { name: "Octubre", value: 10 },
-    { name: "Noviembre", value: 11 },
-    { name: "Diciembre", value: 12 },
-  ];
 
   // Configuración de la tabla
   const table = useReactTable({
@@ -347,6 +373,12 @@ export default function TablePatients({
     saveAs(data, "pacientes.xlsx");
   };
 
+  const detailPatient = ({ id }) => {
+    // Lógica para mostrar los detalles del paciente
+    console.log("ID: " + id);
+    get(route("pacientes.show", { id: id }));
+  };
+
   return (
     <div className="max-w-full">
       {/* Filtro global */}
@@ -409,7 +441,7 @@ export default function TablePatients({
                                 e.target.value || undefined
                               )
                             }
-                            className="w-full py-1 px-2 text-sm border border-gray-300 rounded-md"
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
                           >
                             <option value="">Todos</option>
                             {meses.map((c) => (
@@ -432,7 +464,7 @@ export default function TablePatients({
                                   header.column.getFilterValue()?.[1],
                                 ])
                               }
-                              className="w-20 py-1 px-1 text-sm border border-gray-300 rounded-md"
+                              className="w-20 px-1 py-1 text-sm border border-gray-300 rounded-md"
                             />
                             <input
                               type="number"
@@ -446,7 +478,7 @@ export default function TablePatients({
                                     : undefined,
                                 ])
                               }
-                              className="w-20 py-1 px-1 text-sm border border-gray-300 rounded-md"
+                              className="w-20 px-1 py-1 text-sm border border-gray-300 rounded-md"
                             />
                           </div>
                         ) : header.column.columnDef.header === "COMUNA" ? (
@@ -457,12 +489,47 @@ export default function TablePatients({
                                 e.target.value || undefined
                               )
                             }
-                            className="w-full py-1 px-2 text-sm border border-gray-300 rounded-md"
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
                           >
                             <option value="">Todas</option>
-                            {comunas.map((c) => (
+                            {communes.map((c) => (
                               <option key={c.id} value={c.id}>
                                 {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        ) : header.column.columnDef.header ===
+                          "ESTADO DE PAGO" ? (
+                          <select
+                            value={header.column.getFilterValue() ?? ""}
+                            onChange={(e) =>
+                              header.column.setFilterValue(
+                                e.target.value || undefined
+                              )
+                            }
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
+                          >
+                            <option value="">Todas</option>
+                            {DEBT_STATUS_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : header.column.columnDef.header === "ESTADO" ? (
+                          <select
+                            value={header.column.getFilterValue() ?? ""}
+                            onChange={(e) =>
+                              header.column.setFilterValue(
+                                e.target.value || undefined
+                              )
+                            }
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
+                          >
+                            <option value="">Todas</option>
+                            {PATIENT_STATUS_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
                               </option>
                             ))}
                           </select>
@@ -473,7 +540,7 @@ export default function TablePatients({
                               header.column.setFilterValue(e.target.value)
                             }
                             placeholder="Filtrar..."
-                            className="w-full py-1 px-2 text-sm border border-gray-300 rounded-md"
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
                           />
                         )}
                         {header.column.getCanFilter() &&
@@ -508,57 +575,13 @@ export default function TablePatients({
       </div>
 
       {/* Paginación */}
-      <div className="flex flex-col items-center justify-between gap-2 mt-4 sm:flex-row">
-        <div className="text-sm text-gray-700">
-          Página {table.getState().pagination.pageIndex + 1} de{" "}
-          {table.getPageCount()}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {"<<"}
-          </button>
-          <button
-            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            {"<"}
-          </button>
-          <button
-            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            {">"}
-          </button>
-          <button
-            className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
-            {">>"}
-          </button>
-        </div>
-
-        <select
-          value={pageSize}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value));
-            table.setPageSize(Number(e.target.value));
-          }}
-          className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {[5, 10, 15, 20, 30, 40, 50].map((size) => (
-            <option key={size} value={size}>
-              Mostrar {size}
-            </option>
-          ))}
-        </select>
-      </div>
+      <TablePagination
+        table={table}
+        total={patients.length}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
+      />
     </div>
   );
 }
