@@ -24,7 +24,6 @@ use App\Http\Livewire\{
 
 /* Inertia */
 use App\Http\Controllers\Inertia\{
-  ApplyItemController,
   DteController,
   SessionTypeController,
   PatientController,
@@ -99,79 +98,29 @@ require __DIR__ . '/auth.php';
 
 Route::group(['middleware' => ['auth']], function () {
 
-  Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
+
   Route::get('/', [HomeController::class, 'index'])->name('/');
-
-  Route::middleware('guest')->group(function () {
-
-    Route::get('register/doctor', [RegisteredUserController::class, 'create_doc'])
-      ->name('register.doc');
-  });
-
-  Route::get('/admin', [HomeController::class, 'index'])->name('admin');
-  Route::resource('roles', RoleController::class)->middleware(['role:Admin']);
-  Route::resource('users', UserController::class)->middleware(['role:Admin']);
-
-  //Livewire full page components
-  Route::get('pacientes', ListadosIndex::class)->name('pacientes');
-
-  Route::get('kines', ListadoKines::class)->name('kines');
-  Route::get('kines-detalles/{id}', Atenciones::class)->name('kines-detalles');
-  Route::get('types', Index::class)->name('types');
-
-  //Livewire componentes app kines
-  Route::get('kinesiologos', KineIndex::class)->name('kinesiologos');
-
-
-
-  /* RUTAS PARA PDF */
-  Route::get('/reporte-pdf-all/{applyItems}/{selTipo}', [ReportePdfController::class, 'generarReporteGeneral']);
-  Route::get('/reporte-pdf/{applyItems}/{kine}', [ReportePdfController::class, 'generarReporte']);
-
-  Route::get('/andres', [ReportePdfController::class, 'arreglo'])->name('andres');
-
-
-  /* Verificar Pagos */
-  Route::get('/verificar-pagos', [PaymentIncomeController::class, 'verifyPayment'])->name('verificar.pagos');
-
-
-  /* RUTAS DE PRUEBA NORMALIZACION DE VISTAS LIVEWIRE */
-  Route::get('sesiones', IndexSesiones::class)->name('sesiones'); /* Revisar ruta en funcionalidad */
-
-  Route::get('pagos', IndexPagos::class)->name('pacientes.pagos');/* Revisar ruta en funcionalidad */
-
-  Route::get('{paciente}/pagos', DetallePagos::class)->name('pagos');/* Revisar ruta en funcionalidad */
-
-  Route::get('{paciente}/detalles', Resumen::class)->name('detalles');
-
-
-  /* RUTAS DE KINESIOLOGOS */
-  Route::get('/my-app', KineIndex::class)->name('my-app');
-  Route::get('/no-autorizado', NoAutorizado::class)->name('no-autorizado');
-  Route::get('/mis-pacientes', ListadoPacientes::class)->name('mis-pacientes');
-  Route::get('/mis-atenciones', Resumenes::class)->name('mis-atenciones');
-  Route::get('/kinesiologos/pacientes/{paciente}', AtencionDetalle::class);
-
-
-
-
-
-
-
-
 
   /* Rutas React Inertia */
   /* pacientes */
-  Route::get('listado-pacientes', [PatientController::class, 'index'])->name('listado.pacientes');
+  Route::get('pacientes', [PatientController::class, 'index'])->name('pacientes');
   Route::get('pacientes/{patient}', [PatientController::class, 'show'])->name('pacientes.show');
   Route::post('pacientes-update/{patient}', [PatientController::class, 'update'])->name('pacientes.update');
   Route::post('pacientes-store', [PatientController::class, 'store'])->name('pacientes.store');
   Route::get('pacientes-destroy/{patient}', [PatientController::class, 'destroy'])->name('pacientes.destroy');
   Route::get('informes', [PatientController::class, 'informes'])->name('informes');
   Route::get('pos', [PatientController::class, 'pos'])->name('pos');
+  Route::get('agenda', [PatientController::class, 'agenda'])->name('agenda');
+  Route::get('tratamientos', [PatientController::class, 'tratamientos'])->name('tratamientos');
+
+
+  Route::post('patients-documents', [PatientController::class, 'document_post'])->name('patient.documents.store');
+  Route::resource('treatment-sessions', PatientController::class)->names('treatment_sessions');
+  Route::resource('payments', PatientController::class)->names('payments');
+  Route::resource('patients', PatientController::class)->names('patients');
 
   /* kines */
-  Route::get('doctors', [DoctorController::class, 'index'])->name('doctors.index');
+  Route::get('doctors', [DoctorController::class, 'index'])->name('doctors');
   Route::get('doctors/{id}', [DoctorController::class, 'edit'])->name('doctors.edit');
 
   /* DTE */

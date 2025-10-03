@@ -17,12 +17,14 @@ class DteController extends Controller
 
     public function crear()
     {
-        $pacientes = Patient::orderBy('name')->get();
+        /* $pacientes = Patient::orderBy('name')->get();
         $productos = SessionType::orderBy('name')->get();
         return Inertia::render('Boletas/Crear', [
             'pacientes' => $pacientes,
             'productos' => $productos,
-        ]);
+        ]); */
+
+        return Inertia::render('Documents/ChileTaxDocuments');
     }
 
     /**

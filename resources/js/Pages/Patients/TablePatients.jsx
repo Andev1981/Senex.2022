@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,9 +11,18 @@ import {
   ChevronDown,
   ChevronUp,
   Search,
-  PencilLine,
+  Calendar,
   Trash2,
   Eye,
+  MapPin,
+  Map,
+  Mail,
+  Phone,
+  Stethoscope,
+  CreditCard,
+  Download,
+  Filter,
+  X,
 } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import * as XLSX from "xlsx";
@@ -34,12 +43,112 @@ export default function TablePatients({
   handleOpenModalDelete,
   communes,
 }) {
+  // --- ESTADOS DEL BUSCADOR Y FILTROS ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // valores controlados del panel
+  const [filterEstado, setFilterEstado] = useState(""); // "Activo", "Inactivo" o "" (Todos)
+  const [filterEstadoPago, setFilterEstadoPago] = useState(""); // "Al día", "Con deuda" o "" (Todos)
+  const [filterComuna, setFilterComuna] = useState(""); // nombre exacto o "" (Todas)
+  const [edadMin, setEdadMin] = useState("");
+  const [edadMax, setEdadMax] = useState("");
+
   const { get } = useForm();
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
+
+  // ¿Hay filtros activos?
+  const hasActiveFilters = !!(
+    filterEstado ||
+    filterEstadoPago ||
+    filterComuna ||
+    edadMin ||
+    edadMax
+  );
+
+  // Limpia todos los filtros del panel (y los de TanStack)
+  const clearFilters = () => {
+    setFilterEstado("");
+    setFilterEstadoPago("");
+    setFilterComuna("");
+    setEdadMin("");
+    setEdadMax("");
+    // Limpia column filters en TanStack
+    table.setColumnFilters((prev) =>
+      prev.filter(
+        (f) =>
+          !["status", "payment_status", "comuna_name", "age"].includes(f.id)
+      )
+    );
+  };
+
+  // --- SYNC PANEL -> COLUMN FILTERS TANSTACK ---
+  // Mapea los labels visibles a los valores guardados en tus filas.
+  // Ajusta según tus códigos reales (ejemplo: "Activo" -> "active").
+  const mapEstado = (label) => {
+    if (!label) return undefined;
+    if (label.toLowerCase() === "activo") return "active";
+    if (label.toLowerCase() === "inactivo") return "inactive";
+    return label; // fallback
+  };
+
+  const mapEstadoPago = (label) => {
+    if (!label) return undefined;
+    const l = label.toLowerCase();
+    if (l.includes("día")) return "ok";
+    if (l.includes("deuda")) return "due"; // o "overdue" si usas ese
+    return label; // fallback
+  };
+
+  useEffect(() => {
+    const next = [];
+
+    // status (igualdad)
+    if (filterEstado) {
+      next.push({ id: "status", value: mapEstado(filterEstado) });
+    }
+
+    // payment_status (igualdad)
+    if (filterEstadoPago) {
+      next.push({
+        id: "payment_status",
+        value: mapEstadoPago(filterEstadoPago),
+      });
+    }
+
+    // comuna exacta
+    if (filterComuna) {
+      next.push({ id: "comuna_name", value: filterComuna });
+    }
+
+    // edad min/max (numérico)
+    if (edadMin || edadMax) {
+      const min = edadMin ? Number(edadMin) : undefined;
+      const max = edadMax ? Number(edadMax) : undefined;
+      next.push({ id: "age", value: [min, max] });
+    }
+
+    // Mantén también los otros filtros que ya existan (como el de birth_month si lo usas)
+    setColumnFilters((prev) => {
+      const keep = prev.filter(
+        (f) =>
+          !["status", "payment_status", "comuna_name", "age"].includes(f.id)
+      );
+      return [...keep, ...next];
+    });
+  }, [filterEstado, filterEstadoPago, filterComuna, edadMin, edadMax]);
+
+  // --- DEBOUNCE DEL GLOBAL SEARCH ---
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setGlobalFilter(searchTerm);
+    }, 250);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
 
   // Filtro global
   const filteredData = useMemo(() => {
@@ -133,31 +242,37 @@ export default function TablePatients({
       },
       {
         header: "NOMBRE",
-        accessorFn: (row) => row?.name,
+        accessorFn: (row) => row?.full_name,
         cell: ({ getValue }) => (
           <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            className="flex items-center gap-3 overflow-hidden uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
-            {getValue()}
+            <div className="flex items-center justify-center w-6 h-6 text-xs font-semibold text-white rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
+              {getValue().charAt(0)}
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-900">
+                {getValue()}
+              </p>
+            </div>
           </div>
-        ),
-      },
-      {
-        header: "APELLIDO",
-        accessorFn: (row) => row?.last_name,
-        cell: ({ getValue }) => (
-          <span className="overflow-hidden uppercase runcate whitespace-nowrap">
-            {getValue()}
-          </span>
         ),
       },
       {
         header: "FECHA NACIMIENTO",
         accessorFn: (row) => row?.birth_date,
         id: "birth_date",
-        cell: ({ getValue }) =>
-          getValue() ? new Date(getValue()).toLocaleDateString("es-CL") : "-",
+        cell: ({ getValue }) => {
+          return (
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              {getValue()
+                ? new Date(getValue()).toLocaleDateString("es-CL")
+                : "-"}
+            </div>
+          );
+        },
         filterFn: (row, columnId, filterValue) => {
           if (!filterValue) return true; // si no hay filtro, mostrar todo
           const value = row.getValue(columnId);
@@ -201,7 +316,14 @@ export default function TablePatients({
           ) {
             age--;
           }
-          return age + " años";
+          return age;
+        },
+        cell: ({ getValue }) => {
+          return (
+            <div className="flex items-center gap-2 text-sm text-gray-700 uppercase truncate whitespace-nowrap">
+              {getValue()} años
+            </div>
+          );
         },
         id: "age",
         filterFn: {
@@ -226,9 +348,10 @@ export default function TablePatients({
         accessorFn: (row) => row?.rut,
         cell: ({ getValue }) => (
           <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
+            <CreditCard className="w-4 h-4 text-gray-400" />
             {getValue()}
           </div>
         ),
@@ -238,9 +361,10 @@ export default function TablePatients({
         accessorFn: (row) => row?.comuna_name,
         cell: ({ getValue }) => (
           <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
+            <MapPin className="w-4 h-4 text-gray-400" />
             {getValue()}
           </div>
         ),
@@ -250,9 +374,10 @@ export default function TablePatients({
         accessorFn: (row) => row?.full_address,
         cell: ({ getValue }) => (
           <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
+            <Map className="w-4 h-4 text-gray-400" />
             {getValue()}
           </div>
         ),
@@ -262,9 +387,10 @@ export default function TablePatients({
         accessorFn: (row) => row?.email,
         cell: ({ getValue }) => (
           <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
+            <Mail className="w-4 h-4 text-gray-400" />
             {getValue()}
           </div>
         ),
@@ -274,9 +400,10 @@ export default function TablePatients({
         accessorFn: (row) => row?.phone,
         cell: ({ getValue }) => (
           <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
+            <Phone className="w-4 h-4 text-gray-400" />
             {getValue()}
           </div>
         ),
@@ -286,9 +413,10 @@ export default function TablePatients({
         accessorFn: (row) => row?.last_doctor_name,
         cell: ({ getValue }) => (
           <div
-            className="overflow-hidden uppercase truncate whitespace-nowrap"
+            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
+            <Stethoscope className="w-4 h-4 text-gray-400" />
             {getValue()}
           </div>
         ),
@@ -374,214 +502,221 @@ export default function TablePatients({
   };
 
   const detailPatient = ({ id }) => {
-    // Lógica para mostrar los detalles del paciente
-    console.log("ID: " + id);
     get(route("pacientes.show", { id: id }));
   };
 
   return (
     <div className="max-w-full">
       {/* Filtro global */}
-      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute w-4 h-4 text-gray-400 top-2 left-2" />
-          <input
-            value={globalFilter ?? ""}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Buscar pacientes..."
-            className="w-full py-2 pl-8 pr-3 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+      <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+        <div className="flex flex-col gap-4">
+          {/* Search Bar */}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, apellido, RUT o correo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+              />
+            </div>
+
+            <button
+              onClick={() => setShowFilters((s) => !s)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                showFilters
+                  ? "bg-blue-50 text-blue-600 border-2 border-blue-200"
+                  : "bg-gray-50 text-gray-700 border-2 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              Filtros
+              {hasActiveFilters && (
+                <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+              )}
+            </button>
+
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+              >
+                <X className="w-4 h-4" />
+                Limpiar
+              </button>
+            )}
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={exportToExcel}
+                className="flex items-center gap-2 px-4 py-2 font-medium text-gray-700 transition-colors bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300"
+              >
+                <Download className="w-4 h-4" />
+                Exportar a Excel
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="grid grid-cols-1 gap-3 pt-3 border-t border-gray-200 md:grid-cols-5">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Estado
+                </label>
+                <select
+                  value={filterEstado}
+                  onChange={(e) =>
+                    setFilterEstado(
+                      e.target.value === "Todos" ? "" : e.target.value
+                    )
+                  }
+                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                >
+                  <option>Todos</option>
+                  <option>Activo</option>
+                  <option>Inactivo</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Estado de Pago
+                </label>
+                <select
+                  value={filterEstadoPago}
+                  onChange={(e) =>
+                    setFilterEstadoPago(
+                      e.target.value === "Todos" ? "" : e.target.value
+                    )
+                  }
+                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                >
+                  <option>Todos</option>
+                  <option>Al día</option>
+                  <option>Con deuda</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Comuna
+                </label>
+                <select
+                  value={filterComuna}
+                  onChange={(e) =>
+                    setFilterComuna(
+                      e.target.value === "Todas" ? "" : e.target.value
+                    )
+                  }
+                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                >
+                  <option>Todas</option>
+                  {communes.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Edad Mínima
+                </label>
+                <input
+                  type="number"
+                  value={edadMin}
+                  onChange={(e) => setEdadMin(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Edad Máxima
+                </label>
+                <input
+                  type="number"
+                  value={edadMax}
+                  onChange={(e) => setEdadMax(e.target.value)}
+                  placeholder="100"
+                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tabla */}
+        <div className="pt-4 overflow-hidden rounded-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr
+                    key={headerGroup.id}
+                    className="border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100"
+                  >
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        onClick={header.column.getToggleSortingHandler()}
+                        className="px-2 py-1 text-sm font-semibold tracking-wider text-left text-gray-700 uppercase transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
+                        scope="col"
+                      >
+                        <div className="flex">
+                          <div className="overflow-hidden uppercase truncate whitespace-nowrap">
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                          </div>
+                          <span>
+                            {header.column.getIsSorted() === "asc" ? (
+                              <ChevronUp className="inline w-4 h-4 ml-1" />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <ChevronDown className="inline w-4 h-4 ml-1" />
+                            ) : null}
+                          </span>
+                        </div>
+                        {/* Filtros por columna */}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="transition-colors hover:bg-blue-50/50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-3 py-2">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Paginación */}
+          <TablePagination
+            table={table}
+            total={patients.length}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
           />
         </div>
-        <div className="flex justify-end mb-2">
-          <PrimaryButton type="button" onClick={exportToExcel}>
-            Exportar a Excel
-          </PrimaryButton>
-        </div>
       </div>
-
-      {/* Tabla */}
-      <div className="w-full overflow-x-auto">
-        <table className="min-w-[900px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden">
-          <thead className="bg-gray-100">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className="px-2 py-1 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
-                    scope="col"
-                  >
-                    <div className="flex">
-                      <div className="overflow-hidden uppercase truncate whitespace-nowrap">
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                      </div>
-                      <span>
-                        {header.column.getIsSorted() === "asc" ? (
-                          <ChevronUp className="inline w-4 h-4 ml-1" />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <ChevronDown className="inline w-4 h-4 ml-1" />
-                        ) : null}
-                      </span>
-                    </div>
-                    {/* Filtros por columna */}
-                    {header.column.getCanFilter() && (
-                      <div className="flex gap-1 mt-1">
-                        {/* Filtro rango de fechas */}
-                        {["FECHA NACIMIENTO"].includes(
-                          header.column.columnDef.header
-                        ) ? (
-                          <select
-                            value={header.column.getFilterValue() ?? ""}
-                            onChange={(e) =>
-                              header.column.setFilterValue(
-                                e.target.value || undefined
-                              )
-                            }
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
-                          >
-                            <option value="">Todos</option>
-                            {meses.map((c) => (
-                              <option key={c.value} value={c.value}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : header.column.columnDef.header === "EDAD" ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              placeholder="Min"
-                              value={header.column.getFilterValue()?.[0] ?? ""}
-                              onChange={(e) =>
-                                header.column.setFilterValue([
-                                  e.target.value
-                                    ? Number(e.target.value)
-                                    : undefined,
-                                  header.column.getFilterValue()?.[1],
-                                ])
-                              }
-                              className="w-20 px-1 py-1 text-sm border border-gray-300 rounded-md"
-                            />
-                            <input
-                              type="number"
-                              placeholder="Max"
-                              value={header.column.getFilterValue()?.[1] ?? ""}
-                              onChange={(e) =>
-                                header.column.setFilterValue([
-                                  header.column.getFilterValue()?.[0],
-                                  e.target.value
-                                    ? Number(e.target.value)
-                                    : undefined,
-                                ])
-                              }
-                              className="w-20 px-1 py-1 text-sm border border-gray-300 rounded-md"
-                            />
-                          </div>
-                        ) : header.column.columnDef.header === "COMUNA" ? (
-                          <select
-                            value={header.column.getFilterValue() ?? ""}
-                            onChange={(e) =>
-                              header.column.setFilterValue(
-                                e.target.value || undefined
-                              )
-                            }
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
-                          >
-                            <option value="">Todas</option>
-                            {communes.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : header.column.columnDef.header ===
-                          "ESTADO DE PAGO" ? (
-                          <select
-                            value={header.column.getFilterValue() ?? ""}
-                            onChange={(e) =>
-                              header.column.setFilterValue(
-                                e.target.value || undefined
-                              )
-                            }
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
-                          >
-                            <option value="">Todas</option>
-                            {DEBT_STATUS_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : header.column.columnDef.header === "ESTADO" ? (
-                          <select
-                            value={header.column.getFilterValue() ?? ""}
-                            onChange={(e) =>
-                              header.column.setFilterValue(
-                                e.target.value || undefined
-                              )
-                            }
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
-                          >
-                            <option value="">Todas</option>
-                            {PATIENT_STATUS_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            value={header.column.getFilterValue() ?? ""}
-                            onChange={(e) =>
-                              header.column.setFilterValue(e.target.value)
-                            }
-                            placeholder="Filtrar..."
-                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md"
-                          />
-                        )}
-                        {header.column.getCanFilter() &&
-                          header.column.columnDef.meta?.filterComponent?.({
-                            column: header.column,
-                          })}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="transition even:bg-gray-50 hover:bg-gray-100"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-2 py-1 text-sm border border-gray-200"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Paginación */}
-      <TablePagination
-        table={table}
-        total={patients.length}
-        pageSize={pageSize}
-        setPageSize={setPageSize}
-        pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
-      />
     </div>
   );
 }

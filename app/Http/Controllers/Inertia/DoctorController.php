@@ -19,7 +19,7 @@ class DoctorController extends Controller
     public function index()
     {
         $doctors = Doctor::all();
-        return Inertia::render('Doctors/IndexDoctor', compact('doctors'));
+        return Inertia::render('Doctors/GestionDoctores');
     }
 
     /**

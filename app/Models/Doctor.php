@@ -33,6 +33,20 @@ class Doctor extends Model
         'is_active' => 'bool',
     ];
 
+    public function patientAssignments()
+    {
+        return $this->hasMany(DoctorPatientAssignment::class);
+    }
+
+    public function patients()
+    {
+        // sigue sirviendo belongsToMany para consultar “solo pacientes”
+        return $this->belongsToMany(Patient::class, 'doctor_patient_assignments')
+            ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
+            ->withTimestamps();
+    }
+
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -53,10 +67,7 @@ class Doctor extends Model
         return $this->hasMany(DoctorCommissionRate::class);
     }
 
-    public function applyTypes()
-    {
-        return $this->hasMany(ApplicationTypeUser::class);
-    }
+
     public function getAgeAttribute()
     {
         if (!$this->birth || !Carbon::hasFormat($this->birth, 'Y-m-d')) {

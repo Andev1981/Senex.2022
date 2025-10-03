@@ -26,39 +26,16 @@ class HomeController extends Controller
         }
         return view('admin.index'); */
 
-        $user = auth()->user();
+        /* $user = auth()->user(); */
         /* $pacientes = Patient::with('address', 'address.comuna', 'lastAttention', 'lastAttention.doctor')->where('status', 1)->orderBy('birth_date', 'desc')->get(); */
-        $patients = Patient::with('treatments')->get();
-        $communes = Commune::whereBetween('province_id', [2401, 2406])->get();
+        /* $patients = Patient::with('treatments')->get();
+        $communes = Commune::whereBetween('province_id', [2401, 2406])->get(); */
 
 
         /*  dd($patients, $communes); */
 
-        return Inertia::render('Patients/IndexPatients', compact('user', 'patients', 'communes'));
-    }
+        /* return Inertia::render('Patients/IndexPatients', compact('user', 'patients', 'communes')); */
 
-
-    public function fix()
-    {
-
-        $applyTypes = ApplicationType::all();
-
-
-        if (!$applyTypes->isEmpty()) {
-            foreach ($applyTypes as $type) {
-
-                SessionType::create([
-                    'name' => $type->name,
-                    'base_price' => 1000,
-                    'duration_minutes' => 1,
-                    'plan_elegible' => 1,
-                    'plan_session_value' => 1000,
-                    'is_active' => 1
-                ]);
-            }
-            return 'Proceso completado exitosamente.';
-        } else {
-            return 'No hay tipos de aplicación para procesar.';
-        }
+        return Inertia::render('Dashboard');
     }
 }

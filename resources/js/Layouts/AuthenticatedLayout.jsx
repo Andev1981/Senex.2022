@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function AuthenticatedLayout({ header, children }) {
   const user = usePage().props.auth.user;
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { flash } = usePage().props;
 
   useEffect(() => {
@@ -17,14 +17,22 @@ export default function AuthenticatedLayout({ header, children }) {
   }, [flash]);
 
   return (
-    <div className="min-h-screen p-4 bg-center bg-no-repeat bg-cover bg-slate-50">
-      <Nav
-        user={user}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
-      <Side sidebarOpen={sidebarOpen} />
-      <main className="h-auto pt-10 md:ml-48">{children}</main>
+    <div className="flex w-full overflow-hidden min-h-dvh bg-slate-50">
+      <aside
+        className={`${
+          sidebarOpen ? "w-52" : "w-20"
+        } flex-none sticky top-0 h-dvh overflow-y-auto transition-all duration-300`}
+      >
+        <Side sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      </aside>
+      <div className="flex flex-col flex-1 min-w-0 h-dvh">
+        <Nav
+          user={user}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </div>
       <ToastContainer
         position="bottom-left"
         autoClose={3000}

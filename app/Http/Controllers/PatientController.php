@@ -71,13 +71,6 @@ class PatientController extends Controller
 
         $success = $user->assignRole('Paciente');
 
-        $questions = QuizzQuestion::all();
-        foreach ($questions as $question) {
-            QuizzAnswer::create([
-                'quizz_question_id' => $question->id
-            ]);
-        }
-
 
         if ($success) {
             toast('Ha creado correctamente al paciente', 'success');
@@ -119,11 +112,6 @@ class PatientController extends Controller
     public function show(Patient $patient)
     {
 
-        dd($patient);
-        $solicitudes = Solicitud::where('patient_id', $patient)->orderBy('id', 'DESC')->paginate(5);
-        $pagos = Payment::where('user_id', $patient->user->id)->orderBy('id', 'DESC')->get();
-
-        //dd($paciente, $solicitudes, $pagos);
 
         return view('admin.pacientes.show', compact('paciente', 'solicitudes', 'pagos'));
     }
@@ -148,7 +136,7 @@ class PatientController extends Controller
      */
     public function update(UpdatePatientRequest $request, Patient $patient)
     {
-        //
+        dd($request, $patient);
     }
 
     /**

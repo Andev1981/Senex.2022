@@ -1,5 +1,6 @@
 import React from "react";
 import { User, Phone, Mail, Calendar, MapPin } from "lucide-react";
+import { useForm } from "@inertiajs/react";
 
 export default function PatientData({ patient }) {
   return (
@@ -27,12 +28,14 @@ export default function PatientData({ patient }) {
           <p className="mb-1 text-sm text-gray-600">Fecha de Nacimiento</p>
           <p className="flex items-center gap-2 font-semibold text-gray-900">
             <Calendar className="w-4 h-4 text-gray-400" />
-            {new Date(patient.birthDate).toLocaleDateString("es-CL")}
+            {new Date(patient.birth_date).toLocaleDateString("es-CL")}
           </p>
         </div>
         <div>
           <p className="mb-1 text-sm text-gray-600">Estado Civil</p>
-          <p className="font-semibold text-gray-900">{patient.maritalStatus}</p>
+          <p className="font-semibold text-gray-900">
+            {patient.marital_status}
+          </p>
         </div>
         <div className="md:col-span-2">
           <p className="mb-1 text-sm text-gray-600">Dirección</p>

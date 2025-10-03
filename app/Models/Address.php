@@ -16,18 +16,14 @@ class Address extends Model
         'is_primary',
         'lat',
         'lng',
-        'line1',
-        'line2',
-        'city',
-        'state',
-        'commune_id',
-        'region_id',
-        'province_id',
-        'postal_code',
-        'country',
         'street',
         'number',
+        'commune_id',
+        'province_id',
+        'region_id',
         'details',
+        'country',
+
     ];
 
     protected $casts = [

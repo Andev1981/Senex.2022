@@ -148,8 +148,6 @@ class CommunesTableSeeder extends Seeder
                 'province_id' => (int)$provinceId,
                 'code'        => $code ?? (string)$id,
                 'name'        => $name,
-                'lat'         => isset($lat) ? (float)$lat : null,
-                'lng'         => isset($lng) ? (float)$lng : null,
             ];
 
             $existing = Commune::find($id);

@@ -9,7 +9,7 @@ export default function NextSessions({ patient }) {
         Próximas Sesiones
       </h2>
       <div className="space-y-3">
-        {patient.appointments.map((apt) => (
+        {patient?.appointments?.map((apt) => (
           <div
             key={apt.id}
             className="p-3 border-l-4 border-teal-500 rounded-lg bg-teal-50"

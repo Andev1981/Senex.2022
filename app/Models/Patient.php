@@ -12,23 +12,38 @@ class Patient extends Model
     use HasFactory, HasAddresses;
 
     protected $fillable = [
-        'user_id',
         'name',
         'last_name',
-        'email',
-        'avatar',
         'rut',
-        'birth_date',
+        'email',
         'phone',
+        'birth_date',
+        'gender',
+        'occupation',
+        'marital_status',
         'status',
-        'payment_status',
-        'orden',
+        'status_reason',
+        'status_changed_at',
+        'notes',
     ];
 
 
     protected $casts = [
         'birth_date' => 'date',
+        'status_changed_at' => 'datetime',
     ];
+
+    public function doctorAssignments()
+    {
+        return $this->hasMany(DoctorPatientAssignment::class);
+    }
+
+    public function doctors()
+    {
+        return $this->belongsToMany(Doctor::class, 'doctor_patient_assignments')
+            ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
+            ->withTimestamps();
+    }
 
     public function medicalRecord()
     {
@@ -81,12 +96,37 @@ class Patient extends Model
 
     public function getAgeAttribute()
     {
-        if (!$this->birth_date || !Carbon::hasFormat($this->birth_date, 'Y-m-d')) {
+        if (!$this->birth_date) {
             return null;
         }
 
-        return Carbon::parse($this->birth_date)->age . ' años';
+        /** @var \Carbon\Carbon $date */
+        $date = $this->birth_date instanceof Carbon
+            ? $this->birth_date
+            : Carbon::parse($this->birth_date);
+
+        return $date->age;
     }
+
+    public function getBmiAttribute()
+    {
+        if (!$this->weight || !$this->height) {
+            return null; // si falta dato no calculamos
+        }
+
+        // si height está en cm, convertir a metros
+        $heightInMeters = $this->height > 3 ? $this->height / 100 : $this->height;
+
+        if ($heightInMeters <= 0) {
+            return null;
+        }
+
+        $bmi = $this->weight / ($heightInMeters ** 2);
+
+        // redondear a 1 decimal
+        return round($bmi, 1);
+    }
+
 
     public function getPaymentStatusAttribute(): string
     {
@@ -123,5 +163,6 @@ class Patient extends Model
 
     protected $appends = [
         'age',
+        'bmi'
     ];
 }

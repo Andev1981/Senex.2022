@@ -17,7 +17,7 @@ export default function IndexHistorial({ patient }) {
         </div>
 
         <div className="space-y-4">
-          {patient.medicalHistory.map((record) => (
+          {patient?.treatments?.map((record) => (
             <div
               key={record.id}
               className="p-6 transition-shadow border-l-4 border-teal-500 bg-gradient-to-r from-teal-50 to-transparent rounded-r-xl hover:shadow-md"
@@ -29,19 +29,19 @@ export default function IndexHistorial({ patient }) {
                   </div>
                   <div>
                     <span className="inline-block px-3 py-1 mb-1 text-xs text-white bg-teal-600 rounded-full">
-                      {record.type}
+                      {record?.session_type?.name}
                     </span>
                     <h3 className="text-lg font-bold text-gray-900">
                       {record.diagnosis}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      Atendido por: {record.kinesiologist}
+                      Atendido por: {record?.doctor.name}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-600">
-                    {new Date(record.date).toLocaleDateString("es-CL", {
+                    {new Date(record.start_date).toLocaleDateString("es-CL", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",

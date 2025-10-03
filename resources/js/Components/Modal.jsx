@@ -92,7 +92,7 @@ export default function Modal({
                 )}
 
                 {/* Contenido del modal con scroll si es necesario */}
-                <hr className="my-4" />
+                <hr className="my-2" />
                 <div className="max-h-[90vh] overflow-y-auto">{children}</div>
               </DialogPanel>
             </TransitionChild>

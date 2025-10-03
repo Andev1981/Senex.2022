@@ -49,7 +49,7 @@ class PaymentsController extends Controller
     $paymentId = $req->input('payment_id');
     $amount    = $req->input('amount');
 
-    $payment = \App\Models\PaymentTransaction::findOrFail($paymentId);
+    $payment = \App\Models\Payment::findOrFail($paymentId);
     $svc->allocateToInvoice($payment, $invoice, $amount ? (float)$amount : null);
 
     return back()->with('ok', 'Pago asignado a factura.');
@@ -61,7 +61,7 @@ class PaymentsController extends Controller
     $paymentId = $req->input('payment_id');
     $amount    = $req->input('amount');
 
-    $payment = \App\Models\PaymentTransaction::findOrFail($paymentId);
+    $payment = \App\Models\Payment::findOrFail($paymentId);
     $svc->settleDebtWithPayment($debt, $payment, $amount ? (float)$amount : null);
 
     return back()->with('ok', 'Deuda actualizada.');

@@ -97,3 +97,9 @@ export const PATIENT_STATUS_OPTIONS = Object.entries(patientStatuses).map(
 export const TREATMENT_STATUS_OPTIONS = Object.entries(treatmentStatuses).map(
   ([value, cfg]) => ({ value, label: cfg.label })
 );
+
+export const PATIENT_STATUS_TRANSITIONS = {
+  active: ["suspended", "cancelled"],
+  suspended: ["active", "cancelled"],
+  cancelled: [],
+};

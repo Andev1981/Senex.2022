@@ -26,52 +26,51 @@ class UpdatePatientRequest extends FormRequest
     {
 
         $id = $this->route('patient')->id;
-        return [
-            'name'        => ['required', 'string', 'max:255'],
-            'last_name'   => ['required', 'string', 'max:255'],
-            'email'       => ['required', 'email', 'max:255', Rule::unique('patients', 'email')->ignore($id)],
-            'rut'         => ['required', 'string', 'max:30', Rule::unique('patients', 'rut')->ignore($id)],
-            'birth_date'       => ['required', 'date'],
-            'phone'       => ['nullable', 'string', 'max:30'],
 
-            // Dirección
-            'street'      => ['nullable', 'string', 'max:255'],
-            'number'      => ['nullable', 'string', 'max:50'],
-            'details'     => ['nullable', 'string', 'max:500'],
-            'region_id'   => ['required', 'exists:regions,id'],
-            'province_id' => ['required', 'exists:provinces,id'],
-            'commune_id'  => ['required', 'exists:communes,id'],
+        return [
+            // Identidad
+            'name'       => ['bail', 'required', 'string', 'max:120'],
+            'last_name'  => ['bail', 'required', 'string', 'max:120'],
+
+            // RUT: opcional, formato normalizado y único
+            'rut'        => [
+                'required',
+                Rule::unique('patients', 'rut')->ignore($id),
+            ],
+
+            // Contacto
+            'email'      => ['nullable', 'string', 'email', 'max:255'],
+            'phone'      => ['nullable', 'string', 'max:50'],
+
+            // Demográficos
+            'birth_date' => ['nullable', 'date', 'before_or_equal:today', 'after:1900-01-01'],
+            'gender'     => ['nullable', Rule::in(['male', 'female', 'other', 'unknown'])],
+            'occupation' => ['nullable', 'string', 'max:120'],
+            'marital_status' => ['nullable', 'string', 'max:50'], // o usa Rule::in([...]) si tienes catálogo
+
+            // Estado
+            'status'         => ['required', Rule::in(['active', 'suspended', 'cancelled'])],
+            'status_reason'  => ['nullable', 'string', 'max:2000', 'required_if:status,suspended,cancelled'],
+
+            // Otros
+            'notes'      => ['nullable', 'string', 'max:5000'],
         ];
     }
 
     public function messages()
     {
         return [
-            'name.required'       => 'El nombre es obligatorio.',
-            'last_name.required'  => 'El apellido es obligatorio.',
-            'email.required'      => 'El correo electrónico es obligatorio.',
-            'email.email'         => 'El correo electrónico no es válido.',
-            'email.unique'        => 'El correo electrónico ya está en uso.',
-            'rut.required'        => 'El RUT es obligatorio.',
-            'rut.unique'          => 'El RUT ya está en uso.',
-            'birth_date.required'      => 'La fecha de nacimiento es obligatoria.',
-            'birth_date.date'          => 'La fecha de nacimiento no es válida.',
-            'phone.string'        => 'El teléfono debe ser una cadena de texto.',
-            'phone.max'           => 'El teléfono no debe exceder los 30 caracteres.',
-
-            // Dirección
-            'street.string'       => 'La calle debe ser una cadena de texto.',
-            'street.max'          => 'La calle no debe exceder los 255 caracteres.',
-            'number.string'       => 'El número debe ser una cadena de texto.',
-            'number.max'          => 'El número no debe exceder los 50 caracteres.',
-            'details.string'      => 'Los detalles deben ser una cadena de texto.',
-            'details.max'         => 'Los detalles no deben exceder los 500 caracteres.',
-            'region_id.required'  => 'La región es obligatoria.',
-            'region_id.exists'    => 'La región seleccionada no es válida.',
-            'province_id.required' => 'La provincia es obligatoria.',
-            'province_id.exists'  => 'La provincia seleccionada no es válida.',
-            'commune_id.required' => 'La comuna es obligatoria.',
-            'commune_id.exists'   => 'La comuna seleccionada no es válida.',
+            'name.required'          => 'El nombre es obligatorio.',
+            'last_name.required'     => 'El apellido es obligatorio.',
+            'rut.required'             => 'El RUT es requerido.',
+            'rut.unique'             => 'Este RUT ya está registrado.',
+            'email.email'            => 'El email no es válido.',
+            'phone.regex'            => 'El teléfono debe estar en formato +56 seguido de 9–10 dígitos.',
+            'birth_date.before_or_equal' => 'La fecha de nacimiento no puede ser futura.',
+            'birth_date.after'       => 'La fecha de nacimiento debe ser posterior a 1900-01-01.',
+            'gender.in'              => 'El género seleccionado no es válido.',
+            'status.in'              => 'El estado seleccionado no es válido.',
+            'status_reason.required_if' => 'Debes indicar el motivo cuando el estado es Suspendido o Cancelado.',
         ];
     }
 }

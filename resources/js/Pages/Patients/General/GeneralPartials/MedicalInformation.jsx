@@ -11,7 +11,9 @@ export default function MedicalInformation({ patient }) {
       <div className="space-y-4">
         <div className="p-3 rounded-lg bg-blue-50">
           <p className="mb-1 text-sm text-gray-600">Tipo de Sangre</p>
-          <p className="text-xl font-bold text-blue-600">{patient.bloodType}</p>
+          <p className="text-xl font-bold text-blue-600">
+            {patient.blood_type}
+          </p>
         </div>
         <div>
           <p className="mb-1 text-sm text-gray-600">Alergias</p>
@@ -20,7 +22,7 @@ export default function MedicalInformation({ patient }) {
         <div>
           <p className="mb-1 text-sm text-gray-600">Condiciones Crónicas</p>
           <p className="font-semibold text-gray-900">
-            {patient.chronicConditions}
+            {patient.chronic_conditions}
           </p>
         </div>
       </div>

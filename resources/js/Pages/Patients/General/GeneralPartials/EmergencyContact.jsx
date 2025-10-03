@@ -13,25 +13,25 @@ export default function EmergencyContact({ patient }) {
           <div>
             <p className="text-sm text-gray-600">Nombre</p>
             <p className="font-semibold text-gray-900">
-              {patient.emergencyContact.name}
+              {patient.emergency_contact_name}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Relación</p>
             <p className="font-semibold text-gray-900">
-              {patient.emergencyContact.relationship}
+              {patient.emergency_contact_relationship}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Teléfono</p>
             <p className="font-semibold text-gray-900">
-              {patient.emergencyContact.phone}
+              {patient.emergency_contact_phone}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Email</p>
             <p className="font-semibold text-gray-900">
-              {patient.emergencyContact.email}
+              {patient.emergency_contact_email}
             </p>
           </div>
         </div>

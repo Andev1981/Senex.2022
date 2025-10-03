@@ -1,12 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, useForm, router } from "@inertiajs/react";
-import TableAttendancesPatient from "./Partials/TableAttendancesPatient";
-import { patientStatuses } from "@/utils/status";
-import ModalCreateEditPatient from "./ModalCreateEditPatient";
-import ModalCreateEditTreatment from "./Partials/ModalCreateEditTreatment";
-import Modal from "@/Components/Modal";
-import TableTreatments from "./Partials/TableTreatments";
+import { Head, useForm, router, useRemember } from "@inertiajs/react";
+import { route } from "ziggy-js";
 import {
   User,
   Activity,
@@ -14,381 +9,84 @@ import {
   FileText,
   ChevronLeft,
   Plus,
-  Edit,
-  CheckCircle,
-  Clock,
-  CreditCard,
   Clipboard,
   Target,
-  TrendingUp,
-  Award,
-  Video,
-  PlayCircle,
-  Timer,
   Repeat,
-  Download,
+  CreditCard,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
-import IndexGeneral from "./General/IndexGeneral";
-import IndexHistorial from "./Historial/IndexHistorial";
-import { route } from "ziggy-js";
+import Modal from "@/Components/Modal";
 import PatientCard from "./Partials/PatientCard";
+import { clp } from "@/utils/utils";
+import { PATIENT_STATUS_TRANSITIONS } from "@/utils/status";
+import ResourceFormModal from "../../Components/ResourceFormModal";
+import IndexSessions from "./Sessions/IndexSessions";
 
-function DetailPatient({
-  /* patient */
-  sessions,
-  session_types,
-  treatments,
+// 👉 Lazy load por pestaña (mejor TTI)
+const IndexGeneral = lazy(() => import("./General/IndexGeneral"));
+const IndexHistorial = lazy(() => import("./Historial/IndexHistorial"));
+const IndexTreatments = lazy(() => import("./Treatments/IndexTreatments"));
+
+const canTransition = (from, to) =>
+  PATIENT_STATUS_TRANSITIONS[from]?.includes(to);
+
+/** Hook: sincroniza pestaña con ?tab= y recuerda entre visitas */
+function useSyncedTab(defaultTab = "general") {
+  const initial =
+    new URLSearchParams(window.location.search).get("tab") || defaultTab;
+  const [activeTab, setActiveTab] = useRemember(initial, "patient.activeTab");
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    sp.set("tab", activeTab);
+    window.history.replaceState({}, "", `?${sp.toString()}`);
+  }, [activeTab]);
+
+  return [activeTab, setActiveTab];
+}
+
+/**
+ * Componente principal: DetailPatient (refactor dinámico)
+ */
+export default function DetailPatient({
+  patient,
+  payments = [],
+  sessions = [],
+  session_types = [],
+  treatments = [],
   treatment: defaultTreatment,
-  doctors,
-  communes,
-  regions,
-  provinces,
+  doctors = [],
+  communes = [],
+  regions = [],
+  provinces = [],
 }) {
   const { get } = useForm();
-  const [activeTab, setActiveTab] = useState("general");
-  const [openModalPatient, setOpenModalPatient] = useState(false);
-  const [openModalTreatment, setOpenModalTreatment] = useState(false);
-  const [openModalTreatmentsList, setOpenModalTreatmentsList] = useState(false);
-  const [treatment, setTreatment] = useState(defaultTreatment || null);
+  const [activeTab, setActiveTab] = useSyncedTab("general");
 
-  const handleOpenModalOptions = () => {
-    setOpenModalPatient(true);
-  };
+  // Modales genéricos (creación/edición)
+  const [openTreatmentModal, setOpenTreatmentModal] = useState(false);
+  const [editingTreatment, setEditingTreatment] = useState(null);
 
-  const handleOpenModalTreatment = (data) => {
-    setTreatment(data);
-    setOpenModalTreatment(true);
-  };
+  const [openSessionModal, setOpenSessionModal] = useState(false);
+  const [openPaymentModal, setOpenPaymentModal] = useState(false);
+  const [openDocumentModal, setOpenDocumentModal] = useState(false);
+  const [openPatientModal, setOpenPatientModal] = useState(false);
 
-  const handleOpenModalTreatmentList = () => {
-    setOpenModalTreatmentsList(true);
-  };
-
-  const patient = {
-    id: 1,
-    name: "Carlos Ramírez Soto",
-    rut: "16.789.234-5",
-    email: "carlos.ramirez@email.com",
-    phone: "+56 9 8765 4321",
-    birthDate: "1988-06-20",
-    age: 36,
-    address: "Av. Providencia 2240, Depto 802",
-    city: "Providencia, Santiago",
-    region: "Región Metropolitana",
-    gender: "Masculino",
-    bloodType: "A+",
-    allergies: "Ninguna",
-    chronicConditions: "Escoliosis leve",
-    insurance: "Isapre Consalud - Plan 3000",
-    occupation: "Ingeniero en Software",
-    maritalStatus: "Soltero",
-    emergencyContact: {
-      name: "Andrea Ramírez Soto",
-      relationship: "Hermana",
-      phone: "+56 9 8765 9999",
-      email: "andrea.ramirez@email.com",
-    },
-    physicalCondition: {
-      height: 178,
-      weight: 82,
-      bmi: 25.9,
-      bloodPressure: "120/80",
-      dominantSide: "Derecha",
-      activityLevel: "Moderado",
-      occupation: "Trabajo de oficina - sedentario",
-      sportsPractice: "Running 2 veces por semana",
-    },
-    medicalHistory: [
-      {
-        id: 1,
-        date: "2024-09-25",
-        type: "Evaluación",
-        kinesiologist: "Klgo. Roberto Pérez",
-        diagnosis: "Tendinitis rotador hombro derecho - Grado II",
-        evaluation:
-          "Dolor agudo al levantar brazo sobre 90°. ROM limitado. Fuerza 3/5.",
-        treatment: "Plan de 12 sesiones - Terapia manual + Ejercicios",
-        painLevel: 7,
-        notes:
-          "Paciente refiere dolor nocturno. Inicio hace 3 semanas por sobrecarga laboral.",
-        recommendedSessions: 12,
-      },
-      {
-        id: 2,
-        date: "2024-07-15",
-        type: "Control",
-        kinesiologist: "Klgo. María Silva",
-        diagnosis: "Lumbalgia mecánica",
-        evaluation: "Mejoría significativa. ROM completo. Sin dolor en reposo.",
-        treatment: "Alta médica. Ejercicios de mantención.",
-        painLevel: 1,
-        notes:
-          "Paciente dado de alta. Indicaciones de ergonomía laboral y ejercicios domiciliarios.",
-        recommendedSessions: 0,
-      },
-    ],
-    treatments: [
-      {
-        id: 1,
-        name: "Rehabilitación Hombro Derecho",
-        diagnosis: "Tendinitis del Manguito Rotador",
-        startDate: "2024-09-27",
-        endDate: null,
-        status: "Activo",
-        kinesiologist: "Klgo. Roberto Pérez",
-        description:
-          "Tratamiento de rehabilitación para tendinitis del manguito rotador",
-        totalSessions: 12,
-        completedSessions: 5,
-        frequency: "2 veces por semana",
-        nextAppointment: "2024-10-15 15:00",
-        objectives: [
-          "Disminuir dolor e inflamación",
-          "Recuperar rango de movimiento completo",
-          "Fortalecer musculatura del hombro",
-          "Retorno a actividades cotidianas",
-        ],
-        currentPhase: "Fase II - Movilización Activa",
-        exercises: [
-          {
-            name: "Péndulos de Codman",
-            sets: "3x15",
-            frequency: "Diario",
-            video: true,
-          },
-          {
-            name: "Rotación externa con banda",
-            sets: "3x12",
-            frequency: "3 veces/semana",
-            video: true,
-          },
-          {
-            name: "Elevación escapular",
-            sets: "3x15",
-            frequency: "Diario",
-            video: false,
-          },
-          {
-            name: "Fortalecimiento rotadores",
-            sets: "2x10",
-            frequency: "3 veces/semana",
-            video: true,
-          },
-        ],
-        progress: {
-          painReduction: 60,
-          mobilityImprovement: 45,
-          strengthGain: 30,
-        },
-      },
-      {
-        id: 2,
-        name: "Rehabilitación Lumbar",
-        diagnosis: "Lumbalgia Mecánica",
-        startDate: "2024-06-10",
-        endDate: "2024-07-22",
-        status: "Completado",
-        kinesiologist: "Klgo. María Silva",
-        description: "Tratamiento para dolor lumbar crónico",
-        totalSessions: 10,
-        completedSessions: 10,
-        frequency: "2 veces por semana",
-        objectives: [
-          "Alivio del dolor lumbar",
-          "Mejora de flexibilidad",
-          "Fortalecimiento core",
-          "Educación postural",
-        ],
-        outcome:
-          "Alta satisfactoria. Paciente sin dolor y retorno completo a actividades.",
-      },
-    ],
-    sessions: [
-      {
-        id: 1,
-        treatmentId: 1,
-        sessionNumber: 5,
-        date: "2024-10-10",
-        time: "15:00",
-        duration: 45,
-        kinesiologist: "Klgo. Roberto Pérez",
-        status: "Completada",
-        painBefore: 6,
-        painAfter: 3,
-        techniques: [
-          "Terapia manual - Movilización glenohumeral",
-          "Ultrasonido terapéutico - 5 minutos",
-          "Ejercicios de fortalecimiento",
-          "Crioterapia - 10 minutos",
-        ],
-        exercises: [
-          "Péndulos de Codman",
-          "Rotación externa",
-          "Elevación frontal",
-        ],
-        rom: {
-          flexion: 145,
-          abduction: 140,
-          rotation: 60,
-        },
-        notes:
-          "Paciente muestra mejoría evidente. Disminución significativa del dolor. Continuar con plan.",
-        homework:
-          "Realizar ejercicios 2 veces al día. Aplicar hielo si hay dolor post-actividad.",
-        nextGoals: "Aumentar carga en ejercicios de fortalecimiento",
-      },
-      {
-        id: 2,
-        treatmentId: 1,
-        sessionNumber: 4,
-        date: "2024-10-07",
-        time: "15:00",
-        duration: 45,
-        kinesiologist: "Klgo. Roberto Pérez",
-        status: "Completada",
-        painBefore: 7,
-        painAfter: 4,
-        techniques: [
-          "Terapia manual - Liberación miofascial",
-          "TENS - 15 minutos",
-          "Ejercicios activo-asistidos",
-          "Kinesiotaping",
-        ],
-        exercises: ["Péndulos de Codman", "Rotación externa asistida"],
-        rom: {
-          flexion: 135,
-          abduction: 130,
-          rotation: 55,
-        },
-        notes:
-          "Buena adherencia al tratamiento. Paciente refiere menos dolor nocturno.",
-        homework:
-          "Ejercicios domiciliarios + aplicación de calor húmedo antes de ejercitar.",
-      },
-      {
-        id: 3,
-        treatmentId: 1,
-        sessionNumber: 6,
-        date: "2024-10-15",
-        time: "15:00",
-        duration: 45,
-        kinesiologist: "Klgo. Roberto Pérez",
-        status: "Programada",
-        painBefore: null,
-        painAfter: null,
-      },
-    ],
-    payments: [
-      {
-        id: 1,
-        date: "2024-10-10",
-        concept: "Sesión Kinesiología 5/12",
-        treatmentId: 1,
-        sessionNumber: 5,
-        amount: 20000,
-        paymentMethod: "Tarjeta de Débito",
-        status: "Pagado",
-        invoice: "FK-2024-00243",
-        copay: 8000,
-        insuranceCovered: 12000,
-      },
-      {
-        id: 2,
-        date: "2024-10-07",
-        concept: "Sesión Kinesiología 4/12",
-        treatmentId: 1,
-        sessionNumber: 4,
-        amount: 20000,
-        paymentMethod: "Transferencia",
-        status: "Pagado",
-        invoice: "FK-2024-00238",
-        copay: 8000,
-        insuranceCovered: 12000,
-      },
-      {
-        id: 3,
-        date: "2024-10-15",
-        concept: "Sesión Kinesiología 6/12",
-        treatmentId: 1,
-        sessionNumber: 6,
-        amount: 20000,
-        paymentMethod: "Pendiente",
-        status: "Pendiente",
-        invoice: "FK-2024-00251",
-        copay: 8000,
-        insuranceCovered: 12000,
-      },
-    ],
-    appointments: [
-      {
-        id: 1,
-        date: "2024-10-15",
-        time: "15:00",
-        treatmentId: 1,
-        sessionNumber: 6,
-        kinesiologist: "Klgo. Roberto Pérez",
-        status: "Confirmada",
-        type: "Sesión Regular",
-        duration: 45,
-      },
-      {
-        id: 2,
-        date: "2024-10-17",
-        time: "15:00",
-        treatmentId: 1,
-        sessionNumber: 7,
-        kinesiologist: "Klgo. Roberto Pérez",
-        status: "Programada",
-        type: "Sesión Regular",
-        duration: 45,
-      },
-    ],
-    documents: [
-      {
-        id: 1,
-        name: "Evaluación Kinesiológica Inicial",
-        type: "PDF",
-        size: "320 KB",
-        date: "2024-09-25",
-        category: "Evaluaciones",
-        treatmentId: 1,
-      },
-      {
-        id: 2,
-        name: "Plan de Tratamiento Hombro",
-        type: "PDF",
-        size: "185 KB",
-        date: "2024-09-27",
-        category: "Planes",
-        treatmentId: 1,
-      },
-      {
-        id: 3,
-        name: "Evolución Sesiones 1-5",
-        type: "PDF",
-        size: "240 KB",
-        date: "2024-10-10",
-        category: "Evolución",
-        treatmentId: 1,
-      },
-      {
-        id: 4,
-        name: "Pauta Ejercicios Domiciliarios",
-        type: "PDF",
-        size: "450 KB",
-        date: "2024-09-27",
-        category: "Ejercicios",
-        treatmentId: 1,
-      },
-    ],
-  };
-
-  const totalPaid = patient.payments
-    .filter((p) => p.status === "Pagado")
-    .reduce((sum, p) => sum + p.amount, 0);
-  const totalPending = patient.payments
-    .filter((p) => p.status === "Pendiente")
-    .reduce((sum, p) => sum + p.amount, 0);
+  const totalPaid = useMemo(
+    () =>
+      payments
+        .filter((p) => p.status === "Pagado")
+        .reduce((s, p) => s + (p.amount || 0), 0),
+    [payments]
+  );
+  const totalPending = useMemo(
+    () =>
+      payments
+        .filter((p) => p.status === "Pendiente")
+        .reduce((s, p) => s + (p.amount || 0), 0),
+    [payments]
+  );
 
   const tabs = [
     { id: "general", label: "Información General", icon: User },
@@ -401,41 +99,294 @@ function DetailPatient({
   ];
 
   const handleBack = () => {
-    get(route("listado.pacientes"));
+    get(route("pacientes"));
   };
+
+  /** Acciones: estado del paciente */
+  const changePatientStatus = (to) => {
+    if (!canTransition(patient.status, to)) return;
+    const reason =
+      window.prompt(`Motivo para cambiar a "${to}" (opcional):`) || null;
+    router.patch(
+      route("patients.status", patient.id),
+      { status: to, reason },
+      {
+        preserveScroll: true,
+        onSuccess: () =>
+          router.reload({ only: ["patient"], preserveScroll: true }),
+      }
+    );
+  };
+
+  /** Esquemas para formularios genéricos */
+  const treatmentSchema = useMemo(
+    () => [
+      { name: "name", label: "Nombre", type: "text", required: true },
+      {
+        name: "doctor_id",
+        label: "Kinesiólogo",
+        type: "select",
+        options: doctors.map((d) => ({ value: d.id, label: d.name })),
+      },
+      { name: "start_date", label: "Inicio", type: "date" },
+      {
+        name: "goal",
+        label: "Objetivo",
+        type: "textarea",
+        rows: 3,
+        colSpan: 2,
+      },
+    ],
+    [doctors]
+  );
+
+  const patientSchema = useMemo(
+    () => [
+      { name: "name", label: "Nombre", type: "text", required: true },
+      { name: "last_name", label: "Apellido", type: "text", required: true },
+
+      {
+        name: "rut",
+        label: "RUT",
+        type: "rut",
+        help: "Sin puntos, con guion y DV. Ej: 12345678-9",
+        required: true,
+      },
+
+      {
+        name: "email",
+        label: "Email",
+        type: "email",
+        placeholder: "persona@correo.cl",
+        required: true,
+      },
+      {
+        name: "phone",
+        label: "Teléfono",
+        type: "tel",
+        placeholder: "+56 9 1234 5678",
+        help: "Ej: +56 9 1234 5678",
+      },
+      {
+        name: "birth_date",
+        label: "Fecha de nacimiento",
+        type: "date",
+        min: "1900-01-01",
+        max: "today",
+      },
+      {
+        name: "gender",
+        label: "Género",
+        type: "select",
+        options: [
+          { value: "male", label: "Masculino" },
+          { value: "female", label: "Femenino" },
+          { value: "other", label: "Otro" },
+          { value: "unknown", label: "No especifica" },
+        ],
+      },
+
+      { name: "occupation", label: "Ocupación", type: "text" },
+
+      {
+        name: "marital_status",
+        label: "Estado civil",
+        type: "select",
+        options: [
+          { value: "", label: "—" },
+          { value: "single", label: "Soltero/a" },
+          { value: "married", label: "Casado/a" },
+          { value: "divorced", label: "Divorciado/a" },
+          { value: "widowed", label: "Viudo/a" },
+          { value: "cohabiting", label: "Conviviente" },
+        ],
+      },
+
+      {
+        name: "status",
+        label: "Estado",
+        type: "select",
+        options: [
+          { value: "active", label: "Activo" },
+          { value: "suspended", label: "Suspendido" },
+          { value: "cancelled", label: "Cancelado" },
+        ],
+      },
+      {
+        name: "status_reason",
+        label: "Motivo del estado",
+        type: "textarea",
+        rows: 3,
+        colSpan: 2,
+        visibleIf: (data) => ["suspended", "cancelled"].includes(data.status),
+        help: "Se guardará en auditoría de cambios.",
+      },
+
+      { name: "notes", label: "Notas", type: "textarea", rows: 4, colSpan: 3 },
+    ],
+    [patient]
+  );
+
+  const sessionSchema = useMemo(
+    () => [
+      {
+        name: "treatment_id",
+        label: "Tratamiento",
+        type: "select",
+        required: true,
+        options: treatments.map((t) => ({ value: t.id, label: t.name })),
+      },
+      {
+        name: "doctor_id",
+        label: "Kinesiólogo",
+        type: "select",
+        options: doctors.map((d) => ({ value: d.id, label: d.name })),
+      },
+      {
+        name: "session_type_id",
+        label: "Tipo de Sesión",
+        type: "select",
+        options: session_types.map((s) => ({ value: s.id, label: s.name })),
+      },
+      { name: "date", label: "Fecha", type: "date", required: true },
+      { name: "time", label: "Hora", type: "time" },
+      { name: "duration", label: "Duración (min)", type: "number" },
+      {
+        name: "status",
+        label: "Estado",
+        type: "select",
+        options: [
+          { value: "Programada", label: "Programada" },
+          { value: "Completada", label: "Completada" },
+        ],
+      },
+      { name: "pain_before", label: "Dolor Inicial (0-10)", type: "number" },
+      { name: "pain_after", label: "Dolor Final (0-10)", type: "number" },
+      { name: "notes", label: "Notas", type: "textarea", rows: 3 },
+    ],
+    [doctors, treatments, session_types]
+  );
+
+  const paymentSchema = useMemo(
+    () => [
+      { name: "date", label: "Fecha", type: "date", required: true },
+      { name: "concept", label: "Concepto", type: "text", required: true },
+      { name: "invoice", label: "Documento (boleta/factura)", type: "text" },
+      { name: "copay", label: "Copago", type: "number" },
+      { name: "insuranceCovered", label: "Isapre/Fonasa", type: "number" },
+      { name: "amount", label: "Total", type: "number", required: true },
+      {
+        name: "paymentMethod",
+        label: "Método",
+        type: "select",
+        options: [
+          { value: "Efectivo", label: "Efectivo" },
+          { value: "Débito", label: "Débito" },
+          { value: "Crédito", label: "Crédito" },
+          { value: "Transferencia", label: "Transferencia" },
+          { value: "WebPay", label: "WebPay" },
+        ],
+      },
+      {
+        name: "status",
+        label: "Estado",
+        type: "select",
+        options: [
+          { value: "Pagado", label: "Pagado" },
+          { value: "Pendiente", label: "Pendiente" },
+        ],
+      },
+    ],
+    []
+  );
+
+  const documentSchema = useMemo(
+    () => [
+      { name: "name", label: "Nombre", type: "text", required: true },
+      {
+        name: "category",
+        label: "Categoría",
+        type: "select",
+        options: [
+          { value: "Evolución", label: "Evolución" },
+          { value: "Examen", label: "Examen" },
+          { value: "Derivación", label: "Derivación" },
+          { value: "Otro", label: "Otro" },
+        ],
+      },
+      { name: "file", label: "Archivo", type: "file", required: true },
+    ],
+    []
+  );
+
+  // Helpers de recarga parcial
+  const reload = (only) => router.reload({ only, preserveScroll: true });
 
   return (
     <AuthenticatedLayout>
-      <div className="min-h-screen bg-gray-100">
-        <div className="text-white bg-gradient-to-r from-teal-600 to-cyan-600">
+      <Head title={`Paciente: ${patient.name} ${patient.last_name || ""}`} />
+      <div className="min-h-screen p-4 bg-gray-100">
+        {/* Header / barra superior */}
+        <div className="text-white bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl">
           <div className="px-4 py-6 mx-auto max-w-7xl">
             <button
-              onClick={() => handleBack()}
+              onClick={handleBack}
               className="flex items-center gap-2 mb-4 text-white hover:text-teal-100"
             >
-              <ChevronLeft className="w-5 h-5" />
-              Volver a pacientes
+              <ChevronLeft className="w-5 h-5" /> Volver a pacientes
             </button>
-
-            <PatientCard patient={patient} />
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <PatientCard
+                patient={patient}
+                setOpenPatientModal={setOpenPatientModal}
+              />
+              {/* Acciones de estado */}
+              <div className="flex self-start gap-2 pb-2">
+                {canTransition(patient.status, "suspended") && (
+                  <button
+                    onClick={() => changePatientStatus("suspended")}
+                    className="px-3 py-2 text-yellow-900 bg-yellow-100 rounded-lg hover:bg-yellow-200"
+                  >
+                    Suspender
+                  </button>
+                )}
+                {canTransition(patient.status, "active") && (
+                  <button
+                    onClick={() => changePatientStatus("active")}
+                    className="px-3 py-2 text-green-900 bg-green-100 rounded-lg hover:bg-green-200"
+                  >
+                    Activar
+                  </button>
+                )}
+                {canTransition(patient.status, "cancelled") && (
+                  <button
+                    onClick={() => changePatientStatus("cancelled")}
+                    className="px-3 py-2 text-red-900 bg-red-100 rounded-lg hover:bg-red-200"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
+          {/* Tabs */}
           <div className="px-4 mx-auto max-w-7xl">
             <div className="flex gap-2 pb-0 -mb-px overflow-x-auto">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-4 py-3 font-medium whitespace-nowrap transition-all border-b-2 ${
-                      activeTab === tab.id
-                        ? "text-white border-white bg-white/10"
+                      isActive
+                        ? "text-cyan-600 border-white bg-white rounded-t-xl"
                         : "text-teal-100 border-transparent hover:text-white hover:bg-white/5"
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
+                    <Icon className="w-4 h-4" /> {tab.label}
                   </button>
                 );
               })}
@@ -443,564 +394,38 @@ function DetailPatient({
           </div>
         </div>
 
-        <div className="px-4 py-6 mx-auto max-w-7xl">
-          {activeTab === "general" && <IndexGeneral patient={patient} />}
+        {/* Contenido por pestaña */}
+        <div className="py-6 mx-auto max-w-7xl">
+          <Suspense fallback={<div className="p-6">Cargando…</div>}>
+            {activeTab === "general" && <IndexGeneral patient={patient} />}
+            {activeTab === "history" && <IndexHistorial patient={patient} />}
+            {activeTab === "treatments" && (
+              <IndexTreatments
+                patient={patient}
+                treatments={treatments}
+                onCreate={() => {
+                  setEditingTreatment(null);
+                  setOpenTreatmentModal(true);
+                }}
+                onEdit={(t) => {
+                  setEditingTreatment(t);
+                  setOpenTreatmentModal(true);
+                }}
+              />
+            )}
 
-          {activeTab === "history" && <IndexHistorial patient={patient} />}
-
-          {activeTab === "treatments" && (
-            <div className="space-y-6">
-              {patient.treatments
-                .filter((t) => t.status === "Activo")
-                .map((treatment) => (
-                  <div
-                    key={treatment.id}
-                    className="p-6 bg-white shadow-lg rounded-xl"
-                  >
-                    <div className="flex items-start justify-between mb-6">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h2 className="text-2xl font-bold text-gray-900">
-                            {treatment.name}
-                          </h2>
-                          <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-                            {treatment.status}
-                          </span>
-                        </div>
-                        <p className="mb-1 text-gray-600">
-                          {treatment.diagnosis}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {treatment.kinesiologist}
-                        </p>
-                      </div>
-                      <button className="text-teal-600 hover:text-teal-700">
-                        <Edit className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
-                      <div className="p-4 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
-                        <p className="mb-1 text-sm opacity-90">Sesiones</p>
-                        <p className="text-3xl font-bold">
-                          {treatment.completedSessions}/
-                          {treatment.totalSessions}
-                        </p>
-                        <div className="h-2 mt-2 rounded-full bg-white/20">
-                          <div
-                            className="h-2 transition-all bg-white rounded-full"
-                            style={{
-                              width: `${
-                                (treatment.completedSessions /
-                                  treatment.totalSessions) *
-                                100
-                              }%`,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="p-4 text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                          <TrendingUp className="w-4 h-4" />
-                          <p className="text-sm opacity-90">Reducción Dolor</p>
-                        </div>
-                        <p className="text-3xl font-bold">
-                          {treatment.progress.painReduction}%
-                        </p>
-                      </div>
-
-                      <div className="p-4 text-white bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Activity className="w-4 h-4" />
-                          <p className="text-sm opacity-90">Movilidad</p>
-                        </div>
-                        <p className="text-3xl font-bold">
-                          {treatment.progress.mobilityImprovement}%
-                        </p>
-                      </div>
-
-                      <div className="p-4 text-white bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Award className="w-4 h-4" />
-                          <p className="text-sm opacity-90">Fuerza</p>
-                        </div>
-                        <p className="text-3xl font-bold">
-                          {treatment.progress.strengthGain}%
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
-                      <div>
-                        <h3 className="flex items-center gap-2 mb-3 font-bold text-gray-900">
-                          <Target className="w-5 h-5 text-teal-600" />
-                          Objetivos del Tratamiento
-                        </h3>
-                        <div className="space-y-2">
-                          {treatment.objectives.map((obj, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-start gap-2 text-sm"
-                            >
-                              <CheckCircle className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
-                              <span className="text-gray-700">{obj}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h3 className="mb-3 font-bold text-gray-900">
-                          Información del Tratamiento
-                        </h3>
-                        <div className="space-y-3 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Inicio:</span>
-                            <span className="font-semibold">
-                              {new Date(treatment.startDate).toLocaleDateString(
-                                "es-CL"
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Frecuencia:</span>
-                            <span className="font-semibold">
-                              {treatment.frequency}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Fase Actual:</span>
-                            <span className="font-semibold text-teal-600">
-                              {treatment.currentPhase}
-                            </span>
-                          </div>
-                          {treatment.nextAppointment && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">
-                                Próxima Sesión:
-                              </span>
-                              <span className="font-semibold text-blue-600">
-                                {new Date(
-                                  treatment.nextAppointment
-                                ).toLocaleDateString("es-CL")}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="flex items-center gap-2 mb-3 font-bold text-gray-900">
-                        <Repeat className="w-5 h-5 text-teal-600" />
-                        Ejercicios Asignados
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        {treatment.exercises.map((exercise, idx) => (
-                          <div
-                            key={idx}
-                            className="p-3 border border-teal-200 rounded-lg bg-teal-50"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-sm font-semibold text-gray-900">
-                                {exercise.name}
-                              </h4>
-                              {exercise.video && (
-                                <PlayCircle className="w-4 h-4 text-teal-600" />
-                              )}
-                            </div>
-                            <div className="flex gap-4 text-xs text-gray-600">
-                              <span className="font-medium">
-                                {exercise.sets}
-                              </span>
-                              <span>•</span>
-                              <span>{exercise.frequency}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-              {patient.treatments.filter((t) => t.status === "Completado")
-                .length > 0 && (
-                <div className="p-6 bg-white shadow-lg rounded-xl">
-                  <h2 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
-                    <CheckCircle className="w-5 h-5 text-gray-600" />
-                    Tratamientos Completados
-                  </h2>
-                  <div className="space-y-3">
-                    {patient.treatments
-                      .filter((t) => t.status === "Completado")
-                      .map((treatment) => (
-                        <div
-                          key={treatment.id}
-                          className="p-4 border-l-4 border-gray-400 rounded-r-lg bg-gray-50"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <h3 className="font-bold text-gray-900">
-                                {treatment.name}
-                              </h3>
-                              <p className="text-sm text-gray-600">
-                                {treatment.diagnosis}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {treatment.kinesiologist}
-                              </p>
-                            </div>
-                            <span className="px-3 py-1 text-xs font-medium text-white bg-gray-600 rounded-full">
-                              {treatment.status}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
-                            <div>
-                              <p className="text-gray-600">Duración</p>
-                              <p className="font-semibold">
-                                {new Date(
-                                  treatment.startDate
-                                ).toLocaleDateString("es-CL")}{" "}
-                                -{" "}
-                                {new Date(treatment.endDate).toLocaleDateString(
-                                  "es-CL"
-                                )}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600">Sesiones</p>
-                              <p className="font-semibold">
-                                {treatment.completedSessions}/
-                                {treatment.totalSessions}
-                              </p>
-                            </div>
-                          </div>
-                          {treatment.outcome && (
-                            <div className="p-3 mt-2 bg-white rounded-lg">
-                              <p className="text-sm text-gray-700">
-                                {treatment.outcome}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "sessions" && (
-            <div className="space-y-4">
-              <div className="p-6 bg-white shadow-lg rounded-xl">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-                    <Clipboard className="w-6 h-6 text-teal-600" />
-                    Registro de Sesiones
-                  </h2>
-                  <button className="flex items-center gap-2 px-4 py-2 text-white bg-teal-600 rounded-lg hover:bg-teal-700">
-                    <Plus className="w-4 h-4" />
-                    Registrar Sesión
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {patient.sessions
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .map((session) => (
-                      <div
-                        key={session.id}
-                        className={`border-l-4 ${
-                          session.status === "Completada"
-                            ? "border-teal-500 bg-gradient-to-r from-teal-50 to-transparent"
-                            : "border-blue-500 bg-gradient-to-r from-blue-50 to-transparent"
-                        } p-6 rounded-r-xl`}
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <span
-                                className={`inline-block ${
-                                  session.status === "Completada"
-                                    ? "bg-teal-600"
-                                    : "bg-blue-600"
-                                } text-white text-sm px-3 py-1 rounded-full font-medium`}
-                              >
-                                Sesión #{session.sessionNumber}
-                              </span>
-                              <span
-                                className={`text-sm px-3 py-1 rounded-full font-medium ${
-                                  session.status === "Completada"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-blue-100 text-blue-700"
-                                }`}
-                              >
-                                {session.status}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                              {session.kinesiologist}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-gray-900">
-                              {new Date(session.date).toLocaleDateString(
-                                "es-CL"
-                              )}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {session.time}
-                            </p>
-                            <p className="flex items-center justify-end gap-1 mt-1 text-xs text-gray-500">
-                              <Timer className="w-3 h-3" />
-                              {session.duration} min
-                            </p>
-                          </div>
-                        </div>
-
-                        {session.status === "Completada" && (
-                          <>
-                            <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-4">
-                              <div className="p-3 bg-white rounded-lg">
-                                <p className="mb-1 text-xs text-gray-600">
-                                  Dolor Inicial
-                                </p>
-                                <p
-                                  className={`text-2xl font-bold ${
-                                    session.painBefore >= 7
-                                      ? "text-red-600"
-                                      : session.painBefore >= 4
-                                      ? "text-orange-600"
-                                      : "text-green-600"
-                                  }`}
-                                >
-                                  {session.painBefore}/10
-                                </p>
-                              </div>
-                              <div className="p-3 bg-white rounded-lg">
-                                <p className="mb-1 text-xs text-gray-600">
-                                  Dolor Final
-                                </p>
-                                <p
-                                  className={`text-2xl font-bold ${
-                                    session.painAfter >= 7
-                                      ? "text-red-600"
-                                      : session.painAfter >= 4
-                                      ? "text-orange-600"
-                                      : "text-green-600"
-                                  }`}
-                                >
-                                  {session.painAfter}/10
-                                </p>
-                              </div>
-                              <div className="p-3 bg-white rounded-lg">
-                                <p className="mb-1 text-xs text-gray-600">
-                                  Mejoría
-                                </p>
-                                <p className="text-2xl font-bold text-green-600">
-                                  -{session.painBefore - session.painAfter}
-                                </p>
-                              </div>
-                              <div className="p-3 bg-white rounded-lg">
-                                <p className="mb-1 text-xs text-gray-600">
-                                  Progreso
-                                </p>
-                                <p className="text-2xl font-bold text-teal-600">
-                                  {Math.round(
-                                    ((session.painBefore - session.painAfter) /
-                                      session.painBefore) *
-                                      100
-                                  )}
-                                  %
-                                </p>
-                              </div>
-                            </div>
-
-                            {session.rom && (
-                              <div className="p-4 mb-4 bg-white rounded-lg">
-                                <h4 className="mb-3 text-sm font-semibold text-gray-900">
-                                  Rango de Movimiento (ROM)
-                                </h4>
-                                <div className="grid grid-cols-3 gap-4">
-                                  <div>
-                                    <p className="mb-1 text-xs text-gray-600">
-                                      Flexión
-                                    </p>
-                                    <p className="font-bold text-gray-900">
-                                      {session.rom.flexion}°
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="mb-1 text-xs text-gray-600">
-                                      Abducción
-                                    </p>
-                                    <p className="font-bold text-gray-900">
-                                      {session.rom.abduction}°
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="mb-1 text-xs text-gray-600">
-                                      Rotación
-                                    </p>
-                                    <p className="font-bold text-gray-900">
-                                      {session.rom.rotation}°
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            <div className="mb-4">
-                              <h4 className="mb-2 text-sm font-semibold text-gray-900">
-                                Técnicas Aplicadas
-                              </h4>
-                              <div className="flex flex-wrap gap-2">
-                                {session.techniques.map((technique, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="px-3 py-1 text-xs text-teal-700 bg-teal-100 rounded-full"
-                                  >
-                                    {technique}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-
-                            {session.exercises && (
-                              <div className="mb-4">
-                                <h4 className="mb-2 text-sm font-semibold text-gray-900">
-                                  Ejercicios Realizados
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                  {session.exercises.map((exercise, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="px-3 py-1 text-xs text-purple-700 bg-purple-100 rounded-full"
-                                    >
-                                      {exercise}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {session.notes && (
-                              <div className="p-3 mb-3 bg-white rounded-lg">
-                                <h4 className="mb-1 text-sm font-semibold text-gray-900">
-                                  Notas de la Sesión
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {session.notes}
-                                </p>
-                              </div>
-                            )}
-
-                            {session.homework && (
-                              <div className="p-3 mb-3 border-l-4 border-blue-500 rounded-lg bg-blue-50">
-                                <h4 className="mb-1 text-sm font-semibold text-gray-900">
-                                  Indicaciones para Casa
-                                </h4>
-                                <p className="text-sm text-gray-700">
-                                  {session.homework}
-                                </p>
-                              </div>
-                            )}
-
-                            {session.nextGoals && (
-                              <div className="p-3 border-l-4 border-yellow-500 rounded-lg bg-yellow-50">
-                                <h4 className="mb-1 text-sm font-semibold text-gray-900">
-                                  Objetivos Próxima Sesión
-                                </h4>
-                                <p className="text-sm text-gray-700">
-                                  {session.nextGoals}
-                                </p>
-                              </div>
-                            )}
-                          </>
-                        )}
-
-                        {session.status === "Programada" && (
-                          <div className="py-4 text-center">
-                            <p className="mb-3 text-gray-500">
-                              Sesión programada - Pendiente de realizar
-                            </p>
-                            <button className="px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700">
-                              Iniciar Sesión
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          )}
+            {activeTab === "sessions" && <IndexSessions patient={patient} />}
+          </Suspense>
 
           {activeTab === "exercises" && (
             <div className="p-6 bg-white shadow-lg rounded-xl">
               <h2 className="flex items-center gap-2 mb-6 text-2xl font-bold text-gray-900">
-                <Repeat className="w-6 h-6 text-teal-600" />
-                Plan de Ejercicios
+                <Repeat className="w-6 h-6 text-teal-600" /> Plan de Ejercicios
               </h2>
-
-              {patient.treatments
+              {(patient.treatments || [])
                 .filter((t) => t.status === "Activo")
                 .map((treatment) => (
-                  <div key={treatment.id} className="mb-8">
-                    <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-teal-200">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {treatment.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {treatment.currentPhase}
-                        </p>
-                      </div>
-                      <button className="flex items-center gap-2 text-teal-600 hover:text-teal-700">
-                        <Video className="w-4 h-4" />
-                        <span className="text-sm font-medium">
-                          Ver Todos los Videos
-                        </span>
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      {treatment.exercises.map((exercise, idx) => (
-                        <div
-                          key={idx}
-                          className="p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-teal-300"
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <h4 className="mb-1 font-bold text-gray-900">
-                                {exercise.name}
-                              </h4>
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="px-2 py-1 text-xs font-medium text-teal-700 bg-teal-100 rounded">
-                                  {exercise.sets}
-                                </span>
-                                <span className="text-xs text-gray-600">
-                                  {exercise.frequency}
-                                </span>
-                              </div>
-                            </div>
-                            {exercise.video && (
-                              <button className="p-2 text-teal-600 bg-teal-100 rounded-lg hover:bg-teal-200">
-                                <PlayCircle className="w-5 h-5" />
-                              </button>
-                            )}
-                          </div>
-                          <div className="p-3 text-sm text-gray-600 rounded-lg bg-gray-50">
-                            <p>
-                              Instrucciones detalladas del ejercicio irían
-                              aquí...
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <ExerciseBlock key={treatment.id} treatment={treatment} />
                 ))}
             </div>
           )}
@@ -1008,46 +433,37 @@ function DetailPatient({
           {activeTab === "payments" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="p-6 text-white bg-gradient-to-br from-green-500 to-green-600 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CheckCircle className="w-8 h-8" />
-                    <h3 className="text-lg font-semibold">Total Pagado</h3>
-                  </div>
-                  <p className="text-3xl font-bold">
-                    ${totalPaid.toLocaleString("es-CL")}
-                  </p>
-                </div>
-
-                <div className="p-6 text-white bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Clock className="w-8 h-8" />
-                    <h3 className="text-lg font-semibold">Pendiente</h3>
-                  </div>
-                  <p className="text-3xl font-bold">
-                    ${totalPending.toLocaleString("es-CL")}
-                  </p>
-                </div>
-
-                <div className="p-6 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <DollarSign className="w-8 h-8" />
-                    <h3 className="text-lg font-semibold">Total</h3>
-                  </div>
-                  <p className="text-3xl font-bold">
-                    ${(totalPaid + totalPending).toLocaleString("es-CL")}
-                  </p>
-                </div>
+                <StatCard
+                  title="Total Pagado"
+                  icon={CheckCircle}
+                  className="from-green-500 to-green-600"
+                  value={clp.format(totalPaid)}
+                />
+                <StatCard
+                  title="Pendiente"
+                  icon={Clock}
+                  className="from-orange-500 to-orange-600"
+                  value={clp.format(totalPending)}
+                />
+                <StatCard
+                  title="Total"
+                  icon={DollarSign}
+                  className="from-teal-500 to-teal-600"
+                  value={clp.format(totalPaid + totalPending)}
+                />
               </div>
 
               <div className="p-6 bg-white shadow-lg rounded-xl">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-                    <CreditCard className="w-6 h-6 text-teal-600" />
-                    Historial de Pagos
+                    <CreditCard className="w-6 h-6 text-teal-600" /> Historial
+                    de Pagos
                   </h2>
-                  <button className="flex items-center gap-2 px-4 py-2 text-white bg-teal-600 rounded-lg hover:bg-teal-700">
-                    <Plus className="w-4 h-4" />
-                    Registrar Pago
+                  <button
+                    onClick={() => setOpenPaymentModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 text-white bg-teal-600 rounded-lg hover:bg-teal-700"
+                  >
+                    <Plus className="w-4 h-4" /> Registrar Pago
                   </button>
                 </div>
 
@@ -1055,34 +471,31 @@ function DetailPatient({
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
-                          Fecha
-                        </th>
-                        <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
-                          Concepto
-                        </th>
-                        <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
-                          Factura
-                        </th>
-                        <th className="px-4 py-3 text-xs font-semibold text-right text-gray-600 uppercase">
-                          Copago
-                        </th>
-                        <th className="px-4 py-3 text-xs font-semibold text-right text-gray-600 uppercase">
-                          Isapre
-                        </th>
-                        <th className="px-4 py-3 text-xs font-semibold text-right text-gray-600 uppercase">
-                          Total
-                        </th>
-                        <th className="px-4 py-3 text-xs font-semibold text-left text-gray-600 uppercase">
-                          Método
-                        </th>
-                        <th className="px-4 py-3 text-xs font-semibold text-center text-gray-600 uppercase">
-                          Estado
-                        </th>
+                        {[
+                          "Fecha",
+                          "Concepto",
+                          "Documento",
+                          "Copago",
+                          "Isapre",
+                          "Total",
+                          "Método",
+                          "Estado",
+                        ].map((th) => (
+                          <th
+                            key={th}
+                            className={`px-4 py-3 text-xs font-semibold uppercase ${
+                              ["Copago", "Isapre", "Total"].includes(th)
+                                ? "text-right text-gray-600"
+                                : "text-left text-gray-600"
+                            }`}
+                          >
+                            {th}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {patient.payments.map((payment) => (
+                      {payments?.map((payment) => (
                         <tr key={payment.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-900">
                             {new Date(payment.date).toLocaleDateString("es-CL")}
@@ -1094,13 +507,13 @@ function DetailPatient({
                             {payment.invoice}
                           </td>
                           <td className="px-4 py-3 text-sm text-right text-gray-900">
-                            ${payment.copay.toLocaleString("es-CL")}
+                            {clp.format(payment.copay || 0)}
                           </td>
                           <td className="px-4 py-3 text-sm text-right text-gray-900">
-                            ${payment.insuranceCovered.toLocaleString("es-CL")}
+                            {clp.format(payment.insuranceCovered || 0)}
                           </td>
                           <td className="px-4 py-3 text-sm font-semibold text-right text-gray-900">
-                            ${payment.amount.toLocaleString("es-CL")}
+                            {clp.format(payment.amount || 0)}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {payment.paymentMethod}
@@ -1129,17 +542,19 @@ function DetailPatient({
             <div className="p-6 bg-white shadow-lg rounded-xl">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-                  <FileText className="w-6 h-6 text-teal-600" />
-                  Documentos Clínicos
+                  <FileText className="w-6 h-6 text-teal-600" /> Documentos
+                  Clínicos
                 </h2>
-                <button className="flex items-center gap-2 px-4 py-2 text-white bg-teal-600 rounded-lg hover:bg-teal-700">
-                  <Plus className="w-4 h-4" />
-                  Subir Documento
+                <button
+                  onClick={() => setOpenDocumentModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-white bg-teal-600 rounded-lg hover:bg-teal-700"
+                >
+                  <Plus className="w-4 h-4" /> Subir Documento
                 </button>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {patient.documents.map((doc) => (
+                {(patient.documents || []).map((doc) => (
                   <div
                     key={doc.id}
                     className="p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-teal-300 hover:shadow-md"
@@ -1164,10 +579,14 @@ function DetailPatient({
                       </div>
                     </div>
                     <div className="flex gap-2 mt-4">
-                      <button className="flex items-center justify-center flex-1 gap-1 py-2 text-sm font-medium text-teal-600 rounded-lg bg-teal-50 hover:bg-teal-100">
-                        <Download className="w-4 h-4" />
+                      <a
+                        href={doc.url || "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center flex-1 gap-1 py-2 text-sm font-medium text-teal-600 rounded-lg bg-teal-50 hover:bg-teal-100"
+                      >
                         Descargar
-                      </button>
+                      </a>
                     </div>
                   </div>
                 ))}
@@ -1176,8 +595,202 @@ function DetailPatient({
           )}
         </div>
       </div>
+
+      {/* MODALES genéricos */}
+      <ResourceFormModal
+        open={openTreatmentModal}
+        onClose={() => setOpenTreatmentModal(false)}
+        title={editingTreatment ? "Editar Tratamiento" : "Nuevo Tratamiento"}
+        description="Para subir documentos"
+        schema={treatmentSchema}
+        submitRoute={
+          editingTreatment
+            ? route("treatment_sessions.update", editingTreatment.id)
+            : route("treatment_sessions.store", patient.id)
+        }
+        method={editingTreatment ? "patch" : "post"}
+        initialValues={editingTreatment || { patient_id: patient.id }}
+        afterSubmitReloadOnly={["treatments"]}
+      />
+
+      <ResourceFormModal
+        open={openSessionModal}
+        onClose={() => setOpenSessionModal(false)}
+        title="Registrar Sesión"
+        description="Para subir documentos"
+        schema={sessionSchema}
+        submitRoute={route("treatment_sessions.store", patient.id)}
+        method="post"
+        initialValues={{ patient_id: patient.id }}
+        afterSubmitReloadOnly={["sessions", "patient"]}
+      />
+
+      <ResourceFormModal
+        open={openPaymentModal}
+        onClose={() => setOpenPaymentModal(false)}
+        title="Registrar Pago"
+        description="Para subir documentos"
+        schema={paymentSchema}
+        submitRoute={route("payments.store", patient.id)}
+        method="post"
+        initialValues={{ patient_id: patient.id, status: "Pagado" }}
+        afterSubmitReloadOnly={["payments"]}
+      />
+
+      <ResourceFormModal
+        open={openDocumentModal}
+        onClose={() => setOpenDocumentModal(false)}
+        title="Subir Documento"
+        description="Para subir documentos"
+        schema={documentSchema}
+        submitRoute={route("patient.documents.store", patient.id)}
+        method="post"
+        initialValues={{ patient_id: patient.id }}
+        afterSubmitReloadOnly={["patient", "documents"]}
+      />
+
+      <ResourceFormModal
+        open={openPatientModal}
+        onClose={() => setOpenPatientModal(false)}
+        title="Editar Paciente"
+        description="Para subir documentos"
+        schema={patientSchema}
+        submitRoute={
+          patient
+            ? route("patients.update", patient.id)
+            : route("patients.store")
+        }
+        method={"patch"}
+        initialValues={patient ? patient : {}}
+        afterSubmitReloadOnly={["patient", "documents"]}
+        columns={3}
+        maxWidth={"3xl"}
+      />
     </AuthenticatedLayout>
   );
 }
 
-export default DetailPatient;
+/*** UI AUX: tarjetas y bloques ***/
+function StatCard({
+  title,
+  icon: Icon,
+  value,
+  className = "from-teal-500 to-teal-600",
+}) {
+  return (
+    <div className={`p-6 text-white bg-gradient-to-br ${className} rounded-xl`}>
+      <div className="flex items-center gap-3 mb-2">
+        <Icon className="w-8 h-8" />
+        <h3 className="text-lg font-semibold">{title}</h3>
+      </div>
+      <p className="text-3xl font-bold">{value}</p>
+    </div>
+  );
+}
+
+function ExerciseBlock({ treatment }) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between pb-3 mb-4 border-b-2 border-teal-200">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">{treatment.name}</h3>
+          <p className="text-sm text-gray-600">{treatment.currentPhase}</p>
+        </div>
+        <button className="flex items-center gap-2 text-teal-600 hover:text-teal-700">
+          Ver Todos los Videos
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {(treatment.exercises || []).map((exercise, idx) => (
+          <div
+            key={idx}
+            className="p-4 transition-all border-2 border-gray-200 rounded-xl hover:border-teal-300"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <h4 className="mb-1 font-bold text-gray-900">
+                  {exercise.name}
+                </h4>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-1 text-xs font-medium text-teal-700 bg-teal-100 rounded">
+                    {exercise.sets}
+                  </span>
+                  <span className="text-xs text-gray-600">
+                    {exercise.frequency}
+                  </span>
+                </div>
+              </div>
+              {exercise.video && (
+                <button className="p-2 text-teal-600 bg-teal-100 rounded-lg hover:bg-teal-200">
+                  ▶
+                </button>
+              )}
+            </div>
+            <div className="p-3 text-sm text-gray-600 rounded-lg bg-gray-50">
+              <p>Instrucciones detalladas del ejercicio…</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* function MiniStat({ label, value, tone = 0 }) {
+  const color =
+    tone >= 7
+      ? "text-red-600"
+      : tone >= 4
+      ? "text-orange-600"
+      : "text-green-600";
+  return (
+    <div className="p-3 bg-white rounded-lg">
+      <p className="mb-1 text-xs text-gray-600">{label}</p>
+      <p className={`text-2xl font-bold ${tone ? color : "text-teal-600"}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+function ROMItem({ label, value }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs text-gray-600">{label}</p>
+      <p className="font-bold text-gray-900">{value}°</p>
+    </div>
+  );
+}
+function TagGroup({ title, items, color = "teal" }) {
+  const tone =
+    color === "purple"
+      ? "text-purple-700 bg-purple-100"
+      : "text-teal-700 bg-teal-100";
+  return (
+    <div className="mb-4">
+      <h4 className="mb-2 text-sm font-semibold text-gray-900">{title}</h4>
+      <div className="flex flex-wrap gap-2">
+        {items.map((t, i) => (
+          <span
+            key={`${t}-${i}`}
+            className={`px-3 py-1 text-xs rounded-full ${tone}`}
+          >
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+function Callout({ title, text, tone = "blue" }) {
+  const map = {
+    blue: "border-blue-500 bg-blue-50",
+    yellow: "border-yellow-500 bg-yellow-50",
+  };
+  return (
+    <div className={`p-3 mb-3 border-l-4 rounded-lg ${map[tone]}`}>
+      <h4 className="mb-1 text-sm font-semibold text-gray-900">{title}</h4>
+      <p className="text-sm text-gray-700">{text}</p>
+    </div>
+  );
+} */
