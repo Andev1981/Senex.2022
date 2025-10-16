@@ -234,11 +234,6 @@ export default function TablePatients({
             </span>
           );
         },
-        // filtro: acepta múltiples estados (array de strings)
-        filterFn: (row, id, filterValue) => {
-          if (!filterValue) return true; // sin filtro
-          return String(row.getValue(id) ?? "") === String(filterValue);
-        },
       },
       {
         header: "NOMBRE",

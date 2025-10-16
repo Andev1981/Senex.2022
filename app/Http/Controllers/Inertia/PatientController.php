@@ -112,33 +112,13 @@ class PatientController extends Controller
         DB::beginTransaction();
         try {
             // Paciente
-            $patient = Patient::create([
-                'user_id'    => auth()->id(),
-                'name'       => $validated['name'],
-                'last_name'  => $validated['last_name'],
-                'email'      => $validated['email'],
-                'rut'        => $validated['rut'],
-                'birth_date' => $validated['birth_date'],    // mapeo del front
-                'phone'      => $validated['phone'] ?? '',
-                'status'     => "active",
-            ]);
+            Patient::create($validated);
 
-            // Dirección (morphOne) — creamos asociada al paciente
-            $patient->address()->create([
-                'is_primary'  => true,
-                'type'        => 'patient',
-                'street'      => $validated['street']  ?? '',
-                'number'      => $validated['number']  ?? '',
-                'details'     => $validated['details'] ?? '',
-                'region_id'   => $validated['region_id'],
-                'province_id' => $validated['province_id'],
-                'commune_id'  => $validated['commune_id'],
-            ]);
 
             DB::commit();
             session()->flash('message', 'Paciente creado correctamente.');
             session()->flash('type', 'success');
-            return redirect()->route('listado.pacientes');
+            return back();
         } catch (\Throwable $e) {
             DB::rollBack();
             report($e);
@@ -154,11 +134,12 @@ class PatientController extends Controller
     public function update(UpdatePatientRequest $request, Patient $patient)
     {
 
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
             // Actualizamos paciente
-            $patient->update($request->validated());
+            $patient->update($validated);
 
 
             DB::commit();
@@ -177,183 +158,58 @@ class PatientController extends Controller
         }
     }
 
-    /* public function show(Patient $patient)
-    {
-        $addrPick = DB::table('addresses as a')
-            ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
-            ->where('a.addressable_type', Patient::class)
-            ->groupBy('a.addressable_id');
 
-        $patient = Patient::query()->where('patients.id', $patient->id)->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'patients.id'))
-            ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')->leftJoin('addresses', function ($join) {
-                $join->on('addresses.addressable_id', '=', 'patients.id')
-                    ->where('addresses.addressable_type', '=', Patient::class);
-            })->leftJoin('communes', 'addresses.commune_id', '=', 'communes.id')
-            ->leftJoin('regions', 'addresses.region_id', '=', 'regions.id')
-            ->leftJoin('provinces', 'addresses.province_id', '=', 'provinces.id')->select([
-                'patients.id',
-                'patients.name',
-                'patients.last_name',
-                'patients.email',
-                'patients.birth_date',
-                'patients.rut',
-                'patients.phone',
-                'patients.status',
-                DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) as full_name"),
-
-                DB::raw('addresses.id as address_id'),
-                DB::raw('addresses.street as street'),
-                DB::raw('addresses.number as number'),
-                DB::raw('addresses.details as details'),
-                DB::raw('addresses.region_id as region_id'),
-                DB::raw('addresses.province_id as province_id'),
-                DB::raw('addresses.commune_id as commune_id'),
-
-                DB::raw('communes.name as comuna_name'),
-                DB::raw('provinces.name as provincia_name'),
-                DB::raw('regions.name as region_name'),
-
-                DB::raw("CONCAT_WS(' ', addresses.street, addresses.number) as full_address"),
-
-                DB::raw("(
-                    SELECT CONCAT_WS(' ', d.name, d.last_name)
-                    FROM attendances a
-                    JOIN doctors d ON d.id = a.doctor_id
-                    WHERE a.patient_id = patients.id
-                    ORDER BY a.attended_at DESC
-                    LIMIT 1
-                ) AS last_doctor_name"),
-            ])
-            ->withExists([
-                'debts as has_due' => fn($q) =>
-                $q->whereIn('debts.status', [Debt::STATUS_PENDING, Debt::STATUS_PARTIAL, Debt::STATUS_OVERDUE])
-            ])
-            ->withExists([
-                'debts as has_overdue' => fn($q) =>
-                $q->where('debts.status', Debt::STATUS_OVERDUE)
-            ])
-            ->addSelect([
-                'due_amount' => function ($q) {
-                    $q->from('debts as d')
-                        ->join('treatment_sessions as ts', 'ts.id', '=', 'd.treatment_session_id')
-                        ->whereColumn('ts.patient_id', 'patients.id')
-                        ->whereIn('d.status', ['pending', 'partial', 'overdue'])
-                        ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
-                },
-            ])
-            ->first();
-
-        $patient->payment_status = $patient->has_overdue ? 'overdue' : ($patient->has_due ? 'due' : 'ok');
-
-        $treatments = Treatment::where('patient_id', $patient->id)->with('defaultSessionType')->orderBy('id', "desc")->get();
-        if (count($treatments) > 0) {
-            $treatment = $treatments->where('status', 'active')->first();
-            $sessions = DB::table('treatment_sessions as ai')
-                ->leftJoin('patients as p', 'p.id', '=', 'ai.patient_id')
-                ->leftJoin('doctors as d', 'd.id', '=', 'ai.doctor_id')
-                ->leftJoin('session_types as st', 'st.id', '=', 'ai.session_type_id')
-                ->where('p.id', $patient->id)
-                ->where('ai.treatment_id', $treatment->id)
-                ->whereYear('ai.attended_at', now()->year) // <-- año en curso
-                ->orderBy('p.name', 'asc')
-                ->orderBy('ai.attended_at', 'desc')
-                ->select([
-                    'ai.id',
-                    'ai.attended_at',
-                    'ai.status',
-                    'ai.patient_amount',
-                    'ai.doctor_amount',
-                    'ai.clinic_amount',
-                    'ai.session_number',
-                    'st.name as session_type_name', // <-- faltaba
-                    DB::raw("CONCAT(p.name,' ',p.last_name) as patient_full"),  // precio cobrado al cliente
-                    DB::raw("CONCAT(d.name,' ',d.last_name) as doctor_full"),  // precio cobrado al cliente
-                ])
-                ->selectRaw('(COALESCE(ai.patient_amount,0) - COALESCE(ai.doctor_amount,0)) as total_senex')
-                ->get();
-        } else {
-            $treatment = [];
-            $sessions = [];
-        }
-
-
-        $session_types = SessionType::orderBy('name')->get();
-        $provinces = Province::all();
-        $communes  = Commune::all();
-        $regions   = Region::all();
-        $doctors = Doctor::all();
-
-        return Inertia::render('Patients/DetailPatient', compact('patient', 'sessions', 'communes', 'regions', 'provinces', 'session_types', 'doctors', 'treatments', 'treatment'));
-    } */
 
     public function show(Patient $patient)
     {
-        // ---- Dirección principal (prioriza is_primary) ----
-        $addrPick = DB::table('addresses as a')
-            ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
-            ->where('a.addressable_type', Patient::class)
-            ->groupBy('a.addressable_id');
+
+        $patientId = $patient->id; // evita sombrear la variable
 
         $patient = Patient::query()
-            ->where('patients.id', $patient->id)
-            ->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'patients.id'))
-            ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
-            ->leftJoin('addresses', function ($join) {
-                $join->on('addresses.addressable_id', '=', 'patients.id')
-                    ->where('addresses.addressable_type', '=', Patient::class);
-            })
-            ->leftJoin('communes', 'addresses.commune_id', '=', 'communes.id')
-            ->leftJoin('regions', 'addresses.region_id', '=', 'regions.id')
-            ->leftJoin('provinces', 'addresses.province_id', '=', 'provinces.id')
+            ->with([
+                'latestVital',
+                'allergies',
+                'condition',
+                'contacts',
+                'insurance',
+                'lifestyle',
+                'plans',
+                'address:id,addressable_id,addressable_type,commune_id,province_id,region_id,street,number,details',
+                'address.commune:id,name,province_id',
+                'address.province:id,name,region_id',
+                'address.region:id,name',
+                'treatments',
+                'treatments.sessions',
+                'treatmentSessions',
+            ])
+            ->withExists([
+                'debts as has_due' => fn($q) => $q->whereIn('status', [
+                    Debt::STATUS_PENDING,
+                    Debt::STATUS_PARTIAL,
+                    Debt::STATUS_OVERDUE
+                ]),
+                'debts as has_overdue' => fn($q) => $q->where('status', Debt::STATUS_OVERDUE),
+            ])
             ->select([
-                'patients.name',
-                'patients.last_name',
                 'patients.*',
-                DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) as full_name"),
-
-                DB::raw('addresses.id as address_id'),
-                DB::raw('addresses.street as street'),
-                DB::raw('addresses.number as number'),
-                DB::raw('addresses.details as details'),
-                DB::raw('addresses.region_id as region_id'),
-                DB::raw('addresses.province_id as province_id'),
-                DB::raw('addresses.commune_id as commune_id'),
-
-                DB::raw('communes.name as comuna_name'),
-                DB::raw('provinces.name as provincia_name'),
-                DB::raw('regions.name as region_name'),
-
-                DB::raw("CONCAT_WS(' ', addresses.street, addresses.number) as full_address"),
-
-                DB::raw("(
-                SELECT CONCAT_WS(' ', d.name, d.last_name)
-                FROM attendances a
-                JOIN doctors d ON d.id = a.doctor_id
-                WHERE a.patient_id = patients.id
-                ORDER BY a.attended_at DESC
-                LIMIT 1
-            ) AS last_doctor_name"),
+                DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) AS full_name"),
             ])
-            ->withExists([
-                'debts as has_due' => fn($q) =>
-                $q->whereIn('debts.status', [Debt::STATUS_PENDING, Debt::STATUS_PARTIAL, Debt::STATUS_OVERDUE])
-            ])
-            ->withExists([
-                'debts as has_overdue' => fn($q) =>
-                $q->where('debts.status', Debt::STATUS_OVERDUE)
-            ])
-            ->addSelect([
-                'due_amount' => function ($q) {
-                    $q->from('debts as d')
-                        ->join('treatment_sessions as ts', 'ts.id', '=', 'd.treatment_session_id')
-                        ->whereColumn('ts.patient_id', 'patients.id')
-                        ->whereIn('d.status', ['pending', 'partial', 'overdue'])
-                        ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
-                },
-            ])
-            ->first();
+            ->selectSub(function ($q) {
+                $q->from('debts as d')
+                    ->join('treatment_sessions as ts', 'ts.id', '=', 'd.treatment_session_id')
+                    ->whereColumn('ts.patient_id', 'patients.id')
+                    ->whereIn('d.status', ['pending', 'partial', 'overdue'])
+                    ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
+            }, 'due_amount')
+            ->findOrFail($patientId); // 👈 clave
 
-        $patient->payment_status = $patient->has_overdue ? 'overdue' : ($patient->has_due ? 'due' : 'ok');
+          
+        if (!$patient) {
+            session()->flash('message', 'Paciente no encontrado.');
+            session()->flash('type', 'error');
+
+            return back();
+        }
 
         // ---- Tratamientos del paciente ----
         $treatments = Treatment::where('patient_id', $patient->id)
@@ -405,6 +261,8 @@ class PatientController extends Controller
         $communes      = Commune::all();
         $regions       = Region::all();
         $doctors       = Doctor::all();
+
+
 
         return Inertia::render('Patients/DetailPatient', compact(
             'patient',

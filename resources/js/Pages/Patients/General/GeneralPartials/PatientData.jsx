@@ -37,20 +37,9 @@ export default function PatientData({ patient }) {
             {patient.marital_status}
           </p>
         </div>
-        <div className="md:col-span-2">
-          <p className="mb-1 text-sm text-gray-600">Dirección</p>
-          <p className="flex items-center gap-2 font-semibold text-gray-900">
-            <MapPin className="w-4 h-4 text-gray-400" />
-            {patient.address}, {patient.city}
-          </p>
-        </div>
         <div>
           <p className="mb-1 text-sm text-gray-600">Ocupación</p>
           <p className="font-semibold text-gray-900">{patient.occupation}</p>
-        </div>
-        <div>
-          <p className="mb-1 text-sm text-gray-600">Previsión</p>
-          <p className="font-semibold text-gray-900">{patient.insurance}</p>
         </div>
       </div>
     </div>

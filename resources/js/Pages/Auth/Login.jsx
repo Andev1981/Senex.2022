@@ -186,12 +186,6 @@ export default function Login({ status, canResetPassword }) {
                               Recordarme
                             </span>
                           </label>
-                          <button
-                            onClick={() => setLoginMode("forgot")}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-700"
-                          >
-                            ¿Olvidaste tu contraseña?
-                          </button>
                         </div>
 
                         <button

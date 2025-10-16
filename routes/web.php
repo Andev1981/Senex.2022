@@ -32,17 +32,14 @@ use App\Http\Controllers\Inertia\{
   AttendancesController,
   DoctorController,
   TreatmentController,
+  VitalController,
 };
 
 
 use App\Http\Controllers\{
   HomeController,
-  RoleController,
-  UserController,
-  PaymentIncomeController,
-  ReportePdfController,
-  Auth\RegisteredUserController,
-  TreatmentSessionController
+  AddressController,
+  PatientContactController,
 };
 
 //Reoptimized class loader:
@@ -118,6 +115,15 @@ Route::group(['middleware' => ['auth']], function () {
   Route::resource('treatment-sessions', PatientController::class)->names('treatment_sessions');
   Route::resource('payments', PatientController::class)->names('payments');
   Route::resource('patients', PatientController::class)->names('patients');
+  Route::resource('addresses', AddressController::class)->names('addresses');
+  Route::post('patients/{patient}/addresses', [AddressController::class, 'store'])->name('patients.addresses.store');
+  Route::patch('patients/{patient}/addresses', [AddressController::class, 'update'])->name('patients.addresses.update');
+  Route::post('patients/{patient}/contacts', [PatientContactController::class, 'store'])->name('patients.contacts.store');
+  Route::patch('patients/{patientContact}/contacts', [PatientContactController::class, 'update'])->name('patients.contacts.update');
+  Route::post('patients/vitals', [VitalController::class, 'store'])->name('patients.vitals.store');
+  Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update');
+
+
 
   /* kines */
   Route::get('doctors', [DoctorController::class, 'index'])->name('doctors');

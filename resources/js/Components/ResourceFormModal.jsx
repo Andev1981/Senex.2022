@@ -78,10 +78,37 @@ export default function ResourceFormModal({
 
   const onFieldChange = (f, raw) => {
     const next = f.parse ? f.parse(raw, data) : raw;
+
     setData(f.name, next);
-    // limpia error del campo al cambiar
     if (errors[f.name]) clearErrors(f.name);
-    // callback de reacción entre campos
+
+    // Limpiar dependientes en cascada usando dependsOn
+    const queue = schema
+      .filter(
+        (ch) => Array.isArray(ch.dependsOn) && ch.dependsOn.includes(f.name)
+      )
+      .map((ch) => ch.name);
+
+    const visited = new Set(queue);
+    while (queue.length) {
+      const childName = queue.shift();
+      setData(childName, null);
+      clearErrors(childName);
+
+      // Propaga a nietos/bisnietos
+      schema.forEach((grand) => {
+        if (
+          Array.isArray(grand.dependsOn) &&
+          grand.dependsOn.includes(childName) &&
+          !visited.has(grand.name)
+        ) {
+          visited.add(grand.name);
+          queue.push(grand.name);
+        }
+      });
+    }
+
+    // Reacción custom del campo, si existe
     if (typeof f.onChange === "function") f.onChange(next, data, setData);
   };
 
@@ -118,119 +145,163 @@ export default function ResourceFormModal({
         encType={hasFile ? "multipart/form-data" : undefined}
       >
         <div className={`grid grid-cols-1 ${gridColsClass} gap-4`}>
-          {fields.map((f) => (
-            <div
-              key={f.name}
-              className={`col-span-1 ${
-                f.colSpan ? `md:col-span-${f.colSpan}` : ""
-              }`}
-            >
-              <label className="text-xs text-gray-500">
-                {f.label}
-                {f.required && <span className="text-red-600"> *</span>}
-              </label>
+          {fields.map((f) => {
+            const isDisabled =
+              typeof f.disabled === "function"
+                ? f.disabled(data)
+                : !!f.disabled;
 
-              {f.type === "select" ? (
-                <select
-                  className="w-full border-gray-300 rounded"
-                  value={data[f.name] ?? ""}
-                  onChange={(e) => onFieldChange(f, e.target.value)}
-                  disabled={f.disabled}
-                >
-                  <option value="">{f.placeholder ?? "Selecciona…"}</option>
-                  {f.options?.map((o) => (
-                    <option key={`${f.name}-${o.value}`} value={o.value}>
-                      {o.label}
+            const opts =
+              typeof f.options === "function"
+                ? f.options(data)
+                : f.options ?? [];
+            return (
+              <div
+                key={f.name}
+                className={`col-span-1 ${
+                  f.colSpan ? `md:col-span-${f.colSpan}` : ""
+                }`}
+              >
+                <label className="ml-1 text-xs text-gray-500">
+                  {f.label}
+                  {f.required && <span className="text-red-600"> *</span>}
+                </label>
+                {f.type === "switch" ? (
+                  <div className="flex items-center justify-between rounded-md border-[0.5px] border-gray-300 px-3 py-2">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-700">
+                        {f.placeholder ?? ""}
+                      </span>
+                      {/*  {f.help && (
+                        <span className="text-xs text-gray-500">{f.help}</span>
+                      )} */}
+                    </div>
+
+                    {/* Toggle accesible */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={!!(data[f.name] ?? false)}
+                      aria-label={f.label}
+                      onClick={() => onFieldChange(f, !(data[f.name] ?? false))}
+                      disabled={isDisabled}
+                      className={`relative inline-flex h-6 w-11 items-center overflow-hidden rounded-full transition
+    ${isDisabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
+    ${data[f.name] ? "bg-blue-600" : "bg-gray-300"}`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`absolute left-0 top-0 h-6 w-6 rounded-full bg-white shadow ring-0 transition-transform
+      ${data[f.name] ? "translate-x-5" : "translate-x-0"}`}
+                      />
+                    </button>
+                  </div>
+                ) : f.type === "select" ? (
+                  <select
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    value={data[f.name] ?? ""}
+                    onChange={(e) => onFieldChange(f, e.target.value)}
+                    disabled={isDisabled}
+                  >
+                    <option className="text-gray-500" value="">
+                      {f.placeholder ?? "Selecciona…"}
                     </option>
-                  ))}
-                </select>
-              ) : f.type === "textarea" ? (
-                <textarea
-                  className="w-full border-gray-300 rounded"
-                  rows={f.rows ?? 3}
-                  placeholder={f.placeholder}
-                  value={data[f.name] ?? ""}
-                  onChange={(e) => onFieldChange(f, e.target.value)}
-                  disabled={f.disabled}
-                />
-              ) : f.type === "file" ? (
-                <input
-                  type="file"
-                  className="w-full border-gray-300 rounded"
-                  onChange={(e) =>
-                    onFieldChange(f, e.target.files?.[0] || null)
-                  }
-                  accept={f.accept}
-                  disabled={f.disabled}
-                />
-              ) : f.type === "rut" ? (
-                <RutInput
-                  name={f.name}
-                  value={data[f.name] ?? ""} // CONTROLADO
-                  onChange={(val) => onFieldChange(f, val)} // guarda en useForm
-                  placeholder={f.placeholder ?? "12.345.678-9"}
-                  disabled={f.disabled}
-                  error={errors[f.name]}
-                />
-              ) : f.type === "tel" ? (
-                <ChilePhoneInput
-                  name={f.name}
-                  value={data[f.name] ?? ""}
-                  onChange={(val) => onFieldChange(f, val)}
-                  placeholder={f.placeholder ?? "+56 9 1234 5678"}
-                  disabled={f.disabled}
-                  error={errors[f.name]}
-                />
-              ) : f.type === "date" ? (
-                <input
-                  type="date"
-                  className="w-full border-gray-300 rounded"
-                  value={toDateInput(data[f.name])}
-                  onChange={(e) => onFieldChange(f, e.target.value)} // "YYYY-MM-DD"
-                  min={resolveDateBound(f.min)}
-                  max={resolveDateBound(f.max)}
-                  disabled={f.disabled}
-                />
-              ) : f.type === "time" ? (
-                <input
-                  type="time"
-                  className="w-full border-gray-300 rounded"
-                  value={toTimeInput(data[f.name])}
-                  onChange={(e) => onFieldChange(f, e.target.value)} // "HH:MM"
-                  step={f.step ?? 60}
-                  disabled={f.disabled}
-                />
-              ) : f.type === "datetime-local" ? (
-                <input
-                  type="datetime-local"
-                  className="w-full border-gray-300 rounded"
-                  value={toDatetimeLocalInput(data[f.name])}
-                  onChange={(e) => onFieldChange(f, e.target.value)} // "YYYY-MM-DDTHH:MM"
-                  min={f.min ? toDatetimeLocalInput(f.min) : undefined}
-                  max={f.max ? toDatetimeLocalInput(f.max) : undefined}
-                  disabled={f.disabled}
-                />
-              ) : (
-                <input
-                  type={f.type || "text"}
-                  className="w-full border-gray-300 rounded"
-                  placeholder={f.placeholder}
-                  value={data[f.name] ?? ""}
-                  onChange={(e) => onFieldChange(f, e.target.value)}
-                  min={f.min}
-                  max={f.max}
-                  step={f.step}
-                  pattern={f.pattern}
-                  disabled={f.disabled}
-                />
-              )}
+                    {opts.map((o) => (
+                      <option key={`${f.name}-${o.value}`} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : f.type === "textarea" ? (
+                  <textarea
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    rows={f.rows ?? 3}
+                    placeholder={f.placeholder}
+                    value={data[f.name] ?? ""}
+                    onChange={(e) => onFieldChange(f, e.target.value)}
+                    disabled={f.disabled}
+                  />
+                ) : f.type === "file" ? (
+                  <input
+                    type="file"
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    onChange={(e) =>
+                      onFieldChange(f, e.target.files?.[0] || null)
+                    }
+                    accept={f.accept}
+                    disabled={f.disabled}
+                  />
+                ) : f.type === "rut" ? (
+                  <RutInput
+                    name={f.name}
+                    value={data[f.name] ?? ""} // CONTROLADO
+                    onChange={(val) => onFieldChange(f, val)} // guarda en useForm
+                    placeholder={f.placeholder ?? "12.345.678-9"}
+                    disabled={f.disabled}
+                    error={errors[f.name]}
+                  />
+                ) : f.type === "tel" ? (
+                  <ChilePhoneInput
+                    name={f.name}
+                    value={data[f.name] ?? ""}
+                    onChange={(val) => onFieldChange(f, val)}
+                    placeholder={f.placeholder ?? "+56 9 1234 5678"}
+                    disabled={f.disabled}
+                    error={errors[f.name]}
+                  />
+                ) : f.type === "date" ? (
+                  <input
+                    type="date"
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    value={toDateInput(data[f.name])}
+                    onChange={(e) => onFieldChange(f, e.target.value)} // "YYYY-MM-DD"
+                    min={resolveDateBound(f.min)}
+                    max={resolveDateBound(f.max)}
+                    disabled={f.disabled}
+                  />
+                ) : f.type === "time" ? (
+                  <input
+                    type="time"
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    value={toTimeInput(data[f.name])}
+                    onChange={(e) => onFieldChange(f, e.target.value)} // "HH:MM"
+                    step={f.step ?? 60}
+                    disabled={f.disabled}
+                  />
+                ) : f.type === "datetime-local" ? (
+                  <input
+                    type="datetime-local"
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    value={toDatetimeLocalInput(data[f.name])}
+                    onChange={(e) => onFieldChange(f, e.target.value)} // "YYYY-MM-DDTHH:MM"
+                    min={f.min ? toDatetimeLocalInput(f.min) : undefined}
+                    max={f.max ? toDatetimeLocalInput(f.max) : undefined}
+                    disabled={f.disabled}
+                  />
+                ) : (
+                  <input
+                    type={f.type || "text"}
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    placeholder={f.placeholder}
+                    value={data[f.name] ?? ""}
+                    onChange={(e) => onFieldChange(f, e.target.value)}
+                    min={f.min}
+                    max={f.max}
+                    step={f.step}
+                    pattern={f.pattern}
+                    disabled={f.disabled}
+                  />
+                )}
 
-              {f.help && <p className="mt-1 text-xs text-gray-500">{f.help}</p>}
-              {errors[f.name] && (
-                <p className="text-xs text-red-600">{errors[f.name]}</p>
-              )}
-            </div>
-          ))}
+                {f.help && (
+                  <p className="mt-1 text-xs text-gray-500">{f.help}</p>
+                )}
+                {errors[f.name] && (
+                  <p className="text-xs text-red-600">{errors[f.name]}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <hr className="my-2" />

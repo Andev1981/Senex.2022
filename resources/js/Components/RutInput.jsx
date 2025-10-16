@@ -235,8 +235,6 @@ const RutInput = ({
         </div>
       )}
 
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-
       {esRutEmpresarial() && (
         <div className="flex items-center mt-1 text-xs text-blue-600">
           <Building2 className="w-3 h-3 mr-1" />

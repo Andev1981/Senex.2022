@@ -17,6 +17,7 @@ class Vital extends Model
     'bmi',
     'bp_systolic',
     'bp_diastolic',
+    'blood_type',
     'heart_rate',
     'resp_rate',
     'temperature_c',

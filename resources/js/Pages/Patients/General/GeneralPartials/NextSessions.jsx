@@ -1,12 +1,18 @@
 import React from "react";
-import { Calendar, Timer } from "lucide-react";
+import { ArrowRightIcon, Calendar, Edit, Timer } from "lucide-react";
 
 export default function NextSessions({ patient }) {
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
-        <Calendar className="w-5 h-5 text-teal-600" />
-        Próximas Sesiones
+      <h2 className="flex items-center justify-between gap-2 mb-4 text-xl font-bold text-gray-900">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-teal-600" />
+          Próximas Sesiones
+        </div>
+
+        <div className="hover:cursor-pointer">
+          <ArrowRightIcon className="w-5 h-5 text-gray-300 transition-colors hover:text-gray-400" />
+        </div>
       </h2>
       <div className="space-y-3">
         {patient?.appointments?.map((apt) => (

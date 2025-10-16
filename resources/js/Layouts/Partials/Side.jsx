@@ -35,7 +35,7 @@ function Side({ sidebarOpen, setSidebarOpen }) {
       { id: "boleta", label: "Boleta", icon: FileText, badge: "8" },
       { id: "agenda", label: "Agenda", icon: Calendar, badge: null },
       { id: "tratamientos", label: "Tratamientos", icon: List, badge: null },
-      { id: "pos", label: "POST", icon: Computer, badge: null },
+      { id: "pos", label: "POS", icon: Computer, badge: null },
       /*{
         id: "tratamientos",
         label: "Tratamientos",

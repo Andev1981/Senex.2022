@@ -23,7 +23,6 @@ class Address extends Model
         'region_id',
         'details',
         'country',
-
     ];
 
     protected $casts = [
@@ -41,12 +40,14 @@ class Address extends Model
     {
         return $this->belongsTo(Commune::class);
     }
+
     public function province()
     {
-        return $this->commune?->province();
-    } // acceso por relación
+        return $this->belongsTo(Province::class);
+    }
+
     public function region()
     {
-        return $this->commune?->province?->region();
+        return $this->belongsTo(Region::class);
     }
 }

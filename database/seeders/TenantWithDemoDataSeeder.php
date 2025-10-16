@@ -35,6 +35,13 @@ class TenantWithDemoDataSeeder extends Seeder
       'password' => Hash::make('Juan1981'),
     ]);
 
+    $user = User::create([
+      'name' => 'Demo',
+      'last_name' => 'User',
+      'email' => 'demo@gmail.com',
+      'password' => Hash::make('demo2025'),
+    ]);
+
     $user->roles()->attach($role);
 
     // ============= BRANCHES & ROOMS =============

@@ -33,6 +33,46 @@ class Patient extends Model
         'status_changed_at' => 'datetime',
     ];
 
+    public function vitals()
+    {
+        return $this->hasMany(Vital::class);
+    }
+    public function latestVital()
+    {
+        return $this->hasOne(Vital::class)->latestOfMany('created_at');
+    }
+
+    public function allergies()
+    {
+        return $this->hasMany(PatientAllergy::class);
+    }
+
+    public function condition()
+    {
+        return $this->hasOne(PatientCondition::class);
+    }
+
+    public function contacts()
+    {
+        return $this->hasMany(PatientContact::class);
+    }
+
+    public function insurance()
+    {
+        return $this->hasOne(PatientInsurance::class);
+    }
+
+    public function lifestyle()
+    {
+        return $this->hasOne(PatientLifestyle::class);
+    }
+
+    public function plans()
+    {
+        return $this->hasMany(PatientContact::class);
+    }
+
+
     public function doctorAssignments()
     {
         return $this->hasMany(DoctorPatientAssignment::class);
@@ -147,7 +187,7 @@ class Patient extends Model
         return $query->where('status', 'active');
     }
 
-    public function lastAttendance()
+    public function latestAttendance()
     {
         return $this->hasOne(Attendance::class)->latestOfMany('attended_at'); // o created_at
     }
