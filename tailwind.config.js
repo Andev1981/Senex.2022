@@ -11,17 +11,11 @@ module.exports = {
   ],
 
   theme: {
-    /*  extend: {
-            fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-            },
-            colors:{
-                sky-600:'#0291b3',
-                celeste:'#68d0ec',
-                grisOscuro:'#111827',
-                grisClaro:'#989898',
-            },
-        }, */
+    extend: {
+      spacing: {
+        "safe-bottom": "env(safe-area-inset-bottom)",
+      },
+    },
   },
   plugins: [require("flowbite/plugin", "flowbite-datepicker/js/Datepicker")],
 };

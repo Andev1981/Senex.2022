@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Prices;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
@@ -16,7 +15,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -25,17 +24,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'last_name',
         'email',
         'password',
-        'avatar',
-        'rut',
-        'birth',
-        'phone',
-        'address_id',
-        'status',
-        'user_type',
-        'payment_status',
     ];
 
     /**
@@ -62,36 +52,6 @@ class User extends Authenticatable
         return $this->hasOne(Doctor::class);
     }
 
-    public function address()
-    {
-        return $this->belongsTo(Address::class);
-    }
-
-    public function applications()
-    {
-        return $this->hasMany(Application::class);
-    }
-
-    public function applyItems()
-    {
-        return $this->hasMany(ApplyItem::class);
-    }
-
-    public function application_type_users()
-    {
-        return $this->hasMany(ApplicationTypeUser::class);
-    }
-
-    public function assigns()
-    {
-        return $this->hasMany(Assign::class);
-    }
-
-    public function images()
-    {
-        return $this->morphMany(Image::class, 'imageable');
-    }
-
     public function roles_all()
     {
         return $this->morphToMany(
@@ -103,8 +63,4 @@ class User extends Authenticatable
         );
     }
 
-    public function doctorProfile()
-    {
-        return $this->hasOne(Doctor::class);
-    }
 }

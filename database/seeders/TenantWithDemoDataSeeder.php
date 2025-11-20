@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Faker\Factory as Faker;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Arr;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Str;
 
 
@@ -20,29 +20,53 @@ class TenantWithDemoDataSeeder extends Seeder
     $faker = Faker::create('es_CL');
     $now   = now();
 
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-    $role = Role::create(['name' => 'superadmin', 'guard_name' => 'web']);
-    $role2 = Role::create(['name' => 'admin_user', 'guard_name' => 'web']);
-    $role3 = Role::create(['name' => 'admin_client', 'guard_name' => 'web']);
-    $role4 = Role::create(['name' => 'client', 'guard_name' => 'web']);
-    $role5 = Role::create(['name' => 'coordinator', 'guard_name' => 'web']);
-    $role6 = Role::create(['name' => 'evaluator', 'guard_name' => 'web']);
+        // Crear permisos
+        $permissions = [
+            'users.view',
+            'users.create',
+            'users.edit',
+            'users.delete',
+            'posts.view',
+            'posts.create',
+            'posts.edit',
+            'posts.delete',
+        ];
 
-    $user = User::create([
+        foreach ($permissions as $permission) {
+            Permission::create(['name' => $permission]);
+        }
+
+    $adminRole = Role::create(['name' => 'superadmin', 'guard_name' => 'web']);
+    $role2 = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+    $role3 = Role::create(['name' => 'user', 'guard_name' => 'web']);
+    $role4 = Role::create(['name' => 'doctor', 'guard_name' => 'web']);
+
+    $adminRole->givePermissionTo(Permission::all());
+  
+
+    $user1 = User::create([
       'name' => 'Juan Andres',
-      'last_name' => 'Vergara Tapia',
       'email' => 'javt1981@gmail.com',
       'password' => Hash::make('Juan1981'),
     ]);
 
-    $user = User::create([
+    $user2 = User::create([
       'name' => 'Demo',
-      'last_name' => 'User',
       'email' => 'demo@gmail.com',
       'password' => Hash::make('demo2025'),
     ]);
 
-    $user->roles()->attach($role);
+    
+    $userKine = User::create([
+      'name' => 'Kine',
+      'email' => 'kine@gmail.com',
+      'password' => Hash::make('kine2025'),
+    ]);
+
+    $user1->roles()->attach($adminRole);
+    $user2->roles()->attach($adminRole);
 
     // ============= BRANCHES & ROOMS =============
     $branchId = DB::table('branches')->insertGetId([
@@ -69,7 +93,7 @@ class TenantWithDemoDataSeeder extends Seeder
     // Kine principal ligado al user kine@demo.test
     $doctorIds[] = DB::table('doctors')->insertGetId([
 
-      'user_id' => $user['id'],
+      'user_id' => $userKine['id'],
       'branch_id' => $branchId,
       'name' => 'Kine',
       'last_name' => 'Demo',
@@ -83,7 +107,6 @@ class TenantWithDemoDataSeeder extends Seeder
     for ($i = 0; $i < 3; $i++) {
       $uid = DB::table('users')->insertGetId([
         'name' => $faker->firstName,
-        'last_name' => $faker->lastName,
         'email' => "kine{$i}@demo.test",
         'password' => Hash::make('password'),
         'created_at' => $now,
@@ -632,7 +655,7 @@ class TenantWithDemoDataSeeder extends Seeder
       if ($faker->boolean(25)) {
         DB::table('vitals')->insert([
           'patient_id'            => $pId,
-          'recorded_by_user_id'   => $user['id'],
+          'recorded_by_user_id'   => $user1['id'],
           'recorded_at'           => $attended,
           'height_cm'             => 170,
           'weight_kg'             => 75,
@@ -694,7 +717,7 @@ class TenantWithDemoDataSeeder extends Seeder
       foreach ($sessions as $s) {
         DB::table('payroll_details')->insert([
           'payroll_id' => $payrollId,
-          'treatment_session_id' => $s->id,
+          'treatment_session_id' => $s['id'],
           'patient_id' => $patientId,
           'doctor_id' => $did,
           'session_type_id' => null,

@@ -15,7 +15,7 @@
         "laravel/tinker": "^2.7",
         "libredte/libredte-api-client": "2.0",
         "libredte/libredte-lib-core": "^21.10",
-        "spatie/laravel-permission": "^6.21",
+        "spatie/laravel-permission": "^6.23",
         "tightenco/ziggy": "^2.5",
         "transbank/transbank-sdk": "^5.1"
     },

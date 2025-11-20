@@ -395,3 +395,42 @@ Route::get('/api/patients/{patient}/sessions/summary', [TreatmentSessionControll
   Route::get('/invoices/{invoice}/pdf', [InvoicesController::class, 'downloadPdf'])
     ->name('invoices.pdf');
 });
+
+
+// routes/web.php
+
+use App\Http\Controllers\Kine\KineMobileController;
+use Inertia\Inertia;
+
+// Portal Kine (requiere auth + rol kine)
+Route::middleware(['auth', 'verified', 'kine'])
+    ->prefix('kine')
+    ->name('kine.')
+    ->group(function () {
+        
+        Route::get('/dashboard', [KineMobileController::class, 'dashboard'])
+            ->name('dashboard');
+        
+        Route::get('/sessions/create', [KineMobileController::class, 'createSession'])
+            ->name('sessions.create');
+        
+        Route::post('/sessions', [KineMobileController::class, 'storeSession'])
+            ->name('sessions.store');
+        
+        Route::get('/sessions', [KineMobileController::class, 'sessions'])
+            ->name('sessions.index');
+        
+        Route::get('/payments', [KineMobileController::class, 'payments'])
+            ->name('payments');
+        
+        Route::get('/profile', [KineMobileController::class, 'profile'])
+            ->name('profile');
+        
+        Route::put('/profile', [KineMobileController::class, 'updateProfile'])
+            ->name('profile.update');
+    });
+
+// Página de acceso denegado
+Route::get('/kine/access-denied', function() {
+    return Inertia::render('Kine/Mobile/AccessDenied');
+})->name('kine.access-denied')->middleware('auth');

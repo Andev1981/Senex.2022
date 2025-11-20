@@ -7,17 +7,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
   public function up(): void
   {
-    Schema::create('branches', function (Blueprint $table) {
-      $table->id();
-
-      $table->string('name', 120);
-      $table->string('rut', 12)->nullable();
-      $table->string('phone', 30)->nullable();
-      $table->string('email')->nullable();
-      $table->boolean('active')->default(true)->index();
-      $table->timestamps();
-      $table->index(['id']); // soporte a FKs compuestas
-    });
 
     Schema::create('rooms', function (Blueprint $table) {
       $table->id();
@@ -34,6 +23,5 @@ return new class extends Migration {
   public function down(): void
   {
     Schema::dropIfExists('rooms');
-    Schema::dropIfExists('branches');
   }
 };
