@@ -1,36 +1,12 @@
-import { Clipboard, Plus } from "lucide-react";
-import React from "react";
+import { Copy, Edit } from "lucide-react";
 
-export default function IndexSessions({ patient }) {
-  return (
-    <div className="space-y-4">
-      <div className="p-6 bg-white shadow-lg rounded-xl">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-            <Clipboard className="w-6 h-6 text-teal-600" /> Registro de Sesiones
-          </h2>
-          <button
-            onClick={() => setOpenSessionModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-white bg-teal-600 rounded-lg hover:bg-teal-700"
-          >
-            <Plus className="w-4 h-4" /> Registrar Sesión
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {[...(patient.sessions || [])]
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .map((session) => (
-              <SessionCard key={session.id} session={session} />
-            ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SessionCard({ session }) {
-  const completed = session.status === "Completada";
+export default function SessionCard({
+  session,
+  handleOpenModalSession,
+  treatment,
+  setIsDuplicate,
+}) {
+  const completed = session?.status === "Completada";
   return (
     <div
       className={`border-l-4 ${
@@ -47,7 +23,14 @@ function SessionCard({ session }) {
                 completed ? "bg-teal-600" : "bg-blue-600"
               } text-white text-sm px-3 py-1 rounded-full font-medium`}
             >
-              Sesión #{session.sessionNumber}
+              Sesión Mensual #{session?.month_session_number}
+            </span>
+            <span
+              className={`inline-block ${
+                completed ? "bg-teal-400" : "bg-blue-400"
+              } text-white text-sm px-3 py-1 rounded-full font-medium`}
+            >
+              Sesión Global #{session?.session_number}
             </span>
             <span
               className={`text-sm px-3 py-1 rounded-full font-medium ${
@@ -56,18 +39,35 @@ function SessionCard({ session }) {
                   : "bg-blue-100 text-blue-700"
               }`}
             >
-              {session.status}
+              {session?.status}
             </span>
+            <p
+              className="text-gray-500 cursor-pointer"
+              onClick={() => (
+                handleOpenModalSession(session, treatment),
+                setIsDuplicate(false)
+              )}
+            >
+              <Edit className="w-4 h-4 text-gray-500" />
+            </p>
+            <p
+              className="text-gray-500 cursor-pointer"
+              onClick={() => (
+                handleOpenModalSession(session, treatment), setIsDuplicate(true)
+              )}
+            >
+              <Copy className="w-4 h-4 text-gray-500" />
+            </p>
           </div>
-          <p className="text-sm text-gray-600">{session.kinesiologist}</p>
+          <p className="text-sm text-gray-600">{session?.doctor?.name}</p>
         </div>
         <div className="text-right">
           <p className="font-semibold text-gray-900">
-            {new Date(session.date).toLocaleDateString("es-CL")}
+            {new Date(session?.date).toLocaleDateString("es-CL")}
           </p>
-          <p className="text-sm text-gray-600">{session.time}</p>
+          <p className="text-sm text-gray-600">{session?.time}</p>
           <p className="flex items-center justify-end gap-1 mt-1 text-xs text-gray-500">
-            {session.duration} min
+            {session?.duration} min
           </p>
         </div>
       </div>
@@ -77,26 +77,28 @@ function SessionCard({ session }) {
           <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-4">
             <MiniStat
               label="Dolor Inicial"
-              value={`${session.painBefore}/10`}
-              tone={session.painBefore}
+              value={`${session?.pain_before}/10`}
+              tone={session?.pain_before}
             />
             <MiniStat
               label="Dolor Final"
-              value={`${session.painAfter}/10`}
-              tone={session.painAfter}
+              value={`${session?.pain_after}/10`}
+              tone={session?.pain_after}
             />
             <MiniStat
               label="Mejoría"
-              value={`-${(session.painBefore ?? 0) - (session.painAfter ?? 0)}`}
+              value={`${
+                (session?.pain_before ?? 0) - (session?.pain_after ?? 0)
+              }`}
               tone={0}
             />
             <MiniStat
               label="Progreso"
               value={`${
-                session.painBefore
+                session?.pain_before
                   ? Math.round(
-                      ((session.painBefore - (session.painAfter || 0)) /
-                        session.painBefore) *
+                      ((session?.pain_before - (session?.pain_after || 0)) /
+                        session?.pain_before) *
                         100
                     )
                   : 0
@@ -152,11 +154,11 @@ function SessionCard({ session }) {
             />
           )}
 
-          {session.nextGoals && (
+          {session.next_goals && (
             <Callout
               title="Objetivos Próxima Sesión"
               tone="yellow"
-              text={session.nextGoals}
+              text={session.next_goals}
             />
           )}
         </>
@@ -167,11 +169,72 @@ function SessionCard({ session }) {
           <p className="mb-3 text-gray-500">
             Sesión programada - Pendiente de realizar
           </p>
-          <button className="px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700">
+          <button
+            onClick={() => handleOpenModalSession(session, treatment)}
+            className="px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700"
+          >
             Iniciar Sesión
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone = 0 }) {
+  const color =
+    tone >= 7
+      ? "text-red-600"
+      : tone >= 4
+      ? "text-orange-600"
+      : "text-green-600";
+  return (
+    <div className="p-3 bg-white rounded-lg">
+      <p className="mb-1 text-xs text-gray-600">{label}</p>
+      <p className={`text-2xl font-bold ${tone ? color : "text-teal-600"}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+function ROMItem({ label, value }) {
+  return (
+    <div>
+      <p className="mb-1 text-xs text-gray-600">{label}</p>
+      <p className="font-bold text-gray-900">{value}°</p>
+    </div>
+  );
+}
+function TagGroup({ title, items, color = "teal" }) {
+  const tone =
+    color === "purple"
+      ? "text-purple-700 bg-purple-100"
+      : "text-teal-700 bg-teal-100";
+  return (
+    <div className="mb-4">
+      <h4 className="mb-2 text-sm font-semibold text-gray-900">{title}</h4>
+      <div className="flex flex-wrap gap-2">
+        {items.map((t, i) => (
+          <span
+            key={`${t}-${i}`}
+            className={`px-3 py-1 text-xs rounded-full ${tone}`}
+          >
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+function Callout({ title, text, tone = "blue" }) {
+  const map = {
+    blue: "border-blue-500 bg-blue-50",
+    yellow: "border-yellow-500 bg-yellow-50",
+  };
+  return (
+    <div className={`p-3 mb-3 border-l-4 rounded-lg ${map[tone]}`}>
+      <h4 className="mb-1 text-sm font-semibold text-gray-900">{title}</h4>
+      <p className="text-sm text-gray-700">{text}</p>
     </div>
   );
 }

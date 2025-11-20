@@ -8,6 +8,7 @@ export default function PatientAddress({
   communes,
   regions,
   provinces,
+  address,
 }) {
   const [openAddressModal, setOpenAddressModal] = useState(false);
 
@@ -62,6 +63,11 @@ export default function PatientAddress({
         rows: 3,
         colSpan: 3,
       },
+      {
+        name: "patient_id",
+        label: "ID del Paciente",
+        type: "hidden",
+      },
     ],
     [regions, provinces, communes]
   );
@@ -85,37 +91,37 @@ export default function PatientAddress({
           <div className="">
             <p className="mb-1 text-sm text-gray-600">Región</p>
             <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {patient?.address?.region?.name}
+              {address?.region?.name}
             </p>
           </div>
           <div className="">
             <p className="mb-1 text-sm text-gray-600">Provincia</p>
             <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {patient?.address?.province?.name}
+              {address?.province?.name}
             </p>
           </div>
           <div className="">
             <p className="mb-1 text-sm text-gray-600">Comuna</p>
             <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {patient?.address?.commune?.name}
+              {address?.commune?.name}
             </p>
           </div>
           <div className="col-span-2">
             <p className="mb-1 text-sm text-gray-600">Calle</p>
             <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {patient?.address?.street}
+              {address?.street}
             </p>
           </div>
           <div className="">
             <p className="mb-1 text-sm text-gray-600">Número</p>
             <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {patient?.address?.number}
+              {address?.number}
             </p>
           </div>
           <div className="">
             <p className="mb-1 text-sm text-gray-600">Detalles</p>
             <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {patient?.address?.details}
+              {address?.details}
             </p>
           </div>
         </div>
@@ -124,28 +130,28 @@ export default function PatientAddress({
         open={openAddressModal}
         onClose={() => setOpenAddressModal(false)}
         title="Direccón Paciente"
-        description={
-          patient?.address ? "Edición de dirección" : "Creación de dirección"
-        }
+        description={address ? "Edición de dirección" : "Creación de dirección"}
+        submitLabel={address ? "Actualizar" : "Crear"}
         schema={addressSchema}
         submitRoute={
-          patient.address
+          address?.id
             ? route("patients.addresses.update", patient.id)
             : route("patients.addresses.store", patient.id)
         }
-        method={patient?.address?.id ? "patch" : "post"}
+        method={address?.id ? "patch" : "post"}
         initialValues={{
-          region_id: patient.address?.region_id ?? null,
-          province_id: patient.address?.province_id ?? null,
-          commune_id: patient.address?.commune_id ?? null,
-          street: patient.address?.street ?? "",
-          number: patient.address?.number ?? "",
-          details: patient.address?.details ?? "",
+          patient_id: address?.patient_id ?? null,
+          region_id: address?.region_id ?? null,
+          province_id: address?.province_id ?? null,
+          commune_id: address?.commune_id ?? null,
+          street: address?.street ?? "",
+          number: address?.number ?? "",
+          details: address?.details ?? "",
         }}
-        afterSubmitReloadOnly={["patient"]}
+        afterSubmitReloadOnly={["address", "patient"]}
         columns={3}
         maxWidth={"3xl"}
-        key={`addr-${patient?.address?.id ?? "new"}`}
+        key={`addr-${address?.id ?? "new"}`}
       />
     </div>
   );

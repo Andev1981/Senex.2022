@@ -6,40 +6,138 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTreatmentSessionRequest extends FormRequest
 {
-    /**
+  /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
-        return true;
+        return true; // Ajustar según permisos necesarios
+    }
+
+    /**
+     * Get the custom attributes for validator errors.
+     */
+    public function attributes(): array
+    {
+        return [
+            'techniques' => 'técnicas',
+            'exercises' => 'ejercicios',
+        ];
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'patient_id' => ['required', 'max:255', 'exists:patients,id'],
-            'doctor_id' => ['required', 'max:255', 'exists:doctors,id'],
-            'session_type_id' => ['nullable', 'exists:session_types,id'],
-            'planned_sessions' => ['nullable', 'numeric', 'max:100'],
-            'is_indefinite' => ['nullable', 'boolean'],
-            'evaluation_required' => ['nullable', 'boolean'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
-            'notes' => ['nullable', 'string', 'max:500']
+            'treatment_id' => 'required|exists:treatments,id',
+            'doctor_id' => 'required|exists:doctors,id',
+            'patient_id' => 'required|exists:patients,id',
+            'session_type_id' => 'nullable|exists:session_types,id',
+            'room_id' => 'nullable|exists:rooms,id',
+            'branch_id' => 'nullable|exists:branches,id',
+            'session_number' => 'nullable|integer|min:1',
+            'month_session_number' => 'nullable|integer|min:1',
+            'date' => 'required|date',
+            'time' => 'required|date_format:H:i',
+            'duration' => 'required|integer|min:15|max:180',
+            'status' => 'required|in:Programada,Completada,Cancelada,No Asistió',
+            // Evaluación del dolor (solo para sesiones completadas)
+            'pain_before' => 'nullable|integer|min:0|max:10',
+            'pain_after' => 'nullable|integer|min:0|max:10',
+            // ROM (Rango de Movimiento)
+             'rom_flexion_before' => 'nullable|integer|min:0|max:180',
+            'rom_flexion_after' => 'nullable|integer|min:0|max:180',
+            'rom_abduction_before' => 'nullable|integer|min:0|max:180',
+            'rom_abduction_after' => 'nullable|integer|min:0|max:180',
+            'rom_rotation_before' => 'nullable|integer|min:0|max:180',
+            'rom_rotation_after' => 'nullable|integer|min:0|max:180',
+            // Arrays JSON
+            'techniques' => 'nullable|array',
+            'exercises' => 'nullable|array',
+            // Notas
+            'notes' => 'nullable|string',
+            'homework' => 'nullable|string',
+            'next_goals' => 'nullable|string',
         ];
     }
 
-    public function messages()
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
     {
         return [
-            'patient_id.required' => "Debe tener un paciente seleccionado",
+            'treatment_id.required' => 'El tratamiento es obligatorio',
+            'treatment_id.exists' => 'El tratamiento seleccionado no existe',
+            'doctor_id.required' => 'El kinesiólogo es obligatorio',
+            'doctor_id.exists' => 'El kinesiólogo seleccionado no existe',
+            'patient_id.required' => 'El paciente es obligatorio',
+            'patient_id.exists' => 'El paciente seleccionado no existe',
+            'session_number.integer' => 'El número de sesión debe ser un número entero',
+            'session_number.min' => 'El número de sesión debe ser al menos 1',
+            'month_session_number.integer' => 'El número de sesión del mes debe ser un número entero',
+            'month_session_number.min' => 'El número de sesión del mes debe ser al menos 1',
+            'date.required' => 'La fecha es obligatoria',
+            'date.date' => 'La fecha debe tener un formato válido',
+            'time.required' => 'La hora es obligatoria',
+            'time.date_format' => 'La hora debe tener el formato HH:MM',
+            'duration.required' => 'La duración es obligatoria',
+            'duration.integer' => 'La duración debe ser un número entero',
+            'duration.min' => 'La duración debe ser al menos 15 minutos',
+            'duration.max' => 'La duración no puede exceder 180 minutos',
+            'status.required' => 'El estado es obligatorio',
+            'status.in' => 'El estado debe ser Programada, Completada, Cancelada o No Asistió',
+            'pain_before.integer' => 'El dolor inicial debe ser un número entero',
+            'pain_before.min' => 'El dolor inicial debe ser al menos 0',
+            'pain_before.max' => 'El dolor inicial no puede exceder 10',
+            'pain_after.integer' => 'El dolor final debe ser un número entero',
+            'pain_after.min' => 'El dolor final debe ser al menos 0',
+            'pain_after.max' => 'El dolor final no puede exceder 10',
+            'rom_flexion.integer' => 'La flexión debe ser un número entero',
+            'rom_flexion.min' => 'La flexión debe ser al menos 0 grados',
+            'rom_flexion.max' => 'La flexión no puede exceder 180 grados',
+            'rom_abduction.integer' => 'La abducción debe ser un número entero',
+            'rom_abduction.min' => 'La abducción debe ser al menos 0 grados',
+            'rom_abduction.max' => 'La abducción no puede exceder 180 grados',
+            'rom_rotation.integer' => 'La rotación debe ser un número entero',
+            'rom_rotation.min' => 'La rotación debe ser al menos 0 grados',
+            'rom_rotation.max' => 'La rotación no puede exceder 180 grados',
+            'techniques.array' => 'Las técnicas deben ser una lista válida',
+            'exercises.array' => 'Los ejercicios deben ser una lista válida',
         ];
     }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Valores por defecto
+        if (!$this->has('status')) {
+            $this->merge(['status' => 'Programada']);
+        }
+
+        if (!$this->has('duration')) {
+            $this->merge(['duration' => 45]);
+        }
+
+        // Para sesiones completadas, asegurar que tengan evaluación de dolor
+        if ($this->has('status') && $this->status === 'Completada') {
+            $this->validate([
+                'pain_before' => 'required|integer|min:0|max:10',
+                'pain_after' => 'required|integer|min:0|max:10',
+            ]);
+        }
+
+        // Asegurar que los arrays están correctamente configurados
+        // Los arrays deben llegar como arrays desde el frontend, no convertirlos a JSON aquí
+        // Laravel automáticamente manejará la conversión a JSON en el modelo gracias al $casts
+    }
+
 }

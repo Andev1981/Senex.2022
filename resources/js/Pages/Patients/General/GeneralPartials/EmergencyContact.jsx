@@ -137,6 +137,7 @@ export default function EmergencyContact({ patient }) {
             ? "Editar contacto de emergencia"
             : "Crear contacto de emergencia"
         }
+        submitLabel={mainContact?.id ? "Actualizar" : "Crear"}
         schema={contactSchema}
         submitRoute={
           mainContact?.id

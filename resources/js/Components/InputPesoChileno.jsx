@@ -7,6 +7,9 @@ const InputPesoChileno = ({
   price = 0,
 }) => {
   const formatNumber = (value) => {
+    // Si ya viene formateado, no lo toques
+    if (typeof value === "string" && value.includes("$")) return value;
+
     const digits = String(value).replace(/\D/g, "");
     if (digits) {
       return new Intl.NumberFormat("es-CL", {
@@ -22,16 +25,12 @@ const InputPesoChileno = ({
     const rawValue = e.target.value;
     const numericValue = rawValue.replace(/\D/g, "");
 
-    if (onChange) {
-      onChange({
-        target: {
-          name,
-          value: numericValue ? parseInt(numericValue, 10) : "",
-          type: "text",
-          checked: false,
-        },
-      });
-    }
+    onChange?.({
+      target: {
+        name,
+        value: numericValue ? parseInt(numericValue, 10) : "",
+      },
+    });
   };
 
   const handleFocus = (e) => {
@@ -44,12 +43,12 @@ const InputPesoChileno = ({
     <div className="relative">
       <input
         type="text"
-        value={formatNumber(price)} // siempre se formatea desde props
+        value={formatNumber(price)}
         onChange={handleChange}
         onFocus={handleFocus}
         placeholder="$0"
         className={
-          "rounded-md border-primary/20 boder-[0.5] shadow-sm focus:border-primary-light focus:ring-primary-light/20 " +
+          "rounded-md border-primary/20 border-[0.5] shadow-sm focus:border-primary-light focus:ring-primary-light/20 " +
           className
         }
       />

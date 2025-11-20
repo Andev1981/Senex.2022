@@ -8,37 +8,81 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Requests\StoreSessionTypeRequest;
 use App\Http\Requests\UpdateSessionTypeRequest;
+use Illuminate\Support\Facades\Log;
 
 class SessionTypeController extends Controller
 {
     public function index(Request $request)
     {
-        $q = SessionType::query()
-            ->when($request->get('search'), fn($qq, $s) => $qq->where('name', 'like', "%{$s}%"))
-            ->orderBy('name');
-
-        return Inertia::render('Admin/SessionTypes/IndexSessionTypes', [
-            'filters' => $request->only('search'),
-            'items'   => $q->paginate(15)->withQueryString(),
+        $sessionTypes = SessionType::get();
+        return Inertia::render('SessionTypes/SessionTypesIndex', [
+            'sessionTypes' => $sessionTypes,
         ]);
     }
 
     public function store(StoreSessionTypeRequest $request)
     {
-        SessionType::create($request->validated());
-        return back()->with('success', 'Tipo de sesión creado.');
+        try{
+            SessionType::create($request->validated());
+            
+            session()->flash('message', 'Tipo de sesión agregado correctamente');
+            session()->flash('type', 'success');
+        } 
+        catch (\Exception $e) {
+                Log::info('Error al crear tipo de sesión', [
+                    $e->getMessage()
+                ]);
+                
+                session()->flash('message', 'Error al crear el tipo de sesión: ' . $e->getMessage());
+                session()->flash('type', 'error');
+        }
     }
 
     public function update(UpdateSessionTypeRequest $request, SessionType $sessionType)
     {
-        $sessionType->update($request->validated());
-        return back()->with('success', 'Tipo de sesión actualizado.');
+        
+ 
+        try{
+            $sessionType->update($request->validated());
+            
+            session()->flash('message', 'Tipo de sesión actualizada correctamente');
+            session()->flash('type', 'success');
+        } 
+        catch (\Exception $e) {
+                Log::info('Error al actualizar tipo de sesión', [
+                    $e->getMessage()
+                ]);
+                
+                session()->flash('message', 'Error al actualizar el tipo de sesión: ' . $e->getMessage());
+                session()->flash('type', 'error');
+        }
     }
 
     public function destroy(SessionType $sessionType)
     {
         // Si quieres protección de integridad, valida que no tenga sesiones asociadas
-        $sessionType->delete();
-        return back()->with('success', 'Tipo de sesión eliminado.');
+         if ($sessionType->treatmentSessions()->count() > 0) {
+            session()->flash('message', 'No se puede eliminar este tipo de sesión porque tiene sesiones asociadas');
+                session()->flash('type', 'error');
+
+            return back();
+        }
+
+         try{
+
+            $sessionType->delete();
+            
+            session()->flash('message', 'Tipo de sesión actualizada correctamente');
+            session()->flash('type', 'success');
+        } 
+        catch (\Exception $e) {
+                Log::info('Error al actualizar tipo de sesión', [
+                    $e->getMessage()
+                ]);
+                
+                session()->flash('message', 'Error al actualizar el tipo de sesión: ' . $e->getMessage());
+           
+        
+        }
     }
 }

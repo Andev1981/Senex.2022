@@ -1,39 +1,9 @@
 <?php return array (
-  'barryvdh/laravel-debugbar' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Barryvdh\\Debugbar\\ServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Debugbar' => 'Barryvdh\\Debugbar\\Facades\\Debugbar',
-    ),
-  ),
-  'barryvdh/laravel-dompdf' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Barryvdh\\DomPDF\\ServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Pdf' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
-      'PDF' => 'Barryvdh\\DomPDF\\Facade\\Pdf',
-    ),
-  ),
   'inertiajs/inertia-laravel' => 
   array (
     'providers' => 
     array (
       0 => 'Inertia\\ServiceProvider',
-    ),
-  ),
-  'kdion4891/laravel-livewire-tables' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Kdion4891\\LaravelLivewireTables\\Providers\\TableServiceProvider',
     ),
   ),
   'laravel/breeze' => 
@@ -64,54 +34,6 @@
       0 => 'Laravel\\Tinker\\TinkerServiceProvider',
     ),
   ),
-  'laravel/ui' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Ui\\UiServiceProvider',
-    ),
-  ),
-  'laravelcollective/html' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Collective\\Html\\HtmlServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Form' => 'Collective\\Html\\FormFacade',
-      'Html' => 'Collective\\Html\\HtmlFacade',
-    ),
-  ),
-  'laraveles/spanish' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laraveles\\Spanish\\SpanishServiceProvider',
-    ),
-  ),
-  'livewire/livewire' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Livewire\\LivewireServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Livewire' => 'Livewire\\Livewire',
-    ),
-  ),
-  'maatwebsite/excel' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Maatwebsite\\Excel\\ExcelServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Excel' => 'Maatwebsite\\Excel\\Facades\\Excel',
-    ),
-  ),
   'nesbot/carbon' => 
   array (
     'providers' => 
@@ -140,33 +62,15 @@
       0 => 'Pest\\Laravel\\PestServiceProvider',
     ),
   ),
-  'rappasoft/laravel-livewire-tables' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Rappasoft\\LaravelLivewireTables\\LaravelLivewireTablesServiceProvider',
-    ),
-  ),
-  'realrashid/sweet-alert' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'RealRashid\\SweetAlert\\SweetAlertServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Alert' => 'RealRashid\\SweetAlert\\Facades\\Alert',
-    ),
-  ),
   'spatie/laravel-ignition' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
-    ),
     'aliases' => 
     array (
       'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
+    ),
+    'providers' => 
+    array (
+      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),
   ),
   'spatie/laravel-permission' => 
@@ -181,17 +85,6 @@
     'providers' => 
     array (
       0 => 'Tighten\\Ziggy\\ZiggyServiceProvider',
-    ),
-  ),
-  'victorybiz/laravel-simple-select' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Victorybiz\\SimpleSelect\\SimpleSelectServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'SimpleSelect' => 'Victorybiz\\SimpleSelect\\SimpleSelectFacade',
     ),
   ),
 );

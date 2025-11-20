@@ -12,14 +12,14 @@ class SessionType extends Model
         'duration_minutes',
         'plan_eligible',
         'plan_session_value',
-        'is_active'
+        'active'
     ];
 
     protected $casts = [
-        'base_price' => 'decimal:2',
+        'base_price' => 'integer',
         'plan_eligible' => 'boolean',
         'plan_session_value' => 'integer',
-        'is_active' => 'boolean',
+        'active' => 'boolean',
     ];
 
     // Relaciones sugeridas (ajusta nombres de modelos si difieren)

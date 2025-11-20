@@ -1,8 +1,214 @@
 import Modal from "@/Components/Modal";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useForm, router } from "@inertiajs/react";
+import { Search, X } from "lucide-react"; // para el Autocomplete
 import RutInput from "./RutInput";
 import ChilePhoneInput from "./ChilePhoneInput";
+
+// --- Hook simple de debounce para el Autocomplete ---
+function useDebouncedValue(value, delay = 300) {
+  const [deb, setDeb] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDeb(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return deb;
+}
+
+// --- AutocompleteSelect: soporta datos locales (options) o remotos (loader) con debounce ---
+function AutocompleteSelect({
+  label,
+  value, // any | null
+  onChange, // (val:any)=>void
+  placeholder = "Buscar…",
+  options = [], // [{value, label}]
+  loader = null, // async (query:string) => [{value, label}]
+  noResultsText = "Sin resultados",
+  disabled = false,
+  name,
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [remoteOptions, setRemoteOptions] = useState([]);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+
+  const debQuery = useDebouncedValue(query, 250);
+
+  const allOptions = loader ? remoteOptions : options;
+  const selected = useMemo(
+    () => allOptions.find((o) => o.value === value) || null,
+    [allOptions, value]
+  );
+
+  // Carga remota
+  useEffect(() => {
+    let cancel = false;
+    if (!loader) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const rows = await loader(debQuery || "");
+        if (!cancel) setRemoteOptions(rows || []);
+      } catch (e) {
+        if (!cancel) setRemoteOptions([]);
+      } finally {
+        if (!cancel) setLoading(false);
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [debQuery, loader]);
+
+  // Filtrado local si no hay loader
+  const filtered = useMemo(() => {
+    if (loader) return allOptions; // servidor ya filtra
+    const q = (query || "").toLowerCase().trim();
+    if (!q) return options;
+    return options.filter((o) => o.label.toLowerCase().includes(q));
+  }, [query, options, loader, allOptions]);
+
+  function handleKeyDown(e) {
+    if (disabled) return;
+    if (!open && (e.key === "ArrowDown" || e.key === "Enter")) {
+      setOpen(true);
+      return;
+    }
+    if (!open) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeIndex >= 0 && filtered[activeIndex]) {
+        const pick = filtered[activeIndex];
+        onChange(pick.value);
+        setQuery(pick.label);
+        setOpen(false);
+      }
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  }
+
+  function openMenu() {
+    if (disabled) return;
+    setOpen(true);
+    setActiveIndex(-1);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function pickOption(opt) {
+    if (disabled) return;
+    onChange(opt.value);
+    setQuery(opt.label);
+    setOpen(false);
+  }
+
+  function clearSelection() {
+    if (disabled) return;
+    onChange(null);
+    setQuery("");
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (selected && !open) setQuery(selected.label);
+  }, [selected, open]);
+
+  return (
+    <div className="w-full">
+      {label && (
+        <label
+          className="block mb-1 text-xs font-semibold text-gray-600"
+          htmlFor={name}
+        >
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        <div
+          className={`flex items-center w-full px-3 py-2 border-2 rounded-lg transition ${
+            disabled
+              ? "opacity-60 cursor-not-allowed border-gray-200"
+              : "cursor-text border-gray-200 focus-within:border-blue-500"
+          }`}
+          onClick={openMenu}
+          role="combobox"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+        >
+          <Search className="w-4 h-4 mr-2 text-gray-400" />
+          <input
+            id={name}
+            ref={inputRef}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setOpen(true);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="flex-1 text-sm bg-transparent outline-none"
+            disabled={disabled}
+          />
+          {value != null && (
+            <button
+              type="button"
+              className="p-1 ml-1 rounded hover:bg-gray-100"
+              onClick={clearSelection}
+              aria-label="Limpiar"
+              disabled={disabled}
+            >
+              <X className="w-4 h-4 text-gray-400" />
+            </button>
+          )}
+        </div>
+
+        {open && !disabled && (
+          <div
+            className="absolute z-20 w-full mt-1 overflow-auto bg-white border-2 border-gray-200 rounded-lg shadow-lg max-h-60"
+            role="listbox"
+            ref={listRef}
+          >
+            {loading ? (
+              <div className="p-3 text-sm text-gray-500">Cargando…</div>
+            ) : filtered.length === 0 ? (
+              <div className="p-3 text-sm text-gray-500">{noResultsText}</div>
+            ) : (
+              filtered.map((opt, idx) => {
+                const isActive = idx === activeIndex;
+                const isSelected = value === opt.value;
+                return (
+                  <div
+                    key={`${name}-${opt.value}`}
+                    role="option"
+                    aria-selected={isSelected}
+                    onMouseEnter={() => setActiveIndex(idx)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => pickOption(opt)}
+                    className={`px-3 py-2 text-sm cursor-pointer ${
+                      isActive ? "bg-blue-50" : ""
+                    } ${isSelected ? "font-medium" : ""}`}
+                  >
+                    {opt.label}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ResourceFormModal({
   open,
@@ -18,13 +224,13 @@ export default function ResourceFormModal({
   columns = 2, // 1..4
   maxWidth,
   errorBag, // opcional si usas varios formularios en la misma página
+  submitLabel,
 }) {
   // Usa métodos de useForm para que los errores (422) lleguen a errors
   const form = useForm(initialValues);
   const { data, setData, processing, errors, reset, clearErrors } = form;
 
   const [hasFile, setHasFile] = useState(false);
-  const submitLabel = initialValues?.id ? "Actualizar" : "Guardar";
 
   // --- Date/Time helpers ---
   const todayStr = () => new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -49,6 +255,8 @@ export default function ResourceFormModal({
       2: "md:grid-cols-2",
       3: "md:grid-cols-3",
       4: "md:grid-cols-4",
+      5: "md:grid-cols-5",
+      6: "md:grid-cols-6",
     };
     return map[columns] || "md:grid-cols-2";
   }, [columns]);
@@ -155,26 +363,65 @@ export default function ResourceFormModal({
               typeof f.options === "function"
                 ? f.options(data)
                 : f.options ?? [];
+
+            const useAutocomplete =
+              f.type === "select" &&
+              (f.searchable || typeof f.asyncOptions === "function");
+
             return (
               <div
                 key={f.name}
-                className={`col-span-1 ${
-                  f.colSpan ? `md:col-span-${f.colSpan}` : ""
+                className={`${
+                  f.colSpan ? `col-span-${f.colSpan}` : " col-span-1"
                 }`}
               >
-                <label className="ml-1 text-xs text-gray-500">
+                <label
+                  htmlFor={f.name}
+                  name={f.name}
+                  className="ml-1 text-xs text-gray-500"
+                >
                   {f.label}
                   {f.required && <span className="text-red-600"> *</span>}
                 </label>
-                {f.type === "switch" ? (
+
+                {useAutocomplete ? (
+                  <AutocompleteSelect
+                    name={f.name}
+                    label={null}
+                    value={data[f.name] ?? null}
+                    onChange={(val) => onFieldChange(f, val)}
+                    placeholder={f.placeholder ?? "Selecciona…"}
+                    options={opts}
+                    loader={
+                      typeof f.asyncOptions === "function"
+                        ? (q) => f.asyncOptions(q, data)
+                        : null
+                    }
+                    disabled={isDisabled}
+                  />
+                ) : f.type === "select" ? (
+                  <select
+                    name={f.name}
+                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
+                    value={data[f.name] ?? ""}
+                    onChange={(e) => onFieldChange(f, e.target.value)}
+                    disabled={isDisabled}
+                  >
+                    <option className="text-gray-500" value="">
+                      {f.placeholder ?? "Selecciona…"}
+                    </option>
+                    {opts.map((o) => (
+                      <option key={`${f.name}-${o.value}`} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : f.type === "switch" ? (
                   <div className="flex items-center justify-between rounded-md border-[0.5px] border-gray-300 px-3 py-2">
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-700">
                         {f.placeholder ?? ""}
                       </span>
-                      {/*  {f.help && (
-                        <span className="text-xs text-gray-500">{f.help}</span>
-                      )} */}
                     </div>
 
                     {/* Toggle accesible */}
@@ -196,48 +443,34 @@ export default function ResourceFormModal({
                       />
                     </button>
                   </div>
-                ) : f.type === "select" ? (
-                  <select
-                    className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
-                    value={data[f.name] ?? ""}
-                    onChange={(e) => onFieldChange(f, e.target.value)}
-                    disabled={isDisabled}
-                  >
-                    <option className="text-gray-500" value="">
-                      {f.placeholder ?? "Selecciona…"}
-                    </option>
-                    {opts.map((o) => (
-                      <option key={`${f.name}-${o.value}`} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
                 ) : f.type === "textarea" ? (
                   <textarea
+                    name={f.name}
                     className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
                     rows={f.rows ?? 3}
                     placeholder={f.placeholder}
                     value={data[f.name] ?? ""}
                     onChange={(e) => onFieldChange(f, e.target.value)}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                   />
                 ) : f.type === "file" ? (
                   <input
+                    name={f.name}
                     type="file"
                     className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
                     onChange={(e) =>
                       onFieldChange(f, e.target.files?.[0] || null)
                     }
                     accept={f.accept}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                   />
                 ) : f.type === "rut" ? (
                   <RutInput
                     name={f.name}
-                    value={data[f.name] ?? ""} // CONTROLADO
-                    onChange={(val) => onFieldChange(f, val)} // guarda en useForm
+                    value={data[f.name] ?? ""}
+                    onChange={(val) => onFieldChange(f, val)}
                     placeholder={f.placeholder ?? "12.345.678-9"}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                     error={errors[f.name]}
                   />
                 ) : f.type === "tel" ? (
@@ -246,40 +479,44 @@ export default function ResourceFormModal({
                     value={data[f.name] ?? ""}
                     onChange={(val) => onFieldChange(f, val)}
                     placeholder={f.placeholder ?? "+56 9 1234 5678"}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                     error={errors[f.name]}
                   />
                 ) : f.type === "date" ? (
                   <input
+                    name={f.name}
                     type="date"
                     className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
                     value={toDateInput(data[f.name])}
                     onChange={(e) => onFieldChange(f, e.target.value)} // "YYYY-MM-DD"
                     min={resolveDateBound(f.min)}
                     max={resolveDateBound(f.max)}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                   />
                 ) : f.type === "time" ? (
                   <input
+                    name={f.name}
                     type="time"
                     className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
                     value={toTimeInput(data[f.name])}
                     onChange={(e) => onFieldChange(f, e.target.value)} // "HH:MM"
                     step={f.step ?? 60}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                   />
                 ) : f.type === "datetime-local" ? (
                   <input
+                    name={f.name}
                     type="datetime-local"
                     className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
                     value={toDatetimeLocalInput(data[f.name])}
                     onChange={(e) => onFieldChange(f, e.target.value)} // "YYYY-MM-DDTHH:MM"
                     min={f.min ? toDatetimeLocalInput(f.min) : undefined}
                     max={f.max ? toDatetimeLocalInput(f.max) : undefined}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                   />
                 ) : (
                   <input
+                    name={f.name}
                     type={f.type || "text"}
                     className="w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200"
                     placeholder={f.placeholder}
@@ -289,7 +526,7 @@ export default function ResourceFormModal({
                     max={f.max}
                     step={f.step}
                     pattern={f.pattern}
-                    disabled={f.disabled}
+                    disabled={isDisabled}
                   />
                 )}
 

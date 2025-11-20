@@ -30,24 +30,26 @@ return new class extends Migration {
       $table->foreignId('session_type_id')->constrained()->cascadeOnDelete();
       $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
       $table->foreignId('doctor_id')->nullable()->constrained()->nullOnDelete(); // referente
-      $table->string('name', 150);
       $table->string('diagnosis');
       $table->text('description')->nullable();
-      $table->date('start_date');
+      $table->date('start_date')->nullable();
       $table->date('end_date')->nullable();
-      $table->enum('status', ['Activo', 'Completado', 'Suspendido'])->default('Activo')->index();
-      $table->unsignedTinyInteger('total_sessions');
-      $table->unsignedTinyInteger('completed_sessions')->default(0);
-      $table->string('frequency')->nullable();
+      $table->enum('status', ['Evaluation', 'InProgress', 'Cancelled', 'Paused'])->default('Evaluation')->nullable()->index();
+      $table->unsignedTinyInteger('total_sessions')->nullable();
+      $table->unsignedTinyInteger('completed_sessions')->default(0)->nullable();
+      $table->unsignedTinyInteger('frequency')->default(0)->nullable();
+     /*  $table->string('frequency_time')->nullable(); */
+      $table->enum('frequency_time',['day','week','month'])->nullable();
+      $table->boolean('is_indefinite')->default(false);
       $table->string('current_phase')->nullable();
       $table->json('objectives')->nullable();
       $table->text('outcome')->nullable();
       $table->dateTime('next_appointment')->nullable();
 
       // KPIs
-      $table->unsignedTinyInteger('pain_reduction')->default(0);
-      $table->unsignedTinyInteger('mobility_improvement')->default(0);
-      $table->unsignedTinyInteger('strength_gain')->default(0);
+      $table->unsignedTinyInteger('pain_reduction')->default(0)->nullable();
+      $table->unsignedTinyInteger('mobility_improvement')->default(0)->nullable();
+      $table->unsignedTinyInteger('strength_gain')->default(0)->nullable();
 
       $table->timestamps();
       $table->softDeletes();

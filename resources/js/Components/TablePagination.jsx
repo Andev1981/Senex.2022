@@ -60,7 +60,7 @@ const TablePagination = ({
         <div className="flex items-center gap-3">
           <p className="text-sm text-gray-700">
             Página <span className="font-semibold">{currentPage}</span> de{" "}
-            <span className="font-semibold">{pageCount || 1}</span> — Mostrando{" "}
+            <span className="font-semibold">{pageCount || 1}</span> | Mostrando{" "}
             <span className="font-semibold">
               {total ? `${startRow}–${endRow}` : 0}
             </span>{" "}

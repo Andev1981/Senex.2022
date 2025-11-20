@@ -3,9 +3,18 @@
 namespace App\Http\Controllers\Inertia;
 
 use App\Http\Controllers\Controller;
+use App\Models\Commune;
 use App\Models\Doctor;
+use App\Models\DoctorCommissionRate;
+use App\Models\DoctorPatientAssignment;
+use App\Models\Patient;
+use App\Models\Province;
+use App\Models\Region;
+use App\Models\SessionType;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class DoctorController extends Controller
@@ -18,145 +27,217 @@ class DoctorController extends Controller
 
     public function index()
     {
-        $doctors = Doctor::all();
-        return Inertia::render('Doctors/GestionDoctores');
-    }
+        $addrPick = DB::table('addresses as a')
+            ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
+            ->where('a.addressable_type', Doctor::class)
+            ->groupBy('a.addressable_id');
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        $doctor = Doctor::find($id);
-        if (!$doctor) {
-            return redirect()->route('listado.kines')->with('error', 'Kinesiólogo no encontrado.');
-        }
-        //$atenciones = ApplyItem::with('patient', 'application')->where('doctor_id', $doctor->id)->where('status', 1)->orderBy('fecha_atencion', 'desc')->get();
-
-        $atenciones = DB::table('apply_items as ai')
-            ->leftJoin('patients as p', 'p.id', '=', 'ai.patient_id')
-            ->leftJoin('doctors as d', 'd.id', '=', 'ai.doctor_id')
-            ->leftJoin('application_types as appt', 'appt.id', '=', 'ai.application_type_id') // <-- faltaba
-            ->leftJoin('application_type_users as apptu', function ($join) use ($doctor) {
-                $join->on('apptu.application_type_id', '=', 'ai.application_type_id')
-                    ->where('apptu.user_id', $doctor->id); // filtra por el user del doctor
+        $doctors = Doctor::query()->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'doctors.id'))
+            ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')->leftJoin('addresses', function ($join) {
+                $join->on('addresses.addressable_id', '=', 'doctors.id')
+                    ->where('addresses.addressable_type', '=', Patient::class);
             })
-            ->where('ai.doctor_id', $doctor->id)
-            ->where('ai.status', 1)
-            ->whereYear('ai.fecha_atencion', now()->year) // <-- año en curso
-            ->orderBy('p.name', 'asc')
-            ->orderBy('ai.fecha_atencion', 'asc')
-            ->select([
-                'ai.id',
-                'ai.fecha_atencion',
-                'ai.status',
-                DB::raw("CONCAT(p.name,' ',p.last_name) as patient_full"),
-                'appt.name as application_type_name',
-                DB::raw('COALESCE(apptu.price,0) as valor_kine'),   // desde pivot
-                DB::raw('COALESCE(ai.price,0) as valor_senex'),     // precio cobrado al cliente
-                'ai.numero_sesion',
-            ])
-            ->selectRaw('(COALESCE(ai.price,0) - COALESCE(apptu.price,0)) as total_senex')
-            ->get();
+            ->leftJoin('communes', 'addresses.commune_id', '=', 'communes.id')->select([
+                'doctors.id',
+                'doctors.name',
+                'doctors.last_name',
+                'doctors.email',
+                'doctors.birth_date',
+                'doctors.rut',
+                'doctors.phone',
+                'doctors.status',
+                'doctors.specialty',
+                'doctors.gender',
+                'doctors.*',
+                DB::raw("CONCAT_WS(' ', doctors.name, doctors.last_name) as full_name"),
 
+                DB::raw('addresses.id as address_id'),
+                DB::raw('addresses.street as street'),
+                DB::raw('addresses.number as number'),
+                DB::raw('addresses.details as details'),
+                DB::raw('addresses.region_id as region_id'),
+                DB::raw('addresses.province_id as province_id'),
+                DB::raw('addresses.commune_id as commune_id'),
 
-        $user = auth()->user();
+                DB::raw('communes.name as comuna_name'),
 
+                DB::raw("CONCAT_WS(' ', addresses.street, addresses.number) as full_address"),
+            ])->with('commissionRates','patientAssignments','patients','sessions','sessions.patient','sessions.sessionType')->get();
 
-        return Inertia::render('Doctor/IndexDoctor', compact('doctor', 'atenciones', 'user'));
+        $doctor_commission_rates = DoctorCommissionRate::all();
+        $doctor_patient_assignment = DoctorPatientAssignment::all();
+        $sessionTypes = SessionType::all();
+        $patients = Patient::where('status','active')->get();
+
+        $provinces = Province::all();
+        $communes  = Commune::all();
+        $regions   = Region::all();
+
+        return Inertia::render('Doctors/DoctorsIndex', compact('doctors','doctor_commission_rates','doctor_patient_assignment','sessionTypes','patients',  'communes', 'provinces', 'regions'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
+    public function store(Request $request){
+   
+         $validatedData = $request->all();
+        
+        try{
+
+            Doctor::create($validatedData);
+
+            session()->flash('message', 'Kine cread@ correctamente.');
+            session()->flash('type', 'success');
+
+        }catch(\Throwable $e){
+            Log::info('Error al crear kine: ', [
+                $e->getMessage()
+            ]);
+
+            session()->flash('message', 'Error al crear kine.');
+            session()->flash('type', 'error');
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+    public function update(Request $request, Doctor $doctor){
+        /* $valiadtedData = $request->validate([]); */
+        $validatedData = $request->all();
+        
+        try{
+
+            $doctor->updateOrFail($validatedData);
+
+            session()->flash('message', 'Kine actualizad@ correctamente.');
+            session()->flash('type', 'success');
+
+        }catch(\Throwable $e){
+            Log::info('Error al actualizar kine', [
+                $e->getMessage()
+            ]);
+
+            session()->flash('message', 'Error al actualizar kine.');
+            session()->flash('type', 'error');
+        }
     }
 
-    public function doctor_detail($id) {}
-
-    public function search(Request $request)
+    public function updateCommissionRules(Request $request, Doctor $doctor)
     {
-        $q = trim((string) $request->query('q', ''));
-        $limit = min((int) $request->query('limit', 10), 25); // hard cap
+    
 
-        if (mb_strlen($q) < 2) {
-            return  $items = []; // no spam al DB
+        $validated = $request->validate([
+            'rules' => 'required|array',
+            'rules.*.session_type_id' => 'required|exists:session_types,id',
+            'rules.*.type' => 'required|in:fixed_amount,percentage',
+            'rules.*.value' => 'required|numeric|min:0',
+        ]);
+
+         try {
+  
+        
+            // Crear nuevas reglas
+            foreach ($validated['rules'] as $rule) {
+         
+
+                $doctor->commissionRates()->updateOrCreate(
+                [
+                    'session_type_id' => $rule['session_type_id'],
+                ],
+                [
+                    'commission_type'  => $rule['type'],
+                    'commission_value' => $rule['value'],
+                    'effective_from'   => now(),
+                ]
+            );
+            }
+
+            session()->flash('message', 'Comisión actualizada correctamente.');
+            session()->flash('type', 'success');
+            return back();
+
+        } catch (\Throwable $e) {
+          
+              Log::info('Error al crear comisión: ', [
+                $e->getMessage()
+            ]);
+
+            session()->flash('message', 'Error al actualizar comisión.');
+            session()->flash('type', 'error');
+
         }
 
-        // Campos a mostrar (evita exponer PII innecesaria)
-        $columns = ['id', 'name', 'last_name'];
+    }
 
-        // MySQL (collation ai_ci quita tildes y case)
-        $items = Doctor::query()
-            ->select($columns)
-            ->where(function ($w) use ($q) {
-                $w->where('name', 'LIKE', "%{$q}%")
-                    ->orWhere('last_name', 'LIKE', "%{$q}%");
-            })
-            // Prioriza “empieza con” para mejor ranking visual
-            ->orderByRaw("CASE
-            WHEN name LIKE ? THEN 0
-            WHEN last_name LIKE ? THEN 1
-            ELSE 2 END", ["{$q}%", "{$q}%"])
-            ->orderBy('name')
-            ->limit($limit)
-            ->get();
+    public function assignPatient(Request $request, Doctor $doctor)
+    {
+        $validated = $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+        ]);
 
+        try{
+        
+            // Verificar que no esté ya asignado
+            if (!$doctor->patients()->where('patient_id', $validated['patient_id'])->exists()) {
+                $doctor->patients()->attach($validated['patient_id']);
+            }
 
+            session()->flash('message', 'Paciente asignado correctamente');
+            session()->flash('type', 'success');
+        } catch (\Throwable $e) {
+          
+              Log::info('Error al asignar', [
+                $e->getMessage()
+            ]);
 
-        /*         return response()->json($items);
- */
+            session()->flash('message', 'Error al asignar paciente.');
+            session()->flash('type', 'error');
+
+        }
+
+    }
+
+    public function unassignPatient(Doctor $doctor, Patient $patient)
+    {
+        try{
+        $doctor->patients()->detach($patient->id);
+        session()->flash('message', 'Removida asignación');
+            session()->flash('type', 'success');
+        } catch (\Throwable $e) {
+          
+              Log::info('Error al crear quitar asignación: ', [
+                $e->getMessage()
+            ]);
+
+            session()->flash('message', 'Error al quitar asignación.');
+            session()->flash('type', 'error');
+
+        }
+
+     
+    }
+
+    public function toggleActive(Request $request, Doctor $doctor)
+    {
+        $validated = $request->validate([
+            'is_active' => 'required|boolean',
+        ]);
+
+        try{
+
+            
+            $doctor->update(['is_active' => $validated['is_active']]);
+
+            session()->flash('message', 'Kine Activad@');
+            session()->flash('type', 'success');
+
+        } catch (\Throwable $e) {
+          
+              Log::info('Error al activar kine: ', [
+                $e->getMessage()
+            ]);
+
+            session()->flash('message', 'Error al activar.');
+            session()->flash('type', 'error');
+
+        }
+
+    
     }
 }

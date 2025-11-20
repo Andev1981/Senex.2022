@@ -30,12 +30,14 @@ return new class extends Migration {
     Schema::create('treatment_sessions', function (Blueprint $table) {
       $table->id();
       $table->foreignId('treatment_id')->constrained()->cascadeOnDelete();
+      $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
       $table->foreignId('doctor_id')->constrained()->restrictOnDelete();
       $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
       $table->foreignId('session_type_id')->nullable()->constrained()->nullOnDelete();
       $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
       $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
       $table->unsignedTinyInteger('session_number');
+      $table->unsignedTinyInteger('month_session_number');
       $table->date('date');
       $table->time('time');
       $table->unsignedSmallInteger('duration')->default(45);
@@ -45,10 +47,11 @@ return new class extends Migration {
       $table->unsignedTinyInteger('pain_before')->nullable();
       $table->unsignedTinyInteger('pain_after')->nullable();
       $table->unsignedSmallInteger('rom_flexion')->nullable();
-      $table->unsignedSmallInteger('rom_abduction')->nullable();
       $table->unsignedSmallInteger('rom_rotation')->nullable();
+      $table->unsignedSmallInteger('rom_abduction')->nullable();
       $table->json('techniques')->nullable();
       $table->json('exercises')->nullable();
+      $table->json('meta')->nullable()->comment('Datos adicionales en formato JSON');
       $table->text('notes')->nullable();
       $table->text('homework')->nullable();
       $table->text('next_goals')->nullable();

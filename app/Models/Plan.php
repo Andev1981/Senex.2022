@@ -2,51 +2,56 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Plan extends Model
 {
+    use HasFactory, SoftDeletes;
 
+    protected $fillable = [
+        'name',
+        'codigo',
+        'institution_type',
+        'institution_id',
+        'type',
+        'total_sessions',
+        'price',
+        'valid_months',
+        'session_types',
+        'description',
+        'coverage',
+        'is_active',
+    ];
 
-  public const TYPE_ANNUAL      = 'annual';
-  public const TYPE_SESSIONPACK = 'session_pack';
-  public const TYPE_UNLIMITED   = 'unlimited';
+    protected $casts = [
+        'is_active' => 'boolean',
+        'session_types' => 'array',
+        'price' => 'integer',
+        'total_sessions' => 'integer',
+        'valid_months' => 'integer',
+    ];
 
-  protected $fillable = [
+    // Polymorphic relationships
+    public function healthInsurer()
+    {
+        return $this->belongsTo(HealthInsurer::class, 'institution_id')
+            ->where('institution_type', 'health_insurer');
+    }
 
-    'name',
-    'type',
-    'total_sessions',
-    'price',
-    'valid_months',
-    'session_types',
-    'is_active',
-  ];
+    public function insuranceCompany()
+    {
+        return $this->belongsTo(InsuranceCompany::class, 'institution_id')
+            ->where('institution_type', 'insurance_company');
+    }
 
-  protected $casts = [
-    'total_sessions' => 'integer',
-    'price'          => 'decimal:2',
-    'valid_months'   => 'integer',
-    'session_types'  => 'array',   // [session_type_id, ...]
-    'is_active'      => 'boolean',
-  ];
-
-  // Plan admite cierto tipo de sesión
-  public function allowsSessionType(?int $sessionTypeId): bool
-  {
-    if (!$sessionTypeId) return false;
-    $allowed = $this->session_types ?? [];
-    return in_array((int)$sessionTypeId, array_map('intval', $allowed), true);
-  }
-
-  // Scopes útiles
-  public function scopeActive($q)
-  {
-    return $q->where('is_active', true);
-  }
-  public function scopeForType($q, string $type)
-  {
-    return $q->where('type', $type);
-  }
+    // Accessor to get the related institution
+    public function getInstitutionAttribute()
+    {
+        if ($this->institution_type === 'health_insurer') {
+            return $this->healthInsurer;
+        }
+        return $this->insuranceCompany;
+    }
 }

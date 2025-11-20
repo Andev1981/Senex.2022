@@ -4,25 +4,23 @@ import { AlertCircle, CheckCircle2, Building2, Search } from "lucide-react";
 
 const RutInput = ({
   name = "rut",
-  value = "", // ← CONTROLADO
-  onChange, // ← debe devolver el valor canónico (sin puntos, con guion y DV)
+  value = "",
+  onChange,
   onValidationChange,
   showValidation = true,
-  placeholder = "12345678-9",
+  placeholder = "12.345.678-9",
   className = "",
   inputClassName = "",
   disabled = false,
   required = false,
-  error,
   setRutError,
-  tipoDocumento = null, // Para saber si es factura
-  onEmpresaEncontrada = null, // Callback cuando se encuentra una empresa
-  empresasExistentes = [], // Lista de empresas en BD local
+  tipoDocumento = null,
+  onEmpresaEncontrada = null,
+  empresasExistentes = [],
 }) => {
-  // estado SOLO para el TEXTO formateado que se muestra
   const [display, setDisplay] = useState("");
 
-  // ---------- Helpers ----------
+  // Calcular dígito verificador
   const calculateVerifierDigit = (rutNumbers) => {
     const sequence = [2, 3, 4, 5, 6, 7];
     let sum = 0,
@@ -37,69 +35,87 @@ const RutInput = ({
     return String(r);
   };
 
-  const normalizeCanonical = (raw) => {
+  // Limpiar y normalizar (devuelve formato: 12345678-9)
+  const cleanRut = (raw) => {
     if (!raw) return "";
-    let v = String(raw).toUpperCase().replace(/\./g, "").replace(/\s+/g, "");
-    v = v.replace(/[^0-9K\-]/g, "");
-    if (!v.includes("-") && v.length > 1)
-      v = v.slice(0, -1) + "-" + v.slice(-1);
-    return v;
+
+    // Remover todo excepto números y K
+    let clean = String(raw)
+      .toUpperCase()
+      .replace(/[^0-9K]/g, "");
+
+    if (clean.length === 0) return "";
+    if (clean.length === 1) return clean;
+
+    // Separar: últimos caracteres son DV, el resto es el número
+    const dv = clean.slice(-1);
+    const numero = clean.slice(0, -1);
+
+    return `${numero}-${dv}`;
   };
 
-  const validateRut = (rutValue) => {
-    const canon = normalizeCanonical(rutValue).replace(/\./g, "");
-    const m = /^([0-9]{1,9})-([0-9K])$/.exec(canon);
-    if (!m) return false;
-    const base = m[1],
-      dv = m[2];
-    return calculateVerifierDigit(base) === dv;
+  // Formatear para mostrar (12.345.678-9)
+  const formatRut = (canonical) => {
+    if (!canonical) return "";
+
+    const parts = canonical.split("-");
+    if (parts.length !== 2) return canonical;
+
+    const numero = parts[0];
+    const dv = parts[1];
+
+    // Agregar puntos de miles
+    const numeroFormateado = numero.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return `${numeroFormateado}-${dv}`;
   };
 
-  // RUT empresarial (7-8 dígitos sin DV)
-  const validateRutEmpresarial = (rutValue) => {
-    if (!validateRut(rutValue)) return false;
-    const canon = normalizeCanonical(rutValue).replace(/\./g, "");
-    const base = canon.split("-")[0];
-    return base.length >= 7 && base.length <= 8;
+  // Validar RUT
+  const validateRut = (canonical) => {
+    if (!canonical) return false;
+
+    const parts = canonical.split("-");
+    if (parts.length !== 2) return false;
+
+    const numero = parts[0];
+    const dv = parts[1];
+
+    // Validar que número sea solo dígitos
+    if (!/^\d+$/.test(numero)) return false;
+
+    // Validar que DV sea número o K
+    if (!/^[0-9K]$/.test(dv)) return false;
+
+    // Validar longitud (1 a 9 dígitos)
+    if (numero.length < 1 || numero.length > 9) return false;
+
+    // Calcular y comparar DV
+    return calculateVerifierDigit(numero) === dv;
   };
 
-  const formatRut = (val) => {
-    const rutClean = String(val).replace(/[^0-9kK]/g, "");
-    if (rutClean.length <= 1) return rutClean;
-
-    const dv = rutClean.slice(-1).toUpperCase();
-    let digits = rutClean.slice(0, -1);
-    let result = "-" + dv;
-
-    if (digits.length > 6) {
-      const miles = digits.slice(-3);
-      const millones = digits.slice(-6, -3);
-      const billones = digits.slice(0, -6);
-      result =
-        (billones ? billones + "." : "") + millones + "." + miles + result;
-    } else {
-      while (digits.length > 3) {
-        result = "." + digits.slice(-3) + result;
-        digits = digits.slice(0, -3);
-      }
-      if (digits) result = digits + result;
-    }
-    return result;
+  // RUT empresarial (7-8 dígitos)
+  const validateRutEmpresarial = (canonical) => {
+    if (!validateRut(canonical)) return false;
+    const numero = canonical.split("-")[0];
+    return numero.length >= 7 && numero.length <= 8;
   };
 
   const esRutEmpresarial = () =>
     tipoDocumento && [33, 34, 43, 46, 56, 61].includes(tipoDocumento);
 
-  // ---------- Side effects ----------
-  // Mantener display sincronizado con value del padre
+  // Sincronizar display con value del padre
   useEffect(() => {
-    const canon = normalizeCanonical(value);
-    setDisplay(formatRut(canon));
+    if (value) {
+      const cleaned = cleanRut(value);
+      setDisplay(formatRut(cleaned));
+    } else {
+      setDisplay("");
+    }
   }, [value]);
 
-  // ---------- Empresa local / consulta simulada ----------
+  // Buscar empresa
   const buscarEmpresaLocal = (rut) => {
-    const canon = normalizeCanonical(rut).replace(/[.-]/g, "");
+    const canon = rut.replace(/[.-]/g, "");
     return (
       empresasExistentes.find(
         (emp) => emp.rut.replace(/[.-]/g, "") === canon
@@ -120,7 +136,7 @@ const RutInput = ({
         onEmpresaEncontrada?.(local);
         return local;
       }
-      await new Promise((r) => setTimeout(r, 1000)); // Simulación
+      await new Promise((r) => setTimeout(r, 1000));
       return null;
     } catch (e) {
       console.error("Error consultando empresa:", e);
@@ -130,40 +146,53 @@ const RutInput = ({
     }
   };
 
-  // ---------- Handlers ----------
+  // Handle change
   const handleChange = (e) => {
     const raw = e.target.value;
-    const canon = normalizeCanonical(raw); // ← valor que enviaremos al padre (sin puntos)
-    const formatted = formatRut(canon); // ← lo que se muestra
 
+    // Limpiar y normalizar
+    const canonical = cleanRut(raw);
+
+    // Formatear para mostrar
+    const formatted = formatRut(canonical);
     setDisplay(formatted);
 
-    const okRut = validateRut(canon);
-    const okEmp = esRutEmpresarial() ? validateRutEmpresarial(canon) : true;
+    // Validar
+    const okRut = validateRut(canonical);
+    const okEmp = esRutEmpresarial() ? validateRutEmpresarial(canonical) : true;
     const isValid = okRut && okEmp;
 
-    setRutError?.(!isValid && canon.length > 0);
+    setRutError?.(!isValid && canonical.length > 0);
     onValidationChange?.(isValid);
-    onChange?.(canon); // ← envía valor canónico al form
+
+    // Enviar valor canónico al padre (formato: 12345678-9)
+    onChange?.(canonical);
+
     if (!isValid) setEmpresaEncontrada(null);
   };
 
   const handleConsultarEmpresa = () => {
-    if (display && validateRutEmpresarial(display)) {
-      consultarEmpresa(display);
+    const canonical = cleanRut(display);
+    if (canonical && validateRutEmpresarial(canonical)) {
+      consultarEmpresa(canonical);
     }
   };
 
-  // ---------- Mensajes ----------
+  // Mensajes de validación
   const getValidationMessage = () => {
-    const has = display && normalizeCanonical(display).length >= 2;
-    if (!has) return null;
-    if (!validateRut(display)) return "RUT inválido";
-    if (esRutEmpresarial() && !validateRutEmpresarial(display))
+    const canonical = cleanRut(display);
+    if (!canonical || canonical.length < 3) return null;
+
+    if (!validateRut(canonical)) return "RUT inválido";
+
+    if (esRutEmpresarial() && !validateRutEmpresarial(canonical))
       return "RUT debe ser empresarial (7-8 dígitos)";
+
     if (esRutEmpresarial() && empresaEncontrada)
       return `✓ ${empresaEncontrada.razon_social || empresaEncontrada.name}`;
+
     if (esRutEmpresarial()) return "RUT válido - Empresa no encontrada";
+
     return "RUT válido";
   };
 
@@ -203,9 +232,11 @@ const RutInput = ({
           <button
             type="button"
             onClick={handleConsultarEmpresa}
-            disabled={!validateRutEmpresarial(display) || isConsulting}
+            disabled={
+              !validateRutEmpresarial(cleanRut(display)) || isConsulting
+            }
             className={`px-3 py-2 text-sm rounded-md transition-colors ${
-              validateRutEmpresarial(display) && !isConsulting
+              validateRutEmpresarial(cleanRut(display)) && !isConsulting
                 ? "bg-blue-600 text-white hover:bg-blue-700"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}

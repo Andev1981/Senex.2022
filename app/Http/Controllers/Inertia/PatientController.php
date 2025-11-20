@@ -158,8 +158,6 @@ class PatientController extends Controller
         }
     }
 
-
-
     public function show(Patient $patient)
     {
 
@@ -178,9 +176,12 @@ class PatientController extends Controller
                 'address.commune:id,name,province_id',
                 'address.province:id,name,region_id',
                 'address.region:id,name',
-                'treatments',
+                 'treatments' => fn($q) =>
+                    $q->orderByRaw("CASE WHEN status = 'Activo' THEN 0 ELSE 1 END")
+                        ->latest('id'),
                 'treatments.sessions',
-                'treatmentSessions',
+                'treatments.session_type',
+                'treatments.doctor'
             ])
             ->withExists([
                 'debts as has_due' => fn($q) => $q->whereIn('status', [
@@ -213,7 +214,7 @@ class PatientController extends Controller
 
         // ---- Tratamientos del paciente ----
         $treatments = Treatment::where('patient_id', $patient->id)
-            ->with('defaultSessionType')
+            ->with('session_type','doctor','sessions')
             ->orderByDesc('id')
             ->get();
 
@@ -234,18 +235,7 @@ class PatientController extends Controller
                 // orden más reciente arriba: por fecha y quizá por time si te sirve
                 ->orderByDesc('ai.date')
                 ->select([
-                    'ai.id',
-                    'ai.date',
-                    'ai.time',
-                    'ai.status',
-                    'ai.session_number',
-                    // Montos en CLP (enteros) según tu migración
-                    DB::raw('ai.patient_amount_clp as patient_amount_clp'),
-                    DB::raw('ai.doctor_amount_clp as doctor_amount_clp'),
-                    DB::raw('ai.clinic_amount_clp as clinic_amount_clp'),
-                    DB::raw('st.name as session_type_name'),
-                    DB::raw("CONCAT(p.name,' ',p.last_name) as patient_full"),
-                    DB::raw("CONCAT(d.name,' ',d.last_name) as doctor_full"),
+                    'ai.*',
                 ])
                 ->selectRaw('(COALESCE(ai.patient_amount_clp,0) - COALESCE(ai.doctor_amount_clp,0)) as total_senex')
                 ->get();
@@ -265,6 +255,7 @@ class PatientController extends Controller
 
 
         return Inertia::render('Patients/DetailPatient', compact(
+            'treatment',
             'patient',
             'payments',
             'sessions',
@@ -273,8 +264,6 @@ class PatientController extends Controller
             'provinces',
             'session_types',
             'doctors',
-            'treatments',
-            'treatment'
         ));
     }
 

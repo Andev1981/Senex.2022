@@ -6,31 +6,30 @@ use App\Models\Concerns\HasAddresses;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Doctor extends Model
 {
     use HasFactory, HasAddresses;
 
     protected $fillable = [
-        'avatar',
-        'rut',
-        'birth',
-        'phone',
-        'address_id',
-        'status',
         'user_id',
-        'branch_id',
         'name',
         'last_name',
         'rut',
+        'email',
+        'phone',
+        'birth_date',
+        'gender',
         'specialty',
-        'is_active',
+        'status',
+        'status_reason',
+        'status_changed_at'
     ];
 
-    protected $dates = ['birth'];
-
     protected $casts = [
-        'is_active' => 'bool',
+        'birth_date' => 'date',
+        'status_changed_at' => 'datetime',
     ];
 
     public function patientAssignments()
@@ -46,6 +45,32 @@ class Doctor extends Model
             ->withTimestamps();
     }
 
+    public function getAssignedPatientsAttribute()
+    {
+        return $this->patients;
+    }
+
+    public function sessions(){
+        return $this->hasMany(TreatmentSession::class);
+    }
+
+    public function sessionsMonth(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->sessions()
+                            ->whereMonth('date', now()->month)
+                            ->whereYear('date', now()->year)
+                            ->count()
+        );
+    }
+
+    public function getRevenueMonthAttribute()
+    {
+        return $this->sessions()
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->sum('doctor_amount');
+    }
 
     public function user()
     {
@@ -97,5 +122,7 @@ class Doctor extends Model
         'age',
         'email',
         'direccion',
+        'sessions_month',
+        'revenue_month'
     ];
 }

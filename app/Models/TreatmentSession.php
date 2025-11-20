@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TreatmentSession extends Model
 {
-
-
-    public const STATUS_SCHEDULED = 'scheduled';
-    public const STATUS_COMPLETED = 'completed';
-    public const STATUS_CANCELLED = 'cancelled';
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'treatment_id',
@@ -19,89 +19,299 @@ class TreatmentSession extends Model
         'doctor_id',
         'patient_id',
         'session_type_id',
-        'attended_at',
-        'status',
+        'room_id',
+        'branch_id',
         'session_number',
+        'month_session_number',
+        'date',
+        'time',
+        'duration',
+        'status',
+        // Evaluación del dolor
+        'pain_before',
+        'pain_after',
+        // ROM (Rango de Movimiento)
+        'rom_flexion_before',
+        'rom_flexion_after',
+        'rom_rotation_before',
+        'rom_rotation_after',
+        'rom_abduction_before',
+        'rom_abduction_after',
+        // Arrays JSON
+        'techniques',
+        'exercises',
+        // Notas
+        'notes',
+        'homework',
+        'next_goals',
+        // Montos
         'patient_amount',
         'doctor_amount',
         'clinic_amount',
-        'notes',
-        'meta',
     ];
 
     protected $casts = [
-        'attended_at'   => 'datetime',
-        'patient_amount' => 'decimal:2',
-        'doctor_amount' => 'decimal:2',
-        'clinic_amount' => 'decimal:2',
-        'meta'          => 'array',
+        'date' => 'date',
+        'time' => 'datetime:H:i',
+        'duration' => 'integer',
+        'pain_before' => 'integer',
+        'pain_after' => 'integer',
+        'rom_flexion_before' => 'integer',
+        'rom_flexion_after' => 'integer',
+        'rom_rotation_before' => 'integer',
+        'rom_rotation_after' => 'integer',
+        'rom_abduction_before' => 'integer',
+        'rom_abduction_after' => 'integer',
+        'techniques' => 'array',
+        'exercises' => 'array',
+        'patient_amount' => 'integer',
+        'doctor_amount' => 'integer',
+        'clinic_amount' => 'integer',
     ];
 
-    // ===== Relaciones =====
-    public function treatment()
+    /**
+     * Relaciones
+     */
+    public function treatment(): BelongsTo
     {
         return $this->belongsTo(Treatment::class);
     }
 
-    public function appointment()
+    public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
     }
 
-    public function doctor()
+    public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class);
     }
 
-    public function patient()
+    public function patient(): BelongsTo
     {
         return $this->belongsTo(Patient::class);
     }
 
-    public function sessionType()
+    public function sessionType(): BelongsTo
     {
         return $this->belongsTo(SessionType::class);
     }
 
-    public function payments()
+    public function room(): BelongsTo
     {
-        return $this->hasMany(PaymentTransaction::class);
+        return $this->belongsTo(Room::class);
     }
 
-    public function debt()
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function debt(): HasOne
     {
         return $this->hasOne(Debt::class);
     }
 
-    public function invoice()
+    /**
+     * Scopes
+     */
+    public function scopeScheduled($query)
     {
-        return $this->hasOne(Invoice::class);
+        return $query->where('status', 'Programada');
     }
 
-    public function planConsumptions()
+    public function scopeCompleted($query)
     {
-        return $this->hasMany(PlanSessionConsumption::class);
+        return $query->where('status', 'Completada');
     }
 
-    // ===== Scopes =====
-    public function scopeCompleted($q)
+    public function scopeCancelled($query)
     {
-        return $q->where('status', self::STATUS_COMPLETED);
-    }
-    public function scopeScheduled($q)
-    {
-        return $q->where('status', self::STATUS_SCHEDULED);
+        return $query->where('status', 'Cancelada');
     }
 
-    // ===== Helpers =====
-    public function getIsPaidAttribute(): bool
+    public function scopeForPatient($query, $patientId)
     {
-        if ($this->invoice && $this->invoice->isPaid()) return true;
-        if ($this->debt && $this->debt->balance <= 0) return true;
-        // también considerar planConsumptions (prepago)
-        if ($this->planConsumptions()->exists()) return true;
-        // pago directo sin deuda ni invoice
-        $sum = $this->payments()->where('status', 'completed')->sum('amount');
-        return (float)$sum >= (float)$this->patient_amount;
+        return $query->where('patient_id', $patientId);
+    }
+
+    public function scopeForTreatment($query, $treatmentId)
+    {
+        return $query->where('treatment_id', $treatmentId);
+    }
+
+    /**
+     * Accessors & Mutators
+     */
+    public function getPainImprovementAttribute(): int
+    {
+        if ($this->pain_before && $this->pain_after) {
+            return $this->pain_before - $this->pain_after;
+        }
+        return 0;
+    }
+
+    public function getPainImprovementPercentageAttribute(): float
+    {
+        if ($this->pain_before && $this->pain_before > 0) {
+            return round((($this->pain_before - $this->pain_after) / $this->pain_before) * 100, 1);
+        }
+        return 0;
+    }
+
+    public function getFormattedTimeAttribute(): string
+    {
+        return $this->time->format('H:i');
+    }
+
+    public function getRomAttribute(): array
+    {
+        return [
+            'rom_flexion' => $this->rom_flexion_after ?? $this->rom_flexion_before,
+            'rom_abduction' => $this->rom_abduction_after ?? $this->rom_abduction_before,
+            'rom_rotation' => $this->rom_rotation_after ?? $this->rom_rotation_before,
+        ];
+    }
+
+    /**
+     * Métodos de utilidad
+     */
+    public function isScheduled(): bool
+    {
+        return $this->status === 'Programada';
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === 'Completada';
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'Cancelada';
+    }
+
+    public function didNotAttend(): bool
+    {
+        return $this->status === 'No Asistió';
+    }
+
+    public function markAsCompleted(): void
+    {
+        $this->update(['status' => 'Completada']);
+        
+        // Incrementar sesiones completadas del tratamiento
+        if ($this->treatment) {
+            $this->treatment->incrementCompletedSessions();
+        }
+    }
+
+    public function markAsCancelled(): void
+    {
+        $this->update(['status' => 'Cancelada']);
+    }
+
+    public function markAsNoShow(): void
+    {
+        $this->update(['status' => 'No Asistió']);
+    }
+
+    public function calculatePainProgress(): float
+    {
+        if (!$this->pain_before) {
+            return 0;
+        }
+
+        $improvement = $this->pain_before - ($this->pain_after ?? 0);
+        return round(($improvement / $this->pain_before) * 100, 1);
+    }
+
+    public function getSessionSummary(): array
+    {
+        return [
+            'id' => $this->id,
+            'session_number' => $this->session_number,
+            'month_session_number' => $this->month_session_number,
+            'date' => $this->date->format('Y-m-d'),
+            'time' => $this->formatted_time,
+            'duration' => $this->duration,
+            'status' => $this->status,
+            'doctor' => $this->doctor ? [
+                'id' => $this->doctor->id,
+                'name' => $this->doctor->name,
+            ] : null,
+            'pain_metrics' => [
+                'before' => $this->pain_before,
+                'after' => $this->pain_after,
+                'improvement' => $this->pain_improvement,
+                'progress' => $this->pain_improvement_percentage,
+            ],
+            'rom' => $this->rom,
+            'techniques' => $this->techniques ?? [],
+            'exercises' => $this->exercises ?? [],
+            'notes' => $this->notes,
+            'homework' => $this->homework,
+            'next_goals' => $this->next_goals,
+        ];
+    }
+
+    /**
+     * Métodos para calcular números de sesión automáticamente
+     */
+    
+    /**
+     * Generar el próximo número de sesión general para el tratamiento
+     */
+    public static function generateNextSessionNumber(int $treatmentId): int
+    {
+        return (self::where('treatment_id', $treatmentId)->max('session_number') ?? 0) + 1;
+    }
+
+    /**
+     * Generar el próximo número de sesión del mes para el tratamiento
+     */
+    public static function generateNextMonthSessionNumber(int $treatmentId, string $date): int
+    {
+        $monthStart = Carbon::parse($date)->startOfMonth()->toDateString();
+        $monthEnd = Carbon::parse($date)->endOfMonth()->toDateString();
+        
+        return (self::where('treatment_id', $treatmentId)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->max('month_session_number') ?? 0) + 1;
+    }
+
+    /**
+     * Calcular y asignar números de sesión al crear
+     */
+    public function assignSessionNumbers(): void
+    {
+        // Asignar session_number si no está presente
+        if (!$this->session_number && $this->treatment_id) {
+            $this->session_number = self::generateNextSessionNumber($this->treatment_id);
+        }
+
+        // Asignar month_session_number si no está presente
+        if (!$this->month_session_number && $this->treatment_id && $this->date) {
+            $this->month_session_number = self::generateNextMonthSessionNumber(
+                $this->treatment_id, 
+                $this->date
+            );
+        }
+    }
+
+    /**
+     * Recalcular month_session_number cuando cambia la fecha
+     */
+    public function recalculateMonthSessionNumber(): void
+    {
+        if ($this->treatment_id && $this->date) {
+            $newMonthNumber = self::generateNextMonthSessionNumber(
+                $this->treatment_id, 
+                $this->date
+            );
+            
+            // Actualizar el número del mes manteniendo el número general
+            $this->update(['month_session_number' => $newMonthNumber]);
+        }
     }
 }

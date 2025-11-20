@@ -10,21 +10,18 @@ class PaymentAllocation extends Model
 
 
   protected $fillable = [
-    'tenant_id',
-    'payment_transaction_id',
+    'payment_id',
+    'treatment_session_id',
     'debt_id',
     'invoice_id',
     'amount',
   ];
 
-  protected $casts = [
-    'amount' => 'decimal:2',
-  ];
 
   // ===== Relaciones =====
   public function payment()
   {
-    return $this->belongsTo(PaymentTransaction::class, 'payment_transaction_id');
+    return $this->belongsTo(Payment::class);
   }
 
   public function debt()

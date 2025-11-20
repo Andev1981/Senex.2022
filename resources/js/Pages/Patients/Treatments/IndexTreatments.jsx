@@ -1,254 +1,231 @@
-import {
-  Activity,
-  Award,
-  CheckCircle,
-  Edit,
-  PlayCircle,
-  Repeat,
-  Target,
-  TrendingUp,
-} from "lucide-react";
-import React from "react";
+import { use, useEffect, useState } from "react";
+import { Clipboard, Plus, Target } from "lucide-react";
+import TreatmentCardMain from "./TreatmentPartials/TreatmentCardMain";
+import SideModal from "@/Components/SideModal";
+import TreatmentModal from "./TreatmentPartials/TreatmentModal";
+import IndexSessions from "./Sessions/IndexSessions";
+import SessionModal from "./Sessions/SessionModal";
+import SessionModalDelete from "./Sessions/SessionModalDelete";
 
-export default function IndexTreatments({ patient, treatments }) {
+export default function IndexTreatments({
+  patient,
+  session_types,
+  treatments,
+  sessions,
+  doctors,
+}) {
+  const isLoading = patient == null || treatments == null; // aún no llega la data
+  const isEmpty =
+    !isLoading && Array.isArray(treatments) && treatments.length === 0;
+
+  const [openTreatmentModal, setOpenTreatmentModal] = useState(false);
+  const [selectedTreatment, setSelectedTreatmentModal] = useState(() => {
+    // 1. Intenta tomar el primero InProgress
+    const inProgress = treatments.find((t) => t.status === "InProgress");
+    if (inProgress) return inProgress;
+
+    // 2. Sino, el más reciente (por fecha de creación o start_date)
+    if (treatments.length) {
+      return [...treatments].sort(
+        (a, b) => new Date(b.start_date) - new Date(a.start_date)
+      )[0];
+    }
+
+    // 3. Ninguno
+    return [];
+  });
+
+  const [openSessionModalShow, setOpenSessionModalShow] = useState(false);
+  const [openSessionModal, setOpenSessionModal] = useState(false);
+  const [selectedSession, setSelectedSession] = useState([]);
+
+  const [isDuplicate, setIsDuplicate] = useState(false);
+
+  const handleTreatmentModal = (treatment) => {
+    // Aquí iría la lógica para abrir el modal de tratamiento
+    setIsDuplicate(false);
+    if (treatment) {
+      setSelectedTreatmentModal(treatment);
+    } else {
+      setSelectedTreatmentModal([]);
+    }
+    setOpenTreatmentModal(true);
+  };
+
+  const handleOpenModalSession = (session, treatment) => {
+    // Aquí iría la lógica para abrir el modal de sesión
+    if (treatment) {
+      setSelectedTreatmentModal(treatment);
+    } else {
+      setSelectedTreatmentModal([]);
+    }
+
+    if (session) {
+      setSelectedSession(session);
+    } else {
+      setSelectedSession([]);
+    }
+    setOpenSessionModal(true);
+  };
+
+  const handleOpenModalSessionShow = (session) => {
+    // Aquí iría la lógica para abrir el modal de sesión
+
+    if (session) {
+      setSelectedSession(session);
+    } else {
+      setSelectedSession([]);
+    }
+    setOpenSessionModalShow(true);
+  };
+
   return (
-    <div>
-      {treatments.length == 0 ? (
-        <div className="space-y-6">Sin datos</div>
-      ) : (
-        <div className="space-y-6">
-          {treatments
-            .filter((t) => t.status === "Activo")
-            .map((treatment) => (
-              <div
-                key={treatment.id}
-                className="p-6 bg-white shadow-lg rounded-xl"
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-2xl font-bold text-gray-900">
-                        {treatment.name}
-                      </h2>
-                      <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-                        {treatment.status}
-                      </span>
-                    </div>
-                    <p className="mb-1 text-gray-600">{treatment.diagnosis}</p>
-                    <p className="text-sm text-gray-500">
-                      {treatment.kinesiologist}
-                    </p>
-                  </div>
-                  <button className="text-teal-600 hover:text-teal-700">
-                    <Edit className="w-5 h-5" />
-                  </button>
-                </div>
+    <div className="space-y-4">
+      {/* === Estado: CARGANDO === */}
+      {isLoading && (
+        <div className="flex items-center justify-center w-full p-6 text-sm text-gray-600 rounded-lg bg-gray-50">
+          <div className="grid gap-2 place-items-center">
+            {/* Ícono: latido suave y lento */}
+            <Target className="w-16 h-16 text-teal-500 heartbeat-slow" />
 
-                <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
-                  <div className="p-4 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
-                    <p className="mb-1 text-sm opacity-90">Sesiones</p>
-                    <p className="text-3xl font-bold">
-                      {treatment.completedSessions}/{treatment.totalSessions}
-                    </p>
-                    <div className="h-2 mt-2 rounded-full bg-white/20">
-                      <div
-                        className="h-2 transition-all bg-white rounded-full"
-                        style={{
-                          width: `${
-                            (treatment.completedSessions /
-                              treatment.totalSessions) *
-                            100
-                          }%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <p className="text-sm opacity-90">Reducción Dolor</p>
-                    </div>
-                    <p className="text-3xl font-bold">
-                      {treatment.progress.painReduction}%
-                    </p>
-                  </div>
-
-                  <div className="p-4 text-white bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Activity className="w-4 h-4" />
-                      <p className="text-sm opacity-90">Movilidad</p>
-                    </div>
-                    <p className="text-3xl font-bold">
-                      {treatment.progress.mobilityImprovement}%
-                    </p>
-                  </div>
-
-                  <div className="p-4 text-white bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Award className="w-4 h-4" />
-                      <p className="text-sm opacity-90">Fuerza</p>
-                    </div>
-                    <p className="text-3xl font-bold">
-                      {treatment.progress.strengthGain}%
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
-                  <div>
-                    <h3 className="flex items-center gap-2 mb-3 font-bold text-gray-900">
-                      <Target className="w-5 h-5 text-teal-600" />
-                      Objetivos del Tratamiento
-                    </h3>
-                    <div className="space-y-2">
-                      {treatment.objectives.map((obj, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <CheckCircle className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{obj}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="mb-3 font-bold text-gray-900">
-                      Información del Tratamiento
-                    </h3>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Inicio:</span>
-                        <span className="font-semibold">
-                          {new Date(treatment.startDate).toLocaleDateString(
-                            "es-CL"
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Frecuencia:</span>
-                        <span className="font-semibold">
-                          {treatment.frequency}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Fase Actual:</span>
-                        <span className="font-semibold text-teal-600">
-                          {treatment.currentPhase}
-                        </span>
-                      </div>
-                      {treatment.nextAppointment && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Próxima Sesión:</span>
-                          <span className="font-semibold text-blue-600">
-                            {new Date(
-                              treatment.nextAppointment
-                            ).toLocaleDateString("es-CL")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="flex items-center gap-2 mb-3 font-bold text-gray-900">
-                    <Repeat className="w-5 h-5 text-teal-600" />
-                    Ejercicios Asignados
-                  </h3>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {treatment.exercises.map((exercise, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 border border-teal-200 rounded-lg bg-teal-50"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="text-sm font-semibold text-gray-900">
-                            {exercise.name}
-                          </h4>
-                          {exercise.video && (
-                            <PlayCircle className="w-4 h-4 text-teal-600" />
-                          )}
-                        </div>
-                        <div className="flex gap-4 text-xs text-gray-600">
-                          <span className="font-medium">{exercise.sets}</span>
-                          <span>•</span>
-                          <span>{exercise.frequency}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-          {treatments.filter((t) => t.status === "Completado").length > 0 && (
-            <div className="p-6 bg-white shadow-lg rounded-xl">
-              <h2 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
-                <CheckCircle className="w-5 h-5 text-gray-600" />
-                Tratamientos Completados
-              </h2>
-              <div className="space-y-3">
-                {treatments
-                  .filter((t) => t.status === "Completado")
-                  .map((treatment) => (
-                    <div
-                      key={treatment.id}
-                      className="p-4 border-l-4 border-gray-400 rounded-r-lg bg-gray-50"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-bold text-gray-900">
-                            {treatment.name}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {treatment.diagnosis}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {treatment.kinesiologist}
-                          </p>
-                        </div>
-                        <span className="px-3 py-1 text-xs font-medium text-white bg-gray-600 rounded-full">
-                          {treatment.status}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
-                        <div>
-                          <p className="text-gray-600">Duración</p>
-                          <p className="font-semibold">
-                            {new Date(treatment.startDate).toLocaleDateString(
-                              "es-CL"
-                            )}{" "}
-                            -{" "}
-                            {new Date(treatment.endDate).toLocaleDateString(
-                              "es-CL"
-                            )}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Sesiones</p>
-                          <p className="font-semibold">
-                            {treatment.completedSessions}/
-                            {treatment.totalSessions}
-                          </p>
-                        </div>
-                      </div>
-                      {treatment.outcome && (
-                        <div className="p-3 mt-2 bg-white rounded-lg">
-                          <p className="text-sm text-gray-700">
-                            {treatment.outcome}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
+            {/* Texto con shimmer + puntitos que respiran */}
+            <p className="font-medium thinking-text">
+              Cargando historial
+              <span className="dots" aria-hidden="true">
+                <span>·</span>
+                <span>·</span>
+                <span>·</span>
+              </span>
+            </p>
+          </div>
         </div>
       )}
+
+      {/* === Estado: VACÍO === */}
+      {isEmpty && (
+        <EmptyData
+          handleOpenModalSession={handleOpenModalSession}
+          treatment={selectedTreatment ? selectedTreatment : []}
+        />
+      )}
+
+      {/* === Estado: CON DATOS === */}
+      {!isLoading && !isEmpty && (
+        <div>
+          <div className="grid grid-cols-4 gap-4">
+            <TreatmentCardMain
+              treatment={selectedTreatment}
+              handleTreatmentModal={handleTreatmentModal}
+            />
+            <div className="col-span-3">
+              {selectedTreatment !== null ? (
+                <IndexSessions
+                  sessions={sessions.filter(
+                    (s) => s.treatment_id === selectedTreatment.id
+                  )}
+                  handleOpenModalSession={handleOpenModalSession}
+                  handleOpenModalSessionShow={handleOpenModalSessionShow}
+                  treatment={selectedTreatment}
+                  setIsDuplicate={setIsDuplicate}
+                />
+              ) : (
+                <EmptyData
+                  handleOpenModalSession={handleOpenModalSession}
+                  treatment={selectedTreatment ? selectedTreatment : []}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <SideModal
+        open={openTreatmentModal}
+        onClose={() => setOpenTreatmentModal(false)}
+        title={"Tratamientos"}
+        description={
+          "Acá puede seleccionar otro tratamiento para ver sus detalles."
+        }
+        width="2xl" // sm, md, lg, xl, 2xl, 3xl, full
+      >
+        <TreatmentModal
+          treatments={treatments}
+          handleTreatmentModal={handleTreatmentModal}
+          setOpenTreatmentModal={setOpenTreatmentModal}
+        />
+      </SideModal>
+
+      <SideModal
+        open={openSessionModal}
+        onClose={() => setOpenSessionModal(false)}
+        title={
+          isDuplicate
+            ? "Duplicando Sesión"
+            : selectedSession?.id
+            ? "Editando Sesión"
+            : "Nueva Sesión"
+        }
+        description={
+          selectedSession?.id
+            ? "Edita los campos que necesites para la sesión."
+            : "Agrega los detalles de la nueva sesión."
+        }
+        width="3xl" // sm, md, lg, xl, 2xl, 3xl, full
+      >
+        <SessionModal
+          session={selectedSession}
+          setOpenSessionModal={setOpenSessionModal}
+          treatment={selectedTreatment}
+          doctors={doctors}
+          session_types={session_types}
+          patient={patient}
+          isDuplicate={isDuplicate}
+          afterSubmitReloadOnly={["treatments"]}
+        />
+      </SideModal>
+
+      <SideModal
+        open={openSessionModalShow}
+        onClose={() => setOpenSessionModalShow(false)}
+        title={"Eliminar Sesión"}
+        width="3xl" // sm, md, lg, xl, 2xl, 3xl, full
+      >
+        <SessionModalDelete
+          session={selectedSession}
+          setOpenSessionModalShow={setOpenSessionModalShow}
+        />
+      </SideModal>
     </div>
   );
 }
+
+const EmptyData = ({ handleOpenModalSession, treatment }) => {
+  return (
+    <div className="p-6 bg-white shadow-lg rounded-xl">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+          <Clipboard className="w-6 h-6 text-teal-600" /> Sesiones
+        </h2>
+        {treatment.length > 0 && (
+          <button
+            onClick={() => handleOpenModalSession([], treatment)}
+            className="flex items-center gap-2 px-4 py-2 text-white bg-teal-600 rounded-lg hover:bg-teal-700"
+          >
+            <Plus className="w-4 h-4" /> Registrar Sesión
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col items-center justify-center w-full p-8 text-center border border-gray-300 border-dashed bg-gray-50 rounded-xl">
+        <div className="p-4 mb-3 bg-white rounded-full shadow-sm">
+          <Target className="w-10 h-10 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-700">
+          Sin tratamientos registrados
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Cuando registres una evaluación o sesión, aparecerá aquí.
+        </p>
+      </div>
+    </div>
+  );
+};

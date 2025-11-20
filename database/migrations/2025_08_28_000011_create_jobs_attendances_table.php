@@ -33,9 +33,9 @@ return new class extends Migration
             $table->boolean('attended')->default(false);
 
             // Valores relacionados a comisiones (en centavos si aplica)
-            $table->unsignedInteger('patient_amount')->default(0);
-            $table->unsignedInteger('doctor_amount')->default(0);
-            $table->unsignedInteger('clinic_amount')->default(0);
+            $table->unsignedInteger('patient_amount_cl')->default(0);
+            $table->unsignedInteger('doctor_amount_cl')->default(0);
+            $table->unsignedInteger('clinic_amount_cl')->default(0);
 
             $table->text('notes')->nullable();
             $table->timestamps();

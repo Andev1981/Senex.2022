@@ -9,7 +9,6 @@ import {
   Home,
   Users,
   Calendar,
-  Clipboard,
   Activity,
   FileText,
   Receipt,
@@ -20,6 +19,7 @@ import {
   HelpCircle,
   Computer,
   List,
+  Box,
 } from "lucide-react";
 
 function Side({ sidebarOpen, setSidebarOpen }) {
@@ -30,19 +30,32 @@ function Side({ sidebarOpen, setSidebarOpen }) {
   const menuItems = useMemo(
     () => [
       { id: "/", label: "Dashboard", icon: Home, badge: null },
-      { id: "pacientes", label: "Pacientes", icon: Users, badge: "50" },
+      { id: "patients.index", label: "Pacientes", icon: Users, badge: "50" },
       { id: "doctors", label: "Kines", icon: Stethoscope, badge: "50" },
       { id: "boleta", label: "Boleta", icon: FileText, badge: "8" },
       { id: "agenda", label: "Agenda", icon: Calendar, badge: null },
       { id: "tratamientos", label: "Tratamientos", icon: List, badge: null },
       { id: "pos", label: "POS", icon: Computer, badge: null },
-      /*{
-        id: "tratamientos",
-        label: "Tratamientos",
-        icon: Activity,
+      {
+        id: "sessions.types",
+        label: "Tipo de Sesiones",
+        icon: Receipt,
+        badge: null,
+      },
+      {
+        id: "insurance-companies.index",
+        label: "Aseguradoras",
+        icon: Box,
         badge: "12",
       },
       {
+        id: "health-insurers.index",
+        label: "Isapres",
+        icon: Activity,
+        badge: null,
+      },
+      { id: "plans.index", label: "Planes", icon: Package, badge: null },
+      /*{
         id: "documentos", // si no es una ruta real, deja como contenedor
         label: "Documentos",
         icon: FileText,
@@ -69,8 +82,8 @@ function Side({ sidebarOpen, setSidebarOpen }) {
 
   const bottomMenuItems = useMemo(
     () => [
-      { id: "configuracion", label: "Configuración", icon: Settings },
-      { id: "ayuda", label: "Ayuda", icon: HelpCircle },
+      /*  { id: "configuracion", label: "Configuración", icon: Settings }, */
+      /* { id: "ayuda", label: "Ayuda", icon: HelpCircle }, */
     ],
     []
   );

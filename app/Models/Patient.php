@@ -6,6 +6,7 @@ use App\Models\Concerns\HasAddresses;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Patient extends Model
 {
@@ -192,6 +193,13 @@ class Patient extends Model
         return $this->hasOne(Attendance::class)->latestOfMany('attended_at'); // o created_at
     }
 
+    public function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->name . ' ' . $this->last_name
+        );
+    }
+
     public function openDebts()
     {
         return $this->debts()->whereIn('debts.status', [
@@ -203,6 +211,7 @@ class Patient extends Model
 
     protected $appends = [
         'age',
-        'bmi'
+        'bmi',
+        'full_name'
     ];
 }

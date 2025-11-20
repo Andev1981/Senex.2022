@@ -36,5 +36,6 @@ class AppServiceProvider extends ServiceProvider
         Carbon::setLocale(config('app.locale'));
         /*      setlocale(LC_ALL, 'es_CL', 'es', 'ES'); */
         PaymentAllocation::observe(PaymentAllocationObserver::class);
+        
     }
 }

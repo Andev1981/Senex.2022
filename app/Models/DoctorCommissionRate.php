@@ -23,7 +23,7 @@ class DoctorCommissionRate extends Model
   ];
 
   protected $casts = [
-    'commission_value' => 'decimal:2',
+    'commission_value' => 'integer',
     'effective_from'   => 'date',
     'effective_until'  => 'date',
     'is_active'        => 'boolean',

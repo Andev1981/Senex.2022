@@ -39,7 +39,11 @@ use App\Http\Controllers\Inertia\{
 use App\Http\Controllers\{
   HomeController,
   AddressController,
-  PatientContactController,
+    HealthInsurerController,
+    InsuranceCompanyController,
+    PatientContactController,
+    PlanController,
+    TreatmentSessionController,
 };
 
 //Reoptimized class loader:
@@ -93,6 +97,10 @@ Route::get('storage-link', function () {
 
 require __DIR__ . '/auth.php';
 
+Route::post('/heartbeat', function() {
+    return response()->json(['status' => 'ok']);
+})->name('heartbeat');
+
 Route::group(['middleware' => ['auth']], function () {
 
 
@@ -100,7 +108,7 @@ Route::group(['middleware' => ['auth']], function () {
 
   /* Rutas React Inertia */
   /* pacientes */
-  Route::get('pacientes', [PatientController::class, 'index'])->name('pacientes');
+ /*  Route::get('pacientes', [PatientController::class, 'index'])->name('pacientes'); */
   Route::get('pacientes/{patient}', [PatientController::class, 'show'])->name('pacientes.show');
   Route::post('pacientes-update/{patient}', [PatientController::class, 'update'])->name('pacientes.update');
   Route::post('pacientes-store', [PatientController::class, 'store'])->name('pacientes.store');
@@ -112,7 +120,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   Route::post('patients-documents', [PatientController::class, 'document_post'])->name('patient.documents.store');
-  Route::resource('treatment-sessions', PatientController::class)->names('treatment_sessions');
+  //Route::resource('treatment-sessions', PatientController::class)->names('treatment_sessions');
   Route::resource('payments', PatientController::class)->names('payments');
   Route::resource('patients', PatientController::class)->names('patients');
   Route::resource('addresses', AddressController::class)->names('addresses');
@@ -124,6 +132,25 @@ Route::group(['middleware' => ['auth']], function () {
   Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update');
 
 
+  Route::post('patients/treatments', [TreatmentController::class, 'store'])->name('patients.treatments.store');
+  Route::patch('patients/{treatment}/treatments', [TreatmentController::class, 'update'])->name('patients.treatments.update');
+
+
+
+  // CRUD básico de treatment sessions
+    Route::resource('treatment-sessions', TreatmentSessionController::class)
+        ->names('treatment_sessions');
+    
+    // Rutas adicionales para funcionalidad avanzada
+    Route::post('/treatment-sessions/bulk-update', [TreatmentSessionController::class, 'bulkUpdate'])
+        ->name('treatment_sessions.bulk_update');
+    
+    Route::get('/treatment-sessions/{session}/stats', [TreatmentSessionController::class, 'getSessionStatistics'])
+        ->name('treatment_sessions.stats');
+    
+    // Crear sesión desde appointment
+    Route::get('/treatment-sessions/create-from-appointment/{appointment}', [TreatmentSessionController::class, 'createFromAppointment'])
+        ->name('treatment_sessions.create_from_appointment');
 
   /* kines */
   Route::get('doctors', [DoctorController::class, 'index'])->name('doctors');
@@ -136,10 +163,181 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   /* Treatments */
-  Route::resource('treatments', TreatmentController::class)->names('treatments');
+/*   Route::resource('treatments', TreatmentController::class)->names('treatments');
+ */
 
 
 
+
+/*
+|--------------------------------------------------------------------------
+| RUTAS PARA TRATAMIENTOS Y SESIONES - PATRÓN MIXTO
+|--------------------------------------------------------------------------
+| 
+| PATRÓN MIXTO (Hybrid Pattern):
+| - GET requests -> Inertia::render() (navegación SEO-friendly)
+| - POST/PUT/DELETE requests -> JsonResponse (manejo de formularios modales)
+|
+| Estructura de URLs:
+| - /patients/{patient}/treatments - Lista de tratamientos del paciente
+| - /treatments/{treatment} - Detalle de un tratamiento específico
+| - /patients/{patient}/sessions - Lista de sesiones del paciente  
+| - /sessions/{session} - Detalle de una sesión específica
+|
+*/
+
+// =============================================================================
+// RUTAS DE TRATAMIENTOS
+// =============================================================================
+
+/**
+ * RUTAS DE NAVEGACIÓN (GET) - Inertia::render()
+ * Estas rutas devuelven vistas completas para navegación tradicional
+ */
+
+ Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
+
+Route::get('/patients/{patient}/treatments', [TreatmentController::class, 'index'])
+    ->name('patients.treatments.index');
+
+Route::get('/treatments/{treatment}', [TreatmentController::class, 'show'])
+    ->name('patients.treatments.show');
+
+/**
+ * RUTAS DE API (POST/PUT/DELETE) - JsonResponse
+ * Estas rutas manejan formularios modales sin recargar la página
+ */
+Route::post('/treatments', [TreatmentController::class, 'store'])
+    ->name('treatments.store');
+
+Route::put('/treatments/{treatment}', [TreatmentController::class, 'update'])
+    ->name('treatments.update');
+
+Route::patch('/treatments/{treatment}', [TreatmentController::class, 'update'])
+    ->name('treatments.update');
+
+Route::delete('/treatments/{treatment}', [TreatmentController::class, 'destroy'])
+    ->name('treatments.destroy');
+
+// =============================================================================
+// RUTAS DE SESIONES
+// =============================================================================
+
+/**
+ * RUTAS DE NAVEGACIÓN (GET) - Inertia::render()
+ */
+Route::get('/patients/{patient}/sessions', [TreatmentSessionController::class, 'index'])
+    ->name('sessions.index');
+
+Route::get('/sessions/{session}', [TreatmentSessionController::class, 'show'])
+    ->name('sessions.show');
+
+/**
+ * RUTAS DE API (POST/PUT/DELETE) - JsonResponse
+ */
+Route::post('/sessions', [TreatmentSessionController::class, 'store'])
+    ->name('sessions.store');
+
+Route::put('/sessions/{session}', [TreatmentSessionController::class, 'update'])
+    ->name('sessions.update');
+
+Route::delete('/sessions/{session}', [TreatmentSessionController::class, 'destroy'])
+    ->name('sessions.destroy');
+
+/* Route::patch('/sessions/{session}', [TreatmentSessionController::class, 'update'])
+    ->name('sessions.update'); */
+
+    
+/* Payments */
+Route::post('/payments', [PaymentsController::class, 'store'])
+    ->name('payments.store');
+
+
+
+/* Session Type */
+Route::get('/session-types',[SessionTypeController::class, 'index'])->name('sessions.types');
+
+Route::post('/session-types',[SessionTypeController::class, 'store'])->name('sessions.types.store');
+
+Route::put('/session-types/{session_type}',[SessionTypeController::class, 'update'])->name('sessions.types.update');
+
+Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'destroy'])->name('sessions.types.destroy');
+
+
+
+
+/* Doctors Kine */
+Route::prefix('doctors')->name('doctors.')->group(function () {
+
+    Route::post('/',[DoctorController::class, 'store'])->name('store');
+
+    Route::put('/{doctor}',[DoctorController::class, 'update'])->name('update');
+
+    // Comisiones
+    Route::post('{doctor}/commission-rules', [DoctorController::class, 'updateCommissionRules'])
+        ->name('commission-rules.update');
+    
+    // Asignación de pacientes
+    Route::post('{doctor}/patients/assign', [DoctorController::class, 'assignPatient'])
+        ->name('patients.assign');
+    Route::delete('{doctor}/patients/{patient}', [DoctorController::class, 'unassignPatient'])
+        ->name('patients.unassign');
+    
+    // Toggle activo/inactivo
+    Route::patch('{doctor}/toggle-active', [DoctorController::class, 'toggleActive'])
+        ->name('toggle-active');
+});
+
+
+
+  Route::resource('health-insurers', HealthInsurerController::class)->names('health-insurers');
+  Route::resource('insurance-companies', InsuranceCompanyController::class)->names('insurance-companies');
+  Route::resource('plans', PlanController::class)->names('plans');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =============================================================================
+// RUTAS ADICIONALES PARA OPERACIONES ESPECÍFICAS
+// =============================================================================
+
+// Completar sesión
+Route::put('/sessions/{session}/complete', [TreatmentSessionController::class, 'complete'])
+    ->name('sessions.complete');
+
+// Cancelar sesión
+Route::put('/sessions/{session}/cancel', [TreatmentSessionController::class, 'cancel'])
+    ->name('sessions.cancel');
+
+// Duplicar sesión
+Route::post('/sessions/{session}/duplicate', [TreatmentSessionController::class, 'duplicate'])
+    ->name('sessions.duplicate');
+
+// Recalcular KPIs del tratamiento
+Route::post('/treatments/{treatment}/recalculate-kpis', [TreatmentController::class, 'recalculateKPIs'])
+    ->name('treatments.recalculate-kpis');
+
+// =============================================================================
+// RUTAS DE API PARA BÚSQUEDAS Y FILTROS
+// =============================================================================
+
+// API para obtener tratamientos filtrados de un paciente
+Route::get('/api/patients/{patient}/treatments', [TreatmentController::class, 'apiIndex'])
+    ->name('api.treatments.index');
+
+// API para obtener resumen de sesiones de un paciente
+Route::get('/api/patients/{patient}/sessions/summary', [TreatmentSessionController::class, 'summary'])
+    ->name('api.sessions.summary');
 
 
 

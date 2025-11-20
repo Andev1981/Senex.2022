@@ -5,121 +5,255 @@ namespace App\Http\Controllers\Inertia;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTreatmentRequest;
 use App\Http\Requests\UpdateTreatmentRequest;
+use App\Models\Commune;
+use App\Models\Debt;
+use App\Models\Doctor;
 use App\Models\Treatment;
-use Illuminate\Support\Facades\DB;
+use App\Models\Patient;
+use App\Models\Payment;
+use App\Models\Province;
+use App\Models\Region;
+use App\Models\SessionType;
+use App\Models\TreatmentSession;
+use App\Services\TreatmentService;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class TreatmentController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * INDEX - GET /patients/{patient}/treatments
+     * Retorna vista Inertia para mostrar lista de tratamientos
      */
-    public function index()
+    public function index(Patient $patient): Response
     {
-        //
+        $treatments = Treatment::where('patient_id', $patient->id)
+            ->with(['sessionType', 'doctor', 'sessions', 'sessions.doctor'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $sessions = TreatmentSession::where('patient_id', $patient->id)
+            ->with(['doctor', 'treatment','debt'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $payments = Payment::where('patient_id', $patient->id)->where('status','completed')
+->orderBy('created_at', 'desc')
+            ->get();
+
+
+        if($patient->address !== null){
+            $address = $patient->address->load(['region', 'province', 'commune']);
+         }else{
+            $address = null;
+        }
+
+        $vital = $patient->latestVital;
+        
+        $session_types = SessionType::all();
+        
+        $provinces = Province::all();
+        $communes  = Commune::all();
+        $regions   = Region::all();
+        $doctors   = Doctor::all();
+
+
+        return Inertia::render('Patients/DetailPatient', [
+            'patient' => $patient,
+            'treatments' => $treatments,
+            'sessions' => $sessions,
+            'payments' => $payments,
+            'provinces' => $provinces,
+            'communes' => $communes,
+            'regions' => $regions,
+            'address' => $address,
+            'vital' => $vital,
+            'doctors' => $doctors,
+            'session_types' => $session_types,
+        ]);
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
+     * SHOW - GET /treatments/{treatment}
+     * Retorna vista Inertia para mostrar un tratamiento específico
      */
-    public function create()
+    public function show(Treatment $treatment): Response
     {
-        //
+        $treatment->load([
+            'patient',
+            'sessionType', 
+            'doctor',
+            'sessions' => function ($query) {
+                $query->orderBy('date', 'desc');
+            }
+        ]);
+
+        return Inertia::render('Patients/Treatments/Show', [
+            'treatment' => $treatment,
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \App\Http\Requests\StoreTreatmentSessionRequest  $request
-     * @return \Illuminate\Http\Response
+     * STORE - POST /treatments
+     * Retorna JsonResponse para manejo desde formularios modales
      */
     public function store(StoreTreatmentRequest $request)
     {
-
-        $validated = $request->validated();
-
         try {
-            DB::transaction(function () use (&$validated) {
-                $isActive = ($validated['status'] === 'active');
+            /* $treatment = Treatment::create($request->validated()); */
+            $treatment = app(TreatmentService::class)->createTreatment($request->validated());
 
-                if ($isActive) {
-                    // Desactivar anteriores activos del mismo paciente, con lock
-                    $prevActives = Treatment::where('patient_id', $validated['patient_id'])
-                        ->where('status', 'active')
-                        ->lockForUpdate()
-                        ->get();
-
-                    foreach ($prevActives as $t) {
-                        $t->update([
-                            'status'   => 'inactive',
-                        ]);
-                    }
-                }
-
-                Treatment::create($validated);
-
-                session()->flash('message', 'Tratamiento creado correctamente.');
+            if ($treatment) {
+                session()->flash('message', 'Tratamiento creado.');
                 session()->flash('type', 'success');
-            }, 3);
+            
+            }else{
+                session()->flash('message', 'Tratamiento no se pudo crear.');
+                session()->flash('type', 'error');
+            }
 
-            return back();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            report($e);
+        } catch (\Exception $e) {
 
-            session()->flash('message', 'Error al crear el Tratamiento.');
-            session()->flash('type', 'error');
-
-
-            return back();
+            Log::error('Error creating treatment: ' . $e->getMessage());
+                session()->flash('message', 'Tratamiento no se pudo crear');
+                session()->flash('type', 'error');
+            
         }
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\TreatmentSession  $treatmentSession
-     * @return \Illuminate\Http\Response
+     * UPDATE - PUT/PATCH /treatments/{treatment}
+     * Retorna JsonResponse para manejo desde formularios modales
      */
-    public function show(Treatment $treatmentSession)
+    public function update(UpdateTreatmentRequest $request, Treatment $treatment)
     {
-        //
+        
+        try {
+            $treatment->update($request->validated());
+
+            if (!$treatment) {
+                session()->flash('message', 'Tratamiento actualizado.');
+                session()->flash('type', 'success');
+            
+            }
+
+        } catch (\Exception $e) {
+              if (!$treatment) {
+                session()->flash('message', 'Tratamiento no se pudo actualizar.');
+                session()->flash('type', 'error');
+            
+            }
+        }
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\TreatmentSession  $treatmentSession
-     * @return \Illuminate\Http\Response
+     * DESTROY - DELETE /treatments/{treatment}
+     * Retorna JsonResponse para manejo desde modales
      */
-    public function edit(Treatment $treatmentSession)
+    public function destroy(Treatment $treatment)
     {
-        //
+        try {
+            // No permitir eliminar si tiene sesiones completadas
+            $completedSessions = $treatment->sessions()->completed()->count();
+
+            if ($completedSessions > 0) {
+
+                session()->flash('message', 'No se puede eliminar un tratamiento con sesiones completadas.');
+                session()->flash('type', 'error');
+            
+            }
+
+            $treatment->delete();
+
+            session()->flash('message', 'Eliminado correctamente.');
+            session()->flash('type', 'success');
+
+        } catch (\Exception $e) {
+             session()->flash('message', 'No se puede eliminar tratamiento.');
+            session()->flash('type', 'error');
+        }
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\UpdateTreatmentSessionRequest  $request
-     * @param  \App\Models\TreatmentSession  $treatmentSession
-     * @return \Illuminate\Http\Response
+     * AJAX - GET /api/patients/{patient}/treatments
+     * Para búsquedas y filtrados en tiempo real
      */
-    public function update(UpdateTreatmentRequest $request, Treatment $treatmentSession)
+    public function apiIndex(Request $request, Patient $patient)
     {
-        //
+        $query = Treatment::where('patient_id', $patient->id)
+            ->with(['sessionType', 'doctor']);
+
+        // Filtros
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('diagnosis', 'like', "%{$search}%");
+            });
+        }
+
+        $treatments = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'treatments' => $treatments,
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\TreatmentSession  $treatmentSession
-     * @return \Illuminate\Http\Response
+     * UPDATE KPIs - PUT /api/treatments/{treatment}/kpis
+     * Endpoint específico para actualizar KPIs desde modal
      */
-    public function destroy(Treatment $treatmentSession)
+    public function updateKPIs(UpdateTreatmentRequest $request, Treatment $treatment): JsonResponse{
+        try {
+            // Solo actualizar campos de KPIs
+            $kpiData = Arr::only($request->validated(), ['pain_reduction', 'mobility_improvement', 'strength_gain', 'completed_sessions', 'total_sessions']);
+            $treatment->update($kpiData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'KPIs actualizados exitosamente',
+                'treatment' => $treatment,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar KPIs: ' . $e->getMessage(),
+                'errors' => ['general' => ['Error interno del servidor']],
+            ], 500);
+        }
+    }
+
+    /**
+     * RECALCULATE KPIs - POST /api/treatments/{treatment}/recalculate-kpis
+     * Recalcular KPIs basados en sesiones completadas
+     */
+    public function recalculateKPIs(Treatment $treatment): JsonResponse
     {
-        //
+        try {
+            $kpis = $treatment->calculateKPIs();
+            $treatment->update($kpis);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'KPIs recalculados exitosamente',
+                'treatment' => $treatment->fresh(),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al recalcular KPIs: ' . $e->getMessage(),
+                'errors' => ['general' => ['Error interno del servidor']],
+            ], 500);
+        }
     }
 }

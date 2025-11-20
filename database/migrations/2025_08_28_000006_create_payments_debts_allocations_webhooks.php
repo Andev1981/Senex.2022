@@ -18,15 +18,15 @@ return new class extends Migration {
       $t->foreignId('treatment_id')->nullable()->constrained()->nullOnDelete();
       $t->foreignId('treatment_session_id')->nullable()->constrained()->nullOnDelete();
 
-      $t->date('date')->index();
-      $t->string('concept');
+      $t->date('payment_date')->index();
+      $t->string('transaction_reference')->nullable();
 
       // Dinero en CLP (enteros)
       $t->unsignedBigInteger('amount_clp');                // total cobrado
       $t->unsignedBigInteger('copay_clp')->default(0);     // copago paciente
       $t->unsignedBigInteger('insurance_covered_clp')->default(0); // cubierto por isapre/seguro
 
-      $t->enum('payment_method', ['webpay', 'cash', 'transfer', 'insurance', 'other']);
+      $t->enum('payment_method', ['webpay_credit','webpay_debit', 'cash', 'transfer', 'paycheck', 'other']);
       $t->enum('status', ['pending', 'completed', 'failed', 'refunded', 'void'])->default('pending');
       $t->dateTime('paid_at')->nullable();
 
@@ -70,6 +70,7 @@ return new class extends Migration {
       $t->id();
       $t->foreignId('payment_id')->constrained()->cascadeOnDelete();
       $t->foreignId('debt_id')->nullable()->constrained()->cascadeOnDelete();
+      $t->foreignId('invoice_id')->nullable()->constrained()->cascadeOnDelete();
 
       $t->unsignedBigInteger('amount');
       $t->timestamps();

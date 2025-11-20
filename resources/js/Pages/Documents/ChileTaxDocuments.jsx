@@ -395,7 +395,7 @@ export default function ChileTaxDocuments() {
       <div className="min-h-screen p-4 bg-gray-50">
         {/* Header */}
         <div className="mb-4 text-white shadow-sm bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl">
-          <div className="px-4 py-6 mx-auto max-w-7xl">
+          <div className="px-4 py-6 mx-auto">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl">
@@ -427,7 +427,7 @@ export default function ChileTaxDocuments() {
           </div>
 
           {/* Tabs */}
-          <div className="px-4 mx-auto max-w-7xl">
+          <div className="px-4 mx-auto">
             <div className="flex gap-2 pb-0 -mb-px overflow-x-auto">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -450,7 +450,7 @@ export default function ChileTaxDocuments() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto">
           {/* Dashboard Cards */}
           <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
             <div className="p-6 text-white shadow-sm rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">

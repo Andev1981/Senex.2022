@@ -15,6 +15,7 @@ class Debt extends Model
   public const STATUS_OVERDUE = 'overdue';
 
   protected $fillable = [
+    'patient_id',
     'treatment_session_id',
     'original_amount',
     'paid_amount',
@@ -24,10 +25,9 @@ class Debt extends Model
   ];
 
   protected $casts = [
-    'original_amount' => 'decimal:2',
-    'paid_amount'     => 'decimal:2',
     'due_date'        => 'date',
   ];
+
 
   // ===== Relaciones =====
   public function treatmentSession()
@@ -75,5 +75,12 @@ class Debt extends Model
   public function scopeOpen($q)
   {
     return $q->whereIn('debts.status', [self::STATUS_PENDING, self::STATUS_PARTIAL, self::STATUS_OVERDUE]);
+  }
+
+  protected $appends = ['remaining_amount'];
+
+  public function getRemainingAmountAttribute(): float
+  {
+      return max(0, $this->original_amount - $this->paid_amount);
   }
 }

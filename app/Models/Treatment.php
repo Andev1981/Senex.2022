@@ -2,105 +2,178 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Treatment extends Model
 {
-
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'patient_id',
-        'doctor_id',
         'session_type_id',
+        'default_session_type_id',
+        'patient_id', 
+        'doctor_id',
         'diagnosis',
-        'planned_sessions',
-        'is_indefinite',
-        'evaluation_required',
-        'status',
+        'description',
         'start_date',
         'end_date',
-        'notes',
+        'status',
+        'total_sessions',
+        'completed_sessions',
+        'frequency',
+        'frequency_time',
+        'is_indefinite',
+        'current_phase',
+        'objectives',
+        'outcome',
+        'next_appointment',
+        // KPIs
+        'pain_reduction',
+        'mobility_improvement', 
+        'strength_gain',
     ];
 
     protected $casts = [
-        'is_indefinite'       => 'boolean',
-        'evaluation_required' => 'boolean',
-        'start_date'          => 'date',
-        'end_date'            => 'date',
-        'notes'                => 'array',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'next_appointment' => 'datetime',
+        'objectives' => 'array',
+        'is_indefinite' => 'boolean',
+        'total_sessions' => 'integer',
+        'completed_sessions' => 'integer',
+        'pain_reduction' => 'integer',
+        'mobility_improvement' => 'integer',
+        'strength_gain' => 'integer',
     ];
 
-    /** Estados sugeridos */
-    public const STATUS_ACTIVE     = 'active';
-    public const STATUS_COMPLETED  = 'completed';
-    public const STATUS_PAUSED     = 'paused';
-    public const STATUS_INDEFINITE = 'indefinite';
-    public const STATUS_CANCELLED  = 'cancelled';
+    /**
+     * Relaciones
+     */
+    public function sessionType(): BelongsTo
+    {
+        return $this->belongsTo(SessionType::class);
+    }
 
-    /* ------------------- Relaciones ------------------- */
-    public function patient()
+    public function patient(): BelongsTo
     {
         return $this->belongsTo(Patient::class);
     }
 
-    public function doctor()
+    public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class);
     }
 
-    public function defaultSessionType()
-    {
-        return $this->belongsTo(SessionType::class, 'session_type_id');
-    }
-
-    public function sessions()
+    public function sessions(): HasMany
     {
         return $this->hasMany(TreatmentSession::class);
     }
 
-    /* ------------------- Scopes útiles ------------------- */
-    public function scopeActive($q)
+    /**
+     * Scopes
+     */
+    public function scopeEvaluation($query)
     {
-        return $q->where('status', self::STATUS_ACTIVE);
+        return $query->where('status', 'Evaluation');
     }
 
-    public function scopeForPatient($q, int $patientId)
+    public function scopeActive($query)
     {
-        return $q->where('patient_id', $patientId);
+        return $query->where('status', 'InProgress');
     }
 
-    public function scopeForDoctor($q, int $doctorId)
+    public function scopeCancelled($query)
     {
-        return $q->where('doctor_id', $doctorId);
+        return $query->where('status', 'Cancelled');
     }
 
-    /* ------------------- Helpers de negocio ------------------- */
-
-    /** Total de sesiones registradas (completadas o no) */
-    public function sessionsCount(): int
+    public function scopePaused($query)
     {
-        // si tienes status en TreatmentSession, puedes filtrar por 'completed'
-        return $this->sessions()->count();
+        return $query->where('status', 'Paused');
     }
 
-    /** ¿Está abierto para registrar nuevas sesiones? */
-    public function isOpen(): bool
+    public function scopeCompleted($query)
     {
-        if ($this->status === self::STATUS_CANCELLED || $this->status === self::STATUS_COMPLETED) {
-            return false;
+        return $query->where('status', 'Completed');
+    }
+
+    public function scopeForPatient($query, $patientId)
+    {
+        return $query->where('patient_id', $patientId);
+    }
+
+    /**
+     * Accessors & Mutators
+     */
+    public function getProgressPercentageAttribute(): float
+    {
+        if ($this->total_sessions && $this->total_sessions > 0) {
+            return round(($this->completed_sessions / $this->total_sessions) * 100, 1);
         }
-        if ($this->is_indefinite) return true;
-
-        return is_null($this->planned_sessions) || $this->sessionsCount() < (int) $this->planned_sessions;
+        return 0;
     }
 
-    /** Progreso calculado (para definidos) */
-    public function progress(): ?float
+    public function getNextSessionNumberAttribute(): int
     {
-        if ($this->is_indefinite || !$this->planned_sessions) return null;
-        $done = $this->sessionsCount();
-        return $this->planned_sessions > 0 ? round(($done / $this->planned_sessions) * 100, 1) : null;
+        return ($this->completed_sessions ?? 0) + 1;
+    }
+
+    /**
+     * Métodos de utilidad
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === 'Completado';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'Activo';
+    }
+
+    public function incrementCompletedSessions(): void
+    {
+        $this->increment('completed_sessions');
+        
+        // Si completó todas las sesiones, marcar como completado
+        if ($this->completed_sessions >= $this->total_sessions) {
+            $this->update(['status' => 'Completado']);
+        }
+    }
+
+    public function calculateKPIs(): array
+    {
+        $sessions = $this->sessions()->completed()->get();
+        
+        if ($sessions->isEmpty()) {
+            return [
+                'pain_reduction' => 0,
+                'mobility_improvement' => 0,
+                'strength_gain' => 0,
+            ];
+        }
+
+        $totalPainReduction = 0;
+        $totalMobilityImprovement = 0;
+        $totalStrengthGain = 0;
+
+        foreach ($sessions as $session) {
+            if ($session->pain_before && $session->pain_after) {
+                $totalPainReduction += (($session->pain_before - $session->pain_after) / $session->pain_before) * 100;
+            }
+            // ROM y otros KPIs se calcularían aquí según el tipo de tratamiento
+        }
+
+        $count = $sessions->count();
+
+        return [
+            'pain_reduction' => round($totalPainReduction / $count, 1),
+            'mobility_improvement' => round($totalMobilityImprovement / $count, 1),
+            'strength_gain' => round($totalStrengthGain / $count, 1),
+        ];
     }
 }

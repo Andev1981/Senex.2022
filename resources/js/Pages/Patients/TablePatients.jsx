@@ -24,19 +24,12 @@ import {
   Filter,
   X,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import TablePagination from "@/Components/TablePagination";
 import { route } from "ziggy-js";
 import { useForm } from "@inertiajs/react";
-import {
-  meses,
-  patientStatuses,
-  debtStatuses,
-  DEBT_STATUS_OPTIONS,
-  PATIENT_STATUS_OPTIONS,
-} from "@/utils/status";
+import { meses, patientStatuses, debtStatuses } from "@/utils/status";
 
 export default function TablePatients({
   patients,
@@ -497,7 +490,7 @@ export default function TablePatients({
   };
 
   const detailPatient = ({ id }) => {
-    get(route("pacientes.show", { id: id }));
+    get(route("patients.treatments.index", { id: id }));
   };
 
   return (

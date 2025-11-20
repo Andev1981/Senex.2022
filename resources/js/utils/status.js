@@ -1,3 +1,5 @@
+import { AlertCircle, CheckCircle } from "lucide-react";
+
 // status.js
 export const STATUS_MAP = {
   pending: { label: "Pendiente", chip: "bg-yellow-100 text-yellow-800" },
@@ -103,3 +105,29 @@ export const PATIENT_STATUS_TRANSITIONS = {
   suspended: ["active", "cancelled"],
   cancelled: [],
 };
+
+export const paymentMethods = [
+  { value: "cash", label: "Efectivo", icon: "💵" },
+  { value: "transfer", label: "Transferencia", icon: "🏦" },
+  { value: "webpay_debit", label: "Tarjeta de Débito", icon: "💳" },
+  { value: "webpay_credit", label: "Tarjeta de Crédito", icon: "💳" },
+  { value: "paycheck", label: "Cheque", icon: "📝" },
+  { value: "other", label: "Otro", icon: "💰" },
+];
+
+export const statusOptions = [
+  {
+    value: "completed",
+    label: "Completado",
+    color: "green",
+    icon: CheckCircle,
+  },
+  {
+    value: "pending",
+    label: "Pendiente",
+    color: "yellow",
+    icon: AlertCircle,
+  },
+  { value: "failed", label: "Rechazado", color: "red", icon: AlertCircle },
+  { value: "refunded", label: "Reembolso", color: "red", icon: AlertCircle },
+];

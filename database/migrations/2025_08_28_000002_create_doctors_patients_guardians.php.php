@@ -56,16 +56,20 @@ return new class extends Migration {
         Schema::create('doctors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->unsignedBigInteger('branch_id')->nullable();
-            $table->string('name')->nullable();
-            $table->string('last_name')->nullable();
+            $table->string('name');
+            $table->string('last_name');
             $table->string('rut', 20)->nullable();
+            $table->string('email')->nullable();
+            $table->string('phone', 50)->nullable();
+            $table->date('birth_date')->nullable();
+            $table->enum('gender', ['male', 'female', 'other', 'unknown'])->nullable();
             $table->string('specialty')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->enum('status', ['active', 'suspended', 'cancelled'])->default('active');
+            $table->text('status_reason')->nullable();      // motivo del último cambio
+            $table->timestamp('status_changed_at')->nullable();
             $table->timestamps();
 
             $table->index(['id']);
-            $table->index(['branch_id']);
         });
 
         Schema::create('patient_contacts', function (Blueprint $table) {

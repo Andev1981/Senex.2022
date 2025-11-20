@@ -1,19 +1,24 @@
 import { CheckCircle, Clock, CreditCard, DollarSign, Plus } from "lucide-react";
 import { clp } from "@/utils/utils";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import SideModal from "@/Components/SideModal";
+import PaymentForm from "./PaymentForm";
+import { paymentMethods } from "@/utils/status";
 
-export default function IndexPayments({ payments }) {
+export default function IndexPayments({ payments, sessions, patient }) {
+  const [openPaymentModal, setOpenPaymentModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState([]);
   const totalPaid = useMemo(
     () =>
       payments
-        .filter((p) => p.status === "Pagado")
+        .filter((p) => p.status === "completed")
         .reduce((s, p) => s + (p.amount || 0), 0),
     [payments]
   );
   const totalPending = useMemo(
     () =>
       payments
-        .filter((p) => p.status === "Pendiente")
+        .filter((p) => p.status === "pending")
         .reduce((s, p) => s + (p.amount || 0), 0),
     [payments]
   );
@@ -62,8 +67,6 @@ export default function IndexPayments({ payments }) {
                   "Fecha",
                   "Concepto",
                   "Documento",
-                  "Copago",
-                  "Isapre",
                   "Total",
                   "Método",
                   "Estado",
@@ -85,30 +88,36 @@ export default function IndexPayments({ payments }) {
               {payments?.map((payment) => (
                 <tr key={payment.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    {new Date(payment.date).toLocaleDateString("es-CL")}
+                    {new Date(payment.paid_at).toLocaleDateString("es-CL")}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-900">
-                    {payment.concept}
+                    {payment.transaction_reference}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {payment.invoice}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-gray-900">
-                    {clp.format(payment.copay || 0)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right text-gray-900">
-                    {clp.format(payment.insuranceCovered || 0)}
                   </td>
                   <td className="px-4 py-3 text-sm font-semibold text-right text-gray-900">
                     {clp.format(payment.amount || 0)}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    {payment.paymentMethod}
+                    {(() => {
+                      const method = paymentMethods.find(
+                        (m) => m.value === payment.payment_method
+                      );
+                      return method ? (
+                        <span className="flex items-center gap-2">
+                          <span>{method.icon}</span>
+                          <span>{method.label}</span>
+                        </span>
+                      ) : (
+                        <span>Método no registrado</span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                        payment.status === "Pagado"
+                        payment.status === "completed"
                           ? "bg-green-100 text-green-700"
                           : "bg-orange-100 text-orange-700"
                       }`}
@@ -122,6 +131,22 @@ export default function IndexPayments({ payments }) {
           </table>
         </div>
       </div>
+
+      <SideModal
+        open={openPaymentModal}
+        onClose={() => setOpenPaymentModal(false)}
+        title="Editar Pago"
+        width="3xl"
+      >
+        <PaymentForm
+          setOpenPaymentModal={setOpenPaymentModal}
+          payment={selectedPayment}
+          sessions={sessions}
+          treatment={sessions[0]?.treatment_id}
+          isEditing={false}
+          patient={patient}
+        />
+      </SideModal>
     </div>
   );
 }

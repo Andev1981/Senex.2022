@@ -36,7 +36,7 @@ const TextInputNumber = forwardRef(
         min={min}
         onInput={handleInput}
         className={
-          "rounded-md border-primary/20 shadow-sm focus:border-primary-light focus:ring-primary-light/20 " +
+          "w-full rounded-md border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200 " +
           className
         }
         ref={localRef}
