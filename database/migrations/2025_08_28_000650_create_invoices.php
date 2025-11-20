@@ -15,6 +15,10 @@ return new class extends Migration {
     Schema::create('invoices', function (Blueprint $t) {
       $t->id();
       $t->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
+      $t->foreignId('branch_id')
+                      ->nullable()
+                      ->constrained('branches')
+                      ->nullOnDelete();
       $t->foreignId('patient_id')->nullable()->constrained()->cascadeOnDelete();
       $t->foreignId('payment_id')->nullable()->constrained()->nullOnDelete();
 
@@ -32,6 +36,7 @@ return new class extends Migration {
 
       // Consultas típicas: por empresa/fecha o por folio
       $t->index(['company_id', 'issue_date'], 'invoices_company_issue_idx');
+      $t->index(['branch_id','issue_date']);
     });
   }
 

@@ -69,8 +69,8 @@ class ValidationMessages
             'attended_at.date'       => 'La fecha/hora de atención no es válida.',
             'patient_amount.numeric' => 'El monto paciente debe ser numérico.',
             'patient_amount.min'     => 'El monto paciente no puede ser negativo.',
-            'doctor_amount.numeric'  => 'El monto del doctor debe ser numérico.',
-            'doctor_amount.min'      => 'El monto del doctor no puede ser negativo.',
+            'doctor_amount_clp.numeric'  => 'El monto del doctor debe ser numérico.',
+            'doctor_amount_clp.min'      => 'El monto del doctor no puede ser negativo.',
             'clinic_amount.numeric'  => 'El monto de la clínica debe ser numérico.',
             'clinic_amount.min'      => 'El monto de la clínica no puede ser negativo.',
 
@@ -108,7 +108,7 @@ class ValidationMessages
             'next_goals' => 'próximas metas',
             'attended_at' => 'atendido en',
             'patient_amount' => 'monto paciente',
-            'doctor_amount' => 'monto doctor',
+            'doctor_amount_clp' => 'monto doctor',
             'clinic_amount' => 'monto clínica',
             'meta' => 'meta',
         ];

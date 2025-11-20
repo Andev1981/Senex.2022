@@ -46,7 +46,7 @@ class TreatmentSession extends Model
         'next_goals',
         // Montos
         'patient_amount',
-        'doctor_amount',
+        'doctor_amount_clp',
         'clinic_amount',
     ];
 
@@ -65,7 +65,7 @@ class TreatmentSession extends Model
         'techniques' => 'array',
         'exercises' => 'array',
         'patient_amount' => 'integer',
-        'doctor_amount' => 'integer',
+        'doctor_amount_clp' => 'integer',
         'clinic_amount' => 'integer',
     ];
 

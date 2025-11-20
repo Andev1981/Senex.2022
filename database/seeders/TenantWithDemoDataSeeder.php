@@ -42,6 +42,7 @@ class TenantWithDemoDataSeeder extends Seeder
     $role2 = Role::create(['name' => 'admin', 'guard_name' => 'web']);
     $role3 = Role::create(['name' => 'user', 'guard_name' => 'web']);
     $role4 = Role::create(['name' => 'doctor', 'guard_name' => 'web']);
+    $kine = Role::create(['name' => 'kine', 'guard_name' => 'web']);
 
     $adminRole->givePermissionTo(Permission::all());
   
@@ -67,6 +68,7 @@ class TenantWithDemoDataSeeder extends Seeder
 
     $user1->roles()->attach($adminRole);
     $user2->roles()->attach($adminRole);
+    $userKine->roles()->attach($kine);
 
     // ============= BRANCHES & ROOMS =============
     $branchId = DB::table('branches')->insertGetId([
@@ -99,7 +101,7 @@ class TenantWithDemoDataSeeder extends Seeder
       'last_name' => 'Demo',
       'rut' => null,
       'specialty' => 'Kinesiología Deportiva',
-      'is_active' => 1,
+      'status' => 'active',
       'created_at' => $now,
       'updated_at' => $now
     ]);
@@ -121,7 +123,7 @@ class TenantWithDemoDataSeeder extends Seeder
         'last_name' => $faker->lastName,
         'rut' => null,
         'specialty' => $faker->randomElement(['Respiratoria', 'Deportiva', 'Traumatológica']),
-        'is_active' => 1,
+        'status' => $faker->randomElement( ['active', 'suspended', 'cancelled']),
         'created_at' => $now,
         'updated_at' => $now
       ]);
@@ -211,6 +213,9 @@ class TenantWithDemoDataSeeder extends Seeder
     $planIds[] = DB::table('plans')->insertGetId([
 
       'name' => 'Plan 10 Sesiones',
+      'code' => '1324df',
+      'institution_type' => 'clinic',
+      'institution_id' => null,
       'type' => 'session_pack',
       'total_sessions' => 10,
       'price' => 180000,
@@ -222,6 +227,9 @@ class TenantWithDemoDataSeeder extends Seeder
     ]);
     $planIds[] = DB::table('plans')->insertGetId([
       'name' => 'Plan Anual 50 Sesiones',
+      'code' => 'ahs5',
+      'institution_type' => 'clinic',
+      'institution_id' => null,
       'type' => 'annual',
       'total_sessions' => 50,
       'price' => 750000,
@@ -233,6 +241,9 @@ class TenantWithDemoDataSeeder extends Seeder
     ]);
     $planIds[] = DB::table('plans')->insertGetId([
       'name' => 'Plan Ilimitado Mensual',
+      'code' => '1ky4df',
+      'institution_type' => 'clinic',
+      'institution_id' => null,
       'type' => 'unlimited',
       'total_sessions' => null,
       'price' => 120000,
@@ -276,14 +287,13 @@ class TenantWithDemoDataSeeder extends Seeder
         'patient_id'            => $pid,
         'treatment_id'          => null,                // compra de plan, no ligada a tratamiento específico
         'treatment_session_id'  => null,                // tampoco a una sesión en particular
-        'date'                  => $purchasedAt->toDateString(),
-        'concept'               => 'Compra de plan: ' . ($plan->name ?? 'Plan'),
+        'payment_date'                  => $purchasedAt->toDateString(),
+        'transaction_reference'               => 'Compra de plan: ' . ($plan->name ?? 'Plan'),
         'amount_clp'            => $amountClp,          // total cobrado en CLP
         'copay_clp'             => 0,                   // si todo lo paga el paciente, puedes dejar 0 aquí
         'insurance_covered_clp' => 0,                   // y 0 para cobertura (ajusta si simulas seguros)
-        'payment_method'        => $faker->randomElement(['webpay', 'cash', 'transfer', 'insurance', 'other']),
+        'payment_method'        => $faker->randomElement(['webpay_credit','webpay_credit','webpay_prepaid', 'cash', 'transfer', 'check','voucher', 'other']),
         'status'                => 'completed',         // completado al momento de la compra
-        'paid_at'               => $purchasedAt,        // fecha/hora de pago
         'invoice'               => null,                // o genera uno único si quieres probar la unique()
         'notes'                 => null,
         'created_at'            => $purchasedAt,
@@ -343,15 +353,15 @@ class TenantWithDemoDataSeeder extends Seeder
       $stypeId    = $faker->randomElement($sessionTypeIds);            // obligatorio
 
       $startDate  = Carbon::now()->subDays($faker->numberBetween(5, 40))->startOfDay();
-      $status     = $faker->randomElement(['Activo', 'Completado', 'Suspendido']);
+      $status     = $faker->randomElement(['Evaluation', 'InProgress', 'Cancelled','Paused']);
 
       // total_sessions (tinyint). Mantén un rango razonable para kinesiología
       $totalSessions = $faker->numberBetween(6, 20);
 
       // completed_sessions consistente con status
-      if ($status === 'Completado') {
+      if ($status === 'Completed') {
         $completedSessions = $totalSessions;
-      } elseif ($status === 'Suspendido') {
+      } elseif ($status === 'Cancelled') {
         $completedSessions = $faker->numberBetween(0, max(0, $totalSessions - 1));
       } else { // Activo
         $completedSessions = $faker->numberBetween(0, $totalSessions);
@@ -360,14 +370,14 @@ class TenantWithDemoDataSeeder extends Seeder
       // end_date / outcome / next_appointment coherentes
       $endDate = null;
       $outcome = null;
-      if ($status === 'Completado') {
+      if ($status === 'Completed') {
         // fin entre 1 y 4 semanas después del inicio
         $endDate = (clone $startDate)->addWeeks($faker->numberBetween(1, 4))->toDateString();
         $outcome = $faker->sentence(12);
       }
 
       $nextAppointment = null;
-      if ($status !== 'Completado' && $faker->boolean(70)) {
+      if ($status !== 'Completed' && $faker->boolean(70)) {
         // próxima cita dentro de los próximos 3–14 días a las 10:00
         $nextAppointment = Carbon::now()
           ->addDays($faker->numberBetween(3, 14))
@@ -383,8 +393,9 @@ class TenantWithDemoDataSeeder extends Seeder
       $name = Str::limit($faker->sentence($faker->numberBetween(3, 7)), 150, '');
 
       // frequency / current_phase / objectives (JSON)
-      $frequency    = $faker->randomElement(['1/semana', '2/semana', '3/semana', null]);
-      $currentPhase = $faker->randomElement(['Evaluación', 'Tratamiento', 'Rehabilitación', 'Alta', null]);
+      $frequency_time    = $faker->randomElement(['day', 'week', 'month']);
+      $frequency    = $faker->numberBetween(1,5);
+      $currentPhase = $faker->randomElement(['evaluation', 'treatment', 'rehabilitation', 'discharge']);
 
       $objectivesArr = $faker->randomElements([
         'Reducir dolor',
@@ -398,7 +409,6 @@ class TenantWithDemoDataSeeder extends Seeder
         'session_type_id'     => $stypeId,
         'patient_id'          => $patientId,
         'doctor_id'           => $doctorId, // nullable
-        'name'                => $name,
         'diagnosis'           => $diagnosis,
         'description'         => $description,
         'start_date'          => $startDate->toDateString(),
@@ -407,15 +417,16 @@ class TenantWithDemoDataSeeder extends Seeder
         'total_sessions'      => $totalSessions,
         'completed_sessions'  => $completedSessions,
         'frequency'           => $frequency,
+        'frequency_time'      => $frequency_time,
         'current_phase'       => $currentPhase,
         'objectives'          => json_encode(array_values($objectivesArr), JSON_UNESCAPED_UNICODE),
         'outcome'             => $outcome,
         'next_appointment'    => $nextAppointment,
 
         // KPIs (0–100; tinyint soporta hasta 255)
-        'pain_reduction'      => $status === 'Completado' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
-        'mobility_improvement' => $status === 'Completado' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
-        'strength_gain'       => $status === 'Completado' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
+        'pain_reduction'      => $status === 'Completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
+        'mobility_improvement' => $status === 'Completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
+        'strength_gain'       => $status === 'Completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
 
         'created_at'          => $now,
         'updated_at'          => $now,
@@ -468,10 +479,11 @@ class TenantWithDemoDataSeeder extends Seeder
         'room_id'               => null,     // o $faker->randomElement($roomIds) si los tienes
         'branch_id'             => null,     // idem para sucursales
         'session_number'        => $faker->numberBetween(1, 12),
+        'month_session_number'  => $faker->numberBetween(1, 12),
         'date'                  => $date,
         'time'                  => $time,
         'duration'              => 45,
-        'status'                => 'Completada', // estaba "completed"
+        'status'                => 'scheduled', // estaba "completed"
         'pain_before'           => $faker->optional(0.5)->numberBetween(0, 10),
         'pain_after'            => $faker->optional(0.5)->numberBetween(0, 10),
         'rom_flexion'           => $faker->optional(0.3)->numberBetween(0, 180),
@@ -513,12 +525,19 @@ class TenantWithDemoDataSeeder extends Seeder
             'patient_id'            => $pId,
             'treatment_id'          => $tId,
             'treatment_session_id'  => $tsId,
-            'date'                  => $date,
-            'concept'               => 'Pago sesión kinesióloga',
+            'payment_date'                  => $date,
+            'transaction_reference'               => 'Pago sesión kinesióloga',
             'amount_clp'            => $basePrice,
             'copay_clp'             => 0,
             'insurance_covered_clp' => 0,
-            'payment_method'        => $faker->randomElement(['webpay', 'cash', 'transfer']),
+            'payment_method'        => $faker->randomElement([ 'webpay_credit',
+        'webpay_debit',
+        'webpay_prepaid',
+        'cash',
+        'transfer',
+        'check',
+        'voucher',
+        'other']),
             'status'                => 'completed',
             'paid_at'               => $attended,
             'invoice'               => null,
@@ -705,7 +724,7 @@ class TenantWithDemoDataSeeder extends Seeder
         'total_patient_amount' => $totals['patient'],
         'total_commission_amount' => 0,
         'total_adjustments' => 0,
-        'total_payable' => $totals['doctor'], // neto = doctor_amount (si no hay reglas)
+        'total_payable' => $totals['doctor'], // neto = doctor_amount_clp (si no hay reglas)
         'status' => 'draft',
         'paid_at' => $now,
         'payment_method' => "transferencia",

@@ -142,10 +142,10 @@ export default function TableAttendances({
           currencyFormatter.format(row.getValue("patient_amount")),
       },
       {
-        accessorKey: "doctor_amount",
+        accessorKey: "doctor_amount_clp",
         header: "Valor Doctor",
         cell: ({ row }) =>
-          currencyFormatter.format(row.getValue("doctor_amount")),
+          currencyFormatter.format(row.getValue("doctor_amount_clp")),
       },
       {
         accessorKey: "clinic_amount",
@@ -234,7 +234,7 @@ export default function TableAttendances({
     console.log("Data: " + sumBy((o) => o.total_senex));
 
     const totalValorSenex = sumBy((o) => o.patient_amount);
-    const totalValorKine = sumBy((o) => o.doctor_amount);
+    const totalValorKine = sumBy((o) => o.doctor_amount_clp);
     const totalSenex = sumBy((o) => o.clinic_amount);
 
     return {
@@ -341,7 +341,7 @@ export default function TableAttendances({
         o.session_type_name ?? "-",
         o.session_number ?? "-",
         clp(toNumber(o.patient_amount)),
-        clp(toNumber(o.doctor_amount)),
+        clp(toNumber(o.doctor_amount_clp)),
         clp(toNumber(o.clinic_amount)),
       ];
     });

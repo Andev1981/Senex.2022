@@ -69,7 +69,7 @@ class Doctor extends Model
         return $this->sessions()
             ->whereMonth('date', now()->month)
             ->whereYear('date', now()->year)
-            ->sum('doctor_amount');
+            ->sum('doctor_amount_clp');
     }
 
     public function user()

@@ -60,7 +60,7 @@ export default function DoctorAttendances({
       0
     );
     const totalCommission = filteredSessions.reduce(
-      (sum, s) => sum + (s.doctor_amount || 0),
+      (sum, s) => sum + (s.doctor_amount_clp || 0),
       0
     );
     const uniquePatients = new Set(filteredSessions.map((s) => s.patient_id))
@@ -164,7 +164,7 @@ export default function DoctorAttendances({
           session.patient?.full_name || "-",
           session.session_type?.name || "-",
           statusMap[session.status] || session.status,
-          fmtCLP(session.doctor_amount || 0),
+          fmtCLP(session.doctor_amount_clp || 0),
         ];
       });
 
@@ -521,7 +521,7 @@ export default function DoctorAttendances({
                       {fmtCLP(session.patient_amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-purple-700">
-                      {fmtCLP(session.doctor_amount)}
+                      {fmtCLP(session.doctor_amount_clp)}
                     </td>
                   </tr>
                 ))}

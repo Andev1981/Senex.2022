@@ -14,14 +14,14 @@ class PayrollDetail extends Model
     'treatment_session_id',
     'session_type_name',
     'patient_amount',
-    'doctor_amount',
+    'doctor_amount_clp',
     'commission_rate',
     'notes',
   ];
 
   protected $casts = [
     'patient_amount' => 'decimal:2',
-    'doctor_amount'  => 'decimal:2',
+    'doctor_amount_clp'  => 'decimal:2',
     'commission_rate' => 'decimal:2', // si guardas % aplicado
   ];
 

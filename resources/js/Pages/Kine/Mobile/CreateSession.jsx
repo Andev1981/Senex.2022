@@ -13,7 +13,7 @@ export default function CreateSession({
     session_type_id: "",
     date: new Date().toISOString().split("T")[0],
     patient_amount: "",
-    doctor_amount: "",
+    doctor_amount_clp: "",
     notes: "",
     session_number: "",
   });
@@ -31,7 +31,7 @@ export default function CreateSession({
       ...prev,
       session_type_id: sessionTypeId,
       patient_amount: sessionType?.default_patient_price || "",
-      doctor_amount: sessionType?.default_doctor_price || "",
+      doctor_amount_clp: sessionType?.default_doctor_price || "",
     }));
   };
 
@@ -194,20 +194,20 @@ export default function CreateSession({
               </label>
               <input
                 type="number"
-                value={form.doctor_amount}
+                value={form.doctor_amount_clp}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
-                    doctor_amount: e.target.value,
+                    doctor_amount_clp: e.target.value,
                   }))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="$"
                 required
               />
-              {errors.doctor_amount && (
+              {errors.doctor_amount_clp && (
                 <p className="mt-1 text-sm text-red-600">
-                  {errors.doctor_amount[0]}
+                  {errors.doctor_amount_clp[0]}
                 </p>
               )}
             </div>

@@ -12,6 +12,10 @@ return new class extends Migration {
 
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('branch_id')
+                      ->nullable()
+                      ->constrained('branches')
+                      ->nullOnDelete();
             $table->string('name');
             $table->string('last_name');
             $table->string('rut', 20)->nullable();
@@ -38,6 +42,7 @@ return new class extends Migration {
             $table->index(['last_name', 'name']);          // búsqueda por nombre
             $table->index('email');
             $table->index('phone');
+            $table->index('branch_id');
         });
 
       

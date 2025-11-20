@@ -59,8 +59,8 @@ class TreatmentSessionService
                 $data['patient_amount'] = $sessionType['base_price'];
             }
 
-            if(!isset($data['doctor_amount'])){
-                $data['doctor_amount'] = $doctorCommission['commission_value'];
+            if(!isset($data['doctor_amount_clp'])){
+                $data['doctor_amount_clp'] = $doctorCommission['commission_value'];
             }
 
              if(!isset($data['clinic_amount'])){

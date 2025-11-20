@@ -35,7 +35,7 @@ class PayrollService
           'treatment_session_id' => $s->id,
           'session_type_name'    => optional($s->sessionType)->name ?? 'N/D',
           'patient_amount'       => $s->patient_amount ?? 0,
-          'doctor_amount'        => $s->doctor_amount ?? 0,
+          'doctor_amount_clp'        => $s->doctor_amount_clp ?? 0,
           'commission_rate'      => 0, // si guardas el % aplicado real, setéalo aquí
           'notes'                => null,
         ]);

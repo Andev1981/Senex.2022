@@ -14,18 +14,24 @@ return new class extends Migration {
     Schema::create('treatment_sessions', function (Blueprint $table) {
       $table->id();
       $table->foreignId('treatment_id')->constrained()->cascadeOnDelete();
+      $table->foreignId('branch_id')
+                      ->nullable()
+                      ->constrained('branches')
+                      ->nullOnDelete();
+      $table->foreignId('room_id')
+                      ->nullable()
+                      ->constrained('rooms')
+                      ->nullOnDelete();
       $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
       $table->foreignId('doctor_id')->constrained()->restrictOnDelete();
       $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
       $table->foreignId('session_type_id')->nullable()->constrained()->nullOnDelete();
-      $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
-      $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
       $table->unsignedTinyInteger('session_number');
       $table->unsignedTinyInteger('month_session_number');
       $table->date('date');
       $table->time('time');
       $table->unsignedSmallInteger('duration')->default(45);
-      $table->enum('status', ['Programada', 'Completada', 'Cancelada', 'No Asistió'])->default('Programada')->index();
+      $table->enum('status', ['scheduled', 'completed', 'cancelled', 'not_attend'])->default('scheduled')->index();
 
       // Evaluación & notas
       $table->unsignedTinyInteger('pain_before')->nullable();
@@ -55,6 +61,8 @@ return new class extends Migration {
       // Búsquedas comunes
       $table->index(['patient_id', 'date', 'time'], 'ts_patient_date_time_idx');
       $table->index(['doctor_id', 'date', 'time'], 'ts_kine_date_time_idx');
+      $table->index(['branch_id', 'date']);
+      $table->index('room_id');
     });
   }
 

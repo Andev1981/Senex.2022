@@ -64,7 +64,7 @@ class Payroll extends Model
   {
     $this->total_sessions       = (int) $this->details()->count();
     $this->total_patient_amount = (float) $this->details()->sum('patient_amount');
-    $this->total_doctor_amount  = (float) $this->details()->sum('doctor_amount');
+    $this->total_doctor_amount  = (float) $this->details()->sum('doctor_amount_clp');
     $this->total_clinic_amount  = (float) ($this->total_patient_amount - $this->total_doctor_amount);
     $this->save();
   }

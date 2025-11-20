@@ -16,7 +16,7 @@ return new class extends Migration {
 
             $table->id();
             $table->string('name');
-            $table->string('codigo')->unique();
+            $table->string('code')->unique();
             
             // Polymorphic relationship with health_insurers or insurance_companies
             $table->enum('institution_type', ['health_insurer', 'insurance_company','clinic'])->default('clinic');

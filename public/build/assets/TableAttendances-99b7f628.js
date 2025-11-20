@@ -1,1 +1,509 @@
-import{r as m,j as i,a}from"./app-64bab525.js";import{u as te,f as I,C as oe,g as ne,a as ae,b as le,c as re}from"./index-8705b719.js";import{S as C,m as K}from"./status-84393eae.js";import{E as se,a as ie}from"./jspdf.plugin.autotable-401f3396.js";import{C as ce}from"./chevron-down-30017052.js";import"./index-7ac5b536.js";import"./createLucideIcon-829d55e0.js";function be({sessions:c,handleOpenModalOptions:W,handleOpenModalContactPersons:$,logoUrl:k}){const w=new Date().getMonth()+1,F=new Date().getFullYear(),[j,U]=m.useState([]),[p,v]=m.useState(""),[_,H]=m.useState((c==null?void 0:c.length)>0?c==null?void 0:c.length:1),[D,O]=m.useState([{id:"attended_at",value:w}]),[M,G]=m.useState(0),f=t=>{if(t==null)return 0;if(typeof t=="number")return t;if(typeof t=="string"){const e=t.replace(/\./g,"").replace(",","."),o=Number(e);return Number.isNaN(o)?0:o}return 0},d=t=>(Number(t)||0).toLocaleString("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}),T=t=>t?new Date(t).toLocaleDateString("es-CL"):"-",Y=m.useMemo(()=>{if(!p)return c||[];const t=p.toLowerCase();return(c||[]).filter(e=>Object.values(e).some(o=>o&&o.toString().toLowerCase().includes(t)))},[p,c]),S=new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",minimumFractionDigits:0}),b=t=>String(t).normalize("NFD").replace(/\p{Diacritic}/gu,"").toLowerCase().trim(),P=m.useMemo(()=>[{accessorKey:"patient_full",header:"Paciente"},{accessorKey:"doctor_full",header:"Doctor"},{header:"FECHA ATENCIÓN (MES)",accessorFn:t=>t==null?void 0:t.attended_at,id:"attended_at",cell:({getValue:t})=>t()?T(t()):"-",filterFn:(t,e,o)=>{if(!o)return!0;const l=t.getValue(e);return l?new Date(l).getMonth()+1===Number(o):!1},Filter:({column:t})=>{const e=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];return i("select",{value:t.getFilterValue()??"",onChange:o=>t.setFilterValue(o.target.value?Number(o.target.value):void 0),className:"overflow-hidden uppercase truncate whitespace-nowrap",children:[a("option",{value:"",children:"Todos"}),e.map((o,l)=>a("option",{value:l+1,children:o},l))]})}},{accessorKey:"session_type_name",header:"Tipo"},{accessorKey:"session_number",header:"N° Sesión"},{accessorKey:"patient_amount",header:"Valor Cliente",cell:({row:t})=>S.format(t.getValue("patient_amount"))},{accessorKey:"doctor_amount",header:"Valor Doctor",cell:({row:t})=>S.format(t.getValue("doctor_amount"))},{accessorKey:"clinic_amount",header:"Valor Clínica",cell:({row:t})=>S.format(t.getValue("clinic_amount"))},{accessorKey:"status",header:"Estado",cell:({getValue:t})=>{const e=String(t()),o=C[e]||{label:"Desconocido",chip:"bg-gray-100 text-gray-700"};return a("span",{className:`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${o.chip}`,children:o.label})},filterFn:(t,e,o)=>{var r;if(o==null||Array.isArray(o)&&o.length===0)return!0;const l=String(t.getValue(e)),n=((r=C[l])==null?void 0:r.label)??l;return Array.isArray(o)?new Set(o.map(N=>b(N))).has(b(n)):b(n)===b(o)},meta:{options:Object.values(C).map(t=>t.label)}}],[W,$]),y=te({data:Y,columns:P,state:{sorting:j,globalFilter:p,columnFilters:D,pagination:{pageSize:_,pageIndex:M}},onSortingChange:U,onGlobalFilterChange:v,onColumnFiltersChange:O,onPaginationChange:t=>{const e=typeof t=="function"?t({pageIndex:M,pageSize:_}):t;G(e.pageIndex),H(e.pageSize)},getCoreRowModel:ne(),getSortedRowModel:ae(),getPaginationRowModel:le(),getFilteredRowModel:re(),globalFilterFn:"includesString"}),h=y.getFilteredRowModel().rows,B=h.length,g=m.useMemo(()=>{const t=n=>h.reduce((r,x)=>r+f(n(x.original)),0);console.log("Data: "+t(n=>n.total_senex));const e=t(n=>n.patient_amount),o=t(n=>n.doctor_amount),l=t(n=>n.clinic_amount);return{valor_senex:e,valor_kine:o,total_senex:l}},[h]),J=t=>new Promise(e=>{if(!t)return e(null);try{const o=new Image;o.crossOrigin="anonymous",o.onload=()=>{const l=document.createElement("canvas");l.width=o.naturalWidth,l.height=o.naturalHeight,l.getContext("2d").drawImage(o,0,0);try{const r=l.toDataURL("image/png");e(r)}catch{e(null)}},o.onerror=()=>e(null),o.src=t}catch{e(null)}});return i("div",{className:"max-w-full",children:[i("div",{className:"flex flex-col w-full gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between",children:[a("input",{value:p??"",onChange:t=>v(t.target.value),placeholder:"Buscar...",className:"w-full px-3 py-2 transition border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"}),a("button",{onClick:async()=>{var V,z;const t=h.length,e=new se({orientation:"portrait"}),o=(V=D.find(u=>u.id==="attended_at"))==null?void 0:V.value,l=((z=K.find(u=>u.value===Number(o||w)))==null?void 0:z.name)||"",n=e.internal.pageSize.getWidth(),r=await J(k);r&&e.addImage(r,"PNG",14,8,28,14),e.setFontSize(18);const x="Resumen de Sesiones Kinesiologos",N=e.getTextWidth(x);e.text(x,n/2-N/2,14),e.setFontSize(11);const R="Sesiones Kinesiologos";{const u=e.getTextWidth(R);e.text(R,n/2-u/2,20)}const A=`Mes: ${l} ${F}`,q=e.getTextWidth(A);e.text(A,n/2-q/2,26),e.setFontSize(9);const L=`Total de Sesiones: ${t}`,Q=e.getTextWidth(L);e.text(L,n-14-Q,26),e.setDrawColor(180),e.line(14,30,n-14,30);const X=[["Paciente","Doctor","Fecha Atención","Tipo","N° Sesión","Valor Cliente","Valor Doctor","Valor Clínica"]],E=h.map(u=>{const s=u.original||{};return[s.patient_full??"-",s.doctor_full??"-",T(s.attended_at),s.session_type_name??"-",s.session_number??"-",d(f(s.patient_amount)),d(f(s.doctor_amount)),d(f(s.clinic_amount))]});E.push(["Totales","","","",`(Sesiones: ${t})`,d(g.valor_senex),d(g.valor_kine),d(g.total_senex)]),ie(e,{head:X,body:E,startY:34,theme:"grid",styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[33,150,243],textColor:255,fontStyle:"bold"},alternateRowStyles:{fillColor:[245,248,255]},bodyStyles:{textColor:20},columnStyles:{4:{halign:"right"}},didDrawPage:u=>{const s=e.internal.getNumberOfPages();e.setFontSize(8);const ee=`Exportado: ${new Date().toLocaleString("es-CL").replace(","," - ")} | Página ${s}`;e.text(ee,u.settings.margin.left,e.internal.pageSize.height-5)}});const Z=String(o||w).padStart(2,"0");e.save(`sessions-${F}-${Z}.pdf`)},className:"px-2 py-1 text-sm text-white transition bg-blue-600 rounded-md hover:bg-blue-700",title:"Exporta PDF con logo, título y sin columnas Senex",children:"Exportar PDF"})]}),a("div",{className:"w-full overflow-x-auto border border-gray-200 rounded-md",children:i("table",{className:"min-w-[900px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden",children:[a("thead",{className:"bg-gray-100",children:y.getHeaderGroups().map(t=>a("tr",{children:t.headers.map(e=>{var o,l;return i("th",{onClick:e.column.getToggleSortingHandler(),className:"px-4 py-3 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200",scope:"col",children:[i("div",{className:"flex",children:[a("div",{className:"overflow-hidden uppercase truncate whitespace-nowrap",children:I(e.column.columnDef.header,e.getContext())}),a("span",{children:e.column.getIsSorted()==="asc"?a(oe,{className:"inline w-4 h-4 ml-1"}):e.column.getIsSorted()==="desc"?a(ce,{className:"inline w-4 h-4 ml-1"}):null})]}),e.column.getCanFilter()&&i("div",{className:"flex gap-1 mt-1",children:[["FECHA ATENCIÓN (MES)"].includes(e.column.columnDef.header)?i("select",{value:e.column.getFilterValue()??"",onChange:n=>e.column.setFilterValue(n.target.value||void 0),className:"w-full px-2 py-1 text-sm border border-gray-300 rounded-md",children:[a("option",{value:"",children:"Todos"}),K.map(n=>a("option",{value:n.value,children:n.name},n.value))]}):a("input",{value:e.column.getFilterValue()??"",onChange:n=>e.column.setFilterValue(n.target.value),placeholder:"Filtrar...",className:"w-full px-2 py-1 text-sm border border-gray-300 rounded-md"}),e.column.getCanFilter()&&((l=(o=e.column.columnDef.meta)==null?void 0:o.filterComponent)==null?void 0:l.call(o,{column:e.column}))]})]},e.id)})},t.id))}),a("tbody",{children:y.getRowModel().rows.length===0?a("tr",{children:a("td",{colSpan:P.length,className:"py-6 text-center text-gray-500",children:"No se han encontrado datos"})}):y.getRowModel().rows.map(t=>a("tr",{className:"transition border-b border-gray-200 hover:bg-gray-50",children:t.getVisibleCells().map(e=>a("td",{className:"px-4 py-3 text-gray-800 whitespace-nowrap",children:I(e.column.columnDef.cell,e.getContext())},e.id))},t.id))}),a("tfoot",{children:i("tr",{className:"font-semibold bg-gray-100",children:[i("td",{className:"px-4 py-3",colSpan:4,children:["Totales (sessions: ",B,")"]}),a("td",{className:"px-4 py-3 text-right"}),a("td",{className:"px-4 py-3 text-left",children:d(g.valor_senex)+".-"}),a("td",{className:"px-4 py-3 text-left",children:d(g.valor_kine)+".-"}),a("td",{className:"px-4 py-3 text-left",children:d(g.total_senex)+".-"}),a("td",{className:"px-4 py-3"})]})})]})})]})}export{be as default};
+import { r as m, j as i, a } from "./app-64bab525.js";
+import {
+  u as te,
+  f as I,
+  C as oe,
+  g as ne,
+  a as ae,
+  b as le,
+  c as re,
+} from "./index-8705b719.js";
+import { S as C, m as K } from "./status-84393eae.js";
+import { E as se, a as ie } from "./jspdf.plugin.autotable-401f3396.js";
+import { C as ce } from "./chevron-down-30017052.js";
+import "./index-7ac5b536.js";
+import "./createLucideIcon-829d55e0.js";
+function be({
+  sessions: c,
+  handleOpenModalOptions: W,
+  handleOpenModalContactPersons: $,
+  logoUrl: k,
+}) {
+  const w = new Date().getMonth() + 1,
+    F = new Date().getFullYear(),
+    [j, U] = m.useState([]),
+    [p, v] = m.useState(""),
+    [_, H] = m.useState(
+      (c == null ? void 0 : c.length) > 0 ? (c == null ? void 0 : c.length) : 1
+    ),
+    [D, O] = m.useState([{ id: "attended_at", value: w }]),
+    [M, G] = m.useState(0),
+    f = (t) => {
+      if (t == null) return 0;
+      if (typeof t == "number") return t;
+      if (typeof t == "string") {
+        const e = t.replace(/\./g, "").replace(",", "."),
+          o = Number(e);
+        return Number.isNaN(o) ? 0 : o;
+      }
+      return 0;
+    },
+    d = (t) =>
+      (Number(t) || 0).toLocaleString("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        maximumFractionDigits: 0,
+      }),
+    T = (t) => (t ? new Date(t).toLocaleDateString("es-CL") : "-"),
+    Y = m.useMemo(() => {
+      if (!p) return c || [];
+      const t = p.toLowerCase();
+      return (c || []).filter((e) =>
+        Object.values(e).some(
+          (o) => o && o.toString().toLowerCase().includes(t)
+        )
+      );
+    }, [p, c]),
+    S = new Intl.NumberFormat("es-CL", {
+      style: "currency",
+      currency: "CLP",
+      minimumFractionDigits: 0,
+    }),
+    b = (t) =>
+      String(t)
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase()
+        .trim(),
+    P = m.useMemo(
+      () => [
+        { accessorKey: "patient_full", header: "Paciente" },
+        { accessorKey: "doctor_full", header: "Doctor" },
+        {
+          header: "FECHA ATENCIÓN (MES)",
+          accessorFn: (t) => (t == null ? void 0 : t.attended_at),
+          id: "attended_at",
+          cell: ({ getValue: t }) => (t() ? T(t()) : "-"),
+          filterFn: (t, e, o) => {
+            if (!o) return !0;
+            const l = t.getValue(e);
+            return l ? new Date(l).getMonth() + 1 === Number(o) : !1;
+          },
+          Filter: ({ column: t }) => {
+            const e = [
+              "Enero",
+              "Febrero",
+              "Marzo",
+              "Abril",
+              "Mayo",
+              "Junio",
+              "Julio",
+              "Agosto",
+              "Septiembre",
+              "Octubre",
+              "Noviembre",
+              "Diciembre",
+            ];
+            return i("select", {
+              value: t.getFilterValue() ?? "",
+              onChange: (o) =>
+                t.setFilterValue(
+                  o.target.value ? Number(o.target.value) : void 0
+                ),
+              className: "overflow-hidden uppercase truncate whitespace-nowrap",
+              children: [
+                a("option", { value: "", children: "Todos" }),
+                e.map((o, l) => a("option", { value: l + 1, children: o }, l)),
+              ],
+            });
+          },
+        },
+        { accessorKey: "session_type_name", header: "Tipo" },
+        { accessorKey: "session_number", header: "N° Sesión" },
+        {
+          accessorKey: "patient_amount",
+          header: "Valor Cliente",
+          cell: ({ row: t }) => S.format(t.getValue("patient_amount")),
+        },
+        {
+          accessorKey: "doctor_amount_clp",
+          header: "Valor Doctor",
+          cell: ({ row: t }) => S.format(t.getValue("doctor_amount_clp")),
+        },
+        {
+          accessorKey: "clinic_amount",
+          header: "Valor Clínica",
+          cell: ({ row: t }) => S.format(t.getValue("clinic_amount")),
+        },
+        {
+          accessorKey: "status",
+          header: "Estado",
+          cell: ({ getValue: t }) => {
+            const e = String(t()),
+              o = C[e] || {
+                label: "Desconocido",
+                chip: "bg-gray-100 text-gray-700",
+              };
+            return a("span", {
+              className: `inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${o.chip}`,
+              children: o.label,
+            });
+          },
+          filterFn: (t, e, o) => {
+            var r;
+            if (o == null || (Array.isArray(o) && o.length === 0)) return !0;
+            const l = String(t.getValue(e)),
+              n = ((r = C[l]) == null ? void 0 : r.label) ?? l;
+            return Array.isArray(o)
+              ? new Set(o.map((N) => b(N))).has(b(n))
+              : b(n) === b(o);
+          },
+          meta: { options: Object.values(C).map((t) => t.label) },
+        },
+      ],
+      [W, $]
+    ),
+    y = te({
+      data: Y,
+      columns: P,
+      state: {
+        sorting: j,
+        globalFilter: p,
+        columnFilters: D,
+        pagination: { pageSize: _, pageIndex: M },
+      },
+      onSortingChange: U,
+      onGlobalFilterChange: v,
+      onColumnFiltersChange: O,
+      onPaginationChange: (t) => {
+        const e = typeof t == "function" ? t({ pageIndex: M, pageSize: _ }) : t;
+        G(e.pageIndex), H(e.pageSize);
+      },
+      getCoreRowModel: ne(),
+      getSortedRowModel: ae(),
+      getPaginationRowModel: le(),
+      getFilteredRowModel: re(),
+      globalFilterFn: "includesString",
+    }),
+    h = y.getFilteredRowModel().rows,
+    B = h.length,
+    g = m.useMemo(() => {
+      const t = (n) => h.reduce((r, x) => r + f(n(x.original)), 0);
+      console.log("Data: " + t((n) => n.total_senex));
+      const e = t((n) => n.patient_amount),
+        o = t((n) => n.doctor_amount_clp),
+        l = t((n) => n.clinic_amount);
+      return { valor_senex: e, valor_kine: o, total_senex: l };
+    }, [h]),
+    J = (t) =>
+      new Promise((e) => {
+        if (!t) return e(null);
+        try {
+          const o = new Image();
+          (o.crossOrigin = "anonymous"),
+            (o.onload = () => {
+              const l = document.createElement("canvas");
+              (l.width = o.naturalWidth),
+                (l.height = o.naturalHeight),
+                l.getContext("2d").drawImage(o, 0, 0);
+              try {
+                const r = l.toDataURL("image/png");
+                e(r);
+              } catch {
+                e(null);
+              }
+            }),
+            (o.onerror = () => e(null)),
+            (o.src = t);
+        } catch {
+          e(null);
+        }
+      });
+  return i("div", {
+    className: "max-w-full",
+    children: [
+      i("div", {
+        className:
+          "flex flex-col w-full gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between",
+        children: [
+          a("input", {
+            value: p ?? "",
+            onChange: (t) => v(t.target.value),
+            placeholder: "Buscar...",
+            className:
+              "w-full px-3 py-2 transition border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+          }),
+          a("button", {
+            onClick: async () => {
+              var V, z;
+              const t = h.length,
+                e = new se({ orientation: "portrait" }),
+                o =
+                  (V = D.find((u) => u.id === "attended_at")) == null
+                    ? void 0
+                    : V.value,
+                l =
+                  ((z = K.find((u) => u.value === Number(o || w))) == null
+                    ? void 0
+                    : z.name) || "",
+                n = e.internal.pageSize.getWidth(),
+                r = await J(k);
+              r && e.addImage(r, "PNG", 14, 8, 28, 14), e.setFontSize(18);
+              const x = "Resumen de Sesiones Kinesiologos",
+                N = e.getTextWidth(x);
+              e.text(x, n / 2 - N / 2, 14), e.setFontSize(11);
+              const R = "Sesiones Kinesiologos";
+              {
+                const u = e.getTextWidth(R);
+                e.text(R, n / 2 - u / 2, 20);
+              }
+              const A = `Mes: ${l} ${F}`,
+                q = e.getTextWidth(A);
+              e.text(A, n / 2 - q / 2, 26), e.setFontSize(9);
+              const L = `Total de Sesiones: ${t}`,
+                Q = e.getTextWidth(L);
+              e.text(L, n - 14 - Q, 26),
+                e.setDrawColor(180),
+                e.line(14, 30, n - 14, 30);
+              const X = [
+                  [
+                    "Paciente",
+                    "Doctor",
+                    "Fecha Atención",
+                    "Tipo",
+                    "N° Sesión",
+                    "Valor Cliente",
+                    "Valor Doctor",
+                    "Valor Clínica",
+                  ],
+                ],
+                E = h.map((u) => {
+                  const s = u.original || {};
+                  return [
+                    s.patient_full ?? "-",
+                    s.doctor_full ?? "-",
+                    T(s.attended_at),
+                    s.session_type_name ?? "-",
+                    s.session_number ?? "-",
+                    d(f(s.patient_amount)),
+                    d(f(s.doctor_amount_clp)),
+                    d(f(s.clinic_amount)),
+                  ];
+                });
+              E.push([
+                "Totales",
+                "",
+                "",
+                "",
+                `(Sesiones: ${t})`,
+                d(g.valor_senex),
+                d(g.valor_kine),
+                d(g.total_senex),
+              ]),
+                ie(e, {
+                  head: X,
+                  body: E,
+                  startY: 34,
+                  theme: "grid",
+                  styles: { fontSize: 9, cellPadding: 3 },
+                  headStyles: {
+                    fillColor: [33, 150, 243],
+                    textColor: 255,
+                    fontStyle: "bold",
+                  },
+                  alternateRowStyles: { fillColor: [245, 248, 255] },
+                  bodyStyles: { textColor: 20 },
+                  columnStyles: { 4: { halign: "right" } },
+                  didDrawPage: (u) => {
+                    const s = e.internal.getNumberOfPages();
+                    e.setFontSize(8);
+                    const ee = `Exportado: ${new Date()
+                      .toLocaleString("es-CL")
+                      .replace(",", " - ")} | Página ${s}`;
+                    e.text(
+                      ee,
+                      u.settings.margin.left,
+                      e.internal.pageSize.height - 5
+                    );
+                  },
+                });
+              const Z = String(o || w).padStart(2, "0");
+              e.save(`sessions-${F}-${Z}.pdf`);
+            },
+            className:
+              "px-2 py-1 text-sm text-white transition bg-blue-600 rounded-md hover:bg-blue-700",
+            title: "Exporta PDF con logo, título y sin columnas Senex",
+            children: "Exportar PDF",
+          }),
+        ],
+      }),
+      a("div", {
+        className: "w-full overflow-x-auto border border-gray-200 rounded-md",
+        children: i("table", {
+          className:
+            "min-w-[900px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden",
+          children: [
+            a("thead", {
+              className: "bg-gray-100",
+              children: y.getHeaderGroups().map((t) =>
+                a(
+                  "tr",
+                  {
+                    children: t.headers.map((e) => {
+                      var o, l;
+                      return i(
+                        "th",
+                        {
+                          onClick: e.column.getToggleSortingHandler(),
+                          className:
+                            "px-4 py-3 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200",
+                          scope: "col",
+                          children: [
+                            i("div", {
+                              className: "flex",
+                              children: [
+                                a("div", {
+                                  className:
+                                    "overflow-hidden uppercase truncate whitespace-nowrap",
+                                  children: I(
+                                    e.column.columnDef.header,
+                                    e.getContext()
+                                  ),
+                                }),
+                                a("span", {
+                                  children:
+                                    e.column.getIsSorted() === "asc"
+                                      ? a(oe, {
+                                          className: "inline w-4 h-4 ml-1",
+                                        })
+                                      : e.column.getIsSorted() === "desc"
+                                      ? a(ce, {
+                                          className: "inline w-4 h-4 ml-1",
+                                        })
+                                      : null,
+                                }),
+                              ],
+                            }),
+                            e.column.getCanFilter() &&
+                              i("div", {
+                                className: "flex gap-1 mt-1",
+                                children: [
+                                  ["FECHA ATENCIÓN (MES)"].includes(
+                                    e.column.columnDef.header
+                                  )
+                                    ? i("select", {
+                                        value: e.column.getFilterValue() ?? "",
+                                        onChange: (n) =>
+                                          e.column.setFilterValue(
+                                            n.target.value || void 0
+                                          ),
+                                        className:
+                                          "w-full px-2 py-1 text-sm border border-gray-300 rounded-md",
+                                        children: [
+                                          a("option", {
+                                            value: "",
+                                            children: "Todos",
+                                          }),
+                                          K.map((n) =>
+                                            a(
+                                              "option",
+                                              {
+                                                value: n.value,
+                                                children: n.name,
+                                              },
+                                              n.value
+                                            )
+                                          ),
+                                        ],
+                                      })
+                                    : a("input", {
+                                        value: e.column.getFilterValue() ?? "",
+                                        onChange: (n) =>
+                                          e.column.setFilterValue(
+                                            n.target.value
+                                          ),
+                                        placeholder: "Filtrar...",
+                                        className:
+                                          "w-full px-2 py-1 text-sm border border-gray-300 rounded-md",
+                                      }),
+                                  e.column.getCanFilter() &&
+                                    ((l =
+                                      (o = e.column.columnDef.meta) == null
+                                        ? void 0
+                                        : o.filterComponent) == null
+                                      ? void 0
+                                      : l.call(o, { column: e.column })),
+                                ],
+                              }),
+                          ],
+                        },
+                        e.id
+                      );
+                    }),
+                  },
+                  t.id
+                )
+              ),
+            }),
+            a("tbody", {
+              children:
+                y.getRowModel().rows.length === 0
+                  ? a("tr", {
+                      children: a("td", {
+                        colSpan: P.length,
+                        className: "py-6 text-center text-gray-500",
+                        children: "No se han encontrado datos",
+                      }),
+                    })
+                  : y
+                      .getRowModel()
+                      .rows.map((t) =>
+                        a(
+                          "tr",
+                          {
+                            className:
+                              "transition border-b border-gray-200 hover:bg-gray-50",
+                            children: t
+                              .getVisibleCells()
+                              .map((e) =>
+                                a(
+                                  "td",
+                                  {
+                                    className:
+                                      "px-4 py-3 text-gray-800 whitespace-nowrap",
+                                    children: I(
+                                      e.column.columnDef.cell,
+                                      e.getContext()
+                                    ),
+                                  },
+                                  e.id
+                                )
+                              ),
+                          },
+                          t.id
+                        )
+                      ),
+            }),
+            a("tfoot", {
+              children: i("tr", {
+                className: "font-semibold bg-gray-100",
+                children: [
+                  i("td", {
+                    className: "px-4 py-3",
+                    colSpan: 4,
+                    children: ["Totales (sessions: ", B, ")"],
+                  }),
+                  a("td", { className: "px-4 py-3 text-right" }),
+                  a("td", {
+                    className: "px-4 py-3 text-left",
+                    children: d(g.valor_senex) + ".-",
+                  }),
+                  a("td", {
+                    className: "px-4 py-3 text-left",
+                    children: d(g.valor_kine) + ".-",
+                  }),
+                  a("td", {
+                    className: "px-4 py-3 text-left",
+                    children: d(g.total_senex) + ".-",
+                  }),
+                  a("td", { className: "px-4 py-3" }),
+                ],
+              }),
+            }),
+          ],
+        }),
+      }),
+    ],
+  });
+}
+export { be as default };

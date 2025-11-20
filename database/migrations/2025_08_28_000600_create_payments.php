@@ -15,6 +15,10 @@ return new class extends Migration {
 
       // ===== RELACIONES =====
       $t->foreignId('patient_id')->constrained()->cascadeOnDelete();
+      $t->foreignId('branch_id')
+                      ->nullable()
+                      ->constrained('branches')
+                      ->nullOnDelete();
       $t->foreignId('treatment_id')->nullable()->constrained()->nullOnDelete();
       $t->foreignId('treatment_session_id')->nullable()->constrained()->nullOnDelete();
 
@@ -113,6 +117,7 @@ return new class extends Migration {
       
       // Búsquedas por método de pago
       $t->index(['payment_method', 'payment_date'], 'payments_method_date_idx');
+      $t->index(['branch_id']);
     });
 
   }

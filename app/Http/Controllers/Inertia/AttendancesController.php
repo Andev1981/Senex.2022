@@ -27,14 +27,14 @@ class AttendancesController extends Controller
         'ai.attended_at',
         'ai.status',
         'ai.patient_amount',
-        'ai.doctor_amount',
+        'ai.doctor_amount_clp',
         'ai.clinic_amount',
         'ai.session_number',
         'st.name as session_type_name', // <-- faltaba
         DB::raw("CONCAT(p.name,' ',p.last_name) as patient_full"),  // precio cobrado al cliente
         DB::raw("CONCAT(d.name,' ',d.last_name) as doctor_full"),  // precio cobrado al cliente
       ])
-      ->selectRaw('(COALESCE(ai.patient_amount,0) - COALESCE(ai.doctor_amount,0)) as total_senex')
+      ->selectRaw('(COALESCE(ai.patient_amount,0) - COALESCE(ai.doctor_amount_clp,0)) as total_senex')
       ->get();
 
 

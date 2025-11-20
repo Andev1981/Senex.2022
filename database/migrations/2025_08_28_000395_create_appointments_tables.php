@@ -13,8 +13,16 @@ return new class extends Migration {
 
             // Relaciones
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('branch_id')
+                      ->nullable()
+                      ->constrained('branches')
+                      ->nullOnDelete();
+            $table->foreignId('room_id')
+                      ->nullable()
+                      ->constrained('rooms')
+                      ->nullOnDelete();
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
+    
 
             // Horarios
             $table->dateTime('start_at')->index();
@@ -45,6 +53,7 @@ return new class extends Migration {
             // Restricciones útiles: evitar solapamiento por doctor
             $table->index(['doctor_id', 'start_at', 'end_at'], 'appointments_doctor_time_idx');
             $table->index(['patient_id', 'start_at'], 'appointments_patient_time_idx');
+            $table->index(['branch_id', 'start_at']);
         });
     }
 
