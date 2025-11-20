@@ -398,9 +398,6 @@ Route::get('/api/patients/{patient}/sessions/summary', [TreatmentSessionControll
 });
 
 
-// routes/web.php
-
-use App\Http\Controllers\Kine\KineMobileController;
 use Inertia\Inertia;
 
 // Portal Kine (requiere auth + rol kine)

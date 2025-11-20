@@ -19,7 +19,7 @@ const IndexHistorial = lazy(() => import("./Historial/IndexHistorial"));
 const IndexTreatments = lazy(() => import("./Treatments/IndexTreatments"));
 const IndexExcercises = lazy(() => import("./Excercises/IndexExcercises"));
 const IndexPayments = lazy(() => import("./Payments/IndexPayments"));
-const IndexDocuments = lazy(() => import("./Documents/IndexDocuments"));
+/* const IndexDocuments = lazy(() => import("./Documents/IndexDocuments")); */
 
 /** Hook: sincroniza pestaña con ?tab= y recuerda entre visitas */
 function useSyncedTab(defaultTab = "general") {
@@ -60,9 +60,9 @@ export default function DetailPatient({
     { id: "general", label: "Información General", icon: User },
     { id: "history", label: "Historial Clínico", icon: Activity },
     { id: "treatments", label: "Tratamientos / Sesiones", icon: Target },
-    /* { id: "exercises", label: "Ejercicios", icon: Repeat }, */
     { id: "payments", label: "Pagos", icon: DollarSign },
-    { id: "documents", label: "Documentos", icon: FileText },
+    /* { id: "exercises", label: "Ejercicios", icon: Repeat }, */
+    /* { id: "documents", label: "Documentos", icon: FileText }, */
   ];
 
   const handleBack = () => {

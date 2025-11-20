@@ -12,7 +12,7 @@ import {
   Activity,
   FileText,
   Receipt,
-  DollarSign,
+  UserCog,
   Package,
   BarChart3,
   Settings,
@@ -26,12 +26,12 @@ function Side({ sidebarOpen, setSidebarOpen }) {
   // Trae la URL actual para reaccionar a cambios de ruta
   const { url } = usePage();
 
-  const kineMenuItems = [
+  const kineMenuItems = useMemo(() => [
     { id: "kine.dashboard", label: "Mi Dashboard", icon: Home },
     { id: "kine.my-patients", label: "Mis Pacientes", icon: Users },
     { id: "kine.my-sessions", label: "Mis Sesiones", icon: Calendar },
     { id: "kine.my-profile", label: "Mi Perfil", icon: UserCog },
-  ];
+  ]);
 
   // Define tus items con los IDs como NOMBRES DE RUTA de Ziggy
   const menuItems = useMemo(

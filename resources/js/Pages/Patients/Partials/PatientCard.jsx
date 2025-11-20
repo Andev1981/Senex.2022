@@ -1,97 +1,11 @@
 import { Activity, Edit, FileText, User } from "lucide-react";
 import { useMemo, useState } from "react";
-import ResourceFormModal from "@/Components/ResourceFormModal";
+import ModalCreateEditPatient from "./../ModalCreateEditPatient";
+import SideModal from "@/Components/SideModal";
 
-export default function PatientCard({ patient }) {
+export default function PatientCard({ patient, communes, regions, provinces }) {
   const [openPatientModal, setOpenPatientModal] = useState(false);
-  const patientSchema = useMemo(
-    () => [
-      { name: "name", label: "Nombre", type: "text", required: true },
-      { name: "last_name", label: "Apellido", type: "text", required: true },
 
-      {
-        name: "rut",
-        label: "RUT",
-        type: "rut",
-        help: "Sin puntos, con guion y DV. Ej: 12345678-9",
-        required: true,
-      },
-
-      {
-        name: "email",
-        label: "Email",
-        type: "email",
-        placeholder: "persona@correo.cl",
-        required: true,
-      },
-      {
-        name: "phone",
-        label: "Teléfono",
-        type: "tel",
-        placeholder: "+56 9 1234 5678",
-        help: "Ej: +56 9 1234 5678",
-      },
-      {
-        name: "birth_date",
-        label: "Fecha de nacimiento",
-        type: "date",
-        min: "1900-01-01",
-        max: "today",
-      },
-      {
-        name: "gender",
-        label: "Género",
-        type: "select",
-        options: [
-          { value: "male", label: "Masculino" },
-          { value: "female", label: "Femenino" },
-          { value: "other", label: "Otro" },
-          { value: "unknown", label: "No especifica" },
-        ],
-      },
-
-      { name: "occupation", label: "Ocupación", type: "text" },
-
-      {
-        name: "marital_status",
-        label: "Estado civil",
-        type: "select",
-        options: [
-          { value: "", label: "—" },
-          { value: "single", label: "Soltero/a" },
-          { value: "married", label: "Casado/a" },
-          { value: "divorced", label: "Divorciado/a" },
-          { value: "widowed", label: "Viudo/a" },
-          { value: "cohabiting", label: "Conviviente" },
-        ],
-        parse: (raw) => (raw ? raw : null),
-        parseInitial: (v) => v ?? null,
-      },
-
-      {
-        name: "status",
-        label: "Estado",
-        type: "select",
-        options: [
-          { value: "active", label: "Activo" },
-          { value: "suspended", label: "Suspendido" },
-          { value: "cancelled", label: "Cancelado" },
-        ],
-      },
-      {
-        name: "status_reason",
-        label: "Motivo del estado",
-        type: "textarea",
-        rows: 3,
-        colSpan: 2,
-        visibleIf: (data) => ["suspended", "cancelled"].includes(data.status),
-        help: "Se guardará en auditoría de cambios.",
-      },
-
-      { name: "notes", label: "Notas", type: "textarea", rows: 4, colSpan: 3 },
-    ],
-    [patient]
-  );
   return (
     <div className="flex flex-col items-start justify-between w-full gap-4 md:flex-row md:items-center">
       <div className="flex items-start gap-4">
@@ -130,36 +44,21 @@ export default function PatientCard({ patient }) {
         </button>
       </div>
       {/* Modal Paciente */}
-      <ResourceFormModal
+      <SideModal
         open={openPatientModal}
         onClose={() => setOpenPatientModal(false)}
-        title="Datos Paciente"
-        description="Para editar datos principales"
-        schema={patientSchema}
-        submitRoute={
-          patient
-            ? route("patients.update", patient.id)
-            : route("patients.store")
-        }
-        method={"patch"}
-        initialValues={{
-          name: patient?.name ?? "",
-          last_name: patient?.last_name ?? "",
-          rut: patient?.rut ?? "",
-          email: patient?.email ?? "",
-          phone: patient?.phone ?? "",
-          birth_date: patient?.birth_date ?? "",
-          gender: patient?.gender ?? "",
-          occupation: patient?.occupation ?? "",
-          marital_status: patient?.marital_status ?? "",
-          status: patient?.status ?? "",
-          status_reason: patient?.status_reason ?? "",
-        }}
-        afterSubmitReloadOnly={["patient"]}
-        columns={3}
-        maxWidth={"3xl"}
-        key={`gen-${patient?.id ?? "new"}`}
-      />
+        title="Nuevo Paciente"
+        description="Datos del nuevo paciente"
+        width="4xl"
+      >
+        <ModalCreateEditPatient
+          patient={patient}
+          setOpenModalPatient={setOpenPatientModal}
+          communes={communes}
+          regions={regions}
+          provinces={provinces}
+        />
+      </SideModal>
     </div>
   );
 }

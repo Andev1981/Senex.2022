@@ -9,7 +9,7 @@ import ChilePhoneInput from "@/Components/ChilePhoneInput";
 import RutInput from "@/Components/RutInput";
 import moment from "moment";
 
-function ModalCreateEditPatient({
+export default function ModalCreateEditPatient({
   patient,
   setOpenModalPatient,
   communes,
@@ -25,6 +25,11 @@ function ModalCreateEditPatient({
     birth_date: patient?.birth_date
       ? moment.utc(patient.birth_date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
+    gender: patient?.gender || "",
+    occupation: patient?.occupation || "",
+    marital_status: patient?.marital_status || "",
+    status: patient?.status || "active",
+    status_reason: patient?.status_reason || "",
     phone: patient?.phone || "",
     street: patient?.street || "",
     number: patient?.number || "",
@@ -141,6 +146,7 @@ function ModalCreateEditPatient({
           />
           <ChilePhoneInput
             initialValue={data?.phone}
+            value={data?.phone}
             onChange={(phone) => setData("phone", phone)}
           />
           <InputError message={errors?.phone} className="mt-2" />
@@ -149,6 +155,7 @@ function ModalCreateEditPatient({
           <InputLabel htmlFor="rut" value="Rut" className="ml-2 text-primary" />
           <RutInput
             initialValue={data?.rut}
+            value={data?.rut}
             onChange={(rut) => setData("rut", rut)}
             setRutError={(error) => (errors.rut = error)}
           />
@@ -171,6 +178,121 @@ function ModalCreateEditPatient({
             className="w-full"
           />
           <InputError message={errors?.birth_date} className="mt-2" />
+        </div>
+        <div>
+          <InputLabel
+            htmlFor="occupation"
+            value="Ocupación"
+            className="ml-2 text-primary"
+          />
+          <TextInput
+            type="text"
+            id="occupation"
+            name="occupation"
+            value={data?.occupation}
+            onChange={(e) => handleChange(e)}
+            required
+            className="w-full"
+          />
+          <InputError message={errors?.occupation} className="mt-2" />
+        </div>
+        <div>
+          <InputLabel
+            htmlFor="gender"
+            value="Sexo"
+            className="ml-2 text-primary"
+          />
+          <select
+            id="gender"
+            name="gender"
+            value={data.gender}
+            onChange={(e) => {
+              setData("gender", e.target.value);
+            }}
+            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+            required
+          >
+            {!data.gender && <option value="">-- Sexo --</option>}
+
+            <option key={"female"} value={"female"}>
+              Femenino
+            </option>
+            <option key={"male"} value={"male"}>
+              Masculino
+            </option>
+            <option key={"other"} value={"other"}>
+              Otro
+            </option>
+          </select>
+          <InputError message={errors.gender} className="mt-2" />
+        </div>
+        <div>
+          <InputLabel
+            htmlFor="marital_status"
+            value="Estado civil"
+            className="ml-2 text-primary"
+          />
+          <select
+            id="marital_status"
+            name="marital_status"
+            value={data.marital_status}
+            onChange={(e) => {
+              setData("marital_status", e.target.value);
+            }}
+            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+            required
+          >
+            {!data.marital_status && (
+              <option value="">-- Estado civil --</option>
+            )}
+
+            <option key={"single"} value={"single"}>
+              Soltero/a
+            </option>
+            <option key={"married"} value={"married"}>
+              Casado/a
+            </option>
+            <option key={"divorced"} value={"divorced"}>
+              Divorciado/a
+            </option>
+            <option key={"widowed"} value={"widowed"}>
+              Viudo/a
+            </option>
+            <option key={"cohabiting"} value={"cohabiting"}>
+              Conviviente
+            </option>
+          </select>
+          <InputError message={errors.gender} className="mt-2" />
+        </div>
+        <div>
+          <InputLabel
+            htmlFor="status"
+            value="Estado"
+            className="ml-2 text-primary"
+          />
+          <select
+            id="status"
+            name="status"
+            value={data.status}
+            onChange={(e) => {
+              setData("status", e.target.value);
+            }}
+            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+            required
+          >
+            {!data.status && <option value="">-- Estado --</option>}
+
+            <option key={"active"} value={"active"}>
+              Activo
+            </option>
+            <option key={"suspended"} value={"suspended"}>
+              Suspendido
+            </option>
+            <option key={"cancelled"} value={"cancelled"}>
+              Cancelado
+            </option>
+          </select>
+          <InputError message={errors.status} className="mt-2" />
         </div>
       </div>
       <hr className="my-4" />
@@ -331,5 +453,3 @@ function ModalCreateEditPatient({
     </form>
   );
 }
-
-export default ModalCreateEditPatient;

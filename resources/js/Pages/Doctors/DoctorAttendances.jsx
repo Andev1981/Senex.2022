@@ -56,7 +56,7 @@ export default function DoctorAttendances({
   const stats = useMemo(() => {
     const total = filteredSessions.length;
     const totalRevenue = filteredSessions.reduce(
-      (sum, s) => sum + (s.patient_amount || 0),
+      (sum, s) => sum + (s.patient_amount_clp || 0),
       0
     );
     const totalCommission = filteredSessions.reduce(
@@ -259,16 +259,16 @@ export default function DoctorAttendances({
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="p-6 mx-auto space-y-6 max-w-7xl">
       {/* Header */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <FileText className="w-7 h-7 text-blue-600" />
+            <h1 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
+              <FileText className="text-blue-600 w-7 h-7" />
               Reporte de Sesiones
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="mt-1 text-gray-600">
               {doctor.name} {doctor.last_name} - {doctor.specialty}
             </p>
           </div>
@@ -281,39 +281,39 @@ export default function DoctorAttendances({
       </div>
 
       {/* Filtros */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-5 h-5 text-purple-600" />
           <h2 className="text-lg font-bold text-gray-900">Filtros de fecha</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block mb-2 text-sm font-semibold text-gray-700">
               Fecha inicio
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Calendar className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                className="w-full py-2 pl-10 pr-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block mb-2 text-sm font-semibold text-gray-700">
               Fecha fin
             </label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Calendar className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                className="w-full py-2 pl-10 pr-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
               />
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function DoctorAttendances({
           <div className="flex items-end gap-2">
             <button
               onClick={applyFilters}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 px-4 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700"
               disabled
               style={{ display: "none" }}
             >
@@ -329,7 +329,7 @@ export default function DoctorAttendances({
             </button>
             <button
               onClick={resetFilters}
-              className="w-full px-4 py-2 border-2 border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full px-4 py-2 font-semibold text-gray-700 transition-colors border-2 border-gray-200 rounded-lg hover:bg-gray-50"
             >
               Restablecer
             </button>
@@ -339,7 +339,7 @@ export default function DoctorAttendances({
             <button
               onClick={exportToPDF}
               disabled={isExporting || filteredSessions.length === 0}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center w-full gap-2 px-4 py-2 font-semibold text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               {isExporting ? "Exportando..." : "Exportar PDF"}
@@ -349,64 +349,64 @@ export default function DoctorAttendances({
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 font-medium">
+              <p className="text-sm font-medium text-gray-600">
                 Total Sesiones
               </p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
+              <p className="mt-1 text-3xl font-bold text-gray-900">
                 {stats.total}
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl">
               <Calendar className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 font-medium">
+              <p className="text-sm font-medium text-gray-600">
                 Ingresos Totales
               </p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
+              <p className="mt-1 text-3xl font-bold text-gray-900">
                 {fmtCLP(stats.totalRevenue)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-xl">
               <DollarSign className="w-6 h-6 text-emerald-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 font-medium">Comisiones</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
+              <p className="text-sm font-medium text-gray-600">Comisiones</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900">
                 {fmtCLP(stats.totalCommission)}
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl">
               <TrendingUp className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 font-medium">
+              <p className="text-sm font-medium text-gray-600">
                 Pacientes Únicos
               </p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
+              <p className="mt-1 text-3xl font-bold text-gray-900">
                 {stats.uniquePatients}
               </p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-xl">
               <Users className="w-6 h-6 text-orange-600" />
             </div>
           </div>
@@ -414,12 +414,12 @@ export default function DoctorAttendances({
       </div>
 
       {/* Tabla de sesiones */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900">
             Detalle de Sesiones
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="mt-1 text-sm text-gray-600">
             Mostrando {filteredSessions.length} sesiones del período
             seleccionado
           </p>
@@ -428,40 +428,40 @@ export default function DoctorAttendances({
         <div className="overflow-x-auto">
           {filteredSessions.length === 0 ? (
             <div className="p-12 text-center">
-              <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium">
+              <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <p className="font-medium text-gray-500">
                 No hay sesiones en el período seleccionado
               </p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="mt-1 text-sm text-gray-400">
                 Intenta ajustar los filtros de fecha
               </p>
             </div>
           ) : (
             <table className="w-full">
-              <thead className="bg-gray-50 border-b-2 border-gray-200">
+              <thead className="border-b-2 border-gray-200 bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-left text-gray-600 uppercase">
                     #Sesión
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-left text-gray-600 uppercase">
                     Fecha
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-left text-gray-600 uppercase">
                     Hora
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-left text-gray-600 uppercase">
                     Paciente
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-left text-gray-600 uppercase">
                     Tipo de Sesión
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-left text-gray-600 uppercase">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-right text-gray-600 uppercase">
                     Monto
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-xs font-bold tracking-wider text-right text-gray-600 uppercase">
                     Comisión
                   </th>
                 </tr>
@@ -470,16 +470,16 @@ export default function DoctorAttendances({
                 {filteredSessions.map((session) => (
                   <tr
                     key={session.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="transition-colors hover:bg-gray-50"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                       #{session.session_number}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                       {fmtDate(session.date)}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5 text-gray-400" />
                         {fmtTime(session.time)}
@@ -489,7 +489,7 @@ export default function DoctorAttendances({
                       <div className="font-medium text-gray-900">
                         {session.patient?.full_name}
                       </div>
-                      {/* <div className="text-gray-500 text-xs">
+                      {/* <div className="text-xs text-gray-500">
                         {session.patient?.rut}
                       </div> */}
                     </td>
@@ -499,45 +499,45 @@ export default function DoctorAttendances({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          session.status === "Completada"
+                          session.status === "completed"
                             ? "bg-emerald-100 text-emerald-700"
-                            : session.status === "Agendada"
+                            : session.status === "scheduled"
                             ? "bg-blue-100 text-blue-700"
-                            : session.status === "Cancelada"
+                            : session.status === "cancelled"
                             ? "bg-red-100 text-red-700"
                             : "bg-gray-100 text-gray-700"
                         }`}
                       >
-                        {session.status === "Completada"
+                        {session.status === "completed"
                           ? "Completada"
-                          : session.status === "Agendada"
+                          : session.status === "scheduled"
                           ? "Agendada"
-                          : session.status === "Cancelada"
+                          : session.status === "cancelled"
                           ? "Cancelada"
                           : session.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
-                      {fmtCLP(session.patient_amount)}
+                    <td className="px-6 py-4 text-sm font-semibold text-right text-gray-900 whitespace-nowrap">
+                      {fmtCLP(session.patient_amount_clp)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-purple-700">
+                    <td className="px-6 py-4 text-sm font-semibold text-right text-purple-700 whitespace-nowrap">
                       {fmtCLP(session.doctor_amount_clp)}
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+              <tfoot className="border-t-2 border-gray-200 bg-gray-50">
                 <tr>
                   <td
                     colSpan="6"
-                    className="px-6 py-4 text-sm font-bold text-gray-900 text-right"
+                    className="px-6 py-4 text-sm font-bold text-right text-gray-900"
                   >
                     TOTALES:
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">
+                  <td className="px-6 py-4 text-sm font-bold text-right text-gray-900 whitespace-nowrap">
                     {fmtCLP(stats.totalRevenue)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-purple-700">
+                  <td className="px-6 py-4 text-sm font-bold text-right text-purple-700 whitespace-nowrap">
                     {fmtCLP(stats.totalCommission)}
                   </td>
                 </tr>

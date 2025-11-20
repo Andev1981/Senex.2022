@@ -14,6 +14,8 @@ import {
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
 import TablePatients from "./TablePatients";
+import ModalCreateEditPatient from "./ModalCreateEditPatient";
+import SideModal from "@/Components/SideModal";
 
 export default function IndexPatients({
   patients,
@@ -21,7 +23,7 @@ export default function IndexPatients({
   provinces,
   regions,
 }) {
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [openPatientModal, setOpenPatientModal] = useState(false);
 
   return (
     <AuthenticatedLayout>
@@ -43,7 +45,7 @@ export default function IndexPatients({
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => alert("Nuevo paciente")}
+                onClick={() => setOpenPatientModal(true)}
                 className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
               >
                 <Plus className="w-4 h-4" />
@@ -115,7 +117,7 @@ export default function IndexPatients({
         <TablePatients patients={patients} communes={communes} />
 
         {/* Modal Detalle Paciente */}
-        {selectedPatient && (
+        {/*  {selectedPatient && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl">
@@ -240,8 +242,23 @@ export default function IndexPatients({
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
+      <SideModal
+        open={openPatientModal}
+        onClose={() => setOpenPatientModal(false)}
+        title="Nuevo Paciente"
+        description="Datos del nuevo paciente"
+        width="4xl"
+      >
+        <ModalCreateEditPatient
+          patient={null}
+          setOpenModalPatient={setOpenPatientModal}
+          communes={communes}
+          regions={regions}
+          provinces={provinces}
+        />
+      </SideModal>
     </AuthenticatedLayout>
   );
 }

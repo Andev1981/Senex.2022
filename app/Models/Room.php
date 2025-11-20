@@ -9,7 +9,9 @@ class Room extends Model
 {
 
 
-  protected $fillable = ['branch_id', 'name', 'status'];
+  protected $fillable = ['branch_id', 'name', 'capacity','status'];
+
+  protected $casts = ['capacity' => 'integer'];
 
   public function branch()
   {

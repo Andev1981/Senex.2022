@@ -14,7 +14,6 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\SessionType;
 use App\Models\Treatment;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 

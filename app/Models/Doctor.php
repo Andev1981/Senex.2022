@@ -13,16 +13,18 @@ class Doctor extends Model
     use HasFactory, HasAddresses;
 
     protected $fillable = [
+        'branch_id',
         'user_id',
         'name',
         'last_name',
         'rut',
         'email',
         'phone',
+        'specialty',
         'birth_date',
         'gender',
-        'specialty',
         'status',
+        'mobile_access_enabled',
         'status_reason',
         'status_changed_at'
     ];
@@ -31,6 +33,7 @@ class Doctor extends Model
         'birth_date' => 'date',
         'status_changed_at' => 'datetime',
     ];
+
 
     public function patientAssignments()
     {
@@ -45,34 +48,12 @@ class Doctor extends Model
             ->withTimestamps();
     }
 
-    public function getAssignedPatientsAttribute()
-    {
-        return $this->patients;
-    }
 
     public function sessions(){
         return $this->hasMany(TreatmentSession::class);
     }
 
-    public function sessionsMonth(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->sessions()
-                            ->whereMonth('date', now()->month)
-                            ->whereYear('date', now()->year)
-                            ->count()
-        );
-    }
-
-    public function getRevenueMonthAttribute()
-    {
-        return $this->sessions()
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
-            ->sum('doctor_amount_clp');
-    }
-
-    public function user()
+     public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -91,6 +72,36 @@ class Doctor extends Model
     {
         return $this->hasMany(DoctorCommissionRate::class);
     }
+
+    /* Attributes */
+
+    public function assignedPatients(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->patients
+        );
+    }
+
+    public function sessionsMonth(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->sessions()
+                            ->whereMonth('date', now()->month)
+                            ->whereYear('date', now()->year)
+                            ->count()
+        );
+    }
+
+    public function revenueMonth(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->sessions()
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->sum('doctor_amount_clp')
+        );
+    }
+
 
 
     public function getAgeAttribute()

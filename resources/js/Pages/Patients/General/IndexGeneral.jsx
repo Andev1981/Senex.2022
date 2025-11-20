@@ -16,7 +16,12 @@ export default function IndexGeneral({
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
-        <PatientData patient={patient} />
+        <PatientData
+          patient={patient}
+          communes={communes}
+          regions={regions}
+          provinces={provinces}
+        />
         <PatientAddress
           patient={patient}
           communes={communes}

@@ -13,6 +13,7 @@ class Patient extends Model
     use HasFactory, HasAddresses;
 
     protected $fillable = [
+        'branch_id',
         'name',
         'last_name',
         'rut',
@@ -169,7 +170,7 @@ class Patient extends Model
     }
 
 
-    public function getPaymentStatusAttribute(): string
+    public function paymentStatus(): string
     {
         $overdue = $this->debts()
             ->whereIn('debts.status', ['pending', 'partial', 'overdue'])

@@ -101,12 +101,12 @@ export default function TableDoctors({
         },
       },
       {
-        id: "is_active",
+        id: "status",
         header: "ESTADO",
         cell: ({ row }) => {
-          const { is_active } = row.original;
-          const color = is_active ? "bg-green-500" : "bg-gray-500";
-          const label = is_active ? "Activo" : "Inactivo";
+          const { status } = row.original;
+          const color = status == "active" ? "bg-green-500" : "bg-gray-500";
+          const label = status == "active" ? "Activo" : "Inactivo";
           return (
             <span
               className={`inline-flex text-white items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}
@@ -234,7 +234,7 @@ export default function TableDoctors({
             </button>
             <button
               onClick={exportToExcel}
-              className="inline-flex items-center gap-2 text-sm font-medium border-2 border-gray-200 px-2 py-2 text-white transition bg-green-600 rounded-md hover:bg-green-700"
+              className="inline-flex items-center gap-2 px-2 py-2 text-sm font-medium text-white transition bg-green-600 border-2 border-gray-200 rounded-md hover:bg-green-700"
             >
               <FileDown className="w-4 h-4" /> Excel
             </button>

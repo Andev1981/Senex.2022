@@ -45,9 +45,9 @@ class TreatmentSession extends Model
         'homework',
         'next_goals',
         // Montos
-        'patient_amount',
+        'patient_amount_clp',
         'doctor_amount_clp',
-        'clinic_amount',
+        'clinic_amount_clp',
     ];
 
     protected $casts = [
@@ -64,9 +64,9 @@ class TreatmentSession extends Model
         'rom_abduction_after' => 'integer',
         'techniques' => 'array',
         'exercises' => 'array',
-        'patient_amount' => 'integer',
+        'patient_amount_clp' => 'integer',
         'doctor_amount_clp' => 'integer',
-        'clinic_amount' => 'integer',
+        'clinic_amount_clp' => 'integer',
     ];
 
     /**

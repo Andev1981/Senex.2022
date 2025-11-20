@@ -20,7 +20,7 @@ export default function AuthenticatedLayout({ header, children }) {
     <div className="flex w-full overflow-hidden min-h-dvh bg-slate-50">
       <aside
         className={`${
-          sidebarOpen ? "w-52" : "w-20"
+          sidebarOpen ? "w-52" : "w-18"
         } flex-none sticky top-0 h-dvh overflow-y-auto transition-all duration-300`}
       >
         <Side sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

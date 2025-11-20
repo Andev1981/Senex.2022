@@ -94,7 +94,7 @@ export default function DoctorsIndex({
         <DoctorAttendances
           doctor={selectedDoctor}
           sessions={selectedDoctor?.sessions?.filter(
-            (s) => s.status === "Completada"
+            (s) => s.status === "scheduled"
           )}
           setIsModalOpenAttendences={setIsModalOpenAttendences}
         />

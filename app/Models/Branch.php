@@ -9,7 +9,9 @@ class Branch extends Model
 {
   use HasAddresses;
 
-  protected $fillable = ['tenant_id', 'name', 'code', 'timezone'];
+  protected $fillable = ['name', 'rut', 'phone', 'email','active'];
+
+  protected $casts = ['active' => 'boolean'];
 
   public function rooms()
   {

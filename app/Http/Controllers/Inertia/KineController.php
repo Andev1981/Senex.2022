@@ -26,19 +26,25 @@ class KineController extends Controller
 
         // KPIs del día
         $today = Carbon::today();
+        $month = Carbon::now()->month;
         $sessionsToday = TreatmentSession::where('doctor_id', $doctor->id)
             ->whereDate('date', $today)
+            ->get();
+
+        $sessionsMont = TreatmentSession::where('doctor_id', $doctor->id)
+            ->whereDate('date', $month)
             ->get();
 
         $kpis = [
             'sessions_today' => $sessionsToday->count(),
             'completed_today' => $sessionsToday->where('status', 'Completada')->count(),
             'pending_today' => $sessionsToday->where('status', 'Programada')->count(),
-            'revenue_today' => $sessionsToday->sum('doctor_amount'),
+            'today_earnings' => $sessionsToday->sum('doctor_amount'),
+            'month_earnings' => $sessionsMont->sum('doctor_amount'),
         ];
 
         // Agenda del día
-        $agenda = TreatmentSession::with(['patient', 'treatment'])
+        $agenda = TreatmentSession::with(['patient', 'treatment','sessionType'])
             ->where('doctor_id', $doctor->id)
             ->whereDate('date', $today)
             ->orderBy('time')
@@ -47,7 +53,7 @@ class KineController extends Controller
         // Pacientes asignados
         $patientsCount = $doctor->patients()->count();
 
-        return Inertia::render('Kine/Mobile/Dashboard', [
+        return Inertia::render('KineMobile/Dashboard', [
             'doctor' => $doctor,
             'kpis' => $kpis,
             'agenda' => $agenda,
@@ -70,7 +76,7 @@ class KineController extends Controller
             ->withCount(['sessions as total_sessions'])
             ->get();
 
-        return Inertia::render('Kine/MyPatients', [
+        return Inertia::render('KineMobile/MyPatients', [
             'doctor' => $doctor,
             'patients' => $patients,
         ]);
@@ -108,7 +114,7 @@ class KineController extends Controller
             'revenue' => $sessions->sum('doctor_amount'),
         ];
 
-        return Inertia::render('Kine/MySessions', [
+        return Inertia::render('KineMobile/MySessions', [
             'doctor' => $doctor,
             'sessions' => $sessions,
             'stats' => $stats,
@@ -143,7 +149,7 @@ class KineController extends Controller
             'commission_month' => $sessions->sum('doctor_amount'),
         ];
 
-        return Inertia::render('Kine/MyProfile', [
+        return Inertia::render('KineMobile/MyProfile', [
             'doctor' => $doctor,
             'stats' => $stats,
         ]);
