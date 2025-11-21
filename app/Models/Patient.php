@@ -35,6 +35,10 @@ class Patient extends Model
         'status_changed_at' => 'datetime',
     ];
 
+    public function sessions(){
+        return $this->hasMany(TreatmentSession::class);
+    }
+
     public function vitals()
     {
         return $this->hasMany(Vital::class);

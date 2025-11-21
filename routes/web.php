@@ -26,7 +26,7 @@ use App\Http\Livewire\{
 use App\Http\Controllers\Inertia\{
   DteController,
   SessionTypeController,
-  PatientController,
+  PatientController as InertiaPatientController,
   PaymentsController,
   InvoicesController,
   AttendancesController,
@@ -35,6 +35,7 @@ use App\Http\Controllers\Inertia\{
     TreatmentController,
   VitalController,
 };
+
 
 
 use App\Http\Controllers\{
@@ -109,21 +110,21 @@ Route::group(['middleware' => ['auth']], function () {
 
   /* Rutas React Inertia */
   /* pacientes */
- /*  Route::get('pacientes', [PatientController::class, 'index'])->name('pacientes'); */
-  Route::get('pacientes/{patient}', [PatientController::class, 'show'])->name('pacientes.show');
-  Route::post('pacientes-update/{patient}', [PatientController::class, 'update'])->name('pacientes.update');
-  Route::post('pacientes-store', [PatientController::class, 'store'])->name('pacientes.store');
-  Route::get('pacientes-destroy/{patient}', [PatientController::class, 'destroy'])->name('pacientes.destroy');
-  Route::get('informes', [PatientController::class, 'informes'])->name('informes');
-  Route::get('pos', [PatientController::class, 'pos'])->name('pos');
-  Route::get('agenda', [PatientController::class, 'agenda'])->name('agenda');
-  Route::get('tratamientos', [PatientController::class, 'tratamientos'])->name('tratamientos');
+ /*  Route::get('pacientes', [InertiaPatientController::class, 'index'])->name('pacientes'); */
+  Route::get('pacientes/{patient}', [InertiaPatientController::class, 'show'])->name('pacientes.show');
+  Route::post('pacientes-update/{patient}', [InertiaPatientController::class, 'update'])->name('pacientes.update');
+  Route::post('pacientes-store', [InertiaPatientController::class, 'store'])->name('pacientes.store');
+  Route::get('pacientes-destroy/{patient}', [InertiaPatientController::class, 'destroy'])->name('pacientes.destroy');
+  Route::get('informes', [InertiaPatientController::class, 'informes'])->name('informes');
+  Route::get('pos', [InertiaPatientController::class, 'pos'])->name('pos');
+  Route::get('agenda', [InertiaPatientController::class, 'agenda'])->name('agenda');
+  Route::get('tratamientos', [InertiaPatientController::class, 'tratamientos'])->name('tratamientos');
 
 
-  Route::post('patients-documents', [PatientController::class, 'document_post'])->name('patient.documents.store');
-  //Route::resource('treatment-sessions', PatientController::class)->names('treatment_sessions');
-  Route::resource('payments', PatientController::class)->names('payments');
-  Route::resource('patients', PatientController::class)->names('patients');
+  Route::post('patients-documents', [InertiaPatientController::class, 'document_post'])->name('patient.documents.store');
+  //Route::resource('treatment-sessions', InertiaPatientController::class)->names('treatment_sessions');
+  Route::resource('payments', InertiaPatientController::class)->names('payments');
+  Route::resource('patients', InertiaPatientController::class)->names('patients');
   Route::resource('addresses', AddressController::class)->names('addresses');
   Route::post('patients/{patient}/addresses', [AddressController::class, 'store'])->name('patients.addresses.store');
   Route::patch('patients/{patient}/addresses', [AddressController::class, 'update'])->name('patients.addresses.update');
@@ -196,7 +197,7 @@ Route::group(['middleware' => ['auth']], function () {
  * Estas rutas devuelven vistas completas para navegación tradicional
  */
 
- Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
+ Route::get('/patients', [InertiaPatientController::class, 'index'])->name('patients.index');
 
 Route::get('/patients/{patient}/treatments', [TreatmentController::class, 'index'])
     ->name('patients.treatments.index');
@@ -398,26 +399,50 @@ Route::get('/api/patients/{patient}/sessions/summary', [TreatmentSessionControll
 });
 
 
+use App\Http\Controllers\KineMobile\DashboardController;
+use App\Http\Controllers\KineMobile\PatientController as MobilePatientController;
+use App\Http\Controllers\KineMobile\SessionController;
+use App\Http\Controllers\KineMobile\ProfileController;
+
 use Inertia\Inertia;
 
-// Portal Kine (requiere auth + rol kine)
-// routes/web.php
-
-// Grupo de rutas para kinesiólogos autenticados
-Route::middleware(['auth'])->prefix('kine')->name('kine.')->group(function () {
-    
-    Route::get('/dashboard', [KineController::class, 'dashboard'])
-        ->name('dashboard');
-    
-    Route::get('/my-patients', [KineController::class, 'myPatients'])
-        ->name('my-patients');
-    
-    Route::get('/my-sessions', [KineController::class, 'mySessions'])
-        ->name('my-sessions');
-    
-    Route::get('/my-profile', [KineController::class, 'myProfile'])
-        ->name('my-profile');
-});
+// =============================================================================
+// KINE MOBILE: PORTAL PARA KINESIÓLOGOS
+// =============================================================================
+Route::middleware(['auth', 'ensure.kine']) // ← Tu middleware personalizado
+    ->prefix('kine')
+    ->name('kine.')
+    ->group(function () {
+         // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard');
+        Route::post('/dashboard/refresh', [DashboardController::class, 'refreshKpis'])
+            ->name('dashboard.refresh');
+        
+        // Pacientes
+        Route::get('/my-patients', [MobilePatientController::class, 'index'])
+            ->name('my-patients');
+        Route::get('/patients/{patient}', [MobilePatientController::class, 'show'])
+            ->name('patients.show');
+        
+        // Sesiones
+        Route::get('/my-sessions', [SessionController::class, 'index'])
+            ->name('my-sessions');
+        Route::get('/sessions/{session}', [SessionController::class, 'show'])
+            ->name('sessions.show');
+        Route::post('/sessions/{session}/complete', [SessionController::class, 'complete'])
+            ->name('sessions.complete');
+        Route::post('/sessions/{session}/cancel', [SessionController::class, 'cancel'])
+            ->name('sessions.cancel');
+        
+        // Perfil
+        Route::get('/my-profile', [ProfileController::class, 'index'])
+            ->name('my-profile');
+        Route::put('/my-profile', [ProfileController::class, 'update'])
+            ->name('profile.update');
+        Route::put('/my-profile/password', [ProfileController::class, 'updatePassword'])
+            ->name('profile.password');
+    });
 
 // Página de acceso denegado
 Route::get('/kine/access-denied', function() {
