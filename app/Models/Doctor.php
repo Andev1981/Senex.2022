@@ -7,7 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-
+use Illuminate\Support\Facades\DB;
 
 class Doctor extends Model
 {
@@ -44,9 +44,10 @@ class Doctor extends Model
     public function patients()
     {
         // sigue sirviendo belongsToMany para consultar “solo pacientes”
-        return $this->belongsToMany(Patient::class, 'doctor_patient_assignments')
-            ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
-            ->withTimestamps();
+          return $this->belongsToMany(Patient::class, 'doctor_patient_assignments')
+        ->select('patients.*', DB::raw('patients.id as patient_id'))
+        ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
+        ->withTimestamps();
     }
 
 

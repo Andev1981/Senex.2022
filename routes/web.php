@@ -430,10 +430,15 @@ Route::middleware(['auth', 'ensure.kine']) // ← Tu middleware personalizado
             ->name('my-sessions');
         Route::get('/sessions/{session}', [SessionController::class, 'show'])
             ->name('sessions.show');
+        Route::get('/sessions', [SessionController::class, 'create'])
+            ->name('sessions.create');
+
         Route::post('/sessions/{session}/complete', [SessionController::class, 'complete'])
             ->name('sessions.complete');
         Route::post('/sessions/{session}/cancel', [SessionController::class, 'cancel'])
             ->name('sessions.cancel');
+        Route::put('/sessions/{session}/notes', [SessionController::class, 'updateNotes'])
+    ->name('sessions.update-notes');
         
         // Perfil
         Route::get('/my-profile', [ProfileController::class, 'index'])
@@ -446,5 +451,5 @@ Route::middleware(['auth', 'ensure.kine']) // ← Tu middleware personalizado
 
 // Página de acceso denegado
 Route::get('/kine/access-denied', function() {
-    return Inertia::render('Kine/Mobile/AccessDenied');
+    return Inertia::render('KineMobile/AccessDenied');
 })->name('kine.access-denied')->middleware('auth');

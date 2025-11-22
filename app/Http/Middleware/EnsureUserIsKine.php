@@ -26,7 +26,8 @@ class EnsureUserIsKine
                 'ip' => $request->ip()
             ]);
             
-            abort(403, 'No tienes permisos para acceder a KineMobile');
+
+            return redirect()->route('kine.access-denied');
         }
 
         // 3. Verificar que exista doctor asociado

@@ -35,6 +35,8 @@ class Patient extends Model
         'status_changed_at' => 'datetime',
     ];
 
+    
+
     public function sessions(){
         return $this->hasMany(TreatmentSession::class);
     }
@@ -85,11 +87,11 @@ class Patient extends Model
     }
 
     public function doctors()
-    {
-        return $this->belongsToMany(Doctor::class, 'doctor_patient_assignments')
-            ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
-            ->withTimestamps();
-    }
+{
+    return $this->belongsToMany(Doctor::class, 'doctor_patient_assignments')
+        ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
+        ->withTimestamps();
+}
 
     public function medicalRecord()
     {

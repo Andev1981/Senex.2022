@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,64 +28,72 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-     public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
         $request->session()->regenerate();
 
-        // 🎯 REDIRECCIÓN INTELIGENTE SEGÚN ROL
         $user = $request->user();
         
         // Registrar último login
         $user->update(['last_login_at' => now()]);
 
-        // 1. Si es KINE → validar acceso móvil
+        // 🎯 REDIRECCIÓN DETERMINÍSTICA
+        $redirectTo = $this->getRedirectRoute($user);
+
+        Log::info('Usuario autenticado', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('name'),
+            'redirect_to' => $redirectTo
+        ]);
+
+        return redirect()->to($redirectTo);
+    }
+
+    /**
+     * Determinar ruta de redirección según usuario
+     */
+    protected function getRedirectRoute($user): string
+    {
+        // 1. KINE → Validar y redirigir a KineMobile
         if ($user->hasRole('kine')) {
             $doctor = $user->doctor;
             
-            // Validar que exista doctor asociado
+            // Validar doctor existe
             if (!$doctor) {
                 Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                
-                return redirect()->route('login')
-                    ->withErrors(['email' => 'No se encontró tu perfil de kinesiólogo.']);
+                session()->flash('error', 'No se encontró tu perfil de kinesiólogo.');
+                return route('login');
             }
 
             // Validar estado activo
             if ($doctor->status !== 'active') {
                 Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                
-                return redirect()->route('login')
-                    ->withErrors(['email' => "Tu cuenta está {$doctor->status}. Contacta al administrador."]);
+                session()->flash('error', "Tu cuenta está {$doctor->status}. Contacta al administrador.");
+                return route('login');
             }
 
-            // Validar acceso móvil habilitado
+            // Validar acceso móvil
             if (!$doctor->mobile_access_enabled) {
                 Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                
-                return redirect()->route('login')
-                    ->withErrors(['email' => 'Tu acceso al portal móvil está deshabilitado. Contacta al administrador.']);
+                session()->flash('error', 'Tu acceso móvil está deshabilitado. Contacta al administrador.');
+                return route('login');
             }
 
-            // ✅ Todo OK - registrar login y redirigir
+            // ✅ Todo OK - registrar y redirigir
             $doctor->update(['last_mobile_login' => now()]);
             
-            return redirect()->intended(route('kine.dashboard'));
+            return route('kine.dashboard');
         }
 
-        // 2. Si es ADMIN/SUPERADMIN → dashboard principal
+        // 2. ADMIN/SUPERADMIN → Dashboard principal
         if ($user->hasRole(['admin', 'superadmin'])) {
-            return redirect()->intended(route('dashboard'));
+            return route('/');
         }
 
-        // 3. Default fallback
-        return redirect()->intended(route('/', absolute: false));
+        // 3. FALLBACK → Ruta por defecto
+        return '/';
     }
 
     /**
@@ -95,11 +104,8 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
     }
-
-    
 }

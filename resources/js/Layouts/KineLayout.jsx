@@ -1,7 +1,7 @@
 // resources/js/Layouts/KineLayout.jsx
 import React from "react";
 import { router, usePage } from "@inertiajs/react";
-import { Home, Users, Calendar, User, LogOut } from "lucide-react";
+import { Home, Users, Calendar, User, LogOut, Plus } from "lucide-react";
 
 export default function KineLayout({ children }) {
   const { url } = usePage();
@@ -85,6 +85,14 @@ export default function KineLayout({ children }) {
           </button>
         </div>
       </nav>
+      <div className="fixed z-50 bottom-20 right-4">
+        <button
+          onClick={() => router.visit(route("kine.sessions.create"))}
+          className="flex items-center justify-center w-14 h-14 text-white transition-all shadow-lg bg-gradient-to-r from-teal-500 to-blue-500 rounded-full hover:shadow-xl hover:scale-110"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      </div>
     </div>
   );
 }

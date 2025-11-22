@@ -91,13 +91,23 @@ export default function SessionDetail({ session }) {
   const handleSaveNotes = () => {
     setIsSaving(true);
 
-    // Aquí podrías hacer una llamada AJAX para guardar las notas
-    // Por ahora solo simularemos el guardado
-    setTimeout(() => {
-      setIsSaving(false);
-      setIsEditingNotes(false);
-      alert("Notas guardadas correctamente");
-    }, 500);
+    router.put(
+      route("kine.sessions.update-notes", session.id),
+      {
+        notes: notes,
+      },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setIsSaving(false);
+          setIsEditingNotes(false);
+        },
+        onError: () => {
+          setIsSaving(false);
+          alert("Error al guardar las notas");
+        },
+      }
+    );
   };
 
   return (
@@ -315,45 +325,36 @@ export default function SessionDetail({ session }) {
           </div>
 
           {/* Información de pago */}
-          <div className="p-4 bg-white rounded-lg shadow-sm">
-            <h2 className="mb-3 font-semibold text-gray-900">
-              Información de pago
-            </h2>
+          {session.status === "completed" && (
+            <div className="p-4 bg-white rounded-lg shadow-sm">
+              <h2 className="mb-3 font-semibold text-gray-900">
+                Información de pago
+              </h2>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-                <span className="text-sm text-gray-600">
-                  Precio base sesión
-                </span>
-                <span className="font-semibold text-gray-900">
-                  ${session.session_type.base_price.toLocaleString("es-CL")}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-                <span className="text-sm text-gray-600">Monto paciente</span>
-                <span className="font-semibold text-gray-900">
-                  ${session.payment.patient_amount.toLocaleString("es-CL")}
-                </span>
-              </div>
-
-              {session.status === "Completada" && (
-                <>
-                  <div className="flex items-center justify-between p-3 border-2 border-teal-200 rounded-lg bg-teal-50">
-                    <div>
-                      <span className="text-sm text-gray-600">Tu comisión</span>
-                      <p className="text-xs text-gray-500">
+              <div className="space-y-3">
+                {session.status === "scheduled" && (
+                  <>
+                    <div className="flex items-center justify-between p-3 border-2 border-teal-200 rounded-lg bg-teal-50">
+                      <div>
+                        <span className="text-sm text-gray-600">
+                          Valor Sesión
+                        </span>
+                        {/* <p className="text-xs text-gray-500">
                         ({session.payment.commission_rate}%)
-                      </p>
+                      </p> */}
+                      </div>
+                      <span className="text-xl font-bold text-teal-600">
+                        $
+                        {session.payment.doctor_amount_clp.toLocaleString(
+                          "es-CL"
+                        )}
+                      </span>
                     </div>
-                    <span className="text-xl font-bold text-teal-600">
-                      ${session.payment.doctor_amount.toLocaleString("es-CL")}
-                    </span>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Información de timestamps */}
           <div className="p-4 bg-white rounded-lg shadow-sm">

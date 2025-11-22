@@ -79,7 +79,8 @@ export default function SessionCard({
             <div className="flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" />
               <span>
-                {session.time} • {session.duration} min
+                {new Date(session.time).toLocaleDateString("es-CL")} •{" "}
+                {session.duration} min
               </span>
             </div>
             <div className="flex items-center gap-2">
