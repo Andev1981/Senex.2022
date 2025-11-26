@@ -15,21 +15,34 @@ class Payment extends Model
 
     protected $fillable = [
         'patient_id',
+        'branch_id',
         'treatment_id',
+        'treatment_session_id',
         'payment_date',
         'transaction_reference',
-        'amount',
-        'copay',
-        'insurance_covered',
+        'amount_clp',
+        'copay_clp',
+        'insurance_covered_clp',
         'payment_method',
         'status',
         'paid_at',
+        'webpay_token',
+        'webpay_buy_order',
+        'webpay_session_id',
+        'webpay_authorization_code',
+        'webpay_payment_type',
+        'webpay_response_code',
+        'webpay_installments',
+        'webpay_card_detail',
+        'webpay_transaction_date',
+        'webpay_raw_response',
         'invoice',
         'notes',
     ];
 
     protected $casts = [
-        'payment_date' => 'date'
+        'payment_date' => 'date',
+        'webpay_transaction_date' => 'date'
     ];
 
 

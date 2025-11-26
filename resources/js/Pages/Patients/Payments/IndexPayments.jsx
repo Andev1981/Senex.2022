@@ -3,7 +3,7 @@ import { clp } from "@/utils/utils";
 import React, { useMemo, useState } from "react";
 import SideModal from "@/Components/SideModal";
 import PaymentForm from "./PaymentForm";
-import { paymentMethods } from "@/utils/status";
+import { paymentMethods } from "@/helpers/status";
 
 export default function IndexPayments({ payments, sessions, patient }) {
   const [openPaymentModal, setOpenPaymentModal] = useState(false);

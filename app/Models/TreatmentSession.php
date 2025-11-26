@@ -38,7 +38,7 @@ class TreatmentSession extends Model
         'rom_rotation_after',
         'rom_abduction_before',
         'rom_abduction_after',
-        // Arrays JSON
+        // Arrays
         'techniques',
         'exercises',
         // Notas

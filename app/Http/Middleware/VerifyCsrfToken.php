@@ -13,5 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         //
+        'payments/webpay/return',
+        'public/payments/webpay/return',
     ];
 }

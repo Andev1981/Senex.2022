@@ -8,6 +8,7 @@ use App\Models\Debt;
 use App\Models\TreatmentSession;
 use App\Models\Voucher;
 use App\Models\Invoice;
+use App\Models\PatientPlan;
 use App\Services\Dte\DteService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -46,9 +47,9 @@ class PaymentService
             }
 
             // Emitir DTE si está configurado
-            if ($data['auto_issue_dte'] ?? false) {
+            /* if ($data['auto_issue_dte'] ?? false) {
                 $this->issueDte($payment, $data['dte_type'] ?? 39);
-            }
+            } */
 
             return $payment->fresh(['allocations', 'invoice']);
         });
@@ -118,7 +119,7 @@ class PaymentService
     /**
      * Asigna el pago a sesiones específicas
      */
-    private function allocateToSessions(Payment $payment, array $sessionIds): void
+    /* private function allocateToSessions(Payment $payment, array $sessionIds): void
     {
         foreach ($sessionIds as $sessionId) {
             $session = TreatmentSession::findOrFail($sessionId);
@@ -135,12 +136,12 @@ class PaymentService
                 $this->updateDebtStatus($session->debt);
             }
         }
-    }
+    } */
 
     /**
      * Asigna el pago a deudas específicas
      */
-    private function allocateToDebts(Payment $payment, array $debtIds): void
+   /*  private function allocateToDebts(Payment $payment, array $debtIds): void
     {
         foreach ($debtIds as $debtId) {
             $debt = Debt::findOrFail($debtId);
@@ -156,7 +157,7 @@ class PaymentService
 
             $this->updateDebtStatus($debt);
         }
-    }
+    } */
 
     /**
      * Actualiza el estado de una deuda
@@ -194,7 +195,7 @@ class PaymentService
     /**
      * Emite DTE para el pago
      */
-    private function issueDte(Payment $payment, int $dteType): void
+    /* private function issueDte(Payment $payment, int $dteType): void
     {
         if (!$this->dteService) {
             Log::warning('DTE Service no disponible');
@@ -218,7 +219,7 @@ class PaymentService
                            "Error al emitir DTE: " . $e->getMessage()
             ]);
         }
-    }
+    } */
 
     /**
      * Inicia una transacción Webpay
@@ -242,6 +243,7 @@ class PaymentService
             'webpay_session_id' => $sessionId,
             'notes' => $data['notes'] ?? null,
         ]);
+
 
         // Llamar a Webpay
         $result = $this->webpay->create($buyOrder, $sessionId, $amount);
@@ -319,4 +321,104 @@ class PaymentService
         
         return "{$prefix}{$timestamp}{$random}";
     }
+
+    /**
+ * Asigna un pago a múltiples sesiones
+ */
+public function allocateToSessions(Payment $payment, array $sessionIds): void
+{
+    DB::transaction(function () use ($payment, $sessionIds) {
+        foreach ($sessionIds as $sessionId) {
+            $session = TreatmentSession::findOrFail($sessionId);
+            
+            // Crear asignación
+            PaymentAllocation::create([
+                'payment_id' => $payment->id,
+                'treatment_session_id' => $session->id,
+                'amount_clp' => $session->patient_amount_clp,
+            ]);
+            
+            // Actualizar sesión como pagada
+            $session->update([
+                'payment_status' => 'paid',
+                'paid_at' => now(),
+            ]);
+        }
+        
+        Log::info('Payment allocated to sessions', [
+            'payment_id' => $payment->id,
+            'session_ids' => $sessionIds,
+        ]);
+    });
+}
+
+/**
+ * Asigna un pago a deudas pendientes
+ */
+public function allocateToDebts(Payment $payment, array $debtIds, bool $isPartial = false): void
+{
+    DB::transaction(function () use ($payment, $debtIds, $isPartial) {
+        $remainingAmount = $payment->amount_clp;
+        
+        foreach ($debtIds as $debtId) {
+            if ($remainingAmount <= 0) break;
+            
+            $debt = Debt::findOrFail($debtId);
+            $amountToAllocate = min($remainingAmount, $debt->remaining_amount);
+            
+            // Crear asignación
+            PaymentAllocation::create([
+                'payment_id' => $payment->id,
+                'debt_id' => $debt->id,
+                'amount_clp' => $amountToAllocate,
+            ]);
+            
+            // Actualizar deuda
+            $debt->remaining_amount -= $amountToAllocate;
+            if ($debt->remaining_amount <= 0) {
+                $debt->status = 'paid';
+                $debt->paid_at = now();
+            }
+            $debt->save();
+            
+            $remainingAmount -= $amountToAllocate;
+        }
+        
+        Log::info('Payment allocated to debts', [
+            'payment_id' => $payment->id,
+            'debt_ids' => $debtIds,
+            'is_partial' => $isPartial,
+        ]);
+    });
+}
+
+/**
+ * Asigna un pago a un plan
+ */
+public function allocateToPlan(Payment $payment, int $planId): void
+{
+    DB::transaction(function () use ($payment, $planId) {
+        // Crear o actualizar PatientPlan
+        $patientPlan = PatientPlan::firstOrCreate([
+            'patient_id' => $payment->patient_id,
+            'plan_id' => $planId,
+        ], [
+            'start_date' => now(),
+            'status' => 'active',
+        ]);
+        
+        // Crear asignación
+        PaymentAllocation::create([
+            'payment_id' => $payment->id,
+            'patient_plan_id' => $patientPlan->id,
+            'amount_clp' => $payment->amount_clp,
+        ]);
+        
+        Log::info('Payment allocated to plan', [
+            'payment_id' => $payment->id,
+            'plan_id' => $planId,
+            'patient_plan_id' => $patientPlan->id,
+        ]);
+    });
+}
 }

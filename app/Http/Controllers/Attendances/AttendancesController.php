@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Inertia;
+namespace App\Http\Controllers\Attendances;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
@@ -24,6 +24,8 @@ class AttendancesController extends Controller
      */
     public function index(Request $request)
     {
+         $session = TreatmentSession::findOrFail(84);
+
         try {
             // Por defecto, solo el día actual
             $fechaInicio = $request->input('fecha_inicio', now()->format('Y-m-d'));
@@ -149,8 +151,8 @@ class AttendancesController extends Controller
                     'rom_flexion' => $session->rom_flexion ?? '',
                     'rom_abduction' => $session->rom_abduction ?? '',
                     'rom_rotation' => $session->rom_rotation ?? '',
-                    'techniques' => $session->techniques ? json_decode($session->techniques, true) : [],
-                    'exercises' => $session->exercises ? json_decode($session->exercises, true) : [],
+                    'techniques' => $session->techniques ?? [],
+                    'exercises' => $session->exercises ?? [],
                     'notes' => $session->notes ?? '',
                     'homework' => $session->homework ?? '',
                     'next_goals' => $session->next_goals ?? '',
@@ -167,8 +169,6 @@ class AttendancesController extends Controller
             });
 
             Log::info('Total de atenciones mapeadas: ' . $atenciones->count());
-
-
             // Calcular KPIs
 
             /* dd($sessions[0]->paymentAllocations); */
@@ -426,6 +426,8 @@ class AttendancesController extends Controller
                 'patient_plan_id' => $patientPlan ? $patientPlan->id : null,
                 'patient_amount_clp' => $validated['patient_amount_clp'],
                 'doctor_amount_clp' => $commissionRate['commission_amount'],
+                'techniques' => $request->techniques ?? [],
+                'exercises' => $request->exercises ?? [],
             ]);
 
             // ============================================
@@ -492,165 +494,11 @@ class AttendancesController extends Controller
     }
 
     /**
-     * Inicia una sesión (cambia estado a "in_progress")
-     */
-    public function startSession(Request $request, $id)
-    {
-        try {
-            $session = TreatmentSession::findOrFail($id);
-
-            if ($session->status !== 'scheduled') {
-                session()->flash('message', 'Solo se pueden iniciar sesiones programadas.');
-                session()->flash('type', 'error');
-                return back();
-            }
-
-            $session->update([
-                'status' => 'in_progress',
-            ]);
-
-            Log::info("Sesión iniciada: ID {$id}");
-
-            session()->flash('message', 'Sesión iniciada correctamente.');
-            session()->flash('type', 'success');
-            return back();
-        } catch (\Exception $e) {
-            Log::error("Error al iniciar sesión {$id}: " . $e->getMessage());
-            session()->flash('message', 'Error al iniciar la sesión.');
-            session()->flash('type', 'error');
-            return back();
-        }
-    }
-
-    /**
-     * Completa una sesión
-     */
-    public function completeSession(Request $request, $id)
-    {
-        try {
-            $session = TreatmentSession::findOrFail($id);
-
-            if (!in_array($session->status, ['scheduled', 'in_progress'])) {
-                session()->flash('message', 'Esta sesión no puede ser completada');
-                session()->flash('type', 'error');
-                return back();
-            }
-
-            $validated = $request->validate([
-                'pain_before' => 'required|integer|min:0|max:10',
-                'pain_after' => 'required|integer|min:0|max:10',
-                'rom_flexion' => 'nullable|numeric|min:0|max:180',
-                'rom_abduction' => 'nullable|numeric|min:0|max:180',
-                'rom_rotation' => 'nullable|numeric|min:0|max:180',
-                'techniques' => 'nullable|array',
-                'exercises' => 'nullable|array',
-                'notes' => 'nullable|string',
-                'homework' => 'nullable|string',
-                'next_goals' => 'nullable|string',
-            ]);
-
-            // Convertir arrays a JSON
-            if (isset($validated['techniques'])) {
-                $validated['techniques'] = json_encode($validated['techniques']);
-            }
-            if (isset($validated['exercises'])) {
-                $validated['exercises'] = json_encode($validated['exercises']);
-            }
-
-            $validated['status'] = 'completed';
-            $validated['completed_at'] = now();
-
-            $session->update($validated);
-
-            Log::info("Sesión completada: ID {$id}");
-
-            session()->flash('message', 'Sesión completada correctamente');
-            session()->flash('type', 'success');
-
-            return back();
-        } catch (\Exception $e) {
-            Log::error("Error al completar sesión {$id}: " . $e->getMessage());
-            session()->flash('message', 'Esta sesión no puede ser completada');
-            session()->flash('type', 'error');
-            return back();
-        }
-    }
-
-    /**
-     * Cancela una sesión
-     */
-    public function cancelSession(Request $request, $id)
-    {
-        try {
-            $session = TreatmentSession::findOrFail($id);
-
-            if ($session->status === 'cancelled') {
-                return back()->with('error', 'Esta sesión ya está cancelada');
-            }
-
-            $validated = $request->validate([
-                'cancellation_reason' => 'required|string|min:10',
-            ]);
-
-            $session->update([
-                'status' => 'cancelled',
-                'notes' => ($session->notes ?? '') . "\n\nMotivo de cancelación: " . $validated['cancellation_reason'],
-            ]);
-
-            Log::info("Sesión cancelada: ID {$id}");
-
-            return back()->with('success', 'Sesión cancelada correctamente');
-        } catch (\Exception $e) {
-            Log::error("Error al cancelar sesión {$id}: " . $e->getMessage());
-            return back()->with('error', 'Error al cancelar la sesión');
-        }
-    }
-
-    /**
-     * Marca una sesión como ausente
-     */
-    public function markAbsent(Request $request, $id)
-    {
-        try {
-            $session = TreatmentSession::findOrFail($id);
-
-            $session->update([
-                'status' => 'absent',
-                'notes' => ($session->notes ?? '') . "\n\nPaciente no asistió a la sesión",
-            ]);
-
-            Log::info("Sesión marcada como ausente: ID {$id}");
-
-            return back()->with('success', 'Sesión marcada como ausente');
-        } catch (\Exception $e) {
-            Log::error("Error al marcar ausente sesión {$id}: " . $e->getMessage());
-            return back()->with('error', 'Error al marcar la sesión como ausente');
-        }
-    }
-
-    /**
-     * Mapea el tipo de sesión del backend al formato del frontend
-     */
-    /* private function mapSessionType($type)
-    {
-        $map = [
-            'Evaluación Inicial' => 'evaluacion',
-            'Sesión' => 'sesion',
-            'Control' => 'control',
-            'Reevaluación' => 'control',
-        ];
-
-        return $map[$type] ?? 'sesion';
-    } */
-
-
-   
-
-    /**
      * Actualizar sesión existente
      */
     public function update(Request $request, $id)
     {
+        
         $session = TreatmentSession::findOrFail($id);
         
             $validated = $request->validate([
@@ -931,6 +779,159 @@ class AttendancesController extends Controller
             return back()->with('error', 'Error al actualizar la sesión: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Inicia una sesión (cambia estado a "in_progress")
+     */
+    public function startSession(Request $request, $id)
+    {
+        try {
+            $session = TreatmentSession::findOrFail($id);
+
+            if ($session->status !== 'scheduled') {
+                session()->flash('message', 'Solo se pueden iniciar sesiones programadas.');
+                session()->flash('type', 'error');
+                return back();
+            }
+
+            $session->update([
+                'status' => 'in_progress',
+            ]);
+
+            Log::info("Sesión iniciada: ID {$id}");
+
+            session()->flash('message', 'Sesión iniciada correctamente.');
+            session()->flash('type', 'success');
+            return back();
+        } catch (\Exception $e) {
+            Log::error("Error al iniciar sesión {$id}: " . $e->getMessage());
+            session()->flash('message', 'Error al iniciar la sesión.');
+            session()->flash('type', 'error');
+            return back();
+        }
+    }
+
+    /**
+     * Completa una sesión
+     */
+    public function completeSession(Request $request, $id)
+    {
+        try {
+            $session = TreatmentSession::findOrFail($id);
+
+            if (!in_array($session->status, ['scheduled', 'in_progress'])) {
+                session()->flash('message', 'Esta sesión no puede ser completada');
+                session()->flash('type', 'error');
+                return back();
+            }
+
+            $validated = $request->validate([
+                'pain_before' => 'required|integer|min:0|max:10',
+                'pain_after' => 'required|integer|min:0|max:10',
+                'rom_flexion' => 'nullable|numeric|min:0|max:180',
+                'rom_abduction' => 'nullable|numeric|min:0|max:180',
+                'rom_rotation' => 'nullable|numeric|min:0|max:180',
+                'techniques' => 'nullable|array',
+                'exercises' => 'nullable|array',
+                'notes' => 'nullable|string',
+                'homework' => 'nullable|string',
+                'next_goals' => 'nullable|string',
+            ]);
+
+            // Convertir arrays a JSON
+            if (isset($validated['techniques'])) {
+                $validated['techniques'] = json_encode($validated['techniques']);
+            }
+            if (isset($validated['exercises'])) {
+                $validated['exercises'] = json_encode($validated['exercises']);
+            }
+
+            $validated['status'] = 'completed';
+            $validated['completed_at'] = now();
+
+            $session->update($validated);
+
+            Log::info("Sesión completada: ID {$id}");
+
+            session()->flash('message', 'Sesión completada correctamente');
+            session()->flash('type', 'success');
+
+            return back();
+        } catch (\Exception $e) {
+            Log::error("Error al completar sesión {$id}: " . $e->getMessage());
+            session()->flash('message', 'Esta sesión no puede ser completada');
+            session()->flash('type', 'error');
+            return back();
+        }
+    }
+
+    /**
+     * Cancela una sesión
+     */
+    public function cancelSession(Request $request, $id)
+    {
+        try {
+            $session = TreatmentSession::findOrFail($id);
+
+            if ($session->status === 'cancelled') {
+                return back()->with('error', 'Esta sesión ya está cancelada');
+            }
+
+            $validated = $request->validate([
+                'cancellation_reason' => 'required|string|min:10',
+            ]);
+
+            $session->update([
+                'status' => 'cancelled',
+                'notes' => ($session->notes ?? '') . "\n\nMotivo de cancelación: " . $validated['cancellation_reason'],
+            ]);
+
+            Log::info("Sesión cancelada: ID {$id}");
+
+            return back()->with('success', 'Sesión cancelada correctamente');
+        } catch (\Exception $e) {
+            Log::error("Error al cancelar sesión {$id}: " . $e->getMessage());
+            return back()->with('error', 'Error al cancelar la sesión');
+        }
+    }
+
+    /**
+     * Marca una sesión como ausente
+     */
+    public function markAbsent(Request $request, $id)
+    {
+        try {
+            $session = TreatmentSession::findOrFail($id);
+
+            $session->update([
+                'status' => 'absent',
+                'notes' => ($session->notes ?? '') . "\n\nPaciente no asistió a la sesión",
+            ]);
+
+            Log::info("Sesión marcada como ausente: ID {$id}");
+
+            return back()->with('success', 'Sesión marcada como ausente');
+        } catch (\Exception $e) {
+            Log::error("Error al marcar ausente sesión {$id}: " . $e->getMessage());
+            return back()->with('error', 'Error al marcar la sesión como ausente');
+        }
+    }
+
+    /**
+     * Mapea el tipo de sesión del backend al formato del frontend
+     */
+    /* private function mapSessionType($type)
+    {
+        $map = [
+            'Evaluación Inicial' => 'evaluacion',
+            'Sesión' => 'sesion',
+            'Control' => 'control',
+            'Reevaluación' => 'control',
+        ];
+
+        return $map[$type] ?? 'sesion';
+    } */
+
 
     /**
      * Asigna un paciente a un doctor si no está asignado

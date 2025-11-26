@@ -10,7 +10,7 @@ import RutInput from "@/Components/RutInput";
 import Switch from "@/Components/Switch";
 import moment from "moment";
 import { useEffect } from "react";
-import { especialidadesChile } from "@/Utils/lists";
+import { especialidadesChile } from "@/constants/especialidades";
 
 export default function DoctorDetailModal({
   doctor,

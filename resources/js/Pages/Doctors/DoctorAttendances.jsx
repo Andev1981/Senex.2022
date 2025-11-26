@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { router } from "@inertiajs/react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { logoBase64, fmtCLP, fmtDate, fmtTime } from "@/utils/utils";
+import { fmtCLP, fmtDate, fmtTime } from "@/utils/utils";
+import { logoBase64 } from "@/constants/logo";
 
 import {
   Calendar,

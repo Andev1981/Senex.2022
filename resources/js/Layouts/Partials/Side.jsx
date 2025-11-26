@@ -16,6 +16,7 @@ import {
   Computer,
   List,
   Shell,
+  DollarSign,
 } from "lucide-react";
 
 function Side({ sidebarOpen, setSidebarOpen }) {
@@ -74,8 +75,8 @@ function Side({ sidebarOpen, setSidebarOpen }) {
           },
         ],
       }, */
-      /* { id: "pagos", label: "pagos.index", icon: DollarSign, badge: "3" }, // ejemplo si tu ruta es pagos.index
-      { id: "inventario", label: "Inventario", icon: Package, badge: null },
+      { id: "test.webpay", label: "test/webpay", icon: DollarSign, badge: "3" }, // ejemplo si tu ruta es pagos.index
+      /*{ id: "inventario", label: "Inventario", icon: Package, badge: null },
       { id: "reportes", label: "Reportes", icon: BarChart3, badge: null }, */
     ],
     []

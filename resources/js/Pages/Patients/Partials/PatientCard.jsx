@@ -10,7 +10,7 @@ import {
 import { useState } from "react";
 import ModalCreateEditPatient from "./../ModalCreateEditPatient";
 import SideModal from "@/Components/SideModal";
-import { t } from "@/utils/translations";
+import { t } from "@/constants/translations";
 
 export default function PatientCard({
   patient,

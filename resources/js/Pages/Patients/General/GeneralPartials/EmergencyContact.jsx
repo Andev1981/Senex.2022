@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { AlertCircle, Edit } from "lucide-react";
 import ResourceFormModal from "@/Components/ResourceFormModal";
-import { t } from "@/utils/translations";
+import { t } from "@/constants/translations";
 
 export default function EmergencyContact({ patient, contact }) {
   const [openContactModal, setOpenContactModal] = useState(false);

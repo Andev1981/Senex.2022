@@ -10,14 +10,13 @@ use App\Http\Controllers\Inertia\{
   SessionTypeController,
   PaymentsController,
   InvoicesController,
-  AttendancesController,
-    KineController,
-    TreatmentController,
+  TreatmentController,
   VitalController,
 };
 
 use App\Http\Controllers\Patients\PatientController as InertiaPatientController;
 use App\Http\Controllers\Doctors\DoctorController;
+use App\Http\Controllers\Attendances\AttendancesController;
 
 use App\Http\Controllers\{
   HomeController,
@@ -372,7 +371,7 @@ use App\Http\Controllers\KineMobile\DashboardController;
 use App\Http\Controllers\KineMobile\PatientController as MobilePatientController;
 use App\Http\Controllers\KineMobile\SessionController;
 use App\Http\Controllers\KineMobile\ProfileController;
-
+use App\Http\Controllers\Payments\WebpayController;
 use Inertia\Inertia;
 
 // =============================================================================
@@ -422,3 +421,56 @@ Route::middleware(['auth', 'ensure.kine']) // ← Tu middleware personalizado
 Route::get('/kine/access-denied', function() {
     return Inertia::render('KineMobile/AccessDenied');
 })->name('kine.access-denied')->middleware('auth');
+
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // =========================================================================
+    // INICIO DE PAGOS (Autenticados)
+    // =========================================================================
+    
+    // Pago de una sesión individual
+    Route::post('/payments/webpay/session/{session}', [WebpayController::class, 'initSessionPayment'])
+        ->name('payments.webpay.session');
+
+    // Pago de múltiples sesiones
+    Route::post('/payments/webpay/sessions/multiple', [WebpayController::class, 'initMultipleSessionsPayment'])
+        ->name('payments.webpay.sessions.multiple');
+
+    // Pago de deudas acumuladas
+    Route::post('/payments/webpay/debts', [WebpayController::class, 'initDebtsPayment'])
+        ->name('payments.webpay.debts');
+
+    // Pago de un plan
+    Route::post('/payments/webpay/plan/{plan}', [WebpayController::class, 'initPlanPayment'])
+        ->name('payments.webpay.plan');
+
+    // Consultar estado de transacción
+    Route::get('/payments/webpay/{token}/status', [WebpayController::class, 'status'])
+        ->name('payments.webpay.status');
+});
+
+// =============================================================================
+// RETORNOS DESDE TRANSBANK (Sin autenticación - Transbank hace el callback)
+// =============================================================================
+
+// Retorno para usuarios autenticados (sesión activa)
+Route::match(['GET', 'POST'], '/payments/webpay/return', [WebpayController::class, 'return'])
+    ->name('payments.webpay.return');
+
+// Retorno público (para payment links sin autenticación)
+Route::match(['GET', 'POST'], '/public/payments/webpay/return', [WebpayController::class, 'publicReturn'])
+    ->name('payments.webpay.public-return');
+
+    // Ruta de prueba Webpay (solo desarrollo)
+if (app()->environment('local', 'development')) {
+    Route::middleware(['auth', 'verified'])
+        ->get('/test/webpay', [App\Http\Controllers\Test\WebpayTestController::class, 'index'])
+        ->name('test.webpay');
+}
+    
+
+/* Tareas pendientes */
+/* Igualar formularios de creación de sesiones en tratamientos y pacientes */
+/* Traducir estados en patient/treatments */
+/* Número de sesión mejorar para casos en que se pone una sesion entre medio y que vuelva a ordenar los numero de sesión global y del mes */

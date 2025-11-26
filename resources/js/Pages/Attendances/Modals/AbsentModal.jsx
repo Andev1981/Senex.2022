@@ -18,11 +18,13 @@ export default function AbsentModal({
     }
 
     router.patch(
-      `/attendances/${sessionData.id}/absent`,
+      `/attendances/${sessionData.session_id}/absent`,
       { reason: data.session_absent_notes },
       {
         onSuccess: () => {
-          alert(`⚠️ Paciente marcado como ausente: ${sessionData.paciente}`);
+          alert(
+            `⚠️ Paciente marcado como ausente: ${sessionData.patient_full_name}`
+          );
           setSessionData(false);
         },
         onError: () => {
@@ -39,7 +41,7 @@ export default function AbsentModal({
       </h3>
       <p className="mb-4 text-sm text-gray-600">
         Registra el motivo de ausencia de{" "}
-        <strong>{sessionData?.paciente}</strong>
+        <strong>{sessionData?.patient_full_name}</strong>
       </p>
 
       <div className="mb-4">

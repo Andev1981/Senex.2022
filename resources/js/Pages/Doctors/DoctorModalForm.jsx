@@ -12,7 +12,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import { t } from "@/utils/translations";
+import { t } from "@/constants/translations";
 
 export default function DoctorModalForm({
   selectedDoctor,

@@ -11,7 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import moment from "moment";
-import { paymentMethods, statusOptions } from "@/utils/status";
+import { paymentMethods, statusOptions } from "@/helpers/status";
 
 export default function PaymentForm({
   setOpenPaymentModal,

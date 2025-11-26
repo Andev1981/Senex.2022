@@ -9,12 +9,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
+/**
+ * Controlador unificado para pagos con Webpay Plus
+ * 
+ * Este controlador maneja:
+ * - Pagos de sesiones individuales
+ * - Pagos de múltiples sesiones
+ * - Pagos de deudas acumuladas
+ * - Pagos de planes
+ * - Retornos desde Transbank
+ * - Consultas de estado
+ */
 class WebpayController extends Controller
 {
     public function __construct(
         private PaymentService $paymentService,
         private WebpayPlusService $webpayService
     ) {
+        // Las rutas de retorno deben ser públicas (Transbank las llama)
         $this->middleware(['auth', 'verified'])->except(['return', 'publicReturn']);
     }
 
@@ -24,25 +36,46 @@ class WebpayController extends Controller
      */
     public function initSessionPayment(Request $request, int $sessionId)
     {
+        // DEBUG - Borrar después
+        Log::info('=== INICIO DEBUG WEBPAY ===');
+        Log::info('Request data:', $request->all());
+        Log::info('Session ID:', ['session_id' => $sessionId]);
+        Log::info('User:', ['user_id' => auth()->id()]);
+        
         $validated = $request->validate([
+            'patient_id' => ['required', 'integer', 'exists:patients,id'],
             'amount' => ['required', 'integer', 'min:50'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
+
         try {
             $result = $this->paymentService->initiateWebpayTransaction([
-                'patient_id' => auth()->user()->patient_id ?? $request->input('patient_id'),
+                'patient_id' => $validated['patient_id'],
                 'treatment_session_id' => $sessionId,
                 'amount' => $validated['amount'],
-                'notes' => $validated['notes'] ?? null,
+                'notes' => $validated['notes'] ?? "Pago sesión #{$sessionId}",
             ]);
 
-            Log::info('Webpay transaction initiated', [
+            // Guardar session_id en sesión para asignar después del pago
+            session(['pending_payment_sessions' => [$sessionId]]);
+
+            Log::info('Webpay session payment initiated: ', [
                 'payment_id' => $result['payment_id'],
+                'session_id' => $sessionId,
                 'token' => $result['token'],
+                'url' => $result['url'],
             ]);
 
-            return redirect()->away($result['url']);
+            /* return view('webpay.redirect', [
+                'url' => $result['url'],
+                'token' => $result['token']
+            ]); */
+            return response()->json([
+                'url' => $result['url'],
+                'token' => $result['token']
+            ]);
+
 
         } catch (\Exception $e) {
             Log::error('Error iniciando pago Webpay para sesión', [
@@ -78,12 +111,16 @@ class WebpayController extends Controller
             // Guardar session_ids en sesión para asignar después del pago
             session(['pending_payment_sessions' => $validated['session_ids']]);
 
-            Log::info('Webpay multiple sessions transaction initiated', [
+            Log::info('Webpay multiple sessions payment initiated', [
                 'payment_id' => $result['payment_id'],
                 'sessions_count' => count($validated['session_ids']),
+                'token' => $result['token'],
             ]);
 
-            return redirect()->away($result['url']);
+            return view('webpay.redirect', [
+                'url' => $result['url'],
+                'token' => $result['token']
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Error iniciando pago múltiple Webpay', [
@@ -118,15 +155,22 @@ class WebpayController extends Controller
             ]);
 
             // Guardar debt_ids en sesión para asignar después del pago
-            session(['pending_payment_debts' => $validated['debt_ids']]);
+            session([
+                'pending_payment_debts' => $validated['debt_ids'],
+                'is_partial_payment' => $validated['is_partial'] ?? false,
+            ]);
 
-            Log::info('Webpay debts transaction initiated', [
+            Log::info('Webpay debts payment initiated', [
                 'payment_id' => $result['payment_id'],
                 'debts_count' => count($validated['debt_ids']),
                 'amount' => $validated['amount'],
+                'token' => $result['token'],
             ]);
 
-            return redirect()->away($result['url']);
+             return view('webpay.redirect', [
+                'url' => $result['url'],
+                'token' => $result['token']
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Error iniciando pago de deudas Webpay', [
@@ -139,14 +183,60 @@ class WebpayController extends Controller
     }
 
     /**
-     * Retorno desde Webpay (autenticado)
+     * Inicia un pago para un plan
+     * POST /payments/webpay/plan/{plan}
+     */
+    public function initPlanPayment(Request $request, int $planId)
+    {
+        $validated = $request->validate([
+            'patient_id' => ['required', 'integer', 'exists:patients,id'],
+            'amount' => ['required', 'integer', 'min:50'],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            $result = $this->paymentService->initiateWebpayTransaction([
+                'patient_id' => $validated['patient_id'],
+                'amount' => $validated['amount'],
+                'notes' => $validated['notes'] ?? "Compra plan #{$planId}",
+            ]);
+
+            // Guardar plan_id en sesión para asignar después del pago
+            session(['pending_payment_plan' => $planId]);
+
+            Log::info('Webpay plan payment initiated', [
+                'payment_id' => $result['payment_id'],
+                'plan_id' => $planId,
+                'token' => $result['token'],
+            ]);
+
+             return view('webpay.redirect', [
+                'url' => $result['url'],
+                'token' => $result['token']
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error iniciando pago de plan Webpay', [
+                'plan_id' => $planId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'No se pudo iniciar el pago: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Retorno desde Webpay (autenticado - para usuarios logueados)
      * GET/POST /payments/webpay/return
      */
     public function return(Request $request)
     {
         // Casos de abort/timeout (sin token_ws)
         if (!$request->filled('token_ws')) {
-            Log::warning('Webpay return sin token_ws (abort/timeout)', $request->all());
+            Log::warning('Webpay return sin token_ws (abort/timeout)', [
+                'all_params' => $request->all(),
+                'method' => $request->method(),
+            ]);
 
             return Inertia::render('Payments/WebpayResult', [
                 'success' => false,
@@ -158,12 +248,12 @@ class WebpayController extends Controller
         $token = $request->input('token_ws');
 
         try {
-            // Confirmar transacción
+            // Confirmar transacción con Transbank
             $payment = $this->paymentService->confirmWebpayTransaction($token);
 
             $success = $payment->status === 'completed';
 
-            // Si fue exitoso y hay sesiones/deudas pendientes, asignarlas
+            // Si fue exitoso, asignar sesiones/deudas/planes pendientes
             if ($success) {
                 $this->allocatePendingItems($payment);
             }
@@ -172,6 +262,7 @@ class WebpayController extends Controller
                 'payment_id' => $payment->id,
                 'status' => $payment->status,
                 'amount' => $payment->amount_clp,
+                'authorization_code' => $payment->webpay_authorization_code,
             ]);
 
             return Inertia::render('Payments/WebpayResult', [
@@ -184,6 +275,7 @@ class WebpayController extends Controller
                     'installments' => $payment->webpay_installments,
                     'card_detail' => $payment->webpay_card_detail,
                     'transaction_date' => $payment->webpay_transaction_date,
+                    'patient_name' => $payment->patient->full_name ?? null,
                 ],
                 'message' => $success 
                     ? '¡Pago realizado exitosamente!' 
@@ -208,13 +300,13 @@ class WebpayController extends Controller
     }
 
     /**
-     * Retorno público desde Webpay (para payment links)
+     * Retorno público desde Webpay (para payment links sin autenticación)
      * GET/POST /public/payments/webpay/return
      */
     public function publicReturn(Request $request)
     {
         if (!$request->filled('token_ws')) {
-            return view('payments.public-result', [
+            return Inertia::render('Payments/Publicwebpayresult', [
                 'success' => false,
                 'message' => 'El pago fue cancelado o expiró',
             ]);
@@ -231,11 +323,11 @@ class WebpayController extends Controller
                 $this->updatePaymentLink(session('payment_link_id'), $payment);
             }
 
-            return view('payments.public-result', [
+            return Inertia::render('Payments/Publicwebpayresult',[
                 'success' => $success,
                 'payment' => $payment,
                 'message' => $success 
-                    ? '¡Pago realizado exitosamente!' 
+                    ? '¡Pago realizado exitosamente!'
                     : 'El pago no pudo ser procesado',
             ]);
 
@@ -245,7 +337,7 @@ class WebpayController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return view('payments.public-result', [
+            return Inertia::render('Payments/Publicwebpayresult', [
                 'success' => false,
                 'message' => 'Ocurrió un error al procesar el pago',
             ]);
@@ -280,22 +372,69 @@ class WebpayController extends Controller
     }
 
     /**
-     * Asigna sesiones/deudas pendientes al pago confirmado
+     * Asigna sesiones/deudas/planes pendientes al pago confirmado
      */
     private function allocatePendingItems($payment): void
     {
         // Asignar sesiones si existen
         if (session()->has('pending_payment_sessions')) {
             $sessionIds = session('pending_payment_sessions');
-            $this->paymentService->allocateToSessions($payment, $sessionIds);
+            try {
+                $this->paymentService->allocateToSessions($payment, $sessionIds);
+                Log::info('Sessions allocated to payment', [
+                    'payment_id' => $payment->id,
+                    'session_ids' => $sessionIds,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error allocating sessions to payment', [
+                    'payment_id' => $payment->id,
+                    'session_ids' => $sessionIds,
+                    'error' => $e->getMessage(),
+                ]);
+            }
             session()->forget('pending_payment_sessions');
         }
 
         // Asignar deudas si existen
         if (session()->has('pending_payment_debts')) {
             $debtIds = session('pending_payment_debts');
-            $this->paymentService->allocateToDebts($payment, $debtIds);
-            session()->forget('pending_payment_debts');
+            $isPartial = session('is_partial_payment', false);
+            
+            try {
+                $this->paymentService->allocateToDebts($payment, $debtIds, $isPartial);
+                Log::info('Debts allocated to payment', [
+                    'payment_id' => $payment->id,
+                    'debt_ids' => $debtIds,
+                    'is_partial' => $isPartial,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error allocating debts to payment', [
+                    'payment_id' => $payment->id,
+                    'debt_ids' => $debtIds,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            session()->forget(['pending_payment_debts', 'is_partial_payment']);
+        }
+
+        // Asignar plan si existe
+        if (session()->has('pending_payment_plan')) {
+            $planId = session('pending_payment_plan');
+            
+            try {
+                $this->paymentService->allocateToPlan($payment, $planId);
+                Log::info('Plan allocated to payment', [
+                    'payment_id' => $payment->id,
+                    'plan_id' => $planId,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error allocating plan to payment', [
+                    'payment_id' => $payment->id,
+                    'plan_id' => $planId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            session()->forget('pending_payment_plan');
         }
     }
 
@@ -308,6 +447,11 @@ class WebpayController extends Controller
             $link = \App\Models\PaymentLink::findOrFail($linkId);
             $link->markAsPaid($payment->id, $payment->amount_clp);
             session()->forget('payment_link_id');
+            
+            Log::info('Payment link updated', [
+                'link_id' => $linkId,
+                'payment_id' => $payment->id,
+            ]);
         } catch (\Exception $e) {
             Log::error('Error actualizando payment link', [
                 'link_id' => $linkId,

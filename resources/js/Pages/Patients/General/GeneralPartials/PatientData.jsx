@@ -1,5 +1,5 @@
 import { User, Phone, Mail, Calendar } from "lucide-react";
-import { t } from "@/utils/translations";
+import { t } from "@/constants/translations";
 
 export default function PatientData({ patient }) {
   return (

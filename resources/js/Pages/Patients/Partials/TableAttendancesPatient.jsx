@@ -8,7 +8,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { STATUS_MAP, meses } from "@/utils/status";
+import { STATUS_MAP, meses } from "@/helpers/status";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import TablePagination from "@/Components/TablePagination";

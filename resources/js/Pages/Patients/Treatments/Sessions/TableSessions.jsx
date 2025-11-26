@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import TablePagination from "@/Components/TablePagination";
 import { useForm } from "@inertiajs/react";
-import { patientStatuses } from "@/utils/status";
-import { t } from "@/utils/translations";
+import { patientStatuses } from "@/helpers/status";
+import { t } from "@/constants/translations";
 
 export default function TableSessions({
   sessions = [],

@@ -27,7 +27,7 @@ import {
   debtStatuses,
   DEBT_STATUS_OPTIONS,
   PATIENT_STATUS_OPTIONS,
-} from "@/utils/status";
+} from "@/helpers/status";
 import SecondaryButton from "@/Components/SecondaryButton";
 
 export default function TableTreatments({

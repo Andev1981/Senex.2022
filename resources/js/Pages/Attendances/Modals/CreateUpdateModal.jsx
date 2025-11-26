@@ -128,6 +128,8 @@ export default function CreateUpdateModal({
     }
   };
 
+  console.log("Session: ", sessionData);
+
   return (
     <div className="bg-white rounded-xl">
       {/* ✅ Advertencias según status (solo en edición) */}

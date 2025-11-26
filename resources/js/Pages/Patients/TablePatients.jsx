@@ -29,7 +29,7 @@ import { saveAs } from "file-saver";
 import TablePagination from "@/Components/TablePagination";
 import { route } from "ziggy-js";
 import { useForm } from "@inertiajs/react";
-import { meses, patientStatuses, debtStatuses } from "@/utils/status";
+import { meses, patientStatuses, debtStatuses } from "@/helpers/status";
 
 export default function TablePatients({
   patients,
