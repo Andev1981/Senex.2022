@@ -6,7 +6,7 @@ import SideModal from "@/Components/SideModal";
 import TableInsuranceCompanies from "./TableInsuranceCompanies";
 import InsuranceCompanyModal from "./Partials/InsuranceCompanyModal";
 import InsuranceCompanyModalDelete from "./Partials/InsuranceCompanyModalDelete";
-import { Box, Plus, Shield } from "lucide-react";
+import { BrickWallShield, Plus } from "lucide-react";
 
 function Index({ insuranceCompanies }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,11 +31,11 @@ function Index({ insuranceCompanies }) {
   return (
     <AuthenticatedLayout>
       <Head title="Aseguradoras" />
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-              <Box className="w-6 h-6 text-white" />
+              <BrickWallShield className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Aseguradoras</h1>

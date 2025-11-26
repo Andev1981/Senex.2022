@@ -39,7 +39,7 @@ class StoreTreatmentRequest extends FormRequest
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
-            'status' => 'nullable|in:Evaluation,InProgress,Cancelled,Paused,Completed',
+            'status' => 'nullable|in:evaluation,in_progress,cancelled,paused,completed',
             'total_sessions' => 'nullable|integer|min:1|max:50',
             'completed_sessions' => 'nullable|integer|min:0|max:50',
             'frequency' => 'nullable|integer|min:0|max:7',

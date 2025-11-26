@@ -42,15 +42,24 @@ class TreatmentController extends Controller
             ->get();
 
         $payments = Payment::where('patient_id', $patient->id)->where('status','completed')
-->orderBy('created_at', 'desc')
+        ->orderBy('created_at', 'desc')
             ->get();
 
+        $patient->load([
+            'address.region',
+            'address.province',
+            'address.commune',
+            'latestVital',
+        ]);
 
-        if($patient->address !== null){
-            $address = $patient->address->load(['region', 'province', 'commune']);
-         }else{
-            $address = null;
-        }
+        $contact = $patient->primaryContact;
+       
+        $address = $patient->address;
+
+        $allergies = $patient->allergies;
+
+        $conditions = $patient->condition;
+
 
         $vital = $patient->latestVital;
         
@@ -74,6 +83,9 @@ class TreatmentController extends Controller
             'vital' => $vital,
             'doctors' => $doctors,
             'session_types' => $session_types,
+            'contact' => $contact,
+            'allergies' => $allergies,
+            'conditions' => $conditions,
         ]);
     }
 

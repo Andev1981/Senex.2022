@@ -23,6 +23,7 @@ class TreatmentSession extends Model
         'branch_id',
         'session_number',
         'month_session_number',
+        'consumes_plan',
         'date',
         'time',
         'duration',
@@ -45,8 +46,8 @@ class TreatmentSession extends Model
         'homework',
         'next_goals',
         // Montos
-        'patient_amount_clp',
-        'doctor_amount_clp',
+        'patient_amount_clp', /* base price */
+        'doctor_amount_clp', /* Commission */
         'clinic_amount_clp',
     ];
 
@@ -67,6 +68,7 @@ class TreatmentSession extends Model
         'patient_amount_clp' => 'integer',
         'doctor_amount_clp' => 'integer',
         'clinic_amount_clp' => 'integer',
+        'consumes_plan' => 'boolean',
     ];
 
     /**
@@ -110,6 +112,11 @@ class TreatmentSession extends Model
     public function debt(): HasOne
     {
         return $this->hasOne(Debt::class);
+    }
+
+    public function paymentAllocation(): HasOne
+    {
+        return $this->hasOne(PaymentAllocation::class);
     }
 
     /**

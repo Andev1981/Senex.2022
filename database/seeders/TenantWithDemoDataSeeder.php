@@ -99,9 +99,16 @@ class TenantWithDemoDataSeeder extends Seeder
       'branch_id' => $branchId,
       'name' => 'Kine',
       'last_name' => 'Demo',
-      'rut' => null,
+      'rut' => $faker->unique()->numerify('########-#'),
+      'email' => $faker->unique()->safeEmail(),
+      'phone' => $faker->numerify('+56#########'),
       'specialty' => 'Kinesiología Deportiva',
+      'birth_date' => $faker->date(),
+      'gender' => $faker->randomElement(['male', 'female', 'other','unknown']),
       'status' => 'active',
+      'mobile_app_access' => true,
+      'status_reason' => null,
+      'status_changed_at' => null,
       'created_at' => $now,
       'updated_at' => $now
     ]);
@@ -121,9 +128,14 @@ class TenantWithDemoDataSeeder extends Seeder
         'branch_id' => $branchId,
         'name' => $faker->firstName,
         'last_name' => $faker->lastName,
-        'rut' => null,
+        'rut' => $faker->unique()->numerify('########-#'),
         'specialty' => $faker->randomElement(['Respiratoria', 'Deportiva', 'Traumatológica']),
+        'birth_date' => $faker->date(),
+        'gender' => $faker->randomElement(['male', 'female', 'other','unknown']),
         'status' => $faker->randomElement( ['active', 'suspended', 'cancelled']),
+        'mobile_app_access' => true,
+        'status_reason' => null,
+        'status_changed_at' => null,
         'created_at' => $now,
         'updated_at' => $now
       ]);
@@ -133,19 +145,49 @@ class TenantWithDemoDataSeeder extends Seeder
     $patientIds = [];
     for ($i = 0; $i < 50; $i++) {
       $patientIds[] = DB::table('patients')->insertGetId([
-
         'name' => $faker->firstName,
         'last_name' => $faker->lastName,
-        'rut' => null,
+        'rut' => $faker->unique()->numerify('########-#'),
         'email' => $faker->unique()->safeEmail(),
-        'phone' => $faker->phoneNumber,
+        'phone' => $faker->numerify('+56#########'),
         'birth_date' => $faker->date(),
-        'gender' => $faker->randomElement(['male', 'female', 'other']),
+        'gender' => $faker->randomElement(['male', 'female', 'other','unknown']),
+        'occupation' => $faker->jobTitle,
+        'marital_status' => $faker->randomElement(['single', 'married', 'divorced', 'widowed']),
+        'status' => 'active',
         'notes' => $faker->boolean(30) ? $faker->sentence(8) : null,
         'created_at' => $now,
         'updated_at' => $now,
       ]);
     }
+
+    $communeId = DB::table('communes')->inRandomOrder()->value('id');
+    $provinceId = DB::table('provinces')->inRandomOrder()->value('id');
+    $regionId = DB::table('regions')->inRandomOrder()->value('id');
+
+    for ($i = 0; $i < 50; $i++) {
+      $patientIds[] = DB::table('addresses')->insertGetId([
+
+        'addressable_type' => 'Patient',
+        'addressable_id' => $patientIds[$i],
+        'type' => 'home',
+        'is_primary' => true,
+        'lat' => $faker->latitude,
+        'lng' => $faker->longitude,
+        'street' => $faker->streetName,
+        'number' => $faker->buildingNumber,
+        'commune_id' => $communeId,
+        'province_id' => $provinceId,
+        'region_id' => $regionId,
+        'detaile' => $faker->secondaryAddress,
+        'country' => 'Chile',
+        'created_at' => $now,
+        'updated_at' => $now,
+      ]);
+    }
+       
+
+
 
     // ============= SESSION TYPES =============
     $sessionTypeRows = [
@@ -183,6 +225,7 @@ class TenantWithDemoDataSeeder extends Seeder
           'effective_until' => null,
           'is_active' => 1,
           'notes' => null,
+          'rules'=> null,
           'created_at' => $now,
           'updated_at' => $now
         ]);
@@ -353,15 +396,15 @@ class TenantWithDemoDataSeeder extends Seeder
       $stypeId    = $faker->randomElement($sessionTypeIds);            // obligatorio
 
       $startDate  = Carbon::now()->subDays($faker->numberBetween(5, 40))->startOfDay();
-      $status     = $faker->randomElement(['Evaluation', 'InProgress', 'Cancelled','Paused']);
+      $status     = $faker->randomElement(['evaluation', 'inProgress', 'cancelled','paused']);
 
       // total_sessions (tinyint). Mantén un rango razonable para kinesiología
       $totalSessions = $faker->numberBetween(6, 20);
 
-      // completed_sessions consistente con status
-      if ($status === 'Completed') {
+      // completed_sessions consistente con status  
+      if ($status === 'completed') {
         $completedSessions = $totalSessions;
-      } elseif ($status === 'Cancelled') {
+      } elseif ($status === 'cancelled') {
         $completedSessions = $faker->numberBetween(0, max(0, $totalSessions - 1));
       } else { // Activo
         $completedSessions = $faker->numberBetween(0, $totalSessions);
@@ -370,14 +413,14 @@ class TenantWithDemoDataSeeder extends Seeder
       // end_date / outcome / next_appointment coherentes
       $endDate = null;
       $outcome = null;
-      if ($status === 'Completed') {
+      if ($status === 'completed') {
         // fin entre 1 y 4 semanas después del inicio
         $endDate = (clone $startDate)->addWeeks($faker->numberBetween(1, 4))->toDateString();
         $outcome = $faker->sentence(12);
       }
 
       $nextAppointment = null;
-      if ($status !== 'Completed' && $faker->boolean(70)) {
+      if ($status !== 'completed' && $faker->boolean(70)) {
         // próxima cita dentro de los próximos 3–14 días a las 10:00
         $nextAppointment = Carbon::now()
           ->addDays($faker->numberBetween(3, 14))
@@ -424,9 +467,9 @@ class TenantWithDemoDataSeeder extends Seeder
         'next_appointment'    => $nextAppointment,
 
         // KPIs (0–100; tinyint soporta hasta 255)
-        'pain_reduction'      => $status === 'Completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
-        'mobility_improvement' => $status === 'Completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
-        'strength_gain'       => $status === 'Completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
+        'pain_reduction'      => $status === 'completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
+        'mobility_improvement' => $status === 'completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
+        'strength_gain'       => $status === 'completed' ? $faker->numberBetween(60, 100) : $faker->numberBetween(0, 60),
 
         'created_at'          => $now,
         'updated_at'          => $now,

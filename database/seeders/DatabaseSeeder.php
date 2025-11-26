@@ -8,9 +8,9 @@ class DatabaseSeeder extends Seeder
 {
   public function run(): void
   {
-    $this->call(TenantWithDemoDataSeeder::class);
     $this->call(RegionsTableSeeder::class);
     $this->call(ProvincesTableSeeder::class);
     $this->call(CommunesTableSeeder::class);
+    $this->call(TenantWithDemoDataSeeder::class);
   }
 }

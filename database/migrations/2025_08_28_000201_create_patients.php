@@ -30,7 +30,7 @@ return new class extends Migration {
 
 
 
-            $table->enum('status', ['active', 'suspended', 'cancelled'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'deceased','transferred','archived'])->default('active');
             $table->text('status_reason')->nullable();      // motivo del último cambio
             $table->timestamp('status_changed_at')->nullable();
 

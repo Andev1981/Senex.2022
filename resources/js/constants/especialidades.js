@@ -1,0 +1,16 @@
+export const especialidadesChile = [
+  "Kinesiología General",
+  "Traumatológica",
+  "Deportiva",
+  "Neurológica",
+  "Respiratoria",
+  "Pediátrica",
+  "Geriátrica",
+  "Salud de la Mujer",
+  "Estética",
+  "Terapia Manual",
+  "Pilates Clínico",
+  "RPG",
+  "Punción Seca",
+  "Kinesiotaping",
+];

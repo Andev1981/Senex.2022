@@ -21,7 +21,7 @@ class Doctor extends Model
         'rut',
         'email',
         'phone',
-        'specialty',
+        'speciality',
         'birth_date',
         'gender',
         'status',
@@ -33,6 +33,7 @@ class Doctor extends Model
     protected $casts = [
         'birth_date' => 'date',
         'status_changed_at' => 'datetime',
+        'mobile_access_enabled' => 'boolean',
     ];
 
 
@@ -75,7 +76,27 @@ class Doctor extends Model
         return $this->hasMany(DoctorCommissionRate::class);
     }
 
-    /* Attributes */
+    public function activeCommissionRates()
+    {
+        return $this->hasMany(DoctorCommissionRate::class)
+            ->active()
+            ->validAt(now());
+    }
+
+    public function getCommissionForSession($sessionTypeId, $basePrice)
+    {
+        $rate = DoctorCommissionRate::getApplicableCommission(
+            $this->id,
+            $sessionTypeId
+        );
+
+        if (!$rate) {
+            return 0; // Sin comisión configurada
+        }
+
+        return $rate->calculateCommission($basePrice);
+    }
+        /* Attributes */
 
     public function assignedPatients(): Attribute
     {
@@ -131,11 +152,19 @@ class Doctor extends Model
         return $this->address->address ?? null;
     }
 
+     public function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->name . ' ' . $this->last_name
+        );
+    }
+
     protected $appends = [
         'age',
         'email',
         'direccion',
         'sessions_month',
-        'revenue_month'
+        'revenue_month',
+        'full_name'
     ];
 }

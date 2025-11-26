@@ -49,10 +49,23 @@ export default function TablePatients({
 
   const { get } = useForm();
   const [sorting, setSorting] = useState([]);
-  const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
+
+  const comunasPresentes = useMemo(() => {
+    if (!patients || patients.length === 0) return [];
+
+    // Extraer comunas únicas de los pacientes
+    const comunasUnicas = [
+      ...new Set(
+        patients.map((p) => p.comuna_name).filter(Boolean) // Eliminar valores null/undefined
+      ),
+    ];
+
+    // Ordenar alfabéticamente
+    return comunasUnicas.sort((a, b) => a.localeCompare(b));
+  }, [patients]);
 
   // ¿Hay filtros activos?
   const hasActiveFilters = !!(
@@ -70,31 +83,25 @@ export default function TablePatients({
     setFilterComuna("");
     setEdadMin("");
     setEdadMax("");
-    // Limpia column filters en TanStack
-    table.setColumnFilters((prev) =>
-      prev.filter(
-        (f) =>
-          !["status", "payment_status", "comuna_name", "age"].includes(f.id)
-      )
-    );
+    setSearchTerm("");
+    setColumnFilters([]);
   };
 
   // --- SYNC PANEL -> COLUMN FILTERS TANSTACK ---
   // Mapea los labels visibles a los valores guardados en tus filas.
-  // Ajusta según tus códigos reales (ejemplo: "Activo" -> "active").
   const mapEstado = (label) => {
     if (!label) return undefined;
     if (label.toLowerCase() === "activo") return "active";
     if (label.toLowerCase() === "inactivo") return "inactive";
-    return label; // fallback
+    return label;
   };
 
   const mapEstadoPago = (label) => {
     if (!label) return undefined;
     const l = label.toLowerCase();
     if (l.includes("día")) return "ok";
-    if (l.includes("deuda")) return "due"; // o "overdue" si usas ese
-    return label; // fallback
+    if (l.includes("deuda")) return "due";
+    return label;
   };
 
   useEffect(() => {
@@ -125,7 +132,7 @@ export default function TablePatients({
       next.push({ id: "age", value: [min, max] });
     }
 
-    // Mantén también los otros filtros que ya existan (como el de birth_month si lo usas)
+    // Mantén también los otros filtros que ya existan
     setColumnFilters((prev) => {
       const keep = prev.filter(
         (f) =>
@@ -135,25 +142,6 @@ export default function TablePatients({
     });
   }, [filterEstado, filterEstadoPago, filterComuna, edadMin, edadMax]);
 
-  // --- DEBOUNCE DEL GLOBAL SEARCH ---
-  useEffect(() => {
-    const id = setTimeout(() => {
-      setGlobalFilter(searchTerm);
-    }, 250);
-    return () => clearTimeout(id);
-  }, [searchTerm]);
-
-  // Filtro global
-  const filteredData = useMemo(() => {
-    if (!globalFilter) return patients || [];
-    const filter = globalFilter.toLowerCase();
-    return patients.filter((row) =>
-      Object.values(row).some(
-        (val) => val && val.toString().toLowerCase().includes(filter)
-      )
-    );
-  }, [globalFilter, patients]);
-
   // Definición de columnas
   const columns = useMemo(
     () => [
@@ -161,28 +149,27 @@ export default function TablePatients({
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex">
-            <a
-              type="button"
-              className="mr-1 hover:cursor-pointer btn"
-              onClick={() => detailPatient(row?.original)}
-            >
-              <Eye className="w-4 h-4 text-green-600" />
-            </a>
+          <div
+            type="button"
+            className="flex gap-2 mr-1 hover:cursor-pointer btn"
+            onClick={() => detailPatient(row?.original)}
+          >
+            <Eye className="w-5 h-5 text-green-600" />
+
             <a
               type="button"
               className="mr-1 hover:cursor-pointer btn"
               onClick={() => handleOpenModalDelete(row?.original)}
             >
-              <Trash2 className="w-4 h-4 text-red-700" />
+              <Trash2 className="w-5 h-5 text-red-700" />
             </a>
           </div>
         ),
         enableSorting: false,
       },
       {
-        id: "status", // si usas accessorFn, deja este id
-        accessorKey: "status", // recomendado
+        id: "status",
+        accessorKey: "status",
         header: "ESTADO",
         cell: ({ getValue }) => {
           const v = String(getValue() ?? "");
@@ -198,18 +185,17 @@ export default function TablePatients({
             </span>
           );
         },
-        // filtro: acepta múltiples estados (array de strings)
         filterFn: (row, id, filterValue) => {
-          if (!filterValue) return true; // sin filtro
+          if (!filterValue) return true;
           return String(row.getValue(id) ?? "") === String(filterValue);
         },
       },
       {
         id: "payment_status",
-        accessorKey: "payment_status", // 'ok' | 'due' | 'overdue'
+        accessorKey: "payment_status",
         header: "ESTADO DE PAGO",
         filterFn: (row, id, filterValue) => {
-          if (!filterValue) return true; // sin filtro
+          if (!filterValue) return true;
           const cell = row.getValue(id);
           return String(cell) === String(filterValue);
         },
@@ -262,11 +248,11 @@ export default function TablePatients({
           );
         },
         filterFn: (row, columnId, filterValue) => {
-          if (!filterValue) return true; // si no hay filtro, mostrar todo
+          if (!filterValue) return true;
           const value = row.getValue(columnId);
           if (!value) return false;
           const date = new Date(value);
-          const month = date.getMonth() + 1; // enero = 0 → sumamos 1
+          const month = date.getMonth() + 1;
           return month === Number(filterValue);
         },
         Filter: ({ column }) => {
@@ -292,6 +278,7 @@ export default function TablePatients({
       },
       {
         header: "EDAD",
+        id: "age",
         accessorFn: (row) => {
           if (!row?.birth_date) return null;
           const birthDate = new Date(row.birth_date);
@@ -313,23 +300,7 @@ export default function TablePatients({
             </div>
           );
         },
-        id: "age",
-        filterFn: {
-          betweenDates: (row, columnId, filterValue) => {
-            const [from, to] = filterValue || [];
-            const value = row.getValue(columnId);
-            if (!value) return false;
-
-            const rowDate = new Date(value);
-
-            let fromDate = from ? parseDateString(from) : null;
-            let toDate = to ? parseDateString(to) : null;
-
-            if (fromDate && rowDate < fromDate) return false;
-            if (toDate && rowDate > toDate) return false;
-            return true;
-          },
-        },
+        filterFn: "betweenNumbers",
       },
       {
         header: "RUT",
@@ -346,6 +317,7 @@ export default function TablePatients({
       },
       {
         header: "COMUNA",
+        id: "comuna_name",
         accessorFn: (row) => row?.comuna_name,
         cell: ({ getValue }) => (
           <div
@@ -356,6 +328,13 @@ export default function TablePatients({
             {getValue()}
           </div>
         ),
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          return (
+            String(row.getValue(columnId) ?? "").toLowerCase() ===
+            String(filterValue).toLowerCase()
+          );
+        },
       },
       {
         header: "DIRECCIÓN",
@@ -415,16 +394,16 @@ export default function TablePatients({
 
   // Configuración de la tabla
   const table = useReactTable({
-    data: filteredData,
+    data: patients,
     columns,
     state: {
       sorting,
-      globalFilter,
+      globalFilter: searchTerm,
       columnFilters,
       pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: setSearchTerm,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: (updater) => {
       const newState =
@@ -443,6 +422,7 @@ export default function TablePatients({
       betweenNumbers: (row, columnId, filterValue) => {
         const [min, max] = filterValue || [];
         const value = row.getValue(columnId);
+        if (value === null || value === undefined) return false;
         if (min !== undefined && value < min) return false;
         if (max !== undefined && value > max) return false;
         return true;
@@ -459,20 +439,14 @@ export default function TablePatients({
     },
   });
 
-  // Función auxiliar
-  function parseDateString(dateString) {
-    if (!dateString) return null;
-    const [year, month, day] = dateString.split("-").map(Number);
-    return new Date(year, month - 1, day); // mes es 0-indexed
-  }
-
   const exportToExcel = () => {
-    // Solo exportar filas visibles (filtradas y paginadas)
     const dataToExport = table.getPrePaginationRowModel().rows.map((row) => {
       const obj = {};
       row.getVisibleCells().forEach((cell) => {
         const header = cell.column.columnDef.header;
-        obj[header] = cell.getValue();
+        if (header) {
+          obj[header] = cell.getValue();
+        }
       });
       return obj;
     });
@@ -601,9 +575,9 @@ export default function TablePatients({
                   className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                 >
                   <option>Todas</option>
-                  {communes.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
+                  {comunasPresentes.map((comuna) => (
+                    <option key={comuna} value={comuna}>
+                      {comuna}
                     </option>
                   ))}
                 </select>
@@ -670,7 +644,6 @@ export default function TablePatients({
                             ) : null}
                           </span>
                         </div>
-                        {/* Filtros por columna */}
                       </th>
                     ))}
                   </tr>
@@ -698,10 +671,10 @@ export default function TablePatients({
           {/* Paginación */}
           <TablePagination
             table={table}
-            total={patients.length}
+            total={table.getFilteredRowModel().rows.length}
             pageSize={pageSize}
             setPageSize={setPageSize}
-            pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
+            pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]}
           />
         </div>
       </div>

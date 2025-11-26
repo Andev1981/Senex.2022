@@ -12,6 +12,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import { t } from "@/utils/translations";
 
 export default function DoctorModalForm({
   selectedDoctor,
@@ -218,13 +219,6 @@ export default function DoctorModalForm({
         <div>
           <h3 className="flex items-center gap-2 mb-4 text-lg font-bold text-gray-900">
             <UserCog className="w-5 h-5 text-blue-600" /> Ficha del Profesional
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusPill(
-                selectedDoctor.is_active
-              )}`}
-            >
-              {selectedDoctor.is_active ? "Activo" : "Inactivo"}
-            </span>
           </h3>
           <div className="p-6 text-center text-gray-500 border-2 border-gray-200 border-dashed rounded-lg">
             Selecciona un profesional para ver su detalle.
@@ -236,10 +230,10 @@ export default function DoctorModalForm({
             <UserCog className="w-5 h-5 text-blue-600" /> Ficha del Profesional
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusPill(
-                selectedDoctor.is_active
+                selectedDoctor.status === "active"
               )}`}
             >
-              {selectedDoctor.is_active ? "Activo" : "Inactivo"}
+              {t("doctorStatus", selectedDoctor.status)}
             </span>
           </h3>
           <div className="flex items-start gap-3">

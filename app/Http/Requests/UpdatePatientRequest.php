@@ -7,70 +7,79 @@ use Illuminate\Validation\Rule;
 
 class UpdatePatientRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules()
+    public function rules(): array
     {
-
-        $id = $this->route('patient')->id;
+        $patientId = $this->route('patient')->id;
 
         return [
-            // Identidad
-            'name'       => ['bail', 'required', 'string', 'max:120'],
-            'last_name'  => ['bail', 'required', 'string', 'max:120'],
 
-            // RUT: opcional, formato normalizado y único
-            'rut'        => [
+            // Paciente
+            'name'              => ['required', 'string', 'max:255'],
+            'last_name'         => ['required', 'string', 'max:255'],
+            'rut'               => [
                 'required',
-                Rule::unique('patients', 'rut')->ignore($id),
+                'string',
+                'max:30',
+                Rule::unique('patients', 'rut')->ignore($patientId)
             ],
+            'email'             => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('patients', 'email')->ignore($patientId)
+            ],
+            'phone'             => ['nullable', 'string', 'max:30'],
 
-            // Contacto
-            'email'      => ['nullable', 'string', 'email', 'max:255'],
-            'phone'      => ['nullable', 'string', 'max:50'],
+            'birth_date'        => ['required', 'date', 'before:today'],
+            'gender'            => ['nullable', 'string', 'max:10'],
+            'occupation'        => ['nullable', 'string', 'max:255'],
+            'marital_status'    => ['nullable', 'string', 'max:50'],
 
-            // Demográficos
-            'birth_date' => ['nullable', 'date', 'before_or_equal:today', 'after:1900-01-01'],
-            'gender'     => ['nullable', Rule::in(['male', 'female', 'other', 'unknown'])],
-            'occupation' => ['nullable', 'string', 'max:120'],
-            'marital_status' => ['nullable', 'string', 'max:50'], // o usa Rule::in([...]) si tienes catálogo
+            'status'            => ['nullable', 'string', 'max:50'],
+            'status_reason'     => ['nullable', 'string', 'max:255'],
+            'status_changed_at' => ['nullable', 'date'],
 
-            // Estado
-            'status'         => ['required', Rule::in(['active', 'suspended', 'cancelled'])],
-            'status_reason'  => ['nullable', 'string', 'max:2000', 'required_if:status,suspended,cancelled'],
+            'notes'             => ['nullable', 'string', 'max:1000'],
 
-            // Otros
-            'notes'      => ['nullable', 'string', 'max:5000'],
+            // Dirección
+            'street'            => ['nullable', 'string', 'max:255'],
+            'number'            => ['nullable', 'string', 'max:50'],
+            'details'           => ['nullable', 'string', 'max:500'],
+
+            'region_id'         => ['required', 'integer', 'exists:regions,id'],
+            'province_id'       => ['required', 'integer', 'exists:provinces,id'],
+            'commune_id'        => ['required', 'integer', 'exists:communes,id'],
         ];
     }
 
-    public function messages()
+    public function attributes(): array
     {
         return [
-            'name.required'          => 'El nombre es obligatorio.',
-            'last_name.required'     => 'El apellido es obligatorio.',
-            'rut.required'             => 'El RUT es requerido.',
-            'rut.unique'             => 'Este RUT ya está registrado.',
-            'email.email'            => 'El email no es válido.',
-            'phone.regex'            => 'El teléfono debe estar en formato +56 seguido de 9–10 dígitos.',
-            'birth_date.before_or_equal' => 'La fecha de nacimiento no puede ser futura.',
-            'birth_date.after'       => 'La fecha de nacimiento debe ser posterior a 1900-01-01.',
-            'gender.in'              => 'El género seleccionado no es válido.',
-            'status.in'              => 'El estado seleccionado no es válido.',
-            'status_reason.required_if' => 'Debes indicar el motivo cuando el estado es Suspendido o Cancelado.',
+            'name'              => 'nombre',
+            'last_name'         => 'apellido',
+            'rut'               => 'RUT',
+            'email'             => 'correo electrónico',
+            'phone'             => 'teléfono',
+            'birth_date'        => 'fecha de nacimiento',
+            'gender'            => 'género',
+            'occupation'        => 'ocupación',
+            'marital_status'    => 'estado civil',
+            'status'            => 'estado',
+            'status_reason'     => 'razón del estado',
+            'status_changed_at' => 'fecha de cambio de estado',
+            'notes'             => 'notas',
+            'street'            => 'calle',
+            'number'            => 'número',
+            'details'           => 'detalles',
+            'region_id'         => 'región',
+            'province_id'       => 'provincia',
+            'commune_id'        => 'comuna',
         ];
     }
 }

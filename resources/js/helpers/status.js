@@ -9,6 +9,9 @@ export const STATUS_MAP = {
   scheduled: { label: "Agendado", chip: "bg-purple-100 text-purple-800" },
 };
 
+export const statusPill = (isActive) =>
+  isActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700";
+
 export const meses = [
   { name: "Enero", value: 1 },
   { name: "Febrero", value: 2 },
@@ -131,3 +134,50 @@ export const statusOptions = [
   { value: "failed", label: "Rechazado", color: "red", icon: AlertCircle },
   { value: "refunded", label: "Reembolso", color: "red", icon: AlertCircle },
 ];
+
+export const estadoClass = (estado) => {
+  switch (estado) {
+    case "completed":
+      return "bg-green-100 text-green-700";
+    case "in_progress":
+      return "bg-blue-100 text-blue-700";
+    case "scheduled":
+      return "bg-amber-100 text-amber-700";
+    case "cancelled":
+      return "bg-gray-200 text-gray-700";
+    case "absent":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-gray-100 text-gray-700";
+  }
+};
+
+export const estadoTexto = (estado) => {
+  switch (estado) {
+    case "completed":
+      return "Completada";
+    case "in_progress":
+      return "En Curso";
+    case "scheduled":
+      return "Programada";
+    case "cancelled":
+      return "Cancelada";
+    case "absent":
+      return "Ausente";
+    default:
+      return estado;
+  }
+};
+
+export const tipoClass = (tipo) => {
+  switch (tipo) {
+    case "evaluacion":
+      return "bg-purple-100 text-purple-700";
+    case "control":
+      return "bg-cyan-100 text-cyan-700";
+    case "sesion":
+      return "bg-emerald-100 text-emerald-700";
+    default:
+      return "bg-gray-100 text-gray-700";
+  }
+};

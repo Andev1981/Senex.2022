@@ -34,7 +34,7 @@ export default function AuthenticatedLayout({ header, children }) {
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
       <ToastContainer
-        position="bottom-left"
+        position="top-center"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -43,7 +43,9 @@ export default function AuthenticatedLayout({ header, children }) {
         pauseOnFocusLoss={false}
         draggable={false}
         pauseOnHover={false}
-        theme="dark"
+        theme="light"
+        limit={3}
+        style={{ zIndex: 9999 }}
       />
     </div>
   );

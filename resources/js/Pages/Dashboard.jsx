@@ -180,7 +180,7 @@ export default function Dashboard() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
                 <p className="text-sm text-gray-600">
-                  Bienvenid@, {user?.name + " " + user?.last_name}
+                  Bienvenid@, {user?.name}
                 </p>
               </div>
             </div>
@@ -227,6 +227,24 @@ export default function Dashboard() {
               Pacientes atendidos hoy
             </p>
           </div>
+
+          {/* Alerta Sesiones Vencidas */}
+          {/* {kpis?.scheduled_at_risk > 0 && (
+            <div className="p-4 mb-4 border-l-4 border-yellow-500 bg-yellow-50">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <div>
+                  <p className="font-bold text-yellow-900">
+                    ⚠️ {kpis.scheduled_at_risk} sesiones programadas vencidas
+                  </p>
+                  <p className="text-sm text-yellow-700">
+                    Se marcarán como ausentes automáticamente en la próxima
+                    ejecución
+                  </p>
+                </div>
+              </div>
+            </div>
+          )} */}
 
           {/* Sesiones */}
           <div className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">

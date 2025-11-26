@@ -7,8 +7,10 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import ChilePhoneInput from "@/Components/ChilePhoneInput";
 import RutInput from "@/Components/RutInput";
+import Switch from "@/Components/Switch";
 import moment from "moment";
 import { useEffect } from "react";
+import { especialidadesChile } from "@/Utils/lists";
 
 export default function DoctorDetailModal({
   doctor,
@@ -21,13 +23,17 @@ export default function DoctorDetailModal({
     id: doctor?.id || null,
     name: doctor?.name || "",
     last_name: doctor?.last_name || "",
-    email: doctor?.email || "",
     rut: doctor?.rut || "",
+    email: doctor?.email || "",
+    phone: doctor?.phone || "",
+    speciality: doctor?.speciality || "",
     birth_date: doctor?.birth_date
       ? moment.utc(doctor.birth_date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
-    phone: doctor?.phone || "",
-    speciality: doctor?.speciality || "",
+    gender: doctor?.gender || "",
+    mobile_access_enabled: doctor?.mobile_access_enabled || false,
+    status: doctor?.status || "",
+    status_reason: doctor?.status_reason || "",
     street: doctor?.street || "",
     number: doctor?.number || "",
     details: doctor?.details || "",
@@ -35,30 +41,6 @@ export default function DoctorDetailModal({
     province_id: doctor?.province_id || "",
     region_id: doctor?.region_id || "",
   });
-
-  console.log(doctor);
-
-  useEffect(() => {
-    if (doctor?.id) {
-      setData({
-        id: doctor?.id || null,
-        name: doctor?.name || "",
-        last_name: doctor?.last_name || "",
-        email: doctor?.email || "",
-        rut: doctor?.rut || "",
-        birth_date: doctor?.birth_date
-          ? moment.utc(doctor.birth_date).format("YYYY-MM-DD")
-          : moment.utc(Date.now()).format("YYYY-MM-DD"),
-        phone: doctor?.phone || "",
-        street: doctor?.street || "",
-        number: doctor?.number || "",
-        details: doctor?.details || "",
-        commune_id: doctor?.commune_id || "",
-        province_id: doctor?.province_id || "",
-        region_id: doctor?.region_id || "",
-      });
-    }
-  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -68,7 +50,7 @@ export default function DoctorDetailModal({
       preserveScroll: true,
       onSuccess: () => {
         reset();
-        setOpenModalPatient(false);
+        setIsModalOpenDetail(false);
       },
       onError: () => {
         // Mantener modal abierto (no lo cierres aquí)
@@ -228,20 +210,116 @@ export default function DoctorDetailModal({
             required
           >
             {!data.speciality && <option value="">-- Especialidad --</option>}
-            {specialities?.map((esp) => (
-              <option key={esp.value} value={esp.value}>
-                {esp.value}
+            {especialidadesChile?.map((esp) => (
+              <option key={esp} value={esp}>
+                {esp}
               </option>
             ))}
           </select>
-          <InputError message={errors.region_id} className="mt-2" />
+          <InputError message={errors.speciality} className="mt-2" />
+        </div>
+
+        {/* Género */}
+        <div>
+          <InputLabel
+            htmlFor="gender"
+            value="Sexo"
+            className="ml-2 text-primary"
+          />
+          <select
+            id="gender"
+            name="gender"
+            value={data.gender}
+            onChange={(e) => {
+              setData("gender", e.target.value);
+            }}
+            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+            required
+          >
+            {!data.gender && <option value="">-- Sexo --</option>}
+
+            <option key={"female"} value={"female"}>
+              Femenino
+            </option>
+            <option key={"male"} value={"male"}>
+              Masculino
+            </option>
+            <option key={"other"} value={"other"}>
+              Otro
+            </option>
+          </select>
+          <InputError message={errors.gender} className="mt-2" />
+        </div>
+        {/* Acceso App */}
+        <div>
+          <InputLabel
+            htmlFor="status"
+            value="Acceso Móvil"
+            className="mb-2 ml-2 text-primary"
+          />
+          <Switch
+            id="mobile_access_enabled"
+            name="mobile_access_enabled"
+            checked={!!data?.mobile_access_enabled}
+            onChange={(e) => {
+              const checked = e?.target?.checked ?? false;
+              setData("mobile_access_enabled", checked);
+            }}
+          />
+          <InputError message={errors.mobile_access_enabled} className="mt-2" />
         </div>
       </div>
+      {/* Estado */}
       <hr className="my-4" />
-      {/* Dirección */}
+      <div className="grid grid-cols-3 gap-4 px-4 pt-2">
+        <div>
+          <InputLabel
+            htmlFor="status"
+            value="Estado"
+            className="ml-2 text-primary"
+          />
+          <select
+            id="status"
+            name="status"
+            value={data.status}
+            onChange={(e) => {
+              setData("status", e.target.value);
+            }}
+            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+            required
+          >
+            {!data.status && <option value="">-- Estado --</option>}
 
-      {/* Comuna (ya la tienes, solo ajusta source) */}
+            <option key={"active"} value={"active"}>
+              Activo
+            </option>
+            <option key={"suspended"} value={"suspended"}>
+              Suspendido
+            </option>
+            <option key={"cancelled"} value={"cancelled"}>
+              Cancelado
+            </option>
+          </select>
+          <InputError message={errors.status} className="mt-2" />
+        </div>
+        {data.status !== "active" && (
+          <div className="col-span-3">
+            <div>
+              <InputLabel htmlFor="status_reason" value="Motivo del estado" />
+              <TextInput
+                type="text"
+                id="status_reason"
+                name="status_reason"
+                value={data?.status_reason}
+                onChange={(e) => setData("status_reason", e.target.value)}
+                rows="4"
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
+      <hr className="my-4" />
       <div className="grid grid-cols-2 gap-4 px-4 pt-2">
         {/* Región */}
         <div>

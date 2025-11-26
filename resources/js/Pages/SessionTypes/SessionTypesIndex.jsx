@@ -13,6 +13,7 @@ import {
   XCircle,
   CreditCard,
   Search,
+  Shell,
 } from "lucide-react";
 import SessionTypeModal from "./SessionTypeModal";
 
@@ -58,27 +59,35 @@ export default function SessionTypesIndex({ sessionTypes }) {
   return (
     <AuthenticatedLayout>
       <Head title="Sesiones Pacientes" />
-      <div className="p-6">
+      <div className="p-4">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+
+        <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+              <Shell className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Tipos de Sesiones
+              <h1 className="text-2xl font-bold text-gray-900">
+                Tipo de Sesiones
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Gestiona los diferentes tipos de sesiones y sus configuraciones
+              <p className="text-sm text-gray-600">
+                Gestión de tipos de sesiones
               </p>
             </div>
+          </div>
+          <div className="flex gap-2">
             <button
-              onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={() => handleCreate()}
+              className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
             >
-              <Plus className="w-5 h-5" />
-              Nuevo Tipo de Sesión
+              <Plus className="w-4 h-4" />
+              Nuevo Tipo
             </button>
           </div>
+        </div>
 
+        <div className="my-6">
           {/* Stats */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="p-4 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
@@ -88,7 +97,7 @@ export default function SessionTypesIndex({ sessionTypes }) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Total de Tipos
+                    Total
                   </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {sessionTypes.length}

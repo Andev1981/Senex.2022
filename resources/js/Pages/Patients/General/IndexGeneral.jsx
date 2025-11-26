@@ -12,6 +12,7 @@ export default function IndexGeneral({
   provinces,
   address,
   vital,
+  contact,
 }) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -29,12 +30,12 @@ export default function IndexGeneral({
           provinces={provinces}
           address={address}
         />
-        <EmergencyContact patient={patient} />
+        <EmergencyContact patient={patient} contact={contact} />
       </div>
       <div className="space-y-6">
         <Vital patient={patient} vital={vital} />
-        <MedicalInformation patient={patient} />
-        <NextSessions patient={patient} />
+        {/* <MedicalInformation patient={patient} /> */}
+        {/* <NextSessions patient={patient} /> */}
       </div>
     </div>
   );

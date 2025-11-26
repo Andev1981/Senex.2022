@@ -4,39 +4,20 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
 
-/* Livewire */
-use App\Http\Livewire\{
-  Informes\IndexInformes,
-  Kine\Atenciones,
-  Kine\ListadoKines,
-  Kinesiologos\AtencionDetalle,
-  Paciente\ListadosIndex,
-  Paciente\Resumen,
-  PagosPaciente\IndexPagos,
-  PagosPaciente\DetallePagos,
-  Sesiones\IndexSesiones,
-  Types\Index,
-  Kinesiologos\KineIndex,
-  Kinesiologos\ListadoPacientes,
-  Kinesiologos\NoAutorizado,
-  Kinesiologos\Resumenes
-};
-
 /* Inertia */
 use App\Http\Controllers\Inertia\{
   DteController,
   SessionTypeController,
-  PatientController as InertiaPatientController,
   PaymentsController,
   InvoicesController,
   AttendancesController,
-  DoctorController,
     KineController,
     TreatmentController,
   VitalController,
 };
 
-
+use App\Http\Controllers\Patients\PatientController as InertiaPatientController;
+use App\Http\Controllers\Doctors\DoctorController;
 
 use App\Http\Controllers\{
   HomeController,
@@ -102,6 +83,11 @@ require __DIR__ . '/auth.php';
 Route::post('/heartbeat', function() {
     return response()->json(['status' => 'ok']);
 })->name('heartbeat');
+
+Route::get('/admin/sessions/auto-update', function () {
+    Artisan::call('sessions:auto-update-status');
+    return 'Comando ejecutado. Ver logs en storage/logs/laravel.log';
+})->middleware('auth');
 
 Route::group(['middleware' => ['auth']], function () {
 
@@ -329,29 +315,6 @@ Route::post('/sessions/{session}/duplicate', [TreatmentSessionController::class,
 Route::post('/treatments/{treatment}/recalculate-kpis', [TreatmentController::class, 'recalculateKPIs'])
     ->name('treatments.recalculate-kpis');
 
-// =============================================================================
-// RUTAS DE API PARA BÚSQUEDAS Y FILTROS
-// =============================================================================
-
-// API para obtener tratamientos filtrados de un paciente
-Route::get('/api/patients/{patient}/treatments', [TreatmentController::class, 'apiIndex'])
-    ->name('api.treatments.index');
-
-// API para obtener resumen de sesiones de un paciente
-Route::get('/api/patients/{patient}/sessions/summary', [TreatmentSessionController::class, 'summary'])
-    ->name('api.sessions.summary');
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -367,12 +330,18 @@ Route::get('/api/patients/{patient}/sessions/summary', [TreatmentSessionControll
 
   /* SeniorSenex */
   // Gestión de atenciones (presencial)
-  Route::get('/attendances', [AttendancesController::class, 'index'])->name('attendances.index');
-  Route::post('/attendances', [AttendancesController::class, 'store'])->name('attendances.store');
+  // Vista principal de atenciones
+    Route::get('/attendances', [AttendancesController::class, 'index'])->name('attendances.index');
+    
+    // Acciones sobre sesiones
+    Route::post('/attendances/store', [AttendancesController::class, 'store'])->name('attendances.store');
+    Route::patch('/attendances/{id}/patch', [AttendancesController::class, 'update'])->name('attendances.update');
+    Route::patch('/attendances/{id}/start', [AttendancesController::class, 'startSession'])->name('attendances.start');
+    Route::patch('/attendances/{id}/complete', [AttendancesController::class, 'completeSession'])->name('attendances.complete');
+    Route::patch('/attendances/{id}/cancel', [AttendancesController::class, 'cancelSession'])->name('attendances.cancel');
+    Route::patch('/attendances/{id}/absent', [AttendancesController::class, 'markAbsent'])->name('attendances.absent');
 
-  // Check-in de citas
-  Route::post('/appointments/{appointment}/check-in', [AttendancesController::class, 'checkInAppointment'])
-    ->name('appointments.checkin');
+
 
   // Pagos
   Route::post('/sessions/{session}/pay/now', [PaymentsController::class, 'chargeNowForSession'])->name('sessions.pay.now');

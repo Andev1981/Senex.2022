@@ -7,7 +7,7 @@ import SideModal from "@/Components/SideModal";
 import TablePlans from "./TablePlans";
 import PlanModal from "./Partials/PlanModal";
 import PlanModalDelete from "./Partials/PlanModalDelete";
-import { Box, Plus } from "lucide-react";
+import { Box, NotebookText, Plus } from "lucide-react";
 
 export default function Index({
   plans,
@@ -37,11 +37,11 @@ export default function Index({
   return (
     <AuthenticatedLayout>
       <Head title="Planes" />
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-              <Box className="w-6 h-6 text-white" />
+              <NotebookText className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Planes</h1>

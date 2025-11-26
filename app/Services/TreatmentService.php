@@ -170,11 +170,11 @@ class TreatmentService
         $sessions = TreatmentSession::where('treatment_id', $treatmentId)->get();
 
         return [
-            'total' => $sessions->whereIn('status', ['Programada', 'Completada'])->count(),
-            'completed' => $sessions->where('status', 'Completada')->count(),
-            'scheduled' => $sessions->where('status', 'Programada')->count(),
-            'cancelled' => $sessions->where('status', 'Cancelada')->count(),
-            'no_show' => $sessions->where('status', 'No Asistió')->count(),
+            'total' => $sessions->whereIn('status', ['scheduled', 'completed'])->count(),
+            'completed' => $sessions->where('status', 'completed')->count(),
+            'scheduled' => $sessions->where('status', 'scheduled')->count(),
+            'cancelled' => $sessions->where('status', 'cancelled')->count(),
+            'no_show' => $sessions->where('status', 'no_show')->count(),
         ];
     }
 
@@ -184,7 +184,7 @@ class TreatmentService
     private function calculateTreatmentDates(int $treatmentId): array
     {
         $sessions = TreatmentSession::where('treatment_id', $treatmentId)
-            ->whereIn('status', ['Programada', 'Completada'])
+            ->whereIn('status', ['scheduled', 'completed'])
             ->orderBy('date')
             ->orderBy('time')
             ->get();
@@ -201,14 +201,14 @@ class TreatmentService
         $startDate = $sessions->first()->date;
 
         // End date: última sesión completada
-        $completedSessions = $sessions->where('status', 'Completada');
+        $completedSessions = $sessions->where('status', 'completed');
         $endDate = $completedSessions->isNotEmpty() 
             ? $completedSessions->last()->date 
             : null;
 
         // Next appointment: próxima sesión programada en el futuro
         $nextSession = $sessions->filter(function ($session) {
-            return $session->status === 'Programada' && $session->date->isFuture();
+            return $session->status === 'scheduled' && $session->date->isFuture();
         })->first();
 
         $nextAppointment = null;
@@ -230,7 +230,7 @@ class TreatmentService
     private function calculateTreatmentKPIs(int $treatmentId): array
     {
         $completed = TreatmentSession::where('treatment_id', $treatmentId)
-                                    ->where('status', 'Completada')
+                                    ->where('status', 'completed')
                                     ->get();
 
         $MAX_ROM = 180; // cambiar según articulación
@@ -346,7 +346,7 @@ class TreatmentService
     private function determineStatus(Treatment $treatment, array $sessionStats, array $dates): ?string
     {
         // No cambiar si está suspendido o inactivo manualmente
-        if (in_array($treatment->status, ['Cancelled', 'Completed'])) {
+        if (in_array($treatment->status, ['cancelled', 'completed'])) {
             return null;
         }
         /* 'Evaluation','InProgress','Cancelled','Paused','Completed' */
@@ -355,7 +355,7 @@ class TreatmentService
         if (!$treatment->is_indefinite && 
             $treatment->total_sessions && 
             $sessionStats['completed'] >= $treatment->total_sessions) {
-            return 'Completado';
+            return 'completed';
         }
 
         // Si la última sesión fue hace más de 60 días y no hay próximas sesiones
@@ -363,13 +363,13 @@ class TreatmentService
             $daysSinceLastSession = Carbon::parse($dates['end_date'])->diffInDays(now());
             
             if ($daysSinceLastSession > 60) {
-                return 'Paused';
+                return 'paused';
             }
         }
 
         // Si tiene sesiones programadas o completadas recientes, está activo
         if ($sessionStats['completed'] > 0 || $sessionStats['scheduled'] > 0) {
-            return 'InProgress';
+            return 'in_progress';
         }
 
         return null; // No cambiar
@@ -384,7 +384,7 @@ class TreatmentService
 
         // Obtener sesiones de los últimos 30 días
         $recentSessions = TreatmentSession::where('treatment_id', $treatmentId)
-            ->where('status', 'Completada')
+            ->where('status', 'completed')
             ->where('date', '>=', now()->subDays(30))
             ->orderBy('date')
             ->get();
@@ -405,23 +405,23 @@ class TreatmentService
 
         // Determinar frecuencia
         $frequency = 0;
-        $frequencyTime = 'semanal';
+        $frequencyTime = 'weekly';
 
         if ($avgInterval <= 2) {
             $frequency = 3; // 3 veces por semana
-            $frequencyTime = 'semanal';
+            $frequencyTime = 'weekly';
         } elseif ($avgInterval <= 4) {
             $frequency = 2; // 2 veces por semana
-            $frequencyTime = 'semanal';
+            $frequencyTime = 'weekly';
         } elseif ($avgInterval <= 7) {
             $frequency = 1; // 1 vez por semana
-            $frequencyTime = 'semanal';
+            $frequencyTime = 'weekly';
         } elseif ($avgInterval <= 14) {
             $frequency = 2; // 2 veces al mes
-            $frequencyTime = 'mensual';
+            $frequencyTime = 'monthly';
         } else {
             $frequency = 1; // 1 vez al mes
-            $frequencyTime = 'mensual';
+            $frequencyTime = 'monthly';
         }
 
         $treatment->update([
@@ -524,7 +524,7 @@ class TreatmentService
     private function lastNonCancelledSessionDate(Treatment $treatment): string
     {
         $session = TreatmentSession::where('treatment_id', $treatment->id)
-            ->whereNotIn('status', ['Cancelada'])
+            ->whereNotIn('status', ['cancelled'])
             ->orderByDesc('date')
             ->first();
 
@@ -592,7 +592,7 @@ class TreatmentService
     private function countNonCancelledSessions(Treatment $treatment): int
     {
         return TreatmentSession::where('treatment_id', $treatment->id)
-            ->where('status', '!=', 'Cancelada')
+            ->where('status', '!=', 'cancelled')
             ->count();
     }
 

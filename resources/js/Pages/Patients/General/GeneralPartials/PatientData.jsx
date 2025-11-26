@@ -1,6 +1,5 @@
-import React from "react";
-import { User, Phone, Mail, Calendar, MapPin } from "lucide-react";
-import { useForm } from "@inertiajs/react";
+import { User, Phone, Mail, Calendar } from "lucide-react";
+import { t } from "@/utils/translations";
 
 export default function PatientData({ patient }) {
   return (
@@ -34,7 +33,7 @@ export default function PatientData({ patient }) {
         <div>
           <p className="mb-1 text-sm text-gray-600">Estado Civil</p>
           <p className="font-semibold text-gray-900">
-            {patient.marital_status}
+            {t("maritalStatus", patient.marital_status)}
           </p>
         </div>
         <div>

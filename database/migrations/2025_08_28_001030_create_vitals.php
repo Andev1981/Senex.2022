@@ -24,9 +24,9 @@ return new class extends Migration {
       $t->unsignedSmallInteger('height_cm')->nullable();
       $t->decimal('weight_kg', 5, 2)->nullable();
       $t->decimal('bmi', 5, 2)->nullable();
-      $t->string('blood_type', 3)->nullable();
-      $t->string('bp_systolic', 10)->nullable();
-      $t->string('bp_diastolic', 10)->nullable();
+      $t->enum('blood_type', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])->nullable();
+      $t->unsignedSmallInteger('bp_systolic')->nullable();
+      $t->unsignedSmallInteger('bp_diastolic')->nullable();
       $t->decimal('heart_rate', 5, 2)->nullable();
       $t->decimal('resp_rate', 5, 2)->nullable();
       $t->decimal('temperature_c', 4, 1)->nullable();

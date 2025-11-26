@@ -1,12 +1,4 @@
-import { useMemo, useState } from "react";
-import {
-  Users,
-  Stethoscope,
-  AlertCircle,
-  CheckCircle2,
-  Percent,
-  Plus,
-} from "lucide-react";
+import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/Components/SideModal";
@@ -34,7 +26,7 @@ export default function DoctorsIndex({
 
   return (
     <AuthenticatedLayout>
-      <Head title="Pacientes" />
+      <Head title="Kinesiólogos" />
 
       <div className="min-h-screen p-4 bg-gray-50">
         {/* Header */}
@@ -94,7 +86,7 @@ export default function DoctorsIndex({
         <DoctorAttendances
           doctor={selectedDoctor}
           sessions={selectedDoctor?.sessions?.filter(
-            (s) => s.status === "scheduled"
+            (s) => s.status === "completed"
           )}
           setIsModalOpenAttendences={setIsModalOpenAttendences}
         />

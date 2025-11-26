@@ -15,6 +15,7 @@ export default function ModalCreateEditPatient({
   communes,
   regions,
   provinces,
+  address = [],
 }) {
   const { data, setData, errors, post, put, reset, processing } = useForm({
     id: patient?.id || null,
@@ -31,12 +32,15 @@ export default function ModalCreateEditPatient({
     status: patient?.status || "active",
     status_reason: patient?.status_reason || "",
     phone: patient?.phone || "",
-    street: patient?.street || "",
-    number: patient?.number || "",
-    details: patient?.details || "",
-    commune_id: patient?.commune_id || "",
-    province_id: patient?.province_id || "",
-    region_id: patient?.region_id || "",
+    type: address?.type || "",
+    is_primary: address?.is_primary || true,
+    street: address?.street || "",
+    number: address?.number || "",
+    commune_id: address?.commune_id || "",
+    province_id: address?.province_id || "",
+    region_id: address?.region_id || "",
+    details: address?.details || "",
+    country: address?.country || "Chile",
   });
 
   const handleSubmit = (e) => {
@@ -264,178 +268,199 @@ export default function ModalCreateEditPatient({
           </select>
           <InputError message={errors.gender} className="mt-2" />
         </div>
-        <div>
-          <InputLabel
-            htmlFor="status"
-            value="Estado"
-            className="ml-2 text-primary"
-          />
-          <select
-            id="status"
-            name="status"
-            value={data.status}
-            onChange={(e) => {
-              setData("status", e.target.value);
-            }}
-            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
-            required
-          >
-            {!data.status && <option value="">-- Estado --</option>}
-
-            <option key={"active"} value={"active"}>
-              Activo
-            </option>
-            <option key={"suspended"} value={"suspended"}>
-              Suspendido
-            </option>
-            <option key={"cancelled"} value={"cancelled"}>
-              Cancelado
-            </option>
-          </select>
-          <InputError message={errors.status} className="mt-2" />
-        </div>
       </div>
-      <hr className="my-4" />
-      {/* Dirección */}
+      {patient ? (
+        <>
+          <hr className="mt-4" />
+          <div className="grid grid-cols-3 gap-4 px-4 pt-2">
+            <div>
+              <InputLabel
+                htmlFor="status"
+                value="Estado"
+                className="ml-2 text-primary"
+              />
+              <select
+                id="status"
+                name="status"
+                value={data.status}
+                onChange={(e) => {
+                  setData("status", e.target.value);
+                }}
+                className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+                required
+              >
+                {!data.status && <option value="">-- Estado --</option>}
 
-      {/* Comuna (ya la tienes, solo ajusta source) */}
+                <option key={"active"} value={"active"}>
+                  Activo
+                </option>
+                <option key={"suspended"} value={"suspended"}>
+                  Suspendido
+                </option>
+                <option key={"cancelled"} value={"cancelled"}>
+                  Cancelado
+                </option>
+              </select>
+              <InputError message={errors.status} className="mt-2" />
+            </div>
+          </div>
+          {data.status !== "active" && (
+            <div className="grid grid-cols-1 gap-4 px-4 pt-2">
+              <div>
+                <InputLabel htmlFor="status_reason" value="Motivo del estado" />
+                <TextInput
+                  type="text"
+                  id="status_reason"
+                  name="status_reason"
+                  value={data?.status_reason}
+                  onChange={(e) => setData("status_reason", e.target.value)}
+                  rows="4"
+                />
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <hr className="my-4" />
+          <div className="grid grid-cols-2 gap-4 px-4 pt-2">
+            {/* Región */}
+            <div>
+              <InputLabel
+                htmlFor="region_id"
+                value="Región"
+                className="ml-2 text-primary"
+              />
+              <select
+                id="region_id"
+                name="region_id"
+                value={data.region_id}
+                onChange={(e) => {
+                  setData("region_id", e.target.value);
+                  setData("province_id", ""); // reset provincia
+                  setData("commune_id", ""); // reset comuna
+                }}
+                className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+                required
+              >
+                {!data.region_id && <option value="">-- Región --</option>}
+                {regions?.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name}
+                  </option>
+                ))}
+              </select>
+              <InputError message={errors.region_id} className="mt-2" />
+            </div>
+            {/* Provincia */}
+            <div>
+              <InputLabel
+                htmlFor="province_id"
+                value="Provincia"
+                className="ml-2 text-primary"
+              />
+              <select
+                id="province_id"
+                name="province_id"
+                value={data.province_id}
+                onChange={(e) => {
+                  setData("province_id", e.target.value);
+                  setData("commune_id", ""); // reset comuna
+                }}
+                className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+                required
+                disabled={!data.region_id}
+              >
+                {!data.province_id && <option value="">-- Provincia --</option>}
+                {filteredProvinces?.map((prov) => (
+                  <option key={prov.id} value={prov.id}>
+                    {prov.name}
+                  </option>
+                ))}
+              </select>
+              <InputError message={errors.province_id} className="mt-2" />
+            </div>
+            <div>
+              <InputLabel
+                htmlFor="commune_id"
+                value="Comuna"
+                className="ml-2 text-primary"
+              />
+              <select
+                id="commune_id"
+                name="commune_id"
+                value={data.commune_id}
+                onChange={(e) => setData("commune_id", e.target.value)}
+                className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
+                required
+                disabled={!data.province_id}
+              >
+                {!data.commune_id && <option value="">-- Comuna --</option>}
+                {filteredCommunes?.map((comuna) => (
+                  <option key={comuna.id} value={comuna.id}>
+                    {comuna.name}
+                  </option>
+                ))}
+              </select>
+              <InputError message={errors.commune_id} className="mt-2" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 px-4 pt-2">
+            <div>
+              <InputLabel
+                htmlFor="street"
+                value="Calle"
+                className="ml-2 text-primary"
+              />
+              <TextInput
+                type="text"
+                id="street"
+                name="street"
+                value={data?.street}
+                onChange={(e) => handleChange(e)}
+                className="w-full"
+              />
+              <InputError message={errors?.street} className="mt-2" />
+            </div>
 
-      <div className="grid grid-cols-2 gap-4 px-4 pt-2">
-        {/* Región */}
-        <div>
-          <InputLabel
-            htmlFor="region_id"
-            value="Región"
-            className="ml-2 text-primary"
-          />
-          <select
-            id="region_id"
-            name="region_id"
-            value={data.region_id}
-            onChange={(e) => {
-              setData("region_id", e.target.value);
-              setData("province_id", ""); // reset provincia
-              setData("commune_id", ""); // reset comuna
-            }}
-            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
-            required
-          >
-            {!data.region_id && <option value="">-- Región --</option>}
-            {regions?.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.name}
-              </option>
-            ))}
-          </select>
-          <InputError message={errors.region_id} className="mt-2" />
-        </div>
-        {/* Provincia */}
-        <div>
-          <InputLabel
-            htmlFor="province_id"
-            value="Provincia"
-            className="ml-2 text-primary"
-          />
-          <select
-            id="province_id"
-            name="province_id"
-            value={data.province_id}
-            onChange={(e) => {
-              setData("province_id", e.target.value);
-              setData("commune_id", ""); // reset comuna
-            }}
-            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
-            required
-            disabled={!data.region_id}
-          >
-            {!data.province_id && <option value="">-- Provincia --</option>}
-            {filteredProvinces?.map((prov) => (
-              <option key={prov.id} value={prov.id}>
-                {prov.name}
-              </option>
-            ))}
-          </select>
-          <InputError message={errors.province_id} className="mt-2" />
-        </div>
-        <div>
-          <InputLabel
-            htmlFor="commune_id"
-            value="Comuna"
-            className="ml-2 text-primary"
-          />
-          <select
-            id="commune_id"
-            name="commune_id"
-            value={data.commune_id}
-            onChange={(e) => setData("commune_id", e.target.value)}
-            className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
-            required
-            disabled={!data.province_id}
-          >
-            {!data.commune_id && <option value="">-- Comuna --</option>}
-            {filteredCommunes?.map((comuna) => (
-              <option key={comuna.id} value={comuna.id}>
-                {comuna.name}
-              </option>
-            ))}
-          </select>
-          <InputError message={errors.commune_id} className="mt-2" />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4 px-4 pt-2">
-        <div>
-          <InputLabel
-            htmlFor="street"
-            value="Calle"
-            className="ml-2 text-primary"
-          />
-          <TextInput
-            type="text"
-            id="street"
-            name="street"
-            value={data?.street}
-            onChange={(e) => handleChange(e)}
-            className="w-full"
-          />
-          <InputError message={errors?.street} className="mt-2" />
-        </div>
-
-        <div>
-          <InputLabel
-            htmlFor="number"
-            value="Numeración"
-            className="ml-2 text-primary"
-          />
-          <TextInputNumber
-            type="number"
-            id="number"
-            name="number"
-            value={data?.number}
-            onChange={(e) => handleChange(e)}
-            className="w-full"
-          />
-          <InputError message={errors?.number} className="mt-2" />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-4 px-4 pt-2">
-        <div>
-          <InputLabel
-            htmlFor="details"
-            value="Detalles de la Dirección"
-            className="ml-2 text-primary"
-          />
-          <textarea
-            id="details"
-            name="details"
-            value={data?.details}
-            onChange={(e) => setData("details", e.target.value)}
-            rows="4"
-            className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Ingrese detalles de la dirección..."
-          ></textarea>
-          <InputError message={errors?.details} className="mt-2" />
-        </div>
-      </div>
+            <div>
+              <InputLabel
+                htmlFor="number"
+                value="Numeración"
+                className="ml-2 text-primary"
+              />
+              <TextInputNumber
+                type="number"
+                id="number"
+                name="number"
+                value={data?.number}
+                onChange={(e) => handleChange(e)}
+                className="w-full"
+              />
+              <InputError message={errors?.number} className="mt-2" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 px-4 pt-2">
+            <div>
+              <InputLabel
+                htmlFor="details"
+                value="Detalles de la Dirección"
+                className="ml-2 text-primary"
+              />
+              <textarea
+                id="details"
+                name="details"
+                value={data?.details}
+                onChange={(e) => setData("details", e.target.value)}
+                rows="4"
+                className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Ingrese detalles de la dirección..."
+              ></textarea>
+              <InputError message={errors?.details} className="mt-2" />
+            </div>
+          </div>
+        </>
+      )}
       <hr className="mt-4" />
       <div className="flex justify-end gap-3 px-4 my-4">
         <SecondaryButton

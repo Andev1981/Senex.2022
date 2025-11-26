@@ -80,6 +80,13 @@ class Patient extends Model
         return $this->hasMany(PatientContact::class);
     }
 
+    public function activePlans()
+    {
+        return $this->hasMany(PatientPlan::class)
+            ->active()
+            ->notExpired()
+            ->withSessionsRemaining();
+    }
 
     public function doctorAssignments()
     {
@@ -175,6 +182,12 @@ class Patient extends Model
         return round($bmi, 1);
     }
 
+    public function primaryContact()
+    {
+        return $this->hasOne(PatientContact::class)
+            ->orderByDesc('is_primary')   // primero los primarios (true)
+            ->orderBy('created_at');      // si no hay primarios, el primero creado
+    }
 
     public function paymentStatus(): string
     {

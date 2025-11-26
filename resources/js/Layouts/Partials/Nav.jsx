@@ -63,16 +63,16 @@ function Nav({ user }) {
         {/* Right Side */}
         <div className="flex items-center gap-3 ml-6">
           {/* Quick Actions */}
-          <button className="p-2 transition-colors rounded-lg hover:bg-gray-100">
+          {/* <button className="p-2 transition-colors rounded-lg hover:bg-gray-100">
             <Clock className="w-5 h-5 text-gray-600" />
           </button>
 
           <button className="p-2 transition-colors rounded-lg hover:bg-gray-100">
             <MessageSquare className="w-5 h-5 text-gray-600" />
-          </button>
+          </button> */}
 
           {/* Notifications */}
-          <div className="relative">
+          {/*  <div className="relative">
             <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
               className="relative p-2 transition-colors rounded-lg hover:bg-gray-100"
@@ -134,7 +134,7 @@ function Nav({ user }) {
                 </div>
               </>
             )}
-          </div>
+          </div> */}
 
           {/* Divider */}
           <div className="w-px h-8 bg-gray-200"></div>
@@ -152,10 +152,6 @@ function Nav({ user }) {
                 <p className="text-sm font-semibold text-gray-900">
                   {user.name}
                 </p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {user.last_name}
-                </p>
-                {/* <p className="text-xs text-gray-500">Kinesiólogo</p> */}
               </div>
               <ChevronDown className="hidden w-4 h-4 text-gray-600 lg:block" />
             </button>
@@ -174,13 +170,13 @@ function Nav({ user }) {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {user.name + " " + user.last_name}
+                          {user.name}
                         </p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="p-2">
+                  {/* <div className="p-2">
                     <button className="flex items-center w-full gap-3 px-3 py-2 text-gray-700 transition-colors rounded-lg hover:bg-gray-100">
                       <User className="w-4 h-4" />
                       <span className="text-sm font-medium">Mi Perfil</span>
@@ -197,7 +193,7 @@ function Nav({ user }) {
                       <Shield className="w-4 h-4" />
                       <span className="text-sm font-medium">Privacidad</span>
                     </button>
-                  </div>
+                  </div> */}
                   <div className="p-2 border-t border-gray-200">
                     <Link
                       href={route("logout")}

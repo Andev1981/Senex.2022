@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Inertia;
+namespace App\Http\Controllers\Doctors;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreDoctorRequest;
+use App\Http\Requests\UpdateDoctorRequest;
 use App\Models\Commune;
 use App\Models\Doctor;
 use App\Models\DoctorCommissionRate;
@@ -11,11 +13,15 @@ use App\Models\Patient;
 use App\Models\Province;
 use App\Models\Region;
 use App\Models\SessionType;
-use Carbon\Carbon;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
+
 
 class DoctorController extends Controller
 {
@@ -35,7 +41,7 @@ class DoctorController extends Controller
         $doctors = Doctor::query()->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'doctors.id'))
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')->leftJoin('addresses', function ($join) {
                 $join->on('addresses.addressable_id', '=', 'doctors.id')
-                    ->where('addresses.addressable_type', '=', Patient::class);
+                    ->where('addresses.addressable_type', '=', Doctor::class);
             })
             ->leftJoin('communes', 'addresses.commune_id', '=', 'communes.id')->select([
                 'doctors.id',
@@ -46,7 +52,7 @@ class DoctorController extends Controller
                 'doctors.rut',
                 'doctors.phone',
                 'doctors.status',
-                'doctors.specialty',
+                'doctors.speciality',
                 'doctors.gender',
                 'doctors.*',
                 DB::raw("CONCAT_WS(' ', doctors.name, doctors.last_name) as full_name"),
@@ -76,13 +82,63 @@ class DoctorController extends Controller
         return Inertia::render('Doctors/DoctorsIndex', compact('doctors','doctor_commission_rates','doctor_patient_assignment','sessionTypes','patients',  'communes', 'provinces', 'regions'));
     }
 
-    public function store(Request $request){
+    public function store(StoreDoctorRequest $request){
    
-         $validatedData = $request->all();
+        $validated = $request->validated();
         
-        try{
+        DB::beginTransaction();
 
-            Doctor::create($validatedData);
+        try{
+            
+            // CREAR USUARIO
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['rut']),
+                'email_verified_at' => now(), // Auto-verificado
+            ]);
+
+            $user->assignRole('kine');
+
+            // Separar datos del paciente y la dirección
+            $doctorData = Arr::except($validated, [
+                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
+            ]);
+
+            $addressData = Arr::only($validated, [
+                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
+            ]);
+
+            $doctorData['user_id'] = $user->id;
+
+            $doctor = Doctor::create($doctorData);
+
+             // Crear dirección asociada polimórficamente
+            $doctor->addresses()->create([
+                'type' => 'home',
+                'is_primary' => true,
+                'country' => 'Chile',
+                ...$addressData
+            ]);
+
+            // ENVIAR EMAIL CON CREDENCIALES
+            try {
+                Mail::to($user->email)->send(
+                    new \App\Mail\WelcomeKineEmail($user, temporalPassword :$validated['rut'])
+                );
+            } catch (\Exception $e) {
+                Log::warning('Error enviando email de bienvenida', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+                // No fallar la creación si falla el email
+            }
+
+            /* Log::info('Datos al crear kine: ', [
+                $doctor, $user
+            ]); */
+            
+            DB::commit();
 
             session()->flash('message', 'Kine cread@ correctamente.');
             session()->flash('type', 'success');
@@ -97,13 +153,91 @@ class DoctorController extends Controller
         }
     }
 
-    public function update(Request $request, Doctor $doctor){
-        /* $valiadtedData = $request->validate([]); */
-        $validatedData = $request->all();
-        
-        try{
+    public function update(UpdateDoctorRequest $request, Doctor $doctor){
 
-            $doctor->updateOrFail($validatedData);
+        $validated = $request->validated();
+        
+        DB::beginTransaction();
+
+         try {
+
+            // -------------------------------
+            // 1. Separar datos
+            // -------------------------------
+            $doctorData = Arr::except($validated, [
+                'street', 'number', 'details',
+                'region_id', 'province_id', 'commune_id',
+                'status_reason'
+            ]);
+
+            $addressData = Arr::only($validated, [
+                'street', 'number', 'details',
+                'region_id', 'province_id', 'commune_id'
+            ]);
+
+            if(!$doctor->user->hasRole('kine')){
+                // Evitar cambiar email de kinesiologo
+                $doctor->user->assignRole('kine');
+
+            }
+
+            // -------------------------------
+            // 2. Lógica de CAMBIO DE STATUS
+            // -------------------------------
+            if (array_key_exists('status', $doctorData)) {
+
+                $newStatus = $validated['status'];
+                $oldStatus = $doctor->status;
+
+                // ¿El estado realmente cambió?
+                if ($newStatus !== $oldStatus) {
+
+                    // Registrar fecha de cambio
+                    $doctorData['status_changed_at'] = now();
+
+                    // Si el nuevo estado NO es "active" → status_reason obligatorio
+                    if ($newStatus !== 'active') {
+
+                        if (empty($validated['status_reason'])) {
+                            throw new \Exception("Debe ingresar un motivo cuando el estado no es activo.");
+                        }
+
+                        $doctorData['status_reason'] = $validated['status_reason'];
+                    }
+
+                    // Si el estado cambió a active: limpiar el motivo
+                    if ($newStatus === 'active') {
+                        $doctorData['status_reason'] = null;
+                    }
+
+                } else {
+                    // No hubo cambio → evitar sobrescribir status
+                    unset($doctorData['status']);
+                }
+            }
+
+            // -------------------------------
+            // 3. Actualizar doctor
+            // -------------------------------
+            $doctor->update($doctorData);
+
+            // -------------------------------
+            // 4. Actualizar / crear dirección
+            // -------------------------------
+            $address = $doctor->addresses()->first();
+
+            if ($address) {
+                $address->update($addressData);
+            } elseif (!empty($addressData)) {
+                $doctor->addresses()->create([
+                    'type' => 'home',
+                    'is_primary' => true,
+                    'country' => 'Chile',
+                    ...$addressData
+                ]);
+            }
+
+            DB::commit();
 
             session()->flash('message', 'Kine actualizad@ correctamente.');
             session()->flash('type', 'success');

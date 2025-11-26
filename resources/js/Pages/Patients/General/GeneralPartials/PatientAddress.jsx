@@ -65,7 +65,6 @@ export default function PatientAddress({
       },
       {
         name: "patient_id",
-        label: "ID del Paciente",
         type: "hidden",
       },
     ],
@@ -115,7 +114,7 @@ export default function PatientAddress({
           <div className="">
             <p className="mb-1 text-sm text-gray-600">Número</p>
             <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {address?.number}
+              #{address?.number}
             </p>
           </div>
           <div className="">

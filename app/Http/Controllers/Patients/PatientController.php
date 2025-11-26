@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Inertia;
+namespace App\Http\Controllers\Patients;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
@@ -14,6 +14,7 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\SessionType;
 use App\Models\Treatment;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -105,57 +106,148 @@ class PatientController extends Controller
 
     public function store(StorePatientRequest $request)
     {
-        // Validaciones
+        // Validación
         $validated = $request->validated();
 
         DB::beginTransaction();
-        try {
-            // Paciente
-            Patient::create($validated);
 
+        try {
+
+            // Separar datos del paciente y la dirección
+            $patientData = Arr::except($validated, [
+                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
+            ]);
+
+            $addressData = Arr::only($validated, [
+                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
+            ]);
+
+            // Crear paciente
+            $patient = Patient::create($patientData);
+
+            // Crear dirección asociada polimórficamente
+            $patient->addresses()->create([
+                'type' => 'home',
+                'is_primary' => true,
+                'country' => 'Chile',
+                ...$addressData
+            ]);
 
             DB::commit();
+
             session()->flash('message', 'Paciente creado correctamente.');
             session()->flash('type', 'success');
             return back();
+
         } catch (\Throwable $e) {
+
             DB::rollBack();
             report($e);
 
             session()->flash('message', 'Error al crear el paciente.');
             session()->flash('type', 'error');
-
-
             return back();
         }
     }
 
+
     public function update(UpdatePatientRequest $request, Patient $patient)
     {
-
         $validated = $request->validated();
 
         DB::beginTransaction();
-        try {
-            // Actualizamos paciente
-            $patient->update($validated);
 
+        try {
+
+            // -------------------------------
+            // 1. Separar datos
+            // -------------------------------
+            $patientData = Arr::except($validated, [
+                'street', 'number', 'details',
+                'region_id', 'province_id', 'commune_id',
+                'status_reason'
+            ]);
+
+            $addressData = Arr::only($validated, [
+                'street', 'number', 'details',
+                'region_id', 'province_id', 'commune_id'
+            ]);
+
+            // -------------------------------
+            // 2. Lógica de CAMBIO DE STATUS
+            // -------------------------------
+            if (array_key_exists('status', $patientData)) {
+
+                $newStatus = $validated['status'];
+                $oldStatus = $patient->status;
+
+                // ¿El estado realmente cambió?
+                if ($newStatus !== $oldStatus) {
+
+                    // Registrar fecha de cambio
+                    $patientData['status_changed_at'] = now();
+
+                    // Si el nuevo estado NO es "active" → status_reason obligatorio
+                    if ($newStatus !== 'active') {
+
+                        if (empty($validated['status_reason'])) {
+                            throw new \Exception("Debe ingresar un motivo cuando el estado no es activo.");
+                        }
+
+                        $patientData['status_reason'] = $validated['status_reason'];
+                    }
+
+                    // Si el estado cambió a active: limpiar el motivo
+                    if ($newStatus === 'active') {
+                        $patientData['status_reason'] = null;
+                    }
+
+                } else {
+                    // No hubo cambio → evitar sobrescribir status
+                    unset($patientData['status']);
+                }
+            }
+
+            // -------------------------------
+            // 3. Actualizar paciente
+            // -------------------------------
+            $patient->update($patientData);
+
+            // -------------------------------
+            // 4. Actualizar / crear dirección
+            // -------------------------------
+            $address = $patient->addresses()->first();
+
+            if ($address) {
+                $address->update($addressData);
+            } elseif (!empty($addressData)) {
+                $patient->addresses()->create([
+                    'type' => 'home',
+                    'is_primary' => true,
+                    'country' => 'Chile',
+                    ...$addressData
+                ]);
+            }
 
             DB::commit();
+
             session()->flash('message', 'Paciente actualizado correctamente.');
             session()->flash('type', 'success');
             return back();
+
         } catch (\Throwable $e) {
+
             DB::rollBack();
             report($e);
 
             session()->flash('message', 'Error al actualizar el paciente.');
             session()->flash('type', 'error');
-
-
             return back();
         }
     }
+
+
+
 
     public function show(Patient $patient)
     {
@@ -202,6 +294,8 @@ class PatientController extends Controller
                     ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
             }, 'due_amount')
             ->findOrFail($patientId); // 👈 clave
+
+            dd($patient);
 
           
         if (!$patient) {

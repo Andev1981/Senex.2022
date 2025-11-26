@@ -9,29 +9,18 @@ import {
   Home,
   Users,
   Calendar,
-  Activity,
+  BrickWallShield,
   FileText,
-  Receipt,
-  UserCog,
-  Package,
-  BarChart3,
-  Settings,
-  HelpCircle,
+  NotebookText,
+  HeartPulse,
   Computer,
   List,
-  Box,
+  Shell,
 } from "lucide-react";
 
 function Side({ sidebarOpen, setSidebarOpen }) {
   // Trae la URL actual para reaccionar a cambios de ruta
   const { url } = usePage();
-
-  const kineMenuItems = useMemo(() => [
-    { id: "kine.dashboard", label: "Mi Dashboard", icon: Home },
-    { id: "kine.my-patients", label: "Mis Pacientes", icon: Users },
-    { id: "kine.my-sessions", label: "Mis Sesiones", icon: Calendar },
-    { id: "kine.my-profile", label: "Mi Perfil", icon: UserCog },
-  ]);
 
   // Define tus items con los IDs como NOMBRES DE RUTA de Ziggy
   const menuItems = useMemo(
@@ -39,29 +28,34 @@ function Side({ sidebarOpen, setSidebarOpen }) {
       { id: "/", label: "Dashboard", icon: Home, badge: null },
       { id: "patients.index", label: "Pacientes", icon: Users, badge: "50" },
       { id: "doctors", label: "Kines", icon: Stethoscope, badge: "50" },
+      {
+        id: "attendances.index",
+        label: "Tratamientos",
+        icon: List,
+        badge: null,
+      },
       { id: "boleta", label: "Boleta", icon: FileText, badge: "8" },
       { id: "agenda", label: "Agenda", icon: Calendar, badge: null },
-      { id: "tratamientos", label: "Tratamientos", icon: List, badge: null },
       { id: "pos", label: "POS", icon: Computer, badge: null },
       {
         id: "sessions.types",
         label: "Tipo de Sesiones",
-        icon: Receipt,
+        icon: Shell,
         badge: null,
       },
       {
         id: "insurance-companies.index",
         label: "Aseguradoras",
-        icon: Box,
+        icon: BrickWallShield,
         badge: "12",
       },
       {
         id: "health-insurers.index",
         label: "Isapres",
-        icon: Activity,
+        icon: HeartPulse,
         badge: null,
       },
-      { id: "plans.index", label: "Planes", icon: Package, badge: null },
+      { id: "plans.index", label: "Planes", icon: NotebookText, badge: null },
       /*{
         id: "documentos", // si no es una ruta real, deja como contenedor
         label: "Documentos",

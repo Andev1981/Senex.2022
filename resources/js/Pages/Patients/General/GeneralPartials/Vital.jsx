@@ -112,7 +112,7 @@ export default function Vital({ patient, vital }) {
           <p className="text-base font-bold text-teal-600">{vital?.bmi}</p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-2 py-3">
+      <div className="grid grid-cols-2 gap-3 py-3 md:grid-cols-2">
         <div className="p-2 rounded-lg bg-blue-50">
           <p className="mb-1 text-sm text-gray-600">Presión Diastólica</p>
           <p className="text-xl font-bold text-blue-600">
@@ -141,7 +141,7 @@ export default function Vital({ patient, vital }) {
         <div className="p-3 rounded-lg bg-blue-50">
           <p className="mb-1 text-sm text-gray-600">
             Spo2{" "}
-            {/*  <span className="font-xs text-gray-500 italic">
+            {/*  <span className="italic text-gray-500 font-xs">
               (Saturación perifierica de oxigeno)
             </span> */}
           </p>
@@ -165,6 +165,7 @@ export default function Vital({ patient, vital }) {
             ? route("patients.vitals.update", vital?.id)
             : route("patients.vitals.store")
         }
+        submitLabel={vital?.id ? "Actualizar" : "Crear"}
         method={vital?.id ? "patch" : "post"}
         initialValues={{
           patient_id: patient?.id ?? null,

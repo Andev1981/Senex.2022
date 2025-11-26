@@ -4,6 +4,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getPaginationRowModel,
+  getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import * as XLSX from "xlsx";
@@ -17,6 +18,7 @@ import {
   Search,
   Stethoscope,
   UserCog,
+  X,
 } from "lucide-react";
 import TablePagination from "@/Components/TablePagination";
 import { fmtCLP } from "@/utils/utils";
@@ -29,34 +31,67 @@ export default function TableDoctors({
   setIsModalOpenAttendences,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-
   const [sorting, setSorting] = useState([]);
-  const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [columnFilters, setColumnFilters] = useState([]);
 
-  // Filtrado global simple (busca en todas las columnas)
-  const filteredData = useMemo(() => {
-    if (!globalFilter) return doctors || [];
-    const filter = globalFilter.toLowerCase();
-    return doctors.filter((row) =>
-      Object.values(row).some(
-        (val) => val && val.toString().toLowerCase().includes(filter)
-      )
-    );
-  }, [globalFilter, doctors]);
+  // Estados para los filtros
+  const [filterSpecialty, setFilterSpecialty] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
 
+  // ✅ Verificar si hay filtros activos
+  const hasActiveFilters = !!(filterSpecialty || filterStatus);
+
+  // ✅ Limpiar todos los filtros
+  const clearFilters = () => {
+    setFilterSpecialty("");
+    setFilterStatus("");
+    setSearchTerm("");
+    setColumnFilters([]);
+  };
+
+  // ✅ Mapeo de valores de estado
+  const mapStatus = (label) => {
+    if (!label || label === "Todos") return undefined;
+    if (label.toLowerCase() === "activo") return "active";
+    if (label.toLowerCase() === "inactivo") return "inactive";
+    return label;
+  };
+
+  // ✅ Sync filtros con columnFilters
   useEffect(() => {
-    const id = setTimeout(() => {
-      setGlobalFilter(searchTerm);
-    }, 250);
-    return () => clearTimeout(id);
-  }, [searchTerm]);
+    const next = [];
+
+    if (filterSpecialty && filterSpecialty !== "Todas") {
+      next.push({ id: "specialty", value: filterSpecialty });
+    }
+
+    if (filterStatus) {
+      next.push({ id: "status", value: mapStatus(filterStatus) });
+    }
+
+    setColumnFilters((prev) => {
+      const keep = prev.filter((f) => !["specialty", "status"].includes(f.id));
+      return [...keep, ...next];
+    });
+  }, [filterSpecialty, filterStatus]);
+
+  // ✅ Obtener especialidades únicas presentes en los doctores
+  const specialtiesPresentes = useMemo(() => {
+    if (!doctors || doctors.length === 0) return [];
+    const uniqueSpecialties = [
+      ...new Set(doctors.map((d) => d.specialty).filter(Boolean)),
+    ];
+    return uniqueSpecialties.sort((a, b) => a.localeCompare(b));
+  }, [doctors]);
 
   const columns = useMemo(
     () => [
       {
         id: "profesional",
         header: "PROFESIONAL",
+        accessorFn: (row) => row.full_name,
         cell: ({ row }) => {
           const { name, last_name, phone, email, full_name } = row.original;
           return (
@@ -86,25 +121,39 @@ export default function TableDoctors({
           );
         },
       },
-      { accessorKey: "rut", header: "RUT" },
+      {
+        accessorKey: "rut",
+        header: "RUT",
+        cell: ({ getValue }) => (
+          <span className="text-sm text-gray-700">{getValue()}</span>
+        ),
+      },
       {
         id: "speciality",
+        accessorKey: "speciality",
         header: "ESPECIALIDAD",
-        cell: ({ row }) => {
-          const { specialty } = row.original;
+        cell: ({ getValue }) => {
           return (
             <span className="inline-flex items-center gap-1">
               <Stethoscope className="w-4 h-4 text-gray-400" />
-              {specialty}
+              {getValue()}
             </span>
+          );
+        },
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          return (
+            String(row.getValue(columnId) ?? "").toLowerCase() ===
+            String(filterValue).toLowerCase()
           );
         },
       },
       {
         id: "status",
+        accessorKey: "status",
         header: "ESTADO",
-        cell: ({ row }) => {
-          const { status } = row.original;
+        cell: ({ getValue }) => {
+          const status = getValue();
           const color = status == "active" ? "bg-green-500" : "bg-gray-500";
           const label = status == "active" ? "Activo" : "Inactivo";
           return (
@@ -115,14 +164,51 @@ export default function TableDoctors({
             </span>
           );
         },
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          return String(row.getValue(columnId)) === String(filterValue);
+        },
       },
-      { accessorKey: "sessions_month", header: "SESIONES (MES)" },
+      {
+        id: "mobile_access_enabled",
+        accessorKey: "mobile_access_enabled",
+        header: "ACCESO MÓVIL",
+        cell: ({ getValue }) => {
+          const mobile_access_enabled = getValue();
+          const color =
+            mobile_access_enabled == true ? "bg-green-500" : "bg-gray-500";
+          const label =
+            mobile_access_enabled == true ? "Con Acceso" : "Sin Acceso";
+          return (
+            <span
+              className={`inline-flex text-white items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}
+            >
+              {label}
+            </span>
+          );
+        },
+        filterFn: (row, columnId, filterValue) => {
+          if (!filterValue) return true;
+          return String(row.getValue(columnId)) === String(filterValue);
+        },
+      },
+      {
+        accessorKey: "sessions_month",
+        header: "SESIONES (MES)",
+        cell: ({ getValue }) => (
+          <span className="text-sm text-gray-700">{getValue() || 0}</span>
+        ),
+      },
       {
         id: "revenue_month",
+        accessorKey: "revenue_month",
         header: "INGRESOS (MES)",
-        cell: ({ row }) => {
-          const { revenue_month } = row.original;
-          return <div> {fmtCLP(revenue_month || 0)}</div>;
+        cell: ({ getValue }) => {
+          return (
+            <div className="text-sm font-medium text-gray-700">
+              {fmtCLP(getValue() || 0)}
+            </div>
+          );
         },
       },
       {
@@ -163,33 +249,55 @@ export default function TableDoctors({
   );
 
   const table = useReactTable({
-    data: filteredData,
+    data: doctors,
     columns,
-    state: { sorting, globalFilter },
+    state: {
+      sorting,
+      globalFilter: searchTerm,
+      columnFilters,
+      pagination: { pageSize, pageIndex },
+    },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setSearchTerm,
+    onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: (updater) => {
+      const newState =
+        typeof updater === "function"
+          ? updater({ pageIndex, pageSize })
+          : updater;
+      setPageIndex(newState.pageIndex);
+      setPageSize(newState.pageSize);
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
+    getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: "includesString",
   });
 
   const exportToExcel = () => {
-    const exportData = filteredData.map((item) => ({
-      Nombre: item?.name,
-      Apellido: item?.last_name,
-      Edad: item?.birth
-        ? new Date().getFullYear() - new Date(item.birth).getFullYear()
-        : "N/A",
-      Email: item?.email,
-      Rut: item?.rut,
-      Teléfono: item?.phone,
-    }));
+    const exportData = table.getFilteredRowModel().rows.map((row) => {
+      const item = row.original;
+      return {
+        Nombre: item?.name,
+        Apellido: item?.last_name,
+        Edad: item?.birth
+          ? new Date().getFullYear() - new Date(item.birth).getFullYear()
+          : "N/A",
+        Email: item?.email,
+        Rut: item?.rut,
+        Teléfono: item?.phone,
+        Especialidad: item?.specialty,
+        Estado: item?.status === "active" ? "Activo" : "Inactivo",
+        "Sesiones (Mes)": item?.sessions_month || 0,
+        "Ingresos (Mes)": item?.revenue_month || 0,
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Pacientes");
-    XLSX.writeFile(workbook, "pacientes.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Doctores");
+    XLSX.writeFile(workbook, "doctores.xlsx");
   };
 
   return (
@@ -200,41 +308,44 @@ export default function TableDoctors({
             <Search className="w-4 h-4 text-gray-400" />
             <input
               value={searchTerm}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por nombre, RUT, correo, fono, especialidad..."
               className="w-full text-sm outline-none"
             />
           </div>
           <div className="flex items-center gap-2">
             <select
-              value={searchTerm}
-              onChange={(e) => setSpecialty(e.target.value)}
-              className="px-3 py-2 text-sm font-medium border-2 border-gray-200 rounded-lg"
+              value={filterSpecialty}
+              onChange={(e) => setFilterSpecialty(e.target.value)}
+              className="px-3 py-2 text-sm font-medium border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
             >
-              {[
-                "Todas",
-                ...Array.from(new Set(doctors.map((d) => d.specialty))),
-              ].map((s) => (
-                <option key={s} value={s}>
-                  {s}
+              <option value="">Todas</option>
+              {specialtiesPresentes.map((speciality) => (
+                <option key={speciality} value={speciality}>
+                  {speciality}
                 </option>
               ))}
             </select>
             <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="px-3 py-2 text-sm font-medium border-2 border-gray-200 rounded-lg"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 text-sm font-medium border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
             >
-              <option>Todos</option>
-              <option>Activo</option>
-              <option>Inactivo</option>
+              <option value="">Todos</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
             </select>
-            <button className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium border-2 border-gray-200 rounded-lg hover:bg-gray-50">
-              <Filter className="w-4 h-4" /> Más filtros
-            </button>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium transition border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+              >
+                <X className="w-4 h-4" /> Limpiar
+              </button>
+            )}
             <button
               onClick={exportToExcel}
-              className="inline-flex items-center gap-2 px-2 py-2 text-sm font-medium text-white transition bg-green-600 border-2 border-gray-200 rounded-md hover:bg-green-700"
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white transition bg-green-600 border-2 border-green-600 rounded-lg hover:bg-green-700"
             >
               <FileDown className="w-4 h-4" /> Excel
             </button>
@@ -248,11 +359,11 @@ export default function TableDoctors({
             <UserCog className="w-5 h-5 text-blue-600" /> Doctores/Kines
           </h2>
           <span className="text-sm text-gray-600">
-            {/* {filtrados.length}  */}resultados
+            {table.getFilteredRowModel().rows.length} resultados
           </span>
         </div>
 
-        <div className="w-full overflow-x-auto ">
+        <div className="w-full overflow-x-auto">
           <table className="min-w-[700px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden">
             <thead className="bg-gray-100">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -264,17 +375,21 @@ export default function TableDoctors({
                     <th
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="px-4 py-3 text-xs font-bold text-gray-600 uppercase cursor-pointer"
+                      className="px-4 py-3 text-xs font-bold text-gray-600 uppercase transition cursor-pointer hover:bg-gray-200"
                       scope="col"
                     >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: <ChevronDown className="inline w-4 h-4 ml-1" />,
-                        desc: <ChevronUp className="inline ml-1" />,
-                      }[header.column.getIsSorted()] ?? null}
+                      <div className="flex items-center gap-1">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getIsSorted() === "asc" && (
+                          <ChevronUp className="inline w-4 h-4" />
+                        )}
+                        {header.column.getIsSorted() === "desc" && (
+                          <ChevronDown className="inline w-4 h-4" />
+                        )}
+                      </div>
                     </th>
                   ))}
                 </tr>
@@ -317,10 +432,10 @@ export default function TableDoctors({
         {/* Paginación */}
         <TablePagination
           table={table}
-          total={doctors.length}
+          total={table.getFilteredRowModel().rows.length}
           pageSize={pageSize}
           setPageSize={setPageSize}
-          pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
+          pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]}
         />
       </div>
     </div>

@@ -8,7 +8,6 @@ export default function IndexSessions({
   treatment,
   setIsDuplicate,
 }) {
-  console.log("Tratamientos Contenidos de sesiones: ", sessions.length);
   return (
     <div className="space-y-4">
       <div className="p-6 bg-white shadow-lg rounded-xl">
@@ -36,7 +35,7 @@ export default function IndexSessions({
             </button>
           ) : (
             (sessions.length === 0 && (
-              <div className="p-6 bg-gray-50 border border-dashed rounded-xl">
+              <div className="p-6 border border-dashed bg-gray-50 rounded-xl">
                 <p className="text-gray-500">
                   No hay sesiones registradas para este tratamiento.
                 </p>

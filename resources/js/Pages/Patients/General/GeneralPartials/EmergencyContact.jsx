@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { AlertCircle, Edit } from "lucide-react";
 import ResourceFormModal from "@/Components/ResourceFormModal";
+import { t } from "@/utils/translations";
 
-export default function EmergencyContact({ patient }) {
+export default function EmergencyContact({ patient, contact }) {
   const [openContactModal, setOpenContactModal] = useState(false);
-  const mainContact = patient?.contacts?.find((c) => c?.is_primary == true);
+  const mainContact = contact ? contact : null;
 
   const contactSchema = useMemo(
     () => [
@@ -123,7 +124,9 @@ export default function EmergencyContact({ patient }) {
           </div>
           <div>
             <p className="text-sm text-gray-600">Tipo</p>
-            <p className="font-semibold text-gray-900">{mainContact?.type}</p>
+            <p className="font-semibold text-gray-900">
+              {t("contactType", mainContact?.type)}
+            </p>
           </div>
         </div>
       </div>

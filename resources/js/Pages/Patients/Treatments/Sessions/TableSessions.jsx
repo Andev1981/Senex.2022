@@ -19,6 +19,7 @@ import {
 import TablePagination from "@/Components/TablePagination";
 import { useForm } from "@inertiajs/react";
 import { patientStatuses } from "@/utils/status";
+import { t } from "@/utils/translations";
 
 export default function TableSessions({
   sessions = [],
@@ -86,7 +87,7 @@ export default function TableSessions({
       {
         id: "status", // si usas accessorFn, deja este id
         accessorKey: "status", // recomendado
-        header: "ESTADO",
+        header: "ESTADO.",
         cell: ({ getValue }) => {
           const v = String(getValue() ?? "");
           const cfg = patientStatuses[v] ?? {
@@ -97,7 +98,7 @@ export default function TableSessions({
             <span
               className={`px-2 py-0.5 text-xs rounded-xl border text-white ${cfg.className}`}
             >
-              {cfg.label}
+              {t("sessionStatus", v)}
             </span>
           );
         },
@@ -124,14 +125,17 @@ export default function TableSessions({
       {
         header: "$Pago",
         accessorFn: (row) => row?.debt?.status,
-        cell: ({ getValue }) => (
-          <span
-            className="px-2 py-0.5 text-xs rounded-xl border bg-blue-600 text-white uppercase"
-            title={getValue()}
-          >
-            {getValue()}
-          </span>
-        ),
+        cell: ({ getValue }) => {
+          const v = String(getValue() ?? "");
+          return (
+            <span
+              className="px-2 py-0.5 text-xs rounded-xl border bg-blue-600 text-white uppercase"
+              title={v}
+            >
+              {t("paymentStatus", v)}
+            </span>
+          );
+        },
       },
       {
         header: "FECHA DE SESIÓN",

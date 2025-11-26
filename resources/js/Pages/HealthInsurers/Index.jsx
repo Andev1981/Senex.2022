@@ -6,7 +6,7 @@ import TableHealthInsurers from "./TableHealthInsurers";
 import HealthInsurerModal from "./Partials/HealthInsurerModal";
 import HealthInsurerModalDelete from "./Partials/HealthInsurerModalDelete";
 import SideModal from "@/Components/SideModal";
-import { Plus, Activity } from "lucide-react";
+import { Plus, Activity, HeartPulse } from "lucide-react";
 
 export default function Index({ healthInsurers }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,11 +31,11 @@ export default function Index({ healthInsurers }) {
   return (
     <AuthenticatedLayout>
       <Head title="Isapres" />
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-              <Activity className="w-6 h-6 text-white" />
+              <HeartPulse className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Isapres</h1>

@@ -4,6 +4,27 @@ use Illuminate\Support\Str;
 
 return [
 
+     /*
+    |--------------------------------------------------------------------------
+    | Auto-Update Settings
+    |--------------------------------------------------------------------------
+    */
+    'auto_update' => [
+        // Habilitar/deshabilitar actualización automática
+        'enabled' => env('SESSIONS_AUTO_UPDATE', true),
+        
+        // Minutos de margen para marcar como ausente
+        // (después de la hora programada)
+        'absent_grace_period' => env('SESSIONS_ABSENT_GRACE_PERIOD', 30),
+        
+        // Minutos de margen para completar automáticamente
+        // (después de hora + duración)
+        'complete_grace_period' => env('SESSIONS_COMPLETE_GRACE_PERIOD', 15),
+        
+        // Enviar notificaciones al doctor
+        'notify_doctor' => env('SESSIONS_NOTIFY_DOCTOR', false),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Default Session Driver

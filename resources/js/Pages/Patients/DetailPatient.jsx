@@ -2,15 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm, router, useRemember } from "@inertiajs/react";
 import { route } from "ziggy-js";
-import {
-  User,
-  Activity,
-  DollarSign,
-  FileText,
-  ChevronLeft,
-  Target,
-  Repeat,
-} from "lucide-react";
+import { User, Activity, DollarSign, ChevronLeft, Target } from "lucide-react";
 import PatientCard from "./Partials/PatientCard";
 
 // 👉 Lazy load por pestaña (mejor TTI)
@@ -52,6 +44,9 @@ export default function DetailPatient({
   treatments,
   address,
   vital,
+  contact,
+  allergies,
+  conditions,
 }) {
   const { get } = useForm();
   const [activeTab, setActiveTab] = useSyncedTab("general");
@@ -83,7 +78,13 @@ export default function DetailPatient({
               <ChevronLeft className="w-5 h-5" /> Volver a pacientes
             </button>
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <PatientCard patient={patient} />
+              <PatientCard
+                patient={patient}
+                communes={communes}
+                regions={regions}
+                provinces={provinces}
+                address={address}
+              />
             </div>
           </div>
 
@@ -122,6 +123,7 @@ export default function DetailPatient({
                 provinces={provinces}
                 address={address}
                 vital={vital}
+                contact={contact}
               />
             )}
             {activeTab === "history" && (

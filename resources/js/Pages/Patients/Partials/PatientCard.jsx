@@ -1,9 +1,24 @@
-import { Activity, Edit, FileText, User } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  Activity,
+  Cake,
+  Edit,
+  FileText,
+  IdCard,
+  User,
+  VenusAndMars,
+} from "lucide-react";
+import { useState } from "react";
 import ModalCreateEditPatient from "./../ModalCreateEditPatient";
 import SideModal from "@/Components/SideModal";
+import { t } from "@/utils/translations";
 
-export default function PatientCard({ patient, communes, regions, provinces }) {
+export default function PatientCard({
+  patient,
+  communes,
+  regions,
+  provinces,
+  address,
+}) {
   const [openPatientModal, setOpenPatientModal] = useState(false);
 
   return (
@@ -18,18 +33,24 @@ export default function PatientCard({ patient, communes, regions, provinces }) {
           </h1>
           <div className="flex flex-wrap gap-4 text-sm text-teal-100">
             <span className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
+              <IdCard className="w-4 h-4" />
               RUT: {patient?.rut}
             </span>
             <span>•</span>
-            <span>{patient?.age} años</span>
+            <span className="flex flex-wrap text-sm text-teal-100 gap4">
+              <Cake className="w-4 h-4" />
+              {patient?.age} años
+            </span>
             <span>•</span>
-            <span>{patient?.gender}</span>
+            <span className="flex flex-wrap text-sm text-teal-100 gap4">
+              <VenusAndMars className="w-4 h-4" />
+              {t("gender", patient?.gender)}
+            </span>
             <span>•</span>
-            <span className="flex items-center gap-1">
+            {/* <span className="flex items-center gap-1">
               <Activity className="w-4 h-4" />
               {patient?.activity_level}
-            </span>
+            </span> */}
           </div>
         </div>
       </div>
@@ -47,8 +68,10 @@ export default function PatientCard({ patient, communes, regions, provinces }) {
       <SideModal
         open={openPatientModal}
         onClose={() => setOpenPatientModal(false)}
-        title="Nuevo Paciente"
-        description="Datos del nuevo paciente"
+        title={patient ? "Editar Paciente" : "Nuevo Paciente"}
+        description={
+          patient ? "Editar datos del paciente" : "Datos del nuevo paciente"
+        }
         width="4xl"
       >
         <ModalCreateEditPatient
@@ -57,6 +80,7 @@ export default function PatientCard({ patient, communes, regions, provinces }) {
           communes={communes}
           regions={regions}
           provinces={provinces}
+          address={address}
         />
       </SideModal>
     </div>
