@@ -1,0 +1,5 @@
+{
+  "host": "http://localhost",
+  "port": 8090,
+  "secure": false
+}

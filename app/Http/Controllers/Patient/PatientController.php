@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Patients;
+namespace App\Http\Controllers\Patient;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;

@@ -14,7 +14,7 @@ use App\Http\Controllers\Inertia\{
   VitalController,
 };
 
-use App\Http\Controllers\Patients\PatientController as InertiaPatientController;
+use App\Http\Controllers\Patient\PatientController as InertiaPatientController;
 use App\Http\Controllers\Doctors\DoctorController;
 use App\Http\Controllers\Attendances\AttendancesController;
 
@@ -448,6 +448,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Consultar estado de transacción
     Route::get('/payments/webpay/{token}/status', [WebpayController::class, 'status'])
         ->name('payments.webpay.status');
+
+    Route::get('/payment/pos/itegration', [WebpayController::class, 'paymentPos'])->name('payment.pos');
+
 });
 
 // =============================================================================

@@ -1,6 +1,16 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Head, useForm } from "@inertiajs/react";
-import { CreditCard, DollarSign, Loader2, AlertCircle } from "lucide-react";
+import {
+  CreditCard,
+  DollarSign,
+  Loader2,
+  AlertCircle,
+  User,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  FileText,
+} from "lucide-react";
 import axios from "axios";
 
 /**
@@ -9,25 +19,156 @@ import axios from "axios";
  * Este componente permite probar la integración de Webpay
  * ingresando diferentes montos y escenarios.
  *
- * Ubicación sugerida: resources/js/Pages/Payments/WebpayTest.jsx
- * Ruta sugerida: /test/webpay (solo para desarrollo)
+ * Ubicación: resources/js/Pages/Payments/WebpayTest.jsx
+ * Ruta: /test/webpay (solo para desarrollo)
  */
 export default function WebpayTest({
   patients = [],
   sessions = [],
   debts = [],
+  plans = [],
 }) {
   const [paymentType, setPaymentType] = useState("session"); // 'session', 'multiple', 'debts', 'plan'
   const [processing, setProcessing] = useState(false);
+  const [selectedSessions, setSelectedSessions] = useState([]);
+  const [selectedDebts, setSelectedDebts] = useState([]);
+  const [selectedPlans, setSelectedPlans] = useState([]);
+
   const { data, setData, post, errors } = useForm({
     patient_id: "",
     amount: "",
     session_id: "",
     session_ids: [],
     debt_ids: [],
-    plan_id: "",
+    plan_ids: [],
     notes: "Pago de prueba desde WebpayTest.jsx",
   });
+
+  // Filtrar sesiones del paciente seleccionado
+  const patientSessions = useMemo(() => {
+    if (!data.patient_id) return [];
+    return sessions.filter((s) => s.patient_id === parseInt(data.patient_id));
+  }, [data.patient_id, sessions]);
+
+  // Filtrar deudas del paciente seleccionado
+  const patientDebts = useMemo(() => {
+    if (!data.patient_id) return [];
+    return debts.filter((d) => d.patient_id === parseInt(data.patient_id));
+  }, [data.patient_id, debts]);
+
+  // Filtrar planes del paciente seleccionado
+  const patientPlans = useMemo(() => {
+    if (!data.patient_id) return [];
+    return plans.filter((p) => p.patient_id === parseInt(data.patient_id));
+  }, [data.patient_id, plans]);
+
+  const shouldShowSummary =
+    data.patient_id &&
+    data.amount_clp &&
+    ((data.payment_type === "session" && selectedSessions.length > 0) ||
+      (data.payment_type === "debt" && selectedDebts.length > 0) ||
+      (data.payment_type === "plan" && selectedPlans.length > 0) ||
+      (data.payment_type === "payment_plan" && data.amount_clp > 0));
+
+  // Calcular monto total de sesiones seleccionadas
+  const calculateSessionsTotal = () => {
+    return selectedSessions.reduce((sum, sessionId) => {
+      const session = patientSessions.find((s) => s.id === sessionId);
+      return sum + (session?.patient_amount_clp || 0);
+    }, 0);
+  };
+
+  // Calcular monto total de deudas seleccionadas
+  const calculateDebtsTotal = () => {
+    return selectedDebts.reduce((sum, debtId) => {
+      const debt = patientDebts.find((d) => d.id === debtId);
+      return sum + (debt?.original_amount || 0);
+    }, 0);
+  };
+
+  // Calcular total de planes seleccionados
+  const calculatePlansTotal = useCallback(() => {
+    return selectedPlans.reduce((sum, plan) => {
+      return sum + (plan.price_per_session_clp || 0);
+    }, 0);
+  }, [selectedPlans]);
+
+  // Obtener información del paciente seleccionado
+  const selectedPatient = useMemo(() => {
+    if (!data.patient_id) return null;
+    return patients.find((p) => p.id === parseInt(data.patient_id));
+  }, [data.patient_id, patients]);
+
+  // Manejar cambio de paciente - resetear todo
+  const handlePatientChange = (patientId) => {
+    setData({
+      ...data,
+      patient_id: patientId,
+      session_id: "",
+      session_ids: [],
+      debt_ids: [],
+      plan_ids: [],
+      amount: "",
+    });
+    setSelectedSessions([]);
+    setSelectedDebts([]);
+    setSelectedPlans([]);
+  };
+
+  // Toggle sesión para pago múltiple
+  const toggleSession = (sessionId) => {
+    const newSelected = selectedSessions.includes(sessionId)
+      ? selectedSessions.filter((id) => id !== sessionId)
+      : [...selectedSessions, sessionId];
+
+    setSelectedSessions(newSelected);
+    setData("session_ids", newSelected);
+
+    // Actualizar monto automáticamente
+    const total = newSelected.reduce((sum, id) => {
+      const session = patientSessions.find((s) => s.id === id);
+      return sum + (session?.patient_amount_clp || 0);
+    }, 0);
+    setData("amount", total);
+  };
+
+  // Toggle deuda para pago múltiple
+  const toggleDebt = (debtId) => {
+    const newSelected = selectedDebts.includes(debtId)
+      ? selectedDebts.filter((id) => id !== debtId)
+      : [...selectedDebts, debtId];
+
+    setSelectedDebts(newSelected);
+    setData("debt_ids", newSelected);
+
+    // Actualizar monto automáticamente
+    const total = newSelected.reduce((sum, id) => {
+      const debt = patientDebts.find((d) => d.id === id);
+      return sum + (debt?.original_amount || 0);
+    }, 0);
+    setData("amount", total);
+  };
+
+  // Toggle selección de plan individual
+  const togglePlan = (plan) => {
+    setSelectedPlans((prev) => {
+      const exists = prev.find((p) => p.id === plan.id);
+      if (exists) {
+        return prev.filter((p) => p.id !== plan.id);
+      } else {
+        return [...prev, plan];
+      }
+    });
+  };
+
+  // Actualizar monto cuando se selecciona una sesión individual
+  const handleSessionChange = (sessionId) => {
+    setData("session_id", sessionId);
+    const session = patientSessions.find((s) => s.id === parseInt(sessionId));
+    if (session) {
+      setData("amount", session.patient_amount_clp);
+    }
+  };
 
   // Formatear monto en CLP
   const formatCLP = (amount) => {
@@ -69,21 +210,21 @@ export default function WebpayTest({
         break;
 
       case "multiple":
-        if (data.session_ids.length === 0) {
+        if (selectedSessions.length === 0) {
           alert("Debes seleccionar al menos una sesión");
           return;
         }
         route = "/payments/webpay/sessions/multiple";
-        payload.session_ids = data.session_ids;
+        payload.session_ids = selectedSessions;
         break;
 
       case "debts":
-        if (data.debt_ids.length === 0) {
+        if (selectedDebts.length === 0) {
           alert("Debes seleccionar al menos una deuda");
           return;
         }
         route = "/payments/webpay/debts";
-        payload.debt_ids = data.debt_ids;
+        payload.debt_ids = selectedDebts;
         break;
 
       case "plan":
@@ -110,6 +251,7 @@ export default function WebpayTest({
 
       if (!response.data.url || !response.data.token) {
         alert("Error: Webpay no devolvió URL o Token");
+        setProcessing(false);
         return;
       }
 
@@ -132,11 +274,40 @@ export default function WebpayTest({
       form.submit();
     } catch (error) {
       console.error("Error conectando a Webpay:", error);
-      alert("Hubo un error iniciando el pago.");
-    } finally {
+
+      let errorMessage = "Hubo un error iniciando el pago.";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      alert(errorMessage);
       setProcessing(false);
     }
   };
+
+  useEffect(() => {
+    if (data.payment_type === "session" && selectedSessions.length > 0) {
+      const total = calculateSessionsTotal();
+      setData((prev) => ({ ...prev, amount_clp: total }));
+    } else if (data.payment_type === "debt" && selectedDebts.length > 0) {
+      const total = calculateDebtsTotal();
+      setData((prev) => ({ ...prev, amount_clp: total }));
+    } else if (data.payment_type === "plan" && selectedPlans.length > 0) {
+      // ⭐ NUEVO
+      const total = calculatePlansTotal();
+      setData((prev) => ({ ...prev, amount_clp: total }));
+    }
+  }, [
+    selectedSessions,
+    selectedDebts,
+    selectedPlans, // ⭐ NUEVO
+    data.payment_type,
+    calculateSessionsTotal,
+    calculateDebtsTotal,
+    calculatePlansTotal, // ⭐ NUEVO
+  ]);
 
   // Montos predefinidos para pruebas rápidas
   const quickAmounts = [
@@ -146,6 +317,13 @@ export default function WebpayTest({
     { label: "$30.000", value: 30000 },
     { label: "$50.000", value: 50000 },
     { label: "$100.000", value: 100000 },
+  ];
+
+  const paymentTypes = [
+    { value: "session", label: "Sesión", icon: FileText },
+    { value: "payment_plan", label: "Plan de Pago", icon: Calendar },
+    { value: "debt", label: "Deuda", icon: AlertCircle },
+    { value: "plan", label: "Plan", icon: CheckCircle2 }, // ⭐ NUEVO
   ];
 
   return (
@@ -187,245 +365,615 @@ export default function WebpayTest({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Card Principal */}
-            <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-              {/* Tipo de Pago */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Pago
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { value: "session", label: "Sesión Individual" },
-                    { value: "multiple", label: "Múltiples Sesiones" },
-                    { value: "debts", label: "Deudas" },
-                    { value: "plan", label: "Plan" },
-                  ].map((type) => (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => setPaymentType(type.value)}
-                      className={`px-4 py-3 rounded-lg border-2 transition-colors ${
-                        paymentType === type.value
-                          ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                      }`}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              {/* Header del form */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600" />
+                  Configuración del Pago
+                </h2>
               </div>
 
-              {/* Paciente */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Paciente *
-                </label>
-                <select
-                  value={data.patient_id}
-                  onChange={(e) => setData("patient_id", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Seleccionar paciente...</option>
-                  {patients.length > 0 ? (
-                    patients.map((patient) => (
-                      <option key={patient.id} value={patient.id}>
-                        {patient.full_name} - RUT: {patient.rut}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="1">Juan Pérez - 12.345.678-9</option>
-                      <option value="2">María González - 98.765.432-1</option>
-                      <option value="3">Pedro Rodríguez - 11.222.333-4</option>
-                    </>
-                  )}
-                </select>
-                {errors.patient_id && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.patient_id}
-                  </p>
-                )}
-              </div>
-
-              {/* Campos específicos según tipo de pago */}
-              {paymentType === "session" && (
+              <div className="p-6 space-y-6">
+                {/* Tipo de Pago */}
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Tipo de Pago
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      {
+                        value: "session",
+                        label: "Sesión Individual",
+                        icon: FileText,
+                      },
+                      {
+                        value: "multiple",
+                        label: "Múltiples Sesiones",
+                        icon: CheckCircle2,
+                      },
+                      { value: "debts", label: "Deudas", icon: AlertCircle },
+                      { value: "plan", label: "Plan", icon: Calendar },
+                    ].map((type) => {
+                      const Icon = type.icon;
+                      return (
+                        <button
+                          key={type.value}
+                          type="button"
+                          onClick={() => {
+                            setPaymentType(type.value);
+                            setData({
+                              ...data,
+                              session_id: "",
+                              session_ids: [],
+                              debt_ids: [],
+                              amount: "",
+                            });
+                            setSelectedSessions([]);
+                            setSelectedDebts([]);
+                          }}
+                          className={`px-4 py-4 rounded-lg border-2 transition-all ${
+                            paymentType === type.value
+                              ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold shadow-md"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow"
+                          }`}
+                        >
+                          <Icon className="w-5 h-5 mx-auto mb-1" />
+                          <div className="text-sm">{type.label}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Selección de Paciente */}
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sesión *
+                    Paciente *
                   </label>
                   <select
-                    value={data.session_id}
-                    onChange={(e) => setData("session_id", e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={data.patient_id}
+                    onChange={(e) => handlePatientChange(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
-                    <option value="">Seleccionar sesión...</option>
-                    {sessions.length > 0 ? (
-                      sessions.map((session) => (
-                        <option key={session.id} value={session.id}>
-                          Sesión #{session.session_number} -{" "}
-                          {formatCLP(session.patient_amount_clp)}
+                    <option value="">Seleccionar paciente...</option>
+                    {patients.length > 0 ? (
+                      patients.map((patient) => (
+                        <option key={patient.id} value={patient.id}>
+                          {patient.full_name} - RUT: {patient.rut}
                         </option>
                       ))
                     ) : (
                       <>
-                        <option value="1">Sesión #1 - $30.000</option>
-                        <option value="2">Sesión #2 - $25.000</option>
-                        <option value="3">Sesión #3 - $30.000</option>
+                        <option value="1">Juan Pérez - 12.345.678-9</option>
+                        <option value="2">María González - 98.765.432-1</option>
+                        <option value="3">
+                          Pedro Rodríguez - 11.222.333-4
+                        </option>
                       </>
                     )}
                   </select>
-                </div>
-              )}
 
-              {paymentType === "multiple" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sesiones (separar con coma) *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej: 1,2,3"
-                    value={data.session_ids.join(",")}
-                    onChange={(e) =>
-                      setData(
-                        "session_ids",
-                        e.target.value
-                          .split(",")
-                          .map((id) => id.trim())
-                          .filter(Boolean)
-                      )
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Ingresa los IDs de las sesiones separados por coma
-                  </p>
-                </div>
-              )}
+                  {/* Información del paciente seleccionado */}
+                  {selectedPatient && (
+                    <div className="mt-3 flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>
+                        Paciente seleccionado:{" "}
+                        <strong>{selectedPatient.full_name}</strong>
+                      </span>
+                    </div>
+                  )}
 
-              {paymentType === "debts" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Deudas (separar con coma) *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej: 1,2,3"
-                    value={data.debt_ids.join(",")}
-                    onChange={(e) =>
-                      setData(
-                        "debt_ids",
-                        e.target.value
-                          .split(",")
-                          .map((id) => id.trim())
-                          .filter(Boolean)
-                      )
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Ingresa los IDs de las deudas separados por coma
-                  </p>
+                  {errors.patient_id && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                      <XCircle className="w-4 h-4" />
+                      {errors.patient_id}
+                    </p>
+                  )}
                 </div>
-              )}
 
-              {paymentType === "plan" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plan ID *
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Ej: 1"
-                    value={data.plan_id}
-                    onChange={(e) => setData("plan_id", e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              )}
+                {/* Campos específicos según tipo de pago */}
+                {paymentType === "session" && (
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Sesión a Pagar *
+                    </label>
 
-              {/* Monto */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Monto (CLP) *
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="number"
-                    value={data.amount}
-                    onChange={(e) => setData("amount", e.target.value)}
-                    placeholder="Ingresa el monto en pesos chilenos"
-                    min="50"
-                    step="1"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
-                  />
-                </div>
-                {data.amount && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    = {formatCLP(data.amount)}
-                  </p>
-                )}
-                {errors.amount && (
-                  <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+                    {!data.patient_id ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>Primero selecciona un paciente</p>
+                      </div>
+                    ) : patientSessions.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <XCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>Este paciente no tiene sesiones disponibles</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {patientSessions.map((session) => (
+                          <label
+                            key={session.id}
+                            className={`flex items-center justify-between p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                              data.session_id === session.id.toString()
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="radio"
+                                name="session"
+                                value={session.id}
+                                checked={
+                                  data.session_id === session.id.toString()
+                                }
+                                onChange={(e) =>
+                                  handleSessionChange(e.target.value)
+                                }
+                                className="w-4 h-4 text-blue-600"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  Sesión #{session.session_number}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(session.date).toLocaleDateString(
+                                    "es-CL"
+                                  )}{" "}
+                                  - {session.status}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-blue-600">
+                                {formatCLP(session.patient_amount_clp)}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
 
-                {/* Montos rápidos */}
-                <div className="mt-3">
-                  <p className="text-xs text-gray-500 mb-2">Montos rápidos:</p>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                    {quickAmounts.map((quick) => (
-                      <button
-                        key={quick.value}
-                        type="button"
-                        onClick={() => setData("amount", quick.value)}
-                        className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
-                      >
-                        {quick.label}
-                      </button>
-                    ))}
+                {paymentType === "multiple" && (
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-gray-700">
+                        Seleccionar Sesiones *
+                      </label>
+                      {selectedSessions.length > 0 && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                          {selectedSessions.length} seleccionada(s)
+                        </span>
+                      )}
+                    </div>
+
+                    {!data.patient_id ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>Primero selecciona un paciente</p>
+                      </div>
+                    ) : patientSessions.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <XCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>Este paciente no tiene sesiones disponibles</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {patientSessions.map((session) => (
+                          <label
+                            key={session.id}
+                            className={`flex items-center justify-between p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                              selectedSessions.includes(session.id)
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedSessions.includes(session.id)}
+                                onChange={() => toggleSession(session.id)}
+                                className="w-4 h-4 text-blue-600 rounded"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  Sesión #{session.session_number}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(session.date).toLocaleDateString(
+                                    "es-CL"
+                                  )}{" "}
+                                  - {session.status}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-gray-700">
+                                {formatCLP(session.patient_amount_clp)}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedSessions.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">Total a pagar:</span>
+                          <span className="text-lg font-bold text-blue-600">
+                            {formatCLP(calculateSessionsTotal())}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {paymentType === "debts" && (
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-gray-700">
+                        Seleccionar Deudas *
+                      </label>
+                      {selectedDebts.length > 0 && (
+                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                          {selectedDebts.length} seleccionada(s)
+                        </span>
+                      )}
+                    </div>
+
+                    {!data.patient_id ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p>Primero selecciona un paciente</p>
+                      </div>
+                    ) : patientDebts.length === 0 ? (
+                      <div className="text-center py-8 text-green-500">
+                        <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-400" />
+                        <p className="font-medium">¡Sin deudas pendientes!</p>
+                        <p className="text-sm text-gray-500">
+                          Este paciente no tiene deudas
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {patientDebts.map((debt) => (
+                          <label
+                            key={debt.id}
+                            className={`flex items-center justify-between p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                              selectedDebts.includes(debt.id)
+                                ? "border-red-500 bg-red-50"
+                                : "border-gray-200 hover:border-red-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedDebts.includes(debt.id)}
+                                onChange={() => toggleDebt(debt.id)}
+                                className="w-4 h-4 text-red-600 rounded"
+                              />
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  Deuda #{debt.id}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Vence:{" "}
+                                  {new Date(debt.due_date).toLocaleDateString(
+                                    "es-CL"
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-red-600">
+                                {formatCLP(debt.original_amount)}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedDebts.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600">Total a pagar:</span>
+                          <span className="text-lg font-bold text-red-600">
+                            {formatCLP(calculateDebtsTotal())}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {paymentType === "plan" && (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Seleccionar Plan
+                    </h3>
+
+                    {!data.patient_id ? (
+                      <div className="text-center py-12">
+                        <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500">
+                          Primero selecciona un paciente
+                        </p>
+                      </div>
+                    ) : patientPlans.length === 0 ? (
+                      <div className="text-center py-12">
+                        <XCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500">
+                          Este paciente no tiene planes activos
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="mb-4 text-sm text-gray-600">
+                          {selectedPlans.length === 0
+                            ? "Selecciona un plan para pagar"
+                            : `${selectedPlans.length} plan(es) seleccionado(s)`}
+                        </div>
+
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                          {patientPlans.map((plan) => {
+                            const isSelected = selectedPlans.some(
+                              (p) => p.id === plan.id
+                            );
+
+                            return (
+                              <div
+                                key={plan.id}
+                                onClick={() => togglePlan(plan)}
+                                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                  isSelected
+                                    ? "border-purple-500 bg-purple-50 shadow-md"
+                                    : "border-gray-200 hover:border-purple-300 hover:bg-purple-25"
+                                }`}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-start gap-3 flex-1">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => togglePlan(plan)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                                    />
+
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-semibold text-gray-900">
+                                          {plan.plan_name}
+                                        </span>
+                                        <span
+                                          className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                            plan.status === "active"
+                                              ? "bg-green-100 text-green-800"
+                                              : "bg-gray-100 text-gray-800"
+                                          }`}
+                                        >
+                                          {plan.status}
+                                        </span>
+                                      </div>
+
+                                      <div className="text-sm text-gray-600 space-y-1">
+                                        <div>
+                                          Sesiones: {plan.sessions_used} /{" "}
+                                          {plan.total_sessions} usadas (
+                                          {plan.remaining_sessions} restantes)
+                                        </div>
+                                        <div>
+                                          Vigencia:{" "}
+                                          {new Date(
+                                            plan.start_date
+                                          ).toLocaleDateString("es-CL")}
+                                          {plan.end_date &&
+                                            ` - ${new Date(
+                                              plan.end_date
+                                            ).toLocaleDateString("es-CL")}`}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right ml-4">
+                                    <div className="font-bold text-purple-600">
+                                      {formatCLP(plan.price_per_session_clp)}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      por sesión
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Monto */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-5">
+                  <label className="block text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                    Monto a Pagar (CLP) *
+                  </label>
+
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-500">
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      value={data.amount}
+                      onChange={(e) => setData("amount", e.target.value)}
+                      placeholder="0"
+                      min="50"
+                      step="1"
+                      disabled={
+                        (paymentType === "multiple" &&
+                          selectedSessions.length > 0) ||
+                        (paymentType === "debts" && selectedDebts.length > 0)
+                      }
+                      className={`w-full pl-10 pr-4 py-4 border-2 rounded-lg text-2xl font-bold text-center transition-all ${
+                        data.amount
+                          ? "border-green-400 bg-white text-green-700 focus:ring-4 focus:ring-green-200"
+                          : "border-gray-300 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-200"
+                      } disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                    />
+                  </div>
+
+                  {data.amount && (
+                    <div className="mt-3 text-center">
+                      <p className="text-sm text-gray-600">Equivalente a:</p>
+                      <p className="text-lg font-bold text-green-700">
+                        {formatCLP(data.amount)}
+                      </p>
+                    </div>
+                  )}
+
+                  {errors.amount && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                      <XCircle className="w-4 h-4" />
+                      {errors.amount}
+                    </p>
+                  )}
+
+                  {/* Montos rápidos */}
+                  <div className="mt-4">
+                    <p className="text-xs text-gray-600 mb-2 font-medium">
+                      ⚡ Montos rápidos:
+                    </p>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                      {quickAmounts.map((quick) => (
+                        <button
+                          key={quick.value}
+                          type="button"
+                          onClick={() => setData("amount", quick.value)}
+                          disabled={
+                            (paymentType === "multiple" &&
+                              selectedSessions.length > 0) ||
+                            (paymentType === "debts" &&
+                              selectedDebts.length > 0)
+                          }
+                          className="px-3 py-2 text-sm font-medium bg-white hover:bg-green-50 text-gray-700 hover:text-green-700 rounded-lg border border-gray-300 hover:border-green-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {quick.label}
+                        </button>
+                      ))}
+                    </div>
+                    {((paymentType === "multiple" &&
+                      selectedSessions.length > 0) ||
+                      (paymentType === "debts" &&
+                        selectedDebts.length > 0)) && (
+                      <p className="mt-2 text-xs text-gray-500 italic">
+                        El monto se calcula automáticamente según tu selección
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Notas */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notas Adicionales
+                  </label>
+                  <textarea
+                    value={data.notes}
+                    onChange={(e) => setData("notes", e.target.value)}
+                    rows={3}
+                    placeholder="Agrega cualquier observación sobre este pago..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {shouldShowSummary && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Resumen del Pago
+                </h3>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Paciente:</span>
+                    <span className="font-semibold text-gray-900">
+                      {selectedPatient?.name} {selectedPatient?.last_name}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Tipo de pago:</span>
+                    <span className="font-semibold text-gray-900">
+                      {data.payment_type === "session" &&
+                        `${selectedSessions.length} sesión(es)`}
+                      {data.payment_type === "payment_plan" && "Plan de Pago"}
+                      {data.payment_type === "debt" &&
+                        `${selectedDebts.length} deuda(s)`}
+                      {data.payment_type === "plan" &&
+                        `${selectedPlans.length} plan(es)`}{" "}
+                      {/* ⭐ NUEVO */}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-3 border-t border-blue-200">
+                    <span className="text-gray-700">Monto Total:</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {formatCLP(data.amount_clp)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700">Método de pago:</span>
+                    <span className="font-medium text-gray-900">
+                      Webpay Plus
+                    </span>
                   </div>
                 </div>
               </div>
-
-              {/* Notas */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notas
-                </label>
-                <textarea
-                  value={data.notes}
-                  onChange={(e) => setData("notes", e.target.value)}
-                  rows={2}
-                  placeholder="Notas adicionales..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
+            )}
 
             {/* Botón de envío */}
             <button
               type="submit"
-              disabled={processing}
-              className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 ${
-                processing
+              disabled={processing || !data.patient_id || !data.amount}
+              className={`w-full py-5 px-6 rounded-xl font-bold text-lg text-white transition-all flex items-center justify-center gap-3 shadow-xl ${
+                processing || !data.patient_id || !data.amount
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl"
+                  : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transform hover:scale-[1.02] active:scale-[0.98]"
               }`}
             >
               {processing ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-6 h-6 animate-spin" />
                   Redirigiendo a Webpay...
                 </>
               ) : (
                 <>
-                  <CreditCard className="w-5 h-5" />
-                  Pagar con Webpay Plus
+                  <CreditCard className="w-6 h-6" />
+                  Pagar {data.amount ? formatCLP(data.amount) : ""} con Webpay
                 </>
               )}
             </button>
+
+            {(!data.patient_id || !data.amount) && (
+              <p className="text-center text-sm text-gray-500 -mt-2">
+                {!data.patient_id && "Selecciona un paciente para continuar"}
+                {data.patient_id &&
+                  !data.amount &&
+                  "Ingresa un monto para continuar"}
+              </p>
+            )}
 
             {/* Información de prueba */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -461,21 +1009,95 @@ export default function WebpayTest({
             </div>
           </form>
 
-          {/* Debug info */}
+          {/* Panel de Debug */}
           {import.meta.env.DEV && (
-            <div className="mt-6 bg-gray-100 border border-gray-300 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Debug Info</h3>
-              <pre className="text-xs text-gray-700 overflow-auto">
-                {JSON.stringify(
-                  {
-                    paymentType,
-                    data,
-                    errors,
-                  },
-                  null,
-                  2
+            <div className="bg-gray-900 text-gray-100 rounded-lg p-6 font-mono text-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  Estado del Formulario (Debug)
+                </h3>
+                <span className="text-xs text-gray-400">
+                  Solo visible en desarrollo
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <span className="text-green-400">Form Data:</span>
+                  <pre className="mt-1 text-xs overflow-x-auto">
+                    {JSON.stringify(data, null, 2)}
+                  </pre>
+                </div>
+
+                <div>
+                  <span className="text-blue-400">
+                    Sesiones del paciente disponibles:
+                  </span>
+                  <span className="ml-2 text-white">
+                    {patientSessions.length}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-red-400">
+                    Deudas del paciente disponibles:
+                  </span>
+                  <span className="ml-2 text-white">{patientDebts.length}</span>
+                </div>
+
+                {/* ⭐ NUEVO */}
+                <div>
+                  <span className="text-purple-400">
+                    Planes del paciente disponibles:
+                  </span>
+                  <span className="ml-2 text-white">{patientPlans.length}</span>
+                </div>
+
+                <div>
+                  <span className="text-yellow-400">
+                    Sesiones seleccionadas:
+                  </span>
+                  <pre className="mt-1 text-xs overflow-x-auto">
+                    {JSON.stringify(
+                      selectedSessions.map((s) => s.id),
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+
+                <div>
+                  <span className="text-red-400">Deudas seleccionadas:</span>
+                  <pre className="mt-1 text-xs overflow-x-auto">
+                    {JSON.stringify(
+                      selectedDebts.map((d) => d.id),
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+
+                {/* ⭐ NUEVO */}
+                <div>
+                  <span className="text-purple-400">Planes seleccionados:</span>
+                  <pre className="mt-1 text-xs overflow-x-auto">
+                    {JSON.stringify(
+                      selectedPlans.map((p) => p.id),
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+
+                {errors && Object.keys(errors).length > 0 && (
+                  <div>
+                    <span className="text-red-400">Errores de validación:</span>
+                    <pre className="mt-1 text-xs overflow-x-auto text-red-300">
+                      {JSON.stringify(errors, null, 2)}
+                    </pre>
+                  </div>
                 )}
-              </pre>
+              </div>
             </div>
           )}
         </div>
