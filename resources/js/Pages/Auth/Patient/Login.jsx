@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import { UserCircle, ArrowRight, Loader2 } from "lucide-react";
+import InputError from "@/Components/InputError";
+import RutInput from "@/Components/RutInput";
 
 export default function Login() {
   const { data, setData, post, processing, errors } = useForm({
@@ -56,69 +58,38 @@ export default function Login() {
     <>
       <Head title="Acceso Pacientes" />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full">
+      <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-blue-50 via-white to-indigo-50 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md">
           {/* Logo/Header */}
-          <div className="text-center mb-8">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg mb-4">
+          <div className="mb-8 text-center">
+            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 rounded-full shadow-lg bg-gradient-to-br from-blue-600 to-indigo-600">
               <UserCircle className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">
               Portal de Pacientes
             </h1>
             <p className="text-gray-600">Ingresa con tu RUT para acceder</p>
           </div>
 
           {/* Card Principal */}
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="overflow-hidden bg-white shadow-xl rounded-2xl">
             <div className="px-8 py-10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Input RUT */}
                 <div>
                   <label
                     htmlFor="rut"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="block mb-2 text-sm font-medium text-gray-700"
                   >
                     RUT
                   </label>
-                  <div className="relative">
-                    <input
-                      id="rut"
-                      type="text"
-                      value={formattedRut}
-                      onChange={handleRutChange}
-                      placeholder="12.345.678-9"
-                      maxLength="12"
-                      className={`
-                        w-full px-4 py-3 text-lg border-2 rounded-xl
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                        transition-all duration-200
-                        ${
-                          errors.rut
-                            ? "border-red-300 bg-red-50"
-                            : "border-gray-300 hover:border-gray-400"
-                        }
-                      `}
-                      disabled={processing}
-                      autoFocus
-                    />
-                    {formattedRut && !errors.rut && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  {errors.rut && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                      <span className="font-medium">⚠️</span>
-                      {errors.rut}
-                    </p>
-                  )}
-
-                  <p className="mt-2 text-xs text-gray-500">
-                    Ingresa tu RUT sin puntos ni guión. Ejemplo: 123456789
-                  </p>
+                  <RutInput
+                    initialValue={data?.rut}
+                    value={data?.rut}
+                    onChange={(rut) => setData("rut", rut)}
+                    setRutError={(error) => (errors.rut = error)}
+                  />
+                  <InputError message={errors?.rut} className="mt-2" />
                 </div>
 
                 {/* Botón Submit */}
@@ -150,12 +121,12 @@ export default function Login() {
               </form>
 
               {/* Info adicional */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-700 mb-2">
+              <div className="pt-6 mt-6 border-t border-gray-200">
+                <div className="p-4 rounded-lg bg-blue-50">
+                  <p className="mb-2 text-sm text-gray-700">
                     <strong className="text-blue-900">¿Cómo funciona?</strong>
                   </p>
-                  <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
+                  <ol className="space-y-1 text-sm text-gray-600 list-decimal list-inside">
                     <li>Ingresa tu RUT</li>
                     <li>Recibirás un código por email</li>
                     <li>Ingresa el código para acceder</li>
@@ -165,12 +136,12 @@ export default function Login() {
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
-              <p className="text-center text-sm text-gray-600">
+            <div className="px-8 py-4 border-t border-gray-200 bg-gray-50">
+              <p className="text-sm text-center text-gray-600">
                 ¿Problemas para acceder?{" "}
                 <a
                   href="#"
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="font-medium text-blue-600 hover:text-blue-700"
                 >
                   Contacta al centro
                 </a>
@@ -179,7 +150,7 @@ export default function Login() {
           </div>
 
           {/* Disclaimer */}
-          <p className="mt-6 text-center text-xs text-gray-500">
+          <p className="mt-6 text-xs text-center text-gray-500">
             Al continuar, aceptas nuestros términos de servicio y política de
             privacidad
           </p>

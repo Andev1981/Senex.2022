@@ -13,6 +13,28 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Twilio (SMS y WhatsApp)
+    |--------------------------------------------------------------------------
+    */
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'sms_from' => env('TWILIO_SMS_FROM'),           // +56912345678
+        'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'), // +14155238886 (Twilio Sandbox)
+    ],
+
+     /*
+    |--------------------------------------------------------------------------
+    | Webpay (Transbank)
+    |--------------------------------------------------------------------------
+    */
+    'webpay' => [
+        'environment' => env('WEBPAY_ENVIRONMENT', 'integration'), // integration o production
+        'commerce_code' => env('WEBPAY_COMMERCE_CODE'),
+        'api_key' => env('WEBPAY_API_KEY'),
+    ],
 
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),

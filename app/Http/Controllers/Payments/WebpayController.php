@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Payments;
 
 use App\Http\Controllers\Controller;
+use App\Models\Debt;
+use App\Models\Patient;
 use App\Services\Payments\PaymentService;
 use App\Services\Payments\WebpayPlusService;
 use Illuminate\Http\Request;
@@ -27,9 +29,71 @@ class WebpayController extends Controller
         private WebpayPlusService $webpayService
     ) {
         // Las rutas de retorno deben ser públicas (Transbank las llama)
-        $this->middleware(['auth', 'verified'])->except(['return', 'publicReturn']);
+        $this->middleware(['auth', 'verified'])->except(['return', 'publicReturn','portalPagosIndex','consultarDeudas']);
     }
 
+     /**
+     * GET /pagar - Mostrar formulario de consulta RUT
+     */
+    public function portalPagosIndex()
+    {
+        return Inertia::render('PaymentsPatients/PortalPago');
+    }
+
+    /**
+     * POST /pagar - Consultar deudas y mostrar resultado
+     */
+    public function consultarDeudas(Request $request)
+    {
+        $request->validate([
+            'rut' => ['required', 'string', 'max:12'],
+        ]);
+
+        $patient = Patient::where('rut', $request->rut)->first();
+
+        if (!$patient) {
+            return back()->withErrors([
+                'rut' => 'No encontramos registros con este RUT.',
+            ]);
+        }
+
+        // Obtener deudas activas
+        $deudas = Debt::where('patient_id', $patient->id)
+            ->where('status', 'active')
+            ->where('original_amount', '>', 0)
+            ->orderBy('due_date', 'asc')
+            ->limit(100)
+            ->get()
+            ->map(function ($debt) {
+                return [
+                    'id' => $debt->id,
+                    'type' => 'debt',
+                    'description' => $debt->concept,
+                    'date' => $debt->due_date?->format('d M Y'),
+                    'amount' => (int) $debt->original_amount,
+                ];
+            });
+
+        Log::info('Portal Pago: Consulta de deudas', [
+            'patient_id' => $patient->id,
+            'deudas_count' => $deudas->count(),
+            'ip' => $request->ip(),
+        ]);
+
+        // Guardar RUT en sesión para el pago
+        session(['portal_rut' => $request->rut]);
+
+        return Inertia::render('PaymentsPatients/PortalPagoDeudas', [
+            'patient' => [
+                'id' => $patient->id,
+                'name' => $patient->name,
+                'first_name' => explode(' ', $patient->name)[0],
+            ],
+            'deudas' => $deudas,
+            'total' => $deudas->sum('amount'),
+        ]);
+    }
+    
     /**
      * Inicia un pago individual para una sesión
      * POST /payments/webpay/session/{session}
@@ -436,33 +500,5 @@ class WebpayController extends Controller
             }
             session()->forget('pending_payment_plan');
         }
-    }
-
-    /**
-     * Actualiza el payment link después del pago
-     */
-    private function updatePaymentLink(int $linkId, $payment): void
-    {
-        try {
-            $link = \App\Models\PaymentLink::findOrFail($linkId);
-            $link->markAsPaid($payment->id, $payment->amount_clp);
-            session()->forget('payment_link_id');
-            
-            Log::info('Payment link updated', [
-                'link_id' => $linkId,
-                'payment_id' => $payment->id,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error actualizando payment link', [
-                'link_id' => $linkId,
-                'payment_id' => $payment->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
-
-
-    public function paymentPos(){
-        return Inertia::render('Pos/Index');
     }
 }

@@ -26,7 +26,7 @@ class AuthController extends Controller
             return redirect()->route('patient.dashboard');
         }
 
-        return Inertia::render('Patient/Auth/Login');
+        return Inertia::render('Auth/Patient/Login');
     }
 
     /**
@@ -42,7 +42,7 @@ class AuthController extends Controller
             'rut.required' => 'El RUT es obligatorio.',
         ]);
 
-        $rut = $this->cleanRut($request->rut);
+        $rut = $request->rut;
 
         // Rate limiting: máximo 3 intentos por minuto
         $key = 'request-code:' . $rut;
@@ -58,6 +58,7 @@ class AuthController extends Controller
 
         // Buscar paciente por RUT
         $patient = Patient::where('rut', $rut)->first();
+
 
         if (!$patient) {
             // Por seguridad, no revelar si el RUT existe o no
@@ -113,7 +114,7 @@ class AuthController extends Controller
             ]);
         }
 
-        return Inertia::render('Patient/Auth/VerifyCode', [
+        return Inertia::render('Auth/Patient/VerifyCode', [
             'rut' => $patient->rut,
             'email' => $this->maskEmail($patient->email),
             'patient_name' => $patient->name,

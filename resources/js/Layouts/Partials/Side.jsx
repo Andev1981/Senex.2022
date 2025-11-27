@@ -58,12 +58,6 @@ function Side({ sidebarOpen, setSidebarOpen }) {
         badge: null,
       },
       { id: "plans.index", label: "Planes", icon: NotebookText, badge: null },
-      {
-        id: "admin.payment-links.index",
-        label: "Links",
-        icon: NotebookText,
-        badge: null,
-      },
       /*{
         id: "documentos", // si no es una ruta real, deja como contenedor
         label: "Documentos",

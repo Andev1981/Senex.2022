@@ -9,7 +9,7 @@ use App\Services\Dte\DteProvider;
 use App\Services\Dte\LibreDteProvider;
 use App\Models\PaymentAllocation;
 use App\Observers\PaymentAllocationObserver;
-
+use App\Services\TwilioService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'local') {
             URL::forceScheme('http');
         }
+
+        $this->app->singleton(TwilioService::class, function ($app) {
+        return new TwilioService();
+    });
     }
 
     /**

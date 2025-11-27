@@ -27,6 +27,7 @@ use App\Http\Controllers\{
     InsuranceCompanyController,
     PatientContactController,
     PlanController,
+    PortalPagoController,
     TreatmentSessionController,
 };
 
@@ -405,25 +406,6 @@ Route::middleware(['auth', 'verified'])->prefix('payments/webpay')->name('paymen
 Route::match(['GET', 'POST'], '/payments/webpay/return', [WebpayController::class, 'return'])
     ->name('payments.webpay.return');
 
-// =============================================================================
-// PAYMENT LINKS PÚBLICOS - Sin autenticación
-// =============================================================================
-
-Route::prefix('pay')->name('payment-link.')->group(function () {
-    
-    // Mostrar página de pago público
-    Route::get('/{token}', [PaymentLinkController::class, 'show'])
-        ->name('show');
-    
-    // Iniciar checkout con Webpay
-    Route::post('/{token}/checkout', [PaymentLinkController::class, 'checkout'])
-        ->name('checkout');
-    
-    // ✅ CAMBIADO: Route::post → Route::match
-    // Retorno desde Transbank para PAYMENT LINKS
-    Route::match(['GET', 'POST'], '/webpay/return', [PaymentLinkController::class, 'webpayReturn'])
-        ->name('webpay-return');
-});
 
 
     // Ruta de prueba Webpay (solo desarrollo)
@@ -437,26 +419,13 @@ if (app()->environment('local', 'development')) {
 
 }
 
+// Página principal del portal
+Route::get('/pagar', [WebpayController::class, 'portalPagosIndex'])
+    ->name('portal.pago');
 
-
-// ============================================================================
-// PAYMENT LINKS - Rutas Públicas (sin autenticación)
-// ============================================================================
-
-Route::prefix('pay')->name('payment-link.')->group(function () {
-    
-    // Mostrar página de pago
-    Route::get('/{token}', [PaymentLinkController::class, 'show'])
-        ->name('show');
-    
-    // Iniciar checkout con Webpay
-    Route::post('/{token}/checkout', [PaymentLinkController::class, 'checkout'])
-        ->name('checkout');
-    
-    // Return URL de Webpay
-    Route::post('/webpay/return', [PaymentLinkController::class, 'webpayReturn'])
-        ->name('webpay-return');
-});
+// API: Consultar deudas por RUT
+Route::post('/pagar', [WebpayController::class, 'consultarDeudas'])
+    ->name('portal.pago.consultar');
 
 // ============================================================================
 // AUTENTICACIÓN DE PACIENTES - Rutas Públicas
@@ -497,24 +466,7 @@ Route::prefix('patient')->name('patient.')->group(function () {
     });
 });
 
-// ============================================================================
-// ADMIN - PAYMENT LINKS (con autenticación web)
-// ============================================================================
 
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Listar payment links
-    Route::get('/payment-links', [PaymentLinkController::class, 'index'])
-        ->name('payment-links.index');
-    
-    // Crear payment link
-    Route::post('/payment-links', [PaymentLinkController::class, 'store'])
-        ->name('payment-links.store');
-    
-    // Cancelar payment link
-    Route::post('/payment-links/{paymentLink}/cancel', [PaymentLinkController::class, 'cancel'])
-        ->name('payment-links.cancel');
-});
     
 
 /* Tareas pendientes */
