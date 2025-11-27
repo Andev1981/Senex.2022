@@ -58,6 +58,12 @@ function Side({ sidebarOpen, setSidebarOpen }) {
         badge: null,
       },
       { id: "plans.index", label: "Planes", icon: NotebookText, badge: null },
+      {
+        id: "admin.payment-links.index",
+        label: "Links",
+        icon: NotebookText,
+        badge: null,
+      },
       /*{
         id: "documentos", // si no es una ruta real, deja como contenedor
         label: "Documentos",
@@ -79,7 +85,7 @@ function Side({ sidebarOpen, setSidebarOpen }) {
       { id: "test.webpay", label: "test/webpay", icon: DollarSign, badge: "3" }, // ejemplo si tu ruta es pagos.index
       /*{ id: "inventario", label: "Inventario", icon: Package, badge: null },*/
       {
-        id: "payment.pos",
+        id: "test.pos",
         label: "Integracion Pos",
         icon: BarChart3,
         badge: null,

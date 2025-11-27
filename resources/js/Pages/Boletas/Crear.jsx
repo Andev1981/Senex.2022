@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Head, Link, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import ProductoDetalle from "@/Components/ProductoDetalle"; // Asegúrate de importar el componente ProductoDetalle
-import { tiposDocumento } from "@/utils/lists";
+import { tiposDocumento } from "@/constants/documentos";
 
 export default function CrearBoleta({ pacientes = [], productos = [] }) {
   const [success, setSuccess] = useState(null);

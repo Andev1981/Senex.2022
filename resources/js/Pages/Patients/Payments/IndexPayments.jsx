@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import SideModal from "@/Components/SideModal";
 import PaymentForm from "./PaymentForm";
 import { paymentMethods } from "@/helpers/status";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 export default function IndexPayments({ payments, sessions, patient }) {
   const [openPaymentModal, setOpenPaymentModal] = useState(false);
@@ -158,12 +159,16 @@ function StatCard({
   className = "from-teal-500 to-teal-600",
 }) {
   return (
-    <div className={`p-6 text-white bg-gradient-to-br ${className} rounded-xl`}>
-      <div className="flex items-center gap-3 mb-2">
-        <Icon className="w-8 h-8" />
-        <h3 className="text-lg font-semibold">{title}</h3>
+    <AuthenticatedLayout>
+      <div
+        className={`p-6 text-white bg-gradient-to-br ${className} rounded-xl`}
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <Icon className="w-8 h-8" />
+          <h3 className="text-lg font-semibold">{title}</h3>
+        </div>
+        <p className="text-3xl font-bold">{value}</p>
       </div>
-      <p className="text-3xl font-bold">{value}</p>
-    </div>
+    </AuthenticatedLayout>
   );
 }

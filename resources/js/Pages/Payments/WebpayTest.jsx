@@ -12,7 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import axios from "axios";
-
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 /**
  * Componente de PRUEBA para iniciar pagos con Webpay
  *
@@ -327,7 +327,7 @@ export default function WebpayTest({
   ];
 
   return (
-    <>
+    <AuthenticatedLayout>
       <Head title="Prueba de Webpay" />
 
       <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -1102,6 +1102,6 @@ export default function WebpayTest({
           )}
         </div>
       </div>
-    </>
+    </AuthenticatedLayout>
   );
 }

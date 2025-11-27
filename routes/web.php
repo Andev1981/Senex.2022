@@ -17,6 +17,8 @@ use App\Http\Controllers\Inertia\{
 use App\Http\Controllers\Patient\PatientController as InertiaPatientController;
 use App\Http\Controllers\Doctors\DoctorController;
 use App\Http\Controllers\Attendances\AttendancesController;
+use App\Http\Controllers\PaymentLinkController;
+use App\Http\Controllers\Patient\AuthController as PatientAuthController;
 
 use App\Http\Controllers\{
   HomeController,
@@ -375,102 +377,144 @@ use App\Http\Controllers\Payments\WebpayController;
 use Inertia\Inertia;
 
 // =============================================================================
-// KINE MOBILE: PORTAL PARA KINESIÓLOGOS
+// PAGOS AUTENTICADOS - Sistema Interno
 // =============================================================================
-Route::middleware(['auth', 'ensure.kine']) // ← Tu middleware personalizado
-    ->prefix('kine')
-    ->name('kine.')
-    ->group(function () {
-         // Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
-        Route::post('/dashboard/refresh', [DashboardController::class, 'refreshKpis'])
-            ->name('dashboard.refresh');
-        
-        // Pacientes
-        Route::get('/my-patients', [MobilePatientController::class, 'index'])
-            ->name('my-patients');
-        Route::get('/patients/{patient}', [MobilePatientController::class, 'show'])
-            ->name('patients.show');
-        
-        // Sesiones
-        Route::get('/my-sessions', [SessionController::class, 'index'])
-            ->name('my-sessions');
-        Route::get('/sessions/{session}', [SessionController::class, 'show'])
-            ->name('sessions.show');
-        Route::get('/sessions', [SessionController::class, 'create'])
-            ->name('sessions.create');
 
-        Route::post('/sessions/{session}/complete', [SessionController::class, 'complete'])
-            ->name('sessions.complete');
-        Route::post('/sessions/{session}/cancel', [SessionController::class, 'cancel'])
-            ->name('sessions.cancel');
-        Route::put('/sessions/{session}/notes', [SessionController::class, 'updateNotes'])
-    ->name('sessions.update-notes');
-        
-        // Perfil
-        Route::get('/my-profile', [ProfileController::class, 'index'])
-            ->name('my-profile');
-        Route::put('/my-profile', [ProfileController::class, 'update'])
-            ->name('profile.update');
-        Route::put('/my-profile/password', [ProfileController::class, 'updatePassword'])
-            ->name('profile.password');
-    });
-
-// Página de acceso denegado
-Route::get('/kine/access-denied', function() {
-    return Inertia::render('KineMobile/AccessDenied');
-})->name('kine.access-denied')->middleware('auth');
-
-
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('payments/webpay')->name('payments.webpay.')->group(function () {
     
-    // =========================================================================
-    // INICIO DE PAGOS (Autenticados)
-    // =========================================================================
+    // Iniciar pagos (usuarios autenticados)
+    Route::post('/session/{session}', [WebpayController::class, 'initSessionPayment'])
+        ->name('session');
     
-    // Pago de una sesión individual
-    Route::post('/payments/webpay/session/{session}', [WebpayController::class, 'initSessionPayment'])
-        ->name('payments.webpay.session');
-
-    // Pago de múltiples sesiones
-    Route::post('/payments/webpay/sessions/multiple', [WebpayController::class, 'initMultipleSessionsPayment'])
-        ->name('payments.webpay.sessions.multiple');
-
-    // Pago de deudas acumuladas
-    Route::post('/payments/webpay/debts', [WebpayController::class, 'initDebtsPayment'])
-        ->name('payments.webpay.debts');
-
-    // Pago de un plan
-    Route::post('/payments/webpay/plan/{plan}', [WebpayController::class, 'initPlanPayment'])
-        ->name('payments.webpay.plan');
-
-    // Consultar estado de transacción
-    Route::get('/payments/webpay/{token}/status', [WebpayController::class, 'status'])
-        ->name('payments.webpay.status');
-
-    Route::get('/payment/pos/itegration', [WebpayController::class, 'paymentPos'])->name('payment.pos');
-
+    Route::post('/sessions/multiple', [WebpayController::class, 'initMultipleSessionsPayment'])
+        ->name('sessions.multiple');
+    
+    Route::post('/debts', [WebpayController::class, 'initDebtsPayment'])
+        ->name('debts');
+    
+    Route::post('/plan/{plan}', [WebpayController::class, 'initPlanPayment'])
+        ->name('plan');
+    
+    Route::get('/{token}/status', [WebpayController::class, 'status'])
+        ->name('status');
+    
 });
 
-// =============================================================================
-// RETORNOS DESDE TRANSBANK (Sin autenticación - Transbank hace el callback)
-// =============================================================================
-
-// Retorno para usuarios autenticados (sesión activa)
+// Retorno desde Transbank para USUARIOS AUTENTICADOS
+// ⚠️ SIN MIDDLEWARE - Transbank hace el callback sin autenticación
 Route::match(['GET', 'POST'], '/payments/webpay/return', [WebpayController::class, 'return'])
     ->name('payments.webpay.return');
 
-// Retorno público (para payment links sin autenticación)
-Route::match(['GET', 'POST'], '/public/payments/webpay/return', [WebpayController::class, 'publicReturn'])
-    ->name('payments.webpay.public-return');
+// =============================================================================
+// PAYMENT LINKS PÚBLICOS - Sin autenticación
+// =============================================================================
+
+Route::prefix('pay')->name('payment-link.')->group(function () {
+    
+    // Mostrar página de pago público
+    Route::get('/{token}', [PaymentLinkController::class, 'show'])
+        ->name('show');
+    
+    // Iniciar checkout con Webpay
+    Route::post('/{token}/checkout', [PaymentLinkController::class, 'checkout'])
+        ->name('checkout');
+    
+    // ✅ CAMBIADO: Route::post → Route::match
+    // Retorno desde Transbank para PAYMENT LINKS
+    Route::match(['GET', 'POST'], '/webpay/return', [PaymentLinkController::class, 'webpayReturn'])
+        ->name('webpay-return');
+});
+
 
     // Ruta de prueba Webpay (solo desarrollo)
 if (app()->environment('local', 'development')) {
     Route::middleware(['auth', 'verified'])
         ->get('/test/webpay', [App\Http\Controllers\Test\WebpayTestController::class, 'index'])
         ->name('test.webpay');
+
+    Route::get('/test/pos', [WebpayController::class, 'paymentPos'])
+            ->name('test.pos');
+
 }
+
+
+
+// ============================================================================
+// PAYMENT LINKS - Rutas Públicas (sin autenticación)
+// ============================================================================
+
+Route::prefix('pay')->name('payment-link.')->group(function () {
+    
+    // Mostrar página de pago
+    Route::get('/{token}', [PaymentLinkController::class, 'show'])
+        ->name('show');
+    
+    // Iniciar checkout con Webpay
+    Route::post('/{token}/checkout', [PaymentLinkController::class, 'checkout'])
+        ->name('checkout');
+    
+    // Return URL de Webpay
+    Route::post('/webpay/return', [PaymentLinkController::class, 'webpayReturn'])
+        ->name('webpay-return');
+});
+
+// ============================================================================
+// AUTENTICACIÓN DE PACIENTES - Rutas Públicas
+// ============================================================================
+
+Route::prefix('patient')->name('patient.')->group(function () {
+    
+    // Rutas sin autenticación (guest)
+    Route::middleware('guest:patient')->group(function () {
+        
+        // Mostrar formulario de login
+        Route::get('/login', [PatientAuthController::class, 'showLogin'])
+            ->name('login');
+        
+        // Solicitar código de acceso
+        Route::post('/request-code', [PatientAuthController::class, 'requestCode'])
+            ->name('request-code');
+        
+        // Verificar código
+        Route::post('/verify-code', [PatientAuthController::class, 'verifyCode'])
+            ->name('verify-code');
+        
+        // Reenviar código
+        Route::post('/resend-code', [PatientAuthController::class, 'resendCode'])
+            ->name('resend-code');
+    });
+    
+    // Rutas con autenticación (auth:patient)
+    Route::middleware('auth:patient')->group(function () {
+        
+        // Cerrar sesión
+        Route::post('/logout', [PatientAuthController::class, 'logout'])
+            ->name('logout');
+        
+        // Dashboard (próxima fase)
+        // Route::get('/dashboard', [PatientDashboardController::class, 'index'])
+        //     ->name('dashboard');
+    });
+});
+
+// ============================================================================
+// ADMIN - PAYMENT LINKS (con autenticación web)
+// ============================================================================
+
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Listar payment links
+    Route::get('/payment-links', [PaymentLinkController::class, 'index'])
+        ->name('payment-links.index');
+    
+    // Crear payment link
+    Route::post('/payment-links', [PaymentLinkController::class, 'store'])
+        ->name('payment-links.store');
+    
+    // Cancelar payment link
+    Route::post('/payment-links/{paymentLink}/cancel', [PaymentLinkController::class, 'cancel'])
+        ->name('payment-links.cancel');
+});
     
 
 /* Tareas pendientes */

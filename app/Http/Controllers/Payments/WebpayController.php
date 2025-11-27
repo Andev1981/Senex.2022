@@ -463,6 +463,6 @@ class WebpayController extends Controller
 
 
     public function paymentPos(){
-        return Inertia::render('Payments/Index');
+        return Inertia::render('Pos/Index');
     }
 }

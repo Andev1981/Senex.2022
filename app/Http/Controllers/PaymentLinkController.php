@@ -25,6 +25,9 @@ class PaymentLinkController extends Controller
      * Mostrar página de pago (pública, sin auth)
      * GET /pay/{token}
      */
+
+    
+
     public function show(string $token)
     {
         $paymentLink = PaymentLink::with('patient')
@@ -293,7 +296,7 @@ class PaymentLinkController extends Controller
 
         $paymentLinks = $query->paginate(20);
 
-        return Inertia::render('Admin/PaymentLinks/Index', [
+        return Inertia::render('Payments/PaymentLinks', [
             'paymentLinks' => $paymentLinks,
             'filters' => $request->only(['status', 'patient_id', 'search']),
         ]);
