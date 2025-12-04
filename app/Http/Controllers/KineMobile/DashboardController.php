@@ -54,7 +54,7 @@ class DashboardController extends Controller
             'sessionType:id,name,duration_minutes'
         ])
             ->select('id', 'patient_id', 'treatment_id', 'session_type_id', 
-                     'date', 'time', 'status', 'doctor_amount_clp', 'notes')
+                     'date', 'time', 'status', 'doctor_amount', 'notes')
             ->where('doctor_id', $doctor->id)
             ->whereDate('date', $today)
             ->orderBy('time')
@@ -91,7 +91,7 @@ class DashboardController extends Controller
             'doctor' => [
                 'id' => $doctor->id,
                 'name' => $doctor->name . ' ' . $doctor->last_name,
-                'specialty' => $doctor->specialty,
+                'speciality' => $doctor->speciality,
             ],
             'kpis' => $kpis,
             'agenda' => $agenda,

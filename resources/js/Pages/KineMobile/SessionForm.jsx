@@ -39,7 +39,6 @@ export default function SessionForm({
   const [formData, setFormData] = useState({
     // Datos básicos
     treatment_id: session?.treatment_id || "",
-    session_number: session?.session_number || "",
     month_session_number: session?.month_session_number || "",
     date: session?.date
       ? moment.utc(session.date).format("YYYY-MM-DD")
@@ -265,7 +264,7 @@ export default function SessionForm({
                 </h1>
                 <p className="text-sm text-gray-600">
                   {isEditMode
-                    ? `${session.patient.name} - Sesión #${session.session_number}`
+                    ? `${session.patient.name}`
                     : "Completa los datos de la sesión"}
                 </p>
               </div>
@@ -332,7 +331,7 @@ export default function SessionForm({
               {!isEditMode && (
                 <div className="p-4 bg-white rounded-lg shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white rounded-full bg-teal-600">
+                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white bg-teal-600 rounded-full">
                       1
                     </div>
                     <h3 className="text-base font-semibold text-gray-900">
@@ -479,7 +478,7 @@ export default function SessionForm({
               {formData.patient_id && !isEditMode && (
                 <div className="p-4 bg-white rounded-lg shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white rounded-full bg-teal-600">
+                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white bg-teal-600 rounded-full">
                       2
                     </div>
                     <h3 className="text-base font-semibold text-gray-900">
@@ -562,7 +561,7 @@ export default function SessionForm({
               {(formData.treatment_id || isEditMode) && (
                 <div className="p-4 bg-white rounded-lg shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white rounded-full bg-teal-600">
+                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white bg-teal-600 rounded-full">
                       {isEditMode ? "1" : "3"}
                     </div>
                     <h3 className="text-base font-semibold text-gray-900">
@@ -640,7 +639,7 @@ export default function SessionForm({
               {(formData.session_type_id || isEditMode) && (
                 <div className="p-4 bg-white rounded-lg shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white rounded-full bg-teal-600">
+                    <div className="flex items-center justify-center w-8 h-8 text-sm font-bold text-white bg-teal-600 rounded-full">
                       {isEditMode ? "2" : "4"}
                     </div>
                     <h3 className="text-base font-semibold text-gray-900">

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -21,8 +22,10 @@ class AuthController extends Controller
      */
     public function showLogin()
     {
+
         // Si ya está autenticado, redirigir al dashboard
         if (Auth::guard('patient')->check()) {
+             
             return redirect()->route('patient.dashboard');
         }
 
@@ -95,12 +98,13 @@ class AuthController extends Controller
 
         // Enviar código por email
         try {
-            $patient->notify(new PatientAccessCodeNotification($accessCode));
+           /*  $patient->notify(new PatientAccessCodeNotification($accessCode)); */
 
             Log::info('Código de acceso enviado a paciente', [
                 'patient_id' => $patient->id,
                 'email' => $patient->email,
                 'code_id' => $accessCode->id,
+                'code_access' => $accessCode->code,
             ]);
 
         } catch (\Exception $e) {
@@ -121,13 +125,38 @@ class AuthController extends Controller
         ]);
     }
 
+     /**
+     * Mostrar formulario de verificación de código
+     * GET /patient/verify-code
+     */
+    public function showVerifyCode()
+    {
+        // Verificar que existan datos en sesión
+        $verifyData = session('patient_verify');
+
+        if (!$verifyData || $verifyData['expires_at'] < now()->timestamp) {
+            // Limpiar sesión expirada
+            session()->forget('patient_verify');
+            
+            return redirect()->route('patient.login')
+                ->withErrors(['rut' => 'Sesión expirada. Por favor ingresa tu RUT nuevamente.']);
+        }
+
+        return Inertia::render('Auth/Patient/VerifyCode', [
+            'rut' => $verifyData['rut'],
+            'email' => $verifyData['email'],
+            'patient_name' => $verifyData['patient_name'],
+        ]);
+    }
+
     /**
      * Verificar código e iniciar sesión
      * POST /patient/verify-code
      */
     public function verifyCode(Request $request)
     {
-        $request->validate([
+        // ✅ Validación manual para controlar el redirect
+        $validator = Validator::make($request->all(), [
             'rut' => 'required|string',
             'code' => 'required|string|size:6',
         ], [
@@ -135,30 +164,45 @@ class AuthController extends Controller
             'code.size' => 'El código debe tener 6 dígitos.',
         ]);
 
-        $rut = $this->cleanRut($request->rut);
+        if ($validator->fails()) {
 
-        // Rate limiting: máximo 5 intentos por minuto
+            dd($validator);
+            return redirect()->route('patient.verify-code.show')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        /* $rut = $this->cleanRut($request->rut); */
+        $rut = $request->rut;
+        // Rate limiting
         $key = 'verify-code:' . $rut;
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
-            
-            throw ValidationException::withMessages([
-                'code' => "Demasiados intentos. Por favor espera {$seconds} segundos.",
+
+             Log::warning("Demasiados intentos. Espera {$seconds} segundos.", [
+                'patient_id' => $rut,
+                'code' => $request->code,
+                'ip' => $request->ip(),
             ]);
+            
+            return redirect()->route('patient.verify-code.show');
         }
 
-        RateLimiter::hit($key, 60); // 60 segundos
+        RateLimiter::hit($key, 60);
 
         // Buscar paciente
         $patient = Patient::where('rut', $rut)->first();
 
         if (!$patient) {
-            throw ValidationException::withMessages([
-                'code' => 'Código inválido.',
+             Log::warning('Intento de verificación con código inválido', [
+                'patient_id' => $patient->id,
+                'code' => $request->code,
+                'ip' => $request->ip(),
             ]);
+            return redirect()->route('patient.verify-code.show');
         }
 
-        // Validar y usar el código
+        // Validar código
         $accessCode = PatientAccessCode::validateAndUse(
             $patient->id,
             $request->code,
@@ -167,35 +211,29 @@ class AuthController extends Controller
         );
 
         if (!$accessCode) {
-            Log::warning('Intento de verificación con código inválido', [
+            Log::warning('Código inválido o expirado. Solicita uno nuevo', [
                 'patient_id' => $patient->id,
                 'code' => $request->code,
                 'ip' => $request->ip(),
             ]);
-
-            throw ValidationException::withMessages([
-                'code' => 'Código inválido o expirado. Solicita uno nuevo.',
-            ]);
+             
+            return redirect()->route('patient.verify-code.show');
         }
 
-        // Limpiar rate limiters
+        // ✅ Éxito
         RateLimiter::clear($key);
         RateLimiter::clear('request-code:' . $rut);
+        session()->forget('patient_verify');
 
-        // Iniciar sesión del paciente
-        Auth::guard('patient')->login($patient, true); // Remember = true
+        Auth::guard('patient')->login($patient, true);
+        $request->session()->regenerate();
 
-        // Registrar login exitoso
-        Log::info('Paciente inició sesión exitosamente', [
+        Log::info('Paciente inició sesión', [
             'patient_id' => $patient->id,
-            'access_code_id' => $accessCode->id,
             'ip' => $request->ip(),
         ]);
 
-        // Actualizar último acceso del paciente (opcional)
-        // $patient->update(['last_login_at' => now()]);
-
-        return redirect()->route('patient.dashboard');
+        return redirect()->intended(route('patient.dashboard'));
     }
 
     /**

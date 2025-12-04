@@ -44,14 +44,14 @@ class PatientAccessCodeNotification extends Notification implements ShouldQueue
         $expiresInMinutes = now()->diffInMinutes($this->accessCode->expires_at);
 
         return (new MailMessage)
-            ->subject('Tu código de acceso a KineMobile')
+            ->subject('Tu código de acceso a SenexSports')
             ->greeting('Hola ' . $notifiable->name . ',')
             ->line('Has solicitado acceder a tu portal de paciente.')
             ->line('Tu código de acceso es:')
             ->line('## **' . $this->accessCode->code . '**')
             ->line('Este código es válido por **' . $expiresInMinutes . ' minutos**.')
             ->line('Si no solicitaste este código, puedes ignorar este mensaje.')
-            ->salutation('Equipo KineMobile');
+            ->salutation('Equipo SenexSports');
     }
 
     /**

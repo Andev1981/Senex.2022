@@ -21,11 +21,11 @@ return new class extends Migration {
             $table->string('rut', 20)->nullable();
             $table->string('email')->nullable();
             $table->string('phone', 50)->nullable();
-            $table->string('specialty')->nullable();
+            $table->string('speciality')->nullable();
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female', 'other', 'unknown'])->nullable();
             $table->enum('status', ['active', 'suspended', 'cancelled'])->default('active');
-            $table->boolean('mobile_access_enabled')->default(true);
+            $table->boolean('mobile_app_access')->default(true);
             $table->text('status_reason')->nullable();      // motivo del último cambio
             $table->timestamp('status_changed_at')->nullable();
             $table->timestamps();

@@ -28,14 +28,13 @@ export default function SessionModal({
   const [exerciseInput, setExerciseInput] = useState("");
   const { data, setData, put, post, processing, errors, reset } = useForm({
     treatment_id: session?.treatment_id || "",
-    session_number: session?.session_number || "",
     month_session_number: session?.month_session_number || "",
     date: session?.date
       ? moment.utc(session.date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
     time: session?.time || "",
     duration: session?.duration || 60,
-    status: session?.status || "Programada",
+    status: session?.status || "scheduled",
     doctor_id: session?.doctor?.id || "",
     patient_id: patient?.id || "",
     session_type_id: session?.session_type_id || "",
@@ -62,14 +61,13 @@ export default function SessionModal({
     if (session) {
       setData({
         treatment_id: treatment?.id || "",
-        session_number: session.session_number || "",
         month_session_number: session.month_session_number || "",
         date: session?.date
           ? moment.utc(session.date).format("YYYY-MM-DD")
           : moment.utc(Date.now()).format("YYYY-MM-DD"),
         time: session.time || "",
         duration: session.duration || 60,
-        status: session.status || "Programada",
+        status: session.status || "scheduled",
         doctor_id: session.doctor?.id || "",
         patient_id: patient?.id || "",
         session_type_id: session.session_type_id || "",
@@ -90,17 +88,10 @@ export default function SessionModal({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isDuplicate) {
-      setData("treatment_id", "");
       post(route("sessions.store"), {
         onSuccess: () => {
           setOpenSessionModal(false);
           reset();
-          if (afterSubmitReloadOnly.length) {
-            router.reload({
-              only: afterSubmitReloadOnly,
-              preserveScroll: true,
-            });
-          }
         },
         onError: () => {
           alert(errors.general || "Ocurrió un error al guardar la sesión.");
@@ -184,7 +175,6 @@ export default function SessionModal({
               "Duplicando Sesión"
             ) : (
               <div>
-                {data.session_number && `Sesión Global #${data.session_number}`}
                 {data.month_session_number &&
                   ` / Sesión Mensual #${data.month_session_number}`}
               </div>
@@ -245,9 +235,9 @@ export default function SessionModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               >
-                <option value="Programada">Programada</option>
-                <option value="Completada">Completada</option>
-                <option value="Cancelada">Cancelada</option>
+                <option value="scheduled">Programada</option>
+                <option value="completed">Completada</option>
+                <option value="cancelled">Cancelada</option>
               </select>
               {errors.status && (
                 <p className="mt-1 text-sm text-red-600">{errors.status}</p>
@@ -406,7 +396,7 @@ export default function SessionModal({
               </h3>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 bg-red-100 p-2 rounded-lg shadow-sm">
+                <div className="grid grid-cols-1 gap-4 p-2 bg-red-100 rounded-lg shadow-sm md:grid-cols-2">
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Flexión Inicial (°)
@@ -465,7 +455,7 @@ export default function SessionModal({
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 bg-blue-100 p-2 rounded-lg shadow-sm">
+                <div className="grid grid-cols-1 gap-4 p-2 bg-blue-100 rounded-lg shadow-sm md:grid-cols-2">
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Abducción Inicial (°)
@@ -528,7 +518,7 @@ export default function SessionModal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 bg-black/5 p-2 rounded-lg shadow-sm">
+                <div className="grid grid-cols-1 gap-4 p-2 rounded-lg shadow-sm md:grid-cols-2 bg-black/5">
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Rotación Inicial (°)

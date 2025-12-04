@@ -57,13 +57,7 @@ export default function SessionModalDelete({
             >
               Sesión Mensual #{session?.month_session_number}
             </span>
-            <span
-              className={`inline-block ${
-                completed ? "bg-teal-400" : "bg-blue-400"
-              } text-white text-sm px-3 py-1 rounded-full font-medium`}
-            >
-              Sesión Global #{session?.session_number}
-            </span>
+
             <span
               className={`text-sm px-3 py-1 rounded-full font-medium ${
                 completed

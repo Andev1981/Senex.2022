@@ -57,11 +57,11 @@ export default function DoctorAttendances({
   const stats = useMemo(() => {
     const total = filteredSessions.length;
     const totalRevenue = filteredSessions.reduce(
-      (sum, s) => sum + (s.patient_amount_clp || 0),
+      (sum, s) => sum + (s.patient_amount || 0),
       0
     );
     const totalCommission = filteredSessions.reduce(
-      (sum, s) => sum + (s.doctor_amount_clp || 0),
+      (sum, s) => sum + (s.doctor_amount || 0),
       0
     );
     const uniquePatients = new Set(filteredSessions.map((s) => s.patient_id))
@@ -115,7 +115,7 @@ export default function DoctorAttendances({
       doc.text(`${doctor.full_name}`, 14, 28);
       doc.setFontSize(10);
       doc.setTextColor(107, 114, 128);
-      doc.text(`${doctor.specialty || ""}`, 14, 34);
+      doc.text(`${doctor.speciality || ""}`, 14, 34);
       doc.text(`Período: ${fmtDate(startDate)} - ${fmtDate(endDate)}`, 14, 40);
 
       // Línea divisoria
@@ -159,13 +159,12 @@ export default function DoctorAttendances({
         };
 
         return [
-          session?.session_number || "-",
           fmtDate(session.date),
           fmtTime(session.time),
           session.patient?.full_name || "-",
           session.session_type?.name || "-",
           statusMap[session.status] || session.status,
-          fmtCLP(session.doctor_amount_clp || 0),
+          fmtCLP(session.doctor_amount || 0),
         ];
       });
 
@@ -270,7 +269,7 @@ export default function DoctorAttendances({
               Reporte de Sesiones
             </h1>
             <p className="mt-1 text-gray-600">
-              {doctor.name} {doctor.last_name} - {doctor.specialty}
+              {doctor.name} {doctor.last_name} - {doctor.speciality}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -474,9 +473,6 @@ export default function DoctorAttendances({
                     className="transition-colors hover:bg-gray-50"
                   >
                     <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                      #{session.session_number}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                       {fmtDate(session.date)}
                     </td>
 
@@ -519,10 +515,10 @@ export default function DoctorAttendances({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-right text-gray-900 whitespace-nowrap">
-                      {fmtCLP(session.patient_amount_clp)}
+                      {fmtCLP(session.patient_amount)}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-right text-purple-700 whitespace-nowrap">
-                      {fmtCLP(session.doctor_amount_clp)}
+                      {fmtCLP(session.doctor_amount)}
                     </td>
                   </tr>
                 ))}

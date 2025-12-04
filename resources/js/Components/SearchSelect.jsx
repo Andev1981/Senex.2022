@@ -384,35 +384,35 @@ function DemoSearchSelect() {
     {
       id: 1,
       name: "Dr. Juan Pérez",
-      specialty: "Cardiología",
+      speciality: "Cardiología",
       email: "jperez@hospital.cl",
       rating: 4.8,
     },
     {
       id: 2,
       name: "Dra. María González",
-      specialty: "Pediatría",
+      speciality: "Pediatría",
       email: "mgonzalez@hospital.cl",
       rating: 4.9,
     },
     {
       id: 3,
       name: "Dr. Carlos Rodríguez",
-      specialty: "Traumatología",
+      speciality: "Traumatología",
       email: "crodriguez@hospital.cl",
       rating: 4.7,
     },
     {
       id: 4,
       name: "Dra. Ana Martínez",
-      specialty: "Dermatología",
+      speciality: "Dermatología",
       email: "amartinez@hospital.cl",
       rating: 4.6,
     },
     {
       id: 5,
       name: "Dr. Luis Fernández",
-      specialty: "Neurología",
+      speciality: "Neurología",
       email: "lfernandez@hospital.cl",
       rating: 4.9,
     },
@@ -481,7 +481,7 @@ function DemoSearchSelect() {
             {/* Ejemplo 1: Selección de Doctor (configuración completa) */}
             <div className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                1. Selección de Doctor (con specialty, email y rating)
+                1. Selección de Doctor (con speciality, email y rating)
               </h3>
               <SearchSelect
                 items={doctors}
@@ -493,13 +493,13 @@ function DemoSearchSelect() {
                 config={{
                   valueKey: "id",
                   displayKey: "name",
-                  secondaryKeys: ["specialty", "email"],
-                  searchKeys: ["name", "specialty", "email"],
+                  secondaryKeys: ["speciality", "email"],
+                  searchKeys: ["name", "speciality", "email"],
                   renderSelected: (item) => (
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{item.name}</span>
                       <span className="text-xs text-gray-500">
-                        ({item.specialty})
+                        ({item.speciality})
                       </span>
                       <span className="text-xs text-yellow-600">
                         ⭐ {item.rating}
@@ -640,7 +640,7 @@ function DemoSearchSelect() {
                 onChange={() => {}}
                 config={{
                   displayKey: 'name',
-                  secondaryKeys: ['specialty']
+                  secondaryKeys: ['speciality']
                 }}
                 label="Doctor (deshabilitado)"
                 placeholder="Este campo está deshabilitado"

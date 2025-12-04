@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('notification_preferences', function (Blueprint $table) {
+        Schema::create('notification_attempts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
 
             // Ejemplos de tipo: 'invoice.created', 'attendance.reminder', 'payment.failed'
             $table->string('event_key');
@@ -23,11 +23,12 @@ return new class extends Migration
             // Canal: 'in_app', 'email', 'sms', 'whatsapp', etc.
             $table->string('channel', 32);
 
-            // enabled = true/false
-            $table->boolean('enabled')->default(true);
+            $table->string('status')->nullable();
+
+            $table->string('error_message')->nullable();
 
             // Reglas/horarios silenciosos u opciones específicas (JSON)
-            $table->json('options')->nullable();
+            $table->date('sent_at');
 
             $table->timestamps();
 
@@ -43,6 +44,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('notification_preferences');
+        Schema::dropIfExists('notification_attempts');
     }
 };

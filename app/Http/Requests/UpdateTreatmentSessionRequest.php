@@ -39,7 +39,7 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'session_type_id' => 'nullable|exists:session_types,id',
             'room_id' => 'nullable|exists:rooms,id',
             'branch_id' => 'nullable|exists:branches,id',
-            'session_number' => 'sometimes|integer|min:1',
+
             'month_session_number' => 'sometimes|integer|min:1',
             'date' => 'sometimes|date',
             'time' => 'sometimes|date_format:H:i',
@@ -75,8 +75,6 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'treatment_id.exists' => 'El tratamiento seleccionado no existe',
             'doctor_id.exists' => 'El kinesiólogo seleccionado no existe',
             'patient_id.exists' => 'El paciente seleccionado no existe',
-            'session_number.integer' => 'El número de sesión debe ser un número entero',
-            'session_number.min' => 'El número de sesión debe ser al menos 1',
             'month_session_number.integer' => 'El número de sesión del mes debe ser un número entero',
             'month_session_number.min' => 'El número de sesión del mes debe ser al menos 1',
             'date.date' => 'La fecha debe tener un formato válido',

@@ -52,9 +52,9 @@ class UpdatePatientRequest extends FormRequest
             'number'            => ['nullable', 'string', 'max:50'],
             'details'           => ['nullable', 'string', 'max:500'],
 
-            'region_id'         => ['required', 'integer', 'exists:regions,id'],
-            'province_id'       => ['required', 'integer', 'exists:provinces,id'],
-            'commune_id'        => ['required', 'integer', 'exists:communes,id'],
+            'region_id'         => ['nullable', 'integer', 'exists:regions,id'],
+            'province_id'       => ['nullable', 'integer', 'exists:provinces,id'],
+            'commune_id'        => ['nullable', 'integer', 'exists:communes,id'],
         ];
     }
 

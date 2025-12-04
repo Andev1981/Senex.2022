@@ -134,7 +134,6 @@ export default function TableAttendancesPatient({
       },
       { accessorKey: "doctor_full", header: "Doctor" },
       { accessorKey: "session_type_name", header: "Tipo" },
-      { accessorKey: "session_number", header: "N° Sesión" },
       {
         accessorKey: "status",
         header: "Estado",

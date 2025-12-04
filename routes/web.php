@@ -14,10 +14,8 @@ use App\Http\Controllers\Inertia\{
   VitalController,
 };
 
-use App\Http\Controllers\Patient\PatientController as InertiaPatientController;
 use App\Http\Controllers\Doctors\DoctorController;
 use App\Http\Controllers\Attendances\AttendancesController;
-use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Patient\AuthController as PatientAuthController;
 
 use App\Http\Controllers\{
@@ -30,6 +28,7 @@ use App\Http\Controllers\{
     PortalPagoController,
     TreatmentSessionController,
 };
+use App\Http\Controllers\Admin\Patients\PatientAdminController;
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -99,21 +98,23 @@ Route::group(['middleware' => ['auth']], function () {
   /* Rutas React Inertia */
   /* pacientes */
  /*  Route::get('pacientes', [InertiaPatientController::class, 'index'])->name('pacientes'); */
-  Route::get('pacientes/{patient}', [InertiaPatientController::class, 'show'])->name('pacientes.show');
-  Route::post('pacientes-update/{patient}', [InertiaPatientController::class, 'update'])->name('pacientes.update');
-  Route::post('pacientes-store', [InertiaPatientController::class, 'store'])->name('pacientes.store');
-  Route::get('pacientes-destroy/{patient}', [InertiaPatientController::class, 'destroy'])->name('pacientes.destroy');
-  Route::get('informes', [InertiaPatientController::class, 'informes'])->name('informes');
-  Route::get('pos', [InertiaPatientController::class, 'pos'])->name('pos');
-  Route::get('agenda', [InertiaPatientController::class, 'agenda'])->name('agenda');
-  Route::get('tratamientos', [InertiaPatientController::class, 'tratamientos'])->name('tratamientos');
+  Route::get('pacientes/{patient}', [PatientAdminController::class, 'show'])->name('pacientes.show');
+  Route::post('pacientes-update/{patient}', [PatientAdminController::class, 'update'])->name('pacientes.update');
+  Route::post('pacientes-store', [PatientAdminController::class, 'store'])->name('pacientes.store');
+  Route::get('pacientes-destroy/{patient}', [PatientAdminController::class, 'destroy'])->name('pacientes.destroy');
+  Route::get('informes', [PatientAdminController::class, 'informes'])->name('informes');
+  Route::get('pos', [PatientAdminController::class, 'pos'])->name('pos');
+  Route::get('agenda', [PatientAdminController::class, 'agenda'])->name('agenda');
+  Route::get('tratamientos', [PatientAdminController::class, 'tratamientos'])->name('tratamientos');
 
 
-  Route::post('patients-documents', [InertiaPatientController::class, 'document_post'])->name('patient.documents.store');
-  //Route::resource('treatment-sessions', InertiaPatientController::class)->names('treatment_sessions');
-  Route::resource('payments', InertiaPatientController::class)->names('payments');
-  Route::resource('patients', InertiaPatientController::class)->names('patients');
-  Route::resource('addresses', AddressController::class)->names('addresses');
+  Route::post('patients-documents', [PatientAdminController::class, 'document_post'])->name('patient.documents.store');
+  //Route::resource('treatment-sessions', PatientAdminController::class)->names('treatment_sessions');
+  Route::resource('payments', PatientAdminController::class)->names('payments');
+  Route::resource('patients', PatientAdminController::class)->names('patients');
+  Route::resource('addresses', PatientAdminController::class)->names('addresses');
+
+
   Route::post('patients/{patient}/addresses', [AddressController::class, 'store'])->name('patients.addresses.store');
   Route::patch('patients/{patient}/addresses', [AddressController::class, 'update'])->name('patients.addresses.update');
   Route::post('patients/{patient}/contacts', [PatientContactController::class, 'store'])->name('patients.contacts.store');
@@ -122,6 +123,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update');
 
 
+  /* Crear Tratamiento */
   Route::post('patients/treatments', [TreatmentController::class, 'store'])->name('patients.treatments.store');
   Route::patch('patients/{treatment}/treatments', [TreatmentController::class, 'update'])->name('patients.treatments.update');
 
@@ -185,7 +187,7 @@ Route::group(['middleware' => ['auth']], function () {
  * Estas rutas devuelven vistas completas para navegación tradicional
  */
 
- Route::get('/patients', [InertiaPatientController::class, 'index'])->name('patients.index');
+ Route::get('/patients', [PatientAdminController::class, 'index'])->name('patients.index');
 
 Route::get('/patients/{patient}/treatments', [TreatmentController::class, 'index'])
     ->name('patients.treatments.index');
@@ -200,8 +202,8 @@ Route::get('/treatments/{treatment}', [TreatmentController::class, 'show'])
 Route::post('/treatments', [TreatmentController::class, 'store'])
     ->name('treatments.store');
 
-Route::put('/treatments/{treatment}', [TreatmentController::class, 'update'])
-    ->name('treatments.update');
+/* Route::put('/treatments/{treatment}', [TreatmentController::class, 'update'])
+    ->name('treatments.update'); */
 
 Route::patch('/treatments/{treatment}', [TreatmentController::class, 'update'])
     ->name('treatments.update');
@@ -374,6 +376,7 @@ use App\Http\Controllers\KineMobile\DashboardController;
 use App\Http\Controllers\KineMobile\PatientController as MobilePatientController;
 use App\Http\Controllers\KineMobile\SessionController;
 use App\Http\Controllers\KineMobile\ProfileController;
+use App\Http\Controllers\Patient\PatientDashboardController;
 use App\Http\Controllers\Payments\WebpayController;
 use Inertia\Inertia;
 
@@ -419,6 +422,7 @@ if (app()->environment('local', 'development')) {
 
 }
 
+    
 // Página principal del portal
 Route::get('/pagar', [WebpayController::class, 'portalPagosIndex'])
     ->name('portal.pago');
@@ -426,6 +430,10 @@ Route::get('/pagar', [WebpayController::class, 'portalPagosIndex'])
 // API: Consultar deudas por RUT
 Route::post('/pagar', [WebpayController::class, 'consultarDeudas'])
     ->name('portal.pago.consultar');
+
+Route::get('/pagar/auto/{rut}', [WebpayController::class, 'magicLink'])
+    ->name('portal.pago.magic')
+    ->middleware('signed');
 
 // ============================================================================
 // AUTENTICACIÓN DE PACIENTES - Rutas Públicas
@@ -448,6 +456,10 @@ Route::prefix('patient')->name('patient.')->group(function () {
         Route::post('/verify-code', [PatientAuthController::class, 'verifyCode'])
             ->name('verify-code');
         
+         // ✅ NUEVO: Mostrar formulario de verificación
+        Route::get('/verify-code', [PatientAuthController::class, 'showVerifyCode'])
+            ->name('verify-code.show');
+        
         // Reenviar código
         Route::post('/resend-code', [PatientAuthController::class, 'resendCode'])
             ->name('resend-code');
@@ -461,8 +473,8 @@ Route::prefix('patient')->name('patient.')->group(function () {
             ->name('logout');
         
         // Dashboard (próxima fase)
-        // Route::get('/dashboard', [PatientDashboardController::class, 'index'])
-        //     ->name('dashboard');
+        Route::get('/dashboard', [PatientDashboardController::class, 'index'])
+            ->name('dashboard');
     });
 });
 

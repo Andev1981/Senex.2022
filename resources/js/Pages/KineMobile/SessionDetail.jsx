@@ -344,10 +344,7 @@ export default function SessionDetail({ session }) {
                       </p> */}
                       </div>
                       <span className="text-xl font-bold text-teal-600">
-                        $
-                        {session.payment.doctor_amount_clp.toLocaleString(
-                          "es-CL"
-                        )}
+                        ${session.payment.doctor_amount.toLocaleString("es-CL")}
                       </span>
                     </div>
                   </>

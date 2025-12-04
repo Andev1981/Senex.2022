@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTreatmentSessionRequest;
 use App\Http\Requests\UpdateTreatmentSessionRequest;
-use App\Models\Treatment;
 use App\Models\TreatmentSession;
 use App\Models\Patient;
 use App\Services\PlanService;
@@ -63,12 +62,9 @@ class TreatmentSessionController extends Controller
      */
     public function store(StoreTreatmentSessionRequest $request)
     {
-
-              
      
         try {
              // El service maneja toda la lógica:
-            // - Asigna session_number automáticamente
             // - Asigna month_session_number automáticamente
             // - Valida disponibilidad del doctor
             // - Crea logs
@@ -233,7 +229,6 @@ class TreatmentSessionController extends Controller
     {
         try {
             $newSession = $session->replicate();
-            $newSession->session_number = $session->treatment ? $session->treatment->next_session_number : $session->session_number + 1;
             $newSession->status = 'Programada';
             $newSession->pain_before = null;
             $newSession->pain_after = null;

@@ -93,6 +93,59 @@ class WebpayController extends Controller
             'total' => $deudas->sum('amount'),
         ]);
     }
+
+    // [NUEVA FUNCIÓN: LINK MÁGICO]
+    /**
+     * GET /pagar/auto/{rut} - Entrada via Link Mágico (Modo Automático)
+     * Debe ser llamado desde una ruta con middleware('signed').
+     */
+    public function magicLink(Request $request, string $rut)
+    {
+        // El middleware 'signed' se encarga de validar la firma y la expiración.
+        // Si el link es inválido, Laravel lanza un 403 y no llega aquí.
+        
+        // 1. Buscar al paciente por RUT (asumiendo que el RUT viene limpio de la URL)
+        $patient = Patient::where('rut', $rut)->first();
+
+        if (!$patient) {
+            // Si no se encuentra, redirigimos al portal manual con error.
+            return redirect()->route('portal.pago.index')
+                ->with('error', 'El enlace de pago no es válido o el paciente no fue encontrado.');
+        }
+
+        // 2. Obtener deudas activas (Reutilizando la lógica de consultarDeudas)
+        $deudas = Debt::where('patient_id', $patient->id)
+            ->where('status', 'active')
+            ->where('original_amount', '>', 0)
+            ->orderBy('due_date', 'asc')
+            ->limit(100)
+            ->get()
+            ->map(function ($debt) {
+                return [
+                    'id' => $debt->id,
+                    'type' => 'debt',
+                    'description' => $debt->concept,
+                    'date' => $debt->due_date?->format('d M Y'),
+                    'amount' => (int) $debt->original_amount,
+                ];
+            });
+            
+        // 3. Guardar RUT en sesión (igual que en consultarDeudas) para el siguiente paso de pago
+        session(['portal_rut' => $patient->rut]);
+
+
+        // 4. Renderizar DIRECTO la vista de deudas con los datos precargados
+        return Inertia::render('PaymentsPatients/PortalPagoDeudas', [
+            'patient' => [
+                'id' => $patient->id,
+                'name' => $patient->name,
+                'first_name' => explode(' ', $patient->name)[0],
+            ],
+            'deudas' => $deudas,
+            'total' => $deudas->sum('amount'),
+            'mode' => 'auto', // Indica al frontend que viene de un link mágico
+        ]);
+    }
     
     /**
      * Inicia un pago individual para una sesión

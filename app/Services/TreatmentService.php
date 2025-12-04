@@ -14,6 +14,82 @@ use Illuminate\Support\Facades\Log;
 class TreatmentService
 {
 
+    /*  */
+
+     /**
+     * Crea un tratamiento, su primera sesión y la deuda asociada de forma transaccional.
+     */
+    public function createTreatmentWithSession(array $data): Treatment
+    {
+        // 1. Aseguramos que todas las operaciones se completen o ninguna (Transacción)
+        return DB::transaction(function () use ($data) {
+            
+            // 1.1. Obtener la información necesaria
+            $treatment = Treatment::create($data);
+            $session_type = SessionType::firstOrFail(); // Usar firstOrFail si debe existir
+
+
+            // 1.2. Crear la Sesión (usando lógica del Modelo para la numeración)
+            $treatment_session = TreatmentSession::create([
+                'treatment_id' => $treatment->id,
+                'doctor_id' => $treatment->doctor_id,
+                'patient_id' => $treatment->patient_id,
+                'session_type_id' => $session_type->id,
+                // se calcularán usando un Accessor/Mutator en el Modelo.
+                // Si la fecha y hora no vienen en el request, se deben manejar.
+                'date' => $data['start_date'] ?? null,
+                'time' => $data['time'] ?? null,
+                'duration' => 45,
+                'status' => 'scheduled',
+            ]);
+
+            // 2. Llamar a la lógica de resecuenciación para ordenar
+            // 1.3. Crear la Deuda
+            Debt::create([
+                'patient_id' => $treatment->patient_id,
+                'treatment_session_id' => $treatment_session->id,
+                'original_amount' => $session_type->base_price,
+            ]);
+            
+            $this->resequenceTreatmentSessions($treatment->id);
+            return $treatment;
+        });
+    }
+
+    /**
+     * Recalcula y actualiza la numeración de todas las sesiones de un tratamiento.
+     */
+    protected function resequenceTreatmentSessions(int $treatmentId): void
+    {
+        // 1. Obtener todas las sesiones para el tratamiento específico, ordenadas cronológicamente
+        $sessions = TreatmentSession::where('treatment_id', $treatmentId)
+            ->orderBy('date')
+            ->orderBy('time')
+            ->get();
+
+        // 2. Iterar y actualizar el número de sesión global
+        $monthNumber = 1;
+        $currentMonth = null;
+
+        foreach ($sessions as $session) {
+            
+
+            // **Lógica de Sesión Mensual**
+            $sessionMonth = \Carbon\Carbon::parse($session->date)->format('Y-m');
+            
+            if ($sessionMonth != $currentMonth) {
+                $currentMonth = $sessionMonth;
+                $monthNumber = 1; // Reiniciar el contador mensual
+            }
+            $session->month_session_number = $monthNumber++;
+            
+            // 3. Guardar el cambio sin disparar eventos innecesarios
+            $session->save(['touch' => false]);
+        }
+    }
+
+
+
     public function createTreatment(array $data): Treatment
     {
         return DB::transaction(function () use ($data) {
@@ -28,6 +104,7 @@ class TreatmentService
         });
     }
 
+    
     /**
      * Crear 1 deuda por cada sesión que tendrá el tratamiento
      */
@@ -286,7 +363,12 @@ class TreatmentService
             foreach ($pain as $s) {
                 $before = $s->pain_before; // 0-10
                 $after  = $s->pain_after;
-                $gain   = ($before - $after) / $before * 100; // reducción dolor
+                if ($before > 0) {
+                    // Cálculo normal de reducción de dolor: (Dolor perdido) / (Dolor inicial) * 100
+                    $gain = ($before - $after) / $before * 100; 
+                }else{
+                    $gain = 0;
+                }
                 $total += max(0, min(100, $gain));
             }
             $painPct = round($total / $pain->count(), 0);
@@ -310,7 +392,7 @@ class TreatmentService
 
         // Si no tiene sesiones, está en fase inicial
         if ($completedCount === 0) {
-            return 'Inicial';
+            return 'evaluation';
         }
 
         // Si tiene total_sessions definido, calcular porcentaje
@@ -318,22 +400,24 @@ class TreatmentService
             $percentage = ($completedCount / $treatment->total_sessions) * 100;
 
             if ($percentage < 33) {
-                return 'Inicial';
+                return 'evaluation';
             } elseif ($percentage < 66) {
-                return 'Intermedia';
-            } else {
-                return 'Avanzada';
+                return 'treatment';
+            } elseif ($percentage > 95 && $percentage < 99){
+                return 'rehabilitation';
+            }else{
+                return 'discharge';
             }
         }
 
         // Si es indefinido, usar cantidad de sesiones completadas
         if ($treatment->is_indefinite) {
             if ($completedCount <= 5) {
-                return 'Inicial';
+                return 'evaluation';
             } elseif ($completedCount <= 15) {
-                return 'Intermedia';
+                return 'treatment';
             } else {
-                return 'Avanzada';
+                return 'discharge';
             }
         }
 

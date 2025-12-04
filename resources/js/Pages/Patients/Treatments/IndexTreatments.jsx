@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import { Clipboard, Plus, Target } from "lucide-react";
 import TreatmentCardMain from "./TreatmentPartials/TreatmentCardMain";
 import SideModal from "@/Components/SideModal";

@@ -13,7 +13,7 @@ class TwilioService
 
     public function __construct()
     {
-        $sid = config('services.twilio.sid');
+        /* $sid = config('services.twilio.sid');
         $token = config('services.twilio.token');
         
         if ($sid && $token) {
@@ -21,7 +21,26 @@ class TwilioService
         }
         
         $this->smsFrom = config('services.twilio.sms_from');
-        $this->whatsappFrom = config('services.twilio.whatsapp_from');
+        $this->whatsappFrom = config('services.twilio.whatsapp_from'); */
+
+        // Reemplaza config(...) con env(...)
+        $sid = env('TWILIO_SID'); // <--- Leer directamente del .env
+        $token = env('TWILIO_TOKEN'); // <--- Leer directamente del .env
+        
+        if ($sid && $token) {
+            $this->client = new Client($sid, $token);
+        }
+        
+        $this->smsFrom = env('TWILIO_SMS_FROM');
+        $this->whatsappFrom = env('TWILIO_WHATSAPP_FROM');
+
+         Log::error('TwilioService: ', [
+                 'SID: ' => $sid,
+                 'TOKEN: ' => $token,
+                 'SMSFROM: ' => $this->smsFrom,
+                 'WHATSAPPFROM: ' => $this->whatsappFrom,
+             ]);
+
     }
 
     /**

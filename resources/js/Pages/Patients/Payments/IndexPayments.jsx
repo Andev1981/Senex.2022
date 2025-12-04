@@ -159,16 +159,12 @@ function StatCard({
   className = "from-teal-500 to-teal-600",
 }) {
   return (
-    <AuthenticatedLayout>
-      <div
-        className={`p-6 text-white bg-gradient-to-br ${className} rounded-xl`}
-      >
-        <div className="flex items-center gap-3 mb-2">
-          <Icon className="w-8 h-8" />
-          <h3 className="text-lg font-semibold">{title}</h3>
-        </div>
-        <p className="text-3xl font-bold">{value}</p>
+    <div className={`p-6 text-white bg-gradient-to-br ${className} rounded-xl`}>
+      <div className="flex items-center gap-3 mb-2">
+        <Icon className="w-8 h-8" />
+        <h3 className="text-lg font-semibold">{title}</h3>
       </div>
-    </AuthenticatedLayout>
+      <p className="text-3xl font-bold">{value}</p>
+    </div>
   );
 }

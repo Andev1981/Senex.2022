@@ -251,7 +251,7 @@ export default function DoctorModalForm({
                   </p>
                   <p className="text-sm text-gray-600">{selectedDoctor.rut}</p>
                   <p className="text-sm text-gray-500">
-                    {selectedDoctor?.specialty} — {selectedDoctor?.branch}
+                    {selectedDoctor?.speciality} — {selectedDoctor?.branch}
                   </p>
                 </div>
               </div>

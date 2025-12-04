@@ -39,12 +39,11 @@ class StoreTreatmentSessionRequest extends FormRequest
             'session_type_id' => 'nullable|exists:session_types,id',
             'room_id' => 'nullable|exists:rooms,id',
             'branch_id' => 'nullable|exists:branches,id',
-            'session_number' => 'nullable|integer|min:1',
             'month_session_number' => 'nullable|integer|min:1',
             'date' => 'required|date',
             'time' => 'required|date_format:H:i',
             'duration' => 'required|integer|min:15|max:180',
-            'status' => 'required|in:Programada,Completada,Cancelada,No Asistió',
+            'status' => 'required|in:scheduled,completed, cancelled,not_attend',
             // Evaluación del dolor (solo para sesiones completadas)
             'pain_before' => 'nullable|integer|min:0|max:10',
             'pain_after' => 'nullable|integer|min:0|max:10',
@@ -79,8 +78,7 @@ class StoreTreatmentSessionRequest extends FormRequest
             'doctor_id.exists' => 'El kinesiólogo seleccionado no existe',
             'patient_id.required' => 'El paciente es obligatorio',
             'patient_id.exists' => 'El paciente seleccionado no existe',
-            'session_number.integer' => 'El número de sesión debe ser un número entero',
-            'session_number.min' => 'El número de sesión debe ser al menos 1',
+
             'month_session_number.integer' => 'El número de sesión del mes debe ser un número entero',
             'month_session_number.min' => 'El número de sesión del mes debe ser al menos 1',
             'date.required' => 'La fecha es obligatoria',

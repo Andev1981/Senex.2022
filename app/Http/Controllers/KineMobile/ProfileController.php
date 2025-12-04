@@ -79,7 +79,7 @@ class ProfileController extends Controller
                 'rut' => $doctor->rut,
                 'email' => $doctor->email,
                 'phone' => $doctor->phone,
-                'specialty' => $doctor->specialty,
+                'speciality' => $doctor->speciality,
                 'branch' => $doctor->branch->name ?? 'Sin sucursal',
                 'commission_rates' => $doctor->commissionRates->map(function ($rate) {
                     return [

@@ -74,7 +74,7 @@ export default function WebpayTest({
   const calculateSessionsTotal = () => {
     return selectedSessions.reduce((sum, sessionId) => {
       const session = patientSessions.find((s) => s.id === sessionId);
-      return sum + (session?.patient_amount_clp || 0);
+      return sum + (session?.patient_amount || 0);
     }, 0);
   };
 
@@ -127,7 +127,7 @@ export default function WebpayTest({
     // Actualizar monto automáticamente
     const total = newSelected.reduce((sum, id) => {
       const session = patientSessions.find((s) => s.id === id);
-      return sum + (session?.patient_amount_clp || 0);
+      return sum + (session?.patient_amount || 0);
     }, 0);
     setData("amount", total);
   };
@@ -166,7 +166,7 @@ export default function WebpayTest({
     setData("session_id", sessionId);
     const session = patientSessions.find((s) => s.id === parseInt(sessionId));
     if (session) {
-      setData("amount", session.patient_amount_clp);
+      setData("amount", session.patient_amount);
     }
   };
 
@@ -330,15 +330,15 @@ export default function WebpayTest({
     <AuthenticatedLayout>
       <Head title="Prueba de Webpay" />
 
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="min-h-screen px-4 py-8 bg-gray-50">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 mb-6 text-white">
+          <div className="p-6 mb-6 text-white rounded-lg shadow-lg bg-gradient-to-r from-blue-600 to-blue-800">
             <div className="flex items-center gap-3">
               <CreditCard className="w-8 h-8" />
               <div>
                 <h1 className="text-2xl font-bold">Prueba de Webpay Plus</h1>
-                <p className="text-blue-100 text-sm">
+                <p className="text-sm text-blue-100">
                   Ambiente:{" "}
                   {import.meta.env.VITE_WEBPAY_ENVIRONMENT || "integration"}
                 </p>
@@ -347,11 +347,11 @@ export default function WebpayTest({
           </div>
 
           {/* Alertas de desarrollo */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="p-4 mb-6 border border-yellow-200 rounded-lg bg-yellow-50">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
               <div className="text-sm text-yellow-800">
-                <p className="font-semibold mb-1">⚠️ Componente de Prueba</p>
+                <p className="mb-1 font-semibold">⚠️ Componente de Prueba</p>
                 <p>
                   Este componente es solo para desarrollo. NO usar en
                   producción.
@@ -365,10 +365,10 @@ export default function WebpayTest({
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Card Principal */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="overflow-hidden bg-white rounded-lg shadow-lg">
               {/* Header del form */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
                   <User className="w-5 h-5 text-blue-600" />
                   Configuración del Pago
                 </h2>
@@ -377,10 +377,10 @@ export default function WebpayTest({
               <div className="p-6 space-y-6">
                 {/* Tipo de Pago */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block mb-3 text-sm font-medium text-gray-700">
                     Tipo de Pago
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     {[
                       {
                         value: "session",
@@ -427,14 +427,14 @@ export default function WebpayTest({
                 </div>
 
                 {/* Selección de Paciente */}
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Paciente *
                   </label>
                   <select
                     value={data.patient_id}
                     onChange={(e) => handlePatientChange(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Seleccionar paciente...</option>
                     {patients.length > 0 ? (
@@ -456,7 +456,7 @@ export default function WebpayTest({
 
                   {/* Información del paciente seleccionado */}
                   {selectedPatient && (
-                    <div className="mt-3 flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
+                    <div className="flex items-center gap-2 px-3 py-2 mt-3 text-sm text-blue-700 rounded-lg bg-blue-50">
                       <CheckCircle2 className="w-4 h-4" />
                       <span>
                         Paciente seleccionado:{" "}
@@ -466,7 +466,7 @@ export default function WebpayTest({
                   )}
 
                   {errors.patient_id && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="flex items-center gap-1 mt-2 text-sm text-red-600">
                       <XCircle className="w-4 h-4" />
                       {errors.patient_id}
                     </p>
@@ -475,18 +475,18 @@ export default function WebpayTest({
 
                 {/* Campos específicos según tipo de pago */}
                 {paymentType === "session" && (
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                    <label className="block mb-3 text-sm font-medium text-gray-700">
                       Sesión a Pagar *
                     </label>
 
                     {!data.patient_id ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="py-8 text-center text-gray-500">
                         <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                         <p>Primero selecciona un paciente</p>
                       </div>
                     ) : patientSessions.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="py-8 text-center text-gray-500">
                         <XCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                         <p>Este paciente no tiene sesiones disponibles</p>
                       </div>
@@ -516,7 +516,7 @@ export default function WebpayTest({
                               />
                               <div>
                                 <p className="font-medium text-gray-900">
-                                  Sesión #{session.session_number}
+                                  Sesión #{session.month_session_number}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   {new Date(session.date).toLocaleDateString(
@@ -528,7 +528,7 @@ export default function WebpayTest({
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-blue-600">
-                                {formatCLP(session.patient_amount_clp)}
+                                {formatCLP(session.patient_amount)}
                               </p>
                             </div>
                           </label>
@@ -539,30 +539,30 @@ export default function WebpayTest({
                 )}
 
                 {paymentType === "multiple" && (
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="p-4 bg-white border border-gray-200 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <label className="text-sm font-medium text-gray-700">
                         Seleccionar Sesiones *
                       </label>
                       {selectedSessions.length > 0 && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                        <span className="px-2 py-1 text-xs text-blue-700 bg-blue-100 rounded-full">
                           {selectedSessions.length} seleccionada(s)
                         </span>
                       )}
                     </div>
 
                     {!data.patient_id ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="py-8 text-center text-gray-500">
                         <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                         <p>Primero selecciona un paciente</p>
                       </div>
                     ) : patientSessions.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="py-8 text-center text-gray-500">
                         <XCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                         <p>Este paciente no tiene sesiones disponibles</p>
                       </div>
                     ) : (
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                      <div className="space-y-2 overflow-y-auto max-h-64">
                         {patientSessions.map((session) => (
                           <label
                             key={session.id}
@@ -581,7 +581,7 @@ export default function WebpayTest({
                               />
                               <div>
                                 <p className="font-medium text-gray-900">
-                                  Sesión #{session.session_number}
+                                  Sesión #{session.month_session_number}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   {new Date(session.date).toLocaleDateString(
@@ -593,7 +593,7 @@ export default function WebpayTest({
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-gray-700">
-                                {formatCLP(session.patient_amount_clp)}
+                                {formatCLP(session.patient_amount)}
                               </p>
                             </div>
                           </label>
@@ -602,8 +602,8 @@ export default function WebpayTest({
                     )}
 
                     {selectedSessions.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex justify-between items-center text-sm">
+                      <div className="pt-3 mt-3 border-t border-gray-200">
+                        <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">Total a pagar:</span>
                           <span className="text-lg font-bold text-blue-600">
                             {formatCLP(calculateSessionsTotal())}
@@ -615,25 +615,25 @@ export default function WebpayTest({
                 )}
 
                 {paymentType === "debts" && (
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="p-4 bg-white border border-gray-200 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <label className="text-sm font-medium text-gray-700">
                         Seleccionar Deudas *
                       </label>
                       {selectedDebts.length > 0 && (
-                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                        <span className="px-2 py-1 text-xs text-red-700 bg-red-100 rounded-full">
                           {selectedDebts.length} seleccionada(s)
                         </span>
                       )}
                     </div>
 
                     {!data.patient_id ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="py-8 text-center text-gray-500">
                         <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                         <p>Primero selecciona un paciente</p>
                       </div>
                     ) : patientDebts.length === 0 ? (
-                      <div className="text-center py-8 text-green-500">
+                      <div className="py-8 text-center text-green-500">
                         <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-400" />
                         <p className="font-medium">¡Sin deudas pendientes!</p>
                         <p className="text-sm text-gray-500">
@@ -641,7 +641,7 @@ export default function WebpayTest({
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                      <div className="space-y-2 overflow-y-auto max-h-64">
                         {patientDebts.map((debt) => (
                           <label
                             key={debt.id}
@@ -681,8 +681,8 @@ export default function WebpayTest({
                     )}
 
                     {selectedDebts.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex justify-between items-center text-sm">
+                      <div className="pt-3 mt-3 border-t border-gray-200">
+                        <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">Total a pagar:</span>
                           <span className="text-lg font-bold text-red-600">
                             {formatCLP(calculateDebtsTotal())}
@@ -694,21 +694,21 @@ export default function WebpayTest({
                 )}
 
                 {paymentType === "plan" && (
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <div className="p-6 bg-white rounded-lg shadow">
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900">
                       Seleccionar Plan
                     </h3>
 
                     {!data.patient_id ? (
-                      <div className="text-center py-12">
-                        <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <div className="py-12 text-center">
+                        <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                         <p className="text-gray-500">
                           Primero selecciona un paciente
                         </p>
                       </div>
                     ) : patientPlans.length === 0 ? (
-                      <div className="text-center py-12">
-                        <XCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <div className="py-12 text-center">
+                        <XCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                         <p className="text-gray-500">
                           Este paciente no tiene planes activos
                         </p>
@@ -721,7 +721,7 @@ export default function WebpayTest({
                             : `${selectedPlans.length} plan(es) seleccionado(s)`}
                         </div>
 
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                        <div className="space-y-3 overflow-y-auto max-h-64">
                           {patientPlans.map((plan) => {
                             const isSelected = selectedPlans.some(
                               (p) => p.id === plan.id
@@ -738,13 +738,13 @@ export default function WebpayTest({
                                 }`}
                               >
                                 <div className="flex items-start justify-between">
-                                  <div className="flex items-start gap-3 flex-1">
+                                  <div className="flex items-start flex-1 gap-3">
                                     <input
                                       type="checkbox"
                                       checked={isSelected}
                                       onChange={() => togglePlan(plan)}
                                       onClick={(e) => e.stopPropagation()}
-                                      className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                                      className="w-5 h-5 mt-1 text-purple-600 rounded focus:ring-purple-500"
                                     />
 
                                     <div className="flex-1">
@@ -763,7 +763,7 @@ export default function WebpayTest({
                                         </span>
                                       </div>
 
-                                      <div className="text-sm text-gray-600 space-y-1">
+                                      <div className="space-y-1 text-sm text-gray-600">
                                         <div>
                                           Sesiones: {plan.sessions_used} /{" "}
                                           {plan.total_sessions} usadas (
@@ -783,7 +783,7 @@ export default function WebpayTest({
                                     </div>
                                   </div>
 
-                                  <div className="text-right ml-4">
+                                  <div className="ml-4 text-right">
                                     <div className="font-bold text-purple-600">
                                       {formatCLP(plan.price_per_session_clp)}
                                     </div>
@@ -802,14 +802,14 @@ export default function WebpayTest({
                 )}
 
                 {/* Monto */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-5">
-                  <label className="block text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
+                <div className="p-5 border-2 border-green-200 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50">
+                  <label className="flex items-center block gap-2 mb-3 text-sm font-medium text-gray-800">
                     <DollarSign className="w-5 h-5 text-green-600" />
                     Monto a Pagar (CLP) *
                   </label>
 
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-500">
+                    <span className="absolute text-2xl font-bold text-gray-500 -translate-y-1/2 left-4 top-1/2">
                       $
                     </span>
                     <input
@@ -842,7 +842,7 @@ export default function WebpayTest({
                   )}
 
                   {errors.amount && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <p className="flex items-center gap-1 mt-2 text-sm text-red-600">
                       <XCircle className="w-4 h-4" />
                       {errors.amount}
                     </p>
@@ -850,10 +850,10 @@ export default function WebpayTest({
 
                   {/* Montos rápidos */}
                   <div className="mt-4">
-                    <p className="text-xs text-gray-600 mb-2 font-medium">
+                    <p className="mb-2 text-xs font-medium text-gray-600">
                       ⚡ Montos rápidos:
                     </p>
-                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
                       {quickAmounts.map((quick) => (
                         <button
                           key={quick.value}
@@ -865,7 +865,7 @@ export default function WebpayTest({
                             (paymentType === "debts" &&
                               selectedDebts.length > 0)
                           }
-                          className="px-3 py-2 text-sm font-medium bg-white hover:bg-green-50 text-gray-700 hover:text-green-700 rounded-lg border border-gray-300 hover:border-green-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-3 py-2 text-sm font-medium text-gray-700 transition-all bg-white border border-gray-300 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {quick.label}
                         </button>
@@ -875,7 +875,7 @@ export default function WebpayTest({
                       selectedSessions.length > 0) ||
                       (paymentType === "debts" &&
                         selectedDebts.length > 0)) && (
-                      <p className="mt-2 text-xs text-gray-500 italic">
+                      <p className="mt-2 text-xs italic text-gray-500">
                         El monto se calcula automáticamente según tu selección
                       </p>
                     )}
@@ -883,8 +883,8 @@ export default function WebpayTest({
                 </div>
 
                 {/* Notas */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <label className="block mb-2 text-sm font-medium text-gray-700">
                     Notas Adicionales
                   </label>
                   <textarea
@@ -892,27 +892,27 @@ export default function WebpayTest({
                     onChange={(e) => setData("notes", e.target.value)}
                     rows={3}
                     placeholder="Agrega cualquier observación sobre este pago..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
             </div>
 
             {shouldShowSummary && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className="p-6 rounded-lg shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 className="mb-4 text-lg font-semibold text-gray-900">
                   Resumen del Pago
                 </h3>
 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-700">Paciente:</span>
                     <span className="font-semibold text-gray-900">
                       {selectedPatient?.name} {selectedPatient?.last_name}
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-700">Tipo de pago:</span>
                     <span className="font-semibold text-gray-900">
                       {data.payment_type === "session" &&
@@ -926,14 +926,14 @@ export default function WebpayTest({
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center pt-3 border-t border-blue-200">
+                  <div className="flex items-center justify-between pt-3 border-t border-blue-200">
                     <span className="text-gray-700">Monto Total:</span>
                     <span className="text-2xl font-bold text-blue-600">
                       {formatCLP(data.amount_clp)}
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-700">Método de pago:</span>
                     <span className="font-medium text-gray-900">
                       Webpay Plus
@@ -967,7 +967,7 @@ export default function WebpayTest({
             </button>
 
             {(!data.patient_id || !data.amount) && (
-              <p className="text-center text-sm text-gray-500 -mt-2">
+              <p className="-mt-2 text-sm text-center text-gray-500">
                 {!data.patient_id && "Selecciona un paciente para continuar"}
                 {data.patient_id &&
                   !data.amount &&
@@ -976,28 +976,28 @@ export default function WebpayTest({
             )}
 
             {/* Información de prueba */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">
+            <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+              <h3 className="mb-2 font-semibold text-blue-900">
                 🧪 Tarjetas de Prueba (Ambiente Integration)
               </h3>
               <div className="space-y-2 text-sm text-blue-800">
                 <div>
                   <span className="font-semibold">Visa Exitosa:</span>
-                  <code className="ml-2 bg-white px-2 py-1 rounded">
+                  <code className="px-2 py-1 ml-2 bg-white rounded">
                     4051885600446623
                   </code>
                   <span className="ml-2">CVV: 123</span>
                 </div>
                 <div>
                   <span className="font-semibold">Mastercard Exitosa:</span>
-                  <code className="ml-2 bg-white px-2 py-1 rounded">
+                  <code className="px-2 py-1 ml-2 bg-white rounded">
                     5186059559590568
                   </code>
                   <span className="ml-2">CVV: 123</span>
                 </div>
                 <div>
                   <span className="font-semibold">Rechazo por Saldo:</span>
-                  <code className="ml-2 bg-white px-2 py-1 rounded">
+                  <code className="px-2 py-1 ml-2 bg-white rounded">
                     4051886000056590
                   </code>
                   <span className="ml-2">CVV: 123</span>
@@ -1011,7 +1011,7 @@ export default function WebpayTest({
 
           {/* Panel de Debug */}
           {import.meta.env.DEV && (
-            <div className="bg-gray-900 text-gray-100 rounded-lg p-6 font-mono text-sm">
+            <div className="p-6 font-mono text-sm text-gray-100 bg-gray-900 rounded-lg">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">
                   Estado del Formulario (Debug)
@@ -1024,7 +1024,7 @@ export default function WebpayTest({
               <div className="space-y-4">
                 <div>
                   <span className="text-green-400">Form Data:</span>
-                  <pre className="mt-1 text-xs overflow-x-auto">
+                  <pre className="mt-1 overflow-x-auto text-xs">
                     {JSON.stringify(data, null, 2)}
                   </pre>
                 </div>
@@ -1057,7 +1057,7 @@ export default function WebpayTest({
                   <span className="text-yellow-400">
                     Sesiones seleccionadas:
                   </span>
-                  <pre className="mt-1 text-xs overflow-x-auto">
+                  <pre className="mt-1 overflow-x-auto text-xs">
                     {JSON.stringify(
                       selectedSessions.map((s) => s.id),
                       null,
@@ -1068,7 +1068,7 @@ export default function WebpayTest({
 
                 <div>
                   <span className="text-red-400">Deudas seleccionadas:</span>
-                  <pre className="mt-1 text-xs overflow-x-auto">
+                  <pre className="mt-1 overflow-x-auto text-xs">
                     {JSON.stringify(
                       selectedDebts.map((d) => d.id),
                       null,
@@ -1080,7 +1080,7 @@ export default function WebpayTest({
                 {/* ⭐ NUEVO */}
                 <div>
                   <span className="text-purple-400">Planes seleccionados:</span>
-                  <pre className="mt-1 text-xs overflow-x-auto">
+                  <pre className="mt-1 overflow-x-auto text-xs">
                     {JSON.stringify(
                       selectedPlans.map((p) => p.id),
                       null,
@@ -1092,7 +1092,7 @@ export default function WebpayTest({
                 {errors && Object.keys(errors).length > 0 && (
                   <div>
                     <span className="text-red-400">Errores de validación:</span>
-                    <pre className="mt-1 text-xs overflow-x-auto text-red-300">
+                    <pre className="mt-1 overflow-x-auto text-xs text-red-300">
                       {JSON.stringify(errors, null, 2)}
                     </pre>
                   </div>

@@ -18,7 +18,7 @@ class CommissionService
 
     if (!$rate) {
       // fallback simple: 0 para doctor
-      return ['doctor_amount_clp' => 0.0, 'clinic_amount' => $patientAmount, 'applied' => null];
+      return ['doctor_amount' => 0.0, 'clinic_amount' => $patientAmount, 'applied' => null];
     }
 
     if ($rate->commission_type === DoctorCommissionRate::TYPE_PERCENTAGE) {
@@ -29,7 +29,7 @@ class CommissionService
 
     $doctor = max(0, min($doctor, $patientAmount));
     return [
-      'doctor_amount_clp' => $doctor,
+      'doctor_amount' => $doctor,
       'clinic_amount' => $patientAmount - $doctor,
       'applied'       => $rate,
     ];
@@ -40,7 +40,7 @@ class CommissionService
     if (!$ts->session_type_id || !$ts->doctor_id || $ts->patient_amount === null) return $ts;
 
     $calc = $this->computeFor($ts->doctor_id, $ts->session_type_id, (float)$ts->patient_amount);
-    $ts->doctor_amount_clp = $calc['doctor_amount_clp'];
+    $ts->doctor_amount = $calc['doctor_amount'];
     $ts->clinic_amount = $calc['clinic_amount'];
     $ts->save();
 

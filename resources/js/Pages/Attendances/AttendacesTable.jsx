@@ -197,17 +197,15 @@ export default function AttendacesTable({
         accessorKey: "total",
         header: "Pago",
         cell: ({ row }) => {
-          const { payment_total, patient_amount_clp } = row.original;
+          const { payment_total, patient_amount } = row.original;
           const saldo = Math.max(
             0,
-            (patient_amount_clp || 0) - (payment_total || 0)
+            (patient_amount || 0) - (payment_total || 0)
           );
           return (
             <div className="text-sm text-gray-700 whitespace-nowrap">
               {fmtCLP(payment_total)}{" "}
-              <span className="text-gray-400">
-                / {fmtCLP(patient_amount_clp)}
-              </span>
+              <span className="text-gray-400">/ {fmtCLP(patient_amount)}</span>
               {saldo > 0 && (
                 <div className="text-xs font-semibold text-amber-600">
                   Saldo: {fmtCLP(saldo)}

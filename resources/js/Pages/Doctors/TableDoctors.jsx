@@ -37,15 +37,15 @@ export default function TableDoctors({
   const [columnFilters, setColumnFilters] = useState([]);
 
   // Estados para los filtros
-  const [filterSpecialty, setFilterSpecialty] = useState("");
+  const [filterspeciality, setFilterspeciality] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
   // ✅ Verificar si hay filtros activos
-  const hasActiveFilters = !!(filterSpecialty || filterStatus);
+  const hasActiveFilters = !!(filterspeciality || filterStatus);
 
   // ✅ Limpiar todos los filtros
   const clearFilters = () => {
-    setFilterSpecialty("");
+    setFilterspeciality("");
     setFilterStatus("");
     setSearchTerm("");
     setColumnFilters([]);
@@ -63,8 +63,8 @@ export default function TableDoctors({
   useEffect(() => {
     const next = [];
 
-    if (filterSpecialty && filterSpecialty !== "Todas") {
-      next.push({ id: "specialty", value: filterSpecialty });
+    if (filterspeciality && filterspeciality !== "Todas") {
+      next.push({ id: "speciality", value: filterspeciality });
     }
 
     if (filterStatus) {
@@ -72,16 +72,16 @@ export default function TableDoctors({
     }
 
     setColumnFilters((prev) => {
-      const keep = prev.filter((f) => !["specialty", "status"].includes(f.id));
+      const keep = prev.filter((f) => !["speciality", "status"].includes(f.id));
       return [...keep, ...next];
     });
-  }, [filterSpecialty, filterStatus]);
+  }, [filterspeciality, filterStatus]);
 
   // ✅ Obtener especialidades únicas presentes en los doctores
   const specialtiesPresentes = useMemo(() => {
     if (!doctors || doctors.length === 0) return [];
     const uniqueSpecialties = [
-      ...new Set(doctors.map((d) => d.specialty).filter(Boolean)),
+      ...new Set(doctors.map((d) => d.speciality).filter(Boolean)),
     ];
     return uniqueSpecialties.sort((a, b) => a.localeCompare(b));
   }, [doctors]);
@@ -287,7 +287,7 @@ export default function TableDoctors({
         Email: item?.email,
         Rut: item?.rut,
         Teléfono: item?.phone,
-        Especialidad: item?.specialty,
+        Especialidad: item?.speciality,
         Estado: item?.status === "active" ? "Activo" : "Inactivo",
         "Sesiones (Mes)": item?.sessions_month || 0,
         "Ingresos (Mes)": item?.revenue_month || 0,
@@ -315,8 +315,8 @@ export default function TableDoctors({
           </div>
           <div className="flex items-center gap-2">
             <select
-              value={filterSpecialty}
-              onChange={(e) => setFilterSpecialty(e.target.value)}
+              value={filterspeciality}
+              onChange={(e) => setFilterspeciality(e.target.value)}
               className="px-3 py-2 text-sm font-medium border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
             >
               <option value="">Todas</option>

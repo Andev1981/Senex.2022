@@ -1,72 +1,65 @@
 import { useState, useRef, useEffect } from "react";
-import { Head, useForm, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { ShieldCheck, Mail, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
+import axios from "axios";
 
 export default function VerifyCode({ rut, email, patient_name }) {
-  const { data, setData, post, processing, errors } = useForm({
-    rut: rut,
-    code: "",
-  });
+  const { errors: pageErrors } = usePage().props;
 
   const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [processing, setProcessing] = useState(false);
+  const [errors, setErrors] = useState({});
   const [resending, setResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const inputRefs = useRef([]);
 
   useEffect(() => {
-    // Auto-focus primer input
     inputRefs.current[0]?.focus();
   }, []);
 
-  /**
-   * Manejar cambio en input de código
-   */
+  // Sincronizar errores de Inertia
+  useEffect(() => {
+    if (pageErrors?.code) {
+      setErrors({ code: pageErrors.code });
+      setProcessing(false);
+    }
+  }, [pageErrors]);
+
+  const clearErrors = () => {
+    setErrors({});
+  };
+
   const handleCodeChange = (index, value) => {
-    // Solo permitir números
     if (value && !/^\d$/.test(value)) return;
+
+    clearErrors();
 
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
 
-    // Actualizar form data
-    const fullCode = newCode.join("");
-    setData("code", fullCode);
-
-    // Auto-focus siguiente input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto-submit cuando se completen los 6 dígitos
+    const fullCode = newCode.join("");
     if (fullCode.length === 6) {
       setTimeout(() => handleSubmit(fullCode), 100);
     }
   };
 
-  /**
-   * Manejar tecla presionada
-   */
   const handleKeyDown = (index, e) => {
-    // Backspace: borrar y volver al anterior
     if (e.key === "Backspace" && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-
-    // Flecha izquierda
     if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-
-    // Flecha derecha
     if (e.key === "ArrowRight" && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  /**
-   * Pegar código completo
-   */
   const handlePaste = (e) => {
     e.preventDefault();
     const pastedData = e.clipboardData
@@ -77,60 +70,59 @@ export default function VerifyCode({ rut, email, patient_name }) {
     if (pastedData.length === 6) {
       const newCode = pastedData.split("");
       setCode(newCode);
-      setData("code", pastedData);
-
-      // Focus último input
       inputRefs.current[5]?.focus();
-
-      // Auto-submit
       setTimeout(() => handleSubmit(pastedData), 100);
     }
   };
 
-  /**
-   * Submit del código
-   */
   const handleSubmit = (fullCode = null) => {
-    const codeToSubmit = fullCode || data.code;
+    const codeToSubmit = fullCode || code.join("");
 
-    if (codeToSubmit.length !== 6) return;
+    if (codeToSubmit.length !== 6 || processing) return;
 
-    post(route("patient.verify-code"), {
-      data: {
-        rut: data.rut,
+    setProcessing(true);
+    clearErrors();
+
+    router.post(
+      route("patient.verify-code"),
+      {
+        rut: rut,
         code: codeToSubmit,
       },
-    });
+      {
+        onError: (errors) => {
+          setErrors(errors);
+          setProcessing(false);
+        },
+      }
+    );
   };
 
-  /**
-   * Reenviar código
-   */
   const handleResendCode = async () => {
+    if (resending) return;
+
     setResending(true);
     setResendSuccess(false);
+    clearErrors();
 
     try {
-      await axios.post(route("patient.resend-code"), { rut: data.rut });
-      setResendSuccess(true);
+      const response = await axios.post(route("patient.resend-code"), { rut });
 
-      // Limpiar código actual
-      setCode(["", "", "", "", "", ""]);
-      setData("code", "");
-      inputRefs.current[0]?.focus();
-
-      // Ocultar mensaje de éxito después de 3 segundos
-      setTimeout(() => setResendSuccess(false), 3000);
+      if (response.data.success) {
+        setResendSuccess(true);
+        setCode(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+        setTimeout(() => setResendSuccess(false), 3000);
+      }
     } catch (error) {
-      console.error("Error al reenviar código:", error);
+      const message =
+        error.response?.data?.message || "Error al reenviar el código.";
+      setErrors({ code: message });
     } finally {
       setResending(false);
     }
   };
 
-  /**
-   * Volver al login
-   */
   const handleBack = () => {
     router.visit(route("patient.login"));
   };
@@ -139,14 +131,14 @@ export default function VerifyCode({ rut, email, patient_name }) {
     <>
       <Head title="Verificar Código" />
 
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full">
+      <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-br from-indigo-50 via-white to-purple-50 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full w-20 h-20 mx-auto flex items-center justify-center shadow-lg mb-4">
+          <div className="mb-8 text-center">
+            <div className="flex items-center justify-center w-20 h-20 mx-auto mb-4 rounded-full shadow-lg bg-gradient-to-br from-indigo-600 to-purple-600">
               <ShieldCheck className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">
               Verificar Código
             </h1>
             <p className="text-gray-600">
@@ -155,18 +147,18 @@ export default function VerifyCode({ rut, email, patient_name }) {
           </div>
 
           {/* Card Principal */}
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="overflow-hidden bg-white shadow-xl rounded-2xl">
             <div className="px-8 py-10">
               {/* Mensaje de email enviado */}
-              <div className="bg-indigo-50 border-l-4 border-indigo-500 rounded-lg p-4 mb-6">
+              <div className="p-4 mb-6 border-l-4 border-indigo-500 rounded-lg bg-indigo-50">
                 <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-indigo-900 mb-1">
+                    <p className="mb-1 text-sm font-medium text-indigo-900">
                       Código enviado a tu email
                     </p>
                     <p className="text-sm text-indigo-700">{email}</p>
-                    <p className="text-xs text-indigo-600 mt-2">
+                    <p className="mt-2 text-xs text-indigo-600">
                       El código expira en 15 minutos
                     </p>
                   </div>
@@ -175,7 +167,7 @@ export default function VerifyCode({ rut, email, patient_name }) {
 
               {/* Mensaje de éxito al reenviar */}
               {resendSuccess && (
-                <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-6 animate-fade-in">
+                <div className="p-4 mb-6 border-l-4 border-green-500 rounded-lg bg-green-50">
                   <p className="text-sm font-medium text-green-900">
                     ✓ Código reenviado exitosamente
                   </p>
@@ -184,7 +176,7 @@ export default function VerifyCode({ rut, email, patient_name }) {
 
               {/* Inputs de código */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-4 text-center">
+                <label className="block mb-4 text-sm font-medium text-center text-gray-700">
                   Ingresa el código de 6 dígitos
                 </label>
 
@@ -211,7 +203,11 @@ export default function VerifyCode({ rut, email, patient_name }) {
                             ? "border-red-300 bg-red-50 text-red-600"
                             : "border-gray-300 hover:border-gray-400"
                         }
-                        ${digit ? "border-indigo-500 bg-indigo-50" : ""}
+                        ${
+                          digit && !errors.code
+                            ? "border-indigo-500 bg-indigo-50"
+                            : ""
+                        }
                       `}
                       disabled={processing}
                     />
@@ -219,8 +215,8 @@ export default function VerifyCode({ rut, email, patient_name }) {
                 </div>
 
                 {errors.code && (
-                  <p className="text-sm text-red-600 text-center flex items-center justify-center gap-1">
-                    <span className="font-medium">⚠️</span>
+                  <p className="flex items-center justify-center gap-1 text-sm text-center text-red-600">
+                    <span>⚠️</span>
                     {errors.code}
                   </p>
                 )}
@@ -228,7 +224,7 @@ export default function VerifyCode({ rut, email, patient_name }) {
 
               {/* Loading indicator */}
               {processing && (
-                <div className="flex items-center justify-center gap-2 text-indigo-600 mb-4">
+                <div className="flex items-center justify-center gap-2 mb-4 text-indigo-600">
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span className="text-sm font-medium">
                     Verificando código...
@@ -237,12 +233,12 @@ export default function VerifyCode({ rut, email, patient_name }) {
               )}
 
               {/* Botón de reenviar */}
-              <div className="text-center mb-6">
+              <div className="mb-6 text-center">
                 <button
                   type="button"
                   onClick={handleResendCode}
                   disabled={resending || processing}
-                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {resending ? (
                     <>
@@ -263,7 +259,7 @@ export default function VerifyCode({ rut, email, patient_name }) {
                 type="button"
                 onClick={handleBack}
                 disabled={processing}
-                className="w-full py-3 px-6 rounded-xl font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex items-center justify-center w-full gap-2 px-6 py-3 font-medium text-gray-700 transition-colors bg-gray-100 rounded-xl hover:bg-gray-200 disabled:opacity-50"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Volver
@@ -271,12 +267,12 @@ export default function VerifyCode({ rut, email, patient_name }) {
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
-              <p className="text-center text-sm text-gray-600">
+            <div className="px-8 py-4 border-t border-gray-200 bg-gray-50">
+              <p className="text-sm text-center text-gray-600">
                 ¿Problemas con el código?{" "}
                 <a
                   href="#"
-                  className="text-indigo-600 hover:text-indigo-700 font-medium"
+                  className="font-medium text-indigo-600 hover:text-indigo-700"
                 >
                   Contacta al centro
                 </a>
@@ -285,11 +281,11 @@ export default function VerifyCode({ rut, email, patient_name }) {
           </div>
 
           {/* Info de seguridad */}
-          <div className="mt-6 bg-white rounded-lg shadow-md p-4">
+          <div className="p-4 mt-6 bg-white rounded-lg shadow-md">
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-gray-900 mb-1">
+                <p className="mb-1 text-sm font-medium text-gray-900">
                   Conexión segura
                 </p>
                 <p className="text-xs text-gray-600">

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Activity, Plus, Clipboard, ClipboardList } from "lucide-react";
 import TreatmentCard from "./HistorialPartials/TreatmentCard";
 import ResourceFormModal from "@/Components/ResourceFormModal";
+import SideModal from "@/Components/SideModal";
 
 export default function IndexHistorial({
   patient,
@@ -122,11 +123,11 @@ export default function IndexHistorial({
   };
 
   const STATUS_ORDER = [
-    "InProgress",
-    "Evaluation",
-    "Cancelled",
-    "Paused",
-    "Completed",
+    "in_progress",
+    "evaluation",
+    "cancelled",
+    "paused",
+    "completed",
   ];
 
   const sortedTreatments = [...treatments].sort(
@@ -236,7 +237,7 @@ export default function IndexHistorial({
           description: selectedTreatment?.description ?? null,
           start_date: selectedTreatment?.start_date ?? null,
           end_date: selectedTreatment?.end_date ?? null,
-          status: selectedTreatment?.status ?? "Evaluation",
+          status: selectedTreatment?.status ?? "evaluation",
           total_sessions: selectedTreatment?.total_sessions ?? null,
           completed_sessions: selectedTreatment?.completed_sessions ?? null,
           frequency: selectedTreatment?.frequency ?? null,
@@ -257,6 +258,8 @@ export default function IndexHistorial({
         maxWidth={"4xl"}
         key={`cont-${selectedTreatment?.id ?? "new"}`}
       />
+
+      {/*   <SideModal></SideModal> */}
     </div>
   );
 }

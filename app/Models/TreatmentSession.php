@@ -21,7 +21,6 @@ class TreatmentSession extends Model
         'session_type_id',
         'room_id',
         'branch_id',
-        'session_number',
         'month_session_number',
         'consumes_plan',
         'date',
@@ -46,9 +45,9 @@ class TreatmentSession extends Model
         'homework',
         'next_goals',
         // Montos
-        'patient_amount_clp', /* base price */
-        'doctor_amount_clp', /* Commission */
-        'clinic_amount_clp',
+        'patient_amount', /* base price */
+        'doctor_amount', /* Commission */
+        'clinic_amount',
     ];
 
     protected $casts = [
@@ -65,9 +64,10 @@ class TreatmentSession extends Model
         'rom_abduction_after' => 'integer',
         'techniques' => 'array',
         'exercises' => 'array',
-        'patient_amount_clp' => 'integer',
-        'doctor_amount_clp' => 'integer',
-        'clinic_amount_clp' => 'integer',
+        'patient_amount' => 'integer',
+        'doctor_amount' => 'integer',
+        'clinic_amount' => 'integer',
+        'month_session_number' => 'integer',
         'consumes_plan' => 'boolean',
     ];
 
@@ -237,7 +237,6 @@ class TreatmentSession extends Model
     {
         return [
             'id' => $this->id,
-            'session_number' => $this->session_number,
             'month_session_number' => $this->month_session_number,
             'date' => $this->date->format('Y-m-d'),
             'time' => $this->formatted_time,
@@ -262,17 +261,6 @@ class TreatmentSession extends Model
         ];
     }
 
-    /**
-     * Métodos para calcular números de sesión automáticamente
-     */
-    
-    /**
-     * Generar el próximo número de sesión general para el tratamiento
-     */
-    public static function generateNextSessionNumber(int $treatmentId): int
-    {
-        return (self::where('treatment_id', $treatmentId)->max('session_number') ?? 0) + 1;
-    }
 
     /**
      * Generar el próximo número de sesión del mes para el tratamiento
@@ -292,10 +280,7 @@ class TreatmentSession extends Model
      */
     public function assignSessionNumbers(): void
     {
-        // Asignar session_number si no está presente
-        if (!$this->session_number && $this->treatment_id) {
-            $this->session_number = self::generateNextSessionNumber($this->treatment_id);
-        }
+   
 
         // Asignar month_session_number si no está presente
         if (!$this->month_session_number && $this->treatment_id && $this->date) {

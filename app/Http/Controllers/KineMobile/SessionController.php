@@ -101,7 +101,6 @@ class SessionController extends Controller
         return Inertia::render('KineMobile/SessionDetail', [
             'session' => [
                 'id' => $session->id,
-                'session_number' => $session->session_number,
                 'month_session_number' => $session->month_session_number,
                 'date' => $session->date,
                 'time' => $session->time,
@@ -140,8 +139,8 @@ class SessionController extends Controller
                     'base_price' => $session->sessionType->base_price,
                 ],
                 'payment' => [
-                    'patient_amount_clp' => $session->patient_amount_clp,
-                    'doctor_amount_clp' => $session->doctor_amount_clp,
+                    'patient_amount' => $session->patient_amount,
+                    'doctor_amount' => $session->doctor_amount,
                     'commission_rate' => $session->commission_rate,
                 ],
                 'timestamps' => [
@@ -263,8 +262,7 @@ class SessionController extends Controller
 
         DB::beginTransaction();
         try {
-            // Calcular números de sesión
-            $sessionNumber = TreatmentSession::where('treatment_id', $treatment->id)->count() + 1;
+         
             
             $monthSessionNumber = TreatmentSession::where('treatment_id', $treatment->id)
                 ->whereYear('date', Carbon::parse($validated['date'])->year)
@@ -279,7 +277,6 @@ class SessionController extends Controller
                 'doctor_id' => $doctor->id,
                 'treatment_id' => $validated['treatment_id'],
                 'session_type_id' => $validated['session_type_id'],
-                'session_number' => $sessionNumber,
                 'month_session_number' => $monthSessionNumber,
                 'date' => $validated['date'],
                 'time' => $validated['time'],
@@ -304,9 +301,9 @@ class SessionController extends Controller
                 'next_goals' => $validated['next_goals'],
                 
                 // Pagos
-                'patient_amount_clp' => $validated['patient_amount_clp'],
-                'doctor_amount' => $validated['doctor_amount_clp'],
-                'doctor_amount_clp' => $validated['commission_rate'] ?? 0,
+                'patient_amount' => $validated['patient_amount'],
+                'doctor_amount' => $validated['doctor_amount'],
+                'doctor_amount' => $validated['commission_rate'] ?? 0,
             ]);
 
             DB::commit();
@@ -365,7 +362,6 @@ class SessionController extends Controller
                 'patient_id' => $session->patient_id,
                 'treatment_id' => $session->treatment_id,
                 'session_type_id' => $session->session_type_id,
-                'session_number' => $session->session_number,
                 'month_session_number' => $session->month_session_number,
                 'date' => $session->date,
                 'time' => $session->time,
@@ -398,8 +394,8 @@ class SessionController extends Controller
                     'diagnosis' => $session->treatment->diagnosis,
                 ],
                 'payment' => [
-                    'patient_amount' => $session->patient_amount_clp,
-                    'doctor_amount' => $session->doctor_amount_clp,
+                    'patient_amount' => $session->patient_amount,
+                    'doctor_amount' => $session->doctor_amount,
                     'commission_rate' => $session->commission_rate,
                 ],
             ];

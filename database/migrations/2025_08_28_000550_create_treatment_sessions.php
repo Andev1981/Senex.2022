@@ -26,10 +26,9 @@ return new class extends Migration {
       $table->foreignId('doctor_id')->constrained()->restrictOnDelete();
       $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
       $table->foreignId('session_type_id')->nullable()->constrained()->nullOnDelete();
-      $table->unsignedTinyInteger('session_number');
-      $table->unsignedTinyInteger('month_session_number');
+      $table->unsignedTinyInteger('month_session_number')->default(1);
       $table->date('date');
-      $table->time('time');
+      $table->time('time')->nullable();
       $table->unsignedSmallInteger('duration')->default(45);
       $table->enum('status', ['scheduled', 'completed', 'cancelled', 'not_attend'])->default('scheduled')->index();
 
@@ -48,15 +47,14 @@ return new class extends Migration {
 
       // —— “Snapshot” de tarifa aplicada ——
 
-      $table->unsignedBigInteger('patient_amount_clp')->nullable(); // precio cobrado al paciente
-      $table->unsignedBigInteger('doctor_amount_clp')->nullable();  // parte del doctor
-      $table->unsignedBigInteger('clinic_amount_clp')->nullable();  // parte de la clínica
+      $table->unsignedBigInteger('patient_amount')->nullable(); // precio cobrado al paciente
+      $table->unsignedBigInteger('doctor_amount')->nullable();  // parte del doctor
+      $table->unsignedBigInteger('clinic_amount')->nullable();  // parte de la clínica
 
       $table->timestamps();
       $table->softDeletes();
 
-      // No repetir Nº dentro del tratamiento
-      /* $table->unique(['treatment_id', 'session_number'], 'ts_treatment_number_unique');  */ // no repetir Nº dentro del tratamiento
+
 
       // Búsquedas comunes
       $table->index(['patient_id', 'date', 'time'], 'ts_patient_date_time_idx');
@@ -71,3 +69,6 @@ return new class extends Migration {
     Schema::dropIfExists('treatment_sessions');
   }
 };
+
+
+/* Error al crear el tratamiento. SQLSTATE[HY000]: General error: 1364 Field 'original_amount' doesn't have a default value (Connection: mysql, SQL: insert into `debts` (`patient_id`, `treatment_session_id`, `updated_at`, `created_at`) values (1, 82, 2025-11-29 15:32:28, 2025-11-29 15:32:28)) */

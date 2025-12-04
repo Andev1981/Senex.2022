@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Debt;
 use App\Models\Patient;
 use App\Models\Session;
 use App\Models\TreatmentSession;
 use App\Notifications\PaymentReminderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PaymentReminderController extends Controller
@@ -64,7 +66,7 @@ class PaymentReminderController extends Controller
         ]);
 
         // Calcular deuda del paciente
-        $deuda = Session::where('patient_id', $patient->id)
+        $deuda = Debt::where('patient_id', $patient->id)
             ->where('payment_status', 'pending')
             ->whereNotNull('price')
             ->where('price', '>', 0)
@@ -101,7 +103,7 @@ class PaymentReminderController extends Controller
         ));
 
         // Log
-        \Log::info('Recordatorio de pago enviado', [
+        Log::info('Recordatorio de pago enviado', [
             'patient_id' => $patient->id,
             'channels' => $channels,
             'total' => $deuda->total,
@@ -136,7 +138,7 @@ class PaymentReminderController extends Controller
         $failed = 0;
 
         foreach ($patients as $patient) {
-            $deuda = Session::where('patient_id', $patient->id)
+            $deuda = Debt::where('patient_id', $patient->id)
                 ->where('payment_status', 'pending')
                 ->whereNotNull('price')
                 ->where('price', '>', 0)
@@ -172,7 +174,7 @@ class PaymentReminderController extends Controller
                 $sent++;
             } catch (\Exception $e) {
                 $failed++;
-                \Log::error('Error enviando recordatorio masivo', [
+                Log::error('Error enviando recordatorio masivo', [
                     'patient_id' => $patient->id,
                     'error' => $e->getMessage(),
                 ]);

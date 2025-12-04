@@ -43,8 +43,7 @@ class WebpayTestController extends Controller
                     'patient_id' => $session->patient_id, // ✅ Ya lo tienes
                     'date' => $session->date,
                     'status' => $session->status,
-                    'session_number' => $session->session_number,
-                    'patient_amount_clp' => $session->patient_amount_clp,
+                    'patient_amount' => $session->patient_amount,
                 ];
             });
 

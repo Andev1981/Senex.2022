@@ -61,7 +61,7 @@ export default function MyProfile({ doctor, user, stats, monthlyData }) {
                 <h1 className="text-xl font-bold">
                   {doctor.name} {doctor.last_name}
                 </h1>
-                <p className="text-sm opacity-90">{doctor.specialty}</p>
+                <p className="text-sm opacity-90">{doctor.speciality}</p>
                 <p className="text-xs opacity-75">{doctor.branch}</p>
               </div>
             </div>

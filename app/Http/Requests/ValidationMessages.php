@@ -21,8 +21,6 @@ class ValidationMessages
             'branch_id.required'    => 'La sucursal es obligatoria.',
             'branch_id.exists'      => 'La sucursal seleccionada no existe.',
 
-            'session_number.integer' => 'El número de sesión debe ser un entero.',
-            'session_number.min'     => 'El número de sesión debe ser al menos 1.',
             'date.required'          => 'La fecha es obligatoria.',
             'date.date'              => 'La fecha no tiene un formato válido.',
             'time.required'          => 'La hora es obligatoria.',
@@ -69,8 +67,8 @@ class ValidationMessages
             'attended_at.date'       => 'La fecha/hora de atención no es válida.',
             'patient_amount.numeric' => 'El monto paciente debe ser numérico.',
             'patient_amount.min'     => 'El monto paciente no puede ser negativo.',
-            'doctor_amount_clp.numeric'  => 'El monto del doctor debe ser numérico.',
-            'doctor_amount_clp.min'      => 'El monto del doctor no puede ser negativo.',
+            'doctor_amount.numeric'  => 'El monto del doctor debe ser numérico.',
+            'doctor_amount.min'      => 'El monto del doctor no puede ser negativo.',
             'clinic_amount.numeric'  => 'El monto de la clínica debe ser numérico.',
             'clinic_amount.min'      => 'El monto de la clínica no puede ser negativo.',
 
@@ -88,7 +86,6 @@ class ValidationMessages
             'session_type_id' => 'tipo de sesión',
             'room_id' => 'sala',
             'branch_id' => 'sucursal',
-            'session_number' => 'número de sesión',
             'date' => 'fecha',
             'time' => 'hora',
             'duration' => 'duración',
@@ -108,7 +105,7 @@ class ValidationMessages
             'next_goals' => 'próximas metas',
             'attended_at' => 'atendido en',
             'patient_amount' => 'monto paciente',
-            'doctor_amount_clp' => 'monto doctor',
+            'doctor_amount' => 'monto doctor',
             'clinic_amount' => 'monto clínica',
             'meta' => 'meta',
         ];

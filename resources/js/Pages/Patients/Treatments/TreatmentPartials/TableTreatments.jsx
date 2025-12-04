@@ -201,20 +201,7 @@ export default function TableTreatments({
           </div>
         ),
       },
-      {
-        header: "# Global",
-        accessorFn: (row) => row?.session_number,
-        cell: ({ getValue }) => (
-          <div
-            className="flex items-center gap-3 overflow-hidden uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            <div className="flex items-center justify-center w-6 h-6 text-xs font-semibold text-white rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
-              #{getValue()}
-            </div>
-          </div>
-        ),
-      },
+
       {
         header: "FECHA DE SESIÓN",
         accessorFn: (row) => row?.date,

@@ -24,14 +24,14 @@ return new class extends Migration {
       $table->text('description')->nullable();
       $table->date('start_date')->nullable();
       $table->date('end_date')->nullable();
-      $table->enum('status', ['Evaluation', 'InProgress', 'Cancelled', 'Paused','Completed'])->default('Evaluation')->nullable()->index();
+      $table->enum('status', ['evaluation','in_progress','cancelled','paused','completed'])->default('Evaluation')->nullable()->index();
       $table->unsignedTinyInteger('total_sessions')->nullable();
       $table->unsignedTinyInteger('completed_sessions')->default(0)->nullable();
       $table->unsignedTinyInteger('frequency')->default(0)->nullable();
      /*  $table->string('frequency_time')->nullable(); */
       $table->enum('frequency_time',['day','week','month'])->nullable();
       $table->boolean('is_indefinite')->default(false);
-      $table->enum('current_phase',['evaluation', 'treatment', 'rehabilitation', 'discharge'])->default('evaluation');
+      $table->enum('current_phase',['evaluation', 'treatment', 'rehabilitation', 'discharge'])->default('evaluation')->nullable()->index();
       $table->json('objectives')->nullable();
       $table->text('outcome')->nullable();
       $table->dateTime('next_appointment')->nullable();

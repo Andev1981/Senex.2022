@@ -335,7 +335,7 @@ public function allocateToSessions(Payment $payment, array $sessionIds): void
             PaymentAllocation::create([
                 'payment_id' => $payment->id,
                 'treatment_session_id' => $session->id,
-                'amount_clp' => $session->patient_amount_clp,
+                'amount_clp' => $session->patient_amount,
             ]);
             
             // Actualizar sesión como pagada

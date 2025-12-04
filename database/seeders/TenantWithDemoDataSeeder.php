@@ -102,7 +102,7 @@ class TenantWithDemoDataSeeder extends Seeder
       'rut' => $faker->unique()->numerify('########-#'),
       'email' => $faker->unique()->safeEmail(),
       'phone' => $faker->numerify('+56#########'),
-      'specialty' => 'Kinesiología Deportiva',
+      'speciality' => 'Kinesiología Deportiva',
       'birth_date' => $faker->date(),
       'gender' => $faker->randomElement(['male', 'female', 'other','unknown']),
       'status' => 'active',
@@ -129,7 +129,7 @@ class TenantWithDemoDataSeeder extends Seeder
         'name' => $faker->firstName,
         'last_name' => $faker->lastName,
         'rut' => $faker->unique()->numerify('########-#'),
-        'specialty' => $faker->randomElement(['Respiratoria', 'Deportiva', 'Traumatológica']),
+        'speciality' => $faker->randomElement(['Respiratoria', 'Deportiva', 'Traumatológica']),
         'birth_date' => $faker->date(),
         'gender' => $faker->randomElement(['male', 'female', 'other','unknown']),
         'status' => $faker->randomElement( ['active', 'suspended', 'cancelled']),
@@ -166,8 +166,7 @@ class TenantWithDemoDataSeeder extends Seeder
     $regionId = DB::table('regions')->inRandomOrder()->value('id');
 
     for ($i = 0; $i < 50; $i++) {
-      $patientIds[] = DB::table('addresses')->insertGetId([
-
+      DB::table('addresses')->insertGetId([
         'addressable_type' => 'Patient',
         'addressable_id' => $patientIds[$i],
         'type' => 'home',
@@ -176,10 +175,10 @@ class TenantWithDemoDataSeeder extends Seeder
         'lng' => $faker->longitude,
         'street' => $faker->streetName,
         'number' => $faker->buildingNumber,
-        'commune_id' => $communeId,
-        'province_id' => $provinceId,
-        'region_id' => $regionId,
-        'detaile' => $faker->secondaryAddress,
+        'commune_id' => 6103,
+        'province_id' => 1701,
+        'region_id' => 6,
+        'details' => $faker->secondaryAddress,
         'country' => 'Chile',
         'created_at' => $now,
         'updated_at' => $now,
@@ -200,7 +199,6 @@ class TenantWithDemoDataSeeder extends Seeder
     $sessionTypeIds = [];
     foreach ($sessionTypeRows as [$name, $price, $mins, $planEligible, $planVal]) {
       $sessionTypeIds[] = DB::table('session_types')->insertGetId([
-
         'name' => $name,
         'base_price' => $price,
         'duration_minutes' => $mins,
@@ -396,7 +394,7 @@ class TenantWithDemoDataSeeder extends Seeder
       $stypeId    = $faker->randomElement($sessionTypeIds);            // obligatorio
 
       $startDate  = Carbon::now()->subDays($faker->numberBetween(5, 40))->startOfDay();
-      $status     = $faker->randomElement(['evaluation', 'inProgress', 'cancelled','paused']);
+      $status     = $faker->randomElement(['evaluation', 'in_progress', 'cancelled','paused']);
 
       // total_sessions (tinyint). Mantén un rango razonable para kinesiología
       $totalSessions = $faker->numberBetween(6, 20);
@@ -521,7 +519,6 @@ class TenantWithDemoDataSeeder extends Seeder
         'session_type_id'       => $stypeId,
         'room_id'               => null,     // o $faker->randomElement($roomIds) si los tienes
         'branch_id'             => null,     // idem para sucursales
-        'session_number'        => $faker->numberBetween(1, 12),
         'month_session_number'  => $faker->numberBetween(1, 12),
         'date'                  => $date,
         'time'                  => $time,
@@ -539,9 +536,9 @@ class TenantWithDemoDataSeeder extends Seeder
         'next_goals'            => $faker->boolean(20) ? $faker->sentence(10) : null,
 
         // Snapshot de tarifa aplicada (nuevos nombres *_clp)
-        'patient_amount_clp'    => $basePrice,
-        'doctor_amount_clp'     => $doctorAmount,
-        'clinic_amount_clp'     => $clinicAmount,
+        'patient_amount'    => $basePrice,
+        'doctor_amount'     => $doctorAmount,
+        'clinic_amount'     => $clinicAmount,
 
         'created_at'            => $attended,
         'updated_at'            => $attended,
@@ -754,7 +751,7 @@ class TenantWithDemoDataSeeder extends Seeder
 
       $totals = [
         'sessions' => $sessions->count(),
-        'patient'  => $sessions->sum('patient_amount_clp'),
+        'patient'  => $sessions->sum('patient_amount'),
         'doctor'   => $sessions->sum('doctor_amount_cl'),
         'clinic'   => $sessions->sum('clinic_amount_cl'),
       ];
@@ -767,7 +764,7 @@ class TenantWithDemoDataSeeder extends Seeder
         'total_patient_amount' => $totals['patient'],
         'total_commission_amount' => 0,
         'total_adjustments' => 0,
-        'total_payable' => $totals['doctor'], // neto = doctor_amount_clp (si no hay reglas)
+        'total_payable' => $totals['doctor'], // neto = doctor_amount (si no hay reglas)
         'status' => 'draft',
         'paid_at' => $now,
         'payment_method' => "transferencia",

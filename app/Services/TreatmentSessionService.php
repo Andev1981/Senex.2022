@@ -3,11 +3,13 @@
 
 namespace App\Services;
 
+use App\Models\Treatment;
 use App\Models\Debt;
+use App\Models\Patient;
+use App\Jobs\SendPaymentReminderJob;
 use App\Models\DoctorCommissionRate;
 use App\Models\SessionType;
 use App\Models\TreatmentSession;
-use App\Models\Treatment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +31,7 @@ class TreatmentSessionService
      */
     public function createSession(array $data): TreatmentSession
     {
+    
         return DB::transaction(function () use ($data) {
             // Validar que exista treatment_id
             if (!isset($data['treatment_id'])) {
@@ -38,11 +41,6 @@ class TreatmentSessionService
             // Validar disponibilidad de doctor si se proporciona
             if (isset($data['doctor_id']) && isset($data['date']) && isset($data['time'])) {
                 $this->validateDoctorAvailability($data['doctor_id'], $data['date'], $data['time']);
-            }
-
-            // Asignar números automáticamente si no vienen en los datos
-            if (!isset($data['session_number'])) {
-                $data['session_number'] = $this->calculateNextSessionNumber($data['treatment_id']);
             }
 
             if (!isset($data['month_session_number']) && isset($data['date'])) {
@@ -59,25 +57,25 @@ class TreatmentSessionService
                 $data['patient_amount'] = $sessionType['base_price'];
             }
 
-            if(!isset($data['doctor_amount_clp'])){
-                $data['doctor_amount_clp'] = $doctorCommission['commission_value'];
+            if(!isset($data['doctor_amount'])){
+                $data['doctor_amount'] = $doctorCommission['commission_value'];
             }
 
              if(!isset($data['clinic_amount'])){
                 $data['clinic_amount'] = $sessionType['base_price'] - $doctorCommission['commission_value'];
             }
 
-
-
             // Crear la sesión
             $session = TreatmentSession::create($data);
+
+            // Re-obtener el paciente (necesario para el Job)
+            $patient = Patient::find($session->patient_id); // Asumo que tienes el modelo Patient
 
             // === NUEVO BLOQUE: deuda para tratamientos INDEFINIDOS o sin deuda pre-creada ===
             $treatment = Treatment::find($session->treatment_id);
 
             // Si es indefinido o no hay deuda pre-creada, resolvemos ahora
-            if ($treatment->is_indefinite || !Debt::where('treatment_id', $session->treatment_id)
-                                                ->whereNull('treatment_session_id')
+            if ($treatment->is_indefinite || !Debt::where('treatment_session_id', $session->id)
                                                 ->exists()) {
 
                 $patientPlan = $this->planService->hasActivePlanForSessionType(
@@ -90,6 +88,25 @@ class TreatmentSessionService
                 } else {
                     // Crear deuda en el momento
                     $this->paymentService->createDebtForSession($session);
+
+                    // --- [LÓGICA DE NOTIFICACIÓN] ---
+                    $totalDeuda = (int) $session->patient_amount; // Usamos el monto de la sesión
+                    $session_type = $sessionType['name'];
+                    $treatment_session = $session;
+
+                    if ($patient && $totalDeuda > 0) {
+                        Log::info('Paciente y deuda, listos para enviar whatsapp!!!');
+                        SendPaymentReminderJob::dispatch(
+                            $patient,
+                            $treatment_session,
+                            $session_type,
+                            $totalDeuda,
+                            1, // Es 1 ítem (la sesión recién creada)
+                            ['whatsapp'] // Disparamos a los canales permitidos
+                        )->delay(now()->addMinutes(15)); // Retardo de gracia de 15 minutos
+
+                        Log::info('Job de recordatorio despachado tras crear sesión.', ['session_id' => $session->id]);
+                    }
                 }
             } else {
                 // Tratamiento con total fijo: asociar deuda pre-creada
@@ -110,7 +127,6 @@ class TreatmentSessionService
             Log::info('Sesión creada', [
                 'session_id' => $session->id,
                 'treatment_id' => $session->treatment_id,
-                'session_number' => $session->session_number,
                 'month_session_number' => $session->month_session_number,
             ]);
 
@@ -318,10 +334,6 @@ class TreatmentSessionService
         return DB::transaction(function () use ($session) {
             $updates = [];
 
-            if (!$session->session_number && $session->treatment_id) {
-                $updates['session_number'] = $this->calculateNextSessionNumber($session->treatment_id);
-            }
-
             if (!$session->month_session_number && $session->treatment_id && $session->date) {
                 $updates['month_session_number'] = $this->calculateNextMonthSessionNumber(
                     $session->treatment_id,
@@ -445,16 +457,7 @@ class TreatmentSessionService
         $this->paymentService->createDebtForSession($session);
     }
 
-    /**
-     * Calcular el próximo session_number para un tratamiento
-     */
-    private function calculateNextSessionNumber(int $treatmentId): int
-    {
-        $maxNumber = TreatmentSession::where('treatment_id', $treatmentId)
-            ->max('session_number');
 
-        return ($maxNumber ?? 0) + 1;
-    }
 
     /**
      * Calcular el próximo month_session_number para un tratamiento en una fecha

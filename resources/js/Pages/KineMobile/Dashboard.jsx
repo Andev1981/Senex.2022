@@ -81,7 +81,7 @@ export default function Dashboard({
                 <h1 className="text-xl font-bold text-gray-900">
                   Hola, {doctor.name.split(" ")[0]} 👋
                 </h1>
-                <p className="text-sm text-gray-600">{doctor.specialty}</p>
+                <p className="text-sm text-gray-600">{doctor.speciality}</p>
               </div>
               <button
                 onClick={handleRefresh}

@@ -52,14 +52,13 @@ class TreatmentController extends Controller
             'latestVital',
         ]);
 
-        $contact = $patient->primaryContact;
-       
         $address = $patient->address;
 
+        $contact = $patient->primaryContact;
+       
         $allergies = $patient->allergies;
 
         $conditions = $patient->condition;
-
 
         $vital = $patient->latestVital;
         
@@ -113,27 +112,23 @@ class TreatmentController extends Controller
      * STORE - POST /treatments
      * Retorna JsonResponse para manejo desde formularios modales
      */
-    public function store(StoreTreatmentRequest $request)
+    public function store(StoreTreatmentRequest $request, TreatmentService $treatmentService)
     {
-        try {
-            /* $treatment = Treatment::create($request->validated()); */
-            $treatment = app(TreatmentService::class)->createTreatment($request->validated());
+       try {
+            // El Controller delega toda la lógica de negocio al Service
+            $treatment = $treatmentService->createTreatmentWithSession($request->validated());
 
-            if ($treatment) {
-                session()->flash('message', 'Tratamiento creado.');
-                session()->flash('type', 'success');
-            
-            }else{
-                session()->flash('message', 'Tratamiento no se pudo crear.');
-                session()->flash('type', 'error');
-            }
+            // Si llegamos aquí, la transacción fue exitosa
+            session()->flash('message', 'Tratamiento y primera sesión creados correctamente.');
+            session()->flash('type', 'success');
+
 
         } catch (\Exception $e) {
-
-            Log::error('Error creating treatment: ' . $e->getMessage());
-                session()->flash('message', 'Tratamiento no se pudo crear');
-                session()->flash('type', 'error');
+            // Manejo de errores de la lógica de negocio
+            Log::error('Error creando tratamiento con sesión: ' . $e->getMessage());
             
+            session()->flash('message', 'Error al crear el tratamiento. ' . $e->getMessage());
+            session()->flash('type', 'error');
         }
     }
 
@@ -148,10 +143,13 @@ class TreatmentController extends Controller
             $treatment->update($request->validated());
 
             if (!$treatment) {
-                session()->flash('message', 'Tratamiento actualizado.');
-                session()->flash('type', 'success');
+                session()->flash('message', 'Tratamiento no ha podido ser actualizado.');
+                session()->flash('type', 'error');
             
             }
+
+            session()->flash('message', 'Tratamiento actualizado.');
+                session()->flash('type', 'success');
 
         } catch (\Exception $e) {
               if (!$treatment) {

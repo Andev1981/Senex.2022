@@ -243,7 +243,7 @@ class PaymentService
         }
 
         // Sin plan, usar precio de la sesión o default
-        return $session->patient_amount_clp ?? $this->getDefaultSessionPrice($session);
+        return $session->patient_amount ?? $this->getDefaultSessionPrice($session);
     }
 
     /**

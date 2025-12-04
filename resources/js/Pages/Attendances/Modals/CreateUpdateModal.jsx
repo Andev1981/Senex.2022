@@ -39,7 +39,7 @@ export default function CreateUpdateModal({
       return [
         "duration",
         "session_type_id",
-        "patient_amount_clp",
+        "patient_amount",
         "clinical",
       ].includes(fieldType);
     }
@@ -251,7 +251,7 @@ export default function CreateUpdateModal({
                     setSessionData({
                       ...sessionData,
                       session_type_id: value,
-                      patient_amount_clp: Number(selectedType?.base_price) ?? 0,
+                      patient_amount: Number(selectedType?.base_price) ?? 0,
                       plan_session_value:
                         Number(selectedType?.plan_session_value) ?? 0,
                     });
@@ -283,24 +283,22 @@ export default function CreateUpdateModal({
                 </label>
                 <input
                   type="text"
-                  value={fmtCLP(sessionData.patient_amount_clp || 0)}
+                  value={fmtCLP(sessionData.patient_amount || 0)}
                   onChange={(e) => {
                     const cleanValue = e.target.value.replace(/\D/g, "");
                     setSessionData({
                       ...sessionData,
-                      patient_amount_clp: Number(cleanValue) || 0,
+                      patient_amount: Number(cleanValue) || 0,
                     });
                   }}
                   className={`w-full px-3 py-2 border-2 rounded-lg focus:border-blue-500 focus:outline-none disabled:bg-gray-100 ${
-                    errors.patient_amount_clp
-                      ? "border-red-500"
-                      : "border-gray-200"
+                    errors.patient_amount ? "border-red-500" : "border-gray-200"
                   }`}
                   placeholder="$0"
-                  disabled={!isFieldEditable("patient_amount_clp")}
+                  disabled={!isFieldEditable("patient_amount")}
                   required
                 />
-                <InputError message={errors.patient_amount_clp} />
+                <InputError message={errors.patient_amount} />
                 <p className="mt-1 text-xs text-gray-500">
                   Puedes modificar el valor si es necesario
                 </p>

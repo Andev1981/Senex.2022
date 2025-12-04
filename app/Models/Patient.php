@@ -4,15 +4,15 @@ namespace App\Models;
 
 use App\Models\Concerns\HasAddresses;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Support\Facades\URL;
+use Illuminate\Notifications\Notifiable;
 
 class Patient extends Authenticatable
 {
-    use HasFactory, HasAddresses;
+    use HasFactory, HasAddresses, Notifiable;
 
     protected $fillable = [
         'branch_id',
@@ -28,6 +28,10 @@ class Patient extends Authenticatable
         'status',
         'status_reason',
         'status_changed_at',
+        'opt_out_reminders',
+        'prefers_whatsapp',
+        'prefers_sms',
+        'prefers_mail',
         'notes',
     ];
 
@@ -116,7 +120,6 @@ class Patient extends Authenticatable
     {
         return $this->hasMany(TreatmentSession::class, 'patient_id', 'id');
     }
-
 
     public function address()
     {
@@ -222,6 +225,15 @@ class Patient extends Authenticatable
         );
     }
 
+
+
+        public function getPaymentLinkAttribute()
+        {
+            // Genera una URL temporal o firmada que apunta a tu Portal de Pagos
+            // El controlador verificará la firma y autocompletará el RUT
+            return URL::signedRoute('portal.pago.automatico', ['rut' => $this->rut]);
+        }
+
     public function openDebts()
     {
         return $this->debts()->whereIn('debts.status', [
@@ -236,4 +248,6 @@ class Patient extends Authenticatable
         'bmi',
         'full_name'
     ];
+    
+  
 }

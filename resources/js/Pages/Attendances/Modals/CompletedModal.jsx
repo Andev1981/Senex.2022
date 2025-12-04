@@ -120,14 +120,13 @@ export default function CompletedModal({
           ✅ Completar Sesión Kinesiológica
         </h3>
         <p className="mt-1 text-sm text-gray-600">
-          Paciente: <strong>{sessionData?.patient_full_name}</strong> | Sesión #
-          {sessionData.session_number}
+          Paciente: <strong>{sessionData?.patient_full_name}</strong>
         </p>
       </div>
 
       <div className="p-6 space-y-6">
         {/* SECCIÓN 1: Información Básica (Solo lectura) */}
-        <div className="p-4 bg-gray-50 rounded-lg">
+        <div className="p-4 rounded-lg bg-gray-50">
           <h4 className="mb-3 text-lg font-semibold text-gray-800">
             📋 Información de la Sesión
           </h4>
@@ -338,7 +337,7 @@ export default function CompletedModal({
 
           {/* Opciones predefinidas (checkboxes) */}
           <div className="mb-3">
-            <p className="text-xs font-semibold text-gray-700 mb-2">
+            <p className="mb-2 text-xs font-semibold text-gray-700">
               Selecciona técnicas aplicadas:
             </p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
@@ -389,7 +388,7 @@ export default function CompletedModal({
 
           {/* Input para agregar técnicas personalizadas */}
           <div>
-            <p className="text-xs font-semibold text-gray-700 mb-2">
+            <p className="mb-2 text-xs font-semibold text-gray-700">
               O agrega una técnica personalizada:
             </p>
             <input
@@ -419,7 +418,7 @@ export default function CompletedModal({
 
           {/* Técnicas seleccionadas (chips) */}
           {sessionData.techniques?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border-2 border-green-300">
+            <div className="flex flex-wrap gap-2 p-3 mb-3 bg-white border-2 border-green-300 rounded-lg">
               {sessionData.techniques.map((technique, idx) => (
                 <span
                   key={idx}
@@ -464,7 +463,7 @@ export default function CompletedModal({
 
           {/* Opciones predefinidas (checkboxes) */}
           <div className="mb-3">
-            <p className="text-xs font-semibold text-gray-700 mb-2">
+            <p className="mb-2 text-xs font-semibold text-gray-700">
               Selecciona ejercicios realizados:
             </p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
@@ -515,7 +514,7 @@ export default function CompletedModal({
 
           {/* Input para agregar ejercicios personalizados */}
           <div>
-            <p className="text-xs font-semibold text-gray-700 mb-2">
+            <p className="mb-2 text-xs font-semibold text-gray-700">
               O agrega un ejercicio personalizado:
             </p>
             <input
@@ -545,7 +544,7 @@ export default function CompletedModal({
 
           {/* Ejercicios seleccionados (chips) */}
           {sessionData.exercises?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border-2 border-orange-300">
+            <div className="flex flex-wrap gap-2 p-3 mb-3 bg-white border-2 border-orange-300 rounded-lg">
               {sessionData.exercises.map((exercise, idx) => (
                 <span
                   key={idx}
@@ -614,7 +613,7 @@ export default function CompletedModal({
               })
             }
             placeholder="Ejercicios o recomendaciones para realizar en casa..."
-            className="w-full p-3 border-2 border-gray-200 rounded-lg resize-none h-24 focus:border-blue-500 focus:outline-none"
+            className="w-full h-24 p-3 border-2 border-gray-200 rounded-lg resize-none focus:border-blue-500 focus:outline-none"
           />
         </div>
 
@@ -632,7 +631,7 @@ export default function CompletedModal({
               })
             }
             placeholder="Metas para la próxima sesión o el tratamiento..."
-            className="w-full p-3 border-2 border-gray-200 rounded-lg resize-none h-24 focus:border-blue-500 focus:outline-none"
+            className="w-full h-24 p-3 border-2 border-gray-200 rounded-lg resize-none focus:border-blue-500 focus:outline-none"
           />
         </div>
       </div>

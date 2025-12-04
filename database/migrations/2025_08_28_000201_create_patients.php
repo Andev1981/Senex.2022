@@ -34,6 +34,11 @@ return new class extends Migration {
             $table->text('status_reason')->nullable();      // motivo del último cambio
             $table->timestamp('status_changed_at')->nullable();
 
+            $table->boolean('opt_out_reminders')->default(0);
+            $table->boolean('prefers_whatsapp')->default(0);
+            $table->boolean('prefers_sms')->default(0);
+            $table->boolean('prefers_mail')->default(0);
+
             $table->text('notes')->nullable();
             $table->timestamps();
 

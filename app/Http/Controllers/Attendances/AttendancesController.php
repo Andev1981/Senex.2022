@@ -65,11 +65,10 @@ class AttendancesController extends Controller
                 'session_type_id',
                 'date',
                 'time',
-                'session_number',
                 'month_session_number',
                 'status',
-                'patient_amount_clp',
-                'doctor_amount_clp',
+                'patient_amount',
+                'doctor_amount',
                 'duration'
             ]);
 
@@ -132,7 +131,7 @@ class AttendancesController extends Controller
                     'status' => $session->status,
                     
                     // Precios
-                    'patient_amount_clp' => $session->patient_amount_clp,
+                    'patient_amount' => $session->patient_amount,
                     'plan_session_value' => $session->plan_session_value ?? 0,
                     
                     // Plan
@@ -157,8 +156,7 @@ class AttendancesController extends Controller
                     'homework' => $session->homework ?? '',
                     'next_goals' => $session->next_goals ?? '',
                     
-                    // Metadata
-                    'session_number' => $session->session_number,
+             
                     'month_session_number' => $session->month_session_number,
                     
                     // Totales
@@ -183,7 +181,7 @@ class AttendancesController extends Controller
                     return $session->paymentAllocations->sum('amount');
                 }) ?? 0,
                 'totalPorCobrar' => $sessions->whereIn('status', ['scheduled','completed','in_progress'])
-                    ->sum('patient_amount_clp'),
+                    ->sum('patient_amount'),
             ];
 
 
@@ -279,7 +277,7 @@ class AttendancesController extends Controller
             'patient_plan_id' => 'nullable|exists:patient_plans,id',
             'doctor_id' => 'required|exists:doctors,id',
             'session_type_id' => 'required|exists:session_types,id',
-            'patient_amount_clp' => 'required|numeric|min:0',
+            'patient_amount' => 'required|numeric|min:0',
             'date' => 'required|date',
             'time' => 'required',
             'duration' => 'required|integer|min:15',
@@ -347,7 +345,7 @@ class AttendancesController extends Controller
             );
 
             // 3. Calcular y guardar snapshot de comisión
-            $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount_clp']);
+            $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount']);
             $validated['commission_percentage'] = $commissionRate->commission_percentage;
             $validated['commission_type'] = $commissionRate->commission_type;
 
@@ -417,15 +415,14 @@ class AttendancesController extends Controller
                 'time' => $validated['time'],
                 'duration' => $validated['duration'],
                 'status' => $validated['status'],
-                'session_number' => $treatment->sessions()->count() + 1,
                 'month_session_number' => $treatment->sessions()
                     ->whereMonth('date', now()->month)
                     ->whereYear('date', now()->year)
                     ->count() + 1,
                 'consumes_plan' => $consumePlan,
                 'patient_plan_id' => $patientPlan ? $patientPlan->id : null,
-                'patient_amount_clp' => $validated['patient_amount_clp'],
-                'doctor_amount_clp' => $commissionRate['commission_amount'],
+                'patient_amount' => $validated['patient_amount'],
+                'doctor_amount' => $commissionRate['commission_amount'],
                 'techniques' => $request->techniques ?? [],
                 'exercises' => $request->exercises ?? [],
             ]);
@@ -507,7 +504,7 @@ class AttendancesController extends Controller
                 'patient_plan_id' => 'nullable|exists:patient_plans,id',
                 'doctor_id' => 'required|exists:doctors,id',
                 'session_type_id' => 'required|exists:session_types,id',
-                'patient_amount_clp' => 'required|numeric|min:0',
+                'patient_amount' => 'required|numeric|min:0',
                 'date' => 'required|date',
                 'time' => 'required',
                 'duration' => 'required|integer|min:15',
@@ -527,7 +524,7 @@ class AttendancesController extends Controller
                 'notes' => 'nullable|string',
                 'techniques' => 'nullable|array',
                 'exercises' => 'nullable|array',
-                'patient_amount_clp' => 'nullable|numeric|min:0',
+                'patient_amount' => 'nullable|numeric|min:0',
             ]);
 
             
@@ -554,7 +551,7 @@ class AttendancesController extends Controller
                     }
 
                     // Recalcular comisión con el nuevo rate
-                    $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount_clp']);
+                    $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount']);
                     $validated['commission_percentage'] = $commissionRate->commission_percentage;
                     $validated['commission_type'] = $commissionRate->commission_type;
                 }
@@ -572,7 +569,7 @@ class AttendancesController extends Controller
                     $allowedFields = [
                         'patient_id', 'doctor_id', 'session_type_id',
                         'date', 'time', 'duration', 'status',
-                        'consume_plan', 'patient_plan_id','patient_amount_clp'
+                        'consume_plan', 'patient_plan_id','patient_amount'
                     ];
                     break;
                     
@@ -584,7 +581,7 @@ class AttendancesController extends Controller
                         'rom_flexion_before', 'rom_flexion_after',
                         'rom_abduction_before', 'rom_abduction_after',
                         'rom_rotation_before', 'rom_rotation_after',
-                        'notes', 'techniques', 'exercises','patient_amount_clp'
+                        'notes', 'techniques', 'exercises','patient_amount'
                     ];
                     break;
                     
@@ -596,7 +593,7 @@ class AttendancesController extends Controller
                         'rom_flexion_before', 'rom_flexion_after',
                         'rom_abduction_before', 'rom_abduction_after',
                         'rom_rotation_before', 'rom_rotation_after',
-                        'notes', 'techniques', 'exercises','patient_amount_clp'
+                        'notes', 'techniques', 'exercises','patient_amount'
                     ];
                     break;
                     
