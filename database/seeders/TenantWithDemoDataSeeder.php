@@ -436,7 +436,7 @@ class TenantWithDemoDataSeeder extends Seeder
       // frequency / current_phase / objectives (JSON)
       $frequency_time    = $faker->randomElement(['day', 'week', 'month']);
       $frequency    = $faker->numberBetween(1,5);
-      $currentPhase = $faker->randomElement(['evaluation', 'treatment', 'rehabilitation', 'discharge']);
+      $currentPhase = $faker->randomElement(['evaluation', 'acute_symptomatic', 'functional_restoration','maintenance_prevention', 'discharge']);
 
       $objectivesArr = $faker->randomElements([
         'Reducir dolor',

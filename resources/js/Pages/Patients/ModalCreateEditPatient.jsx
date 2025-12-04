@@ -17,7 +17,7 @@ export default function ModalCreateEditPatient({
   provinces,
   address = [],
 }) {
-  const { data, setData, errors, post, put, reset, processing } = useForm({
+  const { data, setData, errors, post, patch, reset, processing } = useForm({
     id: patient?.id || null,
     name: patient?.name || "",
     last_name: patient?.last_name || "",
@@ -67,9 +67,9 @@ export default function ModalCreateEditPatient({
     if (data.id) {
       // usa PUT/PATCH si tu ruta es resourceful
       // put(route('pacientes.update', data.id), opts);
-      post(route("pacientes.update", data.id), opts); // si tu ruta acepta POST con _method
+      patch(route("patients.update", data.id), opts); // si tu ruta acepta POST con _method
     } else {
-      post(route("pacientes.store"), opts);
+      post(route("patients.store"), opts);
     }
   };
   const handleChange = (e) => {

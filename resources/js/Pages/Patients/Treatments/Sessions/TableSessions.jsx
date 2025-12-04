@@ -56,30 +56,38 @@ export default function TableSessions({
         header: "",
         cell: ({ row }) => (
           <div className="flex gap-2">
-            <p
-              className="text-green-500 cursor-pointer"
-              onClick={() => (
-                handleOpenModalSession(row.original, treatment),
-                setIsDuplicate(false)
+            {treatment.status === "in_progress" &&
+              row.status === "scheduled" && (
+                <p
+                  className="text-green-500 cursor-pointer"
+                  onClick={() => (
+                    handleOpenModalSession(row.original, treatment),
+                    setIsDuplicate(false)
+                  )}
+                >
+                  <Edit className="w-4 h-4 text-green-500" />
+                </p>
               )}
-            >
-              <Edit className="w-4 h-4 text-green-500" />
-            </p>
-            <p
-              className="text-gray-500 cursor-pointer"
-              onClick={() => (
-                handleOpenModalSession(row.original, treatment),
-                setIsDuplicate(true)
-              )}
-            >
-              <Copy className="w-4 h-4 text-gray-500" />
-            </p>
-            <p
-              className="text-red-500 cursor-pointer"
-              onClick={() => handleOpenModalSessionShow(row?.original)}
-            >
-              <Trash2 className="w-4 h-4 text-red-500" />
-            </p>
+            {treatment.status === "in_progress" && (
+              <p
+                className="text-gray-500 cursor-pointer"
+                onClick={() => (
+                  handleOpenModalSession(row.original, treatment),
+                  setIsDuplicate(true)
+                )}
+              >
+                <Copy className="w-4 h-4 text-gray-500" />
+              </p>
+            )}
+
+            {treatment.status === "in_progress" && (
+              <p
+                className="text-red-500 cursor-pointer"
+                onClick={() => handleOpenModalSessionShow(row?.original)}
+              >
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </p>
+            )}
           </div>
         ),
         enableSorting: false,

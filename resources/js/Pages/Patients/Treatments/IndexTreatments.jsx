@@ -21,7 +21,7 @@ export default function IndexTreatments({
   const [openTreatmentModal, setOpenTreatmentModal] = useState(false);
   const [selectedTreatment, setSelectedTreatmentModal] = useState(() => {
     // 1. Intenta tomar el primero InProgress
-    const inProgress = treatments.find((t) => t.status === "InProgress");
+    const inProgress = treatments.find((t) => t.status === "in_progress");
     if (inProgress) return inProgress;
 
     // 2. Sino, el más reciente (por fecha de creación o start_date)

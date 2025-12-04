@@ -21,7 +21,7 @@ export const translations = {
     scheduled: "Programada",
     completed: "Completada",
     canceled: "Cancelada",
-    no_show: "No Asistió",
+    not_attend: "No Asistió",
   },
   paymentStatus: {
     pending: "Pendiente",
@@ -33,6 +33,13 @@ export const translations = {
     inactive: "Inactivo",
     suspended: "Suspendido",
     cancelled: "Cancelado",
+  },
+  treatmentStatus: {
+    evaluation: "Evaluación",
+    in_progress: "En Progreso",
+    cancelled: "Cancelado",
+    paused: "Pausado",
+    completed: "Completado",
   },
   // ... más
 };

@@ -402,9 +402,9 @@ class TreatmentService
             if ($percentage < 33) {
                 return 'evaluation';
             } elseif ($percentage < 66) {
-                return 'treatment';
+                return 'acute_symptomatic';
             } elseif ($percentage > 95 && $percentage < 99){
-                return 'rehabilitation';
+                return 'functional_restoration';
             }else{
                 return 'discharge';
             }
@@ -415,7 +415,7 @@ class TreatmentService
             if ($completedCount <= 5) {
                 return 'evaluation';
             } elseif ($completedCount <= 15) {
-                return 'treatment';
+                return 'functional_restoration';
             } else {
                 return 'discharge';
             }

@@ -14,6 +14,7 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\SessionType;
 use App\Models\Treatment;
+use App\Models\TreatmentSession;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -93,11 +94,69 @@ class PatientAdminController extends Controller
         return Inertia::render('Patients/IndexPatients', compact('patients', 'communes', 'provinces', 'regions'));
     }
 
-    public function kines()
+      /**
+     * INDEX - GET /patients/{patient}/treatments
+     * Retorna vista Inertia para mostrar lista de tratamientos
+     */
+    public function show(Patient $patient)
     {
-        $doctors = Doctor::all();
-        return Inertia::render('Kines/KinesIndex', compact('doctors'));
+        $treatments = Treatment::where('patient_id', $patient->id)
+            ->with(['sessionType', 'doctor', 'sessions', 'sessions.doctor'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $sessions = TreatmentSession::where('patient_id', $patient->id)
+            ->with(['doctor', 'treatment','debt'])
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $payments = Payment::where('patient_id', $patient->id)->where('status','completed')
+        ->orderBy('created_at', 'desc')
+            ->get();
+
+        $patient->load([
+            'address.region',
+            'address.province',
+            'address.commune',
+            'latestVital',
+        ]);
+
+        $address = $patient->address;
+
+        $contact = $patient->primaryContact;
+       
+        $allergies = $patient->allergies;
+
+        $conditions = $patient->condition;
+
+        $vital = $patient->latestVital;
+        
+        $session_types = SessionType::all();
+        
+        $provinces = Province::all();
+        $communes  = Commune::all();
+        $regions   = Region::all();
+        $doctors   = Doctor::all();
+
+
+        return Inertia::render('Patients/DetailPatient', [
+            'patient' => $patient,
+            'treatments' => $treatments,
+            'sessions' => $sessions,
+            'payments' => $payments,
+            'provinces' => $provinces,
+            'communes' => $communes,
+            'regions' => $regions,
+            'address' => $address,
+            'vital' => $vital,
+            'doctors' => $doctors,
+            'session_types' => $session_types,
+            'contact' => $contact,
+            'allergies' => $allergies,
+            'conditions' => $conditions,
+        ]);
     }
+
 
     public function store(StorePatientRequest $request)
     {
@@ -243,10 +302,13 @@ class PatientAdminController extends Controller
         }
     }
 
+    public function destroy(Patient $patient)
+    {
+        $patient->update(['status' => "suspended"]);
+        return back();
+    }
 
-
-
-    public function show(Patient $patient)
+    public function showOld(Patient $patient)
     {
 
         $patientId = $patient->id; // evita sombrear la variable
@@ -290,7 +352,7 @@ class PatientAdminController extends Controller
                     ->whereIn('d.status', ['pending', 'partial', 'overdue'])
                     ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
             }, 'due_amount')
-            ->findOrFail($patientId); // 👈 clave
+            ->findOrFail($patientId);
 
             dd($patient);
 
@@ -357,29 +419,4 @@ class PatientAdminController extends Controller
         ));
     }
 
-    public function destroy(Patient $patient)
-    {
-        $patient->update(['status' => "suspended"]);
-        return back();
-    }
-
-    public function informes()
-    {
-        return Inertia::render('Informes/IndexInformes');
-    }
-
-    public function pos()
-    {
-        return Inertia::render('Pos/ClinicPOS');
-    }
-
-    public function agenda()
-    {
-        return Inertia::render('Agendas/AgendaCalendar');
-    }
-
-    public function tratamientos()
-    {
-        return Inertia::render('Attendances/AtencionesSesiones');
-    }
 }

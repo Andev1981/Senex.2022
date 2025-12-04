@@ -1,7 +1,7 @@
 import React from "react";
+import { getStatusConfig } from "@/constants/treatmentStatuses";
 import {
   CheckCircle,
-  Edit,
   Target,
   TrendingUp,
   Award,
@@ -10,19 +10,18 @@ import {
   Repeat,
 } from "lucide-react";
 
-const STATUS_LABEL = [];
-
 export default function TreatmentCardMain({ treatment, handleTreatmentModal }) {
   return (
     <div key={treatment.id} className="p-4 bg-white shadow-lg rounded-xl">
       <div className="flex items-start justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {treatment.name}
-            </h2>
-            <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-              {treatment.status}
+            <span
+              className={`px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full ${
+                getStatusConfig(treatment.status).className
+              }`}
+            >
+              {getStatusConfig(treatment.status).label}
             </span>
           </div>
           <p className="mb-1 text-gray-600">{treatment.diagnosis}</p>
@@ -31,10 +30,10 @@ export default function TreatmentCardMain({ treatment, handleTreatmentModal }) {
           </p>
         </div>
         <button
-          className="text-teal-600 hover:text-teal-700"
+          className="flex gap-2 px-2 py-1 text-teal-600 border-2 shadow-sm hover:shadow-lg rounded-xl hover:scale-105 hover:text-teal-700"
           onClick={() => handleTreatmentModal(treatment)}
         >
-          <Repeat className="w-5 h-5" />
+          Cambiar <Repeat className="w-5 h-5" />
         </button>
       </div>
 
@@ -154,35 +153,4 @@ export default function TreatmentCardMain({ treatment, handleTreatmentModal }) {
       </div>
     </div>
   );
-}
-
-{
-  /* <div>
-                      <h3 className="flex items-center gap-2 mb-3 font-bold text-gray-900">
-                        <Repeat className="w-5 h-5 text-teal-600" />
-                        Ejercicios Asignados
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        {treatment.exercises.map((exercise, idx) => (
-                          <div
-                            key={idx}
-                            className="p-3 border border-teal-200 rounded-lg bg-teal-50"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-sm font-semibold text-gray-900">
-                                {exercise.name}
-                              </h4>
-                              {exercise.video && (
-                                <PlayCircle className="w-4 h-4 text-teal-600" />
-                              )}
-                            </div>
-                            <div className="flex gap-4 text-xs text-gray-600">
-                              <span className="font-medium">{exercise.sets}</span>
-                              <span>•</span>
-                              <span>{exercise.frequency}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div> */
 }

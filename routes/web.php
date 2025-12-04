@@ -28,7 +28,14 @@ use App\Http\Controllers\{
     PortalPagoController,
     TreatmentSessionController,
 };
+
 use App\Http\Controllers\Admin\Patients\PatientAdminController;
+use App\Http\Controllers\Admin\Treatments\TreatmentAdminController;
+use App\Http\Controllers\Admin\TreatmentSessions\TreatmentSessionAdminController;
+
+
+use App\Http\Controllers\Patient\PatientDashboardController;
+use App\Http\Controllers\Payments\WebpayController;
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -94,14 +101,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   Route::get('/', [HomeController::class, 'index'])->name('/');
-
-  /* Rutas React Inertia */
-  /* pacientes */
- /*  Route::get('pacientes', [InertiaPatientController::class, 'index'])->name('pacientes'); */
-  Route::get('pacientes/{patient}', [PatientAdminController::class, 'show'])->name('pacientes.show');
-  Route::post('pacientes-update/{patient}', [PatientAdminController::class, 'update'])->name('pacientes.update');
-  Route::post('pacientes-store', [PatientAdminController::class, 'store'])->name('pacientes.store');
-  Route::get('pacientes-destroy/{patient}', [PatientAdminController::class, 'destroy'])->name('pacientes.destroy');
+ 
   Route::get('informes', [PatientAdminController::class, 'informes'])->name('informes');
   Route::get('pos', [PatientAdminController::class, 'pos'])->name('pos');
   Route::get('agenda', [PatientAdminController::class, 'agenda'])->name('agenda');
@@ -109,7 +109,6 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   Route::post('patients-documents', [PatientAdminController::class, 'document_post'])->name('patient.documents.store');
-  //Route::resource('treatment-sessions', PatientAdminController::class)->names('treatment_sessions');
   Route::resource('payments', PatientAdminController::class)->names('payments');
   Route::resource('patients', PatientAdminController::class)->names('patients');
   Route::resource('addresses', PatientAdminController::class)->names('addresses');
@@ -154,90 +153,21 @@ Route::group(['middleware' => ['auth']], function () {
   Route::post('/dte/check', [DteController::class, 'check'])->name('dte.check');
 
 
-  /* Treatments */
-/*   Route::resource('treatments', TreatmentController::class)->names('treatments');
- */
-
-
-
-
-/*
-|--------------------------------------------------------------------------
-| RUTAS PARA TRATAMIENTOS Y SESIONES - PATRÓN MIXTO
-|--------------------------------------------------------------------------
-| 
-| PATRÓN MIXTO (Hybrid Pattern):
-| - GET requests -> Inertia::render() (navegación SEO-friendly)
-| - POST/PUT/DELETE requests -> JsonResponse (manejo de formularios modales)
-|
-| Estructura de URLs:
-| - /patients/{patient}/treatments - Lista de tratamientos del paciente
-| - /treatments/{treatment} - Detalle de un tratamiento específico
-| - /patients/{patient}/sessions - Lista de sesiones del paciente  
-| - /sessions/{session} - Detalle de una sesión específica
-|
-*/
 
 // =============================================================================
-// RUTAS DE TRATAMIENTOS
+// RUTAS NUEVAS
 // =============================================================================
 
-/**
- * RUTAS DE NAVEGACIÓN (GET) - Inertia::render()
- * Estas rutas devuelven vistas completas para navegación tradicional
- */
+ Route::resource('patients', PatientAdminController::class)->names('patients');
 
- Route::get('/patients', [PatientAdminController::class, 'index'])->name('patients.index');
+ Route::resource('treatments', TreatmentAdminController::class)->names('treatments');
 
-Route::get('/patients/{patient}/treatments', [TreatmentController::class, 'index'])
-    ->name('patients.treatments.index');
+ Route::resource('sessions', TreatmentSessionAdminController::class)->names('sessions');
 
-Route::get('/treatments/{treatment}', [TreatmentController::class, 'show'])
-    ->name('patients.treatments.show');
 
-/**
- * RUTAS DE API (POST/PUT/DELETE) - JsonResponse
- * Estas rutas manejan formularios modales sin recargar la página
- */
-Route::post('/treatments', [TreatmentController::class, 'store'])
-    ->name('treatments.store');
 
-/* Route::put('/treatments/{treatment}', [TreatmentController::class, 'update'])
-    ->name('treatments.update'); */
 
-Route::patch('/treatments/{treatment}', [TreatmentController::class, 'update'])
-    ->name('treatments.update');
 
-Route::delete('/treatments/{treatment}', [TreatmentController::class, 'destroy'])
-    ->name('treatments.destroy');
-
-// =============================================================================
-// RUTAS DE SESIONES
-// =============================================================================
-
-/**
- * RUTAS DE NAVEGACIÓN (GET) - Inertia::render()
- */
-Route::get('/patients/{patient}/sessions', [TreatmentSessionController::class, 'index'])
-    ->name('sessions.index');
-
-Route::get('/sessions/{session}', [TreatmentSessionController::class, 'show'])
-    ->name('sessions.show');
-
-/**
- * RUTAS DE API (POST/PUT/DELETE) - JsonResponse
- */
-Route::post('/sessions', [TreatmentSessionController::class, 'store'])
-    ->name('sessions.store');
-
-Route::put('/sessions/{session}', [TreatmentSessionController::class, 'update'])
-    ->name('sessions.update');
-
-Route::delete('/sessions/{session}', [TreatmentSessionController::class, 'destroy'])
-    ->name('sessions.destroy');
-
-/* Route::patch('/sessions/{session}', [TreatmentSessionController::class, 'update'])
-    ->name('sessions.update'); */
 
     
 /* Payments */
@@ -372,13 +302,7 @@ Route::post('/treatments/{treatment}/recalculate-kpis', [TreatmentController::cl
 });
 
 
-use App\Http\Controllers\KineMobile\DashboardController;
-use App\Http\Controllers\KineMobile\PatientController as MobilePatientController;
-use App\Http\Controllers\KineMobile\SessionController;
-use App\Http\Controllers\KineMobile\ProfileController;
-use App\Http\Controllers\Patient\PatientDashboardController;
-use App\Http\Controllers\Payments\WebpayController;
-use Inertia\Inertia;
+
 
 // =============================================================================
 // PAGOS AUTENTICADOS - Sistema Interno

@@ -6,7 +6,7 @@ export default function SessionCard({
   treatment,
   setIsDuplicate,
 }) {
-  const completed = session?.status === "Completada";
+  const completed = session?.status === "completed";
   return (
     <div
       className={`border-l-4 ${

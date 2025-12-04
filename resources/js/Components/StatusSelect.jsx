@@ -1,5 +1,5 @@
 import React from "react";
-import { treatmentStatuses, TREATMENT_STATUS_OPTIONS } from "@/helpers/status";
+import { TREATMENT_STATUS_OPTIONS } from "@/helpers/status";
 
 export default function StatusSelect({
   value = "",

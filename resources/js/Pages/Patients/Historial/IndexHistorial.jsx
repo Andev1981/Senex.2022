@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Activity, Plus, Clipboard, ClipboardList } from "lucide-react";
-import TreatmentCard from "./HistorialPartials/TreatmentCard";
-import ResourceFormModal from "@/Components/ResourceFormModal";
+import CardTreatment from "./HistorialPartials/CardTreatment";
 import SideModal from "@/Components/SideModal";
+import ModalCreateUpdateTreatment from "./HistorialPartials/ModalCreateUpdateTreatment";
 
 export default function IndexHistorial({
   patient,
@@ -11,9 +11,7 @@ export default function IndexHistorial({
   treatments = [],
 }) {
   // 1) Normaliza tratamientos a array
-  /* const treatments = Array.isArray(treatments)
-    ? treatments
-    : null; */
+  /*  const treatments = Array.isArray(treatments) ? treatments : null; */
 
   // 2) Estados derivados
   const isLoading = patient == null || treatments == null; // aún no llega la data
@@ -23,99 +21,6 @@ export default function IndexHistorial({
   const [selectedTreatment, setSelectedTreatment] = useState(null);
   const [openTreatmentModal, setOpenTreatmentModal] = useState(false);
   const mainContact = patient?.contacts?.find((c) => c?.is_primary == true);
-
-  const treatmentSchema = useMemo(
-    () => [
-      {
-        name: "doctor_id",
-        label: "Doctor",
-        type: "select",
-        searchable: true,
-        options: (form) =>
-          doctors.map((d) => ({
-            value: d.id,
-            label: d.name,
-          })) /* session_types */,
-        parse: (raw) => (raw ? Number(raw) : null),
-        placeholder: "Seleccione kine",
-        colSpan: 2,
-        required: true,
-      },
-      {
-        name: "start_date",
-        label: "Fecha de inicio",
-        type: "date",
-        min: "2025-01-01",
-        colSpan: 2,
-      },
-
-      {
-        type: "switch",
-        name: "is_indefinite",
-        label: "Sesiones",
-        placeholder: "Cantidad Indefinida",
-      },
-      {
-        name: "total_sessions",
-        label: "Total de sesiones",
-        type: "number",
-        visibleIf: (data) => [false].includes(data.is_indefinite),
-      },
-      {
-        name: "frequency",
-        label: "Frecuencia (Cantidad)",
-        type: "number",
-      },
-      {
-        name: "frequency_time",
-        label: "Tiempo de  Frecuencia",
-        type: "select",
-        options: [
-          { value: "day", label: "Día" },
-          { value: "week", label: "Semanal" },
-          { value: "month", label: "Mensual" },
-        ],
-      },
-      {
-        name: "diagnosis",
-        label: "Diagnóstico",
-        type: "textarea",
-        placeholder: "Diagnóstico...",
-        rows: 3,
-        colSpan: 4,
-      },
-      {
-        name: "description",
-        label: "Descripción",
-        type: "textarea",
-        placeholder: "Descripción...",
-        rows: 3,
-        colSpan: 4,
-      },
-      {
-        name: "objectives",
-        label: "Objetivos",
-        type: "textarea",
-        placeholder: "Objetivos...",
-        rows: 3,
-        colSpan: 4,
-        help: "Ingrese cada objetivo separa por una coma",
-      },
-      {
-        type: "hidden",
-        name: "is_active",
-      },
-      {
-        type: "hidden",
-        name: "patient_id",
-      },
-      {
-        name: "session_type_id",
-        type: "hidden",
-      },
-    ],
-    [patient, mainContact]
-  );
 
   const handleTreatmentModal = (treatment) => {
     setSelectedTreatment(treatment);
@@ -200,7 +105,7 @@ export default function IndexHistorial({
         {!isLoading && !isEmpty && (
           <div className="space-y-4">
             {sortedTreatments.map((t) => (
-              <TreatmentCard
+              <CardTreatment
                 key={
                   t.id ?? `${t.session_type?.id ?? "st"}-${t.start_date ?? "0"}`
                 }
@@ -211,55 +116,19 @@ export default function IndexHistorial({
           </div>
         )}
       </div>
-      {/* Modal Contacto */}
-      <ResourceFormModal
+
+      <SideModal
         open={openTreatmentModal}
         onClose={() => setOpenTreatmentModal(false)}
-        title="Evaluación / Tratamiento Kinesiológico"
-        description={
-          selectedTreatment?.id
-            ? "Editar evaluación / tratamiento"
-            : "Crear evaluación / tratamiento"
-        }
-        submitLabel={selectedTreatment?.id ? "Actualizar" : "Crear"}
-        schema={treatmentSchema}
-        submitRoute={
-          selectedTreatment?.id
-            ? route("patients.treatments.update", selectedTreatment?.id)
-            : route("patients.treatments.store", patient.id)
-        }
-        method={selectedTreatment?.id ? "patch" : "post"}
-        initialValues={{
-          session_type_id: 1,
-          patient_id: patient?.id,
-          doctor_id: selectedTreatment?.doctor_id ?? null,
-          diagnosis: selectedTreatment?.diagnosis ?? null,
-          description: selectedTreatment?.description ?? null,
-          start_date: selectedTreatment?.start_date ?? null,
-          end_date: selectedTreatment?.end_date ?? null,
-          status: selectedTreatment?.status ?? "evaluation",
-          total_sessions: selectedTreatment?.total_sessions ?? null,
-          completed_sessions: selectedTreatment?.completed_sessions ?? null,
-          frequency: selectedTreatment?.frequency ?? null,
-          frequency_time: selectedTreatment?.frequency_time ?? "month",
-          is_indefinite: selectedTreatment?.is_indefinite ?? false,
-          current_phase: selectedTreatment?.current_phase ?? null,
-          objectives: Array.isArray(selectedTreatment?.objectives)
-            ? (selectedTreatment?.objectives).join(", ")
-            : selectedTreatment?.objectives ?? "",
-          outcome: selectedTreatment?.outcome ?? null,
-          next_appointment: selectedTreatment?.next_appointment ?? null,
-          pain_reduction: selectedTreatment?.pain_reduction ?? null,
-          mobility_improvement: selectedTreatment?.mobility_improvement ?? null,
-          strength_gain: selectedTreatment?.strength_gain ?? null,
-        }}
-        afterSubmitReloadOnly={["patient", "selectedTreatment"]}
-        columns={4}
-        maxWidth={"4xl"}
-        key={`cont-${selectedTreatment?.id ?? "new"}`}
-      />
-
-      {/*   <SideModal></SideModal> */}
+        width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
+      >
+        <ModalCreateUpdateTreatment
+          patient={patient}
+          doctors={doctors}
+          selectedTreatment={selectedTreatment}
+          setOpenTreatmentModal={setOpenTreatmentModal}
+        />
+      </SideModal>
     </div>
   );
 }

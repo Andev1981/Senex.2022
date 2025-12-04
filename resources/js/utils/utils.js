@@ -76,3 +76,6 @@ export const fmtTime = (timeStr) => {
 
 export const avg = (arr) =>
   arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+
+export const pct = (n) =>
+  typeof n === "number" && !isNaN(n) ? `${n}%` : n ? `${Number(n)}%` : null;

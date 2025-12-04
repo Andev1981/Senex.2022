@@ -1,6 +1,5 @@
 import { AlertCircle, CheckCircle } from "lucide-react";
 
-// status.js
 export const STATUS_MAP = {
   pending: { label: "Pendiente", chip: "bg-yellow-100 text-yellow-800" },
   completed: { label: "Completado", chip: "bg-green-100 text-green-800" },
@@ -27,25 +26,6 @@ export const meses = [
   { name: "Diciembre", value: 12 },
 ];
 
-export const patientStatuses = {
-  active: {
-    label: "Activo",
-    className: "bg-green-400",
-  },
-  inactive: {
-    label: "Inactivo",
-    className: "bg-gray-400",
-  },
-  suspended: {
-    label: "Suspendido",
-    className: "bg-yellow-300",
-  },
-  cancelled: {
-    label: "Cancelado",
-    className: "bg-red-400",
-  },
-};
-
 export const generes = {
   male: {
     label: "Masculino",
@@ -61,21 +41,7 @@ export const generes = {
   },
 };
 
-export const treatmentStatuses = {
-  active: {
-    label: "Activo",
-    className: "bg-green-500 text-white border border-green-600",
-  },
-  completed: {
-    label: "Completado",
-    className: "bg-blue-500 text-white border border-blue-600",
-  },
-  paused: {
-    label: "Pausado",
-    className: "bg-yellow-500 text-white border border-yellow-600",
-  },
-};
-
+/* Estado de los pagos */
 export const debtStatuses = {
   ok: {
     label: "Al día",
@@ -95,11 +61,27 @@ export const DEBT_STATUS_OPTIONS = Object.entries(debtStatuses).map(
   ([value, cfg]) => ({ value, label: cfg.label })
 );
 
-export const PATIENT_STATUS_OPTIONS = Object.entries(patientStatuses).map(
-  ([value, cfg]) => ({ value, label: cfg.label })
-);
+/* Estado de los pacientes */
+export const patientStatuses = {
+  active: {
+    label: "Activo",
+    className: "bg-green-400",
+  },
+  inactive: {
+    label: "Inactivo",
+    className: "bg-gray-400",
+  },
+  suspended: {
+    label: "Suspendido",
+    className: "bg-yellow-300",
+  },
+  cancelled: {
+    label: "Cancelado",
+    className: "bg-red-400",
+  },
+};
 
-export const TREATMENT_STATUS_OPTIONS = Object.entries(treatmentStatuses).map(
+export const PATIENT_STATUS_OPTIONS = Object.entries(patientStatuses).map(
   ([value, cfg]) => ({ value, label: cfg.label })
 );
 
@@ -180,4 +162,13 @@ export const tipoClass = (tipo) => {
     default:
       return "bg-gray-100 text-gray-700";
   }
+};
+
+export const statusColors = {
+  active: "bg-emerald-600",
+  paused: "bg-amber-600",
+  completed: "bg-slate-600",
+  canceled: "bg-rose-600",
+  // fallback
+  default: "bg-gray-600",
 };

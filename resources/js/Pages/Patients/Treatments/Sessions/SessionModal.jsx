@@ -21,12 +21,11 @@ export default function SessionModal({
   session_types,
   patient,
   isDuplicate = false,
-  afterSubmitReloadOnly = [],
 }) {
   const isEditing = !!session?.id;
   const [techniqueInput, setTechniqueInput] = useState("");
   const [exerciseInput, setExerciseInput] = useState("");
-  const { data, setData, put, post, processing, errors, reset } = useForm({
+  const { data, setData, patch, post, processing, errors, reset } = useForm({
     treatment_id: session?.treatment_id || "",
     month_session_number: session?.month_session_number || "",
     date: session?.date
@@ -98,7 +97,7 @@ export default function SessionModal({
         },
       });
     } else if (session?.id) {
-      put(route("sessions.update", session.id), {
+      patch(route("sessions.update", session.id), {
         onSuccess: () => {
           setOpenSessionModal(false);
           reset();
@@ -162,33 +161,38 @@ export default function SessionModal({
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Información Básica */}
-        <div className="p-4 border border-gray-200 rounded-lg dark:border-gray-700">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            Información Básica{" "}
-          </h3>
-          <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-            <ListChecks className="w-5 h-5 text-blue-600" />
-            {isDuplicate ? (
-              "Duplicando Sesión"
-            ) : (
-              <div>
-                {data.month_session_number &&
-                  ` / Sesión Mensual #${data.month_session_number}`}
-              </div>
-            )}
-          </h3>
-          <hr className="my-4" />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Título Principal */}
+        <header className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <ListChecks className="w-8 h-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Registro de Sesión de Kinesiología
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {isDuplicate
+                ? "Duplicando Sesión"
+                : `Sesión Mensual #${data.month_session_number || "N/A"}`}
+            </p>
+          </div>
+        </header>
+
+        {/* Información General y Programación */}
+        <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+            <Calendar className="w-6 h-6 text-blue-600" />
+            Información de Programación
+          </h2>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Kinesiólogo */}
             <SearchSelect
               items={doctors}
               value={data.doctor_id}
               onChange={(value) => setData("doctor_id", value)}
               config={{
                 valueKey: "id",
-                displayKey: "name", // Dejamos uno solo
+                displayKey: "name",
                 secondaryKeys: ["email"],
                 searchKeys: ["name", "last_name", "email"],
                 renderItem: (item) => (
@@ -203,29 +207,87 @@ export default function SessionModal({
                 ),
               }}
               label="Kinesiolog@ *"
-              placeholder="Buscar..."
+              placeholder="Seleccionar Kinesiólogo..."
             />
+
+            {/* Tipo de Sesión */}
             <SearchSelect
               items={session_types}
               value={data.session_type_id}
               onChange={(value) => setData("session_type_id", value)}
               config={{
                 valueKey: "id",
-                displayKey: "name", // Dejamos uno solo
+                displayKey: "name",
                 secondaryKeys: [],
                 searchKeys: ["name"],
                 renderItem: (item) => (
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {item.name}
-                    </p>
-                  </div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {item.name}
+                  </p>
                 ),
               }}
               label="Tipo de Sesión *"
-              placeholder="Buscar..."
+              placeholder="Seleccionar Tipo..."
             />
-            <div>
+
+            {/* Fecha, Hora y Duración (Agrupados) */}
+            <div className="grid grid-cols-3 col-span-2 gap-4 p-4 border border-blue-100 rounded-lg bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10">
+              {/* Fecha */}
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Fecha *
+                </label>
+                <input
+                  type="date"
+                  value={data.date}
+                  onChange={(e) => setData("date", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+                {errors.date && (
+                  <p className="mt-1 text-sm text-red-600">{errors.date}</p>
+                )}
+              </div>
+              {/* Hora */}
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Hora *
+                </label>
+                <input
+                  type="time"
+                  value={data.time}
+                  onChange={(e) => setData("time", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+                {errors.time && (
+                  <p className="mt-1 text-sm text-red-600">{errors.time}</p>
+                )}
+              </div>
+              {/* Duración */}
+              <div>
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Duración (min) *
+                </label>
+                <input
+                  type="number"
+                  min="15"
+                  step="15"
+                  value={data.duration}
+                  onChange={(e) =>
+                    setData("duration", parseInt(e.target.value) || 0)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+                {errors.duration && (
+                  <p className="mt-1 text-sm text-red-600">{errors.duration}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Estado (al final para dejarlo claro) */}
+            <div className="col-span-2">
               <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Estado *
               </label>
@@ -235,105 +297,82 @@ export default function SessionModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               >
-                <option value="scheduled">Programada</option>
-                <option value="completed">Completada</option>
-                <option value="cancelled">Cancelada</option>
+                <option value="scheduled">Programada 📅</option>
+                <option value="completed">Completada ✅</option>
+                <option value="cancelled">Cancelada ❌</option>
               </select>
               {errors.status && (
                 <p className="mt-1 text-sm text-red-600">{errors.status}</p>
               )}
             </div>
 
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Fecha *
-              </label>
-              <input
-                type="date"
-                value={data.date}
-                onChange={(e) => setData("date", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-              />
-              {errors.date && (
-                <p className="mt-1 text-sm text-red-600">{errors.date}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Hora *
-              </label>
-              <input
-                type="time"
-                value={data.time}
-                onChange={(e) => setData("time", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-              />
-              {errors.time && (
-                <p className="mt-1 text-sm text-red-600">{errors.time}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Duración (minutos) *
-              </label>
-              <input
-                type="number"
-                min="15"
-                step="15"
-                value={data.duration}
-                onChange={(e) => setData("duration", parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-              />
-              {errors.duration && (
-                <p className="mt-1 text-sm text-red-600">{errors.duration}</p>
-              )}
-            </div>
+            {/* Campo condicional para CANCELADA - Sugerencia de Lógica */}
+            {data.status === "cancelled" && (
+              <div className="col-span-2 p-3 border border-red-300 rounded-lg bg-red-50 dark:border-red-700 dark:bg-red-900/10">
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Motivo de Cancelación *
+                </label>
+                <textarea
+                  value={data.cancellation_note} // Asumiendo que tienes este campo en `data`
+                  onChange={(e) => setData("cancellation_note", e.target.value)}
+                  rows="2"
+                  placeholder="Detalles sobre por qué se canceló la sesión."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Métricas de Dolor */}
-        {data.status === "Completada" && (
+        {/* Sección de Resultados: Métrica de Dolor, ROM, Técnicas, Notas (SOLO SI COMPLETADA) */}
+        {data.status === "completed" && (
           <>
-            <div className="p-4 border border-gray-200 rounded-lg dark:border-gray-700">
-              <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                <TrendingDown className="w-5 h-5 text-red-600" />
-                Evaluación del Dolor
-              </h3>
+            {/* Evaluación del Dolor */}
+            <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
+              <h2 className="flex items-center gap-2 mb-6 text-xl font-semibold text-gray-900 dark:text-white">
+                <TrendingDown className="w-6 h-6 text-red-600" />
+                Evaluación del Dolor (Escala Visual Analógica - EVA)
+              </h2>
 
-              {/* Preview Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-4">
-                <div className="p-3 border-l-4 border-red-500 rounded-lg bg-gradient-to-br from-red-50 to-transparent">
-                  <p className="mb-1 text-xs text-gray-600">Dolor Inicial</p>
+              {/* Preview Stats - Mantenemos tus cards por ser muy visuales */}
+              <div className="grid grid-cols-2 gap-4 mb-6 md:grid-cols-4">
+                <div className="p-3 border-l-4 border-red-500 rounded-lg bg-red-50 dark:bg-red-900/10">
+                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                    Dolor Inicial
+                  </p>
                   <p className="text-2xl font-bold text-red-600">
-                    {data.pain_before}/10
+                    {data.pain_before || 0}/10
                   </p>
                 </div>
-                <div className="p-3 border-l-4 border-green-500 rounded-lg bg-gradient-to-br from-green-50 to-transparent">
-                  <p className="mb-1 text-xs text-gray-600">Dolor Final</p>
+                <div className="p-3 border-l-4 border-green-500 rounded-lg bg-green-50 dark:bg-green-900/10">
+                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                    Dolor Final
+                  </p>
                   <p className="text-2xl font-bold text-green-600">
-                    {data.pain_after}/10
+                    {data.pain_after || 0}/10
                   </p>
                 </div>
-                <div className="p-3 border-l-4 border-blue-500 rounded-lg bg-gradient-to-br from-blue-50 to-transparent">
-                  <p className="mb-1 text-xs text-gray-600">Mejoría</p>
+                <div className="p-3 border-l-4 border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/10">
+                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                    Mejoría
+                  </p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {data.pain_before - data.pain_after}
+                    {data.pain_before - data.pain_after} Puntos
                   </p>
                 </div>
-                <div className="p-3 border-l-4 border-teal-500 rounded-lg bg-gradient-to-br from-teal-50 to-transparent">
-                  <p className="mb-1 text-xs text-gray-600">Progreso</p>
+                <div className="p-3 border-l-4 border-teal-500 rounded-lg bg-teal-50 dark:bg-teal-900/10">
+                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                    Progreso
+                  </p>
                   <p className="text-2xl font-bold text-teal-600">
                     {painImprovement}%
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {/* Dolor Inicial */}
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                     Dolor Inicial (0-10)
@@ -348,18 +387,26 @@ export default function SessionModal({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
-                  <input
-                    type="range"
-                    min="0"
-                    max="10"
-                    value={data.pain_before}
-                    onChange={(e) =>
-                      setData("pain_before", parseInt(e.target.value))
-                    }
-                    className="w-full mt-2"
-                  />
+                  {/* Slider con etiquetas de referencia para mejor UX */}
+                  <div className="relative mt-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={data.pain_before}
+                      onChange={(e) =>
+                        setData("pain_before", parseInt(e.target.value))
+                      }
+                      className="w-full"
+                    />
+                    <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      <span>0 - Sin Dolor</span>
+                      <span>10 - Peor Dolor Posible</span>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Dolor Final */}
                 <div>
                   <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                     Dolor Final (0-10)
@@ -374,32 +421,42 @@ export default function SessionModal({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
-                  <input
-                    type="range"
-                    min="0"
-                    max="10"
-                    value={data.pain_after}
-                    onChange={(e) =>
-                      setData("pain_after", parseInt(e.target.value))
-                    }
-                    className="w-full mt-2"
-                  />
+                  <div className="relative mt-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={data.pain_after}
+                      onChange={(e) =>
+                        setData("pain_after", parseInt(e.target.value))
+                      }
+                      className="w-full"
+                    />
+                    <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      <span>0 - Sin Dolor</span>
+                      <span>10 - Peor Dolor Posible</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* ROM (Rango de Movimiento) */}
-            <div className="p-2 border border-gray-200 rounded-lg dark:border-gray-700">
-              <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                <Activity className="w-5 h-5 text-purple-600" />
-                Rango de Movimiento (ROM)
-              </h3>
+            {/* Rango de Movimiento (ROM) */}
+            <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
+              <h2 className="flex items-center gap-2 mb-6 text-xl font-semibold text-gray-900 dark:text-white">
+                <Activity className="w-6 h-6 text-purple-600" />
+                Rango de Movimiento (ROM) - Ángulos en Grados (°)
+              </h2>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
-                <div className="grid grid-cols-1 gap-4 p-2 bg-red-100 rounded-lg shadow-sm md:grid-cols-2">
+              <div className="space-y-4">
+                {/* Flexión */}
+                <div className="grid grid-cols-1 gap-4 p-4 rounded-lg shadow-sm md:grid-cols-2 bg-red-50 dark:bg-red-900/10">
+                  <p className="col-span-2 text-sm font-semibold text-red-700 dark:text-red-300">
+                    Flexión (Ej: Hombro/Rodilla)
+                  </p>
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Flexión Inicial (°)
+                      Pre-Sesión (°)
                     </label>
                     <input
                       type="number"
@@ -428,7 +485,7 @@ export default function SessionModal({
 
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Flexión Final (°)
+                      Post-Sesión (°)
                     </label>
                     <input
                       type="number"
@@ -455,10 +512,15 @@ export default function SessionModal({
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 p-2 bg-blue-100 rounded-lg shadow-sm md:grid-cols-2">
+
+                {/* Abducción */}
+                <div className="grid grid-cols-1 gap-4 p-4 rounded-lg shadow-sm md:grid-cols-2 bg-blue-50 dark:bg-blue-900/10">
+                  <p className="col-span-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
+                    Abducción (Ej: Hombro/Cadera)
+                  </p>
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Abducción Inicial (°)
+                      Pre-Sesión (°)
                     </label>
                     <input
                       type="number"
@@ -490,7 +552,7 @@ export default function SessionModal({
 
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Abducción Final (°)
+                      Post-Sesión (°)
                     </label>
                     <input
                       type="number"
@@ -518,10 +580,14 @@ export default function SessionModal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 p-2 rounded-lg shadow-sm md:grid-cols-2 bg-black/5">
+                {/* Rotación */}
+                <div className="grid grid-cols-1 gap-4 p-4 rounded-lg shadow-sm md:grid-cols-2 bg-gray-50 dark:bg-gray-700/50">
+                  <p className="col-span-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Rotación (Ej: Hombro/Columna)
+                  </p>
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Rotación Inicial (°)
+                      Pre-Sesión (°)
                     </label>
                     <input
                       type="number"
@@ -550,7 +616,7 @@ export default function SessionModal({
 
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Rotación Final (°)
+                      Post-Sesión (°)
                     </label>
                     <input
                       type="number"
@@ -580,168 +646,186 @@ export default function SessionModal({
               </div>
             </div>
 
-            {/* Técnicas Aplicadas */}
-            <div className="p-4 border border-gray-200 rounded-lg dark:border-gray-700">
-              <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                <Dumbbell className="w-5 h-5 text-teal-600" />
-                Técnicas Aplicadas
-              </h3>
+            {/* Técnicas y Ejercicios (Agrupados en una fila) */}
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              {/* Técnicas Aplicadas */}
+              <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
+                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                  <Dumbbell className="w-6 h-6 text-teal-600" />
+                  Técnicas Aplicadas
+                </h2>
 
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={techniqueInput}
-                  onChange={(e) => setTechniqueInput(e.target.value)}
-                  onKeyPress={(e) =>
-                    e.key === "Enter" && (e.preventDefault(), addTechnique())
-                  }
-                  placeholder="Ej: Masaje profundo, Movilización articular..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-                <button
-                  type="button"
-                  onClick={addTechnique}
-                  className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700"
-                >
-                  Agregar
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {data.techniques.map((technique, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-teal-700 bg-teal-100 rounded-full"
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={techniqueInput}
+                    onChange={(e) => setTechniqueInput(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addTechnique())
+                    }
+                    placeholder="Ej: Masaje profundo, Movilización..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={addTechnique}
+                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                    disabled={!techniqueInput.trim()} // Deshabilitar si está vacío
                   >
-                    {technique}
-                    <button
-                      type="button"
-                      onClick={() => removeTechnique(index)}
-                      className="text-teal-600 hover:text-teal-800"
+                    Agregar
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border border-dashed border-teal-300 rounded-lg bg-teal-50 dark:bg-teal-900/10">
+                  {data.techniques.length === 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Aún no hay técnicas aplicadas.
+                    </p>
+                  )}
+                  {data.techniques.map((technique, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-teal-700 bg-teal-100 rounded-full dark:bg-teal-900 dark:text-teal-300"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Ejercicios Realizados */}
-            <div className="p-4 border border-gray-200 rounded-lg dark:border-gray-700">
-              <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                <Activity className="w-5 h-5 text-purple-600" />
-                Ejercicios Realizados
-              </h3>
-
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={exerciseInput}
-                  onChange={(e) => setExerciseInput(e.target.value)}
-                  onKeyPress={(e) =>
-                    e.key === "Enter" && (e.preventDefault(), addExercise())
-                  }
-                  placeholder="Ej: Estiramiento de cuádriceps, Fortalecimiento..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-                <button
-                  type="button"
-                  onClick={addExercise}
-                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700"
-                >
-                  Agregar
-                </button>
+                      {technique}
+                      <button
+                        type="button"
+                        onClick={() => removeTechnique(index)}
+                        className="text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {data.exercises.map((exercise, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-purple-700 bg-purple-100 rounded-full"
+              {/* Ejercicios Realizados */}
+              <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
+                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                  <Activity className="w-6 h-6 text-purple-600" />
+                  Ejercicios Realizados
+                </h2>
+
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={exerciseInput}
+                    onChange={(e) => setExerciseInput(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addExercise())
+                    }
+                    placeholder="Ej: Estiramiento, Fortalecimiento..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={addExercise}
+                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                    disabled={!exerciseInput.trim()} // Deshabilitar si está vacío
                   >
-                    {exercise}
-                    <button
-                      type="button"
-                      onClick={() => removeExercise(index)}
-                      className="text-purple-600 hover:text-purple-800"
+                    Agregar
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border border-dashed border-purple-300 rounded-lg bg-purple-50 dark:bg-purple-900/10">
+                  {data.exercises.length === 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Aún no hay ejercicios registrados.
+                    </p>
+                  )}
+                  {data.exercises.map((exercise, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-purple-700 bg-purple-100 rounded-full dark:bg-purple-900 dark:text-purple-300"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                      {exercise}
+                      <button
+                        type="button"
+                        onClick={() => removeExercise(index)}
+                        className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Notas y Observaciones */}
-            <div className="p-4 border border-gray-200 rounded-lg dark:border-gray-700">
-              <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                <FileText className="w-5 h-5 text-gray-600" />
-                Notas de la Sesión
-              </h3>
+            {/* Notas y Objetivos (Grilla 2x2 para ahorrar espacio) */}
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              {/* Notas de la Sesión */}
+              <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
+                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                  <FileText className="w-6 h-6 text-gray-600" />
+                  Notas y Observaciones
+                </h2>
 
-              <textarea
-                value={data.notes}
-                onChange={(e) => setData("notes", e.target.value)}
-                rows="4"
-                placeholder="Observaciones generales de la sesión..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-            </div>
+                <textarea
+                  value={data.notes}
+                  onChange={(e) => setData("notes", e.target.value)}
+                  rows="5"
+                  placeholder="Observaciones generales de la sesión, respuesta del paciente, etc."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
 
-            {/* Indicaciones para Casa */}
-            <div className="p-4 border border-blue-200 rounded-lg bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20">
-              <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                <Home className="w-5 h-5 text-blue-600" />
-                Indicaciones para Casa
-              </h3>
+              {/* Indicaciones para Casa */}
+              <div className="p-6 border border-blue-300 rounded-lg bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10">
+                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                  <Home className="w-6 h-6 text-blue-600" />
+                  Indicaciones para Casa (Tarea)
+                </h2>
 
-              <textarea
-                value={data.homework}
-                onChange={(e) => setData("homework", e.target.value)}
-                rows="3"
-                placeholder="Ejercicios o recomendaciones para realizar en casa..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-            </div>
+                <textarea
+                  value={data.homework}
+                  onChange={(e) => setData("homework", e.target.value)}
+                  rows="5"
+                  placeholder="Ejercicios o recomendaciones específicas para realizar en casa."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
 
-            {/* Objetivos Próxima Sesión */}
-            <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20">
-              <h3 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                <Target className="w-5 h-5 text-yellow-600" />
-                Objetivos Próxima Sesión
-              </h3>
+              {/* Objetivos Próxima Sesión (Destacado) */}
+              <div className="col-span-1 p-6 border border-yellow-300 rounded-lg md:col-span-2 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/10">
+                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                  <Target className="w-6 h-6 text-yellow-600" />
+                  Objetivos Próxima Sesión
+                </h2>
 
-              <textarea
-                value={data.next_goals}
-                onChange={(e) => setData("next_goals", e.target.value)}
-                rows="3"
-                placeholder="Metas y objetivos a trabajar en la siguiente sesión..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
+                <textarea
+                  value={data.next_goals}
+                  onChange={(e) => setData("next_goals", e.target.value)}
+                  rows="3"
+                  placeholder="Metas y objetivos a trabajar en la siguiente sesión."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
             </div>
           </>
         )}
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        {/* Botones de Acción */}
+        <div className="flex justify-end gap-3 pt-6">
           <button
             type="button"
             onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+            className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
             disabled={processing}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={processing}
           >
             {processing
               ? isDuplicate
                 ? "Duplicando..."
                 : isEditing
-                ? "Actualizando..."
+                ? "Guardando..."
                 : "Creando..."
               : isDuplicate
               ? "Duplicar Sesión"

@@ -464,7 +464,8 @@ export default function TablePatients({
   };
 
   const detailPatient = ({ id }) => {
-    get(route("patients.treatments.index", { id: id }));
+    get(route("patients.show", { id: id }));
+    /* get(route("patients.treatments.index", { id: id })); */
   };
 
   return (

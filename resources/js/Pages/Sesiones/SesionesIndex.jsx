@@ -69,7 +69,7 @@ function SesionesIndex({ sesiones, kines, apply_types, pacientes }) {
         open={modalpatiensOpen}
         onClose={() => setModalSesionesOption(false)}
         title={"Sesión"}
-        description={"Aqui puedes crear o editar usa sesión"}
+        description={"Aqui puedes crear o editar una sesión"}
         maxWidth="4xl"
       >
         <SesionesModal
