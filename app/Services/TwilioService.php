@@ -137,10 +137,10 @@ class TwilioService
     /**
      * Enviar recordatorio de pago por SMS
      */
-    public function sendPaymentReminderSms(string $phone, string $patientName, int $amount, string $portalUrl): bool
+    public function sendPaymentReminderSms(string $phone, string $patientName, int $amount_clp, string $portalUrl): bool
     {
         $message = "KineMobile: Hola {$patientName}, tienes pagos pendientes por " . 
-                   $this->formatCLP($amount) . ". Paga fácil en: {$portalUrl}";
+                   $this->formatCLP($amount_clp) . ". Paga fácil en: {$portalUrl}";
 
         return $this->sendSms($phone, $message);
     }
@@ -148,11 +148,11 @@ class TwilioService
     /**
      * Enviar recordatorio de pago por WhatsApp
      */
-    public function sendPaymentReminderWhatsApp(string $phone, string $patientName, int $amount, int $itemCount, string $portalUrl): bool
+    public function sendPaymentReminderWhatsApp(string $phone, string $patientName, int $amount_clp, int $itemCount, string $portalUrl): bool
     {
         $message = "Hola {$patientName}! 👋\n\n" .
                    "Tienes {$itemCount} pago(s) pendiente(s) en KineMobile por un total de *" . 
-                   $this->formatCLP($amount) . "*.\n\n" .
+                   $this->formatCLP($amount_clp) . "*.\n\n" .
                    "💳 Paga fácil con tu RUT en:\n{$portalUrl}\n\n" .
                    "¿Dudas? Responde a este mensaje.";
 
@@ -202,8 +202,8 @@ class TwilioService
     /**
      * Formatear monto a CLP
      */
-    private function formatCLP(int $amount): string
+    private function formatCLP(int $amount_clp): string
     {
-        return '$' . number_format($amount, 0, ',', '.');
+        return '$' . number_format($amount_clp, 0, ',', '.');
     }
 }

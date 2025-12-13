@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Attendances;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreAttendanceRequest;
 use App\Models\Doctor;
 use App\Models\DoctorCommissionRate;
 use App\Models\Patient;
@@ -24,12 +25,19 @@ class AttendancesController extends Controller
      */
     public function index(Request $request)
     {
-         $session = TreatmentSession::findOrFail(84);
-
+        
         try {
-            // Por defecto, solo el día actual
-            $fechaInicio = $request->input('fecha_inicio', now()->format('Y-m-d'));
-            $fechaFin = $request->input('fecha_fin', now()->format('Y-m-d'));
+            // Obtener el primer día del mes actual (Ej: 2025-12-01)
+            $inicioMes = now()->startOfMonth()->format('Y-m-d');
+
+            // Obtener el último día del mes actual (Ej: 2025-12-31)
+            $finMes = now()->endOfMonth()->format('Y-m-d');
+
+            // 1. Si 'fecha_inicio' no existe en la Request, usa el primer día del mes.
+            $fechaInicio = $request->input('fecha_inicio', $inicioMes);
+
+            // 2. Si 'fecha_fin' no existe en la Request, usa el último día del mes.
+            $fechaFin = $request->input('fecha_fin', $finMes);
             $estado = $request->input('estado', 'all');
             $query = $request->input('query', '');
 
@@ -58,8 +66,11 @@ class AttendancesController extends Controller
                 'paymentAllocation',
             ])
             ->whereBetween('date', [$fechaInicio, $fechaFin])
+            ->orderBy('date','desc')
+            ->orderBy('time','desc')
             ->select([
                 'id',
+                'treatment_id',
                 'patient_id',
                 'doctor_id',
                 'session_type_id',
@@ -160,16 +171,12 @@ class AttendancesController extends Controller
                     'month_session_number' => $session->month_session_number,
                     
                     // Totales
-                    'total_payment' => $session->paymentAllocations ? $session->paymentAllocations->sum('amount') : 0,
+                    'total_payment' => $session->paymentAllocations ? $session->paymentAllocations->sum('amount_clp') : 0,
                     'copay_clp' => $session->payment ? $session->payment->sum('copay_clp') : 0,
                     'duration' => $session->duration,
                 ];
             });
 
-            Log::info('Total de atenciones mapeadas: ' . $atenciones->count());
-            // Calcular KPIs
-
-            /* dd($sessions[0]->paymentAllocations); */
             $kpis = [
                 'total' => $sessions->count(),
                 'completadas' => $sessions->where('status', 'completed')->count(),
@@ -178,7 +185,7 @@ class AttendancesController extends Controller
                 'totalCobrado' =>  $sessions->whereIn('status', ['completed','in_progress','scheduled'])
                 ->filter(fn($session) => $session->paymentAllocations !== null)
                 ->sum(function ($session) {
-                    return $session->paymentAllocations->sum('amount');
+                    return $session->paymentAllocations->sum('amount_clp');
                 }) ?? 0,
                 'totalPorCobrar' => $sessions->whereIn('status', ['scheduled','completed','in_progress'])
                     ->sum('patient_amount'),
@@ -223,9 +230,11 @@ class AttendancesController extends Controller
                             ];
                         });
             
-            $session_types = SessionType::select('id', 'name','base_price', 'plan_session_value')
+            $session_types = SessionType::select('id', 'name','code','category','base_price_clp', 'plan_discount_clp')
                          ->orderBy('name')
                 ->get();
+
+
 
             return Inertia::render('Attendances/Index', [
                 'atenciones' => $atenciones,
@@ -269,21 +278,9 @@ class AttendancesController extends Controller
      /**
      * Crear nueva sesión
      */
-    public function store(Request $request)
+    public function store(StoreAttendanceRequest $request)
     {
-        $validated = $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'consume_plan' => 'nullable|boolean',
-            'patient_plan_id' => 'nullable|exists:patient_plans,id',
-            'doctor_id' => 'required|exists:doctors,id',
-            'session_type_id' => 'required|exists:session_types,id',
-            'patient_amount' => 'required|numeric|min:0',
-            'date' => 'required|date',
-            'time' => 'required',
-            'duration' => 'required|integer|min:15',
-            'status' => 'required|in:scheduled,completed',
-        ]);
-        
+        $validated = $request->validated();
         
         try {
             DB::beginTransaction();
@@ -300,27 +297,32 @@ class AttendancesController extends Controller
 
             if (!$commissionRate) {
                 DB::rollBack();
-                return back()->with('error', 
-                    "⚠️ No hay comisión configurada para {$doctor->full_name} en sesiones de tipo '{$sessionType->name}'. " .
-                    "Por favor, configure la comisión antes de agendar."
-                );
+                session()->flash('message', "⚠️ No hay comisión configurada para {$doctor->full_name} en sesiones de tipo '{$sessionType->name}'. " .
+                    "Por favor, configure la comisión antes de agendar.");
+                session()->flash('type', 'error');
+                return back();
+                
             }
 
             // Si la comisión existe pero no tiene valores
             if ($commissionRate->commission_type === 'percentage' && !$commissionRate->commission_percentage) {
                 DB::rollBack();
-                return back()->with('error', 
-                    "⚠️ La comisión de {$doctor->full_name} no tiene porcentaje asignado. " .
-                    "Configure el valor antes de continuar."
-                );
+
+                session()->flash('message',  "⚠️ La comisión de {$doctor->full_name} no tiene porcentaje asignado. " .
+                    "Configure el valor antes de continuar.");
+                session()->flash('type', 'error');
+
+                return back();
             }
 
-            if ($commissionRate->commission_type === 'fixed' && !$commissionRate->fixed_commission) {
+            if ($commissionRate->commission_type === 'fixed_amount' && !$commissionRate->fixed_commission) {
                 DB::rollBack();
-                return back()->with('error', 
-                    "⚠️ La comisión de {$doctor->full_name} no tiene monto fijo asignado. " .
-                    "Configure el valor antes de continuar."
-                );
+
+                session()->flash('message',  "⚠️ La comisión de {$doctor->full_name} no tiene monto fijo asignado. " .
+                    "Configure el valor antes de continuar.");
+                session()->flash('type', 'error');
+                
+                return back();
             }
 
             // ============================================
@@ -345,7 +347,7 @@ class AttendancesController extends Controller
             );
 
             // 3. Calcular y guardar snapshot de comisión
-            $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount']);
+            $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount_cl']);
             $validated['commission_percentage'] = $commissionRate->commission_percentage;
             $validated['commission_type'] = $commissionRate->commission_type;
 

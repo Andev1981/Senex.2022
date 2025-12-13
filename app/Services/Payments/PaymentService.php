@@ -10,6 +10,7 @@ use App\Models\Voucher;
 use App\Models\Invoice;
 use App\Models\PatientPlan;
 use App\Services\Dte\DteService;
+use App\Services\PlanService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,8 @@ class PaymentService
 {
     public function __construct(
         private WebpayPlusService $webpay,
-        private ?DteService $dteService = null
+        private ?DteService $dteService = null,
+        private PlanService $planService
     ) {}
 
     /**
@@ -28,30 +30,30 @@ class PaymentService
      */
     public function processPayment(array $data): Payment
     {
+        
         return DB::transaction(function () use ($data) {
             // Crear el pago principal
             $payment = $this->createPayment($data);
 
-            // Aplicar voucher si existe
-            if (!empty($data['voucher_id'])) {
-                $this->applyVoucher($payment, $data['voucher_id'], $data['voucher_amount'] ?? null);
-            }
+           /*  dd("Create en services: ", $payment); */
 
             // Asignar a sesiones/deudas
             if (!empty($data['session_ids'])) {
                 $this->allocateToSessions($payment, $data['session_ids']);
+
+                dd("Create allocate session: ");
             }
 
-            if (!empty($data['debt_ids'])) {
+            /* if (!empty($data['debt_ids'])) {
                 $this->allocateToDebts($payment, $data['debt_ids']);
-            }
+            } */
 
             // Emitir DTE si está configurado
             /* if ($data['auto_issue_dte'] ?? false) {
                 $this->issueDte($payment, $data['dte_type'] ?? 39);
             } */
 
-            return $payment->fresh(['allocations', 'invoice']);
+            return $payment->fresh(['paymentAllocations', 'invoice']);
         });
     }
 
@@ -62,17 +64,12 @@ class PaymentService
     {
         return Payment::create([
             'patient_id' => $data['patient_id'],
-            'treatment_id' => $data['treatment_id'] ?? null,
-            'treatment_session_id' => $data['treatment_session_id'] ?? null,
-            'payment_date' => $data['payment_date'] ?? now(),
-            'transaction_reference' => $data['transaction_reference'] ?? null,
-            'amount_clp' => $data['amount'],
-            'copay_clp' => $data['copay_clp'] ?? 0,
-            'insurance_covered_clp' => $data['insurance_covered_clp'] ?? 0,
-            'payment_method' => $data['payment_method'],
-            'status' => $data['status'] ?? 'completed',
+            'payment_date' => $data['payment_date'] ?? null,
+            'amount_clp' => $data['amount_clp'],
             'paid_at' => $data['paid_at'] ?? now(),
-            'notes' => $data['notes'] ?? null,
+            'payment_method' => $data['payment_method'],
+            'transaction_reference' => $data['transaction_reference'] ?? null,
+            'status' => $data['status'] ?? 'completed',
             
             // Campos Webpay si aplica
             'webpay_token' => $data['webpay_token'] ?? null,
@@ -88,89 +85,35 @@ class PaymentService
         ]);
     }
 
-    /**
-     * Aplica un voucher al pago
-     */
-    private function applyVoucher(Payment $payment, int $voucherId, ?int $amount = null): void
-    {
-        $voucher = Voucher::findOrFail($voucherId);
-
-        if (!$voucher->isAvailable()) {
-            throw new \Exception('El voucher no está disponible para uso');
-        }
-
-        // Determinar monto a usar del voucher
-        $voucherAmount = $amount ?? min($voucher->current_balance, $payment->amount_clp);
-
-        // Usar el voucher
-        $voucher->useForPayment(
-            $voucherAmount,
-            $payment->id,
-            $payment->treatment_session_id
-        );
-
-        // Registrar en notas del pago
-        $payment->update([
-            'notes' => ($payment->notes ? $payment->notes . "\n" : '') . 
-                       "Voucher {$voucher->code} aplicado: " . number_format($voucherAmount, 0, ',', '.') . " CLP"
-        ]);
-    }
-
-    /**
-     * Asigna el pago a sesiones específicas
-     */
-    /* private function allocateToSessions(Payment $payment, array $sessionIds): void
-    {
-        foreach ($sessionIds as $sessionId) {
-            $session = TreatmentSession::findOrFail($sessionId);
+       /**
+         * Asigna un pago a múltiples sesiones
+         */
+        public function allocateToSessions(Payment $payment, array $sessionIds): void
+        {
             
-            PaymentAllocation::create([
-                'payment_id' => $payment->id,
-                'treatment_session_id' => $sessionId,
-                'debt_id' => $session->debt_id,
-                'amount' => $session->patient_amount,
-            ]);
-
-            // Actualizar deuda si existe
-            if ($session->debt) {
-                $this->updateDebtStatus($session->debt);
-            }
+                foreach ($sessionIds as $sessionId) {
+                    $session = TreatmentSession::with('debt')->findOrFail($sessionId);
+                     $debt = $session->debt;
+                    
+                    // Crear asignación
+                    PaymentAllocation::create([
+                        'payment_id' => $payment->id,
+                        'invoice_id' => null,
+                        'debt_id' => $session->debt->id,
+                        'treatment_session_id' => $session->id,
+                        'amount_clp' => $session->patient_amount,
+                    ]);
+                    
+                    // Actualizar sesión como pagada
+                     $debt->update(['status' => 'paid']);
+                }
+                
+                Log::info('Payment allocated to sessions', [
+                    'payment_id' => $payment->id,
+                    'session_ids' => $sessionIds,
+                ]);
+          
         }
-    } */
-
-    /**
-     * Asigna el pago a deudas específicas
-     */
-   /*  private function allocateToDebts(Payment $payment, array $debtIds): void
-    {
-        foreach ($debtIds as $debtId) {
-            $debt = Debt::findOrFail($debtId);
-            
-            $remainingDebt = $debt->original_amount - $debt->paid_amount;
-            $allocationAmount = min($remainingDebt, $payment->amount_clp);
-
-            PaymentAllocation::create([
-                'payment_id' => $payment->id,
-                'debt_id' => $debtId,
-                'amount' => $allocationAmount,
-            ]);
-
-            $this->updateDebtStatus($debt);
-        }
-    } */
-
-    /**
-     * Actualiza el estado de una deuda
-     */
-    private function updateDebtStatus(Debt $debt): void
-    {
-        $totalPaid = $debt->allocations()->sum('amount');
-        
-        $debt->update([
-            'paid_amount' => $totalPaid,
-            'status' => $this->calculateDebtStatus($debt->original_amount, $totalPaid, $debt->due_date),
-        ]);
-    }
 
     /**
      * Calcula el estado de una deuda
@@ -228,7 +171,7 @@ class PaymentService
     {
         $buyOrder = $this->generateBuyOrder($data['patient_id']);
         $sessionId = 'patient:' . $data['patient_id'];
-        $amount = $data['amount'];
+        $amount_clp = $data['amount_clp'];
 
         // Crear registro de pago en estado pending
         $payment = Payment::create([
@@ -236,7 +179,7 @@ class PaymentService
             'treatment_id' => $data['treatment_id'] ?? null,
             'treatment_session_id' => $data['treatment_session_id'] ?? null,
             'payment_date' => now(),
-            'amount_clp' => $amount,
+            'amount_clp' => $amount_clp,
             'payment_method' => 'webpay_credit', // Se actualizará después
             'status' => 'pending',
             'webpay_buy_order' => $buyOrder,
@@ -246,7 +189,7 @@ class PaymentService
 
 
         // Llamar a Webpay
-        $result = $this->webpay->create($buyOrder, $sessionId, $amount);
+        $result = $this->webpay->create($buyOrder, $sessionId, $amount_clp);
 
         // Actualizar con el token
         $payment->update(['webpay_token' => $result['token']]);
@@ -322,35 +265,7 @@ class PaymentService
         return "{$prefix}{$timestamp}{$random}";
     }
 
-    /**
- * Asigna un pago a múltiples sesiones
- */
-public function allocateToSessions(Payment $payment, array $sessionIds): void
-{
-    DB::transaction(function () use ($payment, $sessionIds) {
-        foreach ($sessionIds as $sessionId) {
-            $session = TreatmentSession::findOrFail($sessionId);
-            
-            // Crear asignación
-            PaymentAllocation::create([
-                'payment_id' => $payment->id,
-                'treatment_session_id' => $session->id,
-                'amount_clp' => $session->patient_amount,
-            ]);
-            
-            // Actualizar sesión como pagada
-            $session->update([
-                'payment_status' => 'paid',
-                'paid_at' => now(),
-            ]);
-        }
-        
-        Log::info('Payment allocated to sessions', [
-            'payment_id' => $payment->id,
-            'session_ids' => $sessionIds,
-        ]);
-    });
-}
+ 
 
 /**
  * Asigna un pago a deudas pendientes

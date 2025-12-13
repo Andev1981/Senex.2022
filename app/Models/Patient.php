@@ -6,6 +6,12 @@ use App\Models\Concerns\HasAddresses;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Notifications\Notifiable;
@@ -37,56 +43,66 @@ class Patient extends Authenticatable
 
 
     protected $casts = [
-        'birth_date' => 'date',
+         'birth_date' => 'date:Y-m-d',
         'status_changed_at' => 'datetime',
     ];
 
-    
+     /* RELACIONES */
+    // Indica la relación M:N con Company
+    public function companies(): BelongsToMany
+    {
+        // Usa la tabla pivote 'company_doctor'. 
+        // withPivot() te permite acceder a campos de la tabla pivote (como la tarifa).
+        return $this->belongsToMany(Company::class, 'company_patient')
+        ->withPivot('ficha_clinica_local_id','fecha_primer_contacto')
+        ->withTimestamps();
+    }
 
-    public function sessions(){
+    public function sessions(): HasMany
+    {
         return $this->hasMany(TreatmentSession::class);
     }
 
-    public function vitals()
+    public function vitals(): HasMany
     {
         return $this->hasMany(Vital::class);
     }
-    public function latestVital()
+    public function latestVital(): HasOne
     {
         return $this->hasOne(Vital::class)->latestOfMany('created_at');
     }
 
-    public function allergies()
+    public function allergies(): HasMany
     {
         return $this->hasMany(PatientAllergy::class);
     }
 
-    public function condition()
+    public function condition() : HasOne
     {
         return $this->hasOne(PatientCondition::class);
     }
 
-    public function contacts()
+    public function contacts(): HasMany
     {
         return $this->hasMany(PatientContact::class);
     }
 
-    public function insurance()
+    public function insurance(): HasOne
     {
         return $this->hasOne(PatientInsurance::class);
     }
 
-    public function lifestyle()
+    public function lifestyle(): HasOne
     {
         return $this->hasOne(PatientLifestyle::class);
     }
 
-    public function plans()
+    public function plans(): HasMany
     {
         return $this->hasMany(PatientContact::class);
     }
 
-    public function activePlans()
+    public function activePlans(): HasMany
     {
         return $this->hasMany(PatientPlan::class)
             ->active()
@@ -94,50 +110,50 @@ class Patient extends Authenticatable
             ->withSessionsRemaining();
     }
 
-    public function doctorAssignments()
+    public function doctorAssignments():HasMany
     {
         return $this->hasMany(DoctorPatientAssignment::class);
     }
 
-    public function doctors()
+    public function doctors(): BelongsToMany
 {
     return $this->belongsToMany(Doctor::class, 'doctor_patient_assignments')
         ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
         ->withTimestamps();
 }
 
-    public function medicalRecord()
+    public function medicalRecord(): HasOne
     {
         return $this->hasOne(MedicalRecord::class);
     }
 
-    public function treatments()
+    public function treatments(): HasMany
     {
         return $this->hasMany(Treatment::class);
     }
 
-    public function treatmentSessions()
+    public function treatmentSessions(): HasMany
     {
         return $this->hasMany(TreatmentSession::class, 'patient_id', 'id');
     }
 
-    public function address()
+    public function address(): MorphOne
     {
         return $this->morphOne(Address::class, 'addressable'); // 1 a 1 polimórfico
     }
 
-    public function images()
+    public function images() : MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');
     }
 
 
-    public function pacientes()
+    public function pacientes(): HasMany
     {
         return $this->hasMany(PacienteKine::class);
     }
 
-    public function debts()
+    public function debts() : HasManyThrough
     {
         return $this->hasManyThrough(
             Debt::class,             // related
@@ -149,51 +165,28 @@ class Patient extends Authenticatable
         );
     }
 
-    public function invoices()
+    public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
     }
 
-    public function getAgeAttribute()
-    {
-        if (!$this->birth_date) {
-            return null;
-        }
-
-        /** @var \Carbon\Carbon $date */
-        $date = $this->birth_date instanceof Carbon
-            ? $this->birth_date
-            : Carbon::parse($this->birth_date);
-
-        return $date->age;
-    }
-
-    public function getBmiAttribute()
-    {
-        if (!$this->weight || !$this->height) {
-            return null; // si falta dato no calculamos
-        }
-
-        // si height está en cm, convertir a metros
-        $heightInMeters = $this->height > 3 ? $this->height / 100 : $this->height;
-
-        if ($heightInMeters <= 0) {
-            return null;
-        }
-
-        $bmi = $this->weight / ($heightInMeters ** 2);
-
-        // redondear a 1 decimal
-        return round($bmi, 1);
-    }
-
-    public function primaryContact()
+    public function primaryContact(): HasOne
     {
         return $this->hasOne(PatientContact::class)
             ->orderByDesc('is_primary')   // primero los primarios (true)
             ->orderBy('created_at');      // si no hay primarios, el primero creado
     }
 
+    public function latestAttendance(): HasOne
+    {
+        return $this->hasOne(Attendance::class)->latestOfMany('attended_at'); // o created_at
+    }
+
+ 
+
+   
+    
+    /* ----------Estados y Cálculos------------- */
     public function paymentStatus(): string
     {
         $overdue = $this->debts()
@@ -207,33 +200,6 @@ class Patient extends Authenticatable
         return $hasDue ? 'due' : 'ok';
     }
 
-
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'active');
-    }
-
-    public function latestAttendance()
-    {
-        return $this->hasOne(Attendance::class)->latestOfMany('attended_at'); // o created_at
-    }
-
-    public function fullName(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->name . ' ' . $this->last_name
-        );
-    }
-
-
-
-        public function getPaymentLinkAttribute()
-        {
-            // Genera una URL temporal o firmada que apunta a tu Portal de Pagos
-            // El controlador verificará la firma y autocompletará el RUT
-            return URL::signedRoute('portal.pago.automatico', ['rut' => $this->rut]);
-        }
-
     public function openDebts()
     {
         return $this->debts()->whereIn('debts.status', [
@@ -243,10 +209,78 @@ class Patient extends Authenticatable
         ]);
     }
 
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    
+    /* -------------ATTRIBUTES------------- */
+    /* Edad */
+    public function age() : Attribute
+    {
+        return Attribute::make(
+            get : fn () => trim(
+               $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
+            ),
+        );
+       
+    }
+
+    public function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->name . ' ' . $this->last_name
+        );
+    }
+
+    /* public function paymentLink(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => URL::signedRoute('portal.pago.automatico', ['rut' => $this->rut]),
+        );
+    } */
+
+
+    protected function bmi(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                
+                // 1. Verificación inicial de datos (peso y altura)
+                if (!$this->weight || !$this->height) {
+                    return null;
+                }
+
+                // 2. Normalización de la altura (si está en cm, convertir a metros)
+                // Usamos el operador de coalescencia de null (??) para seguridad, aunque ya se verificó.
+                $heightRaw = $this->height ?? 0;
+                
+                $heightInMeters = $heightRaw > 3 
+                                    ? $heightRaw / 100 
+                                    : $heightRaw;
+
+                // 3. Verificación de seguridad (evitar división por cero)
+                if ($heightInMeters <= 0) {
+                    return null;
+                }
+
+                // 4. Cálculo del IMC: peso / (altura * altura)
+                $bmi = $this->weight / ($heightInMeters ** 2);
+
+                // 5. Retorno: Redondear a 1 decimal
+                return round($bmi, 1);
+            },
+        );
+    }
+    
+
     protected $appends = [
         'age',
+        'full_name',
+      /*   'payment_link', */
         'bmi',
-        'full_name'
     ];
     
   

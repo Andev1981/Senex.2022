@@ -1,12 +1,4 @@
-import {
-  Activity,
-  Cake,
-  Edit,
-  FileText,
-  IdCard,
-  User,
-  VenusAndMars,
-} from "lucide-react";
+import { Cake, Edit, IdCard, User, VenusAndMars } from "lucide-react";
 import { useState } from "react";
 import ModalCreateEditPatient from "./../ModalCreateEditPatient";
 import SideModal from "@/Components/SideModal";
@@ -20,6 +12,8 @@ export default function PatientCard({
   address,
 }) {
   const [openPatientModal, setOpenPatientModal] = useState(false);
+
+  console.log("Paciente: ", patient);
 
   return (
     <div className="flex flex-col items-start justify-between w-full gap-4 md:flex-row md:items-center">

@@ -13,14 +13,14 @@ export default function IndexPayments({ payments, sessions, patient }) {
     () =>
       payments
         .filter((p) => p.status === "completed")
-        .reduce((s, p) => s + (p.amount || 0), 0),
+        .reduce((s, p) => s + (p.amount_clp || 0), 0),
     [payments]
   );
   const totalPending = useMemo(
     () =>
       payments
         .filter((p) => p.status === "pending")
-        .reduce((s, p) => s + (p.amount || 0), 0),
+        .reduce((s, p) => s + (p.amount_clp || 0), 0),
     [payments]
   );
 
@@ -98,7 +98,7 @@ export default function IndexPayments({ payments, sessions, patient }) {
                     {payment.invoice}
                   </td>
                   <td className="px-4 py-3 text-sm font-semibold text-right text-gray-900">
-                    {clp.format(payment.amount || 0)}
+                    {clp.format(payment.amount_clp || 0)}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {(() => {

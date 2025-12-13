@@ -16,8 +16,6 @@ return new class extends Migration {
 
       // FKs SIMPLES
       $t->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
-      $t->foreignId('clinical_note_id')->nullable()
-        ->constrained('clinical_notes')->nullOnDelete();
       $t->foreignId('treatment_session_id')->nullable()
         ->constrained('treatment_sessions')->nullOnDelete();
 

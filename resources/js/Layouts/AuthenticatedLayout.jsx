@@ -9,6 +9,7 @@ export default function AuthenticatedLayout({ header, children }) {
   const user = usePage().props.auth.user;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { flash } = usePage().props;
+  const userIsSuperAdmin = usePage().props.auth.roles.includes("superadmin");
 
   useEffect(() => {
     if (flash?.message) {
@@ -23,7 +24,11 @@ export default function AuthenticatedLayout({ header, children }) {
           sidebarOpen ? "w-52" : "w-18"
         } flex-none sticky top-0 h-dvh overflow-y-auto transition-all duration-300`}
       >
-        <Side sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <Side
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          userIsSuperAdmin={userIsSuperAdmin}
+        />
       </aside>
       <div className="flex flex-col flex-1 min-w-0 h-dvh">
         <Nav
@@ -35,14 +40,14 @@ export default function AuthenticatedLayout({ header, children }) {
       </div>
       <ToastContainer
         position="top-center"
-        autoClose={3000}
+        autoClose={6000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
         rtl={false}
         pauseOnFocusLoss={false}
         draggable={false}
-        pauseOnHover={false}
+        pauseOnHover={true}
         theme="light"
         limit={3}
         style={{ zIndex: 9999 }}

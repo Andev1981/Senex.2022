@@ -37,11 +37,31 @@ const Chip = ({ color, text }) => (
   </span>
 );
 
+const getMonthRange = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  // 1. Primer día del mes (Start Date):
+  // Crea la fecha usando UTC para evitar el desfase de zona horaria.
+  const firstDay = new Date(Date.UTC(year, month, 1));
+
+  // 2. Último día del mes (End Date):
+  // Crea el primer día del *siguiente* mes y resta un milisegundo (el día 0).
+  const lastDay = new Date(Date.UTC(year, month + 1, 1, 0, 0, 0, -1));
+
+  // 3. Formateo: Usamos toISOString().split("T")[0]
+  // Esto es seguro porque las fechas ya fueron creadas en UTC.
+  const fechaInicio = firstDay.toISOString().split("T")[0];
+  const fechaFin = lastDay.toISOString().split("T")[0];
+
+  return { fechaInicio, fechaFin };
+};
+
 export default function AttendacesTable({
   atenciones,
   kpis,
-  openCreateSessionModal,
-  openEditSessionModal,
+  openCreateUpdateSessionModal,
   openStartModal,
   openAbsentModal,
   openCompletedModal,
@@ -58,6 +78,10 @@ export default function AttendacesTable({
   const [fechaFin, setFechaFin] = useState(
     filtros.fecha_fin || new Date().toISOString().split("T")[0]
   );
+
+  const { fechaInicio: defaultFechaInicio, fechaFin: defaultFechaFin } =
+    getMonthRange();
+
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageSize, setPageSize] = useState(10);
@@ -79,21 +103,20 @@ export default function AttendacesTable({
 
   // Limpiar filtros y volver al día actual
   const clearFilters = () => {
-    const today = new Date().toISOString().split("T")[0];
-    setFechaInicio(today);
-    setFechaFin(today);
+    setFechaInicio(defaultFechaInicio);
+    setFechaFin(defaultFechaFin);
     setEstado("all");
     setQuery("");
 
     router.get(
       route("attendances.index"),
       {
-        fecha_inicio: today,
-        fecha_fin: today,
+        fecha_inicio: defaultFechaInicio,
+        fecha_fin: defaultFechaFin,
         estado: "all",
         query: "",
       },
-      { preserveState: false, preserveScroll: false }
+      { preserveState: false, preserveScroll: true }
     );
   };
 
@@ -150,6 +173,17 @@ export default function AttendacesTable({
         size: 150,
       },
       {
+        accessorKey: "time",
+        header: "Hora",
+        cell: ({ getValue }) => (
+          <span className="flex font-semibold text-gray-600">
+            <Clock className="w-4 h-4 pt-1 pr-1 " />
+            {getValue()}
+          </span>
+        ),
+        size: 80,
+      },
+      {
         accessorKey: "doctor_full_name",
         header: "Profesional",
         cell: ({ getValue }) => (
@@ -160,17 +194,6 @@ export default function AttendacesTable({
           </span>
         ),
         size: 180,
-      },
-      {
-        accessorKey: "time",
-        header: "Hora",
-        cell: ({ getValue }) => (
-          <span className="flex font-semibold text-gray-600">
-            <Clock className="w-4 h-4 pt-1 pr-1 " />
-            {getValue()}
-          </span>
-        ),
-        size: 80,
       },
 
       {
@@ -224,7 +247,7 @@ export default function AttendacesTable({
           return (
             <div className="flex items-center justify-center gap-1">
               <button
-                onClick={() => openEditSessionModal(a)}
+                onClick={() => openCreateUpdateSessionModal(a)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-yellow-200 text-yellow-700 hover:bg-yellow-50"
                 title="Editar"
               >
@@ -545,7 +568,7 @@ export default function AttendacesTable({
           </h4>
           <div className="grid grid-cols-1 gap-2">
             <button
-              onClick={openCreateSessionModal}
+              onClick={() => openCreateUpdateSessionModal({})}
               className="w-full px-4 py-2 font-semibold text-white rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow"
             >
               Registrar sesión

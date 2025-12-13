@@ -26,12 +26,12 @@ class PaymentService
     {
         return DB::transaction(function () use ($session, $customAmount) {
             // Determinar monto de la deuda
-            $amount = $customAmount ?? $this->calculateSessionAmount($session);
+            $amount_clp = $customAmount ?? $this->calculateSessionAmount($session);
 
             $debt = Debt::create([
                 'patient_id' => $session->patient_id,
                 'treatment_session_id' => $session->id,
-                'original_amount' => $amount,
+                'original_amount' => $amount_clp,
                 'paid_amount' => 0,
                 'status' => 'pending',
                 'due_date' => Carbon::parse($session->date)->addDays(7), // 7 días después de la sesión
@@ -40,7 +40,7 @@ class PaymentService
             Log::info('Deuda creada para sesión', [
                 'debt_id' => $debt->id,
                 'session_id' => $session->id,
-                'amount' => $amount,
+                'amount_clp' => $amount_clp,
             ]);
 
             return $debt;
@@ -83,7 +83,7 @@ class PaymentService
             Log::info('Pago registrado', [
                 'payment_id' => $payment->id,
                 'patient_id' => $payment->patient_id,
-                'amount' => $payment->amount_clp,
+                'amount_clp' => $payment->amount_clp,
             ]);
 
             return $payment->fresh();
@@ -117,7 +117,7 @@ class PaymentService
             PaymentAllocation::create([
                 'payment_id' => $payment->id,
                 'debt_id' => $debt->id,
-                'amount' => $amountToAllocate,
+                'amount_clp' => $amountToAllocate,
             ]);
 
             // Actualizar deuda
@@ -136,7 +136,7 @@ class PaymentService
             Log::info('Pago asignado a deuda', [
                 'payment_id' => $payment->id,
                 'debt_id' => $debt->id,
-                'amount' => $amountToAllocate,
+                'amount_clp' => $amountToAllocate,
             ]);
         }
 
@@ -161,7 +161,7 @@ class PaymentService
         $remainingAmount = $payment->amount_clp;
 
         // Verificar que ya no esté asignado
-        $alreadyAllocated = PaymentAllocation::where('payment_id', $payment->id)->sum('amount');
+        $alreadyAllocated = PaymentAllocation::where('payment_id', $payment->id)->sum('amount_clp');
         $remainingAmount -= $alreadyAllocated;
 
         foreach ($debts as $debt) {
@@ -173,7 +173,7 @@ class PaymentService
             PaymentAllocation::create([
                 'payment_id' => $payment->id,
                 'debt_id' => $debt->id,
-                'amount' => $amountToAllocate,
+                'amount_clp' => $amountToAllocate,
             ]);
 
             $debt->paid_amount += $amountToAllocate;
@@ -316,7 +316,7 @@ class PaymentService
             'payment_history' => $payments->map(function ($p) {
                 return [
                     'date' => $p->date,
-                    'amount' => $p->amount_clp,
+                    'amount_clp' => $p->amount_clp,
                     'method' => $p->payment_method,
                     'invoice' => $p->invoice,
                 ];
@@ -339,7 +339,7 @@ class PaymentService
 
             foreach ($allocations as $allocation) {
                 $debt = $allocation->debt;
-                $debt->paid_amount -= $allocation->amount;
+                $debt->paid_amount -= $allocation->amount_clp;
 
                 // Actualizar estado de la deuda
                 if ($debt->paid_amount <= 0) {

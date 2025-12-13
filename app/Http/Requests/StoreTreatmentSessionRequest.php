@@ -33,22 +33,23 @@ class StoreTreatmentSessionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'treatment_id' => 'required|exists:treatments,id',
+            'company_id' => 'nullable|exists:companies,id',
+            'treatment_id' => 'nullable|exists:treatments,id',
             'doctor_id' => 'required|exists:doctors,id',
             'patient_id' => 'required|exists:patients,id',
             'session_type_id' => 'nullable|exists:session_types,id',
             'room_id' => 'nullable|exists:rooms,id',
             'branch_id' => 'nullable|exists:branches,id',
-            'month_session_number' => 'nullable|integer|min:1',
+            'base_price_clp' => 'nullable|integer|min:0',
             'date' => 'required|date',
             'time' => 'required|date_format:H:i',
             'duration' => 'required|integer|min:15|max:180',
-            'status' => 'required|in:scheduled,completed, cancelled,not_attend',
+            'status' => 'required|in:scheduled,in_progress,completed,cancelled,not_attend',
             // Evaluación del dolor (solo para sesiones completadas)
             'pain_before' => 'nullable|integer|min:0|max:10',
             'pain_after' => 'nullable|integer|min:0|max:10',
             // ROM (Rango de Movimiento)
-             'rom_flexion_before' => 'nullable|integer|min:0|max:180',
+            'rom_flexion_before' => 'nullable|integer|min:0|max:180',
             'rom_flexion_after' => 'nullable|integer|min:0|max:180',
             'rom_abduction_before' => 'nullable|integer|min:0|max:180',
             'rom_abduction_after' => 'nullable|integer|min:0|max:180',
@@ -61,6 +62,7 @@ class StoreTreatmentSessionRequest extends FormRequest
             'notes' => 'nullable|string',
             'homework' => 'nullable|string',
             'next_goals' => 'nullable|string',
+            'cancellation_note' => 'nullable|string',
         ];
     }
 
@@ -90,7 +92,7 @@ class StoreTreatmentSessionRequest extends FormRequest
             'duration.min' => 'La duración debe ser al menos 15 minutos',
             'duration.max' => 'La duración no puede exceder 180 minutos',
             'status.required' => 'El estado es obligatorio',
-            'status.in' => 'El estado debe ser Programada, Completada, Cancelada o No Asistió',
+            'status.in' => 'El estado debe ser Programada, Completada,En Progreso, Cancelada o No Asistió',
             'pain_before.integer' => 'El dolor inicial debe ser un número entero',
             'pain_before.min' => 'El dolor inicial debe ser al menos 0',
             'pain_before.max' => 'El dolor inicial no puede exceder 10',

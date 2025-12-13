@@ -12,10 +12,11 @@ return new class extends Migration {
 
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('branch_id')
-                      ->nullable()
-                      ->constrained('branches')
-                      ->nullOnDelete();
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+     $table->foreignId('branch_id')
+          ->nullable() // Puede ser null si es una operación central.
+          ->constrained()
+          ->comment('Sucursal donde se emitió el DTE.');
             $table->string('name');
             $table->string('last_name');
             $table->string('rut', 20)->nullable();

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
@@ -26,45 +28,48 @@ class Invoice extends Model
   public const STATUS_CANCELLED = 'cancelled';
 
   protected $fillable = [
+    'company_id',
+    'branch_id',
     'patient_id',
-    'treatment_session_id',
-    'patient_plan_id',
-    'type',
-    'document_number',
+    'payment_id',
+    'dte_type',
+    'dte_folio',
     'issue_date',
-    'subtotal',
-    'tax_amount',
-    'total_amount',
-    'sii_status',
-    'sii_track_id',
+    'dte_status',
+    'dte_track_id',
+    'dte_xml',
+    'net_clp',
+    'iva_clp',
+    'total_clp',
     'pdf_path',
-    'xml_path',
-    'status',
-    'meta',
+    'glosa_rechazo',
+    'metadata',
   ];
 
   protected $casts = [
     'issue_date'   => 'date',
-    'subtotal'     => 'decimal:2',
-    'tax_amount'   => 'decimal:2',
-    'total_amount' => 'decimal:2',
+    'net_clp'     => 'decimal:2',
+    'iva_clp'   => 'decimal:2',
+    'total_clp' => 'decimal:2',
     'meta'         => 'array',
   ];
 
   // ===== Relaciones =====
-  public function patient()
+  public function companySetting(): BelongsTo
+  {
+    return $this->belongsTo(Company::class);
+  }
+
+  public function patient(): BelongsTo
   {
     return $this->belongsTo(Patient::class);
   }
-  public function treatmentSession()
+  
+  public function payment():BelongsTo
   {
-    return $this->belongsTo(TreatmentSession::class);
+    return $this->belongsTo(Payment::class);
   }
-  public function patientPlan()
-  {
-    return $this->belongsTo(PatientPlan::class);
-  }
-  public function items()
+  public function items(): HasMany
   {
     return $this->hasMany(InvoiceItem::class);
   }
@@ -72,11 +77,11 @@ class Invoice extends Model
   // ===== Scopes =====
   public function scopePendingSii($q)
   {
-    return $q->where('sii_status', self::SII_PENDING);
+    return $q->where('dte_status', self::SII_PENDING);
   }
   public function scopeAccepted($q)
   {
-    return $q->where('sii_status', self::SII_ACCEPTED);
+    return $q->where('dte_status', self::SII_ACCEPTED);
   }
   public function scopeIssued($q)
   {

@@ -34,7 +34,7 @@ export default function SessionTypeModal({ setIsModalOpen, selectedType }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedType?.id) {
-      put(route("sessions.types.update", selectedType.id), {
+      put(route("session-types.update", selectedType.id), {
         onSuccess: () => {
           setIsModalOpen(false);
           reset();
@@ -44,7 +44,7 @@ export default function SessionTypeModal({ setIsModalOpen, selectedType }) {
         },
       });
     } else {
-      post(route("sessions.types.store"), {
+      post(route("sessions-types.store"), {
         onSuccess: () => {
           setIsModalOpen(false);
           reset();

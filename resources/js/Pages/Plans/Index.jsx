@@ -9,12 +9,7 @@ import PlanModal from "./Partials/PlanModal";
 import PlanModalDelete from "./Partials/PlanModalDelete";
 import { Box, NotebookText, Plus } from "lucide-react";
 
-export default function Index({
-  plans,
-  healthInsurers,
-  insuranceCompanies,
-  sessionTypes,
-}) {
+export default function Index({ plans, insurance }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [plan, setPlan] = useState(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
@@ -44,8 +39,13 @@ export default function Index({
               <NotebookText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Planes</h1>
-              <p className="text-sm text-gray-600">Gestión de Planes</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Planes <span className="font-bold">{insurance?.name}</span>
+              </h1>
+              <p className="text-sm text-gray-600">
+                Gestión de Planes para{" "}
+                <span className="italic">{insurance?.name}</span>
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -70,16 +70,16 @@ export default function Index({
         onClose={() => setModalOpen(false)}
         title={plan ? "Editar Plan" : "Nuevo Plan"}
         description={
-          plan ? "Actualizar información del plan" : "Crear un nuevo plan"
+          plan
+            ? "Actualizar información del plan: " + insurance?.name
+            : "Crear un nuevo plan: " + insurance?.name
         }
         width="3xl"
       >
         <PlanModal
           plan={plan}
           setModalOpen={setModalOpen}
-          healthInsurers={healthInsurers}
-          insuranceCompanies={insuranceCompanies}
-          sessionTypes={sessionTypes}
+          insurance={insurance}
         />
       </SideModal>
 

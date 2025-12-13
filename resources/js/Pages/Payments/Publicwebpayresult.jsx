@@ -38,11 +38,11 @@ export default function PublicWebpayResult({ success, message, payment }) {
   const alertTextColor = success ? "text-blue-800" : "text-yellow-800";
 
   // Formatear monto en CLP
-  const formatCLP = (amount) => {
+  const formatCLP = (amount_clp) => {
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
       currency: "CLP",
-    }).format(amount);
+    }).format(amount_clp);
   };
 
   // Mapear códigos de tipo de pago a nombres legibles

@@ -13,7 +13,6 @@
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
-        "libredte/libredte-api-client": "2.0",
         "libredte/libredte-lib-core": "^21.10",
         "spatie/laravel-permission": "^6.23",
         "tightenco/ziggy": "^2.5",
@@ -41,7 +40,10 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
-        }
+        },
+        "classmap": [ 
+            "vendor/libredte/libredte-lib-core/lib" 
+        ]
     },
     "scripts": {
         "post-autoload-dump": [

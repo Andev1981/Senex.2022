@@ -145,7 +145,7 @@ export default function PortalPagoResultado() {
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
                   <span className="text-gray-500">Monto pagado</span>
                   <span className="text-xl font-bold text-green-500">
-                    {fmtCLP(transaction.amount)}
+                    {fmtCLP(transaction.amount_clp)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">

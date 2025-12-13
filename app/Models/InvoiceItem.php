@@ -11,6 +11,8 @@ class InvoiceItem extends Model
 
   protected $fillable = [
     'invoice_id',
+    'treatment_session_id',
+    'treatment_id',
     'description',
     'session_type_id',
     'quantity',
@@ -34,6 +36,11 @@ class InvoiceItem extends Model
     return $this->belongsTo(Invoice::class);
   }
 
+  public function treatmentSession()
+  {
+    return $this->belongsTo(TreatmentSession::class);
+  }
+  
   public function sessionType()
   {
     return $this->belongsTo(SessionType::class);

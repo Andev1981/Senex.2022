@@ -91,7 +91,7 @@ class VoucherService
      * Crea un voucher monetario
      */
     public function createMonetaryVoucher(
-        int $amount,
+        int $amount_clp,
         ?int $patientId = null,
         ?Carbon $expirationDate = null,
         bool $isTransferable = false,
@@ -100,7 +100,7 @@ class VoucherService
         return $this->createVoucher([
             'patient_id' => $patientId,
             'type' => 'monetary',
-            'monetary_value' => $amount,
+            'monetary_value' => $amount_clp,
             'expiration_date' => $expirationDate,
             'is_transferable' => $isTransferable,
             'source' => 'internal',
@@ -118,7 +118,7 @@ class VoucherService
             'code' => $imedData['code'],
             'patient_id' => $imedData['patient_id'] ?? null,
             'type' => $imedData['type'] ?? 'monetary',
-            'monetary_value' => $imedData['amount'] ?? 0,
+            'monetary_value' => $imedData['amount_clp'] ?? 0,
             'sessions_quantity' => $imedData['sessions'] ?? 0,
             'expiration_date' => isset($imedData['expiration_date']) 
                 ? Carbon::parse($imedData['expiration_date']) 
@@ -149,7 +149,7 @@ class VoucherService
      */
     public function getBestVoucherForPayment(
         int $patientId,
-        int $amount,
+        int $amount_clp,
         ?int $treatmentId = null,
         ?int $sessionTypeId = null
     ): ?Voucher {
@@ -283,7 +283,7 @@ class VoucherService
 
             $voucher->transactions()->create([
                 'transaction_type' => 'cancellation',
-                'amount' => 0,
+                'amount_clp' => 0,
                 'balance_before' => $voucher->current_balance,
                 'balance_after' => $voucher->current_balance,
                 'processed_by' => $userId,

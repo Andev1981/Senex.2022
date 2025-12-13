@@ -12,14 +12,32 @@ return new class extends Migration {
     // -------------------------
     Schema::create('session_types', function (Blueprint $table) {
       $table->id(); // BIGINT UNSIGNED AI
-      $table->string('name', 120)->unique();
-      $table->decimal('base_price', 12, 2)->default(0);
-      $table->unsignedSmallInteger('duration_minutes')->default(45);
-      $table->boolean('plan_eligible')->default(true);
-      $table->unsignedInteger('plan_session_value')->default(1);
-      $table->boolean('active')->default(true)->index();
-      $table->timestamps();
-      $table->softDeletes();
+
+            // ===== 1. IDENTIFICACIÓN Y CATEGORÍA =====
+            $table->string('name', 120)->unique();
+            $table->string('code', 20)->nullable()->unique()->comment('Código arancelario de Isapre/Fonasa/Interno.');
+            $table->enum('category', ['kinesiology', 'evaluation', 'procedure', 'massage', 'other'])->index();
+
+            // ===== 2. PRECIOS Y DURACIÓN =====
+            $table->unsignedBigInteger('base_price_clp') // 🎯 Mejorado: Sufijo CLP para claridad
+                  ->default(0)
+                  ->comment('Precio base del servicio en pesos chilenos (CLP) como entero.');
+            $table->unsignedSmallInteger('duration_minutes')->default(45);
+
+            // ===== 3. REGLAS CLÍNICAS Y DE COBERTURA =====
+            $table->boolean('requires_diagnosis')->default(true)->comment('TRUE si necesita un diagnóstico (CIE-10) para facturar.');
+            $table->boolean('requires_referral')->default(false)->comment('TRUE si requiere orden médica para cobro a terceros.');
+            
+            // 🎯 Campo 'plan_eligible' es muy genérico, lo reemplazamos por el valor de descuento:
+            $table->unsignedBigInteger('plan_discount_clp')->default(0)->comment('Monto de descuento estándar aplicado si se usa un paquete de sesiones.');
+            
+            // Eliminamos 'plan_session_value', ya que la liquidación se calcula con el % del plan.
+            
+            // ===== 4. ESTADO Y AUDITORÍA =====
+            // 🎯 Corrección: Eliminamos la columna 'active' duplicada.
+            $table->boolean('is_active')->default(true)->index();
+            $table->timestamps();
+            $table->softDeletes();
     });
 
   }

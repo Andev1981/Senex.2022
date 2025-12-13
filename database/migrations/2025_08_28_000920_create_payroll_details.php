@@ -14,6 +14,7 @@ return new class extends Migration {
     Schema::create('payroll_details', function (Blueprint $t) {
       $t->id();
 
+      $t->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
 
       // FKs simples
       $t->foreignId('payroll_id')->constrained('payrolls')->cascadeOnDelete();

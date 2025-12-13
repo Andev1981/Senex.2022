@@ -115,9 +115,8 @@ class TreatmentAdminController extends Controller
     {
        try {
 
-            dd($request->all());
             // El Controller delega toda la lógica de negocio al Service
-            $treatment = $treatmentService->createTreatmentWithSession($request->validated());
+            $treatmentService->createTreatment($request->validated());
 
             // Si llegamos aquí, la transacción fue exitosa
             session()->flash('message', 'Tratamiento y primera sesión creados correctamente.');

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
-class PatientAdminController extends Controller
+class PatientController extends Controller
 {
     /**
      * Mostrar formulario de login

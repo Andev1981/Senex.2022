@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Artisan;
 
 /* Inertia */
 use App\Http\Controllers\Inertia\{
-  DteController,
-  SessionTypeController,
   PaymentsController,
   InvoicesController,
   TreatmentController,
@@ -21,19 +19,19 @@ use App\Http\Controllers\Patient\AuthController as PatientAuthController;
 use App\Http\Controllers\{
   HomeController,
   AddressController,
-    HealthInsurerController,
-    InsuranceCompanyController,
+    AgreementController,
+    DteController,
+    DteFolioController,
     PatientContactController,
-    PlanController,
-    PortalPagoController,
     TreatmentSessionController,
 };
-
+use App\Http\Controllers\Admin\CompanySwitchController;
 use App\Http\Controllers\Admin\Patients\PatientAdminController;
+use App\Http\Controllers\Admin\SessionTypes\SessionTypeController;
 use App\Http\Controllers\Admin\Treatments\TreatmentAdminController;
 use App\Http\Controllers\Admin\TreatmentSessions\TreatmentSessionAdminController;
-
-
+use App\Http\Controllers\Admin\Insurances\InsuranceController;
+use App\Http\Controllers\Admin\Plans\PlanController;
 use App\Http\Controllers\Patient\PatientDashboardController;
 use App\Http\Controllers\Payments\WebpayController;
 
@@ -97,6 +95,11 @@ Route::get('/admin/sessions/auto-update', function () {
     return 'Comando ejecutado. Ver logs en storage/logs/laravel.log';
 })->middleware('auth');
 
+Route::post('switch-company', [CompanySwitchController::class, 'switch'])
+    ->name('admin.switch-company')
+    ->middleware(['auth', 'admin']);
+    
+
 Route::group(['middleware' => ['auth']], function () {
 
 
@@ -109,9 +112,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   Route::post('patients-documents', [PatientAdminController::class, 'document_post'])->name('patient.documents.store');
-  Route::resource('payments', PatientAdminController::class)->names('payments');
-  Route::resource('patients', PatientAdminController::class)->names('patients');
-  Route::resource('addresses', PatientAdminController::class)->names('addresses');
+  
 
 
   Route::post('patients/{patient}/addresses', [AddressController::class, 'store'])->name('patients.addresses.store');
@@ -130,7 +131,7 @@ Route::group(['middleware' => ['auth']], function () {
 
   // CRUD básico de treatment sessions
     Route::resource('treatment-sessions', TreatmentSessionController::class)
-        ->names('treatment_sessions');
+        ->names('treatment.sessions');
     
     // Rutas adicionales para funcionalidad avanzada
     Route::post('/treatment-sessions/bulk-update', [TreatmentSessionController::class, 'bulkUpdate'])
@@ -147,13 +148,6 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('doctors', [DoctorController::class, 'index'])->name('doctors');
   Route::get('doctors/{id}', [DoctorController::class, 'edit'])->name('doctors.edit');
 
-  /* DTE */
-  Route::get('/boleta-crear', [DteController::class, 'crear'])->name('boleta');
-  Route::post('/dte/emit', [DteController::class, 'emit'])->name('dte.emit');
-  Route::post('/dte/check', [DteController::class, 'check'])->name('dte.check');
-
-
-
 // =============================================================================
 // RUTAS NUEVAS
 // =============================================================================
@@ -164,26 +158,63 @@ Route::group(['middleware' => ['auth']], function () {
 
  Route::resource('sessions', TreatmentSessionAdminController::class)->names('sessions');
 
+ Route::resource('insurances', InsuranceController::class)->names('insurances');
+
+ Route::resource('agreements', AgreementController::class)->names('agreements');
+
+ Route::resource('plans', PlanController::class)->names('plans');
+
+ Route::resource('patients', PatientAdminController::class)->names('patients');
+
+ Route::resource('addresses', PatientAdminController::class)->names('addresses');
+
+ Route::resource('payments', PaymentsController::class)->names('payments');
+
+ // Pagos
+ Route::post('/sessions/{session}/pay/now', [PaymentsController::class, 'chargeNowForSession'])->name('sessions.pay.now');
+ Route::post('/sessions/{session}/pay/webpay', [PaymentsController::class, 'createWebpay'])->name('sessions.pay.webpay');
+
+ // Callback/return de WebPay (debe estar sin CSRF si es externo, usualmente en routes/web con except en VerifyCsrfToken)
+ Route::match(['GET', 'POST'], '/payments/webpay/confPaymentsControllerirm', [PaymentsController::class, 'confirmWebpay'])->name('payments.webpay.confirm');
+
+ // Asignaciones de pagos
+ Route::post('/invoices/{invoice}/allocate', [PaymentsController::class, 'allocateToInvoice'])->name('invoices.allocate');
+ Route::post('/debts/{debt}/settle', [PaymentsController::class, 'settleDebt'])->name('debts.settle');
+
+
+ Route::get('insurances/{insurance}/plans', [PlanController::class, 'index'])->name('insurances.plans');
 
 
 
+ /* DOCUMENTOS TRIBUTARIOS */
 
+// Rutas de emisión y consulta (generalmente protegidas con middleware 'auth')
+  /* CAF */
+  // Ruta administrativa para cargar nuevos rangos de folios
+  Route::post('/dte/admin/caf/upload', [DteFolioController::class, 'uploadCaf'])
+    ->name('dte.admin.caf.upload');
 
+/* DTE */
+  Route::get('/boleta-crear', [DteController::class, 'index'])->name('boleta');
+  Route::post('/dte/emit', [DteController::class, 'enviarDte'])->name('dte.emit');
+  Route::post('/dte/check', [DteController::class, 'checkDteStatus'])->name('dte.check');
+
+  /* Nuevas dte */
+  Route::post('/dte/issue/{invoiceId}', [DteController::class, 'issueDte'])->name('dte.issue');
+  Route::get('/dte/status/{invoiceId}', [DteController::class, 'checkDteStatus'])->name('dte.status');
     
 /* Payments */
 Route::post('/payments', [PaymentsController::class, 'store'])
     ->name('payments.store');
 
-
-
 /* Session Type */
-Route::get('/session-types',[SessionTypeController::class, 'index'])->name('sessions.types');
+/* Route::get('/session-types',[SessionTypeController::class, 'index'])->name('sessions.types');
 
 Route::post('/session-types',[SessionTypeController::class, 'store'])->name('sessions.types.store');
 
 Route::put('/session-types/{session_type}',[SessionTypeController::class, 'update'])->name('sessions.types.update');
 
-Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'destroy'])->name('sessions.types.destroy');
+Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'destroy'])->name('sessions.types.destroy'); */
 
 
 
@@ -212,10 +243,10 @@ Route::prefix('doctors')->name('doctors.')->group(function () {
 
 
 
-  Route::resource('health-insurers', HealthInsurerController::class)->names('health-insurers');
+  /* Route::resource('health-insurers', HealthInsurerController::class)->names('health-insurers');
   Route::resource('insurance-companies', InsuranceCompanyController::class)->names('insurance-companies');
   Route::resource('plans', PlanController::class)->names('plans');
-
+ */
 
 
 
@@ -253,10 +284,10 @@ Route::post('/treatments/{treatment}/recalculate-kpis', [TreatmentController::cl
 
 
   /* Nuevos tratamientos */
-  Route::get('/admin/session-types',              [SessionTypeController::class, 'index'])->name('session-types.index');
-  Route::post('/admin/session-types',              [SessionTypeController::class, 'store'])->name('session-types.store');
+  Route::resource('/session-types', SessionTypeController::class)->names('session-types');
+/*   Route::post('/admin/session-types',              [SessionTypeController::class, 'store'])->name('session-types.store');
   Route::put('/admin/session-types/{sessionType}', [SessionTypeController::class, 'update'])->name('session-types.update');
-  Route::delete('/admin/session-types/{sessionType}', [SessionTypeController::class, 'destroy'])->name('session-types.destroy');
+  Route::delete('/admin/session-types/{sessionType}', [SessionTypeController::class, 'destroy'])->name('session-types.destroy'); */
 
 
   Route::get('/fix', [HomeController::class, 'fix']);
@@ -277,16 +308,7 @@ Route::post('/treatments/{treatment}/recalculate-kpis', [TreatmentController::cl
 
 
 
-  // Pagos
-  Route::post('/sessions/{session}/pay/now', [PaymentsController::class, 'chargeNowForSession'])->name('sessions.pay.now');
-  Route::post('/sessions/{session}/pay/webpay', [PaymentsController::class, 'createWebpay'])->name('sessions.pay.webpay');
-
-  // Callback/return de WebPay (debe estar sin CSRF si es externo, usualmente en routes/web con except en VerifyCsrfToken)
-  Route::match(['GET', 'POST'], '/payments/webpay/confPaymentsControllerirm', [PaymentsController::class, 'confirmWebpay'])->name('payments.webpay.confirm');
-
-  // Asignaciones de pagos
-  Route::post('/invoices/{invoice}/allocate', [PaymentsController::class, 'allocateToInvoice'])->name('invoices.allocate');
-  Route::post('/debts/{debt}/settle', [PaymentsController::class, 'settleDebt'])->name('debts.settle');
+  
 
   // DTE / Documentos
   Route::get('/invoices', [InvoicesController::class, 'index'])->name('invoices.index');

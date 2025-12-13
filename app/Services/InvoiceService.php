@@ -141,7 +141,7 @@ class InvoiceService
     // TODO: emitir nota de crédito contra $invoice y actualizar estados
     $invoice->status = Invoice::STATUS_CANCELLED;
     $meta = $invoice->meta ?? [];
-    $meta['cancel_reason'] = $reason;
+    $meta['cancellation_note'] = $reason;
     $invoice->meta = $meta;
     $invoice->save();
 

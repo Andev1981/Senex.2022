@@ -14,44 +14,43 @@ use Illuminate\Support\Facades\Log;
 class TreatmentService
 {
 
-    /*  */
 
      /**
-     * Crea un tratamiento, su primera sesión y la deuda asociada de forma transaccional.
+     * Crea un tratamiento.
      */
-    public function createTreatmentWithSession(array $data): Treatment
+    public function createTreatment(array $data): Treatment
     {
         // 1. Aseguramos que todas las operaciones se completen o ninguna (Transacción)
         return DB::transaction(function () use ($data) {
             
             // 1.1. Obtener la información necesaria
             $treatment = Treatment::create($data);
-            $session_type = SessionType::firstOrFail(); // Usar firstOrFail si debe existir
+            return $treatment;
+        });
+    }
 
-
-            // 1.2. Crear la Sesión (usando lógica del Modelo para la numeración)
-            $treatment_session = TreatmentSession::create([
-                'treatment_id' => $treatment->id,
-                'doctor_id' => $treatment->doctor_id,
-                'patient_id' => $treatment->patient_id,
-                'session_type_id' => $session_type->id,
-                // se calcularán usando un Accessor/Mutator en el Modelo.
-                // Si la fecha y hora no vienen en el request, se deben manejar.
-                'date' => $data['start_date'] ?? null,
-                'time' => $data['time'] ?? null,
-                'duration' => 45,
-                'status' => 'scheduled',
-            ]);
-
-            // 2. Llamar a la lógica de resecuenciación para ordenar
-            // 1.3. Crear la Deuda
-            Debt::create([
-                'patient_id' => $treatment->patient_id,
-                'treatment_session_id' => $treatment_session->id,
-                'original_amount' => $session_type->base_price,
-            ]);
+    /**
+     * Crea un tratamiento desde una primera sesión.
+     */
+    public function createTreatmentFromSession(array $data): Treatment
+    {
+        // 1. Aseguramos que todas las operaciones se completen o ninguna (Transacción)
+        return DB::transaction(function () use ($data) {
             
-            $this->resequenceTreatmentSessions($treatment->id);
+            // 1.1. Obtener la información necesaria
+            $treatment = Treatment::firstOrCreate([
+                'patient_id'=> $data['patient_id'],
+                'status' => 'in_progress'
+            ],[
+                'company_id' => $data['company_id'],
+                'session_type_id' => $data['session_type_id'],
+                'patient_id' => $data['patient_id'],
+                'doctor_id' => $data['doctor_id'],
+                'start_date' => $data['date'],
+                'status' => "in_progress",
+                'is_indefinite' => true,
+                'current_phase' => 'functional_restoration'
+            ]);
             return $treatment;
         });
     }
@@ -90,7 +89,7 @@ class TreatmentService
 
 
 
-    public function createTreatment(array $data): Treatment
+    public function createTreatmentOld(array $data): Treatment
     {
         return DB::transaction(function () use ($data) {
             // 1. Crear el tratamiento
@@ -121,7 +120,7 @@ class TreatmentService
             $sessionType   = SessionType::find($sessionTypeId);
 
             // Si no hay tipo, usamos precio por defecto
-            $amount = $sessionType?->base_price ?? 30000;
+            $amount_clp = $sessionType?->base_price ?? 30000;
 
             if($treatment->is_indefinite == false){
                 // ¿Plan activo que cubra esta sesión?
@@ -143,7 +142,7 @@ class TreatmentService
                 'patient_id'             => $treatment->patient_id,
                 'treatment_id'           => $treatment->id,
                 'treatment_session_id'   => null, // se asocia al crear la cita
-                'original_amount'        => $amount,
+                'original_amount'        => $amount_clp,
                 'paid_amount'            => 0,
                 'status'                 => 'pending',
                 'due_date'               => Carbon::parse($slot['date'])->addDays(7),
@@ -622,7 +621,7 @@ class TreatmentService
         foreach ($futureSlots as $slot) {
             $sessionTypeId = $slot['session_type_id'] ?? $treatment->default_session_type_id;
             $sessionType   = SessionType::find($sessionTypeId);
-            $amount        = $sessionType?->price ?? 30000;
+            $amount_clp        = $sessionType?->price ?? 30000;
 
             $patientPlan = app(PlanService::class)
                 ->hasActivePlanForSessionType($treatment->patient_id, $sessionTypeId);
@@ -635,7 +634,7 @@ class TreatmentService
                 'patient_id'           => $treatment->patient_id,
                 'treatment_id'         => $treatment->id,
                 'treatment_session_id' => null,
-                'original_amount'      => $amount,
+                'original_amount'      => $amount_clp,
                 'paid_amount'          => 0,
                 'status'               => 'pending',
                 'due_date'             => Carbon::parse($slot['date'])->addDays(7),

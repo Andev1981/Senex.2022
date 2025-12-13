@@ -78,15 +78,15 @@ export default function TablePlans({
         ),
       },
       {
-        accessorKey: "codigo",
+        accessorKey: "code",
         header: "CÓDIGO",
         cell: ({ getValue }) => (
           <div className="text-gray-600">{getValue()}</div>
         ),
       },
       {
-        accessorKey: "institution_type",
-        header: "",
+        accessorKey: "insurance.name",
+        header: "INSTITUCIÓN",
         cell: ({ getValue }) => (
           <div className="text-gray-600">
             {institutionTypeLabels[getValue()] || getValue()}
@@ -95,8 +95,8 @@ export default function TablePlans({
         filterFn: "equals",
       },
       {
-        accessorKey: "institution_name",
-        header: "INSTITUCIÓN",
+        accessorKey: "insurance.institution_type",
+        header: "TIPO DE INSTITUCIÓN",
         cell: ({ getValue }) => (
           <div className="text-gray-600 uppercase">{getValue() || "-"}</div>
         ),

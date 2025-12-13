@@ -41,6 +41,15 @@ export const translations = {
     paused: "Pausado",
     completed: "Completado",
   },
+  fichaKine: {
+    fixed_amount: "Fijo",
+    percentage: "Porcentage",
+  },
+  plan_type: {
+    unlimited: "Ilimitado",
+    annual: "Anual",
+    session_pack: "Pack de Sesiones",
+  },
   // ... más
 };
 

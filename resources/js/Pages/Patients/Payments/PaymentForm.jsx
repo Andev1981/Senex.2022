@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import {
   DollarSign,
   Calendar,
@@ -11,8 +11,7 @@ import {
   Check,
 } from "lucide-react";
 import moment from "moment";
-import { paymentMethods, statusOptions } from "@/helpers/status";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { paymentMethods } from "@/helpers/status";
 
 export default function PaymentForm({
   setOpenPaymentModal,
@@ -23,6 +22,7 @@ export default function PaymentForm({
   treatment,
 }) {
   const [selectedSessions, setSelectedSessions] = useState([]);
+  const { current_company_id } = usePage().props;
 
   // Filtramos solo sesiones con deuda pendiente
   const pendingSessions = sessions.filter(
@@ -31,27 +31,26 @@ export default function PaymentForm({
 
   // Totales
   const totalPending = pendingSessions.reduce(
-    (sum, s) => sum + (parseFloat(s.debt.remaining_amount) || 0),
+    (sum, s) => sum + (parseFloat(s.debt.original_amount) || 0),
     0
   );
 
   const selectedTotal = selectedSessions.reduce((sum, sessId) => {
     const session = pendingSessions.find((s) => s.id === sessId);
-    return sum + (parseFloat(session?.debt.remaining_amount) || 0);
+    return sum + (parseFloat(session?.debt.original_amount) || 0);
   }, 0);
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
     id: payment?.id || "",
+    company_id: current_company_id || "",
     patient_id: payment?.patient_id || patient?.id || "",
-    treatment_id: payment?.treatment_id || treatment || "",
-    amount: payment?.amount || "",
     payment_date:
       payment?.payment_date || new Date().toISOString().split("T")[0],
-    paid_at: payment?.paid_at || new Date().toISOString().split("T")[0],
-    payment_method: payment?.payment_method || "cash",
     transaction_reference: "Pago sesiónes kinesiológicas",
+    amount_clp: payment?.amount_clp || "",
+    payment_method: payment?.payment_method || "cash",
     status: payment?.status || "completed",
-    notes: payment?.notes || "",
+    paid_at: payment?.paid_at || new Date().toISOString().split("T")[0],
     session_ids: [],
   });
 
@@ -61,16 +60,15 @@ export default function PaymentForm({
       setSelectedSessions(payment.debts?.map((d) => d.session_id) || []);
       setData({
         id: payment?.id || "",
+        company_id: current_company_id || "",
         patient_id: payment?.patient_id || patient?.id || "",
-        treatment_id: payment?.treatment_id || treatment || "",
-        amount: payment.amount || "",
         payment_date:
-          payment.payment_date || new Date().toISOString().split("T")[0],
-        paid_at: payment?.paid_at || new Date().toISOString().split("T")[0],
-        payment_method: payment.payment_method || "cash",
+          payment?.payment_date || new Date().toISOString().split("T")[0],
         transaction_reference: "Pago sesiónes kinesiológicas",
-        status: payment.status || "completed",
-        notes: payment.notes || "",
+        amount_clp: payment?.amount_clp || "",
+        payment_method: payment?.payment_method || "cash",
+        status: payment?.status || "completed",
+        paid_at: payment?.paid_at || new Date().toISOString().split("T")[0],
         session_ids: selectedSessions,
       });
     } else {
@@ -82,9 +80,9 @@ export default function PaymentForm({
         );
         setSelectedSessions(payable.map((s) => s.id));
         setData(
-          "amount",
+          "amount_clp",
           payable
-            .reduce((sum, s) => sum + parseFloat(s.debt.remaining_amount), 0)
+            .reduce((sum, s) => sum + parseFloat(s.debt.original_amount), 0)
             .toString()
         );
       }
@@ -95,9 +93,9 @@ export default function PaymentForm({
   useEffect(() => {
     const total = selectedSessions.reduce((sum, id) => {
       const s = sessions.find((s) => s.id === id);
-      return sum + (s?.debt?.remaining_amount || 0);
+      return sum + (s?.debt?.original_amount || 0);
     }, 0);
-    setData("amount", total.toString());
+    setData("amount_clp", total.toString());
   }, [selectedSessions]);
 
   // 2. Sincronizar IDs
@@ -107,7 +105,7 @@ export default function PaymentForm({
 
   // Actualizar monto cuando cambian selecciones
   useEffect(() => {
-    setData("amount", selectedTotal.toString());
+    setData("amount_clp", selectedTotal.toString());
   }, [selectedSessions]);
 
   const handleSubmit = (e) => {
@@ -186,7 +184,17 @@ export default function PaymentForm({
     return colors[status] || colors.completed;
   };
 
-  const newBalance = selectedTotal - (parseFloat(data.amount) || 0);
+  // Dentro de tu componente, antes del return:
+  const amountInput = parseFloat(data?.amount_clp) || 0;
+  const totalSelected = parseFloat(selectedTotal) || 0;
+
+  // Calculamos el balance asegurando que no baje de 0 si es un pago
+  // o permitiendo negativos si es un abono.
+  const newBalance = totalSelected - amountInput;
+
+  // Variable de control para mostrar el div solo si hay datos válidos
+  const shouldShowBalance =
+    !isEditing && amountInput > 0 && selectedSessions.length > 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -255,7 +263,7 @@ export default function PaymentForm({
           <div className="space-y-3 overflow-y-auto max-h-96">
             {pendingSessions
               .slice() // evita mutar el array original
-              .sort((a, b) => a?.id - b?.id)
+              /* .sort((a, b) => a?.id - b?.id) */
               .map((session) => {
                 const isSelected = selectedSessions.includes(session.id);
                 return (
@@ -294,7 +302,7 @@ export default function PaymentForm({
                             <p className="text-lg font-bold text-orange-600">
                               $
                               {parseFloat(
-                                session.debt.paid_amount
+                                session.debt.original_amount
                               ).toLocaleString("es-CL")}
                             </p>
                             <p className="text-xs text-gray-500">Pendiente</p>
@@ -356,10 +364,9 @@ export default function PaymentForm({
           <DollarSign className="w-5 h-5 text-green-600" />
           Información del Pago
         </h3>
-
-        <div className="space-y-4">
-          {/* Monto */}
+        <div className="grid grid-cols-2 gap-4">
           <div>
+            {/* Monto */}
             <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               Monto a Pagar *
             </label>
@@ -369,50 +376,34 @@ export default function PaymentForm({
               </span>
               <input
                 type="number"
-                min="0"
-                step="0.01"
-                value={data.amount}
-                onChange={(e) => setData("amount", e.target.value)}
+                /* min="0"
+                step="0.01" */
+                value={data.amount_clp}
+                onChange={(e) => setData("amount_clp", e.target.value)}
                 className="w-full py-2 pl-8 pr-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="0.00"
+                placeholder="0"
                 required
               />
             </div>
-            {errors.amount && (
-              <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+            {errors.amount_clp && (
+              <p className="mt-1 text-sm text-red-600">{errors.amount_clp}</p>
             )}
 
             {/* Botones de monto rápido */}
             <div className="flex gap-2 mt-2">
               <button
                 type="button"
-                onClick={() => setData("amount", selectedTotal.toString())}
+                onClick={() => setData("amount_clp", selectedTotal.toString())}
                 className="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200"
                 disabled={selectedSessions.length === 0}
               >
                 Pagar Total Seleccionado
               </button>
             </div>
-
-            {/* Preview del nuevo saldo */}
-            {!isEditing && data.amount && selectedSessions.length > 0 && (
-              <div className="p-2 mt-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Nuevo saldo pendiente:{" "}
-                  <span
-                    className={`font-bold ${
-                      newBalance <= 0 ? "text-green-600" : "text-orange-600"
-                    }`}
-                  >
-                    ${newBalance.toLocaleString("es-CL")}
-                  </span>
-                </p>
-              </div>
-            )}
           </div>
 
-          {/* Fecha del Pago */}
           <div>
+            {/* Fecha del Pago */}
             <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
               Fecha del Pago *
             </label>
@@ -428,42 +419,6 @@ export default function PaymentForm({
             </div>
             {errors.payment_date && (
               <p className="mt-1 text-sm text-red-600">{errors.payment_date}</p>
-            )}
-          </div>
-
-          {/* Estado del Pago */}
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Estado del Pago *
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {statusOptions.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setData("status", option.value)}
-                    className={`p-3 border-2 rounded-lg transition-all ${
-                      data.status === option.value
-                        ? getStatusColor(option.label) + " border-current"
-                        : "border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
-                    }`}
-                  >
-                    <Icon
-                      className={`w-5 h-5 mx-auto mb-1 ${
-                        data.status === option.value
-                          ? "text-current"
-                          : "text-gray-400"
-                      }`}
-                    />
-                    <span className="text-xs font-medium">{option.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {errors.status && (
-              <p className="mt-1 text-sm text-red-600">{errors.status}</p>
             )}
           </div>
         </div>
@@ -573,4 +528,66 @@ export default function PaymentForm({
       </div>
     </form>
   );
+}
+
+{
+  /* Preview del nuevo saldo */
+}
+{
+  /*  {!isEditing && data.amount_clp && selectedSessions.length > 0 && (
+              <div className="p-2 mt-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Nuevo saldo pendiente:{" "}
+                  <span
+                    className={`font-bold ${
+                      shouldShowBalance <= 0
+                        ? "text-green-600"
+                        : "text-orange-600"
+                    }`}
+                  >
+                    ${shouldShowBalance.toLocaleString("es-CL")}
+                  </span>
+                </p>
+              </div>
+            )} */
+}
+
+{
+  /* Estado del Pago */
+}
+{
+  /* <div>
+            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Estado del Pago *
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {statusOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setData("status", option.value)}
+                    className={`p-3 border-2 rounded-lg transition-all ${
+                      data.status === option.value
+                        ? getStatusColor(option.label) + " border-current"
+                        : "border-gray-200 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                    }`}
+                  >
+                    <Icon
+                      className={`w-5 h-5 mx-auto mb-1 ${
+                        data.status === option.value
+                          ? "text-current"
+                          : "text-gray-400"
+                      }`}
+                    />
+                    <span className="text-xs font-medium">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {errors.status && (
+              <p className="mt-1 text-sm text-red-600">{errors.status}</p>
+            )}
+          </div> */
 }

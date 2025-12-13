@@ -1,10 +1,10 @@
 <?php
 return [
-  'provider' => env('DTE_PROVIDER', 'libredte'),
+  'rut_empresa' => env('DTE_RUT_EMPRESA'),
+  'ambiente' => env('DTE_AMBIENTE','certificacion'),
 
-  'libredte' => [
-    'base_url' => env('LIBREDTE_BASE_URL', 'https://libredte.cl'),
-    'api_key'  => env('LIBREDTE_API_KEY'),
-    'issuer_rut' => env('LIBREDTE_ISSUER_RUT'), // 12345678-9
+  'certificado' => [
+    'path' => storage_path('app/'.env('DTE_CERTIFICADO_PATH')),
+    'password'  => env('DTE_CERTIFICADO_PASSWORD'),
   ],
 ];

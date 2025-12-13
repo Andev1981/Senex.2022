@@ -21,15 +21,15 @@ export default function Index({ invoices, filters }) {
           {invoices.data.map((inv) => (
             <tr key={inv.id} className="border-t">
               <td className="p-2">{inv.document_number ?? inv.id}</td>
-              <td className="p-2">{inv.type}</td>
+              <td className="p-2">{inv.dte_type}</td>
               <td className="p-2">
                 {inv.patient?.name} {inv.patient?.last_name}
               </td>
               <td className="p-2 text-right">
-                {Number(inv.total_amount ?? 0).toLocaleString("es-CL")}
+                {Number(inv.total_clp ?? 0).toLocaleString("es-CL")}
               </td>
-              <td className="p-2">{inv.sii_status}</td>
-              <td className="p-2">{inv.status}</td>
+              <td className="p-2">{inv.dte_status}</td>
+              <td className="p-2">{inv.dte_status}</td>
               <td className="p-2 text-center">
                 <Link
                   className="text-blue-600 hover:underline"

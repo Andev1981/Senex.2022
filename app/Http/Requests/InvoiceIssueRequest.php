@@ -13,7 +13,7 @@ class InvoiceIssueRequest extends FormRequest
   public function rules(): array
   {
     return [
-      'type' => ['nullable', 'in:boleta,factura,nota_credito,nota_debito'],
+      'dte_type' => ['nullable', 'in:boleta,factura,nota_credito,nota_debito'],
     ];
   }
 }

@@ -68,7 +68,7 @@ class TreatmentSessionAdminController extends Controller
             // - Asigna month_session_number automáticamente
             // - Valida disponibilidad del doctor
             // - Crea logs
-            $session = $this->sessionService->createSession($request->validated());
+            $this->sessionService->createSession($request->validated());
 
             // Si la sesión es completada, el service ya incrementó el contador
             // Ya no necesitas hacerlo manualmente aquí
@@ -129,7 +129,8 @@ class TreatmentSessionAdminController extends Controller
             }
 
             // Si es una sesión programada, solo la eliminamos
-            $session->delete();
+/*             $session->delete(); */
+            $this->sessionService->deleteSession($session);
 
             session()->flash('message', 'Sesión eliminada exitosamente.');
             session()->flash('type', 'success');

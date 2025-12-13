@@ -36,7 +36,7 @@ export default function WebpayTest({
 
   const { data, setData, post, errors } = useForm({
     patient_id: "",
-    amount: "",
+    amount_clp: "",
     session_id: "",
     session_ids: [],
     debt_ids: [],
@@ -108,7 +108,7 @@ export default function WebpayTest({
       session_ids: [],
       debt_ids: [],
       plan_ids: [],
-      amount: "",
+      amount_clp: "",
     });
     setSelectedSessions([]);
     setSelectedDebts([]);
@@ -129,7 +129,7 @@ export default function WebpayTest({
       const session = patientSessions.find((s) => s.id === id);
       return sum + (session?.patient_amount || 0);
     }, 0);
-    setData("amount", total);
+    setData("amount_clp", total);
   };
 
   // Toggle deuda para pago múltiple
@@ -146,7 +146,7 @@ export default function WebpayTest({
       const debt = patientDebts.find((d) => d.id === id);
       return sum + (debt?.original_amount || 0);
     }, 0);
-    setData("amount", total);
+    setData("amount_clp", total);
   };
 
   // Toggle selección de plan individual
@@ -166,23 +166,23 @@ export default function WebpayTest({
     setData("session_id", sessionId);
     const session = patientSessions.find((s) => s.id === parseInt(sessionId));
     if (session) {
-      setData("amount", session.patient_amount);
+      setData("amount_clp", session.patient_amount);
     }
   };
 
   // Formatear monto en CLP
-  const formatCLP = (amount) => {
+  const formatCLP = (amount_clp) => {
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
       currency: "CLP",
-    }).format(amount || 0);
+    }).format(amount_clp || 0);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validar monto
-    if (!data.amount || data.amount < 50) {
+    if (!data.amount_clp || data.amount_clp < 50) {
       alert("El monto debe ser al menos $50 CLP");
       return;
     }
@@ -196,7 +196,7 @@ export default function WebpayTest({
     let route = "";
     let payload = {
       patient_id: data.patient_id,
-      amount: parseInt(data.amount),
+      amount_clp: parseInt(data.amount_clp),
       notes: data.notes,
     };
 
@@ -407,7 +407,7 @@ export default function WebpayTest({
                               session_id: "",
                               session_ids: [],
                               debt_ids: [],
-                              amount: "",
+                              amount_clp: "",
                             });
                             setSelectedSessions([]);
                             setSelectedDebts([]);
@@ -814,8 +814,8 @@ export default function WebpayTest({
                     </span>
                     <input
                       type="number"
-                      value={data.amount}
-                      onChange={(e) => setData("amount", e.target.value)}
+                      value={data.amount_clp}
+                      onChange={(e) => setData("amount_clp", e.target.value)}
                       placeholder="0"
                       min="50"
                       step="1"
@@ -825,26 +825,26 @@ export default function WebpayTest({
                         (paymentType === "debts" && selectedDebts.length > 0)
                       }
                       className={`w-full pl-10 pr-4 py-4 border-2 rounded-lg text-2xl font-bold text-center transition-all ${
-                        data.amount
+                        data.amount_clp
                           ? "border-green-400 bg-white text-green-700 focus:ring-4 focus:ring-green-200"
                           : "border-gray-300 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-200"
                       } disabled:bg-gray-100 disabled:cursor-not-allowed`}
                     />
                   </div>
 
-                  {data.amount && (
+                  {data.amount_clp && (
                     <div className="mt-3 text-center">
                       <p className="text-sm text-gray-600">Equivalente a:</p>
                       <p className="text-lg font-bold text-green-700">
-                        {formatCLP(data.amount)}
+                        {formatCLP(data.amount_clp)}
                       </p>
                     </div>
                   )}
 
-                  {errors.amount && (
+                  {errors.amount_clp && (
                     <p className="flex items-center gap-1 mt-2 text-sm text-red-600">
                       <XCircle className="w-4 h-4" />
-                      {errors.amount}
+                      {errors.amount_clp}
                     </p>
                   )}
 
@@ -858,7 +858,7 @@ export default function WebpayTest({
                         <button
                           key={quick.value}
                           type="button"
-                          onClick={() => setData("amount", quick.value)}
+                          onClick={() => setData("amount_clp", quick.value)}
                           disabled={
                             (paymentType === "multiple" &&
                               selectedSessions.length > 0) ||
@@ -946,9 +946,9 @@ export default function WebpayTest({
             {/* Botón de envío */}
             <button
               type="submit"
-              disabled={processing || !data.patient_id || !data.amount}
+              disabled={processing || !data.patient_id || !data.amount_clp}
               className={`w-full py-5 px-6 rounded-xl font-bold text-lg text-white transition-all flex items-center justify-center gap-3 shadow-xl ${
-                processing || !data.patient_id || !data.amount
+                processing || !data.patient_id || !data.amount_clp
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transform hover:scale-[1.02] active:scale-[0.98]"
               }`}
@@ -961,16 +961,17 @@ export default function WebpayTest({
               ) : (
                 <>
                   <CreditCard className="w-6 h-6" />
-                  Pagar {data.amount ? formatCLP(data.amount) : ""} con Webpay
+                  Pagar {data.amount_clp ? formatCLP(data.amount_clp) : ""} con
+                  Webpay
                 </>
               )}
             </button>
 
-            {(!data.patient_id || !data.amount) && (
+            {(!data.patient_id || !data.amount_clp) && (
               <p className="-mt-2 text-sm text-center text-gray-500">
                 {!data.patient_id && "Selecciona un paciente para continuar"}
                 {data.patient_id &&
-                  !data.amount &&
+                  !data.amount_clp &&
                   "Ingresa un monto para continuar"}
               </p>
             )}

@@ -3,21 +3,31 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\Dte\DteProvider;
-use App\Services\Dte\LibreDteProvider;
+// ⚠️ Importa la Interfaz (Contrato)
+use App\Contracts\DteServiceProvider as DteContract;
+// ⚠️ Importa la Implementación (Clase Concreta)
+use App\Services\Dte\LibreDteLocalProvider;
 
-class DteServiceProvider extends ServiceProvider
+class DteServiceProvider extends ServiceProvider // Este es tu Provider de Laravel
 {
-  public function register()
-  {
-    $this->app->singleton(DteProvider::class, function () {
-      // Podrías hacer un switch por config('dte.provider') si tuvieras más proveedores
-      return new LibreDteProvider();
-    });
-  }
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        // 🎯 AÑADE ESTA LÍNEA DE VINCULACIÓN (BINDING)
+        // Le dice a Laravel: "Cuando te pidan la Interfaz (DteContract), entrégales la Implementación (LibreDteLocalProvider)".
+        $this->app->bind(
+            DteContract::class,
+            LibreDteLocalProvider::class
+        );
+    }
 
-  public function boot()
-  {
-    //
-  }
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        //
+    }
 }

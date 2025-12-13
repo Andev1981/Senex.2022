@@ -29,12 +29,14 @@ export default function TreatmentCardMain({ treatment, handleTreatmentModal }) {
             {treatment?.doctor?.name + " " + treatment?.doctor?.last_name}
           </p>
         </div>
-        <button
-          className="flex gap-2 px-2 py-1 text-teal-600 border-2 shadow-sm hover:shadow-lg rounded-xl hover:scale-105 hover:text-teal-700"
-          onClick={() => handleTreatmentModal(treatment)}
-        >
-          Cambiar <Repeat className="w-5 h-5" />
-        </button>
+        {treatment.length > 1 && (
+          <button
+            className="flex gap-2 px-2 py-1 text-teal-600 border-2 shadow-sm hover:shadow-lg rounded-xl hover:scale-105 hover:text-teal-700"
+            onClick={() => handleTreatmentModal(treatment)}
+          >
+            Cambiar <Repeat className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-1">

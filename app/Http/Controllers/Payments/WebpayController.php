@@ -70,7 +70,7 @@ class WebpayController extends Controller
                     'type' => 'debt',
                     'description' => $debt->concept,
                     'date' => $debt->due_date?->format('d M Y'),
-                    'amount' => (int) $debt->original_amount,
+                    'amount_clp' => (int) $debt->original_amount,
                 ];
             });
 
@@ -90,7 +90,7 @@ class WebpayController extends Controller
                 'first_name' => explode(' ', $patient->name)[0],
             ],
             'deudas' => $deudas,
-            'total' => $deudas->sum('amount'),
+            'total' => $deudas->sum('amount_clp'),
         ]);
     }
 
@@ -126,7 +126,7 @@ class WebpayController extends Controller
                     'type' => 'debt',
                     'description' => $debt->concept,
                     'date' => $debt->due_date?->format('d M Y'),
-                    'amount' => (int) $debt->original_amount,
+                    'amount_clp' => (int) $debt->original_amount,
                 ];
             });
             
@@ -142,7 +142,7 @@ class WebpayController extends Controller
                 'first_name' => explode(' ', $patient->name)[0],
             ],
             'deudas' => $deudas,
-            'total' => $deudas->sum('amount'),
+            'total' => $deudas->sum('amount_clp'),
             'mode' => 'auto', // Indica al frontend que viene de un link mágico
         ]);
     }
@@ -161,7 +161,7 @@ class WebpayController extends Controller
         
         $validated = $request->validate([
             'patient_id' => ['required', 'integer', 'exists:patients,id'],
-            'amount' => ['required', 'integer', 'min:50'],
+            'amount_clp' => ['required', 'integer', 'min:50'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -170,7 +170,7 @@ class WebpayController extends Controller
             $result = $this->paymentService->initiateWebpayTransaction([
                 'patient_id' => $validated['patient_id'],
                 'treatment_session_id' => $sessionId,
-                'amount' => $validated['amount'],
+                'amount_clp' => $validated['amount_clp'],
                 'notes' => $validated['notes'] ?? "Pago sesión #{$sessionId}",
             ]);
 
@@ -214,14 +214,14 @@ class WebpayController extends Controller
             'patient_id' => ['required', 'integer', 'exists:patients,id'],
             'session_ids' => ['required', 'array', 'min:1'],
             'session_ids.*' => ['required', 'integer', 'exists:treatment_sessions,id'],
-            'amount' => ['required', 'integer', 'min:50'],
+            'amount_clp' => ['required', 'integer', 'min:50'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         try {
             $result = $this->paymentService->initiateWebpayTransaction([
                 'patient_id' => $validated['patient_id'],
-                'amount' => $validated['amount'],
+                'amount_clp' => $validated['amount_clp'],
                 'notes' => $validated['notes'] ?? 'Pago de ' . count($validated['session_ids']) . ' sesiones',
             ]);
 
@@ -259,7 +259,7 @@ class WebpayController extends Controller
             'patient_id' => ['required', 'integer', 'exists:patients,id'],
             'debt_ids' => ['required', 'array', 'min:1'],
             'debt_ids.*' => ['required', 'integer', 'exists:debts,id'],
-            'amount' => ['required', 'integer', 'min:50'],
+            'amount_clp' => ['required', 'integer', 'min:50'],
             'is_partial' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
@@ -267,7 +267,7 @@ class WebpayController extends Controller
         try {
             $result = $this->paymentService->initiateWebpayTransaction([
                 'patient_id' => $validated['patient_id'],
-                'amount' => $validated['amount'],
+                'amount_clp' => $validated['amount_clp'],
                 'notes' => $validated['notes'] ?? 'Pago de deudas pendientes',
             ]);
 
@@ -280,7 +280,7 @@ class WebpayController extends Controller
             Log::info('Webpay debts payment initiated', [
                 'payment_id' => $result['payment_id'],
                 'debts_count' => count($validated['debt_ids']),
-                'amount' => $validated['amount'],
+                'amount_clp' => $validated['amount_clp'],
                 'token' => $result['token'],
             ]);
 
@@ -307,14 +307,14 @@ class WebpayController extends Controller
     {
         $validated = $request->validate([
             'patient_id' => ['required', 'integer', 'exists:patients,id'],
-            'amount' => ['required', 'integer', 'min:50'],
+            'amount_clp' => ['required', 'integer', 'min:50'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         try {
             $result = $this->paymentService->initiateWebpayTransaction([
                 'patient_id' => $validated['patient_id'],
-                'amount' => $validated['amount'],
+                'amount_clp' => $validated['amount_clp'],
                 'notes' => $validated['notes'] ?? "Compra plan #{$planId}",
             ]);
 
@@ -378,7 +378,7 @@ class WebpayController extends Controller
             Log::info('Webpay transaction confirmed', [
                 'payment_id' => $payment->id,
                 'status' => $payment->status,
-                'amount' => $payment->amount_clp,
+                'amount_clp' => $payment->amount_clp,
                 'authorization_code' => $payment->webpay_authorization_code,
             ]);
 
@@ -386,7 +386,7 @@ class WebpayController extends Controller
                 'success' => $success,
                 'payment' => [
                     'id' => $payment->id,
-                    'amount' => $payment->amount_clp,
+                    'amount_clp' => $payment->amount_clp,
                     'authorization_code' => $payment->webpay_authorization_code,
                     'payment_type' => $payment->payment_method,
                     'installments' => $payment->webpay_installments,

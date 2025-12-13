@@ -13,11 +13,8 @@ return new class extends Migration {
     // -------------------------
     Schema::create('treatment_sessions', function (Blueprint $table) {
       $table->id();
+      $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
       $table->foreignId('treatment_id')->constrained()->cascadeOnDelete();
-      $table->foreignId('branch_id')
-                      ->nullable()
-                      ->constrained('branches')
-                      ->nullOnDelete();
       $table->foreignId('room_id')
                       ->nullable()
                       ->constrained('rooms')
@@ -30,7 +27,7 @@ return new class extends Migration {
       $table->date('date');
       $table->time('time')->nullable();
       $table->unsignedSmallInteger('duration')->default(45);
-      $table->enum('status', ['scheduled', 'completed', 'cancelled', 'not_attend'])->default('scheduled')->index();
+      $table->enum('status', ['scheduled', 'completed', 'cancelled', 'not_attend','in_proggress'])->default('scheduled')->index();
 
       // Evaluación & notas
       $table->unsignedTinyInteger('pain_before')->nullable();
@@ -44,6 +41,7 @@ return new class extends Migration {
       $table->text('notes')->nullable();
       $table->text('homework')->nullable();
       $table->text('next_goals')->nullable();
+      $table->text('cancellation_note')->nullable();
 
       // —— “Snapshot” de tarifa aplicada ——
 
@@ -59,7 +57,7 @@ return new class extends Migration {
       // Búsquedas comunes
       $table->index(['patient_id', 'date', 'time'], 'ts_patient_date_time_idx');
       $table->index(['doctor_id', 'date', 'time'], 'ts_kine_date_time_idx');
-      $table->index(['branch_id', 'date']);
+      $table->index(['company_id', 'date']);
       $table->index('room_id');
     });
   }

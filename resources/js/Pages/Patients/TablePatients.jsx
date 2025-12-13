@@ -23,6 +23,7 @@ import {
   Download,
   Filter,
   X,
+  Cake,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -276,30 +277,19 @@ export default function TablePatients({
           );
         },
       },
+
       {
         header: "EDAD",
-        id: "age",
-        accessorFn: (row) => {
-          if (!row?.birth_date) return null;
-          const birthDate = new Date(row.birth_date);
-          const today = new Date();
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          if (
-            monthDiff < 0 ||
-            (monthDiff === 0 && today.getDate() < birthDate.getDate())
-          ) {
-            age--;
-          }
-          return age;
-        },
-        cell: ({ getValue }) => {
-          return (
-            <div className="flex items-center gap-2 text-sm text-gray-700 uppercase truncate whitespace-nowrap">
-              {getValue()} años
-            </div>
-          );
-        },
+        accessorFn: (row) => row?.age,
+        cell: ({ getValue }) => (
+          <div
+            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
+            title={getValue()}
+          >
+            <Cake className="w-4 h-4 text-gray-400" />
+            {getValue()} años
+          </div>
+        ),
         filterFn: "betweenNumbers",
       },
       {

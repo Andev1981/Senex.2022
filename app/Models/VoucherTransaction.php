@@ -15,7 +15,7 @@ class VoucherTransaction extends Model
         'payment_id',
         'treatment_session_id',
         'transaction_type',
-        'amount',
+        'amount_clp',
         'sessions_used',
         'balance_before',
         'balance_after',
@@ -26,7 +26,7 @@ class VoucherTransaction extends Model
     ];
 
     protected $casts = [
-        'amount' => 'integer',
+        'amount_clp' => 'integer',
         'sessions_used' => 'integer',
         'balance_before' => 'integer',
         'balance_after' => 'integer',

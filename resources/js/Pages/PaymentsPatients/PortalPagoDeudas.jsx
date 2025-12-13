@@ -31,12 +31,12 @@ export default function PortalPagoDeudas() {
   // Calcular total seleccionado
   const totalSeleccionado = deudas
     .filter((d) => selectedItems.includes(d.id))
-    .reduce((sum, d) => sum + d.amount, 0);
+    .reduce((sum, d) => sum + d.amount_clp, 0);
 
   // Items para enviar al pago
   const itemsParaPago = deudas
     .filter((d) => selectedItems.includes(d.id))
-    .map((d) => ({ id: d.id, type: d.type, amount: d.amount }));
+    .map((d) => ({ id: d.id, type: d.type, amount_clp: d.amount_clp }));
 
   // Iniciar pago
   const iniciarPago = (e) => {
@@ -217,7 +217,7 @@ export default function PortalPagoDeudas() {
                       </span>
                     </div>
                     <span className="ml-4 font-semibold text-gray-800 whitespace-nowrap">
-                      {fmtCLP(deuda.amount)}
+                      {fmtCLP(deuda.amount_clp)}
                     </span>
                   </div>
                 ))}

@@ -45,7 +45,7 @@ class Debt extends Model
   {
     $paid = (float)$this->paid_amount;
     // si usas allocations a deuda, puedes sumarlas aquí:
-    $allocPaid = (float) $this->paymentAllocations()->sum('amount');
+    $allocPaid = (float) $this->paymentAllocations()->sum('amount_clp');
     $paid = max($paid, $allocPaid); // por si migraste de un modelo a otro
     return max(0, (float)$this->original_amount - $paid);
   }

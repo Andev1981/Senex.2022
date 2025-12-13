@@ -15,7 +15,7 @@ return new class extends Migration {
 
       $t->id();
 
-      $t->foreignId('patient_plan_id')->constrained('patient_plans')->cascadeOnDelete();
+      $t->foreignId('patient_insurance_id')->constrained('patient_insurances')->cascadeOnDelete();
       $t->foreignId('treatment_session_id')->constrained('treatment_sessions')->cascadeOnDelete();
 
       $t->integer('sessions_consumed')->default(1);
@@ -27,10 +27,10 @@ return new class extends Migration {
 
       $t->timestamps();
 
-      $t->index('patient_plan_id');
+      $t->index('patient_insurance_id');
       $t->index('consumed_at');
 
-      $t->unique(['patient_plan_id', 'treatment_session_id'], 'unique_consumption');
+      $t->unique(['patient_insurance_id', 'treatment_session_id'], 'unique_consumption');
 
     });
   }

@@ -11,47 +11,36 @@ class Plan extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'name',
-        'codigo',
-        'institution_type',
-        'institution_id',
+        'code',
+        'insurance_id',
+        'coverage_percentage',
+        'max_sessions',
         'type',
         'total_sessions',
         'price',
         'valid_months',
-        'session_types',
+        'start_date',
+        'end_date',
         'description',
-        'coverage',
         'is_active',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'session_types' => 'array',
-        'price' => 'integer',
+        'max_sessions' => 'integer',
         'total_sessions' => 'integer',
+        'price' => 'integer',
         'valid_months' => 'integer',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_active' => 'boolean',
     ];
 
-    // Polymorphic relationships
-    public function healthInsurer()
+
+    public function insurance()
     {
-        return $this->belongsTo(HealthInsurer::class, 'institution_id')
-            ->where('institution_type', 'health_insurer');
+        return $this->belongsTo(Insurance::class);
     }
 
-    public function insuranceCompany()
-    {
-        return $this->belongsTo(InsuranceCompany::class, 'institution_id')
-            ->where('institution_type', 'insurance_company');
-    }
-
-    // Accessor to get the related institution
-    public function getInstitutionAttribute()
-    {
-        if ($this->institution_type === 'health_insurer') {
-            return $this->healthInsurer;
-        }
-        return $this->insuranceCompany;
-    }
 }

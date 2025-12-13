@@ -1,6 +1,6 @@
 import { List, Plus } from "lucide-react";
 
-export default function AttendancesHeader({ openCreateSessionModal }) {
+export default function AttendancesHeader({ openCreateUpdateSessionModal }) {
   return (
     <div className="p-6 mb-6 bg-white border border-gray-200 shadow-sm rounded-xl">
       <div className="flex items-center justify-between">
@@ -19,7 +19,7 @@ export default function AttendancesHeader({ openCreateSessionModal }) {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={openCreateSessionModal}
+            onClick={() => openCreateUpdateSessionModal({})}
             className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
           >
             <Plus className="w-4 h-4" />

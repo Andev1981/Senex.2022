@@ -2,7 +2,7 @@
 
 /* Estado de los tratamientos */
 export const treatmentStatuses = {
-  evaluating: {
+  evaluation: {
     label: "Evaluación 📝",
     className: "bg-blue-50 text-blue-700 border border-blue-300",
   },
@@ -32,7 +32,7 @@ export const TREATMENT_STATUS_OPTIONS = Object.entries(treatmentStatuses).map(
 export const getStatusConfig = (value) => {
   return (
     treatmentStatuses[value] || {
-      label: "Desconocido",
+      label: "Desconocido ⚪",
       className: "bg-gray-100 text-gray-500",
     }
   );

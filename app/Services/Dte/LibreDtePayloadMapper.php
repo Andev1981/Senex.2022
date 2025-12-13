@@ -3,6 +3,7 @@
 namespace App\Services\Dte;
 
 use App\Models\Invoice;
+use sasco\LibreDTE\Sii\Dte;
 
 class LibreDtePayloadMapper
 {
@@ -10,7 +11,7 @@ class LibreDtePayloadMapper
    * Mapea Invoice + Items a estructura esperada por LibreDTE.
    * Soporta documentos afectos (IVA) y exentos.
    */
-  public function map(Invoice $invoice): array
+  public function mapInvoiceToPayload(Invoice $invoice): array
   {
     $emisor = $invoice->companySetting; // asume relación
     $receptor = $invoice->patient; // asume relación
@@ -36,6 +37,7 @@ class LibreDtePayloadMapper
       'IdDoc' => [
         'TipoDTE' => (int) ($invoice->dte_type ?? 39), // 39 boleta, 33 factura, 61 NC
         'Folio' => 0,
+        'FchEmis' => date('Y-m-d'), // o $invoice->date->format('Y-m-d')
       ],
       'Emisor' => [
         'RUTEmisor' => $emisor->rut ??

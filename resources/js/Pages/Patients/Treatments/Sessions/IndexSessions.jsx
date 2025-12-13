@@ -1,5 +1,6 @@
 import { Clipboard, Plus } from "lucide-react";
 import TableSessions from "./TableSessions";
+import { getStatusConfig } from "@/constants/treatmentStatuses";
 
 export default function IndexSessions({
   sessions,
@@ -8,6 +9,15 @@ export default function IndexSessions({
   treatment,
   setIsDuplicate,
 }) {
+  const isActiveStatus =
+    treatment.status === "evaluation" || treatment.status === "in_progress";
+
+  const hasCapacity =
+    treatment.is_indefinite ||
+    treatment.total_sessions > treatment.completed_sessions;
+
+  const canRegisterSession = isActiveStatus && hasCapacity;
+
   return (
     <div className="space-y-4">
       <div className="px-6 pt-2 pb-6 bg-white shadow-lg rounded-xl dark:bg-gray-800">
@@ -17,7 +27,7 @@ export default function IndexSessions({
           </h2>
           {/* --- Definición del Botón Condicional --- */}
           {/* El botón se muestra si el tratamiento está en curso, independientemente del número de sesiones. */}
-          {treatment.status === "in_progress" && sessions.length > 0 && (
+          {canRegisterSession && (
             <button
               onClick={() => handleOpenModalSession([], treatment)}
               className="flex items-center gap-2 px-4 py-2 text-white transition-colors bg-teal-600 rounded-lg hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600"
@@ -37,10 +47,17 @@ export default function IndexSessions({
               </p>
               {treatment.status !== "in_progress" && (
                 <p className="mt-2 text-sm text-gray-400 dark:text-gray-500">
-                  El tratamiento no está en progreso (Estado: {treatment.status}
+                  El tratamiento no está en progreso (Estado:{" "}
+                  {getStatusConfig(treatment.status).label}
                   ).
                 </p>
               )}
+              <button
+                onClick={() => handleOpenModalSession([], treatment)}
+                className="flex items-center gap-2 px-4 py-2 mt-5 text-white transition-colors bg-teal-600 rounded-lg hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600"
+              >
+                <Plus className="w-4 h-4" /> Registrar Sesión
+              </button>
             </div>
           ) : (
             // Caso 2: Hay sesiones registradas, mostramos la tabla

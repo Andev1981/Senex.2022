@@ -1,4 +1,447 @@
-import{r as p,j as a,F as E,a as e,H as B,L as _,b}from"./app-12bcd6c7.js";import"./index-a8363777.js";const y=r=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",minimumFractionDigits:0}).format(r||0),P=r=>{if(!r)return"-";const d=r.replace(/[^0-9kK]/g,"").toUpperCase();if(d.length<2)return r;const m=d.slice(-1);let h=d.slice(0,-1),i="",o=0;for(let c=h.length-1;c>=0;c--)i=h[c]+i,o++,o===3&&c>0&&(i="."+i,o=0);return`${i}-${m}`};function j({patients:r,filters:d,stats:m}){const[h,i]=p.useState(d.search||""),[o,c]=p.useState([]),[t,k]=p.useState(["mail"]),[f,x]=p.useState(null),[N,g]=p.useState(!1),w=n=>{n.preventDefault(),b.get(route("admin.payment-reminders.index"),{search:h},{preserveState:!0,preserveScroll:!0})},v=n=>{c(l=>l.includes(n)?l.filter(u=>u!==n):[...l,n])},C=()=>{o.length===r.data.length?c([]):c(r.data.map(n=>n.id))},s=n=>{k(l=>l.includes(n)?l.filter(u=>u!==n):[...l,n])},F=(n,l=t)=>{if(l.length===0){alert("Selecciona al menos un canal de envío");return}x(n),b.post(route("admin.payment-reminders.send",n),{channels:l},{preserveScroll:!0,onFinish:()=>x(null)})},S=()=>{if(o.length===0){alert("Selecciona al menos un paciente");return}if(t.length===0){alert("Selecciona al menos un canal de envío");return}b.post(route("admin.payment-reminders.send-bulk"),{patient_ids:o,channels:t},{preserveScroll:!0,onSuccess:()=>{g(!1),c([])}})};return a(E,{children:[e(B,{title:"Recordatorios de Pago"}),a("div",{className:"reminders-page",children:[a("div",{className:"page-header",children:[a("div",{children:[e("h1",{children:"Recordatorios de Pago"}),e("p",{children:"Envía recordatorios a pacientes con deudas pendientes"})]}),e("div",{className:"header-actions",children:e("a",{href:route("portal.pago"),target:"_blank",className:"btn-secondary",children:"Ver Portal de Pagos"})})]}),a("div",{className:"stats-grid",children:[a("div",{className:"stat-card",children:[e("span",{className:"stat-value",children:m.total_patients_with_debt}),e("span",{className:"stat-label",children:"Pacientes con deuda"})]}),a("div",{className:"stat-card",children:[e("span",{className:"stat-value",children:y(m.total_pending_amount)}),e("span",{className:"stat-label",children:"Total pendiente"})]}),a("div",{className:"stat-card",children:[e("span",{className:"stat-value",children:m.total_pending_sessions}),e("span",{className:"stat-label",children:"Sesiones pendientes"})]})]}),a("div",{className:"toolbar",children:[a("form",{onSubmit:w,className:"search-form",children:[e("input",{type:"text",placeholder:"Buscar por nombre, RUT o email...",value:h,onChange:n=>i(n.target.value)}),e("button",{type:"submit",children:"Buscar"})]}),o.length>0&&a("button",{className:"btn-primary",onClick:()=>g(!0),children:["Enviar a ",o.length," seleccionados"]})]}),a("div",{className:"channels-selector",children:[e("span",{children:"Canales de envío:"}),a("label",{className:`channel-option ${t.includes("mail")?"active":""}`,children:[e("input",{type:"checkbox",checked:t.includes("mail"),onChange:()=>s("mail")}),e("span",{className:"channel-icon",children:"📧"}),"Email"]}),a("label",{className:`channel-option ${t.includes("sms")?"active":""}`,children:[e("input",{type:"checkbox",checked:t.includes("sms"),onChange:()=>s("sms")}),e("span",{className:"channel-icon",children:"📱"}),"SMS"]}),a("label",{className:`channel-option ${t.includes("whatsapp")?"active":""}`,children:[e("input",{type:"checkbox",checked:t.includes("whatsapp"),onChange:()=>s("whatsapp")}),e("span",{className:"channel-icon",children:"💬"}),"WhatsApp"]})]}),e("div",{className:"table-container",children:a("table",{children:[e("thead",{children:a("tr",{children:[e("th",{className:"checkbox-col",children:e("input",{type:"checkbox",checked:o.length===r.data.length&&r.data.length>0,onChange:C})}),e("th",{children:"Paciente"}),e("th",{children:"RUT"}),e("th",{children:"Contacto"}),e("th",{className:"text-center",children:"Sesiones"}),e("th",{className:"text-right",children:"Monto"}),e("th",{className:"text-center",children:"Acciones"})]})}),e("tbody",{children:r.data.length===0?e("tr",{children:e("td",{colSpan:"7",className:"empty-state",children:"No hay pacientes con deudas pendientes"})}):r.data.map(n=>a("tr",{className:o.includes(n.id)?"selected":"",children:[e("td",{className:"checkbox-col",children:e("input",{type:"checkbox",checked:o.includes(n.id),onChange:()=>v(n.id)})}),e("td",{children:e("span",{className:"patient-name",children:n.name})}),e("td",{children:e("span",{className:"patient-rut",children:P(n.rut)})}),e("td",{children:a("div",{className:"contact-info",children:[n.email&&a("span",{className:"contact-item",children:["📧 ",n.email]}),n.phone&&a("span",{className:"contact-item",children:["📱 ",n.phone]}),!n.email&&!n.phone&&e("span",{className:"no-contact",children:"Sin contacto"})]})}),e("td",{className:"text-center",children:e("span",{className:"badge",children:n.pending_sessions_count})}),e("td",{className:"text-right",children:e("span",{className:"amount",children:y(n.pending_amount)})}),e("td",{className:"text-center",children:e("button",{className:"btn-send",onClick:()=>F(n.id),disabled:f===n.id||t.length===0,children:f===n.id?"Enviando...":"Enviar"})})]},n.id))})]})}),r.last_page>1&&e("div",{className:"pagination",children:r.links.map((n,l)=>e(_,{href:n.url||"#",className:`page-link ${n.active?"active":""} ${n.url?"":"disabled"}`,dangerouslySetInnerHTML:{__html:n.label},preserveScroll:!0},l))}),N&&e("div",{className:"modal-overlay",onClick:()=>g(!1),children:a("div",{className:"modal",onClick:n=>n.stopPropagation(),children:[e("h2",{children:"Enviar recordatorios"}),a("p",{children:["Se enviará un recordatorio a"," ",e("strong",{children:o.length})," pacientes."]}),a("div",{className:"modal-channels",children:[a("label",{children:[e("input",{type:"checkbox",checked:t.includes("mail"),onChange:()=>s("mail")}),"📧 Email"]}),a("label",{children:[e("input",{type:"checkbox",checked:t.includes("sms"),onChange:()=>s("sms")}),"📱 SMS"]}),a("label",{children:[e("input",{type:"checkbox",checked:t.includes("whatsapp"),onChange:()=>s("whatsapp")}),"💬 WhatsApp"]})]}),a("div",{className:"modal-actions",children:[e("button",{className:"btn-cancel",onClick:()=>g(!1),children:"Cancelar"}),e("button",{className:"btn-confirm",onClick:S,disabled:t.length===0,children:"Enviar recordatorios"})]})]})})]}),e("style",{children:`
+import {
+  r as p,
+  j as a,
+  F as E,
+  a as e,
+  H as B,
+  L as _,
+  b,
+} from "./app-12bcd6c7.js";
+import "./index-a8363777.js";
+const y = (r) =>
+    new Intl.NumberFormat("es-CL", {
+      style: "currency",
+      currency: "CLP",
+      minimumFractionDigits: 0,
+    }).format(r || 0),
+  P = (r) => {
+    if (!r) return "-";
+    const d = r.replace(/[^0-9kK]/g, "").toUpperCase();
+    if (d.length < 2) return r;
+    const m = d.slice(-1);
+    let h = d.slice(0, -1),
+      i = "",
+      o = 0;
+    for (let c = h.length - 1; c >= 0; c--)
+      (i = h[c] + i), o++, o === 3 && c > 0 && ((i = "." + i), (o = 0));
+    return `${i}-${m}`;
+  };
+function j({ patients: r, filters: d, stats: m }) {
+  const [h, i] = p.useState(d.search || ""),
+    [o, c] = p.useState([]),
+    [t, k] = p.useState(["mail"]),
+    [f, x] = p.useState(null),
+    [N, g] = p.useState(!1),
+    w = (n) => {
+      n.preventDefault(),
+        b.get(
+          route("admin.payment-reminders.index"),
+          { search: h },
+          { preserveState: !0, preserveScroll: !0 }
+        );
+    },
+    v = (n) => {
+      c((l) => (l.includes(n) ? l.filter((u) => u !== n) : [...l, n]));
+    },
+    C = () => {
+      o.length === r.data.length ? c([]) : c(r.data.map((n) => n.id));
+    },
+    s = (n) => {
+      k((l) => (l.includes(n) ? l.filter((u) => u !== n) : [...l, n]));
+    },
+    F = (n, l = t) => {
+      if (l.length === 0) {
+        alert("Selecciona al menos un canal de envío");
+        return;
+      }
+      x(n),
+        b.post(
+          route("admin.payment-reminders.send", n),
+          { channels: l },
+          { preserveScroll: !0, onFinish: () => x(null) }
+        );
+    },
+    S = () => {
+      if (o.length === 0) {
+        alert("Selecciona al menos un paciente");
+        return;
+      }
+      if (t.length === 0) {
+        alert("Selecciona al menos un canal de envío");
+        return;
+      }
+      b.post(
+        route("admin.payment-reminders.send-bulk"),
+        { patient_ids: o, channels: t },
+        {
+          preserveScroll: !0,
+          onSuccess: () => {
+            g(!1), c([]);
+          },
+        }
+      );
+    };
+  return a(E, {
+    children: [
+      e(B, { title: "Recordatorios de Pago" }),
+      a("div", {
+        className: "reminders-page",
+        children: [
+          a("div", {
+            className: "page-header",
+            children: [
+              a("div", {
+                children: [
+                  e("h1", { children: "Recordatorios de Pago" }),
+                  e("p", {
+                    children:
+                      "Envía recordatorios a pacientes con deudas pendientes",
+                  }),
+                ],
+              }),
+              e("div", {
+                className: "header-actions",
+                children: e("a", {
+                  href: route("portal.pago"),
+                  target: "_blank",
+                  className: "btn-secondary",
+                  children: "Ver Portal de Pagos",
+                }),
+              }),
+            ],
+          }),
+          a("div", {
+            className: "stats-grid",
+            children: [
+              a("div", {
+                className: "stat-card",
+                children: [
+                  e("span", {
+                    className: "stat-value",
+                    children: m.total_patients_with_debt,
+                  }),
+                  e("span", {
+                    className: "stat-label",
+                    children: "Pacientes con deuda",
+                  }),
+                ],
+              }),
+              a("div", {
+                className: "stat-card",
+                children: [
+                  e("span", {
+                    className: "stat-value",
+                    children: y(m.total_pending_amount),
+                  }),
+                  e("span", {
+                    className: "stat-label",
+                    children: "Total pendiente",
+                  }),
+                ],
+              }),
+              a("div", {
+                className: "stat-card",
+                children: [
+                  e("span", {
+                    className: "stat-value",
+                    children: m.total_pending_sessions,
+                  }),
+                  e("span", {
+                    className: "stat-label",
+                    children: "Sesiones pendientes",
+                  }),
+                ],
+              }),
+            ],
+          }),
+          a("div", {
+            className: "toolbar",
+            children: [
+              a("form", {
+                onSubmit: w,
+                className: "search-form",
+                children: [
+                  e("input", {
+                    type: "text",
+                    placeholder: "Buscar por nombre, RUT o email...",
+                    value: h,
+                    onChange: (n) => i(n.target.value),
+                  }),
+                  e("button", { type: "submit", children: "Buscar" }),
+                ],
+              }),
+              o.length > 0 &&
+                a("button", {
+                  className: "btn-primary",
+                  onClick: () => g(!0),
+                  children: ["Enviar a ", o.length, " seleccionados"],
+                }),
+            ],
+          }),
+          a("div", {
+            className: "channels-selector",
+            children: [
+              e("span", { children: "Canales de envío:" }),
+              a("label", {
+                className: `channel-option ${
+                  t.includes("mail") ? "active" : ""
+                }`,
+                children: [
+                  e("input", {
+                    type: "checkbox",
+                    checked: t.includes("mail"),
+                    onChange: () => s("mail"),
+                  }),
+                  e("span", { className: "channel-icon", children: "📧" }),
+                  "Email",
+                ],
+              }),
+              a("label", {
+                className: `channel-option ${
+                  t.includes("sms") ? "active" : ""
+                }`,
+                children: [
+                  e("input", {
+                    type: "checkbox",
+                    checked: t.includes("sms"),
+                    onChange: () => s("sms"),
+                  }),
+                  e("span", { className: "channel-icon", children: "📱" }),
+                  "SMS",
+                ],
+              }),
+              a("label", {
+                className: `channel-option ${
+                  t.includes("whatsapp") ? "active" : ""
+                }`,
+                children: [
+                  e("input", {
+                    type: "checkbox",
+                    checked: t.includes("whatsapp"),
+                    onChange: () => s("whatsapp"),
+                  }),
+                  e("span", { className: "channel-icon", children: "💬" }),
+                  "WhatsApp",
+                ],
+              }),
+            ],
+          }),
+          e("div", {
+            className: "table-container",
+            children: a("table", {
+              children: [
+                e("thead", {
+                  children: a("tr", {
+                    children: [
+                      e("th", {
+                        className: "checkbox-col",
+                        children: e("input", {
+                          type: "checkbox",
+                          checked:
+                            o.length === r.data.length && r.data.length > 0,
+                          onChange: C,
+                        }),
+                      }),
+                      e("th", { children: "Paciente" }),
+                      e("th", { children: "RUT" }),
+                      e("th", { children: "Contacto" }),
+                      e("th", {
+                        className: "text-center",
+                        children: "Sesiones",
+                      }),
+                      e("th", { className: "text-right", children: "Monto" }),
+                      e("th", {
+                        className: "text-center",
+                        children: "Acciones",
+                      }),
+                    ],
+                  }),
+                }),
+                e("tbody", {
+                  children:
+                    r.data.length === 0
+                      ? e("tr", {
+                          children: e("td", {
+                            colSpan: "7",
+                            className: "empty-state",
+                            children: "No hay pacientes con deudas pendientes",
+                          }),
+                        })
+                      : r.data.map((n) =>
+                          a(
+                            "tr",
+                            {
+                              className: o.includes(n.id) ? "selected" : "",
+                              children: [
+                                e("td", {
+                                  className: "checkbox-col",
+                                  children: e("input", {
+                                    type: "checkbox",
+                                    checked: o.includes(n.id),
+                                    onChange: () => v(n.id),
+                                  }),
+                                }),
+                                e("td", {
+                                  children: e("span", {
+                                    className: "patient-name",
+                                    children: n.name,
+                                  }),
+                                }),
+                                e("td", {
+                                  children: e("span", {
+                                    className: "patient-rut",
+                                    children: P(n.rut),
+                                  }),
+                                }),
+                                e("td", {
+                                  children: a("div", {
+                                    className: "contact-info",
+                                    children: [
+                                      n.email &&
+                                        a("span", {
+                                          className: "contact-item",
+                                          children: ["📧 ", n.email],
+                                        }),
+                                      n.phone &&
+                                        a("span", {
+                                          className: "contact-item",
+                                          children: ["📱 ", n.phone],
+                                        }),
+                                      !n.email &&
+                                        !n.phone &&
+                                        e("span", {
+                                          className: "no-contact",
+                                          children: "Sin contacto",
+                                        }),
+                                    ],
+                                  }),
+                                }),
+                                e("td", {
+                                  className: "text-center",
+                                  children: e("span", {
+                                    className: "badge",
+                                    children: n.pending_sessions_count,
+                                  }),
+                                }),
+                                e("td", {
+                                  className: "text-right",
+                                  children: e("span", {
+                                    className: "amount_clp",
+                                    children: y(n.pending_amount),
+                                  }),
+                                }),
+                                e("td", {
+                                  className: "text-center",
+                                  children: e("button", {
+                                    className: "btn-send",
+                                    onClick: () => F(n.id),
+                                    disabled: f === n.id || t.length === 0,
+                                    children:
+                                      f === n.id ? "Enviando..." : "Enviar",
+                                  }),
+                                }),
+                              ],
+                            },
+                            n.id
+                          )
+                        ),
+                }),
+              ],
+            }),
+          }),
+          r.last_page > 1 &&
+            e("div", {
+              className: "pagination",
+              children: r.links.map((n, l) =>
+                e(
+                  _,
+                  {
+                    href: n.url || "#",
+                    className: `page-link ${n.active ? "active" : ""} ${
+                      n.url ? "" : "disabled"
+                    }`,
+                    dangerouslySetInnerHTML: { __html: n.label },
+                    preserveScroll: !0,
+                  },
+                  l
+                )
+              ),
+            }),
+          N &&
+            e("div", {
+              className: "modal-overlay",
+              onClick: () => g(!1),
+              children: a("div", {
+                className: "modal",
+                onClick: (n) => n.stopPropagation(),
+                children: [
+                  e("h2", { children: "Enviar recordatorios" }),
+                  a("p", {
+                    children: [
+                      "Se enviará un recordatorio a",
+                      " ",
+                      e("strong", { children: o.length }),
+                      " pacientes.",
+                    ],
+                  }),
+                  a("div", {
+                    className: "modal-channels",
+                    children: [
+                      a("label", {
+                        children: [
+                          e("input", {
+                            type: "checkbox",
+                            checked: t.includes("mail"),
+                            onChange: () => s("mail"),
+                          }),
+                          "📧 Email",
+                        ],
+                      }),
+                      a("label", {
+                        children: [
+                          e("input", {
+                            type: "checkbox",
+                            checked: t.includes("sms"),
+                            onChange: () => s("sms"),
+                          }),
+                          "📱 SMS",
+                        ],
+                      }),
+                      a("label", {
+                        children: [
+                          e("input", {
+                            type: "checkbox",
+                            checked: t.includes("whatsapp"),
+                            onChange: () => s("whatsapp"),
+                          }),
+                          "💬 WhatsApp",
+                        ],
+                      }),
+                    ],
+                  }),
+                  a("div", {
+                    className: "modal-actions",
+                    children: [
+                      e("button", {
+                        className: "btn-cancel",
+                        onClick: () => g(!1),
+                        children: "Cancelar",
+                      }),
+                      e("button", {
+                        className: "btn-confirm",
+                        onClick: S,
+                        disabled: t.length === 0,
+                        children: "Enviar recordatorios",
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            }),
+        ],
+      }),
+      e("style", {
+        children: `
                 .reminders-page {
                     padding: 2rem;
                     max-width: 1400px;
@@ -235,7 +678,7 @@ import{r as p,j as a,F as E,a as e,H as B,L as _,b}from"./app-12bcd6c7.js";impor
                     font-size: 0.875rem;
                 }
 
-                .amount {
+                .amount_clp {
                     font-weight: 600;
                     color: #DC2626;
                 }
@@ -392,4 +835,9 @@ import{r as p,j as a,F as E,a as e,H as B,L as _,b}from"./app-12bcd6c7.js";impor
                         flex-wrap: wrap;
                     }
                 }
-            `})]})}export{j as default};
+            `,
+      }),
+    ],
+  });
+}
+export { j as default };

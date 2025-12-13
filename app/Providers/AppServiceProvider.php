@@ -13,6 +13,9 @@ use App\Observers\PaymentAllocationObserver;
 use App\Services\TwilioService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
+use sasco\LibreDTE\FirmaElectronica;
+use App\Services\Dte\LibreDteLocalProvider; // Tu implementación
+use App\Services\Dte\DteServiceProvider as DteServiceContract; // La
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,8 +36,27 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->app->singleton(TwilioService::class, function ($app) {
-        return new TwilioService();
-    });
+            return new TwilioService();
+        });
+
+        $firmaConfig = [
+            'file' => config('dte.certificado.path'),
+            'pass' => config('dte.certificado.pass'),
+        ];
+
+        // Binding de la FirmaElectrónica (sin cambios)
+        $this->app->singleton(FirmaElectronica::class, function ($app)  use ($firmaConfig){
+            // ... [Tu código para crear la instancia de FirmaElectronica con el constructor] ...
+            // (Este código es el que revisamos en el paso anterior y ya está bien)
+            $firma = new FirmaElectronica($firmaConfig); 
+            return $firma;
+        });
+
+        // Binding de la Implementación
+        // Aquí le dices a Laravel que si alguien pide la Interface, le dé la implementación.
+        $this->app->bind(DteServiceContract::class, LibreDteLocalProvider::class);
+
+   
     }
 
     /**

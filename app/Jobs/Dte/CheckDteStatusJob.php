@@ -3,7 +3,7 @@
 namespace App\Jobs\Dte;
 
 use App\Models\Invoice;
-use App\Services\Dte\LibreDteProvider;
+use App\Services\Dte\LibreDteLocalProvider;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,7 +16,7 @@ class CheckDteStatusJob implements ShouldQueue
   public int $tries = 5;
   public $backoff = [60, 120, 300, 600, 900]; // escalado
   public function __construct(public int $invoiceId) {}
-  public function handle(LibreDteProvider $provider): void
+  public function handle( LibreDteLocalProvider $provider): void
   {
     $invoice = Invoice::query()->findOrFail($this->invoiceId);
     if (!$invoice->dte_track_id) return;

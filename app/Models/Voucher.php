@@ -148,7 +148,7 @@ class Voucher extends Model
 
         $this->transactions()->create([
             'transaction_type' => 'activation',
-            'amount' => $this->initial_balance,
+            'amount_clp' => $this->initial_balance,
             'balance_before' => 0,
             'balance_after' => $this->initial_balance,
             'sessions_before' => 0,
@@ -162,13 +162,13 @@ class Voucher extends Model
     /**
      * Usa el bono para un pago
      */
-    public function useForPayment(int $amount, ?int $paymentId = null, ?int $sessionId = null): bool
+    public function useForPayment(int $amount_clp, ?int $paymentId = null, ?int $sessionId = null): bool
     {
         if (!$this->isAvailable()) {
             return false;
         }
 
-        if ($this->type === 'monetary' && $amount > $this->current_balance) {
+        if ($this->type === 'monetary' && $amount_clp > $this->current_balance) {
             return false;
         }
 
@@ -180,10 +180,10 @@ class Voucher extends Model
         $newSessions = $this->sessions_remaining;
 
         if ($this->type === 'monetary') {
-            $newBalance = $this->current_balance - $amount;
+            $newBalance = $this->current_balance - $amount_clp;
         } elseif ($this->type === 'sessions') {
             $newSessions = $this->sessions_remaining - 1;
-            $amount = 0; // Las sesiones no tienen valor monetario directo
+            $amount_clp = 0; // Las sesiones no tienen valor monetario directo
         }
 
         // Determinar nuevo estado
@@ -198,7 +198,7 @@ class Voucher extends Model
         $this->update([
             'current_balance' => $newBalance,
             'sessions_remaining' => $newSessions,
-            'used_balance' => $this->used_balance + $amount,
+            'used_balance' => $this->used_balance + $amount_clp,
             'status' => $newStatus,
             'last_used_at' => now(),
         ]);
@@ -208,7 +208,7 @@ class Voucher extends Model
             'transaction_type' => 'usage',
             'payment_id' => $paymentId,
             'treatment_session_id' => $sessionId,
-            'amount' => $amount,
+            'amount_clp' => $amount_clp,
             'sessions_used' => $this->type === 'sessions' ? 1 : 0,
             'balance_before' => $balanceBefore,
             'balance_after' => $newBalance,
@@ -259,7 +259,7 @@ class Voucher extends Model
 
         $this->transactions()->create([
             'transaction_type' => 'expiration',
-            'amount' => 0,
+            'amount_clp' => 0,
             'balance_before' => $this->current_balance,
             'balance_after' => $this->current_balance,
             'description' => 'Bono expirado automáticamente',
@@ -287,7 +287,7 @@ class Voucher extends Model
 
         $this->transactions()->create([
             'transaction_type' => 'transfer',
-            'amount' => 0,
+            'amount_clp' => 0,
             'balance_before' => $this->current_balance,
             'balance_after' => $this->current_balance,
             'processed_by' => $userId,

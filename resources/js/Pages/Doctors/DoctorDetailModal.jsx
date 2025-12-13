@@ -32,7 +32,7 @@ export default function DoctorDetailModal({
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
     gender: doctor?.gender || "",
     mobile_access_enabled: doctor?.mobile_access_enabled || false,
-    status: doctor?.status || "",
+    status: doctor?.status || "active",
     status_reason: doctor?.status_reason || "",
     street: doctor?.street || "",
     number: doctor?.number || "",
@@ -87,12 +87,6 @@ export default function DoctorDetailModal({
     (com) => com.province_id === parseInt(data.province_id)
   );
 
-  const specialities = [
-    { value: "Musculoesquelética/Traumatológica" },
-    { value: "Deportiva" },
-    { value: "Traumatológica" },
-    { value: "Respiratoria" },
-  ];
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-3 gap-4 px-4 pt-2">

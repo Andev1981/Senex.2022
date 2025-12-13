@@ -1,0 +1,137 @@
+<?php
+
+namespace App\Http\Controllers\Admin\Plans;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePlanRequest;
+use App\Http\Requests\UpdatePlanRequest;
+use App\Models\Insurance;
+use App\Models\Plan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+
+class PlanController extends Controller
+{
+    public function index(Insurance $insurance){
+     
+        /* dd($insurance->id); */
+        $plans = Plan::with('insurance')
+            ->where('insurance_id', $insurance->id)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'code' => $plan->code,
+                    'insurance_id' => $plan->insurance_id,
+                    // 🎯 SOLUCIÓN: Incluir la relación 'insurance' en el array de retorno
+                    'insurance' => [ 
+                        'id' => $plan->insurance->id ?? null,
+                        'name' => $plan->insurance->name ?? 'Particular', 
+                        // Añade más campos de la aseguradora si los necesitas en el front
+                        'institution_type' => $plan->insurance->institution_type ?? null,
+                    ],
+                    'coverage_percentage' => $plan->coverage_percentage,
+                    'type' => $plan->type,
+                    'total_sessions' => $plan->total_sessions,
+                    'price' => $plan->price,
+                    'valid_months' => $plan->valid_months,
+                    'start_date' => $plan->start_date,
+                    'end_date' => $plan->end_date,
+                    'description' => $plan->description,
+                    'is_active' => $plan->is_active,
+                ];
+            });
+
+            return Inertia::render('Plans/Index', [
+            'plans' => $plans,
+            'insurance' => $insurance
+        ]);
+    }
+
+    public function store(StorePlanRequest $request)
+    {
+        $validated = $request->validated();
+
+        try {
+            //code...
+            Plan::create($validated);
+
+            
+            // Si llegamos aquí, la transacción fue exitosa
+            session()->flash('message', 'Plan creado correctamente.');
+            session()->flash('type', 'success');
+        } catch (\Throwable $th) {
+            Log::error("Error al crear el Plan:", [
+                'user_id' => auth()->id(), // Si usas autenticación
+                'exception' => $th->getMessage(),
+                'trace' => $th->getTraceAsString(),
+            ]);
+
+            // 2. Mostrar el mensaje específico de la excepción al usuario
+            // Solo mostrar el getMessage() si es seguro y relevante para el usuario.
+            $errorMessage = "La creación ha fallado. Razón: " . $th->getMessage();
+
+            // En un entorno de producción, a veces quieres mostrar un mensaje más amigable
+            // si el error es de bajo nivel (ej. "Error de conexión").
+            /**/
+            if (app()->environment('production')) {
+                $errorMessage = 'La creación ha fallado debido a un error del sistema. Por favor, intente de nuevo.';
+            } else {
+                $errorMessage = $th->getMessage();
+            }
+            
+            
+            session()->flash('message', $errorMessage);
+            session()->flash('type', 'error');
+        }
+
+    }
+
+    public function update(UpdatePlanRequest $request, Plan $plan)
+    {
+        $validated = $request->validated();
+        try{
+
+        $plan->update($validated);
+        // Si llegamos aquí, la transacción fue exitosa
+            session()->flash('message', 'Plan actualizado correctamente.');
+            session()->flash('type', 'success');
+        } catch (\Throwable $th) {
+                    Log::error("Error al actualizar el Plan:", [
+                        'user_id' => auth()->id(), // Si usas autenticación
+                        'exception' => $th->getMessage(),
+                        'trace' => $th->getTraceAsString(),
+                    ]);
+
+                    // 2. Mostrar el mensaje específico de la excepción al usuario
+                    // Solo mostrar el getMessage() si es seguro y relevante para el usuario.
+                    $errorMessage = "La actualización ha fallado. Razón: " . $th->getMessage();
+
+                    // En un entorno de producción, a veces quieres mostrar un mensaje más amigable
+                    // si el error es de bajo nivel (ej. "Error de conexión").
+                    /**/
+                    if (app()->environment('production')) {
+                        $errorMessage = 'La actualización ha fallado debido a un error del sistema. Por favor, intente de nuevo.';
+                    } else {
+                        $errorMessage = $th->getMessage();
+                    }
+                    
+                    
+                    session()->flash('message', $errorMessage);
+                    session()->flash('type', 'error');
+                }
+    }
+
+    public function destroy(Plan $plan)
+    {
+        $plan->delete();
+
+        return redirect()->route('plans.index')
+            ->with('success', 'Plan deleted successfully.');
+    }
+
+    
+}

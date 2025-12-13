@@ -119,10 +119,10 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
     
 
     /**
-     * Format amount to CLP
+     * Format amount_clp to CLP
      */
-    private function formatCLP(int $amount): string
+    private function formatCLP(int $amount_clp): string
     {
-        return '$' . number_format($amount, 0, ',', '.');
+        return '$' . number_format($amount_clp, 0, ',', '.');
     }
 }

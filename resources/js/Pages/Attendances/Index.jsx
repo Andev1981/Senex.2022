@@ -28,10 +28,10 @@ export default function Index({
   const [showAbsentModal, setShowAbsentModal] = useState(false);
   const [showDTEModal, setShowDTEModal] = useState(false);
   const [showResumenModal, setShowResumenModal] = useState(false);
-  const [showEditSessionModal, setShowEditSessionModal] = useState(false);
   const [showCreateSessionModal, setShowCreateSessionModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
-  const [sessionData, setSessionData] = useState({
+  const [sessionData, setSessionData] = useState({});
+  /*   const [sessionData, setSessionData] = useState({
     session_id: "",
     treatment_id: "",
     patient_id: "",
@@ -54,7 +54,7 @@ export default function Index({
     copay_clp: 0,
     consumes_plan: undefined,
     patient_plan_id: "",
-    patient_plan: "" /* id, plan_name, sessions_remaining, price */,
+    patient_plan: "",
     pain_before: 0,
     pain_after: 0,
     rom_flexion: "",
@@ -69,7 +69,7 @@ export default function Index({
     session_absent_notes: "",
     session_cancellation_notes: "",
     session_start_notes: "",
-  });
+  }); */
 
   // Acciones sobre sesiones
   const openStartModal = (session) => {
@@ -104,13 +104,7 @@ export default function Index({
     setShowResumenModal(true);
   };
 
-  const openCreateSessionModal = () => {
-    setSessionData([]);
-    setShowCreateSessionModal(true);
-  };
-
-  // Función para abrir el modal
-  const openEditSessionModal = (session) => {
+  const openCreateUpdateSessionModal = (session) => {
     setSessionData(session);
     setShowCreateSessionModal(true);
   };
@@ -120,7 +114,9 @@ export default function Index({
       <Head title="Atenciones" />
       <div className="min-h-screen p-4 bg-gray-50">
         {/* Header */}
-        <AttendancesHeader openCreateSessionModal={openCreateSessionModal} />
+        <AttendancesHeader
+          openCreateUpdateSessionModal={openCreateUpdateSessionModal}
+        />
         {/* KPIs */}
         <Kpis kpis={kpis} filtros={filtros} />
 
@@ -128,8 +124,7 @@ export default function Index({
           atenciones={atenciones}
           filtros={filtros}
           kpis={kpis}
-          openCreateSessionModal={openCreateSessionModal}
-          openEditSessionModal={openEditSessionModal}
+          openCreateUpdateSessionModal={openCreateUpdateSessionModal}
           openStartModal={openStartModal}
           openCompletedModal={openCompletedModal}
           openCancelModal={openCancelModal}
@@ -184,13 +179,15 @@ export default function Index({
         <SideModal
           open={showCreateSessionModal}
           onClose={() => setShowCreateSessionModal(false)}
-          title={sessionData?.id ? "✏️ Editar Sesión" : "📋 Nueva Atención"}
-          description={
+          title={
+            sessionData?.session_id ? "✏️ Editar Sesión" : "📋 Nueva Atención"
+          }
+          /* description={
             sessionData?.id
               ? `Editando sesión para ${sessionData.paciente}`
               : "Registra una nueva sesión seleccionando paciente, profesional y tipo"
-          }
-          width="4xl" // sm, md, lg, xl, 2xl, 3xl, full
+          } */
+          width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
         >
           <CreateUpdateModal
             showCreateSessionModal={showCreateSessionModal}

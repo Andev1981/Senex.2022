@@ -1,6 +1,6 @@
 import { useEffect, lazy, Suspense } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, useForm, router, useRemember } from "@inertiajs/react";
+import { Head, useForm, useRemember } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import { User, Activity, DollarSign, ChevronLeft, Target } from "lucide-react";
 import PatientCard from "./Partials/PatientCard";
@@ -9,9 +9,7 @@ import PatientCard from "./Partials/PatientCard";
 const IndexGeneral = lazy(() => import("./General/IndexGeneral"));
 const IndexHistorial = lazy(() => import("./Historial/IndexHistorial"));
 const IndexTreatments = lazy(() => import("./Treatments/IndexTreatments"));
-const IndexExcercises = lazy(() => import("./Excercises/IndexExcercises"));
 const IndexPayments = lazy(() => import("./Payments/IndexPayments"));
-/* const IndexDocuments = lazy(() => import("./Documents/IndexDocuments")); */
 
 /** Hook: sincroniza pestaña con ?tab= y recuerda entre visitas */
 function useSyncedTab(defaultTab = "general") {
@@ -35,7 +33,6 @@ export default function DetailPatient({
   patient,
   payments = [],
   sessions = [],
-  debts = [],
   session_types = [],
   doctors = [],
   communes = [],
@@ -45,8 +42,6 @@ export default function DetailPatient({
   address,
   vital,
   contact,
-  allergies,
-  conditions,
 }) {
   const { get } = useForm();
   const [activeTab, setActiveTab] = useSyncedTab("general");
@@ -56,8 +51,6 @@ export default function DetailPatient({
     { id: "history", label: "Historial Clínico", icon: Activity },
     { id: "treatments", label: "Tratamientos / Sesiones", icon: Target },
     { id: "payments", label: "Pagos", icon: DollarSign },
-    /* { id: "exercises", label: "Ejercicios", icon: Repeat }, */
-    /* { id: "documents", label: "Documentos", icon: FileText }, */
   ];
 
   const handleBack = () => {

@@ -14,6 +14,7 @@ class TreatmentSession extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'treatment_id',
         'appointment_id',
         'doctor_id',
@@ -48,6 +49,7 @@ class TreatmentSession extends Model
         'patient_amount', /* base price */
         'doctor_amount', /* Commission */
         'clinic_amount',
+        'cancellation_note'
     ];
 
     protected $casts = [

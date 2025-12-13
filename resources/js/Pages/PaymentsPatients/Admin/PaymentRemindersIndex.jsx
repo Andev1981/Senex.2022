@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { Head, router, Link } from "@inertiajs/react";
 
 // Formatear moneda CLP
-const formatCLP = (amount) => {
+const formatCLP = (amount_clp) => {
   return new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency: "CLP",
     minimumFractionDigits: 0,
-  }).format(amount || 0);
+  }).format(amount_clp || 0);
 };
 
 // Formatear RUT
@@ -304,7 +304,7 @@ export default function PaymentRemindersIndex({ patients, filters, stats }) {
                       </span>
                     </td>
                     <td className="text-right">
-                      <span className="amount">
+                      <span className="amount_clp">
                         {formatCLP(patient.pending_amount)}
                       </span>
                     </td>
@@ -641,7 +641,7 @@ export default function PaymentRemindersIndex({ patients, filters, stats }) {
                     font-size: 0.875rem;
                 }
 
-                .amount {
+                .amount_clp {
                     font-weight: 600;
                     color: #DC2626;
                 }

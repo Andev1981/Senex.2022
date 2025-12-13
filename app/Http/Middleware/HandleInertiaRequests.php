@@ -5,19 +5,12 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
+use App\Models\Company; // Importar el modelo Company
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that is loaded on the first page visit.
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determine the current asset version.
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
@@ -25,14 +18,20 @@ class HandleInertiaRequests extends Middleware
 
     /**
      * Define the props that are shared by default.
-     *
-     * @return array<string, mixed>
+     * Incluimos 'current_company' y 'current_company_id' aquí.
      */
     public function share(Request $request): array
     {
-         return [
+        // 1. Obtener el contexto de autenticación y compañía.
+        $authData = $this->getAuthContext($request);
+
+        return [
             ...parent::share($request),
-            'auth' => $this->getAuthData($request),
+            'auth' => $authData['auth'],
+            // 🎯 INYECTAMOS EL CONTEXTO DE LA COMPAÑÍA FUERA DE 'auth'
+            'current_company' => $authData['current_company'], 
+            'current_company_id' => $authData['current_company'] ? $authData['current_company']['id'] : null,
+            'all_companies' => $authData['all_companies'],
             'flash' => [
                 'message' => fn() => $request->session()->get('message'),
                 'type' => fn() => $request->session()->get('type', 'info'),
@@ -41,30 +40,70 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Obtener datos de autenticación según el guard activo
+     * Obtener el contexto de autenticación y la compañía activa.
      */
-    private function getAuthData(Request $request): array
+    private function getAuthContext(Request $request): array
     {
-        // Si es un paciente autenticado
+        $user = $request->user();
+        $currentCompany = null;
+        $contextCompanyId = null;
+        $allCompanies = [];
+        
+       
+
+        // --- Manejo del Guardia 'Patient' (solo datos básicos) ---
         if (Auth::guard('patient')->check()) {
             $patient = Auth::guard('patient')->user();
-            
             return [
-                'user' => $patient?->only('id', 'name', 'email', 'rut'),
-                'guard' => 'patient',
-                'roles' => [],
-                'permissions' => [],
+                'auth' => [
+                    'user' => $patient?->only('id', 'name', 'email', 'rut', 'company_id'),
+                    'guard' => 'patient',
+                    'roles' => [],
+                    'permissions' => [],
+                ],
+                'current_company' => null, // Los pacientes no suelen cambiar de contexto
             ];
         }
 
-        // Si es un usuario normal (admin/staff)
-        $user = $request->user();
+        // --- Manejo del Guardia 'web' (Admin/Staff) ---
+        if ($user) {
+            // 1. Determinar el company_id activo
+            
+            // 🎯 Priorizar el ID de la SESIÓN (Para Superadmin que usa el selector)
+            $contextCompanyId = $request->session()->get('current_company_id');
+
+            // 🎯 Si no hay ID en sesión O el usuario tiene un ID fijo, usar el de la DB
+            if (!$contextCompanyId && $user->company_id) {
+                 $contextCompanyId = $user->company_id;
+            }
+
+            // 2. Cargar el objeto de la Compañía (Solo si tenemos una ID válida)
+            if ($contextCompanyId) {
+                // Buscamos solo los campos esenciales para el frontend
+                $currentCompany = Company::select(['id', 'business_name', 'rut', 'giro', 'email', 'phone'])
+                                         ->find($contextCompanyId);
+            }
+        }
+
+        if ($user && $user->isSuperAdmin()) { // 👈 Aquí se usa
+            $allCompanies = Company::select(['id', 'business_name', 'rut', 'giro', 'email', 'phone'])->get()->toArray();
+        } else {
+            $allCompanies = [];
+        }
+
+        /* dd($user,  $user->isSuperAdmin(), $allCompanies); */
         
+        // 3. Devolver el contexto
         return [
-            'user' => $user?->only('id', 'name', 'email'),
-            'guard' => 'web',
-            'roles' => fn() => $user?->getRoleNames() ?? [],
-            'permissions' => fn() => $user?->getAllPermissions()->pluck('name') ?? [],
+            'auth' => [
+                'user' => $user?->only('id', 'name', 'email'),
+                'guard' => 'web',
+                'roles' => fn() => $user?->getRoleNames() ?? [],
+                'permissions' => fn() => $user?->getAllPermissions()->pluck('name') ?? [],
+            ],
+            // Convertir el modelo a array para inyectarlo en Inertia
+            'current_company' => $currentCompany ? $currentCompany->toArray() : null, 
+            'all_companies' => $allCompanies
         ];
     }
 }

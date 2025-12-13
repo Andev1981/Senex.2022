@@ -26,36 +26,6 @@ class TreatmentSessionController extends Controller
     ) {}
 
 
-    public function cancelSession(TreatmentSession $session, ?string $reason = null): TreatmentSession
-    {
-        return DB::transaction(function () use ($session, $reason) {
-            if ($session->isCompleted()) {
-                throw new \Exception('No se puede cancelar una sesión completada');
-            }
-
-            $oldStatus = $session->status;
-
-            $data = ['status' => 'canceled'];
-
-            if ($reason) {
-                $data['notes'] = ($session->notes ? $session->notes . "\n\n" : '') 
-                               . "Motivo de cancelación: {$reason}";
-            }
-
-            $session->update($data);
-
-            // Si estaba completada, revertir consumo del plan
-            if ($oldStatus === 'completed') {
-                $this->planService->revertSessionConsumption($session);
-            }
-
-            // Actualizar tratamiento
-            $this->updateTreatmentAfterStatusChange($session, $oldStatus, 'canceled');
-
-            return $session->fresh();
-        });
-    }
-
     /**
      * STORE - POST /sessions
      * Retorna JsonResponse para manejo desde formularios modales
@@ -64,25 +34,25 @@ class TreatmentSessionController extends Controller
     {
      
         try {
+            /* dd($request->all()); */
              // El service maneja toda la lógica:
             // - Asigna month_session_number automáticamente
             // - Valida disponibilidad del doctor
             // - Crea logs
-            $session = $this->sessionService->createSession($request->validated());
+           
+            $this->sessionService->createSession($request->validated());
 
             // Si la sesión es completada, el service ya incrementó el contador
             // Ya no necesitas hacerlo manualmente aquí
 
             session()->flash('message', 'Sesión creada exitosamente.');
             session()->flash('type', 'success');
-           
 
         } catch (\Exception $e) {
-            Log::info('Error al crear sesión', [
-                $e->getMessage()
-            ]);
+            // FALLO: Capturar la excepción del Service, loguear y redirigir con el mensaje de error
+            Log::error("Error de lógica al agendar sesión: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             
-            session()->flash('message', 'Error al crear la sesión: ' . $e->getMessage());
+            session()->flash('message', "ERROR: " . $e->getMessage());
             session()->flash('type', 'error');
     
         }
@@ -92,24 +62,22 @@ class TreatmentSessionController extends Controller
      * UPDATE - PUT/PATCH /sessions/{session}
      * Retorna JsonResponse para manejo desde formularios modales
      */
-    public function update(UpdateTreatmentSessionRequest $request, TreatmentSession $session)
+    public function update(UpdateTreatmentSessionRequest $request, TreatmentSession $treatmentSession)
     {
         try {
-
-           $session = TreatmentSession::findOrFail($session->id);
             
             // El service recalcula month_session_number si cambió la fecha
-            $session = $this->sessionService->updateSession($session, $request->validated());
+            $this->sessionService->updateSession($treatmentSession, $request->validated());
 
             session()->flash('message', 'Sesión actualizada exitosamente.');
             session()->flash('type', 'success');
-
-          
+            return back();
 
         } catch (\Exception $e) {
             session()->flash('message', 'Error al actualizar la sesión: ' . $e->getMessage());
             session()->flash('type', 'error');
-   
+            return back();
+          
         }
     }
 
@@ -187,6 +155,36 @@ class TreatmentSessionController extends Controller
                 'errors' => ['general' => ['Error interno del servidor']],
             ], 500);
         }
+    }
+
+    public function cancelSession(TreatmentSession $session, ?string $reason = null): TreatmentSession
+    {
+        return DB::transaction(function () use ($session, $reason) {
+            if ($session->isCompleted()) {
+                throw new \Exception('No se puede cancelar una sesión completada');
+            }
+
+            $oldStatus = $session->status;
+
+            $data = ['status' => 'canceled'];
+
+            if ($reason) {
+                $data['notes'] = ($session->notes ? $session->notes . "\n\n" : '') 
+                               . "Motivo de cancelación: {$reason}";
+            }
+
+            $session->update($data);
+
+            // Si estaba completada, revertir consumo del plan
+            if ($oldStatus === 'completed') {
+                $this->planService->revertSessionConsumption($session);
+            }
+
+            // Actualizar tratamiento
+            $this->updateTreatmentAfterStatusChange($session, $oldStatus, 'canceled');
+
+            return $session->fresh();
+        });
     }
 
     /**

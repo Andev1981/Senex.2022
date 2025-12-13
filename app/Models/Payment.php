@@ -16,9 +16,7 @@ class Payment extends Model
     protected $fillable = [
         'patient_id',
         'branch_id',
-        'treatment_id',
-        'treatment_session_id',
-        'payment_date',
+        'liquidation_payor_id ',
         'transaction_reference',
         'amount_clp',
         'copay_clp',
@@ -26,6 +24,7 @@ class Payment extends Model
         'payment_method',
         'status',
         'paid_at',
+        'payment_date',
         'webpay_token',
         'webpay_buy_order',
         'webpay_session_id',
@@ -36,11 +35,12 @@ class Payment extends Model
         'webpay_card_detail',
         'webpay_transaction_date',
         'webpay_raw_response',
-        'invoice',
+        'invoice_id',
         'notes',
     ];
 
     protected $casts = [
+        'paid_at' => 'date',
         'payment_date' => 'date',
         'webpay_transaction_date' => 'date'
     ];
@@ -48,10 +48,6 @@ class Payment extends Model
 
     public function patient(){
         return $this->belongsTo(Patient::class);
-    }
-
-    public function treatment(){
-        return $this->belongsTo(Treatment::class);
     }
 
     public function doctor(){

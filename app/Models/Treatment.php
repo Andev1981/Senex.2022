@@ -13,6 +13,7 @@ class Treatment extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'session_type_id',
         'default_session_type_id',
         'patient_id', 

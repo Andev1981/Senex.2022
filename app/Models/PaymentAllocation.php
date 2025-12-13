@@ -14,7 +14,7 @@ class PaymentAllocation extends Model
     'treatment_session_id',
     'debt_id',
     'invoice_id',
-    'amount',
+    'amount_clp',
   ];
 
 

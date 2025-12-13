@@ -7,6 +7,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class Doctor extends Model
@@ -31,18 +34,28 @@ class Doctor extends Model
     ];
 
     protected $casts = [
-        'birth_date' => 'date',
+        'birth_date' => 'date:Y-m-d',
         'status_changed_at' => 'datetime',
         'mobile_access_enabled' => 'boolean',
     ];
 
+    /* RELACIONES */
+    // Indica la relación M:N con Company
+    public function companies(): BelongsToMany
+    {
+        // Usa la tabla pivote 'company_doctor'. 
+        // withPivot() te permite acceder a campos de la tabla pivote (como la tarifa).
+        return $this->belongsToMany(Company::class, 'company_doctor')
+        ->withPivot('tarifa_acordada','porcentaje_comision','estado_convenio')
+        ->withTimestamps();
+    }
 
-    public function patientAssignments()
+    public function patientAssignments(): HasMany
     {
         return $this->hasMany(DoctorPatientAssignment::class);
     }
 
-    public function patients()
+    public function patients(): BelongsToMany
     {
         // sigue sirviendo belongsToMany para consultar “solo pacientes”
           return $this->belongsToMany(Patient::class, 'doctor_patient_assignments')
@@ -51,38 +64,38 @@ class Doctor extends Model
         ->withTimestamps();
     }
 
-
-    public function sessions(){
+    public function sessions() : HasMany{
         return $this->hasMany(TreatmentSession::class);
     }
 
-     public function user()
+     public function user() : BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function address()
+    public function address(): BelongsTo
     {
         return $this->belongsTo(Address::class);
     }
 
-    public function branch()
+    public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
     }
 
-    public function commissionRates()
+    public function commissionRates(): HasMany
     {
         return $this->hasMany(DoctorCommissionRate::class);
     }
 
-    public function activeCommissionRates()
+    public function activeCommissionRates(): HasMany
     {
         return $this->hasMany(DoctorCommissionRate::class)
             ->active()
             ->validAt(now());
     }
 
+    /*  ----------------- CÁLCULOS -------------------- */
     public function getCommissionForSession($sessionTypeId, $basePrice)
     {
         $rate = DoctorCommissionRate::getApplicableCommission(
@@ -96,15 +109,10 @@ class Doctor extends Model
 
         return $rate->calculateCommission($basePrice);
     }
-        /* Attributes */
+        
+    /* -------------- Attributes GETTERS ---------------- */
 
-    public function assignedPatients(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->patients
-        );
-    }
-
+    /* Sesiones del mes */
     public function sessionsMonth(): Attribute
     {
         return Attribute::make(
@@ -115,6 +123,7 @@ class Doctor extends Model
         );
     }
 
+    /* Ganancias del mes */
     public function revenueMonth(): Attribute
     {
         return Attribute::make(
@@ -124,47 +133,69 @@ class Doctor extends Model
             ->sum('doctor_amount')
         );
     }
-
-
-
-    public function getAgeAttribute()
-    {
-        if (!$this->birth || !Carbon::hasFormat($this->birth, 'Y-m-d')) {
-            return null;
-        }
-
-        return Carbon::parse($this->birth)->age . ' años';
-    }
-
-    public function getEmailAttribute()
-    {
-        return $this->user ? $this->user->email : null;
-    }
-
-    public function getDireccionAttribute()
-    {
-        if (!$this->address || !$this->address->address || !$this->address->number) {
-            return null;
-        }
-        if (!$this->address->number) {
-            return $this->address->address . ' ' . $this->address->number ?? null;
-        }
-        return $this->address->address ?? null;
-    }
-
-     public function fullName(): Attribute
+    
+    /* Pacientes asignados */
+     public function assignedPatients(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->name . ' ' . $this->last_name
+            get: fn () => $this->patients ? $this->patients : null,
         );
     }
 
+    /* Edad */
+    public function age() : Attribute
+    {
+        return Attribute::make(
+            get : fn () => trim(
+               $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
+            ),
+        );
+       
+    }
+
+    /* Dirección completa */
+    protected function fullAddress(): Attribute
+    {
+        return Attribute::make(
+            // El Closure para el GETTER (lectura)
+            get: fn () => trim(
+               // 1. Acceso a la Calle: Usa Nullsafe en la relación ($this->address?->street)
+                //    y la coalescencia de null (??) para asegurar una cadena vacía.
+                ($this->address?->street ?? '') 
+                
+                // 2. Acceso al Número: Nullsafe en la relación
+                . ' ' . ($this->address?->number ?? '') 
+                
+                // 3. Acceso a la Comuna: Nullsafe en la relación (address) Y en la sub-relación (commune)
+                . ' '. ($this->address?->commune?->name ?? '') 
+                
+                // 4. Acceso a la Provincia: Nullsafe en ambas relaciones
+                . ' '. ($this->address?->province?->name ?? '')
+                
+                // 5. Acceso a la Región: Nullsafe en ambas relaciones
+                . ' '. ($this->address?->region?->name ?? '')
+            ),
+        );
+            
+    }
+
+    /* Nombre completo */
+     public function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => trim(
+                ($this->name ?? '') . ' ' . ($this->last_name ?? '')
+            ),
+        );
+    }
+
+
     protected $appends = [
-        'age',
-        'email',
-        'direccion',
-        'sessions_month',
-        'revenue_month',
-        'full_name'
+        'age', /* Edad */
+        'full_address',/* Dirección completa */
+        'assigned_patients',/* Pacientes Asignados */
+        'sessions_month',/* Sesiones del mes */
+        'revenue_month',/* Ganancias del mes */
+        'full_name',/* Nombre completo */
     ];
 }

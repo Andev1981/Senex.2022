@@ -54,11 +54,11 @@ export default function WebpayResult({
   const Icon = current.icon;
 
   // Formatear monto en CLP
-  const formatCLP = (amount) => {
+  const formatCLP = (amount_clp) => {
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
       currency: "CLP",
-    }).format(amount);
+    }).format(amount_clp);
   };
 
   // Mapear códigos de tipo de pago a nombres legibles
@@ -100,11 +100,11 @@ export default function WebpayResult({
               {payment && success && (
                 <div className="mt-6 space-y-3 border-t border-gray-200 pt-4">
                   {/* Monto */}
-                  {payment.amount && (
+                  {payment.amount_clp && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Monto:</span>
                       <span className="font-semibold text-gray-900 text-lg">
-                        {formatCLP(payment.amount)}
+                        {formatCLP(payment.amount_clp)}
                       </span>
                     </div>
                   )}

@@ -1,4 +1,4 @@
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import InputLabel from "@/Components/InputLabel";
 import InputError from "@/Components/InputError";
 import TextInput from "@/Components/TextInput";
@@ -6,26 +6,25 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import InputPesoChileno from "@/Components/InputPesoChileno";
 
-export default function PlanModal({
-  plan,
-  setModalOpen,
-  healthInsurers,
-  insuranceCompanies,
-  sessionTypes,
-}) {
+export default function PlanModal({ plan, setModalOpen, insurance }) {
+  const { props } = usePage();
+
+  const currentCompanyId = props.current_company_id;
+
   const { data, setData, errors, post, put, reset, processing } = useForm({
     id: plan?.id,
+    company_id: currentCompanyId,
     name: plan?.name || "",
-    codigo: plan?.codigo || "",
-    institution_type: plan?.institution_type || "clinic",
-    institution_id: plan?.institution_id || null,
+    code: plan?.code || "",
+    insurance_id: plan?.insurance_id || insurance?.id,
+    coverage_percentage: plan?.coverage_percentage || "",
     type: plan?.type || "",
     total_sessions: plan?.total_sessions || "",
     price: plan?.price || 0,
     valid_months: plan?.valid_months || "",
-    session_types: plan?.session_types || [],
+    start_date: plan?.start_date || "",
+    end_date: plan?.end_date || "",
     description: plan?.description || "",
-    coverage: plan?.coverage || "",
     is_active: plan?.is_active ?? true,
   });
 
@@ -71,13 +70,6 @@ export default function PlanModal({
     setData("session_types", options);
   };
 
-  const institutions =
-    data.institution_type === "health_insurer"
-      ? healthInsurers
-      : data.institution_type === "insurance_company"
-      ? insuranceCompanies
-      : [];
-
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-2 gap-4 px-4 pt-2">
@@ -101,20 +93,38 @@ export default function PlanModal({
 
         <div>
           <InputLabel
-            htmlFor="codigo"
+            htmlFor="code"
             value="Código"
             className="ml-2 text-primary"
           />
           <TextInput
             type="text"
-            id="codigo"
-            name="codigo"
-            value={data?.codigo}
+            id="code"
+            name="code"
+            value={data?.code}
             onChange={handleChange}
             required
             className="w-full"
           />
-          <InputError message={errors?.codigo} className="mt-2" />
+          <InputError message={errors?.code} className="mt-2" />
+        </div>
+
+        <div>
+          <InputLabel
+            htmlFor="coverage_percentage"
+            value="Porcentage"
+            className="ml-2 text-primary"
+          />
+          <TextInput
+            type="number"
+            id="coverage_percentage"
+            name="coverage_percentage"
+            value={data?.coverage_percentage}
+            onChange={handleChange}
+            required
+            className="w-full"
+          />
+          <InputError message={errors?.coverage_percentage} className="mt-2" />
         </div>
 
         <div>
@@ -138,58 +148,6 @@ export default function PlanModal({
           </select>
           <InputError message={errors?.type} className="mt-2" />
         </div>
-
-        <div>
-          <InputLabel
-            htmlFor="institution_type"
-            value="Tipo de Institución"
-            className="ml-2 text-primary"
-          />
-          <select
-            id="institution_type"
-            name="institution_type"
-            value={data?.institution_type}
-            onChange={(e) => {
-              handleChange(e);
-              setData("institution_id", ""); // Reset institution_id when type changes
-            }}
-            className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring-primary"
-            required
-          >
-            <option value="">--Seleccionar--</option>
-            <option value="clinic">Clínica</option>
-            <option value="health_insurer">Isapre</option>
-            <option value="insurance_company">Aseguradora</option>
-          </select>
-          <InputError message={errors?.institution_type} className="mt-2" />
-        </div>
-
-        {data.institution_type !== "clinic" && (
-          <div>
-            <InputLabel
-              htmlFor="institution_id"
-              value="Institución"
-              className="ml-2 text-primary"
-            />
-            <select
-              id="institution_id"
-              name="institution_id"
-              value={data?.institution_id || ""}
-              onChange={handleChange}
-              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring-primary"
-              required={data.institution_type !== "clinic"}
-              disabled={data.institution_type === "clinic"}
-            >
-              <option value="">--Seleccionar--</option>
-              {institutions.map((inst) => (
-                <option key={inst.id} value={inst.id}>
-                  {inst.name}
-                </option>
-              ))}
-            </select>
-            <InputError message={errors?.institution_id} className="mt-2" />
-          </div>
-        )}
 
         {data.type !== "unlimited" && (
           <div>
@@ -245,34 +203,41 @@ export default function PlanModal({
           <InputError message={errors?.valid_months} className="mt-2" />
         </div>
 
-        {sessionTypes && sessionTypes.length > 0 && (
-          <div className="col-span-2">
-            <InputLabel
-              htmlFor="session_types"
-              value="Tipos de Sesión Permitidos"
-              className="ml-2 text-primary"
-            />
-            <select
-              id="session_types"
-              name="session_types"
-              multiple
-              value={data?.session_types}
-              onChange={handleSessionTypesChange}
-              className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring-primary"
-              size="4"
-            >
-              {sessionTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-gray-500">
-              Mantén presionado Ctrl/Cmd para seleccionar múltiples opciones
-            </p>
-            <InputError message={errors?.session_types} className="mt-2" />
-          </div>
-        )}
+        <div>
+          <InputLabel
+            htmlFor="start_date"
+            value="Fecha Inicio"
+            className="ml-2 text-primary"
+          />
+          <TextInput
+            type="date"
+            id="start_date"
+            name="start_date"
+            value={data?.start_date}
+            onChange={handleChange}
+            className="w-full"
+            min="0"
+          />
+          <InputError message={errors?.start_date} className="mt-2" />
+        </div>
+
+        <div>
+          <InputLabel
+            htmlFor="end_date"
+            value="Fecha Término"
+            className="ml-2 text-primary"
+          />
+          <TextInput
+            type="date"
+            id="end_date"
+            name="end_date"
+            value={data?.end_date}
+            onChange={handleChange}
+            className="w-full"
+            min="0"
+          />
+          <InputError message={errors?.end_date} className="mt-2" />
+        </div>
 
         <div className="col-span-2">
           <InputLabel
@@ -290,24 +255,6 @@ export default function PlanModal({
             placeholder="Descripción del plan..."
           />
           <InputError message={errors?.description} className="mt-2" />
-        </div>
-
-        <div className="col-span-2">
-          <InputLabel
-            htmlFor="coverage"
-            value="Cobertura"
-            className="ml-2 text-primary"
-          />
-          <textarea
-            id="coverage"
-            name="coverage"
-            value={data?.coverage}
-            onChange={handleChange}
-            rows="3"
-            className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Detalles de cobertura..."
-          />
-          <InputError message={errors?.coverage} className="mt-2" />
         </div>
 
         <div className="col-span-2">

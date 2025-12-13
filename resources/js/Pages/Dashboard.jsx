@@ -131,21 +131,21 @@ export default function Dashboard() {
     {
       id: 1,
       patient: "Roberto Gómez",
-      amount: 45000,
+      amount_clp: 45000,
       dueDate: "2024-10-15",
       overdue: false,
     },
     {
       id: 2,
       patient: "Elena Vargas",
-      amount: 32000,
+      amount_clp: 32000,
       dueDate: "2024-10-10",
       overdue: true,
     },
     {
       id: 3,
       patient: "Francisco Muñoz",
-      amount: 28000,
+      amount_clp: 28000,
       dueDate: "2024-10-18",
       overdue: false,
     },
@@ -430,7 +430,7 @@ export default function Dashboard() {
                     )}
                   </div>
                   <p className="mb-2 text-2xl font-bold text-gray-900">
-                    ${payment.amount.toLocaleString("es-CL")}
+                    ${payment.amount_clp.toLocaleString("es-CL")}
                   </p>
                   <p className="text-xs text-gray-600">
                     Vence:{" "}

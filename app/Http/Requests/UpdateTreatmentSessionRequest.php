@@ -32,19 +32,22 @@ class UpdateTreatmentSessionRequest extends FormRequest
      */
     public function rules(): array
     {
+        
         return [
+            'company_id' => 'sometimes|exists:companies,id',
             'treatment_id' => 'sometimes|exists:treatments,id',
+            'room_id' => 'nullable|exists:rooms,id',
             'doctor_id' => 'sometimes|exists:doctors,id',
             'patient_id' => 'sometimes|exists:patients,id',
             'session_type_id' => 'nullable|exists:session_types,id',
-            'room_id' => 'nullable|exists:rooms,id',
-            'branch_id' => 'nullable|exists:branches,id',
+            /* 'branch_id' => 'nullable|exists:branches,id', */
 
-            'month_session_number' => 'sometimes|integer|min:1',
+            'month_session_number' => 'sometimes',
             'date' => 'sometimes|date',
             'time' => 'sometimes|date_format:H:i',
             'duration' => 'sometimes|integer|min:15|max:180',
-            'status' => 'sometimes|in:Programada,Completada,Cancelada,No Asistió',
+            'status' => 'sometimes|in:scheduled,in_progress,completed,cancelled,not_attend',
+
             // Evaluación del dolor
             'pain_before' => 'nullable|integer|min:0|max:10',
             'pain_after' => 'nullable|integer|min:0|max:10',
@@ -54,13 +57,21 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'rom_abduction_after' => 'nullable|integer|min:0|max:180',
             'rom_rotation_before' => 'nullable|integer|min:0|max:180',
             'rom_rotation_after' => 'nullable|integer|min:0|max:180',
+            
             // Arrays JSON
             'techniques' => 'nullable|array',
             'exercises' => 'nullable|array',
+            
             // Notas
             'notes' => 'nullable|string',
             'homework' => 'nullable|string',
             'next_goals' => 'nullable|string',
+            'cancellation_note' => 'nullable|string',
+
+            // Montos
+             'patient_amount' => 'nullable|integer|min:0',
+             'doctor_amount' => 'nullable|integer|min:0',
+             'clinic_amount' => 'nullable|integer|min:0',
         ];
     }
 
@@ -82,7 +93,7 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'duration.integer' => 'La duración debe ser un número entero',
             'duration.min' => 'La duración debe ser al menos 15 minutos',
             'duration.max' => 'La duración no puede exceder 180 minutos',
-            'status.in' => 'El estado debe ser Programada, Completada, Cancelada o No Asistió',
+            'status.in' => 'El estado debe ser Programada, Completada,En Progreso, Cancelada o No Asistió',
             'pain_before.integer' => 'El dolor inicial debe ser un número entero',
             'pain_before.min' => 'El dolor inicial debe ser al menos 0',
             'pain_before.max' => 'El dolor inicial no puede exceder 10',

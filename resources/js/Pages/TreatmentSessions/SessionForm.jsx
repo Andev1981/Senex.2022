@@ -69,8 +69,8 @@ const SessionForm = ({
     setLoading(true);
     try {
       const route = isEdit
-        ? "treatment-sessions.update"
-        : "treatment-sessions.store";
+        ? "treatment.sessions.update"
+        : "treatment.sessions.store";
       const method = isEdit ? "put" : "post";
 
       await Inertia[method](

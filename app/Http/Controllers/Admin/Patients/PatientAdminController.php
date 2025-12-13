@@ -107,7 +107,8 @@ class PatientAdminController extends Controller
 
         $sessions = TreatmentSession::where('patient_id', $patient->id)
             ->with(['doctor', 'treatment','debt'])
-            ->orderBy('date', 'desc')
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
             ->get();
 
         $payments = Payment::where('patient_id', $patient->id)->where('status','completed')

@@ -16,6 +16,8 @@ return new class extends Migration
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+
             // Ámbito (scope): null = global; o relación polimórfica (Clinic, User, etc.)
             $table->nullableMorphs('scope'); // scope_type + scope_id
 

@@ -93,11 +93,11 @@ export default function TableDoctors({
         header: "PROFESIONAL",
         accessorFn: (row) => row.full_name,
         cell: ({ row }) => {
-          const { name, last_name, phone, email, full_name } = row.original;
+          const { phone, email, full_name } = row.original;
           return (
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center font-bold text-white rounded-lg w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600">
-                {name
+                {full_name
                   .split(" ")
                   .map((n) => n[0])
                   .join("")}
@@ -126,6 +126,20 @@ export default function TableDoctors({
         header: "RUT",
         cell: ({ getValue }) => (
           <span className="text-sm text-gray-700">{getValue()}</span>
+        ),
+      },
+      {
+        accessorKey: "birth_date",
+        header: "Fecha de Nacimiento",
+        cell: ({ getValue }) => (
+          <span className="text-sm text-gray-700">{getValue()}</span>
+        ),
+      },
+      {
+        accessorKey: "age",
+        header: "EDAD",
+        cell: ({ getValue }) => (
+          <span className="text-sm text-gray-700">{getValue()} AÑOS</span>
         ),
       },
       {

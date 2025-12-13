@@ -11,16 +11,17 @@ return new class extends Migration {
 
         Schema::create('doctors', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('branch_id')
-                      ->nullable()
-                      ->constrained('branches')
-                      ->nullOnDelete();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('last_name');
             $table->string('rut', 20)->nullable();
             $table->string('email')->nullable();
             $table->string('phone', 50)->nullable();
+            $table->string('license_number', 50)->nullable();
+            /* $table->foreignId('specialty_id')
+          ->nullable() // Puede ser null si es una operación central.
+          ->constrained()
+          ->comment('Sucursal donde se emitió el DTE.'); */
             $table->string('speciality')->nullable();
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female', 'other', 'unknown'])->nullable();

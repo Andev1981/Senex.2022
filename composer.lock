@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "045232cfd1ea2249931a5facf73bfd9b",
+    "content-hash": "156263773359ea19d594c02de3e72d56",
     "packages": [
         {
             "name": "brick/math",
@@ -1957,60 +1957,6 @@
                 }
             ],
             "time": "2024-09-21T08:32:55+00:00"
-        },
-        {
-            "name": "libredte/libredte-api-client",
-            "version": "2.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/LibreDTE/libredte-api-client-php.git",
-                "reference": "ba343e9125781f7a3200db7d6db252cd40135b66"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/LibreDTE/libredte-api-client-php/zipball/ba343e9125781f7a3200db7d6db252cd40135b66",
-                "reference": "ba343e9125781f7a3200db7d6db252cd40135b66",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "php": "^7.3 || ^8.0"
-            },
-            "require-dev": {
-                "phpdocumentor/phpdocumentor": "^2.9",
-                "phpunit/phpunit": "^9.2",
-                "vlucas/phpdotenv": "^5.6"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "libredte\\api_client\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-3.0+"
-            ],
-            "authors": [
-                {
-                    "name": "LibreDTE",
-                    "homepage": "https://www.libredte.cl"
-                }
-            ],
-            "description": "Cliente para realizar la integración con los servicios web de LibreDTE desde PHP.",
-            "homepage": "https://www.libredte.cl",
-            "keywords": [
-                "api",
-                "chile",
-                "dte",
-                "facturación electrónica",
-                "sii"
-            ],
-            "support": {
-                "issues": "https://github.com/LibreDTE/libredte-api-client-php/issues",
-                "source": "https://github.com/LibreDTE/libredte-api-client-php"
-            },
-            "time": "2024-01-29T22:01:33+00:00"
         },
         {
             "name": "libredte/libredte-lib-core",

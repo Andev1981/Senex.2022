@@ -36,7 +36,7 @@ class WebpayPlusService
     /**
      * Inicia una transacción Webpay Plus
      */
-    public function create(string $buyOrder, string $sessionId, $amount, ?string $returnUrl = null): array
+    public function create(string $buyOrder, string $sessionId, $amount_clp, ?string $returnUrl = null): array
     {
         try {
             $returnUrl = $returnUrl ?: config('webpay.return_url');
@@ -48,13 +48,13 @@ class WebpayPlusService
             Log::info('Creando transacción Webpay', [
                 'buy_order' => $buyOrder,
                 'session_id' => $sessionId,
-                'amount' => $amount,
+                'amount_clp' => $amount_clp,
                 'return_url' => $returnUrl,
                 'environment' => $this->environment,
             ]);
 
             $transaction = $this->getTransaction();
-            $response = $transaction->create($buyOrder, $sessionId, (int) $amount, $returnUrl);
+            $response = $transaction->create($buyOrder, $sessionId, (int) $amount_clp, $returnUrl);
 
             Log::info('Transacción Webpay creada exitosamente', [
                 'token' => $response->getToken(),
@@ -87,7 +87,7 @@ class WebpayPlusService
 
             $result = [
                 'status' => $resp->getStatus(),
-                'amount' => $resp->getAmount(),
+                'amount_clp' => $resp->getAmount(),
                 'buy_order' => $resp->getBuyOrder(),
                 'session_id' => $resp->getSessionId(),
                 'authorization_code' => $resp->getAuthorizationCode(),
@@ -127,7 +127,7 @@ class WebpayPlusService
             
             return [
                 'status' => $resp->getStatus(),
-                'amount' => $resp->getAmount(),
+                'amount_clp' => $resp->getAmount(),
                 'buy_order' => $resp->getBuyOrder(),
                 'session_id' => $resp->getSessionId(),
                 'raw' => $resp,
@@ -144,11 +144,11 @@ class WebpayPlusService
     /**
      * Reversa/Anula una transacción
      */
-    public function refund(string $token, int $amount): array
+    public function refund(string $token, int $amount_clp): array
     {
         try {
             $transaction = $this->getTransaction();
-            $resp = $transaction->refund($token, $amount);
+            $resp = $transaction->refund($token, $amount_clp);
             
             return [
                 'type' => method_exists($resp, 'getType') ? $resp->getType() : null,
@@ -160,7 +160,7 @@ class WebpayPlusService
         } catch (\Exception $e) {
             Log::error('Error en refund Webpay', [
                 'token' => $token,
-                'amount' => $amount,
+                'amount_clp' => $amount_clp,
                 'error' => $e->getMessage(),
             ]);
             throw $e;

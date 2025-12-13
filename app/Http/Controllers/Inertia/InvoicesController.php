@@ -22,7 +22,7 @@ class InvoicesController extends Controller
     if ($req->filled('status'))    $q->where('status', $req->status);
     if ($req->filled('sii_status')) $q->where('sii_status', $req->sii_status);
 
-    dd($q->toSql(), $q->getBindings());
+
 
     return inertia('Invoices/Index', [
       'invoices' => $q->paginate(20),

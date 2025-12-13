@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Clipboard, Plus, Target } from "lucide-react";
 import TreatmentCardMain from "./TreatmentPartials/TreatmentCardMain";
 import SideModal from "@/Components/SideModal";
+import Modal from "@/Components/Modal";
 import TreatmentModal from "./TreatmentPartials/TreatmentModal";
 import IndexSessions from "./Sessions/IndexSessions";
 import SessionModal from "./Sessions/SessionModal";
@@ -158,18 +159,6 @@ export default function IndexTreatments({
       <SideModal
         open={openSessionModal}
         onClose={() => setOpenSessionModal(false)}
-        title={
-          isDuplicate
-            ? "Duplicando Sesión"
-            : selectedSession?.id
-            ? "Editando Sesión"
-            : "Nueva Sesión"
-        }
-        description={
-          selectedSession?.id
-            ? "Edita los campos que necesites para la sesión."
-            : "Agrega los detalles de la nueva sesión."
-        }
         width="3xl" // sm, md, lg, xl, 2xl, 3xl, full
       >
         <SessionModal
@@ -184,17 +173,17 @@ export default function IndexTreatments({
         />
       </SideModal>
 
-      <SideModal
+      <Modal
         open={openSessionModalShow}
         onClose={() => setOpenSessionModalShow(false)}
         title={"Eliminar Sesión"}
-        width="3xl" // sm, md, lg, xl, 2xl, 3xl, full
+        maxWidth="3xl" // sm, md, lg, xl, 2xl, 3xl, full
       >
         <SessionModalDelete
           session={selectedSession}
           setOpenSessionModalShow={setOpenSessionModalShow}
         />
-      </SideModal>
+      </Modal>
     </div>
   );
 }

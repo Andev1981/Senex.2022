@@ -15,11 +15,15 @@ import {
   Edit,
   Eye,
   Trash2,
+  Timer,
+  Stethoscope,
 } from "lucide-react";
 import TablePagination from "@/Components/TablePagination";
 import { useForm } from "@inertiajs/react";
-import { patientStatuses } from "@/helpers/status";
 import { t } from "@/constants/translations";
+import { getSessionStatusConfig } from "@/constants/sessionStatuses";
+import { getPaymentStatusConfig } from "@/constants/paymentStatuses";
+import { SESSION_STATUS_OPTIONS } from "@/constants/sessionStatuses";
 
 export default function TableSessions({
   sessions = [],
@@ -55,39 +59,40 @@ export default function TableSessions({
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex gap-2">
-            {treatment.status === "in_progress" &&
-              row.status === "scheduled" && (
-                <p
-                  className="text-green-500 cursor-pointer"
-                  onClick={() => (
-                    handleOpenModalSession(row.original, treatment),
-                    setIsDuplicate(false)
-                  )}
-                >
-                  <Edit className="w-4 h-4 text-green-500" />
-                </p>
-              )}
+          <div className="flex gap-4">
             {treatment.status === "in_progress" && (
               <p
-                className="text-gray-500 cursor-pointer"
+                className="text-green-500 cursor-pointer"
                 onClick={() => (
                   handleOpenModalSession(row.original, treatment),
-                  setIsDuplicate(true)
+                  setIsDuplicate(false)
                 )}
               >
-                <Copy className="w-4 h-4 text-gray-500" />
+                <Edit className="w-5 h-5 text-green-500" />
               </p>
             )}
 
-            {treatment.status === "in_progress" && (
-              <p
-                className="text-red-500 cursor-pointer"
-                onClick={() => handleOpenModalSessionShow(row?.original)}
-              >
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </p>
-            )}
+            {treatment.status === "in_progress" &&
+              (row.original.status === "scheduled" ||
+                row.original.status === "in_progress") && (
+                <>
+                  <p
+                    className="text-gray-500 cursor-pointer"
+                    onClick={() => (
+                      handleOpenModalSession(row.original, treatment),
+                      setIsDuplicate(true)
+                    )}
+                  >
+                    <Copy className="w-5 h-5 text-gray-500" />
+                  </p>
+                  <p
+                    className="text-red-500 cursor-pointer"
+                    onClick={() => handleOpenModalSessionShow(row?.original)}
+                  >
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </p>
+                </>
+              )}
           </div>
         ),
         enableSorting: false,
@@ -95,40 +100,42 @@ export default function TableSessions({
       {
         id: "status", // si usas accessorFn, deja este id
         accessorKey: "status", // recomendado
-        header: "ESTADO.",
+        header: "ESTADO",
         cell: ({ getValue }) => {
-          const v = String(getValue() ?? "");
-          const cfg = patientStatuses[v] ?? {
-            label: v,
-            className: "bg-blue-600 text-white",
-          };
+          const cfg = String(getValue() ?? "");
           return (
             <span
-              className={`px-2 py-0.5 text-xs rounded-xl border text-white ${cfg.className}`}
+              className={`px-2 py-0.5 text-xs rounded-xl border block flex-1 w-32 uppercase ${
+                getSessionStatusConfig(cfg).className
+              }`}
             >
-              {t("sessionStatus", v)}
+              {getSessionStatusConfig(cfg).label}
             </span>
           );
         },
-        // filtro: acepta múltiples estados (array de strings)
-        filterFn: (row, id, filterValue) => {
-          if (!filterValue) return true; // sin filtro
-          return String(row.getValue(id) ?? "") === String(filterValue);
-        },
+        filterFn: "includesString",
       },
       {
         header: "# Mensual",
         accessorFn: (row) => row?.month_session_number,
-        cell: ({ getValue }) => (
-          <div
-            className="flex items-center gap-3 overflow-hidden uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            <div className="flex items-center justify-center w-6 h-6 text-xs font-semibold text-white rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-              #{getValue()}
+        cell: ({ getValue }) => {
+          const number = getValue() ?? 0; // Si es null o undefined, usa 0
+          // Normalizamos el valor para la visualización
+          const displayValue = number === 0 ? "-*-" : "# " + number;
+          const displayClass =
+            number === 0 ? " bg-yellow-400" : " bg-green-500";
+
+          return (
+            <div className="flex items-center gap-3 overflow-hidden uppercase truncate whitespace-nowrap">
+              <div
+                className={`flex items-center justify-center  px-2 py-1 w-1/3 text-xs font-semibold text-white rounded-lg bg-gradient-to-br ${displayClass}`}
+              >
+                {displayValue}
+              </div>
             </div>
-          </div>
-        ),
+          );
+        },
+        filterFn: "includesString",
       },
       {
         header: "$Pago",
@@ -137,13 +144,16 @@ export default function TableSessions({
           const v = String(getValue() ?? "");
           return (
             <span
-              className="px-2 py-0.5 text-xs rounded-xl border bg-blue-600 text-white uppercase"
+              className={`px-2 py-0.5 text-xs rounded-xl border bg-blue-600 text-white uppercase ${
+                getPaymentStatusConfig(v).className
+              }`}
               title={v}
             >
-              {t("paymentStatus", v)}
+              {getPaymentStatusConfig(v).label}
             </span>
           );
         },
+        filterFn: "includesString",
       },
       {
         header: "FECHA DE SESIÓN",
@@ -159,6 +169,21 @@ export default function TableSessions({
             </div>
           );
         },
+        filterFn: "includesString",
+      },
+      {
+        header: "HORA",
+        accessorFn: (row) => row?.time,
+        id: "time",
+        cell: ({ getValue }) => {
+          return (
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Timer className="w-4 h-4 text-gray-400" />
+              {getValue()}
+            </div>
+          );
+        },
+        filterFn: "includesString",
       },
       {
         header: "Kine",
@@ -168,9 +193,11 @@ export default function TableSessions({
             className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
             title={getValue()}
           >
+            <Stethoscope className="w-4 h-4 text-gray-400" />
             {getValue()}
           </div>
         ),
+        filterFn: "includesString",
       },
     ],
     [handleOpenModalDelete, sessions]
@@ -222,6 +249,43 @@ export default function TableSessions({
     },
   });
 
+  // Necesitas este componente para gestionar el estado del filtro de la columna
+  function ColumnFilter({ column }) {
+    const columnFilterValue = column.getFilterValue();
+    const isSelect = column.id === "status"; // Define qué columna usa select (status)
+    const statusOptions = [
+      { value: "", label: "Todos" },
+      ...SESSION_STATUS_OPTIONS,
+    ]; // Asume que tienes esta constante disponible
+
+    if (isSelect) {
+      return (
+        <select
+          value={columnFilterValue ?? ""}
+          onChange={(e) => column.setFilterValue(e.target.value)}
+          className="w-full mt-1 px-1 py-0.5 text-xs border border-gray-300 rounded-lg focus:ring-blue-500"
+        >
+          {statusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    // Filtro de texto simple para las demás columnas
+    return (
+      <input
+        type="text"
+        value={columnFilterValue ?? ""}
+        onChange={(e) => column.setFilterValue(e.target.value)}
+        placeholder={`Buscar...`}
+        className="w-full mt-1 px-2 py-0.5 text-xs border border-gray-300 rounded-lg focus:ring-blue-500"
+      />
+    );
+  }
+
   return (
     <div className="max-w-full">
       {/* Filtro global */}
@@ -239,26 +303,31 @@ export default function TableSessions({
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
-                        onClick={header.column.getToggleSortingHandler()}
-                        className="px-2 py-1 text-sm font-semibold tracking-wider text-left text-gray-700 uppercase transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
-                        scope="col"
+                        // ... (resto de las clases th)
                       >
-                        <div className="flex">
-                          <div className="overflow-hidden uppercase truncate whitespace-nowrap">
+                        {/* Contenido principal del encabezado (Nombre y flechas de ordenación) */}
+                        <div
+                          onClick={header.column.getToggleSortingHandler()}
+                          className="flex items-center justify-between cursor-pointer select-none"
+                        >
+                          <div className="overflow-hidden font-semibold uppercase truncate whitespace-nowrap">
                             {flexRender(
                               header.column.columnDef.header,
                               header.getContext()
                             )}
                           </div>
-                          <span>
-                            {header.column.getIsSorted() === "asc" ? (
-                              <ChevronUp className="inline w-4 h-4 ml-1" />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <ChevronDown className="inline w-4 h-4 ml-1" />
-                            ) : null}
-                          </span>
+                          {/* Indicadores de Ordenación */}
+                          {/* ... (ChevronUp / ChevronDown) ... */}
                         </div>
-                        {/* Filtros por columna */}
+
+                        {/* --- ZONA DE FILTRO --- */}
+                        {header.column.getCanFilter() ? (
+                          <div>
+                            {/* Renderiza el componente de filtro para la columna */}
+                            <ColumnFilter column={header.column} />
+                          </div>
+                        ) : null}
+                        {/* -------------------- */}
                       </th>
                     ))}
                   </tr>

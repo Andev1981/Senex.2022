@@ -32,8 +32,8 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['user_id', 'event_key', 'channel']);
-            $table->index(['user_id', 'event_key']);
+            $table->unique(['patient_id', 'event_key', 'channel']);
+            $table->index(['patient_id', 'event_key']);
         });
     }
 

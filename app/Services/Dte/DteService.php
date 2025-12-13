@@ -2,87 +2,118 @@
 
 namespace App\Services\Dte;
 
-use App\Models\Invoice;
-use Illuminate\Support\Facades\Log;
-use Throwable;
+use App\Contracts\DteServiceProvider; // Tu Interfaz
+use App\Models\Invoice; // El documento de origen
+use App\Models\Dte;     // El modelo para el registro de seguimiento SII
+use App\Models\Company; // Para cargar la configuración DTE
+use App\Services\Dte\DteFoliosService; // Tu servicio para folios
+use Exception;
 
 class DteService
 {
-  public function __construct(
-    private readonly DteProvider $provider,
-    private readonly LibreDtePayloadMapper $mapper,
-  ) {}
+    // Inyección de Dependencias
+    public function __construct(
+        // Inyectamos la Interfaz. Laravel le entregará LibreDteLocalProvider (el Binding)
+        protected DteServiceProvider $dteProvider,
+        protected DteFoliosService $foliosService,
+        // Inyectamos el Mapper para generar el XML (LibreDtePayloadMapper.php)
+        protected LibreDtePayloadMapper $payloadMapper 
+    ) {}
 
-  /**
-   * Emite un DTE para la invoice dada y persiste folio/track/status.
-   * @throws \RuntimeException si el proveedor falla
-   */
-  public function emit(Invoice $invoice, array $options = []): array
-  {
-    $invoice->loadMissing(['items', 'patient', 'company']);
+    /**
+     * Método principal de negocio: Orquesta la emisión de un DTE a partir de una Factura.
+     * @param Invoice $invoice El objeto Factura ya persistido.
+     * @return string El Track ID devuelto por el SII.
+     */
 
-    // Mapear a payload LibreDTE
-    $payload = $this->mapper->map($invoice);
+    public function issueInvoiceDte(Invoice $invoice): string
+    {
+        // 1. Validar y Cargar la Configuración Multi-Empresa
+        $config = $this->cargarConfiguracion($invoice->company_id);
 
-    // Normalizar opciones (tipo y envío a SII)
-    $opts = [
-      'type' => (int)($invoice->type ?? ($options['type'] ?? 39)),
-      'send_to_sii' => (bool)($options['send_to_sii'] ?? true),
-    ];
-    try {
-      $resp = $this->provider->issue($payload, $opts);
-    } catch (Throwable $e) {
-      Log::error('DTE emit failed', [
-        'invoice_id' => $invoice->id,
-        'message' => $e->getMessage(),
-      ]);
-      throw new \RuntimeException('No se pudo emitir el DTE: ' . $e->getMessage(), 0, $e);
+        // 2. ✅ AHORA: ASIGNAR Y CONSUMIR EL FOLIO AQUÍ
+        // La responsabilidad de usar el FoliosService es del DteService.
+        // Esto te devuelve el objeto Folios (CAF) y el número reservado.
+        list($objetoFolios, $folioReservado) = $this->foliosService->reservarFolio(
+            $invoice->company_id, 
+            $invoice->type 
+        );
+        
+        $invoice->folio = $folioReservado;
+        $invoice->save(); // Persistir el folio en la tabla 'invoices'
+
+        // 3. Generar el PAYLOAD (Array)
+        $payloadArray = $this->payloadMapper->mapInvoiceToPayload($invoice, $config);
+
+        // 4. DELEGACIÓN CLAVE: Llama a issue(), pasándole el objeto Folios
+        // El objeto Folios (CAF) es necesario para el timbrado.
+        $result = $this->dteProvider->issue($payloadArray, $config, $objetoFolios);
+
+        // 5. Destructuración y Registro de Seguimiento
+        list($trackId, $xmlFirmado) = $result; 
+
+        $this->guardarRegistroDte($invoice, $trackId, $xmlFirmado); 
+
+        return $trackId;
     }
 
-    // Persistir en invoice (ajusta campos a tu schema)
-    $invoice->update([
-      'folio' => $resp['folio'] ?? null,
-      'track_id' => $resp['track_id'] ?? null,
-      'status' => $resp['status'] ?? ($invoice->status ?? 'EMITIDO'),
-      'raw_response' => $resp['raw'] ?? null,
-    ]);
+    /**
+     * Lógica auxiliar para consultar el estado del DTE asíncronamente (usado por un Job o Command).
+     * @param string $trackId El ID de seguimiento del SII.
+     * @param int $companyId El ID de la empresa para cargar la configuración.
+     * @return string El estado final del DTE.
+     */
+    public function checkDteStatus(string $trackId, int $companyId): string
+    {
+        $config = $this->cargarConfiguracion($companyId);
+        
+        // Llama al método status() definido en la Interfaz DteServiceProvider
+        $status = $this->dteProvider->status($trackId, $config);
 
-    return $resp;
-  }
-
-  /**
-   * Consulta estado en proveedor (si lo soporta) y actualiza Invoice.
-   * Retorna array con estado/glosa/raw si aplica.
-   */
-  public function checkStatus(Invoice $invoice): ?array
-  {
-    if (! $invoice->track_id) {
-      return null;
+        // Lógica de negocio para actualizar el estado en el modelo Dte.
+        Dte::where('track_id', $trackId)->update(['estado_sii' => $status]);
+        
+        return $status;
     }
 
-    if (! $this->provider instanceof DteProvider) {
-      // El proveedor actual no soporta status()
-      return null;
+    // --- MÉTODOS AUXILIARES ---
+
+    /**
+     * Carga la configuración del certificado y ambiente para una empresa.
+     */
+    protected function cargarConfiguracion(int $companyId): array
+    {
+        // Buscar la configuración en la tabla 'dte_configuracion'
+        $config = Company::findOrFail($companyId)->dteConfig; // Asume una relación 1:1
+
+        if (!$config) {
+            throw new Exception("Configuración DTE no encontrada para la Compañía ID: {$companyId}");
+        }
+
+        // Retorna un array con las credenciales necesarias
+        return [
+            'rut_empresa' => $config->rut_emisor, // Usado en el XML
+            'ambiente' => $config->ambiente,
+            'path' => storage_path('app/' . $config->certificado_path), // Ruta completa del PFX
+            'password' => decrypt($config->certificado_password), // Importante: desencriptar
+        ];
     }
-
-    try {
-      $resp = $this->provider->status($invoice->track_id);
-    } catch (Throwable $e) {
-      Log::warning('DTE status failed', [
-        'invoice_id' => $invoice->id,
-        'track_id' => $invoice->track_id,
-        'message' => $e->getMessage(),
-      ]);
-      return null;
+    
+    /**
+     * Guarda el registro final del DTE en la tabla 'dtes'.
+     */
+    protected function guardarRegistroDte(Invoice $invoice, string $trackId, string $xmlFirmado): Dte
+    {
+        return Dte::create([
+            'company_id' => $invoice->company_id,
+            'branch_id' => $invoice->branch_id,
+            'type' => $invoice->type,
+            'folio' => $invoice->folio,
+            'rut_emisor' => $invoice->rut_emisor, // O tomarlo de la configuración
+            'xml_data' => $xmlFirmado,
+            'track_id' => $trackId,
+            'estado_sii' => 'ENVIADO', // Estado inicial tras la recepción del Track ID
+            // ... otros campos DTE
+        ]);
     }
-
-    // Mapea a tus campos (ajusta nombres si usas otros)
-    $estado = $resp['estado'] ?? null; // p.ej. ACEPTADO/RECHAZADO/EN_PROCESO
-    $invoice->update([
-      'status' => $estado ?: $invoice->status,
-      'raw_status' => $resp,
-    ]);
-
-    return $resp;
-  }
 }

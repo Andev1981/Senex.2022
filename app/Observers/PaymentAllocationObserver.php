@@ -26,7 +26,7 @@ class PaymentAllocationObserver
     if (!$debt) return;
 
     // Recalcular pagado desde allocations (si usas ambos, tomamos el máximo)
-    $allocPaid = (float) $debt->paymentAllocations()->sum('amount');
+    $allocPaid = (float) $debt->paymentAllocations()->sum('amount_clp');
     $debt->paid_amount = max((float)$debt->paid_amount, $allocPaid);
 
     // Refrescar estado según tu lógica del modelo

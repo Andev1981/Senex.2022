@@ -14,8 +14,18 @@ import {
   CreditCard,
   Search,
   Shell,
+  Type,
+  Code,
+  QrCode,
+  ArrowBigDown,
+  ListCheck,
+  Ungroup,
+  X,
+  Check,
+  ListChecksIcon,
 } from "lucide-react";
 import SessionTypeModal from "./SessionTypeModal";
+import { fmtCLP } from "../../utils/utils";
 
 export default function SessionTypesIndex({ sessionTypes }) {
   const { delete: destroy } = useForm();
@@ -164,19 +174,28 @@ export default function SessionTypesIndex({ sessionTypes }) {
                     Nombre
                   </th>
                   <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                    Categoría
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                    Código
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
                     Precio Base
                   </th>
                   <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
                     Duración
                   </th>
                   <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Plan
+                    Requiere Diagnóstico (CIE-10) para facturar
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                    Requiere orden médica para cobro a terceros.
+                  </th>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
+                    Descuento al Usar En Planes
                   </th>
                   <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
                     Estado
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-right text-gray-500 uppercase dark:text-gray-400">
-                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -205,11 +224,10 @@ export default function SessionTypesIndex({ sessionTypes }) {
                               {sessionType.name}
                             </div>
                             <div className="text-xs text-gray-500">
-                              $
-                              {Math.round(
-                                sessionType.base_price /
+                              {fmtCLP(
+                                sessionType.base_price_clp /
                                   sessionType.duration_minutes
-                              ).toLocaleString("es-CL")}{" "}
+                              )}{" "}
                               / min
                             </div>
                           </div>
@@ -217,12 +235,23 @@ export default function SessionTypesIndex({ sessionTypes }) {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-white">
-                          <DollarSign className="w-4 h-4 text-green-600" />
-                          {parseFloat(sessionType.base_price).toLocaleString(
-                            "es-CL"
-                          )}
+                          <Type className="w-4 h-4 text-green-600" />
+                          {sessionType.category}
                         </div>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
+                          <ListChecksIcon className="w-4 h-4 text-blue-600" />
+                          {sessionType.code}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-white">
+                          {/* <DollarSign className="w-4 h-4 text-green-600" /> */}
+                          {fmtCLP(sessionType.base_price_clp)}
+                        </div>
+                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
                           <Clock className="w-4 h-4 text-blue-600" />
@@ -230,6 +259,43 @@ export default function SessionTypesIndex({ sessionTypes }) {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
+                          {sessionType.requires_diagnosis ? (
+                            <>
+                              <Check className="w-4 h-4 text-green-600" />
+                              SI Requiere (CIE-10)
+                            </>
+                          ) : (
+                            <>
+                              <X className="w-4 h-4 text-red-600" />
+                              NO Requiere (CIE-10)
+                            </>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
+                          {sessionType.requires_referral ? (
+                            <>
+                              <Check className="w-4 h-4 text-green-600" />
+                              SI Requiere Orden
+                            </>
+                          ) : (
+                            <>
+                              <X className="w-4 h-4 text-red-600" />
+                              NO Requiere Orden
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
+                          <ArrowBigDown className="w-4 h-4 text-red-600" />
+                          {fmtCLP(sessionType.plan_discount_clp)}
+                        </div>
+                      </td>
+                      {/* <td className="px-6 py-4 whitespace-nowrap">
                         {sessionType.plan_eligible ? (
                           <div className="flex flex-col gap-1">
                             <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full w-fit">
@@ -252,7 +318,7 @@ export default function SessionTypesIndex({ sessionTypes }) {
                             No elegible
                           </span>
                         )}
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleToggleActive(sessionType)}

@@ -7,7 +7,9 @@ use App\Models\Treatment;
 use App\Models\Debt;
 use App\Models\Patient;
 use App\Jobs\SendPaymentReminderJob;
+use App\Models\Doctor;
 use App\Models\DoctorCommissionRate;
+use App\Models\PatientPlan;
 use App\Models\SessionType;
 use App\Models\TreatmentSession;
 use Carbon\Carbon;
@@ -33,40 +35,156 @@ class TreatmentSessionService
     {
     
         return DB::transaction(function () use ($data) {
-            // Validar que exista treatment_id
-            if (!isset($data['treatment_id'])) {
-                throw new \InvalidArgumentException('treatment_id es requerido');
-            }
 
+             $doctor = Doctor::findOrFail($data['doctor_id']);
+           
             // Validar disponibilidad de doctor si se proporciona
             if (isset($data['doctor_id']) && isset($data['date']) && isset($data['time'])) {
                 $this->validateDoctorAvailability($data['doctor_id'], $data['date'], $data['time']);
             }
 
-            if (!isset($data['month_session_number']) && isset($data['date'])) {
-                $data['month_session_number'] = $this->calculateNextMonthSessionNumber(
-                    $data['treatment_id'],
-                    $data['date']
+            $sessionType = SessionType::findOrFail($data['session_type_id']);
+            $doctorCommission = DoctorCommissionRate::active()
+                ->forDoctor($data['doctor_id'])
+                ->forSessionType($data['session_type_id'])
+                ->validAt(Carbon::parse($data['date']))
+                ->first();
+
+            if (!$doctorCommission) {
+                DB::rollBack();
+                // 🎯 LANZAR EXCEPCIÓN: Esto detiene la transacción y la ejecución.
+                throw new \Exception(
+                    "⚠️ No hay comisión configurada para {$doctor->full_name} en sesiones de tipo '{$sessionType->name}'. " .
+                    "Por favor, configure la comisión antes de agendar."
+                );
+                
+            }
+
+            // Si la comisión existe pero no tiene valores
+            if ($doctorCommission->commission_type === 'percentage' && !$doctorCommission->commission_percentage) {
+                DB::rollBack();
+                 // 🎯 LANZAR EXCEPCIÓN: Esto detiene la transacción y la ejecución.
+                throw new \Exception(
+                   "⚠️ La comisión de {$doctor->full_name} no tiene porcentaje asignado. " .
+                    "Configure el valor antes de continuar."
                 );
             }
 
-            $sessionType = SessionType::find($data['session_type_id']);
-            $doctorCommission = DoctorCommissionRate::where('session_type_id',$data['session_type_id'])->where('doctor_id',$data['doctor_id'])->first();
-
-            if(!isset($data['patient_amount'])){
-                $data['patient_amount'] = $sessionType['base_price'];
+            if ($doctorCommission->commission_type === 'fixed_amount' && !$doctorCommission->commission_value) {
+                DB::rollBack();
+                 // 🎯 LANZAR EXCEPCIÓN: Esto detiene la transacción y la ejecución.
+                throw new \Exception(
+                  "⚠️ La comisión de {$doctor->full_name} no tiene monto fijo asignado. " .
+                    "Configure el valor antes de continuar."
+                );
             }
 
+            if(!isset($data['patient_amount'])){
+                $data['patient_amount'] = $sessionType['base_price_clp'];
+            }
             if(!isset($data['doctor_amount'])){
                 $data['doctor_amount'] = $doctorCommission['commission_value'];
             }
 
-             if(!isset($data['clinic_amount'])){
-                $data['clinic_amount'] = $sessionType['base_price'] - $doctorCommission['commission_value'];
+            if(!isset($data['clinic_amount'])){
+                $data['clinic_amount'] = $sessionType['base_price_clp'] - $doctorCommission['commission_value'];
             }
 
-            // Crear la sesión
-            $session = TreatmentSession::create($data);
+            // ============================================
+            // 1.- Asignar paciente a doctor
+            // ============================================
+            $this->assignPatientToDoctor($data['patient_id'], $data['doctor_id']);
+
+            // ============================================
+            // 2.- Buscar o crear tratamiento
+            // ============================================
+            if(!isset($data['treatment_id'])){
+                $treatment = $this->treatmentService->createTreatmentFromSession($data);
+                $data['treatment_id'] = $treatment->id;
+            }
+
+            if(!isset($data['month_session_number'])){
+                // 1. Calcular el número temporal para la nueva sesión (solo para cumplir el NOT NULL de la DB)
+                $maxExisting = $this->getCurrentMaxSessionNumber($data['treatment_id'], $data['date']);
+                $data['month_session_number'] = $maxExisting + 1;
+            }else{
+                $maxExisting = $this->getCurrentMaxSessionNumber($data['treatment_id'], $data['date']);
+                $data['month_session_number'] = $maxExisting + 1;
+            }
+
+            // ============================================
+            // 3.- Calcular y guardar snapshot de comisión
+            // ============================================
+            $data['commission_amount'] = $doctorCommission->calculateCommission($data['patient_amount']);
+            $data['commission_percentage'] = $doctorCommission->commission_percentage;
+            $data['commission_type'] = $doctorCommission->commission_type;
+
+            // ============================================
+            // 4. Verificar y validar plan (si aplica)
+            // ============================================
+            $consumePlan = $data['consume_plan'] ?? false;
+            $patientPlan = null;
+            
+            if ($consumePlan) {
+                if (!$data['patient_plan_id']) {
+                    DB::rollBack(); 
+                   throw new \Exception(
+                  'Debe seleccionar un plan para consumir'
+                    );
+                }
+                
+                // Buscar plan con scopes
+                $patientPlan = PatientPlan::where('id', $data['patient_plan_id'])
+                    ->where('patient_id', $data['patient_id'])
+                    ->active()
+                    ->notExpired()
+                    ->withSessionsRemaining()
+                    ->first();
+                
+                if (!$patientPlan) {
+                    DB::rollBack();
+                    throw new \Exception(
+                  "⚠️ El plan seleccionado no está disponible o ha expirado"
+                );
+                }
+
+                // Verificar que tenga sesiones disponibles
+                if ($patientPlan->sessions_remaining <= 0) {
+                    DB::rollBack();
+                    throw new \Exception(
+                  "⚠️ El plan no tiene sesiones disponibles"
+                );
+                }
+
+                // Verificar tipos de sesión permitidos en el plan
+                $plan = $patientPlan->plan;
+                if ($plan->session_types) {
+                    $allowedTypes = $plan->session_types; // Ya es array, no necesita json_decode
+    
+                    if (count($allowedTypes) > 0 && !in_array($data['session_type_id'], $allowedTypes)) {
+                        DB::rollBack();
+                    throw new \Exception(
+                        "⚠️ El tipo de sesión seleccionado no está cubierto por este plan"
+                        );
+                    }
+                }
+            }
+
+            if($patientPlan) {
+                Log::info("Plan válido para consumir", [
+                    'patient_plan_id' => $patientPlan->id,
+                    'plan_name' => $patientPlan->plan->name,
+                    'sessions_remaining' => $patientPlan->sessions_remaining,
+                ]);
+            } else {
+                Log::info("No se consumirá plan para esta sesión");
+            }
+
+            // 2. Crear/Guardar el nuevo registro en la base de datos (¡El dato ya existe!)
+            $session = TreatmentSession::create($data); 
+            
+            // 3. RECÁLCULO COMPLETO: Llamar a la función para ordenar todas las sesiones de ese mes.
+            $this->resequenceMonthSessions($session->treatment_id, $session->date);
 
             // Re-obtener el paciente (necesario para el Job)
             $patient = Patient::find($session->patient_id); // Asumo que tienes el modelo Patient
@@ -110,8 +228,7 @@ class TreatmentSessionService
                 }
             } else {
                 // Tratamiento con total fijo: asociar deuda pre-creada
-                $debt = Debt::where('treatment_id', $session->treatment_id)
-                            ->whereNull('treatment_session_id')
+                $debt = Debt::where('treatment_session_id',  $session->treatment_id)
                             ->whereDate('due_date', '>=', $session->date)
                             ->orderBy('due_date')
                             ->first();
@@ -134,6 +251,47 @@ class TreatmentSessionService
         });
     }
 
+     /**
+     * Asigna un paciente a un doctor si no está asignado
+     */
+    private function assignPatientToDoctor($patientId, $doctorId)
+    {
+        $exists = DB::table('doctor_patient_assignments')
+            ->where('patient_id', $patientId)
+            ->where('doctor_id', $doctorId)
+            ->exists();
+
+        if (!$exists) {
+            DB::table('doctor_patient_assignments')->insert([
+                'patient_id' => $patientId,
+                'doctor_id' => $doctorId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            Log::info("Paciente asignado a doctor", [
+                'patient_id' => $patientId,
+                'doctor_id' => $doctorId,
+            ]);
+        }
+    }
+
+    /**
+     * Validar disponibilidad del doctor en una fecha/hora
+     */
+    private function validateDoctorAvailability(int $doctorId, string $date, string $time): void
+    {
+        $exists = TreatmentSession::where('doctor_id', $doctorId)
+            ->where('date', $date)
+            ->where('time', $time)
+            ->whereNotIn('status', ['cancelled'])
+            ->exists();
+
+        if ($exists) {
+            throw new \Exception('El doctor no está disponible en ese horario');
+        }
+    }
+
     /**
      * Actualizar una sesión recalculando números si es necesario
      */
@@ -143,27 +301,31 @@ class TreatmentSessionService
 
             $oldDate = $session->date;
             $newDate = $data['date'] ?? $oldDate;
+            $status = $data['status'];
+            $debt = Debt::where('treatment_session_id',$session->id)->first();
 
-            // Si cambió la fecha a un mes diferente, recalcular month_session_number
-            if ($oldDate && $newDate) {
-                $oldMonth = Carbon::parse($oldDate)->format('Y-m');
-                $newMonth = Carbon::parse($newDate)->format('Y-m');
+            if($status === "cancelled" || $status === "not_attend"){
 
-                if ($oldMonth !== $newMonth) {
-                    $data['month_session_number'] = $this->calculateNextMonthSessionNumber(
-                        $session->treatment_id,
-                        $newDate
-                    );
-
-                    Log::info('Fecha cambió de mes, recalculando month_session_number', [
-                        'session_id' => $session->id,
-                        'old_date' => $oldDate,
-                        'new_date' => $newDate,
-                        'new_month_session_number' => $data['month_session_number'],
-                    ]);
+                if($debt){
+                    $debt->delete();
                 }
-            }
 
+                $data['month_session_number'] = 0;
+                $session->update($data);
+            }else{
+                $data['month_session_number'] = 1;
+                $session->update($data);
+            }
+            
+            if(!$debt){
+                $this->paymentService->createDebtForSession($session);
+            }
+            
+             $this->resequenceMonthSessions(
+                    $session->treatment_id,
+                    $newDate,
+                );
+   
             // Actualizar la sesión
             $session->update($data);
           
@@ -181,6 +343,39 @@ class TreatmentSessionService
         });
     }
 
+    public function deleteSession(TreatmentSession $session)
+    {
+         return DB::transaction(function () use ($session) {
+
+            $oldDate = $session->date;
+            $newDate = $data['date'] ?? $oldDate;
+            $treatment = $session->treatment_id;
+            $debt = Debt::where('treatment_session_id',$session->id)->first();
+            
+            if($debt){
+                $debt->delete();
+            }
+
+            // Actualizar la sesión
+            $session->delete();
+            
+            // Si cambió la fecha a un mes diferente, recalcular month_session_number
+            if ($session->treatment_id) {
+
+                $this->resequenceMonthSessions(
+                    $treatment,
+                    $newDate,
+                );
+        
+                    Log::info('Resecuencia: ', [
+                        'session_id' => $session->id
+                    ]);
+                
+            }
+
+            return;
+        });
+    }
     /**
      * Completar sesión con datos clínicos
      */
@@ -192,7 +387,7 @@ class TreatmentSessionService
                 throw new \Exception('La sesión ya está completada');
             }
 
-            $clinicalData['status'] = 'Completada';
+            $clinicalData['status'] = 'completed';
 
             // Actualizar la sesión con datos clínicos
             $session->update($clinicalData);
@@ -227,7 +422,7 @@ class TreatmentSessionService
 
             $oldStatus = $session->status;
 
-            $data = ['status' => 'Cancelada'];
+            $data = ['status' => 'cancelled'];
 
             if ($reason) {
                 $data['notes'] = ($session->notes ? $session->notes . "\n\n" : '') 
@@ -236,8 +431,8 @@ class TreatmentSessionService
 
             $session->update($data);
 
-            // Si estaba completada antes, revertir consumo del plan
-            if ($oldStatus === 'Completada') {
+            // Si estaba completada completed, revertir consumo del plan
+            if ($oldStatus === 'completed') {
                 $this->planService->revertSessionConsumption($session);
             }
 
@@ -269,7 +464,7 @@ class TreatmentSessionService
             }
 
             $oldStatus = $session->status;
-            $session->update(['status' => 'No Asistió']);
+            $session->update(['status' => 'not_attend']);
 
             // ⚡ ACTUALIZAR TRATAMIENTO
             $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
@@ -308,7 +503,7 @@ class TreatmentSessionService
 
             // Si estaba cancelada, volver a programar
             if ($session->isCancelled()) {
-                $updateData['status'] = 'Programada';
+                $updateData['status'] = 'shceduled';
             }
 
             $session = $this->updateSession($session, $updateData);
@@ -335,9 +530,9 @@ class TreatmentSessionService
             $updates = [];
 
             if (!$session->month_session_number && $session->treatment_id && $session->date) {
-                $updates['month_session_number'] = $this->calculateNextMonthSessionNumber(
+                $this->resequenceMonthSessions(
                     $session->treatment_id,
-                    $session->date
+                    $session->date,
                 );
             }
 
@@ -387,10 +582,10 @@ class TreatmentSessionService
 
         return [
             'total' => $sessions->count(),
-            'completed' => $sessions->where('status', 'Completada')->count(),
-            'scheduled' => $sessions->where('status', 'Programada')->count(),
-            'cancelled' => $sessions->where('status', 'Cancelada')->count(),
-            'no_show' => $sessions->where('status', 'No Asistió')->count(),
+            'completed' => $sessions->where('status', 'completed')->count(),
+            'scheduled' => $sessions->where('status', 'scheduled')->count(),
+            'cancelled' => $sessions->where('status', 'cancelled')->count(),
+            'not_attend' => $sessions->where('status', 'not_attend')->count(),
             'average_pain_improvement' => $this->calculateAveragePainImprovement($sessions),
             'attendance_rate' => $this->calculateAttendanceRate($sessions),
             'sessions' => $sessions->map(fn($s) => $s->getSessionSummary()),
@@ -412,9 +607,9 @@ class TreatmentSessionService
         return [
             'month' => $monthStart->format('Y-m'),
             'total_sessions' => $sessions->count(),
-            'completed' => $sessions->where('status', 'Completada')->count(),
-            'scheduled' => $sessions->where('status', 'Programada')->count(),
-            'remaining' => $sessions->where('status', 'Programada')->count(),
+            'completed' => $sessions->where('status', 'completed')->count(),
+            'scheduled' => $sessions->where('status', 'scheduled')->count(),
+            'remaining' => $sessions->whereIn('status', ['scheduled','completed'])->count(),
             'attendance_rate' => $this->calculateAttendanceRate($sessions),
         ];
     }
@@ -457,37 +652,51 @@ class TreatmentSessionService
         $this->paymentService->createDebtForSession($session);
     }
 
-
-
     /**
      * Calcular el próximo month_session_number para un tratamiento en una fecha
      */
-    private function calculateNextMonthSessionNumber(int $treatmentId, string $date): int
+    private function getCurrentMaxSessionNumber(int $treatmentId, string $date): int
     {
-        $monthStart = Carbon::parse($date)->startOfMonth();
-        $monthEnd = Carbon::parse($date)->endOfMonth();
-
-        $maxNumber = TreatmentSession::where('treatment_id', $treatmentId)
+        $carbonDate = Carbon::parse($date);
+        $monthStart = $carbonDate->copy()->startOfMonth();
+        $monthEnd = $carbonDate->copy()->endOfMonth();
+    
+        return TreatmentSession::where('treatment_id', $treatmentId)
             ->whereBetween('date', [$monthStart, $monthEnd])
-            ->max('month_session_number');
-
-        return ($maxNumber ?? 0) + 1;
+            ->max('month_session_number') ?? 0;
     }
 
-    /**
-     * Validar disponibilidad del doctor en una fecha/hora
-     */
-    private function validateDoctorAvailability(int $doctorId, string $date, string $time): void
+    public function resequenceMonthSessions(int $treatmentId, string $date): void
     {
-        $exists = TreatmentSession::where('doctor_id', $doctorId)
-            ->where('date', $date)
-            ->where('time', $time)
-            ->whereNotIn('status', ['Cancelada'])
-            ->exists();
+        $carbonDate = Carbon::parse($date);
+        $monthStart = $carbonDate->copy()->startOfMonth();
+        $monthEnd = $carbonDate->copy()->endOfMonth();
 
-        if ($exists) {
-            throw new \Exception('El doctor no está disponible en ese horario');
-        }
+        // 1. Traer todas las sesiones del mes/tratamiento, ordenadas por fecha y hora.
+        $sessions = TreatmentSession::where('treatment_id', $treatmentId)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->whereIn('status',['scheduled','completed','in_progress'] )
+            ->orderBy('date', 'asc') // CRUCIAL: Ordenar por fecha cronológica
+            ->orderBy('time', 'asc') // CRUCIAL: Ordenar por fecha cronológica
+            ->get();
+
+        // 2. Iniciar la secuencia.
+        $sequence = 1;
+
+        // 3. Iterar y actualizar secuencialmente.
+        // Usar transacciones para asegurar la atomicidad de los updates.
+        DB::transaction(function () use ($sessions, & $sequence) {
+            foreach ($sessions as $session) {
+                // Solo actualiza si el número es diferente para evitar updates innecesarios.
+                if ($session->month_session_number !== $sequence) {
+                    // Usamos save() para aprovechar los mutators de Eloquent, 
+                    // o usar update() para mayor velocidad. Usaremos save() por simplicidad.
+                    $session->month_session_number = $sequence;
+                    $session->save(['touch' => false]); // Usar ['touch' => false] evita actualizar timestamps de la sesión.
+                }
+                $sequence++;
+            }
+        });
     }
 
     /**
@@ -496,7 +705,7 @@ class TreatmentSessionService
     private function calculateAveragePainImprovement(Collection $sessions): ?float
     {
         $completedSessions = $sessions->filter(function ($session) {
-            return $session->status === 'Completada' 
+            return $session->status === 'completed' 
                 && !is_null($session->pain_before) 
                 && !is_null($session->pain_after);
         });
@@ -530,7 +739,7 @@ class TreatmentSessionService
 
         // Contar sesiones completadas (asistidas)
         $attendedSessions = $pastSessions->filter(function ($session) {
-            return $session->status === 'Completada';
+            return $session->status === 'completed';
         });
 
         $attendanceRate = ($attendedSessions->count() / $pastSessions->count()) * 100;

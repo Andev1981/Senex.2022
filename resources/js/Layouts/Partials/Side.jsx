@@ -9,7 +9,7 @@ import {
   Home,
   Users,
   Calendar,
-  BrickWallShield,
+  Shield,
   FileText,
   NotebookText,
   HeartPulse,
@@ -18,9 +18,13 @@ import {
   Shell,
   DollarSign,
   BarChart3,
+  Handshake,
 } from "lucide-react";
+import CompanySwitcher from "@/Components/CompanySwitcher";
 
-function Side({ sidebarOpen, setSidebarOpen }) {
+function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
+  const { props } = usePage();
+  const currentCompany = props?.current_company;
   // Trae la URL actual para reaccionar a cambios de ruta
   const { url } = usePage();
 
@@ -31,33 +35,41 @@ function Side({ sidebarOpen, setSidebarOpen }) {
       { id: "patients.index", label: "Pacientes", icon: Users, badge: "50" },
       { id: "doctors", label: "Kines", icon: Stethoscope, badge: "50" },
       {
-        id: "attendances.index",
-        label: "Tratamientos",
-        icon: List,
-        badge: null,
-      },
-      { id: "boleta", label: "Boleta", icon: FileText, badge: "8" },
-      { id: "agenda", label: "Agenda", icon: Calendar, badge: null },
-      { id: "pos", label: "POS", icon: Computer, badge: null },
-      {
-        id: "sessions.types",
+        id: "session-types.index",
         label: "Tipo de Sesiones",
         icon: Shell,
         badge: null,
       },
       {
-        id: "insurance-companies.index",
-        label: "Aseguradoras",
-        icon: BrickWallShield,
-        badge: "12",
-      },
-      {
-        id: "health-insurers.index",
-        label: "Isapres",
-        icon: HeartPulse,
+        id: "agreements.index",
+        label: "Convenios",
+        icon: Handshake,
         badge: null,
       },
-      { id: "plans.index", label: "Planes", icon: NotebookText, badge: null },
+      { id: "boleta", label: "Boleta", icon: FileText, badge: "8" },
+      {
+        id: "attendances.index",
+        label: "Tratamientos",
+        icon: List,
+        badge: null,
+      },
+      {
+        id: "insurances.index",
+        label: "Aseguradoras",
+        icon: Shield,
+        badge: null,
+      },
+      /* { id: "agenda", label: "Agenda", icon: Calendar, badge: null }, */
+      { id: "pos", label: "POS", icon: Computer, badge: null },
+      { id: "test.webpay", label: "test/webpay", icon: DollarSign, badge: "3" }, // ejemplo si tu ruta es pagos.index
+      {
+        id: "invoices.index",
+        label: "Facturas",
+        icon: BarChart3,
+        badge: null,
+      },
+      /*{ id: "inventario", label: "Inventario", icon: Package, badge: null },*/
+      /* { id: "plans.index", label: "Planes", icon: NotebookText, badge: null }, */
       /*{
         id: "documentos", // si no es una ruta real, deja como contenedor
         label: "Documentos",
@@ -76,14 +88,6 @@ function Side({ sidebarOpen, setSidebarOpen }) {
           },
         ],
       }, */
-      { id: "test.webpay", label: "test/webpay", icon: DollarSign, badge: "3" }, // ejemplo si tu ruta es pagos.index
-      /*{ id: "inventario", label: "Inventario", icon: Package, badge: null },*/
-      {
-        id: "test.pos",
-        label: "Integracion Pos",
-        icon: BarChart3,
-        badge: null,
-      },
     ],
     []
   );
@@ -95,26 +99,25 @@ function Side({ sidebarOpen, setSidebarOpen }) {
     ],
     []
   );
-
-  // Helper: chequear si una ruta está activa con Ziggy
-  const isRouteActive = (name) => {
-    try {
-      // Si usas nombres con comodín, puedes hacer route().current('documentos.*')
-      // Aquí asumimos IDs exactos; ajusta si necesitas comodines.
-      return route().current(name) || route().current(`${name}.*`);
-    } catch {
-      return false;
-    }
+  // Ejemplo de función de ayuda isRouteActive (usando Ziggy/Laravel)
+  const isRouteActive = (routeId) => {
+    // Usa comodines (*) para activar cualquier ruta que comience con el ID
+    return route().current(routeId + "*");
   };
 
-  // Dado un item, define si está activo (incluye hijos en caso de submenu)
+  // 🎯 FUNCIÓN CLAVE: Determina si el ÍTEM CONTENEDOR debe estar ACTIVO
   const isItemActive = (item) => {
-    if (item.submenu?.length) {
-      // Activo si algún hijo lo está
-      return item.submenu.some((s) => isRouteActive(s.id));
+    // 1. Verificar si el ítem principal tiene una ruta propia activa (ej: 'admin.dashboard')
+    if (item.id && route().current(item.id)) {
+      return true;
     }
-    // Si el item.id es un nombre de ruta real
-    return isRouteActive(item.id);
+
+    // 2. Verificar si el ítem tiene submenú y si ALGUNA de sus sub-rutas está activa
+    if (item.submenu?.length) {
+      return item.submenu.some((sub) => isRouteActive(sub.id));
+    }
+
+    return false;
   };
 
   // Estado de aperturas manuales de submenús por id
@@ -145,7 +148,9 @@ function Side({ sidebarOpen, setSidebarOpen }) {
                 <Stethoscope className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-gray-900">SenexSport</h1>
+                <h1 className="font-bold text-gray-900">
+                  {currentCompany.business_name}
+                </h1>
                 <p className="text-xs text-gray-500">Gestión</p>
               </div>
             </div>
@@ -168,6 +173,7 @@ function Side({ sidebarOpen, setSidebarOpen }) {
 
       {/* Navegación */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        {userIsSuperAdmin && <CompanySwitcher />}
         <div className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;

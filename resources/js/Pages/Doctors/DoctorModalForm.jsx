@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { t } from "@/constants/translations";
+import { fmtCLP } from "@/utils/utils";
 
 export default function DoctorModalForm({
   selectedDoctor,
@@ -45,17 +46,6 @@ export default function DoctorModalForm({
 
   const statusPill = (isActive) =>
     isActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700";
-
-  const fmtCLP = (v) => {
-    const n = Number(v); // convierte string → number
-    return Number.isFinite(n) && n >= 0
-      ? n.toLocaleString("es-CL", {
-          style: "currency",
-          currency: "CLP",
-          maximumFractionDigits: 0,
-        })
-      : "-";
-  };
 
   const availablePatients = useMemo(() => {
     if (!selectedDoctor) return [];
@@ -113,14 +103,14 @@ export default function DoctorModalForm({
       // Mapear correctamente el tipo
       const isPercentage = rate.commission_type === "percentage";
       return {
-        type: isPercentage ? "Porcentaje" : "Fijo",
+        type: isPercentage ? "percentage" : "fixed_amount",
         label: rate.commission_type,
         value: String(rate.commission_value || 0),
       };
     }
 
     // 3) Nunca hubo regla → valores por defecto
-    return { type: "Fijo", label: "fixed_amount", value: "" };
+    return { type: "fixed_amount", label: "fixed_amount", value: "" };
   };
 
   const setDraft = (sessionTypeId, field, value) => {
@@ -134,7 +124,7 @@ export default function DoctorModalForm({
           [sessionTypeId]: {
             ...currentRule,
             type: value,
-            label: value === "Fijo" ? "fixed_amount" : "percentage",
+            label: value === "fixed_amount" ? "fixed_amount" : "percentage",
           },
         };
       }
@@ -364,12 +354,16 @@ export default function DoctorModalForm({
                                 }
                                 className="px-2 py-1 text-sm border-2 border-gray-200 rounded-lg"
                               >
-                                <option value="Fijo">Fijo</option>
-                                <option value="Porcentaje">Porcentaje</option>
+                                <option value="fixed_amount">
+                                  {t("fichaKine", "fixed_amount")}
+                                </option>
+                                <option value="percentage">
+                                  {t("fichaKine", "percentage")}
+                                </option>
                               </select>
                             ) : (
                               <span className="text-gray-700">
-                                {rule.label}
+                                {t("fichaKine", rule.label)}
                               </span>
                             )}
                           </td>
@@ -382,13 +376,13 @@ export default function DoctorModalForm({
                                   setDraft(sty.id, "value", e.target.value)
                                 }
                                 placeholder={
-                                  rule.type === "Porcentaje" ? "%" : "$"
+                                  rule.type === "percentage" ? "%" : "$"
                                 }
                                 className="w-32 px-2 py-1 text-sm border-2 border-gray-200 rounded-lg"
                               />
                             ) : (
                               <span className="text-gray-800">
-                                {rule.type === "Porcentaje"
+                                {rule.type === "percentage"
                                   ? `${rule.value || 0}%`
                                   : fmtCLP(Number(rule.value || 0))}
                               </span>

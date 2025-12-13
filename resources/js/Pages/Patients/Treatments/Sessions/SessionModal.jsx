@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import SearchSelect from "@/Components/SearchSelect";
+import { SESSION_STATUS_OPTIONS } from "@/constants/sessionStatuses";
 
 export default function SessionModal({
   session,
@@ -27,7 +28,7 @@ export default function SessionModal({
   const [exerciseInput, setExerciseInput] = useState("");
   const { data, setData, patch, post, processing, errors, reset } = useForm({
     treatment_id: session?.treatment_id || "",
-    month_session_number: session?.month_session_number || "",
+    month_session_number: session?.month_session_number || 0,
     date: session?.date
       ? moment.utc(session.date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
@@ -54,6 +55,7 @@ export default function SessionModal({
     notes: session?.notes || "",
     homework: session?.homework || "",
     next_goals: session?.next_goals || "",
+    cancellation_note: session?.cancellation_note || "",
   });
 
   useEffect(() => {
@@ -297,9 +299,11 @@ export default function SessionModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               >
-                <option value="scheduled">Programada 📅</option>
-                <option value="completed">Completada ✅</option>
-                <option value="cancelled">Cancelada ❌</option>
+                {SESSION_STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
               {errors.status && (
                 <p className="mt-1 text-sm text-red-600">{errors.status}</p>
@@ -326,7 +330,7 @@ export default function SessionModal({
         </div>
 
         {/* Sección de Resultados: Métrica de Dolor, ROM, Técnicas, Notas (SOLO SI COMPLETADA) */}
-        {data.status === "completed" && (
+        {(data.status === "completed" || data.status === "in_progress") && (
           <>
             {/* Evaluación del Dolor */}
             <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
