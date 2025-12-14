@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\User;
+use App\Models\Voucher;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -56,44 +57,76 @@ class TenantWithDemoDataSeeder extends Seeder
         'phone' => '+56939377546'
     ]);
 
+    $company2 = Company::create([
+        'rut' => '22222222-2',
+        'business_name' => 'Demo',
+        'giro' => 'Compañia demo',
+        'email' => 'contacto@demo.cl',
+        'phone' => '+56912345678'
+    ]);
+
     $branch = Branch::create([
         'company_id' => $company['id'],
         'codigo_sucursal_sii' => 'sin codigo',
-        'name' => 'Nombre Sucursal',
+        'name' => 'Senex',
         'phone' => '+56939377546',
-        'email' => 'contacto@branch.cl',
+        'email' => 'contacto@senex.cl',
+        'active' => true,
+    ]);
+
+    $branch2 = Branch::create([
+        'company_id' => $company['id'],
+        'codigo_sucursal_sii' => 'sin codigo',
+        'name' => 'SenexSport',
+        'phone' => '+56939377546',
+        'email' => 'contacto@senexsport.cl',
+        'active' => true,
+    ]);
+
+    $branch3 = Branch::create([
+        'company_id' => $company2['id'],
+        'codigo_sucursal_sii' => 'sin codigo',
+        'name' => 'Branch Demo',
+        'phone' => '+56939377546',
+        'email' => 'contacto@senexsport.cl',
         'active' => true,
     ]);
   
 
     $user1 = User::create([
       'company_id' => $company['id'],
-      'branch_id' => $branch['id'],
       'name' => 'Juan Andres',
       'email' => 'javt1981@gmail.com',
       'password' => Hash::make('Juan1981'),
     ]);
 
+    // Sincronizar sucursales (borra las anteriores y deja solo las del array)
+    $user1->branches()->sync([$branch->id => ['is_main' => true], $branch2->id => ['is_main' => false], $branch3->id => ['is_main' => true]]);
+
+    // O simplemente agregar una nueva
+    /* $user1->branches()->attach($branchId3); */
+
     $user2 = User::create([
       'company_id' => $company['id'],
-      'branch_id' => $branch['id'],
       'name' => 'Demo',
       'email' => 'demo@gmail.com',
       'password' => Hash::make('demo2025'),
     ]);
-
+    $user2->branches()->sync([$branch->id => ['is_main' => true], $branch2->id => ['is_main' => false]]);
     
     $userKine = User::create([
-       'company_id' => $company['id'],
-      'branch_id' => $branch['id'],
+      'company_id' => $company['id'],
       'name' => 'Kine',
       'email' => 'kine@gmail.com',
       'password' => Hash::make('kine2025'),
     ]);
+    
+    $userKine->branches()->sync([$branch->id => ['is_main' => true]]);
 
     $user1->roles()->attach($adminRole);
-    $user2->roles()->attach($adminRole);
+    $user2->roles()->attach($role2);
     $userKine->roles()->attach($kine);
+
 
     // ============= BRANCHES & ROOMS =============
     /* $branchId = $branch->id; */
@@ -101,7 +134,6 @@ class TenantWithDemoDataSeeder extends Seeder
     $roomIds = [];
     foreach (['Box 1', 'Box 2', 'Box 3'] as $rName) {
       $roomIds[] = DB::table('rooms')->insertGetId([
-
         'branch_id' => $branch['id'],
         'name' => $rName,
         'capacity' => 1,
@@ -183,6 +215,32 @@ class TenantWithDemoDataSeeder extends Seeder
         'updated_at' => $now,
       ]);
     }
+
+    // 1. Un Bono IMED con 10 sesiones (Isapre)
+    Voucher::create([
+        'code' => 'IMED-998877',
+        'patient_id' => 1,
+        'type' => 'sessions',
+        'sessions_quantity' => 10,
+        'sessions_remaining' => 10,
+        'source' => 'imed',
+        'status' => 'active',
+        'issued_date' => now(),
+        'company_id' => $company['id'],
+    ]);
+
+    // 2. Un Saldo a Favor (Monetario) por una devolución
+    Voucher::create([
+        'code' => 'REFUND-001',
+        'patient_id' => 1,
+        'type' => 'monetary',
+        'initial_balance' => 50000,
+        'current_balance' => 50000,
+        'source' => 'refund',
+        'status' => 'active',
+        'issued_date' => now(),
+        'company_id' => $company['id'],
+    ]);
        
     // ============= SESSION TYPES =============
     // Esta es la lista de datos que proporcionaste, expandida con las claves del negocio
@@ -218,6 +276,7 @@ class TenantWithDemoDataSeeder extends Seeder
             $code = $session[7]; // 👈 Usamos el código estático definido arriba
 
             $dataToInsert[] = [
+                'company_id' => $company['id'],
                 'name' => $name,
                 'code' => $code, // 👈 Asignación directa
                 'category' => $category,

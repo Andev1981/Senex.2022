@@ -38,6 +38,17 @@ class AuthenticatedSessionController extends Controller
         // Registrar último login
         $user->update(['last_login_at' => now()]);
 
+        // --- 🎯 Lógica de Sucursal Inicial ---
+        // Buscamos la sucursal marcada como 'is_main' o la primera disponible
+        $initialBranch = $user->branches()->wherePivot('is_main', true)->first() 
+                        ?? $user->branches()->first();
+
+        if ($initialBranch) {
+            // Guardamos en la sesión la sucursal activa
+            $request->session()->put('active_branch_id', $initialBranch->id);
+        }
+        //
+
         // 🎯 REDIRECCIÓN DETERMINÍSTICA
         $redirectTo = $this->getRedirectRoute($user);
 

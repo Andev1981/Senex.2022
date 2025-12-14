@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class VoucherTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, Multitenantable;
 
     protected $fillable = [
+        'company_id',
         'voucher_id',
         'payment_id',
         'treatment_session_id',

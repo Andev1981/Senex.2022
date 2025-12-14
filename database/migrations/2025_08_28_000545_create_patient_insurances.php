@@ -10,6 +10,8 @@ return new class extends Migration {
 
         Schema::create('patient_insurances', function (Blueprint $table) {
             $table->id();
+            // 🎯 Seguridad Multiempresa
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
             $table->foreignId('insurance_id')->constrained()->cascadeOnDelete();
             $table->foreignId('plan_id')->nullable()->constrained()->nullOnDelete();
@@ -20,6 +22,8 @@ return new class extends Migration {
             $table->boolean('is_primary')->default(true);
             $table->text('notes')->nullable();
             $table->timestamps();
+            // Evita que un paciente tenga la misma previsión duplicada en la misma clínica
+            $table->unique(['company_id', 'patient_id', 'insurance_id'], 'patient_insurance_unique');
         });
     }
 

@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('patient_access_codes', function (Blueprint $table) {
             $table->id();
             
+             // 🎯 Seguridad Multiempresa
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             // Relación con paciente
             $table->foreignId('patient_id')
                 ->constrained('patients')

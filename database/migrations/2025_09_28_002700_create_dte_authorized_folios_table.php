@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('authorized_folios', function (Blueprint $table) {
             $table->id();
-            
+             $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+
             // Datos del CAF
             $table->string('rut_emisor', 12)->comment('RUT del emisor al que se le autorizó el CAF.');
             $table->unsignedSmallInteger('tipo_dte')->comment('Tipo de DTE (ej: 33 para Factura Electrónica).');

@@ -15,10 +15,11 @@ return new class extends Migration {
 
       // ===== RELACIONES =====
       $t->foreignId('patient_id')->constrained()->cascadeOnDelete();
+       $t->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
       $t->foreignId('branch_id')
-                      ->nullable()
-                      ->constrained('branches')
-                      ->nullOnDelete();
+          ->nullable() // Puede ser null si es una operación central.
+          ->constrained()
+          ->comment('Sucursal donde se emitió el DTE.');
       $t->foreignId('liquidation_payor_id')->constrained()->onDelete('cascade');
       /* $t->foreignId('treatment_id')->nullable()->constrained()->nullOnDelete(); */
       /* $t->foreignId('treatment_session_id')->nullable()->constrained()->nullOnDelete(); */

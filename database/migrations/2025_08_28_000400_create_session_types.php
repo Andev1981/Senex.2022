@@ -11,8 +11,8 @@ return new class extends Migration {
     // session_types (PADRE)
     // -------------------------
     Schema::create('session_types', function (Blueprint $table) {
-      $table->id(); // BIGINT UNSIGNED AI
-
+            $table->id(); // BIGINT UNSIGNED AI
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
             // ===== 1. IDENTIFICACIÓN Y CATEGORÍA =====
             $table->string('name', 120)->unique();
             $table->string('code', 20)->nullable()->unique()->comment('Código arancelario de Isapre/Fonasa/Interno.');

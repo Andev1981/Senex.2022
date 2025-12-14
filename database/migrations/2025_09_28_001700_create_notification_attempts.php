@@ -15,6 +15,8 @@ return new class extends Migration
     {
         Schema::create('notification_attempts', function (Blueprint $table) {
             $table->id();
+             // 🎯 Seguridad Multiempresa
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
 
             // Ejemplos de tipo: 'invoice.created', 'attendance.reminder', 'payment.failed'

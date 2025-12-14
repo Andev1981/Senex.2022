@@ -13,6 +13,7 @@ class UpdatePaymentRequest extends FormRequest
   public function rules(): array
   {
     return [
+      'company_id' => 'required',
      'patient_id' => 'required',
       'payment_date' => 'required',
       'amount_clp' => 'required',

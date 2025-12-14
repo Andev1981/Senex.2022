@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 class Availability extends Model
 {
 
+  use Multitenantable;
 
   protected $fillable = [
+    'company_id',
     'doctor_id',
     'timezone',
     'rrule',

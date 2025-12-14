@@ -35,25 +35,13 @@ class PaymentService
             // Crear el pago principal
             $payment = $this->createPayment($data);
 
-           /*  dd("Create en services: ", $payment); */
-
             // Asignar a sesiones/deudas
             if (!empty($data['session_ids'])) {
-                $this->allocateToSessions($payment, $data['session_ids']);
-
-                dd("Create allocate session: ");
+                $sessionsIds = TreatmentSession::with('debt')->whereIn('id', $data['session_ids'])->get();
+                $this->allocateToSessions($payment, $sessionsIds);
             }
 
-            /* if (!empty($data['debt_ids'])) {
-                $this->allocateToDebts($payment, $data['debt_ids']);
-            } */
-
-            // Emitir DTE si está configurado
-            /* if ($data['auto_issue_dte'] ?? false) {
-                $this->issueDte($payment, $data['dte_type'] ?? 39);
-            } */
-
-            return $payment->fresh(['paymentAllocations', 'invoice']);
+            return $payment->fresh(['paymentAllocation', 'invoice']);
         });
     }
 
@@ -88,20 +76,19 @@ class PaymentService
        /**
          * Asigna un pago a múltiples sesiones
          */
-        public function allocateToSessions(Payment $payment, array $sessionIds): void
+        public function allocateToSessions(Payment $payment, $sessionIds): void
         {
             
                 foreach ($sessionIds as $sessionId) {
-                    $session = TreatmentSession::with('debt')->findOrFail($sessionId);
-                     $debt = $session->debt;
+                    $debt = $sessionId->debt;
                     
                     // Crear asignación
                     PaymentAllocation::create([
                         'payment_id' => $payment->id,
                         'invoice_id' => null,
-                        'debt_id' => $session->debt->id,
-                        'treatment_session_id' => $session->id,
-                        'amount_clp' => $session->patient_amount,
+                        'debt_id' => $sessionId->debt->id,
+                        'treatment_session_id' => $sessionId->id,
+                        'amount_clp' => $sessionId->patient_amount,
                     ]);
                     
                     // Actualizar sesión como pagada

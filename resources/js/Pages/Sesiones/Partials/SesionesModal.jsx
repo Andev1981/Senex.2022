@@ -65,8 +65,6 @@ function SesionesModal({
     }));
   };
 
-  console.log("Paciente: ", paciente);
-
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex items-center gap-2 px-4 font-bold">

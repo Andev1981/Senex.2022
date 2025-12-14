@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Attendance extends Model
 {
-    use HasFactory;
+    use HasFactory, Multitenantable;
 
     protected $fillable = [
+        'company_id',
         'doctor_id',
         'patient_id',
         'attended_at',

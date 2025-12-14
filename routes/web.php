@@ -95,9 +95,13 @@ Route::get('/admin/sessions/auto-update', function () {
     return 'Comando ejecutado. Ver logs en storage/logs/laravel.log';
 })->middleware('auth');
 
-Route::post('switch-company', [CompanySwitchController::class, 'switch'])
+Route::post('switch-company', [CompanySwitchController::class, 'switchCompany'])
     ->name('admin.switch-company')
-    ->middleware(['auth', 'admin']);
+    ->middleware(['auth', 'role:superadmin']);
+Route::post('switch-branch', [CompanySwitchController::class, 'switchBranch'])
+    ->name('admin.switch-branch')
+    ->middleware(['auth', 'role:admin|superadmin|kine']);
+
     
 
 Route::group(['middleware' => ['auth']], function () {

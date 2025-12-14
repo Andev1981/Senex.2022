@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasAddresses;
+use App\Traits\Multitenantable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +18,6 @@ class Doctor extends Model
     use HasFactory, HasAddresses;
 
     protected $fillable = [
-        'branch_id',
         'user_id',
         'name',
         'last_name',
@@ -27,10 +27,7 @@ class Doctor extends Model
         'speciality',
         'birth_date',
         'gender',
-        'status',
         'mobile_access_enabled',
-        'status_reason',
-        'status_changed_at'
     ];
 
     protected $casts = [

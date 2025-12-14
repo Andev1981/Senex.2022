@@ -13,7 +13,11 @@ return new class extends Migration {
     // -------------------------
     Schema::create('payment_allocations', function (Blueprint $t) {
       $t->id();
-      
+      $t->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+      $t->foreignId('branch_id')
+          ->nullable() // Puede ser null si es una operación central.
+          ->constrained()
+          ->comment('Sucursal donde se emitió el DTE.');
       $t->foreignId('payment_id')->constrained()->cascadeOnDelete();
       $t->foreignId('debt_id')->nullable()->constrained()->cascadeOnDelete();
       $t->foreignId('treatment_session_id')->nullable()->constrained()->nullOnDelete();

@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
 class Appointment extends Model
 {
-
+  use Multitenantable;
+   
   protected $fillable = [
+    'company_id',
+    'branch_id',
+    'room_id',
     'patient_id',
     'doctor_id',
     'room_id',

@@ -2,16 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 class PatientAccessCode extends Model
 {
+    use Multitenantable;
     /**
      * No usa updated_at
      */
     const UPDATED_AT = null;
 
     protected $fillable = [
+        'company_id',
         'patient_id',
         'code',
         'expires_at',

@@ -10,6 +10,8 @@ return new class extends Migration {
 
     Schema::create('patient_lifestyles', function (Blueprint $table) {
       $table->id();
+       // 🎯 Seguridad Multiempresa
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
       $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
       $table->enum('activity_level', ['sedentary', 'light', 'moderate', 'vigorous'])->nullable();
       $table->string('sport')->nullable();

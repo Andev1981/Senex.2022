@@ -14,6 +14,8 @@ return new class extends Migration {
      Schema::create('debts', function (Blueprint $t) {
       $t->id();
 
+      // 🎯 Seguridad Multiempresa
+      $t->foreignId('company_id')->constrained()->onDelete('cascade');
       $t->foreignId('patient_id')->constrained()->cascadeOnDelete();
       
       // FK a la sesión que generó la deuda

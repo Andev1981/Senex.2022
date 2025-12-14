@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 
 class PayrollDetail extends Model
 {
 
+  use Multitenantable;
 
   protected $fillable = [
+    'company_id',
     'payroll_id',
     'treatment_session_id',
     'session_type_name',

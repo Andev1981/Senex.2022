@@ -488,7 +488,6 @@ function DemoSearchSelect() {
                 value={selectedDoctor}
                 onChange={(value, item) => {
                   setSelectedDoctor(value);
-                  console.log("Doctor seleccionado:", item);
                 }}
                 config={{
                   valueKey: "id",

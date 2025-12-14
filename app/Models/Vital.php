@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 class Vital extends Model
 {
 
+  use Multitenantable;
 
   protected $fillable = [
+    'company_id',
     'patient_id',
     'recorded_by_user_id',
     'recorded_at',

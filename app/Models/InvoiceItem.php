@@ -2,33 +2,29 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 
 class InvoiceItem extends Model
 {
-
+  use Multitenantable;
 
   protected $fillable = [
+    'company_id',
     'invoice_id',
     'treatment_session_id',
     'treatment_id',
     'description',
-    'session_type_id',
     'quantity',
-    'unit_price',
-    'discount_amount',
-    'line_total',
-    'tax_exempt',
-    'sii_item_code',
+    'unit_price_clp',
+    'total_clp',
   ];
 
   protected $casts = [
     'quantity'       => 'integer',
-    'unit_price'     => 'decimal:2',
-    'discount_amount' => 'decimal:2',
-    'line_total'     => 'decimal:2',
-    'tax_exempt'     => 'boolean',
+    'unit_price_clp'     => 'decimal:2',
+    'total_clp' => 'decimal:2',
   ];
 
   public function invoice()

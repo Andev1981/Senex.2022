@@ -12,6 +12,7 @@ use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\TreatmentSession;
+use App\Services\InvoiceService;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,64 +25,57 @@ class PaymentsController extends Controller
      * Inyectar el service en el constructor
      */
     public function __construct(
-        private PaymentService $paymentService
+        private PaymentService $paymentService,
+        private InvoiceService $invoiceService
     ) {}
 
 
-     public function store(StorePaymentRequest $request){
-    
+  public function store(StorePaymentRequest $request)
+{
     $data = $request->validated();
 
-     DB::beginTransaction();
-     try {
+    DB::beginTransaction();
+    try {
+        // 1. PROCESAR EL PAGO (Crítico)
+        // Si falla aquí, el catch hará rollback y nada se guardará.
+        $payment = $this->paymentService->processPayment($data);
 
-          /* dd("Antes de enviar: ",$data); */
+        try {
+            // 2. PROCESAR LA FACTURA (Importante pero secundario al pago)
+            $invoice = $this->invoiceService->processInvoice($payment, $data);
 
-          $payment = $this->paymentService->processPayment($data);
+            // Si llegamos aquí, ambos servicios fueron exitosos
+            DB::commit();
 
+            // 3. DESPACHAR EL JOB (Fuera de la transacción por seguridad)
+            EmitDteJob::dispatch($invoice->id);
 
-          dd("Respuesta en controller: ", $payment);
-            
-            /* DB::commit(); */
-
-            /* $invoice = Invoice::create([
-                'payment_id' => $payment->id,
-                'status' => 'pending', // Aún no enviado al SII
-                'patient_id' => $data['patient_id'],
-            ]); */
-
-            /* foreach ($data['session_ids'] as $sessionId) {
-              $session = TreatmentSession::find($sessionId);
-              $sessionDate = \Carbon\Carbon::parse($session->session_date)->format('d-m-Y');
-              InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
-                    'treatment_session_id' => $sessionId,
-                    'treatment_id' => $session->treatment_id,
-                    'description' => 'Sesión de Terapia (' . $sessionDate . ')',
-                    'quantity' => 1, // Siempre 1
-                    'unit_price_clp' => $session->patient_amount,
-                    'total_clp' => $session->patient_amount,
-                ]);
-            } */
-
-            /* EmitDteJob::dispatch($invoice); */
-
-            session()->flash('message', 'Pago agregado correctamente');
+            session()->flash('message', 'Pago registrado y boleta enviada al SII.');
             session()->flash('type', 'success');
-            return back();
-     } 
-     catch (\Exception $e) {
-            Log::info('Error al crear pago', [
-                $e->getMessage()
-            ]);
+
+        } catch (\Exception $eInvoice) {
+            // Si falla la factura, confirmamos el pago de todos modos
+            DB::commit(); 
             
-            session()->flash('message', 'Error al crear la pago: ' . $e->getMessage());
-            session()->flash('type', 'error');
-            return back();
-     }
+            Log::error("Pago #{$payment->id} guardado, pero falló la factura: " . $eInvoice->getMessage());
+            
+            session()->flash('message', 'Pago registrado, pero hubo un problema al generar la boleta. Favor generarla manualmente.');
+            session()->flash('type', 'warning');
+        }
 
+        return back();
 
-  }
+    } catch (\Exception $ePayment) {
+        // Si el pago falla, deshacemos TODO
+        DB::rollBack();
+        
+        Log::critical("Error fatal al procesar pago: " . $ePayment->getMessage());
+        
+        session()->flash('message', 'No se pudo registrar el pago: ' . $ePayment->getMessage());
+        session()->flash('type', 'error');
+        return back();
+    }
+}
 
 
   public function chargeNowForSession(StorePaymentRequest $req, PaymentService $svc, TreatmentSession $session)

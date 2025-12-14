@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 class DoctorCommissionRate extends Model
 {
-
+    use Multitenantable;
 
   public const TYPE_PERCENTAGE  = 'percentage';
   public const TYPE_FIXED       = 'fixed_amount';
 
   protected $fillable = [
+    'company_id',
     'doctor_id',
     'session_type_id',
     'commission_type',

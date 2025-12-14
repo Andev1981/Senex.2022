@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 
 class NotificationAttemp extends Model
 {
-
+  use Multitenantable;
 
   protected $fillable = [
+    'company_id',
     'patient_id',
     'event_key ',
     'channel',

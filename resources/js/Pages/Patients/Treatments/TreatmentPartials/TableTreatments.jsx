@@ -141,8 +141,6 @@ export default function TableTreatments({
     );
   }, [globalFilter, treatments]);
 
-  console.log("Sesion: ", treatments[0]);
-
   // Definición de columnas
   const columns = useMemo(
     () => [

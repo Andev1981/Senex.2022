@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DoctorPatientAssignment extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Multitenantable;
 
     protected $table = 'doctor_patient_assignments';
 
     protected $fillable = [
+        'company_id',
         'doctor_id',
         'patient_id',
         'role',

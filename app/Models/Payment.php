@@ -2,18 +2,22 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Payment extends Model
 {
-    use HasFactory;
+    use HasFactory, Multitenantable;
 
     protected $guarded = [
         'id'
     ];
 
     protected $fillable = [
+        'company_id',
         'patient_id',
         'branch_id',
         'liquidation_payor_id ',
@@ -46,12 +50,19 @@ class Payment extends Model
     ];
 
 
-    public function patient(){
+    public function patient() : BelongsTo
+    {
         return $this->belongsTo(Patient::class);
     }
 
-    public function doctor(){
-        return $this->belongsTo(Doctor::class);
+    public function paymentAllocation() : HasOne
+    {
+        return $this->hasOne(PaymentAllocation::class);
+    }
+
+    public function invoice() : HasOne
+    {
+        return $this->hasOne(Invoice::class);
     }
 
 

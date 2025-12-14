@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Branch;
+use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
-use App\Models\Company; // Importar el modelo Company
 
 class HandleInertiaRequests extends Middleware
 {
@@ -16,22 +17,27 @@ class HandleInertiaRequests extends Middleware
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     * Incluimos 'current_company' y 'current_company_id' aquí.
-     */
     public function share(Request $request): array
     {
-        // 1. Obtener el contexto de autenticación y compañía.
         $authData = $this->getAuthContext($request);
 
         return [
             ...parent::share($request),
             'auth' => $authData['auth'],
-            // 🎯 INYECTAMOS EL CONTEXTO DE LA COMPAÑÍA FUERA DE 'auth'
+            
+            // Contexto de Compañía
             'current_company' => $authData['current_company'], 
             'current_company_id' => $authData['current_company'] ? $authData['current_company']['id'] : null,
+
+            // Contexto de Sucursal
+            'current_branch' => $authData['current_branch'], 
+            'current_branch_id' => $authData['current_branch'] ? $authData['current_branch']['id'] : null,
+
+            // Listados para Switchers
             'all_companies' => $authData['all_companies'],
+            'available_branches' => $authData['available_branches'],
+
+            // Mensajes Flash
             'flash' => [
                 'message' => fn() => $request->session()->get('message'),
                 'type' => fn() => $request->session()->get('type', 'info'),
@@ -39,19 +45,16 @@ class HandleInertiaRequests extends Middleware
         ];
     }
 
-    /**
-     * Obtener el contexto de autenticación y la compañía activa.
-     */
     private function getAuthContext(Request $request): array
     {
         $user = $request->user();
         $currentCompany = null;
         $contextCompanyId = null;
         $allCompanies = [];
-        
-       
+        $activeBranch = null;
+        $availableBranches = collect();
 
-        // --- Manejo del Guardia 'Patient' (solo datos básicos) ---
+        // 1. Guardia Patient (Sin cambios)
         if (Auth::guard('patient')->check()) {
             $patient = Auth::guard('patient')->user();
             return [
@@ -61,39 +64,70 @@ class HandleInertiaRequests extends Middleware
                     'roles' => [],
                     'permissions' => [],
                 ],
-                'current_company' => null, // Los pacientes no suelen cambiar de contexto
+                'current_company' => null,
+                'current_branch' => null,
+                'available_branches' => [],
+                'all_companies' => [],
             ];
         }
 
-        // --- Manejo del Guardia 'web' (Admin/Staff) ---
         if ($user) {
-            // 1. Determinar el company_id activo
+            // --- 2. DETERMINAR ID DE EMPRESA (Lógica simplificada y segura) ---
             
-            // 🎯 Priorizar el ID de la SESIÓN (Para Superadmin que usa el selector)
+            // Prioridad 1: Lo que el Superadmin eligió en el Switcher (Sesión)
             $contextCompanyId = $request->session()->get('current_company_id');
 
-            // 🎯 Si no hay ID en sesión O el usuario tiene un ID fijo, usar el de la DB
+            // Prioridad 2: Si no hay sesión, usamos el company_id del usuario
             if (!$contextCompanyId && $user->company_id) {
-                 $contextCompanyId = $user->company_id;
+                $contextCompanyId = $user->company_id;
             }
 
-            // 2. Cargar el objeto de la Compañía (Solo si tenemos una ID válida)
+            // Prioridad 3: Si sigue siendo null (Superadmin recién logueado), tomamos la primera
+            if (!$contextCompanyId && $user->isSuperAdmin()) {
+                $firstCompany = Company::first();
+                $contextCompanyId = $firstCompany ? $firstCompany->id : null;
+            }
+
+            // --- 3. CARGAR OBJETO COMPAÑÍA ---
             if ($contextCompanyId) {
-                // Buscamos solo los campos esenciales para el frontend
-                $currentCompany = Company::select(['id', 'business_name', 'rut', 'giro', 'email', 'phone'])
-                                         ->find($contextCompanyId);
+                // Usamos withoutGlobalScopes() por pura seguridad, aunque ya quitamos el trait
+                $currentCompany = Company::withoutGlobalScopes()
+                    ->select(['id', 'business_name', 'rut', 'giro', 'email', 'phone'])
+                    ->find($contextCompanyId);
+            }
+
+            // --- 4. DETERMINAR SUCURSALES DISPONIBLES ---
+            if ($user->isSuperAdmin()) {
+                $allCompanies = Company::select(['id', 'business_name', 'rut'])->get();
+                if ($contextCompanyId) {
+                    $availableBranches = Branch::where('company_id', $contextCompanyId)
+                        ->select('id', 'name')->get();
+                }
+            } else {
+                // Usuarios normales: Solo sus sucursales en ESA empresa
+                $availableBranches = $user->branches()
+                    ->where('branches.company_id', $contextCompanyId)
+                    ->select('branches.id', 'branches.name')->get();
+            }
+
+            // --- 5. DETERMINAR SUCURSAL ACTIVA (Solo lectura) ---
+            $activeBranchId = $request->session()->get('active_branch_id');
+
+            if (!$activeBranchId && $availableBranches->isNotEmpty()) {
+                // Intentar buscar la principal asignada al usuario
+                $mainBranch = $user->branches()
+                    ->where('branches.company_id', $contextCompanyId)
+                    ->wherePivot('is_main', true)
+                    ->first();
+                
+                $activeBranchId = $mainBranch ? $mainBranch->id : $availableBranches->first()->id;
+            }
+
+            if ($activeBranchId && $availableBranches->isNotEmpty()) {
+                $activeBranch = $availableBranches->firstWhere('id', $activeBranchId);
             }
         }
 
-        if ($user && $user->isSuperAdmin()) { // 👈 Aquí se usa
-            $allCompanies = Company::select(['id', 'business_name', 'rut', 'giro', 'email', 'phone'])->get()->toArray();
-        } else {
-            $allCompanies = [];
-        }
-
-        /* dd($user,  $user->isSuperAdmin(), $allCompanies); */
-        
-        // 3. Devolver el contexto
         return [
             'auth' => [
                 'user' => $user?->only('id', 'name', 'email'),
@@ -101,9 +135,10 @@ class HandleInertiaRequests extends Middleware
                 'roles' => fn() => $user?->getRoleNames() ?? [],
                 'permissions' => fn() => $user?->getAllPermissions()->pluck('name') ?? [],
             ],
-            // Convertir el modelo a array para inyectarlo en Inertia
-            'current_company' => $currentCompany ? $currentCompany->toArray() : null, 
-            'all_companies' => $allCompanies
+            'current_company' => $currentCompany ? $currentCompany->toArray() : null,
+            'all_companies' => $allCompanies,
+            'current_branch' => $activeBranch ? (is_array($activeBranch) ? $activeBranch : $activeBranch->toArray()) : null,
+            'available_branches' => $availableBranches,
         ];
     }
 }

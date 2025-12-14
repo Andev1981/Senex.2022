@@ -11,7 +11,20 @@ return new class extends Migration
         // Tabla principal de bonos/vouchers
         Schema::create('vouchers', function (Blueprint $table) {
             $table->id();
-            
+
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+            $table->foreignId('insurance_id')
+                ->nullable() // Opcional: El bono puede no ser de Isapre (ej: bono regalo)
+                ->constrained()
+                ->nullOnDelete();
+            $table->foreignId('plan_id')
+                ->nullable() // 🎯 AQUÍ: Permite bonos sin plan asociado
+                ->constrained()
+                ->nullOnDelete();
+            $table->foreignId('branch_id')
+                ->nullable() // Puede ser null si es una operación central.
+                ->constrained();
+
             // Código único del bono (ej: IMED-2025-001234)
             $table->string('code', 50)->unique()->index();
             
@@ -82,52 +95,15 @@ return new class extends Migration
             $table->index(['source', 'external_id']);
         });
 
-        // Tabla de transacciones de uso de bonos
-        Schema::create('voucher_transactions', function (Blueprint $table) {
-            $table->id();
-            
-            $table->foreignId('voucher_id')->constrained()->cascadeOnDelete();
-            
-            // Relación con el pago/sesión que consumió el bono
-            $table->foreignId('payment_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('treatment_session_id')->nullable()->constrained()->nullOnDelete();
-            
-            // Tipo de transacción
-            $table->enum('transaction_type', [
-                'activation',     // Activación inicial del bono
-                'usage',          // Uso del bono en un pago
-                'refund',         // Devolución al bono
-                'transfer',       // Transferencia a otro paciente
-                'expiration',     // Expiración automática
-                'cancellation'    // Cancelación manual
-            ])->index();
-            
-            // Montos de la transacción
-            $table->unsignedBigInteger('amount_clp')->default(0); // Monto en CLP
-            $table->unsignedInteger('sessions_used')->default(0); // Sesiones consumidas
-            
-            // Saldos después de la transacción
-            $table->unsignedBigInteger('balance_before')->default(0);
-            $table->unsignedBigInteger('balance_after')->default(0);
-            $table->unsignedInteger('sessions_before')->default(0);
-            $table->unsignedInteger('sessions_after')->default(0);
-            
-            // Información adicional
-            $table->text('description')->nullable();
-            $table->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();
-            
-            $table->timestamps();
-            
-            // Índices
-            $table->index(['voucher_id', 'created_at']);
-            $table->index(['payment_id']);
-            $table->index(['treatment_session_id']);
+        // Esta migración se ejecuta después de que AMBAS tablas existan
+        Schema::table('treatment_sessions', function (Blueprint $table) {
+            $table->foreignId('voucher_id')->nullable()->constrained();
         });
+
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('voucher_transactions');
         Schema::dropIfExists('vouchers');
     }
 };

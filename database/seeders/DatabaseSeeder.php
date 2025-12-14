@@ -10,9 +10,9 @@ class DatabaseSeeder extends Seeder
   {
     $this->call(DiagnosticSeeder::class);
     $this->call(RegionsTableSeeder::class);
-    $this->call(InsuranceSeeder::class);
     $this->call(ProvincesTableSeeder::class);
     $this->call(CommunesTableSeeder::class);
     $this->call(TenantWithDemoDataSeeder::class);
+    $this->call(InsuranceSeeder::class);
   }
 }

@@ -15,7 +15,11 @@ return new class extends Migration {
     Schema::create('patient_plans', function (Blueprint $t) {
 
       $t->id();
-
+ $t->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+      $t->foreignId('branch_id')
+          ->nullable() // Puede ser null si es una operación central.
+          ->constrained()
+          ->comment('Sucursal donde se emitió el DTE.');
 
       $t->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
       $t->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();

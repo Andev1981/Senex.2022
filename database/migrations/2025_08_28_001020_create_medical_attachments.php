@@ -14,6 +14,9 @@ return new class extends Migration {
     Schema::create('medical_attachments', function (Blueprint $t) {
       $t->id();
 
+      // 🎯 Seguridad Multiempresa
+      $t->foreignId('company_id')->constrained()->onDelete('cascade');
+
       // FKs SIMPLES
       $t->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
       $t->foreignId('treatment_session_id')->nullable()

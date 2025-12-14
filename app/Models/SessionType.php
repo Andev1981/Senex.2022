@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 class SessionType extends Model
 {
+    use Multitenantable;
+    
     protected $fillable = [
+        'company_id',
         'name',
         'base_price',
         'duration_minutes',

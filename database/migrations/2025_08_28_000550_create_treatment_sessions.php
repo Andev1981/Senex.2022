@@ -19,6 +19,11 @@ return new class extends Migration {
                       ->nullable()
                       ->constrained('rooms')
                       ->nullOnDelete();
+    // Definirlo como nullable es lo que permite que el paciente sea "Particular"
+    /* $table->foreignId('voucher_id')
+          ->nullable() 
+          ->constrained('vouchers')
+          ->nullOnDelete(); */
       $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
       $table->foreignId('doctor_id')->constrained()->restrictOnDelete();
       $table->foreignId('patient_id')->constrained()->cascadeOnDelete();

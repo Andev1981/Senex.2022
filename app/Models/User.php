@@ -6,6 +6,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -56,6 +57,14 @@ class User extends Authenticatable
     public function company() : HasOne
     {
         return $this->hasOne(Company::class);
+    }
+
+    public function branches() : BelongsToMany
+    {
+        // Relación muchos a muchos
+        return $this->belongsToMany(Branch::class)
+                    ->withPivot('is_main')
+                    ->withTimestamps();
     }
 
     public function roles_all() : MorphToMany

@@ -17,6 +17,9 @@ return new class extends Migration
             $table->engine = 'InnoDB';
             $table->id();
 
+             // 🎯 Seguridad Multiempresa
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
 
             // Regla iCal RRULE (sin BYHOUR aquí; usa start/end_time para hora)

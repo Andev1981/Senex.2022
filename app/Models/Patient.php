@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasAddresses;
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -18,9 +19,10 @@ use Illuminate\Notifications\Notifiable;
 
 class Patient extends Authenticatable
 {
-    use HasFactory, HasAddresses, Notifiable;
+    use HasFactory, HasAddresses, Notifiable, Multitenantable;
 
     protected $fillable = [
+        'company_id',
         'branch_id',
         'name',
         'last_name',
@@ -56,6 +58,13 @@ class Patient extends Authenticatable
         return $this->belongsToMany(Company::class, 'company_patient')
         ->withPivot('ficha_clinica_local_id','fecha_primer_contacto')
         ->withTimestamps();
+    }
+
+    public function insurances()
+    {
+        return $this->belongsToMany(Insurance::class, 'patient_insurances')
+                    ->withPivot('policy_number', 'plan_name', 'is_primary', 'company_id')
+                    ->withTimestamps();
     }
 
     public function sessions(): HasMany
@@ -116,16 +125,13 @@ class Patient extends Authenticatable
     }
 
     public function doctors(): BelongsToMany
-{
-    return $this->belongsToMany(Doctor::class, 'doctor_patient_assignments')
-        ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
-        ->withTimestamps();
-}
-
-    public function medicalRecord(): HasOne
     {
-        return $this->hasOne(MedicalRecord::class);
+        return $this->belongsToMany(Doctor::class, 'doctor_patient_assignments')
+            ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
+            ->withTimestamps();
     }
+
+
 
     public function treatments(): HasMany
     {

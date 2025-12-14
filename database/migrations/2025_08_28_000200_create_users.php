@@ -11,9 +11,6 @@ return new class extends Migration {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
-            $table->foreignId('branch_id')
-                ->nullable() // Puede ser null si es una operación central.
-                ->constrained()->comment('Sucursal donde se emitió el DTE.');
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');

@@ -12,6 +12,8 @@ return new class extends Migration {
     // -------------------------
     Schema::create('agenda_slots', function (Blueprint $table) {
       $table->id();
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+
       $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
       $table->foreignId('room_id')->constrained()->cascadeOnDelete();
       $table->foreignId('doctor_id')->constrained()->restrictOnDelete();

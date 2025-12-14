@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 
-class MedicalRecord extends Model
+class Notification extends Model
 {
 
+  use Multitenantable;
 
   protected $fillable = [
+    'company_id',
     'patient_id',
     'allergies',
     'conditions',

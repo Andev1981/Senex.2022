@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('liquidation_payors', function (Blueprint $table) {
             $table->id();
+             $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+      $table->foreignId('branch_id')
+          ->nullable() // Puede ser null si es una operación central.
+          ->constrained()
+          ->comment('Sucursal donde se emitió el DTE.');
             $table->foreignId('billing_liquidation_id')->constrained()->onDelete('cascade');
             
             // Identificador de la entidad pagadora:

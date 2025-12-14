@@ -13,6 +13,7 @@ return new class extends Migration {
 
             // Relaciones
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
             $table->foreignId('branch_id')
                       ->nullable()
                       ->constrained('branches')

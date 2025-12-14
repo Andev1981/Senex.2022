@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,12 +10,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Payroll extends Model
 {
 
+  use Multitenantable;
 
   public const STATUS_DRAFT    = 'draft';
   public const STATUS_APPROVED = 'approved';
   public const STATUS_PAID     = 'paid';
 
   protected $fillable = [
+    'company_id',
     'doctor_id',
     'period_start',
     'period_end',

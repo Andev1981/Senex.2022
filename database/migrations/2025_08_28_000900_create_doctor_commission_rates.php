@@ -13,6 +13,9 @@ return new class extends Migration {
     Schema::create('doctor_commission_rates', function (Blueprint $t) {
       $t->id();
 
+      // 🎯 Seguridad Multiempresa
+      $t->foreignId('company_id')->constrained()->onDelete('cascade');
+
       // FKs simples
       $t->foreignId('doctor_id')->constrained('doctors')->cascadeOnDelete();
       $t->foreignId('session_type_id')->constrained('session_types')->cascadeOnDelete();

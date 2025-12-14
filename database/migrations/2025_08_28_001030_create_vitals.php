@@ -13,7 +13,8 @@ return new class extends Migration {
     // =========================
     Schema::create('vitals', function (Blueprint $t) {
       $t->id();
-
+      // 🎯 Seguridad Multiempresa
+      $t->foreignId('company_id')->constrained()->onDelete('cascade');
       // FKs SIMPLES
       $t->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
       $t->foreignId('recorded_by_user_id')->nullable()

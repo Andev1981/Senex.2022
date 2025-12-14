@@ -19,6 +19,7 @@ class InsuranceSeeder extends Seeder
             // y que usarás como la entidad emisora.
             // ===============================================
             [
+                'company_id' => 1,
                 'name' => 'Tu Clínica',
                 'rut' => '76.387.221-1', // 🎯 Reemplazar con el RUT real de tu empresa
                 'institution_type' => 'clinic',
@@ -33,6 +34,7 @@ class InsuranceSeeder extends Seeder
             // 2. SALUD PÚBLICA (FONASA)
             // ===============================================
             [
+                'company_id' => 1,
                 'name' => 'Fondo Nacional de Salud (FONASA)',
                 'rut' => '61.700.000-K',
                 'institution_type' => 'health_insurer',
@@ -48,6 +50,7 @@ class InsuranceSeeder extends Seeder
             // Se incluyen las principales Isapres a la fecha.
             // ===============================================
             [
+                'company_id' => 1,
                 'name' => 'Isapre Colmena Golden Cross',
                 'rut' => '78.000.000-1',
                 'institution_type' => 'health_insurer',
@@ -58,6 +61,7 @@ class InsuranceSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'company_id' => 1,
                 'name' => 'Isapre CruzBlanca',
                 'rut' => '99.510.000-K',
                 'institution_type' => 'health_insurer',
@@ -68,6 +72,7 @@ class InsuranceSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'company_id' => 1,
                 'name' => 'Isapre Consalud',
                 'rut' => '96.840.450-K',
                 'institution_type' => 'health_insurer',
@@ -78,6 +83,7 @@ class InsuranceSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'company_id' => 1,
                 'name' => 'Isapre Banmédica',
                 'rut' => '96.938.620-8',
                 'institution_type' => 'health_insurer',
@@ -93,6 +99,7 @@ class InsuranceSeeder extends Seeder
             // Se incluyen ejemplos de seguros complementarios comunes.
             // ===============================================
             [
+                'company_id' => 1,
                 'name' => 'BICE Vida (Seguro Complementario)',
                 'rut' => '96.641.480-1',
                 'institution_type' => 'insurance_company',
@@ -103,6 +110,7 @@ class InsuranceSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'company_id' => 1,
                 'name' => 'Mapfre (Seguro de Salud)',
                 'rut' => '96.539.950-7',
                 'institution_type' => 'insurance_company',

@@ -15,6 +15,7 @@ return new class extends Migration
 
         Schema::create('calendar_accounts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
             $table->enum('provider', ['google', 'microsoft']);
             $table->string('external_calendar_id');

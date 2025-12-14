@@ -2,67 +2,73 @@
 
 namespace App\Services;
 
-use App\Models\{Invoice, InvoiceItem, TreatmentSession, PatientPlan, CompanySetting, SessionType};
+use App\Models\{Invoice, InvoiceItem, TreatmentSession, PatientPlan, CompanySetting, Payment, SessionType};
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class InvoiceService
 {
-  public function issueForSession(TreatmentSession $session, string $type = Invoice::TYPE_BOLETA): Invoice
+  public function processInvoice(Payment $payment,array $data, string $type = Invoice::TYPE_BOLETA): Invoice
   {
-    return DB::transaction(function () use ($session, $type) {
+    return DB::transaction(function () use ($payment, $data, $type) 
+    {
 
+      /* $company = CompanySetting::query()->first();
+      if (!$company) throw new RuntimeException('Faltan datos tributarios de la empresa.'); */
+      
+      $invoice = $this->createInvoice($data, $payment);
 
-      $company = CompanySetting::query()->first();
-      if (!$company) throw new RuntimeException('Faltan datos tributarios de la empresa.');
-
-      // 1) Crear invoice issued (o draft si prefieres)
-      $inv = Invoice::query()->create([
-        'patient_id'           => $session->patient_id,
-        'treatment_session_id' => $session->id,
-        'patient_plan_id'      => null,
-        'type'                 => $type,
-        'document_number'      => null, // se setea al aceptar/emitir
-        'issue_date'           => now()->toDateString(),
-        'subtotal'             => 0,
-        'tax_amount'           => 0,
-        'total_amount'         => 0,
-        'sii_status'           => Invoice::SII_PENDING,
-        'sii_track_id'         => null,
-        'pdf_path'             => null,
-        'xml_path'             => null,
-        'status'               => Invoice::STATUS_ISSUED,
-        'meta'                 => [],
-      ]);
-
-      // 2) Crear item
-      $desc = optional($session->sessionType)->name ?? 'Atención Kinesiología';
-      $price = (float) ($session->patient_amount ?? 0);
-
-      InvoiceItem::query()->create([
-        'invoice_id'     => $inv->id,
-        'description'    => $desc,
-        'session_type_id' => $session->session_type_id,
-        'quantity'       => 1,
-        'unit_price'     => $price,
-        'discount_amount' => 0,
-        'line_total'     => $price,
-        'tax_exempt'     => true, // ajustar según giro/servicio
-        'sii_item_code'  => null,
-      ]);
-
-      // 3) Recalcular totales (exento por defecto)
-      $inv->recalcTotalsFromItems(
-        taxRate: (int)($company->tax_rate ?? 0),
-        taxExempt: true
-      );
-
-      // 4) Enviar a SII vía proveedor (simulado aquí)
-      $this->sendToSii($inv);
-
-      return $inv->fresh('items');
+      if (!empty($data['session_ids'])) {
+                $sessionsIds = TreatmentSession::with('debt')->whereIn('id', $data['session_ids'])->get();
+                $this->createItemsInvoice($invoice, $sessionsIds);
+            }
+      
+      return $invoice->load('items');
     });
   }
+
+   /**
+     * Crea el registro de pago
+     */
+    private function createInvoice(array $data, Payment $payment): Invoice
+    {
+        return Invoice::create([
+            'company_id' => $data["company_id"],
+            'issue_date' =>  Carbon::now()->format('d-m-Y'),
+            'payment_id' => $payment->id,
+            'status' => 'pending', // Aún no enviado al SII
+            'patient_id' => $data['patient_id'],
+        ]);
+    }
+
+       /**
+         * Asigna un pago a múltiples sesiones
+         */
+        public function createItemsInvoice(Invoice $invoice,$sessionIds): void
+        {
+            
+                foreach ($sessionIds as $sessionId) {
+                  $sessionDate = Carbon::parse($sessionId->date)->format('d-m-Y');
+                  InvoiceItem::create([
+                        'company_id' => $invoice->company_id,
+                        'invoice_id' => $invoice->id,
+                        'treatment_session_id' => $sessionId->id,
+                        'treatment_id' => $sessionId->treatment_id,
+                        'description' => 'Sesión de Terapia (' . $sessionDate . ')',
+                        'quantity' => 1, // Siempre 1
+                        'unit_price_clp' => $sessionId->patient_amount,
+                        'total_clp' => $sessionId->patient_amount,
+                    ]);
+                
+                Log::info('Invoices Items creadas: ', [
+                    'invoice_id' => $invoice->id,
+                    'session_ids' => $sessionIds,
+                ]);
+              }
+          
+        }
 
   public function issueForPlan(PatientPlan $pp, string $type = Invoice::TYPE_FACTURA): Invoice
   {

@@ -15,6 +15,8 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
+             // 🎯 Seguridad Multiempresa
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->morphs('notifiable'); // notifiable_type + notifiable_id
             $table->string('type');       // Clase de notificación
             $table->text('data');         // JSON como texto

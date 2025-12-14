@@ -33,12 +33,26 @@ class DoctorController extends Controller
 
     public function index()
     {
+        $currentCompanyId = session('current_company_id');
+        $activeBranchId = session('active_branch_id');
+
         $addrPick = DB::table('addresses as a')
             ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
             ->where('a.addressable_type', Doctor::class)
             ->groupBy('a.addressable_id');
 
-        $doctors = Doctor::query()->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'doctors.id'))
+        $doctors = Doctor::query()
+            // 🎯 1. FILTRO DE EMPRESA: Unimos con la pivot para filtrar por la clínica activa
+            ->join('company_doctor', 'doctors.id', '=', 'company_doctor.doctor_id')
+            ->where('company_doctor.company_id', $currentCompanyId)
+            // 2. Filtro Opcional: Sucursal Activa
+            // Filtramos a través de la relación del usuario asociado al doctor
+            ->when($activeBranchId, function ($query) use ($activeBranchId) {
+                $query->whereHas('user.branches', function ($q) use ($activeBranchId) {
+                    $q->where('branches.id', $activeBranchId);
+                });
+            })
+            ->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'doctors.id'))
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')->leftJoin('addresses', function ($join) {
                 $join->on('addresses.addressable_id', '=', 'doctors.id')
                     ->where('addresses.addressable_type', '=', Doctor::class);

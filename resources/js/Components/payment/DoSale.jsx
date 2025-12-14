@@ -40,17 +40,17 @@ export default function DoSale({ onSaleResponse }) {
     onSaleResponse(null);
     swal("Solicite al cliente que opere el POS", { buttons: false });
 
-    POS.doMulticodeSale(total, "ticket12", "597029414301", (data) => {
-      console.log("Intermedio", data);
-    }).then((response) => {
-      if (response.responseCode === 0) {
-        swal("Transacción aprobada", "", "success");
-        clearTotal();
-      } else {
-        swal("Fallo", "No fue aprobada", "error");
+    POS.doMulticodeSale(total, "ticket12", "597029414301", (data) => {}).then(
+      (response) => {
+        if (response.responseCode === 0) {
+          swal("Transacción aprobada", "", "success");
+          clearTotal();
+        } else {
+          swal("Fallo", "No fue aprobada", "error");
+        }
+        onSaleResponse(response);
       }
-      onSaleResponse(response);
-    });
+    );
   };
 
   return (

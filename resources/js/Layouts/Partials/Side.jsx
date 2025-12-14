@@ -21,10 +21,11 @@ import {
   Handshake,
 } from "lucide-react";
 import CompanySwitcher from "@/Components/CompanySwitcher";
+import BranchSwitcher from "@/Components/BranchSwitcher";
 
 function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
   const { props } = usePage();
-  const currentCompany = props?.current_company;
+  const { current_company } = props;
   // Trae la URL actual para reaccionar a cambios de ruta
   const { url } = usePage();
 
@@ -149,7 +150,17 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
               </div>
               <div>
                 <h1 className="font-bold text-gray-900">
-                  {currentCompany.business_name}
+                  <div className="company-info">
+                    {current_company ? (
+                      <span className="font-bold">
+                        {current_company.business_name}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic">
+                        Contexto Global
+                      </span>
+                    )}
+                  </div>
                 </h1>
                 <p className="text-xs text-gray-500">Gestión</p>
               </div>
@@ -173,7 +184,13 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 
       {/* Navegación */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        {userIsSuperAdmin && <CompanySwitcher />}
+        <div className="flex-col gap-4 items-center mb-2">
+          {/* Solo Superadmins ven este */}
+          {userIsSuperAdmin && <CompanySwitcher />}
+
+          {/* Todos ven este (si tienen > 1 sucursal) */}
+          <BranchSwitcher />
+        </div>
         <div className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;

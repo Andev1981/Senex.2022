@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('billing_liquidations', function (Blueprint $table) {
             $table->id();
+             $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+      $table->foreignId('branch_id')
+          ->nullable() // Puede ser null si es una operación central.
+          ->constrained()
+          ->comment('Sucursal donde se emitió el DTE.');
             // Referencias a la prestación y contexto:
             $table->foreignId('treatment_session_id')->constrained()->onDelete('cascade'); // La sesión que generó el cobro
             $table->foreignId('treatment_id')->constrained()->onDelete('cascade'); // El tratamiento al que pertenece

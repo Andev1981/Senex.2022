@@ -53,7 +53,6 @@ function ModalInsurance({ insurance, setModalOpen }) {
     }));
   };
 
-  console.log("Data: ", data);
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-2 gap-4 px-4 pt-2">

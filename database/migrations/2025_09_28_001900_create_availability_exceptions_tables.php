@@ -16,6 +16,9 @@ return new class extends Migration
         Schema::create('availability_exceptions', function (Blueprint $table) {
             $table->id();
 
+             // 🎯 Seguridad Multiempresa
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
 
             // rango afectado (fecha/hora si quieres granularidad fina)

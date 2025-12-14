@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
 
 class Debt extends Model
 {
 
+  use Multitenantable;
 
   public const STATUS_PENDING = 'pending';
   public const STATUS_PARTIAL = 'partial';
@@ -15,6 +17,7 @@ class Debt extends Model
   public const STATUS_OVERDUE = 'overdue';
 
   protected $fillable = [
+    'company_id',
     'patient_id',
     'treatment_session_id',
     'original_amount',
