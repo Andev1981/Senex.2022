@@ -4,17 +4,19 @@ namespace App\Notifications;
 
 use App\Channels\TwilioSmsChannel;
 use App\Channels\TwilioWhatsAppChannel;
+use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\Patient;
 use App\Models\TreatmentSession;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use App\Traits\NotificationUtils;
 use Illuminate\Support\Facades\Log;
 
-class PaymentReminderNotification extends Notification implements ShouldQueue
+class PaymentReminderNotification extends Notification implements ShouldQueue, WhatsAppNotificationInterface
 {
-    use Queueable;
+    use Queueable, NotificationUtils;
 
     protected Patient $patient;
     protected TreatmentSession $treatment_session;
@@ -30,7 +32,7 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
      * @param int $itemCount Cantidad de items pendientes
      * @param array $channels Canales: ['mail', 'sms', 'whatsapp']
      */
-    public function __construct(Patient $patient,TreatmentSession $treatment_session,$session_type,int $totalAmount, int $itemCount, array $channels = ['mail'])
+    public function __construct(Patient $patient, TreatmentSession $treatment_session, $session_type, int $totalAmount, int $itemCount, array $channels = ['mail'])
     {
 
         $this->patient = $patient;
@@ -39,6 +41,38 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
         $this->totalAmount = $totalAmount;
         $this->itemCount = $itemCount;
         $this->channels = $channels;
+    }
+
+
+    /**
+     * Get the notification's delivery channels.
+     */
+    public function via($notifiable): array
+    {
+        if ($notifiable->opt_out_reminders) {
+            return [];
+        }
+
+        $channels = [];
+
+        // 2. Filtro para Email
+        if ($notifiable->prefers_mail && $notifiable->email) {
+            $channels[] = 'mail';
+        }
+
+        // 3. Filtro para WhatsApp (Usando tu canal personalizado)
+        if ($notifiable->prefers_whatsapp && $notifiable->phone) {
+            $channels[] = \App\Channels\TwilioWhatsAppChannel::class;
+        }
+
+        // 4. Filtro para SMS (Si lo tienes implementado)
+        if ($notifiable->prefers_sms && $notifiable->phone) {
+            $channels[] = \App\Channels\TwilioSmsChannel::class;
+        }
+
+
+
+        return $channels;
     }
 
     /**
@@ -51,39 +85,21 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
         $sessionType = $this->session_type;
         $sessionDate = $this->treatment_session['date'];
         $sessionHour = $this->treatment_session['time'];
+        $firstName = $this->getFirstName($this->getRecipientName($notifiable));
+        $patientRef = $this->getPatientReference($notifiable);
+        $montoFormateado = $this->formatCLP($this->totalAmount);
 
         return [
             'body' => "Hola {$firstName}! 👋\n\n" .
-                      "Tienes {$this->itemCount} pago(s) pendiente(s) en Senex por un total de *" . $this->formatCLP($this->totalAmount) . "*.\n\n" .
-                      "---------------- * -----------------" .
-                      "Atención: {$sessionType}\n\n" .
-                      "Fecha: {$sessionDate}" .
-                      "Hora: {$sessionHour}\n\n" .
-                      "💳 Paga fácil con tu RUT en:\n{$portalUrl}\n\n" .
-                      "¿Dudas? Responde a este mensaje.",
+                "Tienes {$this->itemCount} sesione(s) pendiente(s) de pago en Senex {$patientRef} por un total de *{$montoFormateado}*.\n\n" .
+                "---------------- * -----------------\n" .
+                "Atención: {$sessionType}\n" .
+                "Fecha: {$sessionDate}\n" .
+                "Hora: {$sessionHour}\n\n" .
+                "💳 Paga fácil con tu RUT en:\n{$portalUrl}\n\n" .
+                "¿Dudas? Responde a este mensaje.",
+            'event_key' => 'payment.reminder'
         ];
-    }
-
-    /**
-     * Get the notification's delivery channels.
-     */
-    public function via($notifiable): array
-    {
-        $availableChannels = [];
-
-        foreach ($this->channels as $channel) {
-            if ($channel === 'mail' && $notifiable->email) {
-                $availableChannels[] = 'mail';
-            }
-            if ($channel === 'sms' && $notifiable->phone) {
-                $availableChannels[] = TwilioSmsChannel::class;
-            }
-            if ($channel === 'whatsapp' && $notifiable->phone) {
-                $availableChannels[] = TwilioWhatsAppChannel::class;
-            }
-        }
-
-        return $availableChannels;
     }
 
     /**
@@ -110,19 +126,9 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
     public function toSms($notifiable): array
     {
         $portalUrl = route('portal.pago');
-        
+
         return [
             'body' => "KineMobile: Tienes pagos pendientes por " . $this->formatCLP($this->totalAmount) . ". Paga fácil en: {$portalUrl}",
         ];
-    }
-
-    
-
-    /**
-     * Format amount_clp to CLP
-     */
-    private function formatCLP(int $amount_clp): string
-    {
-        return '$' . number_format($amount_clp, 0, ',', '.');
     }
 }

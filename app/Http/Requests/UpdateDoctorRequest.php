@@ -51,7 +51,7 @@ class UpdateDoctorRequest extends FormRequest
             'gender'            => ['nullable', 'string', 'max:10'],
 
             'status'            => ['nullable', 'string', 'max:50'],
-            'mobile_access_enabled' => ['nullable', 'boolean'],
+            'mobile_app_access' => ['nullable', 'boolean'],
             'status_reason'     => ['nullable', 'string', 'max:255'],
             'status_changed_at' => ['nullable', 'date'],
 
@@ -99,6 +99,8 @@ class UpdateDoctorRequest extends FormRequest
             'status_reason.string'       => 'La razón del estado debe ser una cadena de texto.',
             'status_reason.max'          => 'La razón del estado no debe exceder los 255 caracteres.',
 
+            'mobile_app_access.boolean'  => 'El estado de acceso debe ser verdadero o falso',
+
             'status_changed_at.date'     => 'La fecha de cambio de estado no es válida.',
 
             // Dirección
@@ -139,7 +141,7 @@ class UpdateDoctorRequest extends FormRequest
             'status'            => 'estado',
             'status_reason'     => 'razón del estado',
             'status_changed_at' => 'fecha de cambio de estado',
-
+            'mobile_app_access' => 'mobile_app_access',
             'street'            => 'calle',
             'number'            => 'número',
             'details'           => 'detalles',

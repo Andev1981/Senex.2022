@@ -71,13 +71,17 @@ export const patientStatuses = {
     label: "Inactivo",
     className: "bg-gray-400",
   },
-  suspended: {
-    label: "Suspendido",
-    className: "bg-yellow-300",
-  },
-  cancelled: {
-    label: "Cancelado",
+  transferred: {
+    label: "Transferido",
     className: "bg-red-400",
+  },
+  archived: {
+    label: "Archivado",
+    className: "bg-blue-400",
+  },
+  deceased: {
+    label: "Fallecido",
+    className: "bg-yellow-300",
   },
 };
 

@@ -14,12 +14,14 @@ import TextInputNumber from "@/Components/TextInputNumber";
 import PrimaryButton from "@/Components/PrimaryButton";
 import { useForm } from "@inertiajs/react";
 import { TREATMENT_CURRENT_PHASE_OPTIONS } from "@/constants/treatmentCurrentPhases";
+import { fmtDateISO } from "@/utils/utils";
 
 export default function ModalCreateUpdateTreatment({
   patient,
   selectedTreatment,
   doctors,
   setOpenTreatmentModal,
+  diagnostics,
 }) {
   // ... (Inicialización de useForm y datos - Sin cambios)
   const isEditing = !!selectedTreatment?.id;
@@ -29,7 +31,7 @@ export default function ModalCreateUpdateTreatment({
     session_type_id: 1,
     patient_id: patient?.id,
     doctor_id: selectedTreatment?.doctor_id ?? null,
-    diagnosis: selectedTreatment?.diagnosis ?? null,
+    diagnostic_code: selectedTreatment?.diagnostic_code ?? null,
     description: selectedTreatment?.description ?? null,
     start_date: selectedTreatment?.start_date ?? null,
     end_date: selectedTreatment?.end_date ?? null,
@@ -138,9 +140,9 @@ export default function ModalCreateUpdateTreatment({
               onChange={(value) => setData("doctor_id", value)}
               config={{
                 valueKey: "id",
-                displayKey: "name",
-                secondaryKeys: ["email"],
-                searchKeys: ["name", "last_name", "email"],
+                displayKey: "full_name",
+                secondaryKeys: ["email", "phone"],
+                searchKeys: ["name", "last_name", "email", "full_name"],
               }}
               label="Kinesiolog@ a Cargo *"
               placeholder="Buscar Kinesiólogo..."
@@ -180,24 +182,26 @@ export default function ModalCreateUpdateTreatment({
 
         <div className="grid grid-cols-1 gap-6">
           {/* Diagnóstico - Bloqueado */}  
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Diagnóstico Principal (CIE-10 o Descripción) * 
-            </label>
-
-            <input
-              type="text"
-              value={data.diagnosis}
-              onChange={(e) => setData("diagnosis", e.target.value)}
-              placeholder="Ej: Esguince de tobillo grado II, Tendinopatía rotuliana"
-              className={`${baseInputClasses} focus:ring-purple-500`}
-              required
+          <div className="md:col-span-2">
+            <SearchSelect
+              items={diagnostics}
+              value={data.diagnostic_code}
+              onChange={(value) => setData("diagnostic_code", value)}
+              config={{
+                valueKey: "code",
+                displayKey: "description",
+                secondaryKeys: ["code"],
+                searchKeys: ["code", "description"],
+              }}
+              label="Diagnóstico Principal (CIE-10) * "
+              placeholder="Buscar código..."
+              error={errors.diagnostic_code}
               disabled={isLocked} // Bloqueo aplicado
             />
-
-            {errors.diagnosis && (
-              <p className="mt-1 text-sm text-red-600">{errors.diagnosis}</p>
-            )}
+            <span className="flex text-sm italic text-gray-400">
+              Código(CIE-10):{" "}
+              <p className="pl-2 font-bold">{data.diagnostic_code}</p>
+            </span>
           </div>
           {/* Descripción - Bloqueado */}  
           <div>
@@ -236,10 +240,9 @@ export default function ModalCreateUpdateTreatment({
               <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Fecha de Inicio *
               </label>
-
               <input
                 type="date"
-                value={data.start_date}
+                value={fmtDateISO(data.start_date)}
                 onChange={(e) => setData("start_date", e.target.value)}
                 className={`${baseInputClasses} focus:ring-teal-500`}
                 required
@@ -258,7 +261,7 @@ export default function ModalCreateUpdateTreatment({
 
               <input
                 type="date"
-                value={data.end_date}
+                value={fmtDateISO(data.end_date)}
                 onChange={(e) => setData("end_date", e.target.value)}
                 className={`${baseInputClasses} focus:ring-teal-500`}
                 disabled={isLocked} // Bloqueo aplicado

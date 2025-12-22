@@ -24,13 +24,13 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => $authData['auth'],
-            
+
             // Contexto de Compañía
-            'current_company' => $authData['current_company'], 
+            'current_company' => $authData['current_company'],
             'current_company_id' => $authData['current_company'] ? $authData['current_company']['id'] : null,
 
             // Contexto de Sucursal
-            'current_branch' => $authData['current_branch'], 
+            'current_branch' => $authData['current_branch'],
             'current_branch_id' => $authData['current_branch'] ? $authData['current_branch']['id'] : null,
 
             // Listados para Switchers
@@ -38,10 +38,10 @@ class HandleInertiaRequests extends Middleware
             'available_branches' => $authData['available_branches'],
 
             // Mensajes Flash
-            'flash' => [
+            /* 'flash' => [
                 'message' => fn() => $request->session()->get('message'),
                 'type' => fn() => $request->session()->get('type', 'info'),
-            ],
+            ], */
         ];
     }
 
@@ -73,13 +73,29 @@ class HandleInertiaRequests extends Middleware
 
         if ($user) {
             // --- 2. DETERMINAR ID DE EMPRESA (Lógica simplificada y segura) ---
-            
+
             // Prioridad 1: Lo que el Superadmin eligió en el Switcher (Sesión)
             $contextCompanyId = $request->session()->get('current_company_id');
 
-            // Prioridad 2: Si no hay sesión, usamos el company_id del usuario
-            if (!$contextCompanyId && $user->company_id) {
-                $contextCompanyId = $user->company_id;
+            // --- 2. DETERMINAR ID DE EMPRESA (Con auto-reparación) ---
+            $contextCompanyId = $request->session()->get('current_company_id');
+
+            if (!$contextCompanyId) {
+                // Intentamos recuperar del perfil del usuario
+                if ($user->company_id) {
+                    $contextCompanyId = $user->company_id;
+                }
+                // Si es Superadmin y no tiene empresa asignada, tomamos la primera
+                elseif ($user->isSuperAdmin()) {
+                    $firstCompany = Company::first();
+                    $contextCompanyId = $firstCompany ? $firstCompany->id : null;
+                }
+
+                // 🎯 CRUCIAL: Si encontramos un ID, lo guardamos en la sesión 
+                // para que en la siguiente petición no sea null.
+                if ($contextCompanyId) {
+                    $request->session()->put('current_company_id', $contextCompanyId);
+                }
             }
 
             // Prioridad 3: Si sigue siendo null (Superadmin recién logueado), tomamos la primera
@@ -119,7 +135,7 @@ class HandleInertiaRequests extends Middleware
                     ->where('branches.company_id', $contextCompanyId)
                     ->wherePivot('is_main', true)
                     ->first();
-                
+
                 $activeBranchId = $mainBranch ? $mainBranch->id : $availableBranches->first()->id;
             }
 

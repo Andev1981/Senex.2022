@@ -42,6 +42,7 @@ export default function DetailPatient({
   address,
   vital,
   contact,
+  diagnostics = [],
 }) {
   const { get } = useForm();
   const [activeTab, setActiveTab] = useSyncedTab("general");
@@ -125,6 +126,7 @@ export default function DetailPatient({
                 doctors={doctors}
                 session_types={session_types}
                 treatments={treatments}
+                diagnostics={diagnostics}
               />
             )}
             {activeTab === "treatments" && (

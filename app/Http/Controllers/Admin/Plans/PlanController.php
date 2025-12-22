@@ -7,12 +7,22 @@ use App\Http\Requests\StorePlanRequest;
 use App\Http\Requests\UpdatePlanRequest;
 use App\Models\Insurance;
 use App\Models\Plan;
+use App\Services\Plans\PlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PlanController extends Controller
 {
+
+    protected PlanService $planService;
+
+    // Inyección de Dependencias
+    public function __construct(PlanService $planService)
+    {
+        $this->planService = $planService;
+    }
+
     public function index(Insurance $insurance){
      
         /* dd($insurance->id); */
@@ -53,11 +63,18 @@ class PlanController extends Controller
 
     public function store(StorePlanRequest $request)
     {
+       
         $validated = $request->validated();
 
         try {
+
+            // 2. DELEGAR la lógica al Service Layer
+            $plan = $this->planService->createPlanWithContent(
+                 $validated
+            );
+
             //code...
-            Plan::create($validated);
+            /* Plan::create($validated); */
 
             
             // Si llegamos aquí, la transacción fue exitosa

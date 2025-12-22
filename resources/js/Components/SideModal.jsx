@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useRef } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -27,9 +27,15 @@ export default function SideModal({
     full: "max-w-full w-full",
   }[width];
 
+  const addButtonRef = useRef(null);
+
   return (
     <Transition show={open} leave="duration-200">
-      <Dialog onClose={onClose} className="relative z-50">
+      <Dialog
+        onClose={onClose}
+        className="relative z-50"
+        initialFocus={addButtonRef}
+      >
         {/* Fondo oscuro */}
         <TransitionChild
           as={Fragment}

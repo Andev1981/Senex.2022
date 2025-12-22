@@ -10,20 +10,26 @@ return new class extends Migration {
 
         Schema::create('patient_insurances', function (Blueprint $table) {
             $table->id();
-            // 🎯 Seguridad Multiempresa
-            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+
+            // 🔑 LLAVES FORÁNEAS
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('insurance_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('plan_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('member_id')->nullable();
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->enum('status',['active','inactive','pending'])->default('active');
-            $table->boolean('is_primary')->default(true);
-            $table->text('notes')->nullable();
+            $table->foreignId('insurance_id')->constrained('insurances')->cascadeOnDelete();
+            $table->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();
+            
+            // 👤 DATOS DEL AFILIADO (CRÍTICO PARA BOLETA/BONO)
+            $table->string('affiliate_rut', 12)->comment('RUT del titular del plan (puede ser diferente al paciente).');
+            $table->boolean('is_affiliate_holder')->default(false)->comment('Si es true, el paciente es el titular.');
+            $table->boolean('is_active')->default(true)->comment('Solo un plan puede estar activo a la vez para un paciente.');
+            
+            // 📅 VIGENCIA Y TRAZABILIDAD
+            $table->date('enrollment_date')->nullable()->comment('Fecha de inicio de afiliación.');
+            $table->date('expiration_date')->nullable()->comment('Fecha de término del plan.');
+            
             $table->timestamps();
-            // Evita que un paciente tenga la misma previsión duplicada en la misma clínica
-            $table->unique(['company_id', 'patient_id', 'insurance_id'], 'patient_insurance_unique');
+
+            // Índice para unicidad: un paciente no puede tener el mismo plan dos veces (mientras esté activo)
+            $table->unique(['patient_id', 'insurance_id', 'plan_id', 'is_active'], 'unique_active_plan');
+            $table->index(['patient_id', 'is_active']);
         });
     }
 

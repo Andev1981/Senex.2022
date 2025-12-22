@@ -18,10 +18,8 @@ export default function CreateUpdateModal({
 }) {
   const isEditing = !!sessionData?.session_id;
   const currentStatus = sessionData?.status;
-  const { current_company_id } = usePage().props;
   const { data, setData, errors, post, patch, reset, processing } = useForm({
     id: sessionData?.session_id || "",
-    company_id: current_company_id,
     treatment_id: sessionData?.treatment_id || "",
     doctor_id: sessionData?.doctor_id || "",
     patient_id: sessionData?.patient_id || "",
@@ -168,7 +166,7 @@ export default function CreateUpdateModal({
         {isEditing && (
           <>
             {(currentStatus === "cancelled" || currentStatus === "absent") && (
-              <div className="p-3 mx-2 mt-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="p-3 mx-2 mt-4 border border-red-200 rounded-lg bg-red-50">
                 <p className="text-sm font-semibold text-red-800">
                   ⚠️ Esta sesión no puede editarse. Estado:{" "}
                   {estadoTexto(currentStatus)}
@@ -177,7 +175,7 @@ export default function CreateUpdateModal({
             )}
 
             {currentStatus === "in_progress" && (
-              <div className="p-3 mx-2 mt-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="p-3 mx-2 mt-4 border border-yellow-200 rounded-lg bg-yellow-50">
                 <p className="text-sm font-semibold text-yellow-800">
                   ⚠️ Solo puedes editar: duración, tipo de sesión, valor y datos
                   clínicos
@@ -186,7 +184,7 @@ export default function CreateUpdateModal({
             )}
 
             {currentStatus === "completed" && (
-              <div className="p-3 mx-2 mt-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="p-3 mx-2 mt-4 border border-blue-200 rounded-lg bg-blue-50">
                 <p className="text-sm font-semibold text-blue-800">
                   ℹ️ Solo puedes editar datos clínicos
                 </p>
@@ -427,16 +425,16 @@ export default function CreateUpdateModal({
 
                   if (plans.length === 0) {
                     return (
-                      <div className="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                      <div className="p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
                         <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gray-200 rounded-lg">
+                          <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-gray-200 rounded-lg">
                             <span className="text-xl">💳</span>
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-gray-700">
                               Este paciente no tiene planes activos
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="mt-1 text-xs text-gray-500">
                               La sesión se cobrará individualmente
                             </p>
                           </div>
@@ -489,9 +487,9 @@ export default function CreateUpdateModal({
                           <InputError message={errors.patient_plan_id} />
 
                           {selectedPlan && (
-                            <div className="mt-3 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                            <div className="p-3 mt-3 border-2 border-blue-200 rounded-lg bg-blue-50">
                               <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-500 text-white rounded-lg font-bold text-sm">
+                                <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-white bg-blue-500 rounded-lg">
                                   ✓
                                 </div>
                                 <div className="flex-1">
@@ -499,7 +497,7 @@ export default function CreateUpdateModal({
                                     {selectedPlan.plan_name}
                                   </p>
                                   {selectedPlan.plan_description && (
-                                    <p className="text-xs text-blue-700 mt-1">
+                                    <p className="mt-1 text-xs text-blue-700">
                                       {selectedPlan.plan_description}
                                     </p>
                                   )}
@@ -544,7 +542,7 @@ export default function CreateUpdateModal({
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-2">
-                              <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg font-bold">
+                              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 font-bold text-white rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
                                 💳
                               </div>
                               <div>
@@ -564,13 +562,13 @@ export default function CreateUpdateModal({
                           </div>
 
                           <div className="grid grid-cols-3 gap-3 mb-3">
-                            <div className="p-2 bg-white rounded-lg border border-gray-200">
+                            <div className="p-2 bg-white border border-gray-200 rounded-lg">
                               <p className="text-xs text-gray-600">Incluidas</p>
                               <p className="text-lg font-bold text-gray-900">
                                 {plans[0].sessions_included}
                               </p>
                             </div>
-                            <div className="p-2 bg-white rounded-lg border border-gray-200">
+                            <div className="p-2 bg-white border border-gray-200 rounded-lg">
                               <p className="text-xs text-gray-600">Usadas</p>
                               <p className="text-lg font-bold text-gray-600">
                                 {plans[0].sessions_used}
@@ -599,7 +597,7 @@ export default function CreateUpdateModal({
                           </div>
 
                           {plans[0].expiry_date && (
-                            <div className="mb-3 p-2 bg-white rounded-lg border border-gray-200">
+                            <div className="p-2 mb-3 bg-white border border-gray-200 rounded-lg">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-gray-600">
                                   📅 Fecha de vencimiento:
@@ -619,7 +617,7 @@ export default function CreateUpdateModal({
                           )}
 
                           {plans[0].plan_description && (
-                            <div className="mb-3 p-2 bg-white rounded-lg border border-gray-200">
+                            <div className="p-2 mb-3 bg-white border border-gray-200 rounded-lg">
                               <p className="text-xs text-gray-700">
                                 {plans[0].plan_description}
                               </p>
@@ -660,7 +658,7 @@ export default function CreateUpdateModal({
                               >
                                 Usar sesión de este plan
                               </label>
-                              <p className="text-xs mt-1 text-gray-600">
+                              <p className="mt-1 text-xs text-gray-600">
                                 {plans[0].sessions_remaining > 0 ? (
                                   <>
                                     Se marcará 1 sesión como usada. Quedarían{" "}
@@ -669,13 +667,13 @@ export default function CreateUpdateModal({
                                       disponibles
                                     </span>
                                     {plans[0].sessions_remaining - 1 === 0 && (
-                                      <span className="block mt-1 text-orange-600 font-semibold">
+                                      <span className="block mt-1 font-semibold text-orange-600">
                                         ⚠️ Esta será la última sesión del plan
                                       </span>
                                     )}
                                   </>
                                 ) : (
-                                  <span className="text-red-600 font-semibold">
+                                  <span className="font-semibold text-red-600">
                                     ⚠️ Plan agotado. Esta sesión se cobrará
                                     individualmente.
                                   </span>
@@ -693,7 +691,7 @@ export default function CreateUpdateModal({
                               );
                               if (daysUntilExpiry <= 7 && daysUntilExpiry > 0) {
                                 return (
-                                  <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded-lg">
+                                  <div className="p-2 mt-3 border border-orange-200 rounded-lg bg-orange-50">
                                     <p className="text-xs text-orange-800">
                                       ⏰{" "}
                                       <strong>
@@ -709,14 +707,14 @@ export default function CreateUpdateModal({
                       )}
 
                       {!data.consume_plan && plans.length > 0 && (
-                        <div className="p-3 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+                        <div className="p-3 border-2 border-yellow-200 rounded-lg bg-yellow-50">
                           <div className="flex items-start gap-2">
-                            <span className="text-yellow-600 text-lg">💰</span>
+                            <span className="text-lg text-yellow-600">💰</span>
                             <div>
                               <p className="text-sm font-semibold text-yellow-900">
                                 Sesión de pago individual
                               </p>
-                              <p className="text-xs text-yellow-700 mt-1">
+                              <p className="mt-1 text-xs text-yellow-700">
                                 Esta sesión NO consumirá ningún plan y se
                                 cobrará por separado
                               </p>
@@ -793,7 +791,7 @@ export default function CreateUpdateModal({
                         <InputError message={errors.patient_plan_id} />
 
                         {data.patient_plan_id && (
-                          <div className="p-3 mt-2 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="p-3 mt-2 border border-blue-200 rounded-lg bg-blue-50">
                             <p className="text-sm text-blue-800">
                               ℹ️ Cambiar de plan ajustará automáticamente las
                               sesiones usadas
@@ -883,7 +881,7 @@ export default function CreateUpdateModal({
               </div>
 
               {/* Rango de Movimiento */}
-              <div className="p-4 border-2 border-purple-200 rounded-lg bg-purple-50 mt-4">
+              <div className="p-4 mt-4 border-2 border-purple-200 rounded-lg bg-purple-50">
                 <h4 className="mb-4 text-lg font-semibold text-purple-900">
                   📐 Rango de Movimiento
                 </h4>
@@ -945,7 +943,7 @@ export default function CreateUpdateModal({
 
                 {/* Opciones predefinidas (checkboxes) */}
                 <div className="mb-3">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">
+                  <p className="mb-2 text-xs font-semibold text-gray-700">
                     Selecciona técnicas aplicadas:
                   </p>
                   <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
@@ -996,7 +994,7 @@ export default function CreateUpdateModal({
 
                 {/* Input para agregar técnicas personalizadas */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-700 mb-2">
+                  <p className="mb-2 text-xs font-semibold text-gray-700">
                     O agrega una técnica personalizada:
                   </p>
                   <input
@@ -1026,7 +1024,7 @@ export default function CreateUpdateModal({
 
                 {/* Técnicas seleccionadas (chips) */}
                 {data.techniques?.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border-2 border-green-300">
+                  <div className="flex flex-wrap gap-2 p-3 mb-3 bg-white border-2 border-green-300 rounded-lg">
                     {data.techniques.map((technique, idx) => (
                       <span
                         key={idx}
@@ -1071,7 +1069,7 @@ export default function CreateUpdateModal({
 
                 {/* Opciones predefinidas (checkboxes) */}
                 <div className="mb-3">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">
+                  <p className="mb-2 text-xs font-semibold text-gray-700">
                     Selecciona ejercicios realizados:
                   </p>
                   <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
@@ -1122,7 +1120,7 @@ export default function CreateUpdateModal({
 
                 {/* Input para agregar ejercicios personalizados */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-700 mb-2">
+                  <p className="mb-2 text-xs font-semibold text-gray-700">
                     O agrega un ejercicio personalizado:
                   </p>
                   <input
@@ -1152,7 +1150,7 @@ export default function CreateUpdateModal({
 
                 {/* Ejercicios seleccionados (chips) */}
                 {data.exercises?.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white rounded-lg border-2 border-orange-300">
+                  <div className="flex flex-wrap gap-2 p-3 mb-3 bg-white border-2 border-orange-300 rounded-lg">
                     {data.exercises.map((exercise, idx) => (
                       <span
                         key={idx}
@@ -1190,7 +1188,7 @@ export default function CreateUpdateModal({
               </div>
 
               {/* Observaciones Clínicas */}
-              <div className="p-4 border-2 border-gray-200 rounded-lg mt-4">
+              <div className="p-4 mt-4 border-2 border-gray-200 rounded-lg">
                 <h4 className="mb-4 text-lg font-semibold text-gray-800">
                   📝 Observaciones Clínicas
                 </h4>

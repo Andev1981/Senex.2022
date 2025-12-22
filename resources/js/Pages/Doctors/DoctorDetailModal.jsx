@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "@inertiajs/react";
 import InputLabel from "@/Components/InputLabel";
 import InputError from "@/Components/InputError";
@@ -9,8 +10,8 @@ import ChilePhoneInput from "@/Components/ChilePhoneInput";
 import RutInput from "@/Components/RutInput";
 import Switch from "@/Components/Switch";
 import moment from "moment";
-import { useEffect } from "react";
 import { especialidadesChile } from "@/constants/especialidades";
+import { Building2 } from "lucide-react";
 
 export default function DoctorDetailModal({
   doctor,
@@ -19,6 +20,9 @@ export default function DoctorDetailModal({
   communes,
   setIsModalOpenDetail,
 }) {
+  // Estado para saber si estamos ante un paciente que ya existe en otra sede
+  const [isExistingInSystem, setIsExistingInSystem] = useState(false);
+
   const { data, setData, errors, post, put, reset, processing } = useForm({
     id: doctor?.id || null,
     name: doctor?.name || "",
@@ -31,19 +35,74 @@ export default function DoctorDetailModal({
       ? moment.utc(doctor.birth_date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
     gender: doctor?.gender || "",
-    mobile_access_enabled: doctor?.mobile_access_enabled || false,
-    status: doctor?.status || "active",
-    status_reason: doctor?.status_reason || "",
-    street: doctor?.street || "",
-    number: doctor?.number || "",
-    details: doctor?.details || "",
+    mobile_app_access: doctor?.branch?.mobile_app_access || false,
+    status: doctor?.branch?.status || "active",
+    status_reason: doctor?.branch?.status_reason || "",
     commune_id: doctor?.commune_id || "",
     province_id: doctor?.province_id || "",
     region_id: doctor?.region_id || "",
+    street: doctor?.street || "",
+    number: doctor?.number || "",
+    details: doctor?.details || "",
   });
+
+  // 🎯 FUNCIÓN DE VALIDACIÓN DE RUT
+  const handleRutBlur = async (e) => {
+    const rut = e.target.value;
+
+    // 🎯 Limpiamos para la API (quitar puntos)
+    const cleanRut = rut.replace(/\./g, "");
+
+    // Solo validamos si es un paciente nuevo y el RUT tiene longitud mínima
+    if (data.id || cleanRut.length < 8) return;
+
+    try {
+      // Llamada al endpoint que creamos en Laravel
+      const response = await axios.post(route("doctors.check-existing"), {
+        rut: cleanRut,
+      });
+
+      if (response.data.status === "exists") {
+        const d = response.data.doctor;
+
+        // Cargamos los datos en el formulario
+        setData((prev) => ({
+          ...prev,
+          id: d.id,
+          name: d.name,
+          last_name: d.last_name,
+          email: d.email,
+          phone: d.phone,
+          birth_date: moment.utc(d.birth_date).format("YYYY-MM-DD"),
+          speciality: d.speciality,
+          gender: d.gender,
+          mobile_app_access: d.mobile_app_access,
+          status: d.status,
+          status_reason: d.status_reason,
+          commune_id: d.commune_id,
+          province_id: d.province_id,
+          region_id: d.region_id,
+          street: d.street,
+          number: d.number,
+          details: d.details,
+        }));
+
+        setIsExistingInSystem(true);
+        /* clearErrors(); */ // Limpiamos errores previos si los había
+      } else {
+        setIsExistingInSystem(false);
+      }
+    } catch (error) {
+      console.error("Error al validar el RUT en el sistema", error);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (data.status !== "active") {
+      setData("mobile_app_access", false);
+    }
 
     const opts = {
       preserveState: (page) => Object.keys(page.props.errors || {}).length > 0,
@@ -71,6 +130,7 @@ export default function DoctorDetailModal({
       post(route("doctors.store"), opts);
     }
   };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setData((prev) => ({
@@ -88,8 +148,31 @@ export default function DoctorDetailModal({
   );
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="shadow-xl p-2 rounded-lg">
+      {/* 🎯 MENSAJE ESTÁTICO DE CABECERA */}
+      {isExistingInSystem && (
+        <div className="mx-4 mt-2 p-3 bg-blue-50 border-l-4 border-blue-500 text-blue-700 text-sm flex items-center gap-2 rounded">
+          <Building2 className="w-4 h-4" />
+          <span>
+            Este doctor ya pertenece a la red de clínicas. Al guardar, se
+            actualizarán sus datos y se vinculará a esta sucursal.
+          </span>
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-4 px-4 pt-2">
+        <div>
+          <InputLabel htmlFor="rut" value="Rut" className="ml-2 text-primary" />
+          <RutInput
+            value={data.rut}
+            initialValue={data?.rut}
+            onChange={(rut) => setData("rut", rut)}
+            setRutError={(error) => (errors.rut = error)}
+            onBlur={handleRutBlur} // 🎯 DISPARADOR DE BÚSQUEDA
+            disabled={!!data.id} // No se cambia el RUT en edición
+          />
+
+          <InputError message={errors?.rut} className="mt-2" />
+        </div>
         <div>
           <InputLabel
             htmlFor="name"
@@ -104,6 +187,7 @@ export default function DoctorDetailModal({
             onChange={(e) => handleChange(e)}
             required
             className="w-full"
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           />
           <InputError message={errors?.name} className="mt-2" />
         </div>
@@ -121,6 +205,7 @@ export default function DoctorDetailModal({
             onChange={(e) => handleChange(e)}
             required
             className="w-full"
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           />
           <InputError message={errors?.last_name} className="mt-2" />
         </div>
@@ -139,6 +224,7 @@ export default function DoctorDetailModal({
             onChange={(e) => handleChange(e)}
             required
             className="w-full"
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           />
           <InputError message={errors?.email} className="mt-2" />
         </div>
@@ -152,20 +238,10 @@ export default function DoctorDetailModal({
             value={data.phone}
             initialValue={data.phone}
             onChange={(phone) => setData("phone", phone)}
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           />
 
           <InputError message={errors?.phone} className="mt-2" />
-        </div>
-        <div>
-          <InputLabel htmlFor="rut" value="Rut" className="ml-2 text-primary" />
-          <RutInput
-            value={data.rut}
-            initialValue={data?.rut}
-            onChange={(rut) => setData("rut", rut)}
-            setRutError={(error) => (errors.rut = error)}
-          />
-
-          <InputError message={errors?.rut} className="mt-2" />
         </div>
 
         <div>
@@ -182,6 +258,7 @@ export default function DoctorDetailModal({
             onChange={(e) => handleChange(e)}
             required
             className="w-full"
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           />
           <InputError message={errors?.birth_date} className="mt-2" />
         </div>
@@ -202,6 +279,7 @@ export default function DoctorDetailModal({
             }}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
             required
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           >
             {!data.speciality && <option value="">-- Especialidad --</option>}
             {especialidadesChile?.map((esp) => (
@@ -229,6 +307,7 @@ export default function DoctorDetailModal({
             }}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
             required
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           >
             {!data.gender && <option value="">-- Sexo --</option>}
 
@@ -244,28 +323,10 @@ export default function DoctorDetailModal({
           </select>
           <InputError message={errors.gender} className="mt-2" />
         </div>
-        {/* Acceso App */}
-        <div>
-          <InputLabel
-            htmlFor="status"
-            value="Acceso Móvil"
-            className="mb-2 ml-2 text-primary"
-          />
-          <Switch
-            id="mobile_access_enabled"
-            name="mobile_access_enabled"
-            checked={!!data?.mobile_access_enabled}
-            onChange={(e) => {
-              const checked = e?.target?.checked ?? false;
-              setData("mobile_access_enabled", checked);
-            }}
-          />
-          <InputError message={errors.mobile_access_enabled} className="mt-2" />
-        </div>
       </div>
       {/* Estado */}
       <hr className="my-4" />
-      <div className="grid grid-cols-3 gap-4 px-4 pt-2">
+      <div className="grid grid-cols-2 gap-4 px-4 pt-2">
         <div>
           <InputLabel
             htmlFor="status"
@@ -277,10 +338,26 @@ export default function DoctorDetailModal({
             name="status"
             value={data.status}
             onChange={(e) => {
-              setData("status", e.target.value);
+              const newStatus = e.target.value;
+
+              // 1. Actualizamos el estado "status"
+              setData("status", newStatus);
+
+              // 2. Usamos una función de callback para hacer la validación inmediatamente DESPUÉS
+              // (Inertia/useForm usa callbacks para asegurar la reactividad)
+              setData("status", newStatus, {
+                onFinish: () => {
+                  // Si el nuevo status NO es 'active', forzamos el acceso a false
+                  if (newStatus !== "active") {
+                    setData("mobile_access_enabled", false); // Usar el nombre de campo correcto
+                  }
+                  // Si es 'active', NO hacemos nada, respetando la elección del usuario
+                },
+              });
             }}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
             required
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           >
             {!data.status && <option value="">-- Estado --</option>}
 
@@ -296,7 +373,7 @@ export default function DoctorDetailModal({
           </select>
           <InputError message={errors.status} className="mt-2" />
         </div>
-        {data.status !== "active" && (
+        {data.status !== "active" ? (
           <div className="col-span-3">
             <div>
               <InputLabel htmlFor="status_reason" value="Motivo del estado" />
@@ -307,8 +384,29 @@ export default function DoctorDetailModal({
                 value={data?.status_reason}
                 onChange={(e) => setData("status_reason", e.target.value)}
                 rows="4"
+                required={data.status !== "active"}
+                disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
               />
             </div>
+          </div>
+        ) : (
+          <div>
+            <InputLabel
+              htmlFor="status"
+              value="Acceso Móvil"
+              className="mb-2 ml-2 mt-2 text-primary"
+            />
+            <Switch
+              id="mobile_app_access"
+              name="mobile_app_access"
+              checked={!!data?.mobile_app_access}
+              onChange={(e) => {
+                const checked = e?.target?.checked ?? false;
+                setData("mobile_app_access", checked);
+              }}
+              disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
+            />
+            <InputError message={errors.mobile_app_access} className="mt-2" />
           </div>
         )}
       </div>
@@ -333,6 +431,7 @@ export default function DoctorDetailModal({
             }}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
             required
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           >
             {!data.region_id && <option value="">-- Región --</option>}
             {regions?.map((region) => (
@@ -360,7 +459,7 @@ export default function DoctorDetailModal({
             }}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
             required
-            disabled={!data.region_id}
+            disabled={!data.region_id || isExistingInSystem}
           >
             {!data.province_id && <option value="">-- Provincia --</option>}
             {filteredProvinces?.map((prov) => (
@@ -384,7 +483,7 @@ export default function DoctorDetailModal({
             onChange={(e) => setData("commune_id", e.target.value)}
             className="rounded-md w-full border-gray-100 shadow-sm focus:border-primary/20 focus:ring-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-primary dark:focus:ring-primary/20 border-[0.5px]"
             required
-            disabled={!data.province_id}
+            disabled={!data.province_id || isExistingInSystem}
           >
             {!data.commune_id && <option value="">-- Comuna --</option>}
             {filteredCommunes?.map((comuna) => (
@@ -410,6 +509,7 @@ export default function DoctorDetailModal({
             value={data?.street}
             onChange={(e) => handleChange(e)}
             className="w-full"
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           />
           <InputError message={errors?.street} className="mt-2" />
         </div>
@@ -427,6 +527,7 @@ export default function DoctorDetailModal({
             value={data?.number}
             onChange={(e) => handleChange(e)}
             className="w-full"
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
           />
           <InputError message={errors?.number} className="mt-2" />
         </div>
@@ -446,7 +547,8 @@ export default function DoctorDetailModal({
             rows="4"
             className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Ingrese detalles de la dirección..."
-          ></textarea>
+            disabled={isExistingInSystem} // 🎯 BLOQUEAR SI YA EXISTE
+          />
           <InputError message={errors?.details} className="mt-2" />
         </div>
       </div>
@@ -461,7 +563,9 @@ export default function DoctorDetailModal({
           Cancelar
         </SecondaryButton>
         <PrimaryButton type="submit" disabled={processing}>
-          {data.id ? "Actualizar" : "Crear"}
+          {data.id || isExistingInSystem
+            ? "Actualizar y Vincular"
+            : "Crear Paciente"}
         </PrimaryButton>
       </div>
     </form>

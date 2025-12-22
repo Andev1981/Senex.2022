@@ -27,13 +27,10 @@ class Doctor extends Model
         'speciality',
         'birth_date',
         'gender',
-        'mobile_access_enabled',
     ];
 
     protected $casts = [
         'birth_date' => 'date:Y-m-d',
-        'status_changed_at' => 'datetime',
-        'mobile_access_enabled' => 'boolean',
     ];
 
     /* RELACIONES */
@@ -45,6 +42,13 @@ class Doctor extends Model
         return $this->belongsToMany(Company::class, 'company_doctor')
         ->withPivot('tarifa_acordada','porcentaje_comision','estado_convenio')
         ->withTimestamps();
+    }
+
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class, 'branch_doctor')
+                    ->withPivot(['status','mobile_app_access','status_reason','status_changed_at'])
+                    ->withTimestamps();
     }
 
     public function patientAssignments(): HasMany
@@ -75,10 +79,6 @@ class Doctor extends Model
         return $this->belongsTo(Address::class);
     }
 
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(Branch::class);
-    }
 
     public function commissionRates(): HasMany
     {
@@ -186,6 +186,28 @@ class Doctor extends Model
         );
     }
 
+    public function getBranchAttribute()
+    {
+        $activeBranchId = session('active_branch_id');
+
+        if (!$activeBranchId) return null;
+
+        $branch = $this->branches()
+                    ->where('branches.id', $activeBranchId)
+                    ->withPivot(['id','status','mobile_app_access','status_reason','status_changed_at'])->first();
+        
+        if (!$branch) return null;
+
+        // Retornamos un objeto limpio con los datos de la pivot a primer nivel si quieres
+        return [
+            'id' => $branch->pivot->id,
+            'status' => $branch->pivot->status,
+            'mobile_app_access' => (bool) $branch->pivot->mobile_app_access,
+            'status_reason' => $branch->pivot->status_reason,
+            'status_changed_at' => $branch->pivot->status_changed_at,
+        ];
+    }
+
 
     protected $appends = [
         'age', /* Edad */
@@ -194,5 +216,6 @@ class Doctor extends Model
         'sessions_month',/* Sesiones del mes */
         'revenue_month',/* Ganancias del mes */
         'full_name',/* Nombre completo */
+        'branch'
     ];
 }

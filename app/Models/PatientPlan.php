@@ -26,9 +26,12 @@ class PatientPlan extends Model
         'paused_at',
         'cancelled_at',
         'cancellation_reason',
+        'contract_uuid',
+        'role',
     ];
 
     protected $casts = [
+        'contract_uuid' => 'string',
         'purchased_at' => 'datetime',
         'start_date' => 'date',
         'expiry_date' => 'date',
@@ -39,6 +42,8 @@ class PatientPlan extends Model
     ];
 
     // Relaciones
+    // Relación al paciente dueño de esta instancia de cobertura
+
     public function patient()
     {
         return $this->belongsTo(Patient::class);
@@ -81,6 +86,7 @@ class PatientPlan extends Model
     }
 
     // Scopes
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');

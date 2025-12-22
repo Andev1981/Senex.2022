@@ -12,7 +12,7 @@ import {
 import React from "react";
 
 export default function List({
-  documents,
+  invoices,
   searchTerm,
   setSearchTerm,
   filterType,
@@ -24,14 +24,12 @@ export default function List({
   DTES_TYPES,
   DTES_STATUSES,
 }) {
-  const totalEmitidos = documents.filter((d) => d.status === "Emitido").length;
-  const totalAceptados = documents.filter(
-    (d) => d.status === "Aceptado"
-  ).length;
-  const totalRechazados = documents.filter(
+  const totalEmitidos = invoices.filter((d) => d.status === "Emitido").length;
+  const totalAceptados = invoices.filter((d) => d.status === "Aceptado").length;
+  const totalRechazados = invoices.filter(
     (d) => d.status === "Rechazado"
   ).length;
-  const totalMonto = documents.reduce((sum, d) => sum + d.total, 0);
+  const totalMonto = invoices.reduce((sum, d) => sum + d.total, 0);
 
   return (
     <div>
@@ -89,8 +87,8 @@ export default function List({
             >
               <option value="todos">Todos los tipos</option>
               {DTES_TYPES.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
             </select>
@@ -133,7 +131,10 @@ export default function List({
                     Total
                   </th>
                   <th className="px-4 py-3 text-xs font-bold text-center text-gray-600 uppercase">
-                    Estado
+                    Pago
+                  </th>
+                  <th className="px-4 py-3 text-xs font-bold text-center text-gray-600 uppercase">
+                    Envío SII
                   </th>
                   <th className="px-4 py-3 text-xs font-bold text-center text-gray-600 uppercase">
                     Acciones
@@ -142,44 +143,49 @@ export default function List({
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredDocuments.map((doc) => {
-                  const docType = DTES_TYPES.find((dt) => dt.id === doc.type);
+                  const docType = DTES_TYPES.find(
+                    (dt) => dt.value === doc.dte_type
+                  );
                   const Icon = docType?.icon || FileText;
-                  const typeStyle = DTES_TYPES[doc.type] || {
+                  const typeStyle = DTES_TYPES[doc.dte_type] || {
                     text: "text-gray-600",
                   };
                   return (
                     <tr key={doc.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <Icon className={`w-5 h-5 ${typeStyle.text}`} />
+                          <Icon
+                            className={`w-5 h-5 ${typeStyle?.styles?.text}`}
+                          />
                           <span className="text-sm font-medium text-gray-900">
-                            {doc.typeName}
+                            {doc.dte_type}
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-3 font-mono text-sm text-gray-900">
-                        {doc.folio}
+                        {doc.dte_folio || "Sin Folio"}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {new Date(doc.date).toLocaleDateString("es-CL")}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {doc.client.razonSocial}
+                        {doc.patient.full_name}
                       </td>
                       <td className="px-4 py-3 font-mono text-sm text-gray-600">
-                        {doc.client.rut}
+                        {doc.patient.rut}
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-right text-gray-900">
-                        ${doc.total.toLocaleString("es-CL")}
+                        ${doc.amount_gross.toLocaleString("es-CL")}
                       </td>
+                      <td>{doc.payment_status}</td>
                       <td className="px-4 py-3 text-center">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                            DTES_STATUSES[doc.status] ||
+                            DTES_STATUSES[doc.dte_status] ||
                             "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          {doc.status}
+                          {doc.dte_status}
                         </span>
                       </td>
                       <td className="px-4 py-3">

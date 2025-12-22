@@ -15,5 +15,6 @@ class VerifyCsrfToken extends Middleware
         //
         'payments/webpay/return',
         'public/payments/webpay/return',
+        '/payments/webpay/confirm'
     ];
 }

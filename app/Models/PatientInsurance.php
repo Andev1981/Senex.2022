@@ -11,23 +11,24 @@ class PatientInsurance extends Model
 {
     use HasFactory, Multitenantable;
 
+    protected $table = 'patient_insurances'; 
+
     protected $fillable = [
-        'company_id',
         'patient_id',
-        "insurance_id",
-        "plan_id",
-        "member_id",
-        "start_date",
-        "end_date",
-        "status",
-        "is_primary",
-        "notes",
+        'insurance_id',
+        'plan_id',
+        'affiliate_rut',
+        'is_affiliate_holder',
+        'is_active',
+        'enrollment_date',
+        'expiration_date',
     ];
 
     protected $casts = [
-        "start_date" => "date",
-        "end_date" => "date",
-        "is_primary" => "boolean"
+        'is_affiliate_holder' => 'boolean',
+        'is_active' => 'boolean',
+        'enrollment_date' => 'date',
+        'expiration_date' => 'date',
     ];
 
     public function patient() : BelongsTo

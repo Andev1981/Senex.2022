@@ -91,6 +91,7 @@ class CompanySwitchController extends Controller
         session()->flash('message', 'Ha cambiado de sucursal');
         session()->flash('type', 'success');
             return redirect()->to('/'); 
+            /* return back();  */
         } catch (\Throwable $th) {
             //throw $th;
             session()->flash('message', 'No se ha podido cambiar de sucursal');

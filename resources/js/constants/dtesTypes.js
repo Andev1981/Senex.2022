@@ -2,7 +2,7 @@ import { FileText, Package, Receipt, FileCheck } from "lucide-react";
 
 /* Tipos de dte estilos */
 export const dtesTypes = {
-  boleta: {
+  39: {
     code: 39,
     name: "Boleta Electrónica",
     icon: Receipt,
@@ -16,7 +16,7 @@ export const dtesTypes = {
       badge: "bg-blue-100 text-blue-700",
     },
   },
-  boleta_exenta: {
+  41: {
     code: 41,
     name: "Boleta Electrónica Exenta",
     icon: Receipt,
@@ -30,7 +30,7 @@ export const dtesTypes = {
       badge: "bg-purple-100 text-purple-700",
     },
   },
-  factura: {
+  33: {
     code: 33,
     name: "Factura Electrónica",
     icon: FileText,
@@ -44,7 +44,7 @@ export const dtesTypes = {
       badge: "bg-green-100 text-green-700",
     },
   },
-  factura_exenta: {
+  34: {
     code: 34,
     name: "Factura Electrónica Exenta",
     icon: FileText,
@@ -58,7 +58,7 @@ export const dtesTypes = {
       badge: "bg-teal-100 text-teal-700",
     },
   },
-  factura_compra: {
+  46: {
     code: 46,
     name: "Factura de Compra",
     icon: FileCheck,
@@ -72,7 +72,7 @@ export const dtesTypes = {
       badge: "bg-orange-100 text-orange-700",
     },
   },
-  nota_credito: {
+  61: {
     code: 61,
     name: "Nota de Crédito",
     icon: FileText,
@@ -86,7 +86,7 @@ export const dtesTypes = {
       badge: "bg-red-100 text-red-700",
     },
   },
-  nota_debito: {
+  56: {
     code: 56,
     name: "Nota de Débito",
     icon: FileText,
@@ -100,7 +100,7 @@ export const dtesTypes = {
       badge: "bg-yellow-100 text-yellow-700",
     },
   },
-  guia_despacho: {
+  52: {
     code: 52,
     name: "Guía de Despacho",
     icon: Package,

@@ -27,7 +27,7 @@ import {
   MoreVertical,
   Home,
 } from "lucide-react";
-import AuthenticatedLayout from "../Layouts/AuthenticatedLayout";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage } from "@inertiajs/react";
 
 export default function Dashboard() {

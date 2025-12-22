@@ -25,8 +25,8 @@ class PatientController extends Controller
             ->with([
                 'treatments' => function ($q) use ($doctor) {
                     $q->where('doctor_id', $doctor->id)
-                      ->where('status', 'InProgress')
-                      ->with('sessionType:id,name');
+                        ->where('status', 'InProgress')
+                        ->with('sessionType:id,name');
                 }
             ])
             ->withCount([
@@ -35,7 +35,7 @@ class PatientController extends Controller
                 },
                 'sessions as completed_sessions' => function ($q) use ($doctor) {
                     $q->where('doctor_id', $doctor->id)
-                      ->where('status', 'completed');
+                        ->where('status', 'completed');
                 }
             ]);
 
@@ -43,15 +43,15 @@ class PatientController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('rut', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('rut', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
         $patients = $query->orderBy('name')->get()->map(function ($patient) {
             $activeTreatment = $patient->treatments->first();
-            
+
             return [
                 'id' => $patient->id,
                 'name' => $patient->name . ' ' . $patient->last_name,
@@ -91,14 +91,14 @@ class PatientController extends Controller
         $patient->load([
             'treatments' => function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
-                  ->with('sessionType:id,name')
-                  ->latest();
+                    ->with('sessionType:id,name')
+                    ->latest();
             },
             'sessions' => function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
-                  ->with('sessionType:id,name')
-                  ->latest()
-                  ->limit(20);
+                    ->with('sessionType:id,name')
+                    ->latest()
+                    ->limit(20);
             },
             'contacts' => function ($q) {
                 $q->where('is_primary', true);
@@ -125,8 +125,8 @@ class PatientController extends Controller
                         'progress' => [
                             'completed' => $treatment->completed_sessions,
                             'total' => $treatment->total_sessions,
-                            'percentage' => $treatment->total_sessions > 0 
-                                ? round(($treatment->completed_sessions / $treatment->total_sessions) * 100) 
+                            'percentage' => $treatment->total_sessions > 0
+                                ? round(($treatment->completed_sessions / $treatment->total_sessions) * 100)
                                 : 0,
                         ],
                     ];

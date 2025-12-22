@@ -7,22 +7,28 @@ use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Commune;
 use App\Models\Debt;
+use App\Models\Diagnostic;
 use App\Models\Doctor;
 use App\Models\Patient;
+use App\Models\PatientContact;
 use App\Models\Payment;
 use App\Models\Province;
 use App\Models\Region;
 use App\Models\SessionType;
 use App\Models\Treatment;
-use App\Models\TreatmentSession;
-use Illuminate\Support\Arr;
+use App\Notifications\PatientTutorWelcomeNotification;
+use App\Notifications\PatientWelcomeNotification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+
 
 class PatientAdminController extends Controller
 {
     public function index()
     {
+        $activeBranchId = session('active_branch_id');
+        $currentCompanyId = session('current_company_id');
 
         $addrPick = DB::table('addresses as a')
             ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
@@ -32,6 +38,13 @@ class PatientAdminController extends Controller
         $patients = Patient::query()->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'patients.id'))
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
             ->leftJoin('communes as c', 'addr.commune_id', '=', 'c.id')
+            ->when($activeBranchId, function ($query) use ($activeBranchId) {
+                // 🎯 Ahora simplemente preguntamos: 
+                // "¿Está este paciente vinculado a esta sucursal en la tabla pivot?"
+                $query->whereHas('branches', function ($q) use ($activeBranchId) {
+                    $q->where('branches.id', $activeBranchId);
+                });
+            })
             ->select([
                 'patients.id',
                 'patients.name',
@@ -87,121 +100,227 @@ class PatientAdminController extends Controller
 
 
 
-        $provinces = Province::all();
-        $communes  = Commune::all();
-        $regions   = Region::all();
+        $provinces = Province::all(['id', 'name', 'region_id']);
+        $communes  = Commune::all(['id', 'name', 'province_id']);
+        $regions   = Region::all(['id', 'name']);
 
         return Inertia::render('Patients/IndexPatients', compact('patients', 'communes', 'provinces', 'regions'));
     }
 
-      /**
+    /**
      * INDEX - GET /patients/{patient}/treatments
      * Retorna vista Inertia para mostrar lista de tratamientos
      */
     public function show(Patient $patient)
     {
-        $treatments = Treatment::where('patient_id', $patient->id)
-            ->with(['sessionType', 'doctor', 'sessions', 'sessions.doctor'])
-            ->orderBy('created_at', 'desc')
+        $activeBranchId = session('active_branch_id');
+        $companyId = session('current_company_id');
+
+        // 1. Tratamientos y Sesiones (Optimizado)
+        $treatments = Treatment::query()
+            ->where('patient_id', $patient->id)
+            ->where('company_id', $companyId)
+            ->where('branch_id', $activeBranchId)
+            ->with([
+                'sessionType',
+                'doctor',
+                'diagnostic',
+                'sessions' => fn($q) => $q->orderBy('date', 'asc')->orderBy('time', 'asc'),
+                'sessions.doctor',
+                'sessions.debt'
+            ])
+            ->latest()
             ->get();
 
-        $sessions = TreatmentSession::where('patient_id', $patient->id)
-            ->with(['doctor', 'treatment','debt'])
-            ->orderBy('date', 'asc')
-            ->orderBy('time', 'asc')
+
+        // Extraemos las sesiones de los tratamientos ya cargados
+        $sessions = $treatments->flatMap->sessions;
+
+        // 2. Pagos filtrados por empresa/sucursal
+        $payments = Payment::where('patient_id', $patient->id)
+            ->where('company_id', $companyId) // 🎯 Seguridad
+            ->where('branch_id', $activeBranchId)
+            ->where('status', 'completed')
+            ->latest()
             ->get();
 
-        $payments = Payment::where('patient_id', $patient->id)->where('status','completed')
-        ->orderBy('created_at', 'desc')
-            ->get();
-
+        // 3. Carga de datos del paciente
         $patient->load([
             'address.region',
             'address.province',
             'address.commune',
             'latestVital',
+            'primaryContact',
+            'allergies',
+            'condition',
+            'debts',
         ]);
 
-        $address = $patient->address;
+        // 4. Listas para formularios (Filtradas por contexto)
 
-        $contact = $patient->primaryContact;
-       
-        $allergies = $patient->allergies;
+        // Solo doctores de esta empresa
+        $doctors = Doctor::whereHas('branches', function ($q) use ($activeBranchId) {
+            $q->where('branches.id', $activeBranchId);
+        })->select('id', 'name', 'last_name', 'phone', 'email')->get();
 
-        $conditions = $patient->condition;
+        // Solo tipos de sesión de esta empresa
+        $session_types = SessionType::where('company_id', $companyId)->get();
 
-        $vital = $patient->latestVital;
-        
-        $session_types = SessionType::all();
-        
-        $provinces = Province::all();
-        $communes  = Commune::all();
-        $regions   = Region::all();
-        $doctors   = Doctor::all();
-
+        $diagnostics = Diagnostic::orderBy('description', 'asc')->get(['code', 'description']);
 
         return Inertia::render('Patients/DetailPatient', [
-            'patient' => $patient,
-            'treatments' => $treatments,
-            'sessions' => $sessions,
-            'payments' => $payments,
-            'provinces' => $provinces,
-            'communes' => $communes,
-            'regions' => $regions,
-            'address' => $address,
-            'vital' => $vital,
-            'doctors' => $doctors,
+            'patient'     => $patient,
+            'treatments'  => $treatments,
+            'sessions'    => $sessions,
+            'payments'    => $payments,
+            'address'     => $patient->address,
+            'vital'       => $patient->latestVital,
+            'contact'     => $patient->primaryContact,
+            'allergies'   => $patient->allergies,
+            'conditions'  => $patient->condition,
+            'doctors'     => $doctors,
             'session_types' => $session_types,
-            'contact' => $contact,
-            'allergies' => $allergies,
-            'conditions' => $conditions,
+            'diagnostics' => $diagnostics,
+            // Listas geográficas (Considerar cargar bajo demanda en el futuro)
+            'regions'     => Region::all(['id', 'name']),
+            'provinces'   => Province::all(['id', 'name', 'region_id']),
+            'communes'    => Commune::all(['id', 'name', 'province_id']),
         ]);
     }
 
 
     public function store(StorePatientRequest $request)
     {
-        // Validación
-        $validated = $request->validated();
+        $activeBranchId = session('active_branch_id');
+        $companyId = session('current_company_id');
+
+        if (!$companyId) {
+            // Fallback de seguridad: si la sesión falló, intentamos el del usuario
+            $companyId = auth()->user()->company_id;
+        }
 
         DB::beginTransaction();
 
         try {
 
-            // Separar datos del paciente y la dirección
-            $patientData = Arr::except($validated, [
-                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
-            ]);
+            $exists = Patient::where('rut', $request->rut)->exists();
 
-            $addressData = Arr::only($validated, [
-                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
-            ]);
+            // 3. Si no existe, creamos
+            $patient = Patient::updateOrCreate(
+                ['rut' => $request->rut, 'company_id' => $companyId],
+                [
+                    'name' => $request->name,
+                    'last_name' => $request->last_name,
+                    'email' => $request->email,
+                    'birth_date' => $request->birth_date,
+                    'gender' => $request->gender,
+                    'ocupation' => $request->occupation,
+                    'marital_status' => $request->marital_status,
+                    'status' => $request->status,
+                    'phone' => $request->phone,
+                    'opt_out_reminders' => $request->opt_out_reminders,
+                    'prefers_whatsapp' => $request->prefers_whatsapp,
+                    'prefers_mail' => $request->prefers_mail,
+                    'prefers_sms' => $request->prefers_sms,
+                    'require_tutor' => $request->require_tutor,
+                ]
+            );
 
-            // Crear paciente
-            $patient = Patient::create($patientData);
+            if ($request->require_tutor) {
+                $contact = PatientContact::updateOrCreate(
+                    [
+                        'patient_id' => $patient->id,
+                        'type' => 'guardian' // Identificador de tipo
+                    ],
+                    [
+                        'name' => $request->guardian_name,
+                        'relationship' => $request->guardian_relationship,
+                        'phone' => $request->guardian_phone,
+                        'rut' => $request->guardian_rut,
+                        'email' => $request->guardian_email,
+                        'is_primary' => true, // Marcamos como el responsable de cobro
+                    ]
+                );
+            }
 
-            // Crear dirección asociada polimórficamente
-            $patient->addresses()->create([
-                'type' => 'home',
-                'is_primary' => true,
-                'country' => 'Chile',
-                ...$addressData
-            ]);
+
+            // syncWithoutDetaching añade el vínculo si no existe, sin borrar otros sedes
+            $patient->branches()->syncWithoutDetaching([$activeBranchId]);
+
+            // Si NO existía, es un paciente nuevo -> Bienvenida
 
             DB::commit();
 
-            session()->flash('message', 'Paciente creado correctamente.');
-            session()->flash('type', 'success');
-            return back();
+            if (!$exists) {
+                if ($request->require_tutor) {
+                    // Notificamos al tutor
+                    $contact->notify(new PatientTutorWelcomeNotification($patient, $contact));
+                } else {
+                    // Notificamos al paciente directamente
+                    $patient->notify(new PatientWelcomeNotification($patient));
+                }
+            }
 
+            $patient->refresh();
+
+            // 3. Opcional: Si necesitas devolver nombres de comunas o relaciones
+            $patient->load([
+                'address.region',
+                'address.province',
+                'address.commune',
+                'latestVital',
+                'primaryContact',
+                'allergies',
+                'condition'
+            ]);
+            return response()->json([
+                'message' => 'Paciente guardado correctamente',
+                'patient' => $patient // Enviamos el ID para que React sepa a dónde redirigir
+            ], 201);
         } catch (\Throwable $e) {
 
             DB::rollBack();
             report($e);
+        }
+    }
 
-            session()->flash('message', 'Error al crear el paciente.');
-            session()->flash('type', 'error');
-            return back();
+    public function quickStore(Request $request)
+    {
+        $activeBranchId = session('active_branch_id');
+        $companyId = session('current_company_id');
+
+        $validated = $request->validate([
+            'rut'        => 'required|string|unique:patients,rut',
+            'name' => 'required|string|max:100',
+            'last_name'  => 'required|string|max:100',
+            'email'      => 'required|email|unique:patients,email',
+            'phone'      => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $patient = Patient::create([
+                'company_id' => $companyId,
+                'rut'        => $validated['rut'],
+                'name' => $validated['name'],
+                'last_name'  => $validated['last_name'],
+                'email'      => $validated['email'],
+                'phone'      => $validated['phone'],
+                'status'     => 'active',
+            ]);
+
+            // Asociamos a la sucursal actual
+            $patient->branches()->attach($activeBranchId);
+
+            // O si es una tabla directa: PatientBranch::create(['patient_id' => $patient->id, 'branch_id' => $validated['branch_id']]);
+
+            DB::commit();
+
+            return response()->json($patient);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error al crear el paciente'], 500);
         }
     }
 
@@ -215,23 +334,9 @@ class PatientAdminController extends Controller
         try {
 
             // -------------------------------
-            // 1. Separar datos
+            // Lógica de CAMBIO DE STATUS
             // -------------------------------
-            $patientData = Arr::except($validated, [
-                'street', 'number', 'details',
-                'region_id', 'province_id', 'commune_id',
-                'status_reason'
-            ]);
-
-            $addressData = Arr::only($validated, [
-                'street', 'number', 'details',
-                'region_id', 'province_id', 'commune_id'
-            ]);
-
-            // -------------------------------
-            // 2. Lógica de CAMBIO DE STATUS
-            // -------------------------------
-            if (array_key_exists('status', $patientData)) {
+            if (array_key_exists('status', $validated)) {
 
                 $newStatus = $validated['status'];
                 $oldStatus = $patient->status;
@@ -240,7 +345,7 @@ class PatientAdminController extends Controller
                 if ($newStatus !== $oldStatus) {
 
                     // Registrar fecha de cambio
-                    $patientData['status_changed_at'] = now();
+                    $validated['status_changed_at'] = now();
 
                     // Si el nuevo estado NO es "active" → status_reason obligatorio
                     if ($newStatus !== 'active') {
@@ -249,49 +354,30 @@ class PatientAdminController extends Controller
                             throw new \Exception("Debe ingresar un motivo cuando el estado no es activo.");
                         }
 
-                        $patientData['status_reason'] = $validated['status_reason'];
+                        $validated['status_reason'] = $validated['status_reason'];
                     }
 
                     // Si el estado cambió a active: limpiar el motivo
                     if ($newStatus === 'active') {
-                        $patientData['status_reason'] = null;
+                        $validated['status_reason'] = null;
                     }
-
                 } else {
                     // No hubo cambio → evitar sobrescribir status
-                    unset($patientData['status']);
+                    unset($validated['status']);
                 }
             }
 
-            
 
             // -------------------------------
-            // 3. Actualizar paciente
+            // Actualizar paciente
             // -------------------------------
-            $patient->update($patientData);
-
-            // -------------------------------
-            // 4. Actualizar / crear dirección
-            // -------------------------------
-            $address = $patient->addresses()->first();
-
-            if ($address) {
-                $address->update($addressData);
-            } elseif (!empty($addressData)) {
-                $patient->addresses()->create([
-                    'type' => 'home',
-                    'is_primary' => true,
-                    'country' => 'Chile',
-                    ...$addressData
-                ]);
-            }
+            $patient->update($validated);
 
             DB::commit();
 
             session()->flash('message', 'Paciente actualizado correctamente.');
             session()->flash('type', 'success');
             return back();
-
         } catch (\Throwable $e) {
 
             DB::rollBack();
@@ -309,115 +395,31 @@ class PatientAdminController extends Controller
         return back();
     }
 
-    public function showOld(Patient $patient)
+    public function checkExisting(Request $request)
     {
+        $request->validate(['rut' => 'required']);
 
-        $patientId = $patient->id; // evita sombrear la variable
+        // El Trait Multitenantable ya filtra por la empresa actual, 
+        // así que no necesitamos preocuparnos por otras clínicas.
+        $patient = Patient::where('rut', $request->rut)->first();
 
-        $patient = Patient::query()
-            ->with([
-                'latestVital',
-                'allergies',
-                'condition',
-                'contacts',
-                'insurance',
-                'lifestyle',
-                'plans',
-                'address:id,addressable_id,addressable_type,commune_id,province_id,region_id,street,number,details',
-                'address.commune:id,name,province_id',
-                'address.province:id,name,region_id',
-                'address.region:id,name',
-                 'treatments' => fn($q) =>
-                    $q->orderByRaw("CASE WHEN status = 'Activo' THEN 0 ELSE 1 END")
-                        ->latest('id'),
-                'treatments.sessions',
-                'treatments.session_type',
-                'treatments.doctor'
-            ])
-            ->withExists([
-                'debts as has_due' => fn($q) => $q->whereIn('status', [
-                    Debt::STATUS_PENDING,
-                    Debt::STATUS_PARTIAL,
-                    Debt::STATUS_OVERDUE
-                ]),
-                'debts as has_overdue' => fn($q) => $q->where('status', Debt::STATUS_OVERDUE),
-            ])
-            ->select([
-                'patients.*',
-                DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) AS full_name"),
-            ])
-            ->selectSub(function ($q) {
-                $q->from('debts as d')
-                    ->join('treatment_sessions as ts', 'ts.id', '=', 'd.treatment_session_id')
-                    ->whereColumn('ts.patient_id', 'patients.id')
-                    ->whereIn('d.status', ['pending', 'partial', 'overdue'])
-                    ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
-            }, 'due_amount')
-            ->findOrFail($patientId);
-
-            dd($patient);
-
-          
-        if (!$patient) {
-            session()->flash('message', 'Paciente no encontrado.');
-            session()->flash('type', 'error');
-
-            return back();
+        if ($patient) {
+            return response()->json([
+                'status' => 'exists',
+                'patient' => [
+                    'id' => $patient->id,
+                    'name' => $patient->name,
+                    'last_name' => $patient->last_name,
+                    'email' => $patient->email,
+                    'phone' => $patient->phone,
+                    'birth_date' => $patient->birth_date,
+                    'gender' => $patient->gender,
+                    'occupation' => $patient->occupation,
+                    'marital_status' => $patient->marital_status,
+                ]
+            ]);
         }
 
-        // ---- Tratamientos del paciente ----
-        $treatments = Treatment::where('patient_id', $patient->id)
-            ->with('session_type','doctor','sessions')
-            ->orderByDesc('id')
-            ->get();
-
-        // Busca 'Activo' (coincide con enum de tu migración). Si no hay, toma el último tratamiento.
-        $treatment = $treatments->firstWhere('status', 'Activo') ?? $treatments->first();
-
-        // ---- Sesiones: si hay tratamiento, tráelas; si no, vacío sin romper front ----
-        if ($treatment) {
-            $sessions = DB::table('treatment_sessions as ai')
-                ->leftJoin('patients as p', 'p.id', '=', 'ai.patient_id')
-                ->leftJoin('doctors as d', 'd.id', '=', 'ai.doctor_id')
-                ->leftJoin('session_types as st', 'st.id', '=', 'ai.session_type_id')
-                ->where('p.id', $patient->id)
-                ->where('ai.treatment_id', $treatment->id)
-                // tu schema usa `date` (DATE) en treatment_sessions
-                ->whereYear('ai.date', now()->year)
-                ->orderBy('p.name', 'asc')
-                // orden más reciente arriba: por fecha y quizá por time si te sirve
-                ->orderByDesc('ai.date')
-                ->select([
-                    'ai.*',
-                ])
-                ->selectRaw('(COALESCE(ai.patient_amount,0) - COALESCE(ai.doctor_amount,0)) as total_senex')
-                ->get();
-        } else {
-            $sessions = collect(); // arreglo vacío coherente con Inertia
-        }
-
-        $payments = Payment::where('patient_id', $patient->id)->get();
-
-        // ---- Catálogos auxiliares ----
-        $session_types = SessionType::orderBy('name')->get();
-        $provinces     = Province::all();
-        $communes      = Commune::all();
-        $regions       = Region::all();
-        $doctors       = Doctor::all();
-
-
-
-        return Inertia::render('Patients/DetailPatient', compact(
-            'treatment',
-            'patient',
-            'payments',
-            'sessions',
-            'communes',
-            'regions',
-            'provinces',
-            'session_types',
-            'doctors',
-        ));
+        return response()->json(['status' => 'new']);
     }
-
 }

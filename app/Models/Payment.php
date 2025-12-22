@@ -6,6 +6,7 @@ use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Payment extends Model
@@ -17,53 +18,62 @@ class Payment extends Model
     ];
 
     protected $fillable = [
+        'uuid',
+        'user_id',
         'company_id',
-        'patient_id',
         'branch_id',
-        'liquidation_payor_id ',
+        'patient_id',
+        'amount_clp', // Copago final
+        'amount_gross', // Copago final
+        'amount_insurance_primary', // Copago final
+        'amount_insurance_secondary', // Copago final
+        'discount',
+        'payment_date',
         'transaction_reference',
-        'amount_clp',
-        'copay_clp',
-        'insurance_covered_clp',
         'payment_method',
         'status',
         'paid_at',
-        'payment_date',
         'webpay_token',
         'webpay_buy_order',
         'webpay_session_id',
         'webpay_authorization_code',
-        'webpay_payment_type',
+        'webpay_payment_type_code',
         'webpay_response_code',
         'webpay_installments',
         'webpay_card_detail',
-        'webpay_transaction_date',
         'webpay_raw_response',
-        'invoice_id',
-        'notes',
+        'metadata',
     ];
 
     protected $casts = [
-        'paid_at' => 'date',
-        'payment_date' => 'date',
-        'webpay_transaction_date' => 'date'
+        'metadata' => 'array', // Crucial para recuperar el carrito en el commit
+        'webpay_card_detail' => 'array',
+        'payment_date' => 'datetime',
+        'paid_at' => 'datetime',
     ];
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
 
-    public function patient() : BelongsTo
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function patient(): BelongsTo
     {
         return $this->belongsTo(Patient::class);
     }
 
-    public function paymentAllocation() : HasOne
+    public function paymentAllocation(): HasMany
     {
-        return $this->hasOne(PaymentAllocation::class);
+        return $this->hasMany(PaymentAllocation::class);
     }
 
-    public function invoice() : HasOne
+    public function receivables(): HasMany
     {
-        return $this->hasOne(Invoice::class);
+        return $this->hasMany(Receivable::class);
     }
-
-
 }

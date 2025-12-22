@@ -34,24 +34,11 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
     () => [
       { id: "/", label: "Dashboard", icon: Home, badge: null },
       { id: "patients.index", label: "Pacientes", icon: Users, badge: "50" },
-      { id: "doctors", label: "Kines", icon: Stethoscope, badge: "50" },
+      { id: "doctors.index", label: "Kines", icon: Stethoscope, badge: "50" },
       {
         id: "session-types.index",
         label: "Tipo de Sesiones",
         icon: Shell,
-        badge: null,
-      },
-      {
-        id: "agreements.index",
-        label: "Convenios",
-        icon: Handshake,
-        badge: null,
-      },
-      { id: "boleta", label: "Boleta", icon: FileText, badge: "8" },
-      {
-        id: "attendances.index",
-        label: "Tratamientos",
-        icon: List,
         badge: null,
       },
       {
@@ -60,15 +47,35 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
         icon: Shield,
         badge: null,
       },
-      /* { id: "agenda", label: "Agenda", icon: Calendar, badge: null }, */
-      { id: "pos", label: "POS", icon: Computer, badge: null },
-      { id: "test.webpay", label: "test/webpay", icon: DollarSign, badge: "3" }, // ejemplo si tu ruta es pagos.index
       {
+        id: "agreements.index",
+        label: "Convenios",
+        icon: Handshake,
+        badge: null,
+      },
+
+      {
+        id: "attendances.index",
+        label: "Tratamientos",
+        icon: List,
+        badge: null,
+      },
+      {
+        id: "payments.index",
+        label: "Pagos",
+        icon: DollarSign,
+        badge: "3",
+      },
+      { id: "documents", label: "Boleta", icon: FileText, badge: "8" },
+      // ejemplo si tu ruta es pagos.index
+      /* { id: "agenda", label: "Agenda", icon: Calendar, badge: null }, */
+      /* { id: "pos", label: "POS", icon: Computer, badge: null }, */
+      /*  {
         id: "invoices.index",
         label: "Facturas",
         icon: BarChart3,
         badge: null,
-      },
+      }, */
       /*{ id: "inventario", label: "Inventario", icon: Package, badge: null },*/
       /* { id: "plans.index", label: "Planes", icon: NotebookText, badge: null }, */
       /*{
@@ -156,7 +163,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
                         {current_company.business_name}
                       </span>
                     ) : (
-                      <span className="text-gray-400 italic">
+                      <span className="italic text-gray-400">
                         Contexto Global
                       </span>
                     )}
@@ -184,7 +191,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 
       {/* Navegación */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <div className="flex-col gap-4 items-center mb-2">
+        <div className="flex-col items-center gap-4 mb-2">
           {/* Solo Superadmins ven este */}
           {userIsSuperAdmin && <CompanySwitcher />}
 

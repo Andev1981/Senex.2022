@@ -27,26 +27,33 @@ class DteController extends Controller
 
     public function index()
     {
-        /* $pacientes = Patient::orderBy('name')->get();
-        $productos = SessionType::orderBy('name')->get();
-        return Inertia::render('Boletas/Crear', [
-            'pacientes' => $pacientes,
-            'productos' => $productos,
-        ]); */
-        $companyId = auth()->user()->company_id;
 
-        $branches = Branch::where('company_id', $companyId)->orderBy('name')->get();
-        $patients = Patient::whereHas('companies', function ($query) use ($companyId) {
-            $query->where('company_id', $companyId);
-        })->select('id', 'name','last_name', 'rut')->get();
-        $doctors = Doctor::whereHas('companies', function ($query) use ($companyId) {
-            $query->where('company_id', $companyId);
-        })->select('id', 'name','last_name', 'rut')->get();
+        $activeBranchId = session('active_branch_id');
+        $currentCompanyId = session('current_company_id');
 
-        return Inertia::render('Documents/ChileTaxDocuments',[
-            'branches' => $branches, 
+        $branches = Branch::where('company_id', $currentCompanyId)->orderBy('name')->get();
+        $patients = Patient::when($activeBranchId, function ($query) use ($activeBranchId) {
+            // 🎯 Ahora simplemente preguntamos: 
+            // "¿Está este paciente vinculado a esta sucursal en la tabla pivot?"
+            $query->whereHas('branches', function ($q) use ($activeBranchId) {
+                $q->where('branches.id', $activeBranchId);
+            });
+        })->select('id', 'name', 'last_name', 'rut')->get();
+        $doctors = Doctor::when($activeBranchId, function ($query) use ($activeBranchId) {
+            // 🎯 Ahora simplemente preguntamos: 
+            // "¿Está este paciente vinculado a esta sucursal en la tabla pivot?"
+            $query->whereHas('branches', function ($q) use ($activeBranchId) {
+                $q->where('branches.id', $activeBranchId);
+            });
+        })->select('id', 'name', 'last_name', 'rut')->get();
+
+        $invoices = Invoice::with('patient', 'items')->where('branch_id', $activeBranchId)->get();
+
+        return Inertia::render('Documents/IndexDocuments', [
+            'branches' => $branches,
             'patients' => $patients,
-            'doctors'  => $doctors
+            'doctors'  => $doctors,
+            'invoices' => $invoices,
         ]);
     }
 
@@ -54,16 +61,15 @@ class DteController extends Controller
     {
         // 1. Persistencia: Crear la factura interna (Invoice)
         // Lógica para validar y guardar Invoice, InvoiceItems, etc.
-        $invoice = $this->guardarNuevaFactura($request->all()); 
-        
+        $invoice = $this->guardarNuevaFactura($request->all());
+
         // 2. Delegación: Llamar al servicio de negocio para procesar el DTE
         try {
             // El DteService se encargará de buscar la config, llamar a LibreDteLocalProvider::issue(), etc.
-            $trackId = $this->dteService->issueInvoiceDte($invoice); 
-            
+            $trackId = $this->dteService->issueInvoiceDte($invoice);
+
             // 3. Respuesta: Devolver una respuesta exitosa.
             return inertia()->location(route('invoices.show', $invoice->id));
-            
         } catch (\Exception $e) {
             // Manejo de errores de DTE
             return back()->withErrors(['dte_error' => 'Error DTE: ' . $e->getMessage()]);
@@ -82,7 +88,7 @@ class DteController extends Controller
         if (!$invoice->dte_track_id) {
             return response()->json(['message' => 'La factura no tiene un Track ID de envío registrado.'], 404);
         }
-        
+
         try {
             $status = $this->dteService->checkDteStatus($invoice->dte_track_id, $invoice->company_id);
 
@@ -96,9 +102,8 @@ class DteController extends Controller
                 'estado_sii' => $status['estado'],
                 'glosa_sii' => $status['glosa'],
             ]);
-
         } catch (\Exception $e) {
-             return response()->json(['error' => 'Error al consultar estado: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al consultar estado: ' . $e->getMessage()], 500);
         }
     }
 }

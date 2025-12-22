@@ -12,6 +12,7 @@ return new class extends Migration {
         Schema::create('doctors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
             $table->string('name');
             $table->string('last_name');
             $table->string('rut', 20)->nullable();
@@ -25,13 +26,17 @@ return new class extends Migration {
             $table->string('speciality')->nullable();
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female', 'other', 'unknown'])->nullable();
-            $table->enum('status', ['active', 'suspended', 'cancelled'])->default('active');
-            $table->boolean('mobile_app_access')->default(true);
-            $table->text('status_reason')->nullable();      // motivo del último cambio
-            $table->timestamp('status_changed_at')->nullable();
+            
             $table->timestamps();
 
             $table->index(['id']);
+
+             // Índices
+            $table->unique('rut');                          // único (varios NULL permitidos)
+            $table->index(['last_name', 'name']);          // búsqueda por nombre
+            $table->index('email');
+            $table->index('phone');
+
         });
 
        

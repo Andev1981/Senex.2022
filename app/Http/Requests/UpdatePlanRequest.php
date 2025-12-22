@@ -30,7 +30,7 @@ class UpdatePlanRequest extends FormRequest
             'insurance_id' => 'required|exists:insurances,id',
             'coverage_percentage' => 'required|numeric',
             'total_sessions' => 'nullable|integer|min:0',
-            'type' => 'required|in:annual,session_pack,unlimited',
+            'type' => 'required|in:internal,external',
             'price' => 'required|integer|min:0',
             'valid_months' => 'nullable|integer|min:0',
             'start_date' => 'nullable|date',
@@ -86,7 +86,7 @@ class UpdatePlanRequest extends FormRequest
             // ===== REGLAS DE VALORES PERMITIDOS (ENUM) =====
             
             // Corregido: 'in' se usa para validar que el valor esté dentro de la lista (ENUM)
-            'type.required' => 'Debe seleccionar el tipo de plan (anual, paquete, ilimitado).',
+            'type.required' => 'Debe seleccionar el tipo de plan (Interno, Externo).',
             'type.in' => 'El tipo de plan seleccionado no es válido.',
         ];
     }

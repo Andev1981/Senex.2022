@@ -9,6 +9,7 @@ export default function IndexHistorial({
   doctors,
   session_types,
   treatments = [],
+  diagnostics = [],
 }) {
   // 1) Normaliza tratamientos a array
   /*  const treatments = Array.isArray(treatments) ? treatments : null; */
@@ -123,6 +124,7 @@ export default function IndexHistorial({
         width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
       >
         <ModalCreateUpdateTreatment
+          diagnostics={diagnostics}
           patient={patient}
           doctors={doctors}
           selectedTreatment={selectedTreatment}

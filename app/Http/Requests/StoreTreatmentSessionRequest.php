@@ -26,6 +26,55 @@ class StoreTreatmentSessionRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $activeBranchId = session('active_branch_id');
+        $companyId = session('current_company_id');
+
+
+        // 1. Usar merge() para agregar 'company_id' si no existe en la solicitud
+        // La lógica $validated['company_id'] = $currentCompanyId; se traduce a:
+        
+        if (!$this->has('company_id') && $companyId) {
+            $this->merge([
+                'company_id' => $companyId,
+            ]);
+        }
+
+        // 2. Usar merge() para agregar 'branch_id' si no existe en la solicitud
+        // La lógica $validated['branch_id'] = $activeBranchId; se traduce a:
+        
+        if (!$this->has('branch_id') && $activeBranchId) {
+            $this->merge([
+                'branch_id' => $activeBranchId,
+            ]);
+        }
+
+        // Valores por defecto
+        if (!$this->has('status')) {
+            $this->merge(['status' => 'scheduled']);
+        }
+
+        if (!$this->has('duration')) {
+            $this->merge(['duration' => 45]);
+        }
+
+        // Para sesiones completadas, asegurar que tengan evaluación de dolor
+        if ($this->has('status') && $this->status === 'completed') {
+            $this->validate([
+                'pain_before' => 'required|integer|min:0|max:10',
+                'pain_after' => 'required|integer|min:0|max:10',
+            ]);
+        }
+
+        // Asegurar que los arrays están correctamente configurados
+        // Los arrays deben llegar como arrays desde el frontend, no convertirlos a JSON aquí
+        // Laravel automáticamente manejará la conversión a JSON en el modelo gracias al $casts
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
@@ -33,13 +82,13 @@ class StoreTreatmentSessionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => 'nullable|exists:companies,id',
+            'company_id' => 'nullable|exists:branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'treatment_id' => 'nullable|exists:treatments,id',
             'doctor_id' => 'required|exists:doctors,id',
             'patient_id' => 'required|exists:patients,id',
             'session_type_id' => 'nullable|exists:session_types,id',
             'room_id' => 'nullable|exists:rooms,id',
-            'branch_id' => 'nullable|exists:branches,id',
             'base_price_clp' => 'nullable|integer|min:0',
             'date' => 'required|date',
             'time' => 'required|date_format:H:i',
@@ -113,31 +162,6 @@ class StoreTreatmentSessionRequest extends FormRequest
         ];
     }
 
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        // Valores por defecto
-        if (!$this->has('status')) {
-            $this->merge(['status' => 'Programada']);
-        }
-
-        if (!$this->has('duration')) {
-            $this->merge(['duration' => 45]);
-        }
-
-        // Para sesiones completadas, asegurar que tengan evaluación de dolor
-        if ($this->has('status') && $this->status === 'Completada') {
-            $this->validate([
-                'pain_before' => 'required|integer|min:0|max:10',
-                'pain_after' => 'required|integer|min:0|max:10',
-            ]);
-        }
-
-        // Asegurar que los arrays están correctamente configurados
-        // Los arrays deben llegar como arrays desde el frontend, no convertirlos a JSON aquí
-        // Laravel automáticamente manejará la conversión a JSON en el modelo gracias al $casts
-    }
+    
 
 }

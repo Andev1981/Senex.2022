@@ -31,20 +31,19 @@ import TablePagination from "@/Components/TablePagination";
 import { route } from "ziggy-js";
 import { useForm } from "@inertiajs/react";
 import { meses, patientStatuses, debtStatuses } from "@/helpers/status";
+import usePatientStore from "@/Stores/usePatientStore";
 
-export default function TablePatients({
-  patients,
-  handleOpenModalDelete,
-  communes,
-}) {
+export default function TablePatients({ handleOpenModalDelete, communes }) {
+  const patients = usePatientStore((state) => state.patients);
+
   // --- ESTADOS DEL BUSCADOR Y FILTROS ---
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
   // valores controlados del panel
-  const [filterEstado, setFilterEstado] = useState(""); // "Activo", "Inactivo" o "" (Todos)
-  const [filterEstadoPago, setFilterEstadoPago] = useState(""); // "Al día", "Con deuda" o "" (Todos)
-  const [filterComuna, setFilterComuna] = useState(""); // nombre exacto o "" (Todas)
+  const [filterEstado, setFilterEstado] = useState("");
+  const [filterEstadoPago, setFilterEstadoPago] = useState("");
+  const [filterComuna, setFilterComuna] = useState("");
   const [edadMin, setEdadMin] = useState("");
   const [edadMax, setEdadMax] = useState("");
 
@@ -56,19 +55,12 @@ export default function TablePatients({
 
   const comunasPresentes = useMemo(() => {
     if (!patients || patients.length === 0) return [];
-
-    // Extraer comunas únicas de los pacientes
     const comunasUnicas = [
-      ...new Set(
-        patients.map((p) => p.comuna_name).filter(Boolean) // Eliminar valores null/undefined
-      ),
+      ...new Set(patients.map((p) => p.comuna_name).filter(Boolean)),
     ];
-
-    // Ordenar alfabéticamente
     return comunasUnicas.sort((a, b) => a.localeCompare(b));
   }, [patients]);
 
-  // ¿Hay filtros activos?
   const hasActiveFilters = !!(
     filterEstado ||
     filterEstadoPago ||
@@ -77,7 +69,6 @@ export default function TablePatients({
     edadMax
   );
 
-  // Limpia todos los filtros del panel (y los de TanStack)
   const clearFilters = () => {
     setFilterEstado("");
     setFilterEstadoPago("");
@@ -88,90 +79,98 @@ export default function TablePatients({
     setColumnFilters([]);
   };
 
-  // --- SYNC PANEL -> COLUMN FILTERS TANSTACK ---
-  // Mapea los labels visibles a los valores guardados en tus filas.
+  // --- HELPERS DE MAPEO DINÁMICO ---
+  // Buscan la llave (key) basada en el label seleccionado en el <select>
   const mapEstado = (label) => {
-    if (!label) return undefined;
-    if (label.toLowerCase() === "activo") return "active";
-    if (label.toLowerCase() === "inactivo") return "inactive";
-    return label;
+    if (!label || label === "Todos") return undefined;
+    const entry = Object.entries(patientStatuses).find(
+      ([_, cfg]) => cfg.label === label
+    );
+    return entry ? entry[0] : undefined;
   };
 
   const mapEstadoPago = (label) => {
-    if (!label) return undefined;
-    const l = label.toLowerCase();
-    if (l.includes("día")) return "ok";
-    if (l.includes("deuda")) return "due";
-    return label;
+    if (!label || label === "Todos") return undefined;
+    const entry = Object.entries(debtStatuses).find(
+      ([_, cfg]) => cfg.label === label
+    );
+    return entry ? entry[0] : undefined;
   };
 
+  // --- USE EFFECT CORREGIDO ---
   useEffect(() => {
     const next = [];
 
-    // status (igualdad)
-    if (filterEstado) {
-      next.push({ id: "status", value: mapEstado(filterEstado) });
+    // 1. Filtro Estado
+    const valEstado = mapEstado(filterEstado);
+    if (valEstado) {
+      next.push({ id: "status", value: valEstado });
     }
 
-    // payment_status (igualdad)
-    if (filterEstadoPago) {
-      next.push({
-        id: "payment_status",
-        value: mapEstadoPago(filterEstadoPago),
-      });
+    // 2. Filtro Estado Pago
+    const valPago = mapEstadoPago(filterEstadoPago);
+    if (valPago) {
+      next.push({ id: "payment_status", value: valPago });
     }
 
-    // comuna exacta
-    if (filterComuna) {
+    // 3. Filtro Comuna
+    if (filterComuna && filterComuna !== "Todas") {
       next.push({ id: "comuna_name", value: filterComuna });
     }
 
-    // edad min/max (numérico)
+    // 4. Filtro Edad
     if (edadMin || edadMax) {
-      const min = edadMin ? Number(edadMin) : undefined;
-      const max = edadMax ? Number(edadMax) : undefined;
-      next.push({ id: "age", value: [min, max] });
+      next.push({
+        id: "age",
+        value: [
+          edadMin ? Number(edadMin) : undefined,
+          edadMax ? Number(edadMax) : undefined,
+        ],
+      });
     }
 
-    // Mantén también los otros filtros que ya existan
-    setColumnFilters((prev) => {
-      const keep = prev.filter(
-        (f) =>
-          !["status", "payment_status", "comuna_name", "age"].includes(f.id)
-      );
-      return [...keep, ...next];
-    });
+    // IMPORTANTE: Sobrescribimos el estado completamente.
+    // No usamos 'prev' para evitar filtros zombis que causan errores de ID.
+    setColumnFilters(next);
   }, [filterEstado, filterEstadoPago, filterComuna, edadMin, edadMax]);
 
-  // Definición de columnas
+  //Definición de columnas
   const columns = useMemo(
     () => [
       {
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div
-            type="button"
-            className="flex gap-2 mr-1 hover:cursor-pointer btn"
-            onClick={() => detailPatient(row?.original)}
-          >
-            <Eye className="w-5 h-5 text-green-600" />
+          <div className="flex gap-2 mr-1 hover:cursor-pointer btn">
+            <button
+              type="button"
+              onClick={() => {
+                document.activeElement.blur();
+                detailPatient(row?.original);
+              }}
+            >
+              <Eye className="w-5 h-5 text-green-600" />
+            </button>
 
-            <a
+            <button
               type="button"
               className="mr-1 hover:cursor-pointer btn"
-              onClick={() => handleOpenModalDelete(row?.original)}
+              onClick={() => {
+                document.activeElement.blur();
+                handleOpenModalDelete(row?.original);
+              }}
             >
               <Trash2 className="w-5 h-5 text-red-700" />
-            </a>
+            </button>
           </div>
         ),
         enableSorting: false,
       },
       {
-        id: "status",
+        id: "status", // ID EXPLÍCITO REQUERIDO PARA EL FILTRO
         accessorKey: "status",
         header: "ESTADO",
+        accessorFn: (row) => row.status,
         cell: ({ getValue }) => {
           const v = String(getValue() ?? "");
           const cfg = patientStatuses[v] ?? {
@@ -188,18 +187,18 @@ export default function TablePatients({
         },
         filterFn: (row, id, filterValue) => {
           if (!filterValue) return true;
-          return String(row.getValue(id) ?? "") === String(filterValue);
+          const val = String(row.getValue(id) ?? "")
+            .toLowerCase()
+            .trim();
+          const filter = String(filterValue).toLowerCase().trim();
+          return val === filter;
         },
       },
       {
-        id: "payment_status",
+        id: "payment_status", // ID EXPLÍCITO REQUERIDO PARA EL FILTRO
         accessorKey: "payment_status",
         header: "ESTADO DE PAGO",
-        filterFn: (row, id, filterValue) => {
-          if (!filterValue) return true;
-          const cell = row.getValue(id);
-          return String(cell) === String(filterValue);
-        },
+        accessorFn: (row) => row.payment_status,
         cell: ({ getValue }) => {
           const v = String(getValue() ?? "");
           const cfg = debtStatuses[v] ?? {
@@ -213,6 +212,14 @@ export default function TablePatients({
               {cfg.label}
             </span>
           );
+        },
+        filterFn: (row, id, filterValue) => {
+          if (!filterValue) return true;
+          const val = String(row.getValue(id) ?? "")
+            .toLowerCase()
+            .trim();
+          const filter = String(filterValue).toLowerCase().trim();
+          return val === filter;
         },
       },
       {
@@ -235,19 +242,17 @@ export default function TablePatients({
         ),
       },
       {
+        id: "birth_date",
         header: "FECHA NACIMIENTO",
         accessorFn: (row) => row?.birth_date,
-        id: "birth_date",
-        cell: ({ getValue }) => {
-          return (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              {getValue()
-                ? new Date(getValue()).toLocaleDateString("es-CL")
-                : "-"}
-            </div>
-          );
-        },
+        cell: ({ getValue }) => (
+          <div className="flex items-center gap-2 text-sm text-gray-700">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            {getValue()
+              ? new Date(getValue()).toLocaleDateString("es-CL")
+              : "-"}
+          </div>
+        ),
         filterFn: (row, columnId, filterValue) => {
           if (!filterValue) return true;
           const value = row.getValue(columnId);
@@ -256,29 +261,9 @@ export default function TablePatients({
           const month = date.getMonth() + 1;
           return month === Number(filterValue);
         },
-        Filter: ({ column }) => {
-          return (
-            <select
-              value={column.getFilterValue() ?? ""}
-              onChange={(e) =>
-                column.setFilterValue(
-                  e.target.value ? Number(e.target.value) : undefined
-                )
-              }
-              className="overflow-hidden uppercase truncate whitespace-nowrap"
-            >
-              <option value="">Todos</option>
-              {meses.map((mes, i) => (
-                <option key={i} value={i + 1}>
-                  {mes}
-                </option>
-              ))}
-            </select>
-          );
-        },
       },
-
       {
+        id: "age",
         header: "EDAD",
         accessorFn: (row) => row?.age,
         cell: ({ getValue }) => (
@@ -306,8 +291,8 @@ export default function TablePatients({
         ),
       },
       {
+        id: "comuna_name", // ID EXPLÍCITO REQUERIDO
         header: "COMUNA",
-        id: "comuna_name",
         accessorFn: (row) => row?.comuna_name,
         cell: ({ getValue }) => (
           <div
@@ -379,7 +364,7 @@ export default function TablePatients({
         ),
       },
     ],
-    [handleOpenModalDelete, communes]
+    [handleOpenModalDelete, communes, patients]
   );
 
   // Configuración de la tabla
@@ -389,7 +374,7 @@ export default function TablePatients({
     state: {
       sorting,
       globalFilter: searchTerm,
-      columnFilters,
+      columnFilters, // Estado React conectado
       pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
@@ -406,7 +391,7 @@ export default function TablePatients({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getFilteredRowModel: getFilteredRowModel(), // VITAL
     globalFilterFn: "includesString",
     filterFns: {
       betweenNumbers: (row, columnId, filterValue) => {
@@ -427,6 +412,7 @@ export default function TablePatients({
         return true;
       },
     },
+    autoResetPageIndex: false,
   });
 
   const exportToExcel = () => {
@@ -455,7 +441,6 @@ export default function TablePatients({
 
   const detailPatient = ({ id }) => {
     get(route("patients.show", { id: id }));
-    /* get(route("patients.treatments.index", { id: id })); */
   };
 
   return (
@@ -530,6 +515,8 @@ export default function TablePatients({
                   <option>Todos</option>
                   <option>Activo</option>
                   <option>Inactivo</option>
+                  <option>Suspendido</option>
+                  <option>Cancelado</option>
                 </select>
               </div>
 
@@ -549,6 +536,7 @@ export default function TablePatients({
                   <option>Todos</option>
                   <option>Al día</option>
                   <option>Con deuda</option>
+                  <option>Vencida</option>
                 </select>
               </div>
 

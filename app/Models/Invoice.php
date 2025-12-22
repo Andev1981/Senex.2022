@@ -11,49 +11,65 @@ class Invoice extends Model
 {
 
   use Multitenantable;
-  
-  // ===== Tipos de documento (ajusta a tu proveedor) =====
-  public const TYPE_BOLETA   = 'boleta';
-  public const TYPE_FACTURA  = 'factura';
-  public const TYPE_NCREDITO = 'nota_credito';
-  public const TYPE_NDEBITO  = 'nota_debito';
 
-  // ===== Estados DTE y locales =====
-  public const SII_PENDING  = 'pending';
-  public const SII_SENT     = 'sent';
-  public const SII_ACCEPTED = 'accepted';
-  public const SII_REJECTED = 'rejected';
+  // ===== Códigos Oficiales SII =====
+  public const TYPE_FACTURA          = 33;
+  public const TYPE_FACTURA_EXENTA   = 34;
+  public const TYPE_BOLETA           = 39;
+  public const TYPE_BOLETA_EXENTA    = 41; // Muy común en salud (sin IVA)
+  public const TYPE_NCREDITO         = 61;
+  public const TYPE_NDEBITO          = 56;
 
-  public const STATUS_DRAFT   = 'draft';
-  public const STATUS_ISSUED  = 'issued';
-  public const STATUS_PAID    = 'paid';
-  public const STATUS_CANCELLED = 'cancelled';
+  // ===== Estados TRIBUTARIOS (Relación con el SII) =====
+  public const SII_STATUS_PENDING  = 'pending';  // Aún no enviado al SII
+  public const SII_STATUS_SENT     = 'sent';     // Enviado, esperando respuesta
+  public const SII_STATUS_ACCEPTED  = 'accepted'; // ¡Todo OK!
+  public const SII_STATUS_REJECTED  = 'rejected'; // Hubo un error (ej. Folio duplicado)
+
+  // ===== Estados FINANCIEROS (Relación con tu caja) =====
+  public const PAYMENT_STATUS_UNPAID  = 'unpaid';  // Emitida pero no pagada (ej. Factura a 30 días)
+  public const PAYMENT_STATUS_PAID    = 'paid';    // Dinero recibido
+  public const PAYMENT_STATUS_VOIDED  = 'voided';  // Anulada administrativamente
 
   protected $fillable = [
     'company_id',
     'branch_id',
+    'user_id',            // Quién emitió la boleta (Cajero)
     'patient_id',
     'payment_id',
-    'dte_type',
-    'dte_folio',
-    'issue_date',
-    'dte_status',
-    'dte_track_id',
-    'dte_xml',
-    'net_clp',
-    'iva_clp',
-    'total_clp',
-    'pdf_path',
-    'glosa_rechazo',
-    'metadata',
+    'insurance_id',
+    'entity_type',        // Polimórfico: Receptor (Patient o Company)
+    'entity_id',
+
+    // --- MONTOS CONTABLES (VITALES) ---
+    'amount_neto',        // Monto Afecto antes de IVA
+    'amount_exento',      // Monto que no paga IVA (Servicios Médicos)
+    'amount_iva',         // El 19% del Neto
+    'amount_total',       // Neto + Exento + IVA
+
+    // --- DESGLOSE DE COPAGO (CLÍNICO) ---
+    'amount_gross',              // Valor arancel total
+    'amount_insurance_primary',  // Aporte Isapre/Fonasa
+    'amount_insurance_secondary', // Aporte Seguro Complementario
+    'amount_patient',            // Lo que efectivamente sale del bolsillo del paciente
+
+    // --- DATOS SII / DTE ---
+    'dte_type',           // 33, 34, 39, 41, 61
+    'dte_folio',          // Número correlativo legal
+    'issue_date',         // Fecha de emisión
+    'dte_status',         // pending, accepted, rejected
+    'dte_track_id',       // ID de seguimiento del SII
+    'dte_xml',            // XML del documento
+    'pdf_path',           // Ruta al PDF de respaldo físico
+
+    // --- ESTADOS LOCALES ---
+    'payment_status',     // paid, unpaid, voided
+    'metadata',           // Datos extra del proveedor DTE
   ];
 
   protected $casts = [
-    'issue_date'   => 'date',
-    'net_clp'     => 'decimal:2',
-    'iva_clp'   => 'decimal:2',
-    'total_clp' => 'decimal:2',
-    'meta'         => 'array',
+    'metadata' => 'array',
+    'issue_date' => 'date',
   ];
 
   // ===== Relaciones =====
@@ -66,8 +82,8 @@ class Invoice extends Model
   {
     return $this->belongsTo(Patient::class);
   }
-  
-  public function payment():BelongsTo
+
+  public function payment(): BelongsTo
   {
     return $this->belongsTo(Payment::class);
   }
@@ -76,44 +92,49 @@ class Invoice extends Model
     return $this->hasMany(InvoiceItem::class);
   }
 
+  /* public function treatmentSession(): HasMany
+  {
+    return $this->hasMany(TreatmentSession::class);
+  } */
+
   // ===== Scopes =====
   public function scopePendingSii($q)
   {
-    return $q->where('dte_status', self::SII_PENDING);
+    return $q->where('dte_status', self::SII_STATUS_PENDING);
   }
   public function scopeAccepted($q)
   {
-    return $q->where('dte_status', self::SII_ACCEPTED);
+    return $q->where('dte_status', self::SII_STATUS_ACCEPTED);
   }
-  public function scopeIssued($q)
+  public function scopeVoided($q)
   {
-    return $q->where('status', self::STATUS_ISSUED);
+    return $q->where('status', self::PAYMENT_STATUS_VOIDED);
   }
   public function scopePaid($q)
   {
-    return $q->where('status', self::STATUS_PAID);
+    return $q->where('status', self::PAYMENT_STATUS_PAID);
   }
 
   // ===== Helpers de estado =====
   public function isPaid(): bool
   {
-    return $this->status === self::STATUS_PAID;
+    return $this->status === self::PAYMENT_STATUS_PAID;
   }
-  public function markIssued(?string $number = null): void
+  public function markVoided(?string $number = null): void
   {
-    $this->status = self::STATUS_ISSUED;
+    $this->status = self::PAYMENT_STATUS_VOIDED;
     if ($number) $this->document_number = $number;
     $this->save();
   }
   public function markAccepted(?string $trackId = null): void
   {
-    $this->sii_status = self::SII_ACCEPTED;
+    $this->sii_status = self::SII_STATUS_ACCEPTED;
     if ($trackId) $this->sii_track_id = $trackId;
     $this->save();
   }
   public function markRejected(?string $reason = null): void
   {
-    $this->sii_status = self::SII_REJECTED;
+    $this->sii_status = self::SII_STATUS_REJECTED;
     $meta = $this->meta ?? [];
     if ($reason) $meta['reject_reason'] = $reason;
     $this->meta = $meta;
@@ -121,7 +142,7 @@ class Invoice extends Model
   }
   public function settleAsPaid(): void
   {
-    $this->status = self::STATUS_PAID;
+    $this->status = self::PAYMENT_STATUS_PAID;
     $this->save();
   }
 
@@ -135,4 +156,19 @@ class Invoice extends Model
     $this->total_amount = $subtotal + $tax;
     $this->save();
   }
+
+
+  public function getTypeNameAttribute(): string
+  {
+    return match ($this->dte_type) {
+      self::TYPE_FACTURA        => 'Factura Electrónica',
+      self::TYPE_FACTURA_EXENTA => 'Factura Exenta',
+      self::TYPE_BOLETA         => 'Boleta Electrónica',
+      self::TYPE_BOLETA_EXENTA  => 'Boleta Exenta',
+      self::TYPE_NCREDITO       => 'Nota de Crédito',
+      self::TYPE_NDEBITO        => 'Nota de Débito',
+      default                   => 'Documento Desconocido',
+    };
+  }
+  protected $appends = ['type_name']; // Para que se incluya en el JSON de Inertia
 }

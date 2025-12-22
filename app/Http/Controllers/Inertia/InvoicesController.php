@@ -7,7 +7,7 @@ use App\Http\Requests\InvoiceIssueRequest;
 use App\Models\Invoice;
 use App\Models\TreatmentSession;
 use App\Models\PatientPlan;
-use App\Services\InvoiceService;
+use App\Services\Invoices\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,9 +15,7 @@ class InvoicesController extends Controller
 {
   public function index(Request $req)
   {
-    $q = Invoice::query()
-      ->with(['patient', 'treatmentSession', 'items'])
-      ->latest('id');
+    $q = Invoice::with('patient')->get();
 
     if ($req->filled('status'))    $q->where('status', $req->status);
     if ($req->filled('sii_status')) $q->where('sii_status', $req->sii_status);
@@ -25,12 +23,12 @@ class InvoicesController extends Controller
 
 
     return inertia('Invoices/Index', [
-      'invoices' => $q->paginate(20),
+      'invoices' => $q,
       'filters'  => $req->only(['status', 'sii_status']),
     ]);
   }
 
-  public function issueForSession(InvoiceIssueRequest $req, InvoiceService $svc, TreatmentSession $session)
+  /* public function issueForSession(InvoiceIssueRequest $req, InvoiceService $svc, TreatmentSession $session)
   {
     $this->authorize('update', $session);
     $invoice = $svc->issueForSession($session, $req->input('type', 'boleta'));
@@ -44,7 +42,7 @@ class InvoicesController extends Controller
     $invoice = $svc->issueForPlan($patientPlan, $req->input('type', 'factura'));
 
     return back()->with('ok', "Documento emitido (#{$invoice->document_number})");
-  }
+  } */
 
   public function cancel(Request $req, InvoiceService $svc, Invoice $invoice)
   {

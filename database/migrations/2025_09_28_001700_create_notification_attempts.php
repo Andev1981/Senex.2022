@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('notification_attempts', function (Blueprint $table) {
             $table->id();
-             // 🎯 Seguridad Multiempresa
+            $table->uuid('notification_id')->nullable();
+            // 🎯 Seguridad Multiempresa
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
 
@@ -30,11 +31,11 @@ return new class extends Migration
             $table->string('error_message')->nullable();
 
             // Reglas/horarios silenciosos u opciones específicas (JSON)
-            $table->date('sent_at');
+            $table->timestamp('sent_at')->nullable();
 
             $table->timestamps();
 
-            $table->unique(['patient_id', 'event_key', 'channel']);
+
             $table->index(['patient_id', 'event_key']);
         });
     }

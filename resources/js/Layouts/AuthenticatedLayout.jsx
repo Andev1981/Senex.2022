@@ -1,21 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePage } from "@inertiajs/react";
 import Nav from "./Partials/Nav";
 import Side from "./Partials/Side";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function AuthenticatedLayout({ header, children }) {
   const user = usePage().props.auth.user;
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { flash } = usePage().props;
   const userIsSuperAdmin = usePage().props.auth.roles.includes("superadmin");
-
-  useEffect(() => {
-    if (flash?.message) {
-      toast[flash.type || "info"](flash.message);
-    }
-  }, [flash]);
 
   return (
     <div className="flex w-full overflow-hidden min-h-dvh bg-slate-50">
@@ -38,20 +29,6 @@ export default function AuthenticatedLayout({ header, children }) {
         />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
-      <ToastContainer
-        position="top-center"
-        autoClose={6000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss={false}
-        draggable={false}
-        pauseOnHover={true}
-        theme="light"
-        limit={3}
-        style={{ zIndex: 9999 }}
-      />
     </div>
   );
 }

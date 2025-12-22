@@ -15,7 +15,7 @@ return new class extends Migration {
     Schema::create('patient_plans', function (Blueprint $t) {
 
       $t->id();
- $t->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+      $t->foreignId('company_id')->constrained()->comment('Llave foránea a la empresa dueña de este registro.');
       $t->foreignId('branch_id')
           ->nullable() // Puede ser null si es una operación central.
           ->constrained()
@@ -23,6 +23,11 @@ return new class extends Migration {
 
       $t->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
       $t->foreignId('plan_id')->constrained('plans')->cascadeOnDelete();
+      // contract_uuid: Agrupa a todos los miembros de una familia bajo un mismo contrato.
+      // Es la clave para calcular los límites de cobertura globales.
+      $t->uuid('contract_uuid')->nullable()->index();
+      $t->enum('role', ['individual', 'holder', 'beneficiary'])->default('individual');
+
       $t->foreignId('payment_id')->nullable()
         ->constrained('payments')->nullOnDelete();
 

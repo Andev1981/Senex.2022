@@ -7,7 +7,7 @@ use App\Http\Requests\StoreTreatmentSessionRequest;
 use App\Http\Requests\UpdateTreatmentSessionRequest;
 use App\Models\TreatmentSession;
 use App\Models\Patient;
-use App\Services\PlanService;
+use App\Services\Plans\PlanService;
 use App\Services\TreatmentSessionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;

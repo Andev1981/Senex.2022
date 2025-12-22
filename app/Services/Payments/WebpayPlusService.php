@@ -36,7 +36,7 @@ class WebpayPlusService
     /**
      * Inicia una transacción Webpay Plus
      */
-    public function create(string $buyOrder, string $sessionId, $amount_clp, ?string $returnUrl = null): array
+    public function createTransaction(string $buyOrder, string $sessionId, $amount_clp, ?string $returnUrl = null): array
     {
         try {
             $returnUrl = $returnUrl ?: config('webpay.return_url');

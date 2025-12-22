@@ -16,11 +16,11 @@ return new class extends Migration {
       $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
       $table->foreignId('treatment_id')->constrained()->cascadeOnDelete();
       $table->foreignId('room_id')
-                      ->nullable()
-                      ->constrained('rooms')
-                      ->nullOnDelete();
-    // Definirlo como nullable es lo que permite que el paciente sea "Particular"
-    /* $table->foreignId('voucher_id')
+        ->nullable()
+        ->constrained('rooms')
+        ->nullOnDelete();
+      // Definirlo como nullable es lo que permite que el paciente sea "Particular"
+      /* $table->foreignId('voucher_id')
           ->nullable() 
           ->constrained('vouchers')
           ->nullOnDelete(); */
@@ -32,14 +32,17 @@ return new class extends Migration {
       $table->date('date');
       $table->time('time')->nullable();
       $table->unsignedSmallInteger('duration')->default(45);
-      $table->enum('status', ['scheduled', 'completed', 'cancelled', 'not_attend','in_proggress'])->default('scheduled')->index();
+      $table->enum('status', ['scheduled', 'completed', 'cancelled', 'not_attend', 'in_proggress'])->default('scheduled')->index();
 
       // Evaluación & notas
       $table->unsignedTinyInteger('pain_before')->nullable();
       $table->unsignedTinyInteger('pain_after')->nullable();
-      $table->unsignedSmallInteger('rom_flexion')->nullable();
-      $table->unsignedSmallInteger('rom_rotation')->nullable();
-      $table->unsignedSmallInteger('rom_abduction')->nullable();
+      $table->unsignedSmallInteger('rom_flexion_before')->nullable();
+      $table->unsignedSmallInteger('rom_flexion_after')->nullable();
+      $table->unsignedSmallInteger('rom_rotation_before')->nullable();
+      $table->unsignedSmallInteger('rom_rotation_after')->nullable();
+      $table->unsignedSmallInteger('rom_abduction_before')->nullable();
+      $table->unsignedSmallInteger('rom_abduction_after')->nullable();
       $table->json('techniques')->nullable();
       $table->json('exercises')->nullable();
       $table->json('meta')->nullable()->comment('Datos adicionales en formato JSON');
@@ -48,13 +51,18 @@ return new class extends Migration {
       $table->text('next_goals')->nullable();
       $table->text('cancellation_note')->nullable();
 
+      $table->boolean('consumes_plan')->default(false);
+
       // —— “Snapshot” de tarifa aplicada ——
 
       $table->unsignedBigInteger('patient_amount')->nullable(); // precio cobrado al paciente
       $table->unsignedBigInteger('doctor_amount')->nullable();  // parte del doctor
       $table->unsignedBigInteger('clinic_amount')->nullable();  // parte de la clínica
 
+      /* exento */
+      $table->boolean('is_exento')->default(true); // En salud, la mayoría son exentos
       $table->timestamps();
+
       $table->softDeletes();
 
 
@@ -62,7 +70,7 @@ return new class extends Migration {
       // Búsquedas comunes
       $table->index(['patient_id', 'date', 'time'], 'ts_patient_date_time_idx');
       $table->index(['doctor_id', 'date', 'time'], 'ts_kine_date_time_idx');
-      $table->index(['company_id', 'date']);
+      $table->index(['company_id', 'date', 'is_exento']);
       $table->index('room_id');
     });
   }

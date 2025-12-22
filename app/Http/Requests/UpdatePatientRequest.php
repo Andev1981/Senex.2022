@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Patient;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,26 +15,28 @@ class UpdatePatientRequest extends FormRequest
 
     public function rules(): array
     {
-        $patientId = $this->route('patient')->id;
+        // 🎯 Obtenemos el RUT del request para buscar si ya existe un ID
+        $patient = Patient::where('rut', $this->rut)
+                ->where('company_id', session('current_company_id'))
+                ->first();
 
         return [
 
             // Paciente
             'name'              => ['required', 'string', 'max:255'],
             'last_name'         => ['required', 'string', 'max:255'],
-            'rut'               => [
+            'rut' => [
                 'required',
                 'string',
-                'max:30',
-                Rule::unique('patients', 'rut')->ignore($patientId)
+                'max:20',
+                $patient ? '' : Rule::unique('patients')->where('company_id', session('current_company_id')),
             ],
             'email'             => [
                 'required',
                 'string',
                 'email',
                 'max:255',
-                Rule::unique('patients', 'email')->ignore($patientId)
-            ],
+                $patient ? '' : Rule::unique('patients')->where('company_id', session('current_company_id'))], // Ignora si es edición],
             'phone'             => ['nullable', 'string', 'max:30'],
 
             'birth_date'        => ['required', 'date', 'before:today'],

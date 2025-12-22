@@ -13,10 +13,6 @@ return new class extends Migration {
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
-     $table->foreignId('branch_id')
-          ->nullable() // Puede ser null si es una operación central.
-          ->constrained()
-          ->comment('Sucursal donde se emitió el DTE.');
             $table->string('name');
             $table->string('last_name');
             $table->string('rut', 20)->nullable();
@@ -31,7 +27,7 @@ return new class extends Migration {
 
 
 
-            $table->enum('status', ['active', 'inactive', 'deceased','transferred','archived'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'deceased', 'transferred', 'archived'])->default('active');
             $table->text('status_reason')->nullable();      // motivo del último cambio
             $table->timestamp('status_changed_at')->nullable();
 
@@ -39,6 +35,8 @@ return new class extends Migration {
             $table->boolean('prefers_whatsapp')->default(0);
             $table->boolean('prefers_sms')->default(0);
             $table->boolean('prefers_mail')->default(0);
+
+            $table->boolean('require_tutor')->default(0);
 
             $table->text('notes')->nullable();
             $table->timestamps();
@@ -48,10 +46,7 @@ return new class extends Migration {
             $table->index(['last_name', 'name']);          // búsqueda por nombre
             $table->index('email');
             $table->index('phone');
-            $table->index('branch_id');
         });
-
-      
     }
 
     public function down(): void

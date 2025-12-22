@@ -15,11 +15,12 @@ class Treatment extends Model
 
     protected $fillable = [
         'company_id',
+        'branch_id',
         'session_type_id',
         'default_session_type_id',
         'patient_id', 
         'doctor_id',
-        'diagnosis',
+        'diagnostic_code',
         'description',
         'start_date',
         'end_date',
@@ -55,6 +56,11 @@ class Treatment extends Model
     /**
      * Relaciones
      */
+    public function diagnostic() : BelongsTo
+    {
+        return $this->belongsTo(Diagnostic::class,'diagnostic_code','code');
+    }
+
     public function sessionType(): BelongsTo
     {
         return $this->belongsTo(SessionType::class);

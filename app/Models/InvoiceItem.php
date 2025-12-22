@@ -11,21 +11,23 @@ class InvoiceItem extends Model
   use Multitenantable;
 
   protected $fillable = [
-    'company_id',
     'invoice_id',
-    'treatment_session_id',
-    'treatment_id',
-    'description',
-    'quantity',
-    'unit_price_clp',
-    'total_clp',
+     'company_id',
+    'branch_id',
+        'session_type_id',
+        'treatment_session_id',
+        'agreement_item_id',
+        'description',
+        'quantity',
+        'unit_price',
+        'unit_insurance_primary',
+        'unit_insurance_secondary',
+        'unit_patient',
+        'total_gross',
+        'total_patient',
+        'is_exento',
   ];
 
-  protected $casts = [
-    'quantity'       => 'integer',
-    'unit_price_clp'     => 'decimal:2',
-    'total_clp' => 'decimal:2',
-  ];
 
   public function invoice()
   {

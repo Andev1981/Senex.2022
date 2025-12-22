@@ -4,16 +4,16 @@ namespace Database\Seeders;
 
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\Doctor;
+use App\Models\Patient;
 use App\Models\User;
 use App\Models\Voucher;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Faker\Factory as Faker;
-use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Str;
 
 
 class TenantWithDemoDataSeeder extends Seeder
@@ -143,9 +143,14 @@ class TenantWithDemoDataSeeder extends Seeder
       ]);
     }
 
+    $branches = DB::table('branches')->where('company_id', $company['id'])->pluck('id');   
+
     // ============= DOCTORS (kines) =============
     // 3 kines extra
-    for ($i = 0; $i < 3; $i++) {
+    for ($i = 0; $i < 5; $i++) {
+      $number = rand(10000000, 25000000);
+      $rut = $this->calculateRut($number);
+
       $uid = DB::table('users')->insertGetId([
         'company_id' => $company['id'],
         'name' => $faker->firstName,
@@ -155,48 +160,82 @@ class TenantWithDemoDataSeeder extends Seeder
         'updated_at' => $now,
       ]);
 
-      $doctorIds[] = DB::table('doctors')->insertGetId([
+       $doctor = Doctor::create([
+        'company_id' => $company['id'],
         'user_id' => $uid,
         'name' => $faker->firstName,
         'last_name' => $faker->lastName,
-        'rut' => $faker->unique()->numerify('########-#'),
+        'rut' => $rut,
          'email' => "kine{$i}@demo.test",
         'phone' => $faker->numerify('+56#########'),
         'speciality' => $faker->randomElement(['Respiratoria', 'Deportiva', 'Traumatológica']),
         'birth_date' => $faker->date(),
         'gender' => $faker->randomElement(['male', 'female', 'other','unknown']),
-        'status' => $faker->randomElement( ['active', 'suspended', 'cancelled']),
-        'mobile_app_access' => true,
-        'status_reason' => null,
-        'status_changed_at' => null,
         'created_at' => $now,
         'updated_at' => $now
       ]);
+
+      $randomBranchId = $faker->randomElement($branches);
+       $doctor->branches()->attach($randomBranchId);
     }
 
-    // ============= PATIENTS (50) =============
+     // ============= PATIENTS (50) =============
     $patientIds = [];
     for ($i = 0; $i < 50; $i++) {
-      $patientIds[] = DB::table('patients')->insertGetId([
-        'company_id' => $company['id'],
-        'branch_id' => $branch['id'],
-        'name' => $faker->firstName,
-        'last_name' => $faker->lastName,
-        'rut' => $faker->unique()->numerify('########-#'),
-        'email' => $faker->unique()->safeEmail(),
-        'phone' => $faker->numerify('+56#########'),
-        'birth_date' => $faker->date(),
-        'gender' => $faker->randomElement(['male', 'female', 'other','unknown']),
-        'occupation' => $faker->jobTitle,
+       $number = rand(10000000, 25000000);
+      $rut = $this->calculateRut($number);
+
+      // 1. Creamos el paciente usando el Modelo para poder usar relaciones después
+    $patient = Patient::create([
+        'company_id'     => $company['id'],
+        'name'           => $faker->firstName,
+        'last_name'      => $faker->lastName,
+        'rut'            => $rut,
+        'email'          => $faker->unique()->safeEmail(),
+        'phone'          => $faker->numerify('+569########'),
+        'birth_date'     => $faker->date(),
+        'gender'         => $faker->randomElement(['male', 'female', 'other', 'unknown']),
+        'occupation'     => $faker->jobTitle,
         'marital_status' => $faker->randomElement(['single', 'married', 'divorced', 'widowed']),
-        'status' => 'active',
-        'notes' => $faker->boolean(30) ? $faker->sentence(8) : null,
+        'status'         => 'active',
+        'notes'          => $faker->boolean(30) ? $faker->sentence(8) : null,
+        'created_at'     => $now,
+        'updated_at'     => $now,
+    ]);
+
+      // 2. Vinculamos a una o varias sucursales aleatorias de esa empresa
+      // Esto llenará la tabla branch_patient automáticamente
+      $randomBranchId = $faker->randomElement($branches);
+      
+      $patient->branches()->attach($randomBranchId);
+      
+      // Opcional: Si quieres que algunos pacientes estén en más de una sede (Many-to-Many real)
+      /* if ($faker->boolean(20)) { // 20% de probabilidad de estar en otra sede
+          $otherBranch = $faker->randomElement($branches);
+          $patient->branches()->syncWithoutDetaching([$otherBranch]);
+      } */
+
+       DB::table('addresses')->insertGetId([
+        'addressable_type' => 'Patient',
+        'addressable_id' => $patient->id,
+        'type' => 'home',
+        'is_primary' => true,
+        'lat' => $faker->latitude,
+        'lng' => $faker->longitude,
+        'street' => $faker->streetName,
+        'number' => $faker->buildingNumber,
+        'commune_id' => 13101,
+        'province_id' => 2401,
+        'region_id' => 12,
+        'details' => $faker->secondaryAddress,
+        'country' => 'Chile',
         'created_at' => $now,
         'updated_at' => $now,
       ]);
+
     }
 
-    for ($i = 0; $i < 50; $i++) {
+    /* for ($i = 0; $i < 50; $i++) {
       DB::table('addresses')->insertGetId([
         'addressable_type' => 'Patient',
         'addressable_id' => $patientIds[$i],
@@ -214,33 +253,7 @@ class TenantWithDemoDataSeeder extends Seeder
         'created_at' => $now,
         'updated_at' => $now,
       ]);
-    }
-
-    // 1. Un Bono IMED con 10 sesiones (Isapre)
-    Voucher::create([
-        'code' => 'IMED-998877',
-        'patient_id' => 1,
-        'type' => 'sessions',
-        'sessions_quantity' => 10,
-        'sessions_remaining' => 10,
-        'source' => 'imed',
-        'status' => 'active',
-        'issued_date' => now(),
-        'company_id' => $company['id'],
-    ]);
-
-    // 2. Un Saldo a Favor (Monetario) por una devolución
-    Voucher::create([
-        'code' => 'REFUND-001',
-        'patient_id' => 1,
-        'type' => 'monetary',
-        'initial_balance' => 50000,
-        'current_balance' => 50000,
-        'source' => 'refund',
-        'status' => 'active',
-        'issued_date' => now(),
-        'company_id' => $company['id'],
-    ]);
+    } */
        
     // ============= SESSION TYPES =============
     // Esta es la lista de datos que proporcionaste, expandida con las claves del negocio
@@ -275,6 +288,8 @@ class TenantWithDemoDataSeeder extends Seeder
             $category = $session[6]; 
             $code = $session[7]; // 👈 Usamos el código estático definido arriba
 
+    
+
             $dataToInsert[] = [
                 'company_id' => $company['id'],
                 'name' => $name,
@@ -297,5 +312,15 @@ class TenantWithDemoDataSeeder extends Seeder
         DB::table('session_types')->insert($dataToInsert);
 
     // Listo 🎉
+  }
+
+  private function calculateRut($numero)
+  {
+      $m = 0; $s = 1;
+      for ($t = $numero; $t; $t = floor($t / 10)) {
+          $s = ($s + $t % 10 * (9 - $m++ % 6)) % 11;
+      }
+      $dv = $s ? $s - 1 : 'K';
+      return $numero . '-' . $dv;
   }
 }

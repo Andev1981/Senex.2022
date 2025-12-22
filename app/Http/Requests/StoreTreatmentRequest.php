@@ -24,6 +24,7 @@ class StoreTreatmentRequest extends FormRequest
         ];
     }
 
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -36,7 +37,7 @@ class StoreTreatmentRequest extends FormRequest
             'patient_id' => 'sometimes|exists:patients,id',
             'doctor_id' => 'sometimes|exists:doctors,id',
             'start_date' => 'required|date',
-            'diagnosis' => 'required|string|max:200',
+            'diagnostic_code' => 'required|exists:diagnostics,code',
             'description' => 'nullable|string',
             'end_date' => 'nullable|date|after:start_date',
             'status' => 'nullable|in:evaluation,in_progress,cancelled,paused,completed',
@@ -67,9 +68,7 @@ class StoreTreatmentRequest extends FormRequest
             'session_type_id.exists' => 'El tipo de sesión seleccionado no existe',
             'patient_id.exists' => 'El paciente seleccionado no existe',
             'doctor_id.exists' => 'El kinesiólogo seleccionado no existe',
-            'diagnosis.required' => 'El diagnóstico es requerido para comenzar',
-            'diagnosis.string' => 'El diagnóstico debe ser un texto',
-            'diagnosis.max' => 'El diagnóstico no debe tener mas de 200 caracteres',
+            'diagnostic_code.required' => 'El diagnóstico es requerido para comenzar',
             'start_date.required' => 'La fecha de inicio es obligatoria',
             'end_date.after' => 'La fecha de fin debe ser posterior a la fecha de inicio',
             'total_sessions.integer' => 'El total de sesiones debe ser un número entero',
@@ -104,6 +103,26 @@ class StoreTreatmentRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $activeBranchId = session('active_branch_id');
+        $companyId = session('current_company_id');
+
+        // 1. Usar merge() para agregar 'company_id' si no existe en la solicitud
+        // La lógica $validated['company_id'] = $currentCompanyId; se traduce a:
+        
+        if (! $this->has('company_id') && $companyId) {
+            $this->merge([
+                'company_id' => $companyId,
+            ]);
+        }
+
+        // 2. Usar merge() para agregar 'branch_id' si no existe en la solicitud
+        // La lógica $validated['branch_id'] = $activeBranchId; se traduce a:
+        
+        if (! $this->has('branch_id') && $activeBranchId) {
+            $this->merge([
+                'branch_id' => $activeBranchId,
+            ]);
+        }
         // Combinar objetivos de array a JSON si viene como array
         if ($this->has('objectives')) {
             // Convertir objectives de string a array si es necesario

@@ -136,7 +136,7 @@ export default function CardTreatment({ treatment, handleTreatmentModal }) {
             </h3>
             <p className="text-sm text-gray-600">
               Atendido por:
-              <div className="flex gap-2 mt-2 text-base text-gray-600">
+              <div className="flex gap-2 mt-2 ml-2 text-base text-gray-600">
                 <Stethoscope className="w-6 h-6" />
                 {treatment?.doctor?.name || "-"}
               </div>
@@ -179,9 +179,17 @@ export default function CardTreatment({ treatment, handleTreatmentModal }) {
           <p className="mb-1 text-sm font-semibold text-gray-700">
             Diagnóstico
           </p>
-          <p className="text-sm text-gray-600 uppercase">
-            {treatment?.diagnosis || "-"}
+          <p className="text-sm text-gray-600 uppercase ml-2">
+            {treatment?.diagnostic
+              ? treatment.diagnostic.code +
+                " " +
+                treatment.diagnostic.description
+              : "No se ha ingresado"}
           </p>
+          <p className="mb-1 text-sm font-semibold text-gray-700">
+            Descripción
+          </p>
+          <p className="ml-2">{treatment.description}</p>
         </div>
 
         <div>

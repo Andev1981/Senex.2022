@@ -17,6 +17,7 @@ const RutInput = ({
   tipoDocumento = null,
   onEmpresaEncontrada = null,
   empresasExistentes = [],
+  onBlur = null, // 🎯 1. Recibir la prop onBlur
 }) => {
   const [display, setDisplay] = useState("");
 
@@ -210,6 +211,7 @@ const RutInput = ({
             type="text"
             value={display}
             onChange={handleChange}
+            onBlur={onBlur} // 🎯 2. ASIGNAR EL EVENTO AQUÍ
             placeholder={placeholder}
             disabled={disabled}
             required={required}

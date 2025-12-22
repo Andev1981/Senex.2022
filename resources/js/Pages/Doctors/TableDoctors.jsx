@@ -163,8 +163,8 @@ export default function TableDoctors({
         },
       },
       {
-        id: "status",
-        accessorKey: "status",
+        id: "branch.status",
+        accessorKey: "branch.status",
         header: "ESTADO",
         cell: ({ getValue }) => {
           const status = getValue();
@@ -184,15 +184,14 @@ export default function TableDoctors({
         },
       },
       {
-        id: "mobile_access_enabled",
-        accessorKey: "mobile_access_enabled",
+        id: "branch.mobile_app_access",
+        accessorKey: "branch.mobile_app_access",
         header: "ACCESO MÓVIL",
         cell: ({ getValue }) => {
-          const mobile_access_enabled = getValue();
+          const mobile_app_access = getValue();
           const color =
-            mobile_access_enabled == true ? "bg-green-500" : "bg-gray-500";
-          const label =
-            mobile_access_enabled == true ? "Con Acceso" : "Sin Acceso";
+            mobile_app_access == true ? "bg-green-500" : "bg-gray-500";
+          const label = mobile_app_access == true ? "Con Acceso" : "Sin Acceso";
           return (
             <span
               className={`inline-flex text-white items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}

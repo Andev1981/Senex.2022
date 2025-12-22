@@ -22,6 +22,11 @@ class PaymentAllocation extends Model
 
   // ===== Relaciones =====
 
+  public function treatmentSession() :BelongsTo
+  {
+    return $this->belongsTo(TreatmentSession::class);
+  }
+
   public function payment() : BelongsTo
   {
     return $this->belongsTo(Payment::class);

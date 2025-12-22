@@ -228,7 +228,7 @@ export default function DoctorModalForm({
           </h3>
           <div className="flex items-start gap-3">
             <div className="flex items-center justify-center w-12 h-12 font-bold text-white rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
-              {selectedDoctor.name
+              {selectedDoctor?.name
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
@@ -237,18 +237,18 @@ export default function DoctorModalForm({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-bold text-gray-900">
-                    {selectedDoctor.name} {selectedDoctor.last_name}
+                    {selectedDoctor?.name} {selectedDoctor?.last_name}
                   </p>
-                  <p className="text-sm text-gray-600">{selectedDoctor.rut}</p>
+                  <p className="text-sm text-gray-600">{selectedDoctor?.rut}</p>
                   <p className="text-sm text-gray-500">
-                    {selectedDoctor?.speciality} — {selectedDoctor?.branch}
+                    {selectedDoctor?.speciality}
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-1 mt-2 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  {selectedDoctor.phone}
+                  {selectedDoctor?.phone}
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-gray-400" />
@@ -257,7 +257,7 @@ export default function DoctorModalForm({
                 {selectedDoctor?.availability && (
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    Disponibilidad: {selectedDoctor.availability.join(", ")}
+                    Disponibilidad: {selectedDoctor?.availability.join(", ")}
                   </div>
                 )}
               </div>
@@ -267,19 +267,19 @@ export default function DoctorModalForm({
               <div className="p-3 text-center border border-gray-200 rounded-lg bg-gray-50">
                 <p className="text-xs text-gray-600">Sesiones mes</p>
                 <p className="text-xl font-bold">
-                  {selectedDoctor.sessions_month || 0}
+                  {selectedDoctor?.sessions_month || 0}
                 </p>
               </div>
               <div className="p-3 text-center border border-gray-200 rounded-lg bg-gray-50">
                 <p className="text-xs text-gray-600">Ingresos mes</p>
                 <p className="text-xl font-bold">
-                  {fmtCLP(selectedDoctor.revenue_month || 0)}
+                  {fmtCLP(selectedDoctor?.revenue_month || 0)}
                 </p>
               </div>
               <div className="p-3 text-center border border-gray-200 rounded-lg bg-gray-50">
                 <p className="text-xs text-gray-600">Pacientes</p>
                 <p className="text-xl font-bold">
-                  {selectedDoctor.sessions?.length || 0}
+                  {selectedDoctor?.sessions?.length || 0}
                 </p>
               </div>
             </div>
@@ -338,12 +338,15 @@ export default function DoctorModalForm({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {sessionTypes.map((sty) => {
+                    {sessionTypes?.map((sty) => {
                       const rule = getRuleFor(sty.id);
                       return (
                         <tr key={sty.id}>
-                          <td className="px-3 py-2 text-sm text-gray-800">
-                            {sty.name}
+                          <td className="flex px-3 py-2 text-sm text-gray-800">
+                            {sty.name}{" "}
+                            <p className="pl-2 italic text-gray-600">
+                              ({fmtCLP(sty.base_price_clp)})
+                            </p>
                           </td>
                           <td className="px-3 py-2 text-sm">
                             {isEditingCommission ? (
@@ -410,20 +413,20 @@ export default function DoctorModalForm({
             </div>
 
             <div className="p-4 space-y-3">
-              {patientsDraft.length === 0 ? (
+              {patientsDraft?.length === 0 ? (
                 <div className="text-sm text-gray-500">
                   Aún no hay pacientes asignados a este profesional.
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {patientsDraft.map((asp) => (
+                  {patientsDraft?.map((asp) => (
                     <div
                       key={asp.id}
                       className="flex items-center justify-between gap-2 p-2 border border-gray-200 rounded-lg"
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">
-                          {asp.name}
+                          {asp.full_name}
                         </p>
                         <p className="text-xs text-gray-500 truncate">
                           {asp.rut} · {asp.phone}
@@ -455,21 +458,21 @@ export default function DoctorModalForm({
                   />
                 </div>
                 <div className="mt-3 space-y-2 overflow-auto max-h-48">
-                  {availablePatients.length === 0 ? (
+                  {availablePatients?.length === 0 ? (
                     <div className="text-xs text-gray-500">
                       {patientQuery
                         ? "Sin resultados disponibles."
                         : "Busca un paciente para asignar"}
                     </div>
                   ) : (
-                    availablePatients.map((avp) => (
+                    availablePatients?.map((avp) => (
                       <div
                         key={avp.id}
                         className="flex items-center justify-between gap-2 p-2 border border-gray-200 rounded-lg"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">
-                            {avp.name}
+                            {avp.full_name}
                           </p>
                           <p className="text-xs text-gray-500 truncate">
                             {avp.rut} · {avp.phone}
@@ -488,26 +491,6 @@ export default function DoctorModalForm({
               </div>
             </div>
           </div>
-
-          {/* Acciones */}
-          {/* <div className="grid grid-cols-2 gap-2 mt-6">
-            <button
-              onClick={editDoctor}
-              className="px-3 py-2 text-xs font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              Editar datos
-            </button>
-            <button
-              onClick={toggleActive}
-              className={`px-3 py-2 text-xs font-semibold border-2 rounded-lg ${
-                selectedDoctor.is_active
-                  ? "text-red-700 border-red-200 hover:bg-red-50"
-                  : "text-green-700 border-green-200 hover:bg-green-50"
-              }`}
-            >
-              {selectedDoctor.is_active ? "Desactivar" : "Activar"}
-            </button>
-          </div> */}
         </div>
       )}
     </div>

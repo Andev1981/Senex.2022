@@ -16,13 +16,13 @@ class TreatmentSession extends Model
 
     protected $fillable = [
         'company_id',
+        /* 'branch_id', */
         'treatment_id',
         'appointment_id',
         'doctor_id',
         'patient_id',
         'session_type_id',
         'room_id',
-        'branch_id',
         'month_session_number',
         'consumes_plan',
         'date',
@@ -50,10 +50,12 @@ class TreatmentSession extends Model
         'patient_amount', /* base price */
         'doctor_amount', /* Commission */
         'clinic_amount',
-        'cancellation_note'
+        'cancellation_note',
+        'is_exento'
     ];
 
     protected $casts = [
+        'is_exento' => 'boolean',
         'date' => 'date',
         'time' => 'datetime:H:i',
         'duration' => 'integer',
@@ -209,7 +211,7 @@ class TreatmentSession extends Model
     public function markAsCompleted(): void
     {
         $this->update(['status' => 'Completada']);
-        
+
         // Incrementar sesiones completadas del tratamiento
         if ($this->treatment) {
             $this->treatment->incrementCompletedSessions();
@@ -272,7 +274,7 @@ class TreatmentSession extends Model
     {
         $monthStart = Carbon::parse($date)->startOfMonth()->toDateString();
         $monthEnd = Carbon::parse($date)->endOfMonth()->toDateString();
-        
+
         return (self::where('treatment_id', $treatmentId)
             ->whereBetween('date', [$monthStart, $monthEnd])
             ->max('month_session_number') ?? 0) + 1;
@@ -283,12 +285,12 @@ class TreatmentSession extends Model
      */
     public function assignSessionNumbers(): void
     {
-   
+
 
         // Asignar month_session_number si no está presente
         if (!$this->month_session_number && $this->treatment_id && $this->date) {
             $this->month_session_number = self::generateNextMonthSessionNumber(
-                $this->treatment_id, 
+                $this->treatment_id,
                 $this->date
             );
         }
@@ -301,10 +303,10 @@ class TreatmentSession extends Model
     {
         if ($this->treatment_id && $this->date) {
             $newMonthNumber = self::generateNextMonthSessionNumber(
-                $this->treatment_id, 
+                $this->treatment_id,
                 $this->date
             );
-            
+
             // Actualizar el número del mes manteniendo el número general
             $this->update(['month_session_number' => $newMonthNumber]);
         }

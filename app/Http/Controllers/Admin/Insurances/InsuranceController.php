@@ -2,26 +2,52 @@
 
 namespace App\Http\Controllers\Admin\Insurances;
 
+use App\Enums\PaymentMethodEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Insurance;
 use App\Http\Requests\StoreInsuranceCompanyRequest;
 use App\Http\Requests\UpdateInsuranceCompanyRequest;
-use App\Models\Plan;
+use App\Models\SessionType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InsuranceController extends Controller
 {
-    public function index()
+    /* public function indexPagos()
     {
        
+        $patients = Patient::get();
+        $sessionTypes = SessionType::get();
         $insurances = Insurance::get();
         $plans = Plan::get();
+        $paymentMethods = collect(PaymentMethodEnum::cases())->map(function ($method) {
+        return [
+                'value' => $method->value,
+                'label' => $method->label(),
+            ];
+        })->toArray();
 
 
-        return Inertia::render('Insurances/Index', [
+
+        return Inertia::render('BillingCheckout/Index', [
+            'patients' => $patients,
+            'sessionTypes' => $sessionTypes,
             'insurances' => $insurances,
             'plans' => $plans,
+            'paymentMethods' => $paymentMethods,
+        ]);
+    } */
+
+    public function index()
+    {
+        // Traemos las aseguradoras con sus planes para mostrarlas en la tabla/modales.
+        $insurances = Insurance::with('plans')->get();
+
+        $sessionTypes = SessionType::get(['id', 'name', 'base_price_clp']);
+
+        return Inertia::render('Insurances/InsuranceIndex', [
+            'insurances' => $insurances,
+            'sessionTypes' => $sessionTypes,
         ]);
     }
 
@@ -29,7 +55,7 @@ class InsuranceController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'rut' => 'required|string|max:255|unique:insurance_companies,rut',
+            'rut' => 'required|string|max:255|unique:insurances,rut',
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
@@ -39,15 +65,15 @@ class InsuranceController extends Controller
 
         Insurance::create($validated);
 
-        return redirect()->route('insurance-companies.index')
+        return back()
             ->with('success', 'Insurance Company created successfully.');
     }
 
-    public function update(Request $request, Insurance $insuranceCompany)
+    public function update(Request $request, Insurance $insurance)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'rut' => 'required|string|max:255|unique:insurance_companies,rut,' . $insuranceCompany->id,
+            'rut' => 'required|string|max:255|unique:insurances,rut,' . $insurance->id,
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
@@ -55,9 +81,9 @@ class InsuranceController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $insuranceCompany->update($validated);
+        $insurance->update($validated);
 
-        return redirect()->route('insurance-companies.index')
+        return back()
             ->with('success', 'Insurance Company updated successfully.');
     }
 
@@ -65,7 +91,7 @@ class InsuranceController extends Controller
     {
         $insuranceCompany->delete();
 
-        return redirect()->route('insurance-companies.index')
+        return back()
             ->with('success', 'Insurance Company deleted successfully.');
     }
 }

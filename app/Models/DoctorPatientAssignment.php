@@ -14,6 +14,7 @@ class DoctorPatientAssignment extends Model
 
     protected $fillable = [
         'company_id',
+        'branch_id',
         'doctor_id',
         'patient_id',
         'role',

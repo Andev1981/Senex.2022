@@ -15,7 +15,7 @@ use App\Models\Province;
 use App\Models\Region;
 use App\Models\SessionType;
 use App\Models\TreatmentSession;
-use App\Services\TreatmentService;
+use App\Services\Treatments\TreatmentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
@@ -37,12 +37,12 @@ class TreatmentController extends Controller
             ->get();
 
         $sessions = TreatmentSession::where('patient_id', $patient->id)
-            ->with(['doctor', 'treatment','debt'])
+            ->with(['doctor', 'treatment', 'debt'])
             ->orderBy('date', 'desc')
             ->get();
 
-        $payments = Payment::where('patient_id', $patient->id)->where('status','completed')
-        ->orderBy('created_at', 'desc')
+        $payments = Payment::where('patient_id', $patient->id)->where('status', 'completed')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $patient->load([
@@ -55,15 +55,15 @@ class TreatmentController extends Controller
         $address = $patient->address;
 
         $contact = $patient->primaryContact;
-       
+
         $allergies = $patient->allergies;
 
         $conditions = $patient->condition;
 
         $vital = $patient->latestVital;
-        
+
         $session_types = SessionType::all();
-        
+
         $provinces = Province::all();
         $communes  = Commune::all();
         $regions   = Region::all();
@@ -96,7 +96,7 @@ class TreatmentController extends Controller
     {
         $treatment->load([
             'patient',
-            'sessionType', 
+            'sessionType',
             'doctor',
             'sessions' => function ($query) {
                 $query->orderBy('date', 'desc');
@@ -114,19 +114,17 @@ class TreatmentController extends Controller
      */
     public function store(StoreTreatmentRequest $request, TreatmentService $treatmentService)
     {
-       try {
+        try {
             // El Controller delega toda la lógica de negocio al Service
-            $treatment = $treatmentService->createTreatmentWithSession($request->validated());
+            /*  $treatment = $treatmentService->createTreatmentWithSession($request->validated()); */
 
             // Si llegamos aquí, la transacción fue exitosa
             session()->flash('message', 'Tratamiento y primera sesión creados correctamente.');
             session()->flash('type', 'success');
-
-
         } catch (\Exception $e) {
             // Manejo de errores de la lógica de negocio
             Log::error('Error creando tratamiento con sesión: ' . $e->getMessage());
-            
+
             session()->flash('message', 'Error al crear el tratamiento. ' . $e->getMessage());
             session()->flash('type', 'error');
         }
@@ -138,24 +136,21 @@ class TreatmentController extends Controller
      */
     public function update(UpdateTreatmentRequest $request, Treatment $treatment)
     {
-        
+
         try {
             $treatment->update($request->validated());
 
             if (!$treatment) {
                 session()->flash('message', 'Tratamiento no ha podido ser actualizado.');
                 session()->flash('type', 'error');
-            
             }
 
             session()->flash('message', 'Tratamiento actualizado.');
-                session()->flash('type', 'success');
-
+            session()->flash('type', 'success');
         } catch (\Exception $e) {
-              if (!$treatment) {
+            if (!$treatment) {
                 session()->flash('message', 'Tratamiento no se pudo actualizar.');
                 session()->flash('type', 'error');
-            
             }
         }
     }
@@ -174,16 +169,14 @@ class TreatmentController extends Controller
 
                 session()->flash('message', 'No se puede eliminar un tratamiento con sesiones completadas.');
                 session()->flash('type', 'error');
-            
             }
 
             $treatment->delete();
 
             session()->flash('message', 'Eliminado correctamente.');
             session()->flash('type', 'success');
-
         } catch (\Exception $e) {
-             session()->flash('message', 'No se puede eliminar tratamiento.');
+            session()->flash('message', 'No se puede eliminar tratamiento.');
             session()->flash('type', 'error');
         }
     }
@@ -206,7 +199,7 @@ class TreatmentController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('diagnosis', 'like', "%{$search}%");
+                    ->orWhere('diagnosis', 'like', "%{$search}%");
             });
         }
 
@@ -221,7 +214,8 @@ class TreatmentController extends Controller
      * UPDATE KPIs - PUT /api/treatments/{treatment}/kpis
      * Endpoint específico para actualizar KPIs desde modal
      */
-    public function updateKPIs(UpdateTreatmentRequest $request, Treatment $treatment): JsonResponse{
+    public function updateKPIs(UpdateTreatmentRequest $request, Treatment $treatment): JsonResponse
+    {
         try {
             // Solo actualizar campos de KPIs
             $kpiData = Arr::only($request->validated(), ['pain_reduction', 'mobility_improvement', 'strength_gain', 'completed_sessions', 'total_sessions']);
@@ -232,7 +226,6 @@ class TreatmentController extends Controller
                 'message' => 'KPIs actualizados exitosamente',
                 'treatment' => $treatment,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -257,7 +250,6 @@ class TreatmentController extends Controller
                 'message' => 'KPIs recalculados exitosamente',
                 'treatment' => $treatment->fresh(),
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

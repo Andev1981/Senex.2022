@@ -1,29 +1,30 @@
-import { useState } from "react";
-import {
-  Plus,
-  User,
-  Calendar,
-  Mail,
-  MapPin,
-  X,
-  Check,
-  AlertCircle,
-  FileText,
-  Users,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, User, Check, AlertCircle, FileText, Users } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
 import TablePatients from "./TablePatients";
 import ModalCreateEditPatient from "./ModalCreateEditPatient";
 import SideModal from "@/Components/SideModal";
+import usePatientStore from "@/Stores/usePatientStore";
 
 export default function IndexPatients({
-  patients,
+  patients: initialPatients,
   communes,
   provinces,
   regions,
 }) {
+  const addButtonRef = useRef(null);
   const [openPatientModal, setOpenPatientModal] = useState(false);
+  // 1. Obtenemos las acciones de Zustand
+  const patients = usePatientStore((state) => state.patients);
+  const setPatients = usePatientStore((state) => state.setPatients);
+
+  // 2. Sincronizamos cuando cambien las props de Inertia
+  useEffect(() => {
+    if (initialPatients) {
+      setPatients(initialPatients);
+    }
+  }, [initialPatients]);
 
   return (
     <AuthenticatedLayout>
@@ -45,6 +46,7 @@ export default function IndexPatients({
             </div>
             <div className="flex gap-2">
               <button
+                ref={addButtonRef}
                 onClick={() => setOpenPatientModal(true)}
                 className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
               >

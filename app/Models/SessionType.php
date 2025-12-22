@@ -12,19 +12,26 @@ class SessionType extends Model
     protected $fillable = [
         'company_id',
         'name',
-        'base_price',
+        'code',
+        'category',
+        'base_price_clp',
         'duration_minutes',
-        'plan_eligible',
-        'plan_session_value',
-        'active'
+        'require_diagnosis',
+        'require_referral',
+        'plan_discount_clp',
+        'is_active'
     ];
 
     protected $casts = [
-        'base_price' => 'integer',
-        'plan_eligible' => 'boolean',
-        'plan_session_value' => 'integer',
-        'active' => 'boolean',
+        'is_active' => 'boolean',
+        'require_diagnosis' => 'boolean',
+        'require_referral' => 'boolean',
     ];
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     // Relaciones sugeridas (ajusta nombres de modelos si difieren)
     public function treatmentSessions()

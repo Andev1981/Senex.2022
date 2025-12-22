@@ -23,7 +23,6 @@ class Patient extends Authenticatable
 
     protected $fillable = [
         'company_id',
-        'branch_id',
         'name',
         'last_name',
         'rut',
@@ -40,31 +39,46 @@ class Patient extends Authenticatable
         'prefers_whatsapp',
         'prefers_sms',
         'prefers_mail',
+        'require_tutor',
         'notes',
     ];
 
 
     protected $casts = [
-         'birth_date' => 'date:Y-m-d',
+        'birth_date' => 'date:Y-m-d',
         'status_changed_at' => 'datetime',
+        'opt_out_reminders' => 'boolean',
+        'prefers_whatsapp'  => 'boolean',
+        'prefers_mail'      => 'boolean',
+        'prefers_sms'       => 'boolean',
+        'require_tutor'     => 'boolean',
     ];
 
-     /* RELACIONES */
+    /* RELACIONES */
     // Indica la relación M:N con Company
     public function companies(): BelongsToMany
     {
         // Usa la tabla pivote 'company_doctor'. 
         // withPivot() te permite acceder a campos de la tabla pivote (como la tarifa).
         return $this->belongsToMany(Company::class, 'company_patient')
-        ->withPivot('ficha_clinica_local_id','fecha_primer_contacto')
-        ->withTimestamps();
+            ->withPivot('ficha_clinica_local_id', 'fecha_primer_contacto')
+            ->withTimestamps();
+    }
+
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class, 'branch_patient')
+            ->withPivot('status')
+            ->withTimestamps();
     }
 
     public function insurances()
     {
-        return $this->belongsToMany(Insurance::class, 'patient_insurances')
-                    ->withPivot('policy_number', 'plan_name', 'is_primary', 'company_id')
-                    ->withTimestamps();
+        // Usa la tabla patients_insurances como pivot y PatientInsurance como modelo
+        return $this->belongsToMany(Insurance::class, 'patients_insurances')
+            ->using(PatientInsurance::class)
+            ->withPivot(['plan_id', 'is_active', 'affiliate_rut', 'is_affiliate_holder'])
+            ->withTimestamps();
     }
 
     public function sessions(): HasMany
@@ -86,7 +100,7 @@ class Patient extends Authenticatable
         return $this->hasMany(PatientAllergy::class);
     }
 
-    public function condition() : HasOne
+    public function condition(): HasOne
     {
         return $this->hasOne(PatientCondition::class);
     }
@@ -119,7 +133,7 @@ class Patient extends Authenticatable
             ->withSessionsRemaining();
     }
 
-    public function doctorAssignments():HasMany
+    public function doctorAssignments(): HasMany
     {
         return $this->hasMany(DoctorPatientAssignment::class);
     }
@@ -130,8 +144,6 @@ class Patient extends Authenticatable
             ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
             ->withTimestamps();
     }
-
-
 
     public function treatments(): HasMany
     {
@@ -148,7 +160,7 @@ class Patient extends Authenticatable
         return $this->morphOne(Address::class, 'addressable'); // 1 a 1 polimórfico
     }
 
-    public function images() : MorphMany
+    public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');
     }
@@ -159,7 +171,7 @@ class Patient extends Authenticatable
         return $this->hasMany(PacienteKine::class);
     }
 
-    public function debts() : HasManyThrough
+    public function debts(): HasManyThrough
     {
         return $this->hasManyThrough(
             Debt::class,             // related
@@ -188,23 +200,12 @@ class Patient extends Authenticatable
         return $this->hasOne(Attendance::class)->latestOfMany('attended_at'); // o created_at
     }
 
- 
 
-   
-    
+
+
+
     /* ----------Estados y Cálculos------------- */
-    public function paymentStatus(): string
-    {
-        $overdue = $this->debts()
-            ->whereIn('debts.status', ['pending', 'partial', 'overdue'])
-            ->whereDate('due_date', '<', now()->toDateString())
-            ->exists();
 
-        if ($overdue) return 'overdue';
-
-        $hasDue = $this->debts()->whereIn('debts.status', ['pending', 'partial', 'overdue'])->exists();
-        return $hasDue ? 'due' : 'ok';
-    }
 
     public function openDebts()
     {
@@ -215,29 +216,51 @@ class Patient extends Authenticatable
         ]);
     }
 
-
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
     }
 
-    
+
     /* -------------ATTRIBUTES------------- */
+
+    public function getPaymentStatusAttribute(): string
+    {
+        // Si la relación ya está cargada en memoria, la usamos para no tocar la BD
+        if ($this->relationLoaded('debts')) {
+            $activeDebts = $this->debts->whereIn('status', ['pending', 'partial', 'overdue']);
+
+            $overdue = $activeDebts->where('due_date', '<', now()->toDateString())->isNotEmpty();
+            if ($overdue) return 'overdue';
+
+            return $activeDebts->isNotEmpty() ? 'due' : 'ok';
+        }
+
+        // Si no está cargada, hacemos la consulta SQL específica (con el prefijo de tabla)
+        $query = $this->debts()->whereIn('debts.status', ['pending', 'partial', 'overdue']);
+
+        if ((clone $query)->whereDate('due_date', '<', now()->toDateString())->exists()) {
+            return 'overdue';
+        }
+
+        return $query->exists() ? 'due' : 'ok';
+    }
+
+
     /* Edad */
-    public function age() : Attribute
+    public function age(): Attribute
     {
         return Attribute::make(
-            get : fn () => trim(
-               $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
+            get: fn() => trim(
+                $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
             ),
         );
-       
     }
 
     public function fullName(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->name . ' ' . $this->last_name
+            get: fn() => $this->name . ' ' . $this->last_name
         );
     }
 
@@ -253,7 +276,7 @@ class Patient extends Authenticatable
     {
         return Attribute::make(
             get: function () {
-                
+
                 // 1. Verificación inicial de datos (peso y altura)
                 if (!$this->weight || !$this->height) {
                     return null;
@@ -262,10 +285,10 @@ class Patient extends Authenticatable
                 // 2. Normalización de la altura (si está en cm, convertir a metros)
                 // Usamos el operador de coalescencia de null (??) para seguridad, aunque ya se verificó.
                 $heightRaw = $this->height ?? 0;
-                
-                $heightInMeters = $heightRaw > 3 
-                                    ? $heightRaw / 100 
-                                    : $heightRaw;
+
+                $heightInMeters = $heightRaw > 3
+                    ? $heightRaw / 100
+                    : $heightRaw;
 
                 // 3. Verificación de seguridad (evitar división por cero)
                 if ($heightInMeters <= 0) {
@@ -280,14 +303,12 @@ class Patient extends Authenticatable
             },
         );
     }
-    
+
 
     protected $appends = [
         'age',
         'full_name',
-      /*   'payment_link', */
+        'payment_status',
         'bmi',
     ];
-    
-  
 }

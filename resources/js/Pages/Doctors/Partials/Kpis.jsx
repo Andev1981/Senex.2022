@@ -4,8 +4,8 @@ import { avg } from "@/utils/utils";
 
 export default function Kpis({ doctors }) {
   const kpis = useMemo(() => {
-    const actives = doctors.filter((d) => d.status === "active");
-    const inactives = doctors.filter((d) => d.status !== "active");
+    const actives = doctors.filter((d) => d.branch.status === "active");
+    const inactives = doctors.filter((d) => d.branch.status !== "active");
     const commissions = actives.map((d) =>
       d.commission?.type === "percentage" ? d.commission.value : 0
     );
