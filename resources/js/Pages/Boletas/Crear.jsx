@@ -71,8 +71,8 @@ export default function CrearBoleta({ pacientes = [], productos = [] }) {
       const { client, items, issue_date } = response.data;
 
       // Actualizar datos del formulario
-      setData((prev) => ({
-        ...prev,
+      setData({
+        ...data,
         receptor: {
           name: client.razonSocial || "",
           rut: client.rut || "",
@@ -80,13 +80,13 @@ export default function CrearBoleta({ pacientes = [], productos = [] }) {
           direccion: client.direccion || "",
           comuna: client.comuna || "",
         },
-        detalles: items.map(item => ({
+        detalles: (items || []).map(item => ({
              nombre: item.nombre,
              cantidad: item.cantidad,
              precio: item.precio
         })),
         fecha_referencia: issue_date || "",
-      }));
+      });
 
     } catch (error) {
       console.error("Error buscando folio:", error);

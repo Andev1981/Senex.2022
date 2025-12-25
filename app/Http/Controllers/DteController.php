@@ -398,7 +398,7 @@ class DteController extends Controller
                 'cantidad' => $item->quantity,
                 'precio' => $item->unit_price_clp,
             ];
-        });
+        })->values();
 
         return response()->json([
             'found' => true,
