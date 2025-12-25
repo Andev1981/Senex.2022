@@ -19,8 +19,10 @@ class CheckDteStatusJob implements ShouldQueue
   public function handle( LibreDteLocalProvider $provider): void
   {
     $invoice = Invoice::query()->findOrFail($this->invoiceId);
-    if (!$invoice->dte_track_id) return;
-    $r = $provider->status($invoice->dte_track_id);
+    $dte = $invoice->currentDte();
+
+    if (!$dte || !$dte->track_id) return;
+    $r = $provider->status($dte->track_id);
     // Si aún está en proceso, reintenta luego
     if (($r['estado'] ?? null) === 'EN_PROCESO') {
       $this->release(300); // 5 minutos

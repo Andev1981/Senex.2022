@@ -47,6 +47,12 @@ return new class extends Migration
 
       // --- BLOQUE 5: ESTADOS INTERNOS Y AUDITORÍA ---
       $table->string('payment_status')->default('unpaid')->comment('paid, unpaid, voided');
+      
+      // Detalle de Pagos
+      $table->string('transaction_number')->nullable()->comment('N° de operación/comprobante');
+      $table->date('transaction_date')->nullable();
+      $table->integer('global_discount_clp')->default(0)->comment('Descuento global aplicado al subtotal');
+
       $table->json('metadata')->nullable();
 
       $table->timestamps();

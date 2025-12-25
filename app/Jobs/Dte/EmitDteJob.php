@@ -37,10 +37,28 @@ class EmitDteJob implements ShouldQueue
     $folioReservado = $folioService['folioReservado'];
 
     $resp = $provider->issue($payload, $companySetting, $objetoFolios);
-    // Persistir en Invoice
+    
+    // Crear registro en tabla dtes (Fuente de verdad del Track ID)
+    if (!empty($resp['track_id'])) {
+        \App\Models\Dte::create([
+            'company_id' => $invoice->company_id,
+            'branch_id' => $invoice->branch_id,
+            'origin_type' => get_class($invoice),
+            'origin_id' => $invoice->id,
+            'type' => $invoice->dte_type,
+            'folio' => $folioReservado,
+            'rut_emisor' => $companySetting->rut_emisor ?? '',
+            'rut_receptor' => $invoice->patient->rut ?? '',
+            'total_monto_clp' => $invoice->amount_total_clp,
+            'track_id' => $resp['track_id'],
+            'estado_sii' => $resp['status'] ?? 'ENVIADO',
+            'xml_data' => $resp['xml'] ?? null, // Si el proveedor devuelve el XML
+        ]);
+    }
+
+    // Persistir estado en Invoice
     $invoice->update([
       'dte_folio' => $folioReservado,
-      'dte_track_id' => $resp['track_id'] ?? null,
       'dte_status' => $resp['status'] ?? 'ENVIADO',
       'dte_provider' => 'libredte',
     ]);

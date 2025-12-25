@@ -6,6 +6,10 @@ export const paymentStatuses = {
     label: "Pendiente ⏳",
     className: "bg-blue-50 text-blue-700 border border-blue-300",
   },
+  unpaid: {
+    label: "No Pagado ⏳",
+    className: "bg-orange-50 text-orange-700 border border-orange-300",
+  },
   partial: {
     label: "Parcial 🟡",
     className: "bg-green-50 text-green-700 border border-green-300",

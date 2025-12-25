@@ -10,6 +10,23 @@ class Dte extends Model
 {
     use HasFactory, Multitenantable;
 
+    protected $fillable = [
+        'company_id',
+        'branch_id',
+        'origin_type',
+        'origin_id',
+        'type',
+        'folio',
+        'rut_emisor',
+        'rut_receptor',
+        'total_monto_clp',
+        'estado_sii',
+        'track_id',
+        'glosa_rechazo',
+        'xml_data',
+        'related_dte_id',
+    ];
+
     // Relación inversa: "Dime quién me generó"
     public function origin()
     {

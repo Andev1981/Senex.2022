@@ -22,8 +22,12 @@ import { DTES_TYPES, getDtesConfigByCode } from "@/constants/dtesTypes";
 import { DTES_STATUSES } from "@/constants/dtesStatuses";
 import HeaderDocuments from "./partials/HeaderDocuments";
 import List from "./partials/List";
+import RutInput from "@/Components/RutInput";
+import SearchSelect from "@/Components/SearchSelect";
+import Swal from "sweetalert2";
+import axios from "axios";
 
-export default function IndexDocuments({ invoices }) {
+export default function IndexDocuments({ invoices, communes, patients, sellables }) {
   const [activeTab, setActiveTab] = useState("list");
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,12 +37,25 @@ export default function IndexDocuments({ invoices }) {
   const { data, setData, post, processing, errors, reset } = useForm({
     dte_type: "",
     issue_date: new Date().toISOString().split("T")[0],
-    patient: {
+    expiration_date: "",
+    client: {
       rut: "",
-      name: "",
-      last_name: "",
+      razonSocial: "",
+      giro: "",
+      direccion: "",
+      comuna: "",
+      ciudad: "Santiago",
     },
+    patient_id: null,
     items: [],
+    global_discount: 0,
+    payment_method: "Efectivo",
+    transaction_number: "", // Nuevo campo
+    transaction_date: "",   // Nuevo campo opcional
+    observations: "",
+    reference_doc: "",
+    reason: "",
+    simulate: true,
   });
 
   // --- Helpers ---
@@ -51,24 +68,65 @@ export default function IndexDocuments({ invoices }) {
   };
 
   const calculateTotals = () => {
-    const subtotal_clp = data.items.reduce(
-      (sum, item) => sum + calculateItemTotal(item),
-      0
-    );
+    let net_subtotal = 0;
+    let exempt_subtotal = 0;
+    const subtotal_items = data.items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
     const docType = DTES_TYPES.find((dt) => dt.code === data.dte_type);
-    const iva =
-      docType && !docType.exento ? Math.round(subtotal_clp * 0.19) : 0;
-    const total = subtotal_clp + iva;
-    return { subtotal_clp, iva, total };
+    const isDocExempt = docType?.exento;
+
+    // Clasificar montos item por item
+    data.items.forEach(item => {
+        const lineTotal = calculateItemTotal(item);
+        // Si el documento es exento, TODO es exento.
+        // Si el documento es afecto, miramos si el ítem individual es exento.
+        if (isDocExempt || item.is_exempt) {
+            exempt_subtotal += lineTotal;
+        } else {
+            net_subtotal += lineTotal;
+        }
+    });
+
+    // Aplicar descuento global proporcionalmente (simple approach: restar del neto primero)
+    // Nota: Para precisión contable estricta se debería prorratear, pero para este flujo:
+    const discount_global = Number(data.global_discount) || 0;
+    
+    // Si hay descuento, lo descontamos del neto primero (beneficio cliente), luego exento si sobra
+    let remainingDiscount = discount_global;
+    
+    if (net_subtotal >= remainingDiscount) {
+        net_subtotal -= remainingDiscount;
+        remainingDiscount = 0;
+    } else {
+        remainingDiscount -= net_subtotal;
+        net_subtotal = 0;
+        exempt_subtotal = Math.max(0, exempt_subtotal - remainingDiscount);
+    }
+
+    const iva = Math.round(net_subtotal * 0.19);
+    const subtotal_clp = net_subtotal; // Base Imponible
+    const total = net_subtotal + exempt_subtotal + iva;
+
+    return { subtotal_items, discount_global, subtotal_clp, exempt_subtotal, iva, total };
   };
 
   // --- Create ---
-  const addItem = () =>
+  const addItem = (sellable = null) =>
     setData((f) => ({
       ...f,
       items: [
         ...f.items,
-        { description: "", quantity: 1, unitPrice: 0, discount_clp: 0 },
+        { 
+            description: sellable ? sellable.name : "", 
+            quantity: 1, 
+            unitPrice: sellable ? sellable.price : 0, 
+            discount_clp: 0,
+            comment: "",
+            is_exempt: sellable ? (sellable.is_exempt ? true : false) : false, // Capturar exención
+            sellable_type: sellable 
+                ? (sellable.type === 'Producto' ? 'App\\Models\\Product' : 'App\\Models\\SessionType') 
+                : undefined,
+            sellable_id: sellable ? sellable.id : undefined
+        },
       ],
     }));
 
@@ -85,49 +143,91 @@ export default function IndexDocuments({ invoices }) {
       return { ...f, items };
     });
 
-  const handleCreateDocument = () => {
-    const { subtotal_clp, iva, total } = calculateTotals();
-    const docType = DTES_TYPES.find((dt) => dt.code === data.type);
-    const newDoc = {
-      id: invoices.length + 1,
-      type: data.type,
-      typeName: docType.name,
-      number: Math.floor(Math.random() * 10000),
-      date: data.date,
-      client: data.client,
-      items: data.items,
-      subtotal_clp,
-      iva,
-      total,
-      status: "Emitido",
-      folio: `${data.type.toUpperCase().substring(0, 2)}-2024-${String(
-        Math.floor(Math.random() * 10000)
-      ).padStart(6, "0")}`,
-      ted: Math.random().toString(36).substring(2, 15),
-      paymentMethod: data.paymentMethod,
-      expirationDate: data.expirationDate || null,
-      referenceDoc: data.referenceDoc || null,
-      reason: data.reason || null,
-    };
-    setDocuments((docs) => [newDoc, ...docs]);
-    setActiveTab("list");
-    setData({
-      type: "",
-      date: new Date().toISOString().split("T")[0],
-      expirationDate: "",
-      client: {
-        rut: "",
-        razonSocial: "",
-        giro: "",
-        direccion: "",
-        comuna: "",
-        ciudad: "Santiago",
-      },
-      items: [{ description: "", quantity: 1, unitPrice: 0, discount_clp: 0 }],
-      observations: "",
-      paymentMethod: "Efectivo",
-      referenceDoc: "",
-      reason: "",
+  const handleTypeChange = (newType) => {
+      setData(current => ({
+          ...current,
+          dte_type: newType,
+          items: [], // Limpiar items al cambiar tipo (precios/impuestos pueden variar)
+          reference_doc: "",
+          reason: "",
+          // Mantenemos client, fecha, etc.
+      }));
+  };
+
+  const handleReferenceBlur = async () => {
+      if (!data.reference_doc) return;
+      
+      try {
+          const response = await axios.get(route('dte.lookup', data.reference_doc));
+          const doc = response.data;
+          
+          if (doc.found) {
+              setData(d => ({
+                  ...d,
+                  patient_id: doc.patient_id,
+                  client: doc.client,
+                  reason: d.reason || `Referencia a ${doc.type_name} del ${doc.issue_date}`, // Sugerencia de motivo
+              }));
+              
+              const Toast = Swal.mixin({
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 3000,
+                  timerProgressBar: true,
+              });
+              
+              Toast.fire({
+                  icon: 'success',
+                  title: 'Documento referenciado encontrado'
+              });
+          }
+      } catch (error) {
+          if (error.response && error.response.status === 404) {
+              Swal.fire({
+                  icon: 'warning',
+                  title: 'Documento no encontrado',
+                  text: 'No se encontró un documento emitido con este folio en el sistema.',
+              });
+          }
+      }
+  };
+
+  const handleCreateDocument = (e) => {
+    e.preventDefault();
+
+    Swal.fire({
+      title: "¿Emitir Documento?",
+      text: data.simulate 
+        ? "Se generará en MODO SIMULACIÓN (No válido ante SII)" 
+        : "Se enviará al SII. Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, emitir",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        post(route("documents.store"), {
+          onSuccess: () => {
+            setActiveTab("list");
+            reset();
+            Swal.fire(
+              "¡Emitido!",
+              "El documento ha sido generado correctamente.",
+              "success"
+            );
+          },
+          onError: () => {
+             Swal.fire(
+              "Error",
+              "Hubo un problema al emitir el documento.",
+              "error"
+            );
+          }
+        });
+      }
     });
   };
 
@@ -205,7 +305,7 @@ export default function IndexDocuments({ invoices }) {
                       key={type.code}
                       type="button"
                       // ✅ Guardamos el código numérico DTE en el estado
-                      onClick={() => setData("dte_type", type.code)}
+                      onClick={() => handleTypeChange(type.code)}
                       className={`p-4 rounded-xl border-2 transition-all ${
                         active
                           ? `${styles.border} ${styles.bg}`
@@ -240,8 +340,55 @@ export default function IndexDocuments({ invoices }) {
                 </h3> */}
                 </div>
 
-                {data.type ? (
+                {data.dte_type ? (
                   <>
+                    {/* Buscador Principal de Paciente */}
+                    <div className="mb-6 p-6 bg-white border border-blue-100 shadow-sm rounded-xl">
+                        <label className="block mb-2 text-lg font-semibold text-gray-900">
+                            Buscar Paciente / Cliente
+                        </label>
+                        <div className="flex gap-4 items-start">
+                            <div className="flex-1">
+                                <SearchSelect
+                                    items={patients}
+                                    value={null}
+                                    onChange={(val, p) => {
+                                        if (p) {
+                                            setData(d => ({
+                                                ...d,
+                                                patient_id: p.id,
+                                                client: {
+                                                    rut: p.rut,
+                                                    razonSocial: p.full_name,
+                                                    giro: "Particular",
+                                                    direccion: p.address ? `${p.address.street} ${p.address.number || ''}` : '',
+                                                    comuna: p.address?.commune_name || '',
+                                                    ciudad: p.address?.region_name || 'Santiago',
+                                                    insurance_name: p.insurance_name // Guardamos esto visualmente en client si queremos, o usamos estado local
+                                                }
+                                            }));
+                                        }
+                                    }}
+                                    config={{
+                                        displayKey: "full_name",
+                                        secondaryKeys: ["rut", "insurance_name"],
+                                        searchKeys: ["full_name", "rut"],
+                                        emptyMessage: "Paciente no encontrado. Ingrese los datos manualmente abajo."
+                                    }}
+                                    placeholder="Buscar por Nombre o RUT..."
+                                />
+                            </div>
+                            {data.client.razonSocial && (
+                                <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p className="text-xs text-blue-600 font-bold uppercase">Previsión</p>
+                                    <p className="text-sm font-semibold text-blue-900">
+                                        {patients.find(p => p.rut === data.client.rut)?.insurance_name || 'Desconocida'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Datos del Documento */}
                     <div
                       className={`mb-6 p-4 border-l-4 rounded-xl ${
@@ -258,9 +405,9 @@ export default function IndexDocuments({ invoices }) {
                           </label>
                           <input
                             type="date"
-                            value={data.date}
+                            value={data.issue_date}
                             onChange={(e) =>
-                              setData({ ...data, date: e.target.value })
+                              setData({ ...data, issue_date: e.target.value })
                             }
                             className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                           />
@@ -273,11 +420,11 @@ export default function IndexDocuments({ invoices }) {
                             </label>
                             <input
                               type="date"
-                              value={data.expirationDate}
+                              value={data.expiration_date}
                               onChange={(e) =>
                                 setData({
                                   ...data,
-                                  expirationDate: e.target.value,
+                                  expiration_date: e.target.value,
                                 })
                               }
                               className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
@@ -289,24 +436,53 @@ export default function IndexDocuments({ invoices }) {
                             Forma de Pago
                           </label>
                           <select
-                            value={data.paymentMethod}
+                            value={data.payment_method}
                             onChange={(e) =>
                               setData({
                                 ...data,
-                                paymentMethod: e.target.value,
+                                payment_method: e.target.value,
                               })
                             }
                             className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                           >
-                            <option>Efectivo</option>
-                            <option>Transferencia</option>
-                            <option>Cheque</option>
-                            <option>Tarjeta de Crédito</option>
-                            <option>Tarjeta de Débito</option>
-                            <option>Crédito</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                            <option value="Tarjeta de Débito">Tarjeta de Débito</option>
+                            <option value="Crédito">Crédito</option>
                           </select>
                         </div>
                       </div>
+                      
+                      {/* Campos condicionales de Pago */}
+                      {['Transferencia', 'Tarjeta de Crédito', 'Tarjeta de Débito', 'Cheque'].includes(data.payment_method) && (
+                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mt-4 pt-4 border-t border-gray-200">
+                             <div>
+                                <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    N° Comprobante / Operación
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.transaction_number}
+                                    onChange={(e) => setData('transaction_number', e.target.value)}
+                                    placeholder="Ej: 12345678"
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                                />
+                             </div>
+                             <div>
+                                <label className="block mb-2 text-sm font-medium text-gray-700">
+                                    Fecha de Transacción
+                                </label>
+                                <input
+                                    type="date"
+                                    value={data.transaction_date || data.issue_date}
+                                    onChange={(e) => setData('transaction_date', e.target.value)}
+                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                                />
+                             </div>
+                          </div>
+                      )}
                     </div>
 
                     {/* Referencia (para NC y ND) */}
@@ -323,13 +499,14 @@ export default function IndexDocuments({ invoices }) {
                             </label>
                             <input
                               type="text"
-                              value={data.referenceDoc}
+                              value={data.reference_doc}
                               onChange={(e) =>
                                 setData({
                                   ...data,
-                                  referenceDoc: e.target.value,
+                                  reference_doc: e.target.value,
                                 })
                               }
+                              onBlur={handleReferenceBlur}
                               placeholder="Ej: Factura 1234"
                               className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                             />
@@ -361,26 +538,28 @@ export default function IndexDocuments({ invoices }) {
                         docStyles.bg || "bg-gray-50"
                       } ${docStyles.border || "border-gray-200"}`}
                     >
-                      <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                        Datos del Cliente/Receptor
-                      </h3>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Datos del Cliente/Receptor
+                        </h3>
+                      </div>
+
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {/* CAMPO 1: RUT */}
                         <div>
                           <label className="block mb-2 text-sm font-medium text-gray-700">
                             RUT
                           </label>
-                          <input
-                            type="text"
-                            placeholder="12.345.678-9"
+                          <RutInput
                             value={data?.client?.rut || ""}
-                            onChange={(e) =>
+                            onChange={(val) =>
                               setData({
                                 ...data,
-                                client: { ...data.client, rut: e.target.value },
+                                client: { ...data.client, rut: val },
                               })
                             }
                             className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                            placeholder="12.345.678-9"
                           />
                         </div>
 
@@ -455,21 +634,30 @@ export default function IndexDocuments({ invoices }) {
                           <label className="block mb-2 text-sm font-medium text-gray-700">
                             Comuna
                           </label>
-                          <input
-                            type="text"
-                            placeholder="Comuna"
+                          <select
                             value={data?.client?.comuna || ""}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const selectedName = e.target.value;
+                              const selectedCommune = communes.find(c => c.name === selectedName);
+                              
                               setData({
                                 ...data,
                                 client: {
                                   ...data.client,
-                                  comuna: e.target.value,
+                                  comuna: selectedName,
+                                  ciudad: selectedCommune ? selectedCommune.region_name : (data.client.ciudad || '')
                                 },
-                              })
-                            }
+                              });
+                            }}
                             className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          />
+                          >
+                            <option value="">Seleccione una comuna</option>
+                            {communes.map((commune) => (
+                              <option key={commune.id} value={commune.name}>
+                                {commune.name}
+                              </option>
+                            ))}
+                          </select>
                         </div>
 
                         {/* CAMPO 6: Ciudad */}
@@ -503,14 +691,32 @@ export default function IndexDocuments({ invoices }) {
                       } ${docStyles.border || "border-gray-200"}`}
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Detalle del Documento
-                        </h3>
+                        <div className="flex-1 mr-4">
+                             <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                Detalle del Documento
+                             </h3>
+                             <div className="max-w-xl">
+                                <SearchSelect 
+                                    items={sellables}
+                                    onChange={(val, item) => {
+                                        if (item) addItem(item);
+                                    }}
+                                    config={{
+                                        displayKey: 'name',
+                                        secondaryKeys: ['price', 'type'],
+                                        searchKeys: ['name'],
+                                        renderSelected: (item) => `${item.name} - $${item.price}`,
+                                        valueKey: 'unique_id'
+                                    }}
+                                    placeholder="Buscar Producto o Servicio para agregar..."
+                                />
+                             </div>
+                        </div>
                         <button
-                          onClick={addItem}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                          onClick={() => addItem(null)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 mt-6"
                         >
-                          <Plus className="w-4 h-4" /> Agregar Línea
+                          <Plus className="w-4 h-4" /> Agregar Línea Manual
                         </button>
                       </div>
                       <div className="overflow-hidden border-2 border-gray-200 rounded-xl">
@@ -519,6 +725,9 @@ export default function IndexDocuments({ invoices }) {
                             <tr>
                               <th className="px-4 py-3 text-xs font-bold text-left text-gray-600 uppercase">
                                 Descripción
+                              </th>
+                              <th className="px-4 py-3 text-xs font-bold text-left text-gray-600 uppercase w-64">
+                                Comentario/Detalle
                               </th>
                               <th className="w-24 px-4 py-3 text-xs font-bold text-center text-gray-600 uppercase">
                                 Cantidad
@@ -555,35 +764,53 @@ export default function IndexDocuments({ invoices }) {
                                 </td>
                                 <td className="px-4 py-2">
                                   <input
+                                    type="text"
+                                    value={item.comment}
+                                    onChange={(e) =>
+                                      updateItem(
+                                        index,
+                                        "comment",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Detalle adicional (opcional)"
+                                    className="w-full px-2 py-1 text-sm border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
+                                  />
+                                </td>
+                                <td className="px-4 py-2">
+                                  <input
                                     type="number"
                                     value={item.quantity}
                                     onChange={(e) =>
                                       updateItem(
                                         index,
                                         "quantity",
-                                        parseFloat(e.target.value) || 0
+                                        parseInt(e.target.value) || 0
                                       )
                                     }
-                                    min="0"
-                                    step="0.01"
+                                    min="1"
+                                    step="1"
                                     className="w-full px-2 py-1 text-center border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
                                   />
                                 </td>
                                 <td className="px-4 py-2">
-                                  <input
-                                    type="number"
-                                    value={item.unitPrice}
-                                    onChange={(e) =>
-                                      updateItem(
-                                        index,
-                                        "unitPrice",
-                                        parseFloat(e.target.value) || 0
-                                      )
-                                    }
-                                    min="0"
-                                    step="1"
-                                    className="w-full px-2 py-1 text-right border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
-                                  />
+                                  <div className="relative">
+                                    <span className="absolute left-2 top-1.5 text-gray-500">$</span>
+                                    <input
+                                      type="number"
+                                      value={item.unitPrice}
+                                      onChange={(e) =>
+                                        updateItem(
+                                          index,
+                                          "unitPrice",
+                                          parseInt(e.target.value) || 0
+                                        )
+                                      }
+                                      min="0"
+                                      step="1"
+                                      className="w-full pl-6 pr-2 py-1 text-right border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
+                                    />
+                                  </div>
                                 </td>
                                 <td className="px-4 py-2">
                                   <input
@@ -609,14 +836,12 @@ export default function IndexDocuments({ invoices }) {
                                   )}
                                 </td>
                                 <td className="px-4 py-2 text-center">
-                                  {data.items.length > 1 && (
-                                    <button
-                                      onClick={() => removeItem(index)}
-                                      className="p-2 text-red-600 rounded-lg hover:bg-red-50"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  )}
+                                  <button
+                                    onClick={() => removeItem(index)}
+                                    className="p-2 text-red-600 rounded-lg hover:bg-red-50"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -634,7 +859,28 @@ export default function IndexDocuments({ invoices }) {
                       >
                         <div className="space-y-3">
                           <div className="flex justify-between text-gray-700">
-                            <span>subtotal_clp:</span>
+                            <span>Subtotal Items:</span>
+                            <span className="font-semibold">
+                              $
+                              {calculateTotals().subtotal_items.toLocaleString(
+                                "es-CL"
+                              )}
+                            </span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center text-gray-700">
+                            <span>Descuento Global ($):</span>
+                            <input 
+                                type="number"
+                                value={data.global_discount}
+                                onChange={(e) => setData('global_discount', parseFloat(e.target.value) || 0)}
+                                className="w-32 px-2 py-1 text-right border border-gray-300 rounded focus:border-blue-500 focus:outline-none text-sm"
+                                min="0"
+                            />
+                          </div>
+                          
+                          <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-200">
+                            <span>Monto Neto (Base):</span>
                             <span className="font-semibold">
                               $
                               {calculateTotals().subtotal_clp.toLocaleString(
@@ -642,7 +888,8 @@ export default function IndexDocuments({ invoices }) {
                               )}
                             </span>
                           </div>
-                          {!DTES_TYPES.find((dt) => dt.code === data.type)
+
+                          {!DTES_TYPES.find((dt) => dt.code === data.dte_type)
                             ?.exento && (
                             <div className="flex justify-between text-gray-700">
                               <span>IVA (19%):</span>
@@ -652,7 +899,7 @@ export default function IndexDocuments({ invoices }) {
                             </div>
                           )}
                           <div className="flex justify-between pt-3 text-xl font-bold text-gray-900 border-t-2 border-gray-200">
-                            <span>Total:</span>
+                            <span>Total a Pagar:</span>
                             <span>
                               ${calculateTotals().total.toLocaleString("es-CL")}
                             </span>
@@ -684,6 +931,17 @@ export default function IndexDocuments({ invoices }) {
                       ></textarea>
                     </div>
 
+                    <div className="flex items-center gap-2 mb-4 ml-2">
+                       <input 
+                          type="checkbox" 
+                          id="simulate"
+                          checked={data.simulate} 
+                          onChange={(e) => setData('simulate', e.target.checked)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="simulate" className="text-sm font-medium text-gray-700">Modo Simulación (No enviar al SII)</label>
+                    </div>
+
                     {/* Botones de Acción */}
                     <div
                       /*  className="flex gap-3"   */ className={`flex gap-4 mb-6 p-4 border-l-4 rounded-xl ${
@@ -692,7 +950,12 @@ export default function IndexDocuments({ invoices }) {
                     >
                       <button
                         onClick={handleCreateDocument}
-                        className={`flex rounded-lg items-center justify-center flex-1 gap-2 py-3 font-bold text-gray-50  transition-colors border-2 ${docStyles.bg_cover} hover:${docStyles.bg} hover:${docStyles.border} hover:${docStyles.text}`}
+                        disabled={data.items.length === 0 || !data.client.rut || processing}
+                        className={`flex rounded-lg items-center justify-center flex-1 gap-2 py-3 font-bold text-gray-50  transition-colors border-2 ${
+                            data.items.length === 0 || !data.client.rut || processing
+                            ? "bg-gray-400 border-gray-400 cursor-not-allowed opacity-50"
+                            : `${docStyles.bg_cover} hover:${docStyles.bg} hover:${docStyles.border} hover:${docStyles.text}`
+                        }`}
                       >
                         <FileCheck className="w-5 h-5" /> Emitir{" "}
                         {selectedDte?.name}
@@ -701,9 +964,9 @@ export default function IndexDocuments({ invoices }) {
                         onClick={() => {
                           setActiveTab("list");
                           setData({
-                            type: "",
-                            date: new Date().toISOString().split("T")[0],
-                            expirationDate: "",
+                            dte_type: "",
+                            issue_date: new Date().toISOString().split("T")[0],
+                            expiration_date: "",
                             client: {
                               rut: "",
                               razonSocial: "",
@@ -712,17 +975,10 @@ export default function IndexDocuments({ invoices }) {
                               comuna: "",
                               ciudad: "Santiago",
                             },
-                            items: [
-                              {
-                                description: "",
-                                quantity: 1,
-                                unitPrice: 0,
-                                discount_clp: 0,
-                              },
-                            ],
+                            items: [],
                             observations: "",
-                            paymentMethod: "Efectivo",
-                            referenceDoc: "",
+                            payment_method: "Efectivo",
+                            reference_doc: "",
                             reason: "",
                           });
                         }}
@@ -809,7 +1065,7 @@ export default function IndexDocuments({ invoices }) {
                         const count = invoices.filter(
                           (d) => d.status === status
                         ).length;
-                        const total = invoices
+                        const total = documents
                           .filter((d) => d.status === status)
                           .reduce((sum, d) => sum + d.total, 0);
                         if (count === 0) return null;
@@ -861,7 +1117,7 @@ export default function IndexDocuments({ invoices }) {
                         Total Documentos
                       </p>
                       <p className="text-3xl font-bold text-blue-900">
-                        {invoices.length}
+                        {documents.length}
                       </p>
                     </div>
                     <div className="p-4 border border-green-100 rounded-lg bg-gradient-to-r from-green-50 to-green-100">
@@ -876,7 +1132,7 @@ export default function IndexDocuments({ invoices }) {
                       <p className="mb-1 text-sm text-purple-700">IVA Total</p>
                       <p className="text-3xl font-bold text-purple-900">
                         $
-                        {invoices
+                        {documents
                           .reduce((sum, d) => sum + d.iva, 0)
                           .toLocaleString("es-CL")}
                       </p>
@@ -891,12 +1147,16 @@ export default function IndexDocuments({ invoices }) {
                   </h3>
                   <div className="space-y-3">
                     {Object.values(
-                      invoices.reduce((acc, doc) => {
-                        const key = doc.client.rut;
+                      documents.reduce((acc, doc) => {
+                        const key =
+                          doc.client?.rut || doc.patient?.rut || "unknown";
                         if (!acc[key])
                           acc[key] = {
-                            rut: doc.client.rut,
-                            name: doc.client.razonSocial,
+                            rut: key,
+                            name:
+                              doc.client?.razonSocial ||
+                              doc.patient?.name ||
+                              "Cliente",
                             count: 0,
                             total: 0,
                           };
@@ -995,10 +1255,29 @@ export default function IndexDocuments({ invoices }) {
                   <div>
                     <p className="text-sm text-gray-600">Forma de Pago</p>
                     <p className="font-semibold">
-                      {selectedDocument.paymentMethod}
+                      {selectedDocument.metadata?.payment_method || selectedDocument.paymentMethod || 'Efectivo'}
                     </p>
                   </div>
                 </div>
+
+                {/* Detalles Específicos del Pago (Si aplica) */}
+                {selectedDocument.metadata?.transaction_number && (
+                    <div className="mb-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                        <h4 className="text-xs font-bold text-blue-800 uppercase mb-2">Detalle de Transacción</h4>
+                        <div className="flex gap-6">
+                            <div>
+                                <p className="text-xs text-blue-600">N° Operación/Comprobante</p>
+                                <p className="text-sm font-mono font-medium text-blue-900">{selectedDocument.metadata.transaction_number}</p>
+                            </div>
+                            {selectedDocument.metadata.transaction_date && (
+                                <div>
+                                    <p className="text-xs text-blue-600">Fecha Transacción</p>
+                                    <p className="text-sm font-medium text-blue-900">{new Date(selectedDocument.metadata.transaction_date).toLocaleDateString('es-CL')}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Datos del Cliente */}
                 <div className="pb-6 mb-6 border-b border-gray-200">

@@ -68,11 +68,12 @@ class PaymentFlowSeeder extends Seeder
             $invoice = Invoice::create([
                 'company_id' => 1,
                 'branch_id' => 1,
+                'user_id' => 1, // Usuario por defecto (Admin)
                 'patient_id' => $patient->id,
                 'payment_id' => $payment->id,
 
                 // 🎯 CAMPOS AGREGADOS:
-                'entity_type' => 'Patient',
+                'entity_type' => Patient::class,
                 'entity_id'   => $patient->id,
 
                 'amount_gross_clp' => 50000,

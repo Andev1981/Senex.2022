@@ -75,7 +75,7 @@ class Patient extends Authenticatable
     public function insurances()
     {
         // Usa la tabla patients_insurances como pivot y PatientInsurance como modelo
-        return $this->belongsToMany(Insurance::class, 'patients_insurances')
+        return $this->belongsToMany(Insurance::class, 'patient_insurances')
             ->using(PatientInsurance::class)
             ->withPivot(['plan_id', 'is_active', 'affiliate_rut', 'is_affiliate_holder'])
             ->withTimestamps();

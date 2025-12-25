@@ -58,18 +58,21 @@ class Invoice extends Model
     'dte_folio',          // Número correlativo legal
     'issue_date',         // Fecha de emisión
     'dte_status',         // pending, accepted, rejected
-    'dte_track_id',       // ID de seguimiento del SII
     'dte_xml',            // XML del documento
     'pdf_path',           // Ruta al PDF de respaldo físico
 
     // --- ESTADOS LOCALES ---
     'payment_status',     // paid, unpaid, voided
+    'transaction_number',
+    'transaction_date',
+    'global_discount_clp',
     'metadata',           // Datos extra del proveedor DTE
   ];
 
   protected $casts = [
     'metadata' => 'array',
     'issue_date' => 'date',
+    'transaction_date' => 'date',
   ];
 
   // ===== Relaciones =====

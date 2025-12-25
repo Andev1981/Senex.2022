@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Inertia } from "@inertiajs/inertia";
+import { router } from "@inertiajs/react";
 
 /**
  * Hook básico para llamadas API
@@ -17,7 +17,7 @@ export const useApi = () => {
     setError(null);
 
     try {
-      await Inertia.post(url, data, {
+      await router.post(url, data, {
         ...options,
         onError: (errors) => {
           setError(errors);
@@ -39,7 +39,7 @@ export const useApi = () => {
     setError(null);
 
     try {
-      await Inertia.put(url, data, {
+      await router.put(url, data, {
         ...options,
         onError: (errors) => {
           setError(errors);
@@ -61,7 +61,7 @@ export const useApi = () => {
     setError(null);
 
     try {
-      await Inertia.delete(url, {
+      await router.delete(url, {
         ...options,
         onError: (errors) => {
           setError(errors);
@@ -83,7 +83,7 @@ export const useApi = () => {
     setError(null);
 
     try {
-      await Inertia.get(url, options);
+      await router.get(url, options);
     } catch (err) {
       setError(err.message || "Error en la petición");
     } finally {

@@ -23,7 +23,7 @@ return new class extends Migration {
       /* $t->foreignId('session_type_id')->nullable()->constrained(); */
       $t->foreignId('treatment_session_id')->nullable()->constrained();
       $t->foreignId('agreement_rule_id')->nullable()->constrained();
-      $t->morphs('sellable');
+      $t->nullableMorphs('sellable'); // Permite nulos para ítems manuales
 
       $t->string('description');
       $t->integer('quantity')->default(1);

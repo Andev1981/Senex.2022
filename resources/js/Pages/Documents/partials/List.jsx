@@ -21,12 +21,13 @@ import {
 } from "lucide-react";
 import TablePagination from "@/Components/TablePagination";
 import { fmtDateISO, fmtDate } from "@/utils/utils";
+import { getPaymentStatusConfig } from "@/constants/paymentStatuses";
+import { getDteStatusConfig, dtesStatuses } from "@/constants/dtesStatuses";
 
 export default function List({
   invoices = [], // Data completa
   setSelectedDocument,
   DTES_TYPES = [],
-  DTES_STATUSES = {},
 }) {
   // --- Estados de TanStack Table ---
   const [sorting, setSorting] = useState([]);
@@ -44,7 +45,7 @@ export default function List({
       emitidos: invoices.filter((d) => d.status === "Emitido").length,
       aceptados: invoices.filter((d) => d.status === "Aceptado").length,
       rechazados: invoices.filter((d) => d.status === "Rechazado").length,
-      totalMonto: invoices.reduce((sum, d) => sum + d.total, 0),
+      totalMonto: invoices.reduce((sum, d) => sum + (d.amount_total_clp || 0), 0),
     };
   }, [invoices]);
 
@@ -104,8 +105,7 @@ export default function List({
         ),
       },
       {
-        header: "Fecha",
-        accessorKey: "date",
+        accessorKey: "issue_date",
         header: ({ column }) => {
           return (
             <button
@@ -162,7 +162,7 @@ export default function List({
         ),
       },
       {
-        accessorKey: "amount_gross_clp",
+        accessorKey: "amount_total_clp",
         header: ({ column }) => {
           return (
             <button
@@ -178,12 +178,11 @@ export default function List({
         },
         cell: ({ getValue }) => (
           <div className="text-sm font-semibold text-right text-gray-900">
-            ${getValue().toLocaleString("es-CL")}
+            ${(getValue() || 0).toLocaleString("es-CL")}
           </div>
         ),
       },
       {
-        header: ({ column }) => <div className="text-center">Pago</div>,
         accessorKey: "payment_status",
         header: ({ column }) => {
           return (
@@ -198,9 +197,16 @@ export default function List({
             </button>
           );
         },
-        cell: ({ getValue }) => (
-          <div className="text-center text-sm">{getValue()}</div>
-        ),
+        cell: ({ getValue }) => {
+            const config = getPaymentStatusConfig(getValue());
+            return (
+              <div className="text-center">
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${config.className}`}>
+                  {config.label}
+                </span>
+              </div>
+            );
+        },
       },
       {
         accessorKey: "dte_status", // Usamos esto para el filtro
@@ -217,17 +223,16 @@ export default function List({
             </button>
           );
         },
-        cell: ({ getValue }) => (
-          <div className="text-center">
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                DTES_STATUSES[getValue()] || "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {getValue()}
-            </span>
-          </div>
-        ),
+        cell: ({ getValue }) => {
+            const config = getDteStatusConfig(getValue());
+            return (
+              <div className="text-center">
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${config.className}`}>
+                  {config.label}
+                </span>
+              </div>
+            );
+        },
       },
       {
         id: "actions",
@@ -263,7 +268,7 @@ export default function List({
         ),
       },
     ],
-    [DTES_TYPES, DTES_STATUSES, setSelectedDocument]
+    [DTES_TYPES, setSelectedDocument]
   );
 
   // --- Inicialización de la Tabla ---
@@ -370,10 +375,10 @@ export default function List({
               className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
             >
               <option value="todos">Todos los estados</option>
-              <option value="Emitido">Emitido</option>
-              <option value="Aceptado">Aceptado</option>
-              <option value="Rechazado">Rechazado</option>
-              <option value="Anulado">Anulado</option>
+              <option value="pending">Pendiente</option>
+              <option value="sent">Enviado SII</option>
+              <option value="accepted">Aceptado</option>
+              <option value="rejected">Rechazado</option>
             </select>
           </div>
         </div>

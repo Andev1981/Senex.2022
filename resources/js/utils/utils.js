@@ -79,3 +79,60 @@ export const avg = (arr) =>
 
 export const pct = (n) =>
   typeof n === "number" && !isNaN(n) ? `${n}%` : n ? `${Number(n)}%` : null;
+
+/**
+ * Formatea un número o string a formato RUT Chileno (XX.XXX.XXX-X)
+ * @param {string|number} rut - El RUT sucio (ej: "123456789" o "12.345.678-9")
+ * @returns {string} - El RUT formateado
+ */
+export const fmtRUT = (rut) => {
+  if (!rut) return "";
+
+  // 1. Limpiar: Dejar solo números y 'k' o 'K'
+  let value = String(rut).replace(/[^0-9kK]/g, "");
+
+  // 2. Separar cuerpo y dígito verificador
+  const body = value.slice(0, -1);
+  const dv = value.slice(-1).toUpperCase();
+
+  // 3. Formatear el cuerpo con puntos
+  // Usamos una expresión regular para poner puntos cada 3 dígitos de atrás pa'lante
+  const bodyFormatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+  return `${bodyFormatted}-${dv}`;
+};
+
+/**
+ * Valida si un RUT es matemáticamente correcto (Algoritmo Módulo 11)
+ * @param {string} rut
+ * @returns {boolean}
+ */
+export const validateRUT = (rut) => {
+  if (!rut || rut.trim().length < 3) return false;
+
+  // Limpiar
+  const value = String(rut).replace(/[^0-9kK]/g, "");
+  const body = value.slice(0, -1);
+  const dv = value.slice(-1).toUpperCase();
+
+  // Validar largo mínimo
+  if (body.length < 6) return false;
+
+  // Calcular dígito esperado
+  let suma = 0;
+  let multiplo = 2;
+
+  for (let i = body.length - 1; i >= 0; i--) {
+    suma += multiplo * parseInt(body.charAt(i));
+    multiplo = multiplo < 7 ? multiplo + 1 : 2;
+  }
+
+  const dvEsperado = 11 - (suma % 11);
+  let dvCalculado = "";
+
+  if (dvEsperado === 11) dvCalculado = "0";
+  else if (dvEsperado === 10) dvCalculado = "K";
+  else dvCalculado = String(dvEsperado);
+
+  return dvCalculado === dv;
+};
