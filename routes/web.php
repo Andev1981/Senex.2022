@@ -287,8 +287,10 @@ Route::group(['middleware' => ['auth']], function () {
 
   /* DTE */
   Route::get('/documents', [DteController::class, 'index'])->name('documents');
+  Route::post('/documents', [DteController::class, 'store'])->name('documents.store');
   Route::post('/dte/emit', [DteController::class, 'enviarDte'])->name('dte.emit');
   Route::post('/dte/check', [DteController::class, 'checkDteStatus'])->name('dte.check');
+  Route::get('/dte/lookup/{folio}', [DteController::class, 'lookupByFolio'])->name('dte.lookup');
 
   /* Nuevas dte */
   Route::post('/dte/issue/{invoiceId}', [DteController::class, 'issueDte'])->name('dte.issue');

@@ -3,9 +3,11 @@ import { Head, Link, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import ProductoDetalle from "@/Components/ProductoDetalle"; // Asegúrate de importar el componente ProductoDetalle
 import { tiposDocumento } from "@/constants/documentos";
+import axios from "axios";
 
 export default function CrearBoleta({ pacientes = [], productos = [] }) {
   const [success, setSuccess] = useState(null);
+  const [loadingReferencia, setLoadingReferencia] = useState(false);
 
   // Estados para búsqueda
   const [searchPaciente, setSearchPaciente] = useState("");
@@ -56,6 +58,44 @@ export default function CrearBoleta({ pacientes = [], productos = [] }) {
   const esGuiaDespacho = () => data.tipo_documento === 52;
   const esNotaCreditoDebito = () => [56, 61].includes(data.tipo_documento);
   const requiereRut = () => esFactura() || esNotaCreditoDebito();
+
+  // Función para buscar datos del documento referenciado
+  const handleFolioBlur = async () => {
+    if (!data.folio_referencia || !esNotaCreditoDebito()) return;
+
+    setLoadingReferencia(true);
+    try {
+      const response = await axios.get(
+        `/dte/lookup/${data.folio_referencia}`
+      );
+      const { client, items, issue_date } = response.data;
+
+      // Actualizar datos del formulario
+      setData((prev) => ({
+        ...prev,
+        receptor: {
+          name: client.razonSocial || "",
+          rut: client.rut || "",
+          giro: client.giro || "",
+          direccion: client.direccion || "",
+          comuna: client.comuna || "",
+        },
+        detalles: items.map(item => ({
+             nombre: item.nombre,
+             cantidad: item.cantidad,
+             precio: item.precio
+        })),
+        fecha_referencia: issue_date || "",
+      }));
+
+    } catch (error) {
+      console.error("Error buscando folio:", error);
+      // Opcional: Mostrar alerta si no encuentra
+      // alert("No se encontró el documento con ese folio");
+    } finally {
+      setLoadingReferencia(false);
+    }
+  };
 
   // Función para validar si el formulario está completo según el tipo de documento
   const formularioCompleto = () => {
@@ -582,21 +622,33 @@ export default function CrearBoleta({ pacientes = [], productos = [] }) {
                         <label className="block mb-1 text-sm font-medium text-purple-700">
                           Folio del Documento Referenciado *
                         </label>
-                        <input
-                          type="text"
-                          placeholder="Folio del documento original"
-                          value={data.folio_referencia}
-                          onChange={(e) =>
-                            setData("folio_referencia", e.target.value)
-                          }
-                          className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 ${
-                            data.folio_referencia.trim() === ""
-                              ? "border-red-300 focus:ring-red-500"
-                              : "border-purple-300 focus:ring-purple-500"
-                          }`}
-                          required
-                        />
-                        {data.folio_referencia.trim() === "" && (
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Folio del documento original"
+                            value={data.folio_referencia}
+                            onChange={(e) =>
+                              setData("folio_referencia", e.target.value)
+                            }
+                            onBlur={handleFolioBlur}
+                            disabled={loadingReferencia}
+                            className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 ${
+                              data.folio_referencia.trim() === ""
+                                ? "border-red-300 focus:ring-red-500"
+                                : "border-purple-300 focus:ring-purple-500"
+                            } ${loadingReferencia ? "bg-gray-100" : ""}`}
+                            required
+                          />
+                          {loadingReferencia && (
+                            <div className="absolute right-3 top-2.5">
+                              <svg className="w-4 h-4 text-purple-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        {data.folio_referencia.trim() === "" && !loadingReferencia && (
                           <p className="mt-1 text-xs text-red-500">
                             Folio de referencia es obligatorio
                           </p>

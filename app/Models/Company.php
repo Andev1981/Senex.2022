@@ -14,7 +14,7 @@ class Company extends Model
 
     protected $fillable = [
         'rut',
-        'busioness_name',
+        'business_name',
         'giro',
         'email',
         'phone',
