@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Inertia } from "@inertiajs/inertia";
 import TableSesiones from "./TableSesiones";
 import SessionForm from "./SessionForm";
 

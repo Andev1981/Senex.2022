@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Inertia } from "@inertiajs/inertia";
+import { router } from "@inertiajs/react";
 
 const SessionForm = ({
   session = null,
@@ -73,7 +73,7 @@ const SessionForm = ({
         : "treatment.sessions.store";
       const method = isEdit ? "put" : "post";
 
-      await Inertia[method](
+      await router[method](
         route,
         {
           ...formData,

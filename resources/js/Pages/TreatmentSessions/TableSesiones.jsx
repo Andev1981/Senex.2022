@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Inertia } from "@inertiajs/inertia";
+import { router } from "@inertiajs/react";
 
 // Badge de Status simple
 const StatusBadge = ({ status }) => {
@@ -118,7 +118,7 @@ const TableSesiones = ({
   // Manejar edición inline simple
   const handleCellSave = async (sessionId, field, value) => {
     try {
-      await Inertia.put(
+      await router.put(
         `/treatment-sessions/${sessionId}`,
         {
           [field]: value,
