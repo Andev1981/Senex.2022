@@ -22,14 +22,14 @@ return new class extends Migration {
                 ->comment('Seguro primario involucrado en la transacción');
 
             // ===== MONTOS HOMOLOGADOS (Sincronizados con Frontend final_shares) =====
-            // amount_clp será el "amount_patient" (lo que efectivamente entró a caja)
+            // amount_clp será el "amount_patient_clp" (lo que efectivamente entró a caja)
             $t->bigInteger('amount_clp')->default(0)->comment('Monto final pagado por el paciente (Copago)');
 
             // Auditoría de montos totales
-            $t->bigInteger('amount_gross')->default(0)->comment('Total bruto de la atención (100%)');
-            $t->bigInteger('amount_insurance_primary')->default(0)->comment('Cobertura Isapre/Fonasa');
-            $t->bigInteger('amount_insurance_secondary')->default(0)->comment('Cobertura Seguro Complementario');
-            $t->bigInteger('discount')->default(0)->comment('Descuento aplicado');
+            $t->bigInteger('amount_gross_clp')->default(0)->comment('Total bruto de la atención (100%)');
+            $t->bigInteger('amount_insurance_primary_clp')->default(0)->comment('Cobertura Isapre/Fonasa');
+            $t->bigInteger('amount_insurance_secondary_clp')->default(0)->comment('Cobertura Seguro Complementario');
+            $t->bigInteger('discount_clp')->default(0)->comment('Descuento aplicado');
 
             // ===== DATOS DEL PAGO =====
             $t->date('payment_date')->index();

@@ -72,8 +72,8 @@ export default function SessionForm({
     next_goals: session?.next_goals || "",
 
     // Pagos
-    patient_amount: session?.payment?.patient_amount || 0,
-    doctor_amount: session?.payment?.doctor_amount || 0,
+    patient_amount_clp: session?.payment?.patient_amount_clp || 0,
+    doctor_amount_clp: session?.payment?.doctor_amount_clp || 0,
     commission_rate: session?.payment?.commission_rate || 0,
   });
 
@@ -111,8 +111,8 @@ export default function SessionForm({
 
       setFormData((prev) => ({
         ...prev,
-        patient_amount: basePrice,
-        doctor_amount: Math.round(doctorAmount),
+        patient_amount_clp: basePrice,
+        doctor_amount_clp: Math.round(doctorAmount),
         commission_rate: doctorCommission?.commission_value || 0,
         duration: selectedSessionType.duration_minutes || 60,
       }));
@@ -157,8 +157,8 @@ export default function SessionForm({
       patient_id: patient.id,
       treatment_id: "",
       session_type_id: "",
-      patient_amount: 0,
-      doctor_amount: 0,
+      patient_amount_clp: 0,
+      doctor_amount_clp: 0,
       commission_rate: 0,
     });
     setSearchPatient(patient.name);
@@ -430,8 +430,8 @@ export default function SessionForm({
                             patient_id: "",
                             treatment_id: "",
                             session_type_id: "",
-                            patient_amount: 0,
-                            doctor_amount: 0,
+                            patient_amount_clp: 0,
+                            doctor_amount_clp: 0,
                             commission_rate: 0,
                           });
                           setSearchPatient("");
@@ -605,7 +605,7 @@ export default function SessionForm({
                           </span>
                         </div>
                         <span className="font-semibold text-gray-900">
-                          ${formData.patient_amount.toLocaleString("es-CL")}
+                          ${formData.patient_amount_clp.toLocaleString("es-CL")}
                         </span>
                       </div>
 
@@ -627,7 +627,7 @@ export default function SessionForm({
                           </div>
                         </div>
                         <span className="text-lg font-bold text-teal-600">
-                          ${formData.doctor_amount.toLocaleString("es-CL")}
+                          ${formData.doctor_amount_clp.toLocaleString("es-CL")}
                         </span>
                       </div>
                     </div>

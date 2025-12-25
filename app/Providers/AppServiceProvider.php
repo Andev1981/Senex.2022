@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Company;
 use App\Models\Doctor;
 use App\Models\Patient;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Models\PaymentAllocation;
+use App\Models\Product;
+use App\Models\SessionType;
 use App\Models\User;
 use App\Observers\PaymentAllocationObserver;
 use App\Services\TwilioService;
@@ -45,18 +48,16 @@ class AppServiceProvider extends ServiceProvider
         ];
 
         // Binding de la FirmaElectrónica (sin cambios)
-        $this->app->singleton(FirmaElectronica::class, function ($app)  use ($firmaConfig){
+        $this->app->singleton(FirmaElectronica::class, function ($app)  use ($firmaConfig) {
             // ... [Tu código para crear la instancia de FirmaElectronica con el constructor] ...
             // (Este código es el que revisamos en el paso anterior y ya está bien)
-            $firma = new FirmaElectronica($firmaConfig); 
+            $firma = new FirmaElectronica($firmaConfig);
             return $firma;
         });
 
         // Binding de la Implementación
         // Aquí le dices a Laravel que si alguien pide la Interface, le dé la implementación.
         $this->app->bind(DteServiceContract::class, LibreDteLocalProvider::class);
-
-   
     }
 
     /**
@@ -72,10 +73,12 @@ class AppServiceProvider extends ServiceProvider
         PaymentAllocation::observe(PaymentAllocationObserver::class);
 
         Relation::enforceMorphMap([
+            'Product' => Product::class,
+            'SessionType' => SessionType::class,
+            'Company' => Company::class,
             'Patient' => Patient::class,
             'Doctor' => Doctor::class,
             'User' => User::class,
         ]);
-        
     }
 }

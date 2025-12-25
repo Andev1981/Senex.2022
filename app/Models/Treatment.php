@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,14 +12,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Treatment extends Model
 {
-    use HasFactory, SoftDeletes, Multitenantable;
+    use HasFactory, SoftDeletes, Multitenantable, BelongsToTenant;
 
     protected $fillable = [
         'company_id',
         'branch_id',
         'session_type_id',
         'default_session_type_id',
-        'patient_id', 
+        'patient_id',
         'doctor_id',
         'diagnostic_code',
         'description',
@@ -36,7 +37,7 @@ class Treatment extends Model
         'next_appointment',
         // KPIs
         'pain_reduction',
-        'mobility_improvement', 
+        'mobility_improvement',
         'strength_gain',
     ];
 
@@ -56,9 +57,9 @@ class Treatment extends Model
     /**
      * Relaciones
      */
-    public function diagnostic() : BelongsTo
+    public function diagnostic(): BelongsTo
     {
-        return $this->belongsTo(Diagnostic::class,'diagnostic_code','code');
+        return $this->belongsTo(Diagnostic::class, 'diagnostic_code', 'code');
     }
 
     public function sessionType(): BelongsTo
@@ -146,7 +147,7 @@ class Treatment extends Model
     public function incrementCompletedSessions(): void
     {
         $this->increment('completed_sessions');
-        
+
         // Si completó todas las sesiones, marcar como completado
         if ($this->completed_sessions >= $this->total_sessions) {
             $this->update(['status' => 'Completado']);
@@ -156,7 +157,7 @@ class Treatment extends Model
     public function calculateKPIs(): array
     {
         $sessions = $this->sessions()->completed()->get();
-        
+
         if ($sessions->isEmpty()) {
             return [
                 'pain_reduction' => 0,

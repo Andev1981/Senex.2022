@@ -3,8 +3,8 @@ import { Head, router } from "@inertiajs/react";
 import Modal from "@/Components/Modal";
 import { Plus, Handshake } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import AgreementItemFormModal from "./Modals/AgreementItemFormModal";
-import AgreementItemListModal from "./Modals/AgreementItemListModal";
+import AgreementRuleFormModal from "./Modals/AgreementRuleFormModal";
+import AgreementRulesListModal from "./Modals/AgreementRulesListModal";
 import AgreementFormModal from "./Modals/AgreementFormModal";
 import AgreementsTable from "./Components/AgreementsTable";
 
@@ -42,7 +42,7 @@ export default function Index({ agreements, insurances, sessionTypes, plans }) {
   const handleOpenListRules = (agreement) => {
     // En tu código pasabas 'item', aquí lo guardamos como 'agreement'
     openModal(MODALS.RULES_LIST, {
-      rules: agreement.items,
+      rules: agreement.rules,
       agreement: agreement,
     });
   };
@@ -104,7 +104,7 @@ export default function Index({ agreements, insurances, sessionTypes, plans }) {
           insurances={insurances}
         />
         {/* Modal de Listado de Reglas */}
-        <AgreementItemListModal
+        <AgreementRulesListModal
           show={modalState.type === MODALS.RULES_LIST}
           onClose={closeModal}
           rules={modalState.data?.rules}
@@ -115,7 +115,7 @@ export default function Index({ agreements, insurances, sessionTypes, plans }) {
           }
         />
         {/* Modal de Edición/Creación de Regla */}
-        <AgreementItemFormModal
+        <AgreementRuleFormModal
           show={modalState.type === MODALS.RULE_FORM}
           onClose={closeModal}
           agreement={modalState.data?.parentAgreement}

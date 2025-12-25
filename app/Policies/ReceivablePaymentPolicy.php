@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\AgreementRule;
+use App\Models\ReceivablePayment;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class AgreementItemPolicy
+class ReceivablePaymentPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -19,7 +19,7 @@ class AgreementItemPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, AgreementRule $agreementRule): bool
+    public function view(User $user, ReceivablePayment $receivablePayment): bool
     {
         //
     }
@@ -35,7 +35,7 @@ class AgreementItemPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, AgreementRule $agreementRule): bool
+    public function update(User $user, ReceivablePayment $receivablePayment): bool
     {
         //
     }
@@ -43,7 +43,7 @@ class AgreementItemPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, AgreementRule $agreementRule): bool
+    public function delete(User $user, ReceivablePayment $receivablePayment): bool
     {
         //
     }
@@ -51,7 +51,7 @@ class AgreementItemPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, AgreementRule $agreementRule): bool
+    public function restore(User $user, ReceivablePayment $receivablePayment): bool
     {
         //
     }
@@ -59,7 +59,7 @@ class AgreementItemPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, AgreementRule $agreementRule): bool
+    public function forceDelete(User $user, ReceivablePayment $receivablePayment): bool
     {
         //
     }

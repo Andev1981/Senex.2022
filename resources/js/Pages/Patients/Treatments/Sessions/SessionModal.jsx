@@ -1,841 +1,663 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useForm } from "@inertiajs/react";
+import moment from "moment";
 import {
   Calendar,
   Activity,
-  TrendingDown,
-  Dumbbell,
-  FileText,
-  Home,
-  Target,
+  User,
   ListChecks,
+  Stethoscope, // Icono visual
+  ClipboardList,
+  Target,
+  Info, // Icono de información
 } from "lucide-react";
-import moment from "moment";
 import SearchSelect from "@/Components/SearchSelect";
-import { SESSION_STATUS_OPTIONS } from "@/constants/sessionStatuses";
 
-export default function SessionModal({
-  session,
-  setOpenSessionModal,
-  doctors,
-  treatment,
-  session_types,
-  patient,
+const STATUS_OPTIONS = [
+  { value: "scheduled", label: "📅 Programada" },
+  { value: "attended", label: "✅ Asistida / Completada" },
+  { value: "missed", label: "🚫 Faltó (Missed)" },
+  { value: "cancelled", label: "❌ Cancelada" },
+];
+
+export default function SessionFormModal({
+  setShowModal,
+  sessionData = null,
+  patients = [],
+  doctors = [],
+  // diagnoses = [], // YA NO ES NECESARIO PASAR LA LISTA COMPLETA
+  session_types = [],
+  preselectedPatient = null,
   isDuplicate = false,
 }) {
-  const isEditing = !!session?.id;
-  const [techniqueInput, setTechniqueInput] = useState("");
-  const [exerciseInput, setExerciseInput] = useState("");
-  const { data, setData, patch, post, processing, errors, reset } = useForm({
-    treatment_id: session?.treatment_id || "",
-    month_session_number: session?.month_session_number || 0,
-    date: session?.date
-      ? moment.utc(session.date).format("YYYY-MM-DD")
-      : moment.utc(Date.now()).format("YYYY-MM-DD"),
-    time: session?.time || "",
-    duration: session?.duration || 60,
-    status: session?.status || "scheduled",
-    doctor_id: session?.doctor?.id || "",
-    patient_id: patient?.id || "",
-    session_type_id: session?.session_type_id || "",
-    // Métricas de dolor
-    pain_before: session?.pain_before || 0,
-    pain_after: session?.pain_after || 0,
-    // ROM (Rango de Movimiento)
-    rom_flexion_before: session?.rom_flexion_before || 0,
-    rom_flexion_after: session?.rom_flexion_after || 0,
-    rom_abduction_before: session?.rom_abduction_before || 0,
-    rom_abduction_after: session?.rom_abduction_after || 0,
-    rom_rotation_before: session?.rom_rotation_before || 0,
-    rom_rotation_after: session?.rom_rotation_after || 0,
-    // Arrays
-    techniques: session?.techniques || [],
-    exercises: session?.exercises || [],
-    // Notas
-    notes: session?.notes || "",
-    homework: session?.homework || "",
-    next_goals: session?.next_goals || "",
-    cancellation_note: session?.cancellation_note || "",
+  const isEditing = !!sessionData?.id && !isDuplicate;
+  const currentStatus = sessionData?.status || "scheduled";
+
+  // Formatear doctores
+  const formattedDoctors = useMemo(() => {
+    return doctors.map((d) => ({
+      ...d,
+      full_name: d.full_name || `${d.name} ${d.last_name || ""}`.trim(),
+    }));
+  }, [doctors]);
+
+  const { data, setData, post, patch, processing, errors, reset } = useForm({
+    id: sessionData?.id || "",
+    // Eliminamos diagnosis_id del formulario porque pertenece al treatment
+    treatment_id:
+      sessionData?.treatment_id ||
+      preselectedPatient?.active_treatments?.[0]?.id ||
+      "",
+    patient_id: sessionData?.patient_id || preselectedPatient?.id || "",
+    doctor_id: sessionData?.doctor_id || "",
+    session_type_id: sessionData?.session_type_id || "",
+
+    // Control
+    date: sessionData?.date
+      ? moment.utc(sessionData.date).format("YYYY-MM-DD")
+      : moment().format("YYYY-MM-DD"),
+    time: sessionData?.time || "",
+    duration: sessionData?.duration || 45,
+    status: sessionData?.status || "scheduled",
+    consumes_plan: sessionData?.consumes_plan || false,
+
+    // SOAP
+    pain_level: sessionData?.pain_level || 0,
+    subjective: sessionData?.subjective || "",
+    objective: sessionData?.objective || "",
+    assessment: sessionData?.assessment || "",
+    plan: sessionData?.plan || "",
+
+    // JSONs
+    evaluation_data: sessionData?.evaluation_data || {
+      rom: {
+        flexion: { before: 0, after: 0 },
+        extension: { before: 0, after: 0 },
+        abduction: { before: 0, after: 0 },
+        rotation: { before: 0, after: 0 },
+      },
+    },
+    activities_data: sessionData?.activities_data || {
+      techniques: [],
+      exercises: [],
+    },
+
+    // Finanzas
+    patient_amount_clp: sessionData?.patient_amount_clp || 0,
+    patient_plan_id: sessionData?.patient_plan_id || "",
   });
 
+  // Estado local para MOSTRAR el diagnóstico actual (solo lectura)
+  const [currentDiagnosisName, setCurrentDiagnosisName] = useState(null);
+
+  const [techniqueInput, setTechniqueInput] = useState("");
+
+  // ... Helpers de ROM y Activities (Igual que antes) ...
+  const handleRomChange = (type, moment, value) => {
+    const currentRom = data.evaluation_data.rom || {};
+    setData("evaluation_data", {
+      ...data.evaluation_data,
+      rom: {
+        ...currentRom,
+        [type]: { ...currentRom[type], [moment]: parseInt(value) || 0 },
+      },
+    });
+  };
+  const handleActivityChange = (category, item, action) => {
+    const currentList = data.activities_data[category] || [];
+    const newList =
+      action === "add"
+        ? [...new Set([...currentList, item])]
+        : currentList.filter((i) => i !== item);
+    setData("activities_data", {
+      ...data.activities_data,
+      [category]: newList,
+    });
+  };
+  const isFieldEditable = (fieldType) => {
+    if (!isEditing && !isDuplicate) return true;
+    if (isDuplicate) return true;
+    if (currentStatus === "cancelled" || currentStatus === "missed")
+      return false;
+    if (currentStatus === "attended") return fieldType === "clinical";
+    return true;
+  };
+
+  // ... imports y setup inicial
+
+  // 1. Obtener el objeto del paciente seleccionado actualmente
+  const selectedPatientObj = useMemo(() => {
+    const currentId = parseInt(data.patient_id);
+    if (!currentId) return null;
+    // Buscar en lista o usar preseleccionado
+    if (preselectedPatient && preselectedPatient.id === currentId)
+      return preselectedPatient;
+    return patients.find((p) => p.id === currentId);
+  }, [data.patient_id, patients, preselectedPatient]);
+
+  // 2. Obtener sus tratamientos activos
+  const patientTreatments = useMemo(() => {
+    if (!selectedPatientObj) return [];
+    return (
+      selectedPatientObj.active_treatments ||
+      selectedPatientObj.treatments ||
+      []
+    );
+  }, [selectedPatientObj]);
+
+  // 3. Obtener el Diagnóstico ACTUAL basado en el treatment_id seleccionado en el form
+  const currentDiagnosisDisplay = useMemo(() => {
+    if (!data.treatment_id || patientTreatments.length === 0) return null;
+
+    const treatment = patientTreatments.find(
+      (t) => String(t.id) === String(data.treatment_id)
+    );
+    if (!treatment) return null;
+
+    const d = treatment.diagnostic || treatment.diagnosis;
+    return d
+      ? `${d.code || ""} - ${d.description || ""}`
+      : "Sin diagnóstico especificado";
+  }, [data.treatment_id, patientTreatments]);
+
+  // --- LÓGICA CLAVE CORREGIDA Y ROBUSTA ---
+  // --- EFECTO: AUTO-SELECCIÓN POR DEFECTO ---
   useEffect(() => {
-    if (session) {
-      setData({
-        treatment_id: treatment?.id || "",
-        month_session_number: session.month_session_number || "",
-        date: session?.date
-          ? moment.utc(session.date).format("YYYY-MM-DD")
-          : moment.utc(Date.now()).format("YYYY-MM-DD"),
-        time: session.time || "",
-        duration: session.duration || 60,
-        status: session.status || "scheduled",
-        doctor_id: session.doctor?.id || "",
-        patient_id: patient?.id || "",
-        session_type_id: session.session_type_id || "",
-        pain_before: session.pain_before || 0,
-        pain_after: session.pain_after || 0,
-        rom_flexion: session.rom?.rom_flexion || "",
-        rom_abduction: session.rom?.rom_abduction || "",
-        rom_rotation: session.rom?.rom_rotation || "",
-        techniques: session.techniques || [],
-        exercises: session.exercises || [],
-        notes: session.notes || "",
-        homework: session.homework || "",
-        next_goals: session.next_goals || "",
-      });
+    // Si no hay tratamientos, no hacemos nada
+    if (patientTreatments.length === 0) return;
+
+    // Si ya hay un tratamiento seleccionado Y ese tratamiento pertenece al paciente actual, NO lo tocamos
+    const currentIsValid = patientTreatments.some(
+      (t) => String(t.id) === String(data.treatment_id)
+    );
+
+    if (isEditing) return; // En edición nunca tocamos nada automáticamente
+
+    if (!data.treatment_id || !currentIsValid) {
+      // Seleccionamos el más reciente (el primero de la lista) por defecto
+      setData((prev) => ({ ...prev, treatment_id: patientTreatments[0].id }));
     }
-  }, [session]);
+  }, [patientTreatments, data.treatment_id, isEditing]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isDuplicate) {
-      post(route("sessions.store"), {
-        onSuccess: () => {
-          setOpenSessionModal(false);
-          reset();
-        },
-        onError: () => {
-          alert(errors.general || "Ocurrió un error al guardar la sesión.");
-        },
-      });
-    } else if (session?.id) {
-      patch(route("sessions.update", session.id), {
-        onSuccess: () => {
-          setOpenSessionModal(false);
-          reset();
-        },
-        onError: () => {
-          alert(errors.general || "Ocurrió un error al guardar la sesión.");
-        },
-      });
-    } else {
-      post(route("sessions.store"), {
-        onSuccess: () => {
-          setOpenSessionModal(false);
-          reset();
-        },
-        onError: () => {
-          alert(errors.general || "Ocurrió un error al guardar la sesión.");
-        },
-      });
-    }
+    if (!data.patient_id) return alert("Selecciona un paciente");
+    if (!data.doctor_id) return alert("Selecciona un kinesiólogo");
+    // if (!data.treatment_id) return alert("El paciente no tiene un tratamiento activo."); // Opcional, buena validación
+
+    const opts = {
+      onSuccess: () => {
+        reset();
+        setShowModal(false);
+      },
+      onError: () => alert("Revisa los errores."),
+    };
+    isEditing
+      ? patch(route("sessions.update", data.id), opts)
+      : post(route("sessions.store"), opts);
   };
 
-  const handleCancel = () => {
-    reset();
-    setOpenSessionModal(false);
-  };
-
-  const addTechnique = () => {
-    if (techniqueInput.trim()) {
-      setData("techniques", [...data.techniques, techniqueInput.trim()]);
-      setTechniqueInput("");
-    }
-  };
-
-  const removeTechnique = (index) => {
-    setData(
-      "techniques",
-      data.techniques.filter((_, i) => i !== index)
-    );
-  };
-
-  const addExercise = () => {
-    if (exerciseInput.trim()) {
-      setData("exercises", [...data.exercises, exerciseInput.trim()]);
-      setExerciseInput("");
-    }
-  };
-
-  const removeExercise = (index) => {
-    setData(
-      "exercises",
-      data.exercises.filter((_, i) => i !== index)
-    );
-  };
-
-  const painImprovement =
-    data.pain_before > 0
-      ? Math.round(
-          ((data.pain_before - data.pain_after) / data.pain_before) * 100
-        )
-      : 0;
+  const activePlans = (() => {
+    const pId = data.patient_id;
+    if (!pId) return [];
+    const patientObj = patients.find((p) => p.id === pId) || preselectedPatient;
+    return patientObj?.active_plans || [];
+  })();
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Título Principal */}
-        <header className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <ListChecks className="w-8 h-8 text-blue-600" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Registro de Sesión de Kinesiología
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {isDuplicate
-                ? "Duplicando Sesión"
-                : `Sesión Mensual #${data.month_session_number || "N/A"}`}
-            </p>
+    <div className="bg-white dark:bg-gray-800 rounded-xl max-h-[90vh] overflow-y-auto">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* HEADER */}
+        <header className="sticky top-0 z-10 flex items-center justify-between pt-2 pb-4 bg-white border-b border-gray-200 dark:bg-gray-800">
+          <div className="flex items-center gap-3">
+            <ListChecks className="w-8 h-8 text-blue-600" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {isEditing ? "Editar Sesión" : "Nueva Sesión"}
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Ficha Clínica SOAP + Gestión
+              </p>
+            </div>
+          </div>
+          <div className="w-48">
+            <label className="block mb-1 text-xs font-bold text-gray-500 uppercase">
+              Estado
+            </label>
+            <select
+              value={data.status}
+              onChange={(e) => setData("status", e.target.value)}
+              className="w-full text-sm border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
         </header>
 
-        {/* Información General y Programación */}
-        <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
-          <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            <Calendar className="w-6 h-6 text-blue-600" />
-            Información de Programación
-          </h2>
+        <div className="px-6 pb-6 space-y-8">
+          {/* 1. DATOS ADMINISTRATIVOS */}
+          <div className="p-5 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-900/50 dark:border-gray-700">
+            <h2 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              Datos Generales
+            </h2>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Kinesiólogo */}
-            <SearchSelect
-              items={doctors}
-              value={data.doctor_id}
-              onChange={(value) => setData("doctor_id", value)}
-              config={{
-                valueKey: "id",
-                displayKey: "name",
-                secondaryKeys: ["email"],
-                searchKeys: ["name", "last_name", "email"],
-                renderItem: (item) => (
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {item.name} {item.last_name}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Paciente */}
+              {preselectedPatient ? (
+                <div className="p-3 bg-white border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600">
+                  <label className="block text-xs font-bold text-gray-500 uppercase">
+                    Paciente
+                  </label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <User className="w-5 h-5 text-gray-400" />
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {preselectedPatient.full_name}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <SearchSelect
+                  label="Paciente *"
+                  items={patients}
+                  value={data.patient_id}
+                  onChange={(val) => setData("patient_id", val)}
+                  disabled={!isFieldEditable("patient_id")}
+                  config={{
+                    valueKey: "id",
+                    displayKey: "full_name",
+                    secondaryKeys: ["rut"],
+                    searchKeys: ["full_name", "rut"],
+                    renderItem: (item) => <p>{item.full_name}</p>,
+                  }}
+                />
+              )}
+
+              {/* Kinesiólogo */}
+              <SearchSelect
+                label="Kinesiólogo/a *"
+                items={formattedDoctors}
+                value={data.doctor_id}
+                onChange={(val) => setData("doctor_id", val)}
+                disabled={!isFieldEditable("doctor_id")}
+                config={{
+                  valueKey: "id",
+                  displayKey: "full_name",
+                  searchKeys: ["full_name"],
+                  renderItem: (item) => <p>{item.full_name}</p>,
+                }}
+              />
+
+              {/* --- SELECCIÓN DE TRATAMIENTO / DIAGNÓSTICO --- */}
+              <div className="md:col-span-2">
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Tratamiento / Diagnóstico a tratar *
+                </label>
+
+                {patientTreatments.length > 1 ? (
+                  // CASO A: Múltiples tratamientos -> Mostramos un SELECT
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Stethoscope className="w-5 h-5 text-teal-600" />
+                    </div>
+                    <select
+                      value={data.treatment_id}
+                      onChange={(e) => setData("treatment_id", e.target.value)}
+                      disabled={!isFieldEditable("clinical")}
+                      className="w-full pl-10 border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      {patientTreatments.map((t) => {
+                        const d = t.diagnostic || t.diagnosis;
+                        const name = d
+                          ? `${d.code} - ${d.description}`
+                          : "Sin diagnóstico";
+                        // Formatear fecha para ayudar a distinguir
+                        const date = t.created_at
+                          ? moment(t.created_at).format("DD/MM/YYYY")
+                          : "";
+                        return (
+                          <option key={t.id} value={t.id}>
+                            {name} (Inicio: {date})
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <p className="mt-1 text-xs text-teal-600">
+                      ℹ️ Este paciente tiene {patientTreatments.length}{" "}
+                      tratamientos activos. Selecciona uno.
                     </p>
-                    <div className="flex gap-3 mt-1 text-xs text-gray-500">
-                      <span>📧 {item.email}</span>
+                  </div>
+                ) : (
+                  // CASO B: 1 o 0 Tratamientos -> Mostramos la TARJETA SOLO LECTURA (Más elegante)
+                  <div
+                    className={`flex items-start gap-3 p-3 rounded-lg border ${
+                      currentDiagnosisDisplay
+                        ? "bg-teal-50 border-teal-200"
+                        : "bg-gray-100 border-gray-200"
+                    }`}
+                  >
+                    <div className="mt-1">
+                      <Stethoscope
+                        className={`w-5 h-5 ${
+                          currentDiagnosisDisplay
+                            ? "text-teal-600"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                        Diagnóstico Activo
+                      </h4>
+                      {currentDiagnosisDisplay ? (
+                        <p className="text-sm font-medium text-teal-800 dark:text-teal-300">
+                          {currentDiagnosisDisplay}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gray-500 italic">
+                          {data.patient_id
+                            ? "El paciente no tiene tratamientos activos."
+                            : "Selecciona un paciente."}
+                        </p>
+                      )}
+                    </div>
+                    {/* Input oculto para que viaje el ID */}
+                    <input
+                      type="hidden"
+                      name="treatment_id"
+                      value={data.treatment_id}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Fechas y Horas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Fecha
+                  </label>
+                  <input
+                    type="date"
+                    value={data.date}
+                    onChange={(e) => setData("date", e.target.value)}
+                    disabled={!isFieldEditable("date")}
+                    className="w-full border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Hora
+                  </label>
+                  <input
+                    type="time"
+                    value={data.time}
+                    onChange={(e) => setData("time", e.target.value)}
+                    disabled={!isFieldEditable("time")}
+                    className="w-full border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Finanzas */}
+              <div className="grid grid-cols-2 gap-4">
+                <SearchSelect
+                  label="Tipo Sesión"
+                  items={session_types}
+                  value={data.session_type_id}
+                  onChange={(val) => {
+                    const type = session_types.find((t) => t.id === val);
+                    setData((prev) => ({
+                      ...prev,
+                      session_type_id: val,
+                      patient_amount_clp: type
+                        ? Number(type.base_price_clp)
+                        : 0,
+                    }));
+                  }}
+                  config={{
+                    valueKey: "id",
+                    displayKey: "name",
+                    renderItem: (i) => <span>{i.name}</span>,
+                  }}
+                />
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Plan
+                  </label>
+                  <select
+                    value={data.consumes_plan ? "yes" : "no"}
+                    onChange={(e) =>
+                      setData("consumes_plan", e.target.value === "yes")
+                    }
+                    className="w-full border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <option value="no">Pago Individual</option>
+                    <option value="yes" disabled={activePlans.length === 0}>
+                      Descontar de Pack (
+                      {activePlans.length > 0 ? "Disponible" : "Sin planes"})
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* --- 2. EVOLUCIÓN CLÍNICA (SOAP) --- */}
+          {["attended", "scheduled"].includes(data.status) && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <ClipboardList className="w-6 h-6 text-teal-600" />
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Evolución Clínica (SOAP)
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {/* S: SUBJECTIVE */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-teal-700 dark:text-teal-400">
+                    <User className="w-5 h-5" /> Subjetivo (S)
+                  </h3>
+                  <div className="mb-4">
+                    <div className="flex justify-between mb-1">
+                      <label className="text-sm font-medium text-gray-700">
+                        Nivel de Dolor (EVA)
+                      </label>
+                      <span
+                        className={`font-bold text-lg ${
+                          data.pain_level > 7 ? "text-red-600" : "text-blue-600"
+                        }`}
+                      >
+                        {data.pain_level}/10
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={data.pain_level}
+                      onChange={(e) =>
+                        setData("pain_level", parseInt(e.target.value))
+                      }
+                      className="w-full accent-teal-600"
+                    />
+                  </div>
+                  <textarea
+                    value={data.subjective}
+                    onChange={(e) => setData("subjective", e.target.value)}
+                    className="w-full text-sm border-gray-300 rounded-lg"
+                    rows="3"
+                    placeholder="Paciente refiere..."
+                  />
+                </div>
+
+                {/* O: OBJECTIVE */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-blue-700 dark:text-blue-400">
+                    <Activity className="w-5 h-5" /> Objetivo (O)
+                  </h3>
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg dark:bg-blue-900/20">
+                    <p className="text-xs font-bold text-blue-800 uppercase mb-2">
+                      ROM (Grados)
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {["flexion", "abduction"].map((romType) => (
+                        <div key={romType}>
+                          <label className="text-xs text-gray-600 capitalize">
+                            {romType}
+                          </label>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              placeholder="Pre"
+                              className="w-1/2 px-2 py-1 text-xs border rounded"
+                              value={
+                                data.evaluation_data.rom?.[romType]?.before ||
+                                ""
+                              }
+                              onChange={(e) =>
+                                handleRomChange(
+                                  romType,
+                                  "before",
+                                  e.target.value
+                                )
+                              }
+                            />
+                            <input
+                              type="number"
+                              placeholder="Post"
+                              className="w-1/2 px-2 py-1 text-xs border rounded"
+                              value={
+                                data.evaluation_data.rom?.[romType]?.after || ""
+                              }
+                              onChange={(e) =>
+                                handleRomChange(
+                                  romType,
+                                  "after",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ),
-              }}
-              label="Kinesiolog@ *"
-              placeholder="Seleccionar Kinesiólogo..."
-            />
+                  <textarea
+                    value={data.objective}
+                    onChange={(e) => setData("objective", e.target.value)}
+                    className="w-full text-sm border-gray-300 rounded-lg"
+                    rows="2"
+                    placeholder="Se observa..."
+                  />
+                </div>
 
-            {/* Tipo de Sesión */}
-            <SearchSelect
-              items={session_types}
-              value={data.session_type_id}
-              onChange={(value) => setData("session_type_id", value)}
-              config={{
-                valueKey: "id",
-                displayKey: "name",
-                secondaryKeys: [],
-                searchKeys: ["name"],
-                renderItem: (item) => (
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {item.name}
-                  </p>
-                ),
-              }}
-              label="Tipo de Sesión *"
-              placeholder="Seleccionar Tipo..."
-            />
+                {/* A: ASSESSMENT */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">
+                    <ClipboardList className="w-5 h-5" /> Análisis (A)
+                  </h3>
+                  <textarea
+                    value={data.assessment}
+                    onChange={(e) => setData("assessment", e.target.value)}
+                    className="w-full text-sm border-gray-300 rounded-lg"
+                    rows="3"
+                    placeholder="Evolución positiva..."
+                  />
+                </div>
 
-            {/* Fecha, Hora y Duración (Agrupados) */}
-            <div className="grid grid-cols-3 col-span-2 gap-4 p-4 border border-blue-100 rounded-lg bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10">
-              {/* Fecha */}
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Fecha *
-                </label>
-                <input
-                  type="date"
-                  value={data.date}
-                  onChange={(e) => setData("date", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  required
-                />
-                {errors.date && (
-                  <p className="mt-1 text-sm text-red-600">{errors.date}</p>
-                )}
-              </div>
-              {/* Hora */}
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Hora *
-                </label>
-                <input
-                  type="time"
-                  value={data.time}
-                  onChange={(e) => setData("time", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  required
-                />
-                {errors.time && (
-                  <p className="mt-1 text-sm text-red-600">{errors.time}</p>
-                )}
-              </div>
-              {/* Duración */}
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Duración (min) *
-                </label>
-                <input
-                  type="number"
-                  min="15"
-                  step="15"
-                  value={data.duration}
-                  onChange={(e) =>
-                    setData("duration", parseInt(e.target.value) || 0)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  required
-                />
-                {errors.duration && (
-                  <p className="mt-1 text-sm text-red-600">{errors.duration}</p>
-                )}
+                {/* P: PLAN */}
+                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-green-700 dark:text-green-400">
+                    <Target className="w-5 h-5" /> Plan (P)
+                  </h3>
+                  <div className="mb-3">
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={techniqueInput}
+                        onChange={(e) => setTechniqueInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleActivityChange(
+                              "techniques",
+                              techniqueInput,
+                              "add"
+                            );
+                            setTechniqueInput("");
+                          }
+                        }}
+                        className="flex-1 text-xs border-gray-300 rounded"
+                        placeholder="Técnica/Ejercicio..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleActivityChange(
+                            "techniques",
+                            techniqueInput,
+                            "add"
+                          );
+                          setTechniqueInput("");
+                        }}
+                        className="bg-green-600 text-white px-2 rounded"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {data.activities_data.techniques?.map((t, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full flex items-center gap-1"
+                        >
+                          {t}{" "}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleActivityChange("techniques", t, "remove")
+                            }
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <textarea
+                    value={data.plan}
+                    onChange={(e) => setData("plan", e.target.value)}
+                    className="w-full text-sm border-gray-300 rounded-lg"
+                    rows="2"
+                    placeholder="Próxima sesión..."
+                  />
+                </div>
               </div>
             </div>
-
-            {/* Estado (al final para dejarlo claro) */}
-            <div className="col-span-2">
-              <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Estado *
-              </label>
-              <select
-                value={data.status}
-                onChange={(e) => setData("status", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-              >
-                {SESSION_STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {errors.status && (
-                <p className="mt-1 text-sm text-red-600">{errors.status}</p>
-              )}
-            </div>
-
-            {/* Campo condicional para CANCELADA - Sugerencia de Lógica */}
-            {data.status === "cancelled" && (
-              <div className="col-span-2 p-3 border border-red-300 rounded-lg bg-red-50 dark:border-red-700 dark:bg-red-900/10">
-                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Motivo de Cancelación *
-                </label>
-                <textarea
-                  value={data.cancellation_note} // Asumiendo que tienes este campo en `data`
-                  onChange={(e) => setData("cancellation_note", e.target.value)}
-                  rows="2"
-                  placeholder="Detalles sobre por qué se canceló la sesión."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  required
-                />
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Sección de Resultados: Métrica de Dolor, ROM, Técnicas, Notas (SOLO SI COMPLETADA) */}
-        {(data.status === "completed" || data.status === "in_progress") && (
-          <>
-            {/* Evaluación del Dolor */}
-            <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
-              <h2 className="flex items-center gap-2 mb-6 text-xl font-semibold text-gray-900 dark:text-white">
-                <TrendingDown className="w-6 h-6 text-red-600" />
-                Evaluación del Dolor (Escala Visual Analógica - EVA)
-              </h2>
-
-              {/* Preview Stats - Mantenemos tus cards por ser muy visuales */}
-              <div className="grid grid-cols-2 gap-4 mb-6 md:grid-cols-4">
-                <div className="p-3 border-l-4 border-red-500 rounded-lg bg-red-50 dark:bg-red-900/10">
-                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Dolor Inicial
-                  </p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {data.pain_before || 0}/10
-                  </p>
-                </div>
-                <div className="p-3 border-l-4 border-green-500 rounded-lg bg-green-50 dark:bg-green-900/10">
-                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Dolor Final
-                  </p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {data.pain_after || 0}/10
-                  </p>
-                </div>
-                <div className="p-3 border-l-4 border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/10">
-                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Mejoría
-                  </p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {data.pain_before - data.pain_after} Puntos
-                  </p>
-                </div>
-                <div className="p-3 border-l-4 border-teal-500 rounded-lg bg-teal-50 dark:bg-teal-900/10">
-                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
-                    Progreso
-                  </p>
-                  <p className="text-2xl font-bold text-teal-600">
-                    {painImprovement}%
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Dolor Inicial */}
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Dolor Inicial (0-10)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="10"
-                    value={data.pain_before}
-                    onChange={(e) =>
-                      setData("pain_before", parseInt(e.target.value) || 0)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                  {/* Slider con etiquetas de referencia para mejor UX */}
-                  <div className="relative mt-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={data.pain_before}
-                      onChange={(e) =>
-                        setData("pain_before", parseInt(e.target.value))
-                      }
-                      className="w-full"
-                    />
-                    <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span>0 - Sin Dolor</span>
-                      <span>10 - Peor Dolor Posible</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dolor Final */}
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Dolor Final (0-10)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="10"
-                    value={data.pain_after}
-                    onChange={(e) =>
-                      setData("pain_after", parseInt(e.target.value) || 0)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                  <div className="relative mt-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={data.pain_after}
-                      onChange={(e) =>
-                        setData("pain_after", parseInt(e.target.value))
-                      }
-                      className="w-full"
-                    />
-                    <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span>0 - Sin Dolor</span>
-                      <span>10 - Peor Dolor Posible</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Rango de Movimiento (ROM) */}
-            <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
-              <h2 className="flex items-center gap-2 mb-6 text-xl font-semibold text-gray-900 dark:text-white">
-                <Activity className="w-6 h-6 text-purple-600" />
-                Rango de Movimiento (ROM) - Ángulos en Grados (°)
-              </h2>
-
-              <div className="space-y-4">
-                {/* Flexión */}
-                <div className="grid grid-cols-1 gap-4 p-4 rounded-lg shadow-sm md:grid-cols-2 bg-red-50 dark:bg-red-900/10">
-                  <p className="col-span-2 text-sm font-semibold text-red-700 dark:text-red-300">
-                    Flexión (Ej: Hombro/Rodilla)
-                  </p>
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Pre-Sesión (°)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={data.rom_flexion_before}
-                      onChange={(e) =>
-                        setData(
-                          "rom_flexion_before",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="180"
-                      value={data.rom_flexion_before}
-                      onChange={(e) =>
-                        setData("rom_flexion_before", parseInt(e.target.value))
-                      }
-                      className="w-full mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Post-Sesión (°)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={data.rom_flexion_after}
-                      onChange={(e) =>
-                        setData(
-                          "rom_flexion_after",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="180"
-                      value={data.rom_flexion_after}
-                      onChange={(e) =>
-                        setData("rom_flexion_after", parseInt(e.target.value))
-                      }
-                      className="w-full mt-2"
-                    />
-                  </div>
-                </div>
-
-                {/* Abducción */}
-                <div className="grid grid-cols-1 gap-4 p-4 rounded-lg shadow-sm md:grid-cols-2 bg-blue-50 dark:bg-blue-900/10">
-                  <p className="col-span-2 text-sm font-semibold text-blue-700 dark:text-blue-300">
-                    Abducción (Ej: Hombro/Cadera)
-                  </p>
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Pre-Sesión (°)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={data.rom_abduction_before}
-                      onChange={(e) =>
-                        setData(
-                          "rom_abduction_before",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="180"
-                      value={data.rom_abduction_before}
-                      onChange={(e) =>
-                        setData(
-                          "rom_abduction_before",
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className="w-full mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Post-Sesión (°)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={data.rom_abduction_after}
-                      onChange={(e) =>
-                        setData(
-                          "rom_abduction_after",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="180"
-                      value={data.rom_abduction_after}
-                      onChange={(e) =>
-                        setData("rom_abduction_after", parseInt(e.target.value))
-                      }
-                      className="w-full mt-2"
-                    />
-                  </div>
-                </div>
-
-                {/* Rotación */}
-                <div className="grid grid-cols-1 gap-4 p-4 rounded-lg shadow-sm md:grid-cols-2 bg-gray-50 dark:bg-gray-700/50">
-                  <p className="col-span-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Rotación (Ej: Hombro/Columna)
-                  </p>
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Pre-Sesión (°)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={data.rom_rotation_before}
-                      onChange={(e) =>
-                        setData(
-                          "rom_rotation_before",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="180"
-                      value={data.rom_rotation_before}
-                      onChange={(e) =>
-                        setData("rom_rotation_before", parseInt(e.target.value))
-                      }
-                      className="w-full mt-2"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Post-Sesión (°)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={data.rom_rotation_after}
-                      onChange={(e) =>
-                        setData(
-                          "rom_rotation_after",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="180"
-                      value={data.rom_rotation_after}
-                      onChange={(e) =>
-                        setData("rom_rotation_after", parseInt(e.target.value))
-                      }
-                      className="w-full mt-2"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Técnicas y Ejercicios (Agrupados en una fila) */}
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              {/* Técnicas Aplicadas */}
-              <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                  <Dumbbell className="w-6 h-6 text-teal-600" />
-                  Técnicas Aplicadas
-                </h2>
-
-                <div className="flex gap-2 mb-4">
-                  <input
-                    type="text"
-                    value={techniqueInput}
-                    onChange={(e) => setTechniqueInput(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && (e.preventDefault(), addTechnique())
-                    }
-                    placeholder="Ej: Masaje profundo, Movilización..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={addTechnique}
-                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50"
-                    disabled={!techniqueInput.trim()} // Deshabilitar si está vacío
-                  >
-                    Agregar
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border border-dashed border-teal-300 rounded-lg bg-teal-50 dark:bg-teal-900/10">
-                  {data.techniques.length === 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Aún no hay técnicas aplicadas.
-                    </p>
-                  )}
-                  {data.techniques.map((technique, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-teal-700 bg-teal-100 rounded-full dark:bg-teal-900 dark:text-teal-300"
-                    >
-                      {technique}
-                      <button
-                        type="button"
-                        onClick={() => removeTechnique(index)}
-                        className="text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ejercicios Realizados */}
-              <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                  <Activity className="w-6 h-6 text-purple-600" />
-                  Ejercicios Realizados
-                </h2>
-
-                <div className="flex gap-2 mb-4">
-                  <input
-                    type="text"
-                    value={exerciseInput}
-                    onChange={(e) => setExerciseInput(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && (e.preventDefault(), addExercise())
-                    }
-                    placeholder="Ej: Estiramiento, Fortalecimiento..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={addExercise}
-                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50"
-                    disabled={!exerciseInput.trim()} // Deshabilitar si está vacío
-                  >
-                    Agregar
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border border-dashed border-purple-300 rounded-lg bg-purple-50 dark:bg-purple-900/10">
-                  {data.exercises.length === 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Aún no hay ejercicios registrados.
-                    </p>
-                  )}
-                  {data.exercises.map((exercise, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-2 px-3 py-1 text-sm font-medium text-purple-700 bg-purple-100 rounded-full dark:bg-purple-900 dark:text-purple-300"
-                    >
-                      {exercise}
-                      <button
-                        type="button"
-                        onClick={() => removeExercise(index)}
-                        className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Notas y Objetivos (Grilla 2x2 para ahorrar espacio) */}
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              {/* Notas de la Sesión */}
-              <div className="p-6 bg-white border border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                  <FileText className="w-6 h-6 text-gray-600" />
-                  Notas y Observaciones
-                </h2>
-
-                <textarea
-                  value={data.notes}
-                  onChange={(e) => setData("notes", e.target.value)}
-                  rows="5"
-                  placeholder="Observaciones generales de la sesión, respuesta del paciente, etc."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-
-              {/* Indicaciones para Casa */}
-              <div className="p-6 border border-blue-300 rounded-lg bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10">
-                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                  <Home className="w-6 h-6 text-blue-600" />
-                  Indicaciones para Casa (Tarea)
-                </h2>
-
-                <textarea
-                  value={data.homework}
-                  onChange={(e) => setData("homework", e.target.value)}
-                  rows="5"
-                  placeholder="Ejercicios o recomendaciones específicas para realizar en casa."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-
-              {/* Objetivos Próxima Sesión (Destacado) */}
-              <div className="col-span-1 p-6 border border-yellow-300 rounded-lg md:col-span-2 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/10">
-                <h2 className="flex items-center gap-2 mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                  <Target className="w-6 h-6 text-yellow-600" />
-                  Objetivos Próxima Sesión
-                </h2>
-
-                <textarea
-                  value={data.next_goals}
-                  onChange={(e) => setData("next_goals", e.target.value)}
-                  rows="3"
-                  placeholder="Metas y objetivos a trabajar en la siguiente sesión."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Botones de Acción */}
-        <div className="flex justify-end gap-3 pt-6">
+        {/* FOOTER */}
+        <div className="sticky bottom-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
           <button
             type="button"
-            onClick={handleCancel}
-            className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-            disabled={processing}
+            onClick={() => setShowModal(false)}
+            className="px-4 py-2 text-sm text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             disabled={processing}
           >
-            {processing
-              ? isDuplicate
-                ? "Duplicando..."
-                : isEditing
-                ? "Guardando..."
-                : "Creando..."
-              : isDuplicate
-              ? "Duplicar Sesión"
-              : isEditing
-              ? "Actualizar Sesión"
-              : "Crear Sesión"}
+            {processing ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
           </button>
         </div>
       </form>

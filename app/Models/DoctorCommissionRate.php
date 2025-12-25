@@ -9,39 +9,39 @@ class DoctorCommissionRate extends Model
 {
     use Multitenantable;
 
-  public const TYPE_PERCENTAGE  = 'percentage';
-  public const TYPE_FIXED       = 'fixed_amount';
+    public const TYPE_PERCENTAGE  = 'percentage';
+    public const TYPE_FIXED       = 'fixed_amount';
 
-  protected $fillable = [
-    'company_id',
-    'doctor_id',
-    'session_type_id',
-    'commission_type',
-    'commission_value',
-    'effective_from',
-    'effective_until',
-    'is_active',
-    'notes',
-  ];
+    protected $fillable = [
+        'company_id',
+        'doctor_id',
+        'session_type_id',
+        'commission_type',
+        'amount_clp',
+        'effective_from',
+        'effective_until',
+        'is_active',
+        'notes',
+    ];
 
-  protected $casts = [
-    'commission_value' => 'integer',
-    'effective_from'   => 'date',
-    'effective_until'  => 'date',
-    'is_active'        => 'boolean',
-  ];
+    protected $casts = [
+        'amount_clp' => 'integer',
+        'effective_from'   => 'date',
+        'effective_until'  => 'date',
+        'is_active'        => 'boolean',
+    ];
 
-  public function doctor()
-  {
-    return $this->belongsTo(Doctor::class);
-  }
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class);
+    }
 
-  public function sessionType()
-  {
-    return $this->belongsTo(SessionType::class);
-  }
+    public function sessionType()
+    {
+        return $this->belongsTo(SessionType::class);
+    }
 
- // Scopes
+    // Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -50,13 +50,13 @@ class DoctorCommissionRate extends Model
     public function scopeValidAt($query, $date = null)
     {
         $date = $date ?? now();
-        
+
         return $query->where(function ($q) use ($date) {
             $q->where('effective_from', '<=', $date)
-              ->orWhereNull('effective_from');
+                ->orWhereNull('effective_from');
         })->where(function ($q) use ($date) {
             $q->where('effective_until', '>=', $date)
-              ->orWhereNull('effective_until');
+                ->orWhereNull('effective_until');
         });
     }
 
@@ -69,7 +69,7 @@ class DoctorCommissionRate extends Model
     {
         return $query->where(function ($q) use ($sessionTypeId) {
             $q->where('session_type_id', $sessionTypeId)
-              ->orWhereNull('session_type_id'); // Comisión general
+                ->orWhereNull('session_type_id'); // Comisión general
         });
     }
 
@@ -79,14 +79,14 @@ class DoctorCommissionRate extends Model
         switch ($this->commission_type) {
             case 'percentage':
                 return ($basePrice * $this->commission_percentage) / 100;
-                
+
             case 'fixed':
                 return $this->fixed_commission;
-                
+
             case 'hybrid':
                 $percentageAmount = ($basePrice * $this->commission_percentage) / 100;
                 return $percentageAmount + $this->fixed_commission;
-                
+
             default:
                 return 0;
         }

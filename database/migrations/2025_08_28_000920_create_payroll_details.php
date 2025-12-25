@@ -33,15 +33,15 @@ return new class extends Migration {
       $t->boolean('attended')->default(true);
 
       // Montos en CLP
-      $t->unsignedBigInteger('patient_amount')->default(0);    // cobrado al paciente/base
-      $t->unsignedBigInteger('commission_base')->default(0);   // base sobre la que se calculó
-      $t->unsignedBigInteger('commission_amount')->default(0); // comisión del doctor
-      $t->unsignedBigInteger('adjustment_amount')->default(0); // bono/descuento por ítem
-      $t->unsignedBigInteger('subtotal')->default(0);          // commission + adjustment
+      $t->unsignedBigInteger('patient_amount_clp')->default(0);    // cobrado al paciente/base
+      $t->unsignedBigInteger('commission_base_clp')->default(0);   // base sobre la que se calculó
+      $t->unsignedBigInteger('commission_amount_clp')->default(0); // comisión del doctor
+      $t->unsignedBigInteger('adjustment_amount_clp')->default(0); // bono/descuento por ítem
+      $t->unsignedBigInteger('subtotal_clp')->default(0);          // commission + adjustment
 
       // Traza de cómo se calculó (para auditoría)
       $t->enum('rate_type', ['fixed_amount', 'percentage'])->nullable();
-      $t->unsignedBigInteger('rate_amount')->nullable(); // si fijo
+      $t->unsignedBigInteger('rate_amount_clp')->nullable(); // si fijo
       $t->decimal('rate_percentage', 5, 2)->nullable();  // si %
       $t->json('calc_context')->nullable();              // snapshot de reglas/condiciones
 

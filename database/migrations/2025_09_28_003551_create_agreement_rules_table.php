@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         // Detalle de la cobertura/precio por servicio dentro de un tarifario (Agreement).
-        Schema::create('agreement_items', function (Blueprint $table) {
+        Schema::create('agreement_rules', function (Blueprint $table) {
             $table->id();
 
             // 🔗 RELACIONES
@@ -17,7 +17,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete()
                 ->comment('FK al tarifario maestro.');
-            
+
             $table->foreignId('session_type_id')
                 ->constrained('session_types') // Asume que tienes una tabla 'services'
                 ->cascadeOnDelete()
@@ -30,12 +30,12 @@ return new class extends Migration
                 ->comment('Plan específico (ej: Fonasa B). Null si aplica a todos los planes de esa aseguradora.');
 
             // --- VALORES DE COBERTURA (SIMULACIÓN IMED) ---
-            $table->unsignedBigInteger('gross_price')->comment('Precio bruto de la prestación (100%).');
-            
+            $table->unsignedBigInteger('gross_price_clp')->comment('Precio bruto de la prestación (100%).');
+
             // 🎯 Estos son los valores que reemplazarán la respuesta de I-Med
             $table->unsignedBigInteger('patient_share_clp')->comment('Monto fijo de copago que paga el paciente.');
             $table->unsignedBigInteger('insurance_share_clp')->comment('Monto fijo de cobertura que paga la aseguradora.');
-            
+
             // Porcentajes de cobertura (opcional, para flexibilidad)
             $table->decimal('patient_percentage', 5, 2)->default(0)->comment('Porcentaje de cobertura del paciente.');
             $table->decimal('insurance_percentage', 5, 2)->default(0)->comment('Porcentaje de cobertura de la aseguradora.');
@@ -51,6 +51,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('agreement_items');
+        Schema::dropIfExists('agreement_rules');
     }
 };

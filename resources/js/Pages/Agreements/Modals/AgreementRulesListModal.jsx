@@ -1,11 +1,12 @@
 import SideModal from "@/Components/SideModal";
-import AgreementItemsTable from "../Components/AgreementItemsTable";
+import AgreementRulesTable from "../Components/AgreementRulesTable";
 
-export default function AgreementItemListModal({
+export default function AgreementRulesListModal({
   show,
   onClose,
   rules,
   handleOpenRuleForm,
+  agreement,
   setRuleToEdit,
 }) {
   return (
@@ -14,9 +15,10 @@ export default function AgreementItemListModal({
       onClose={() => onClose()}
       title="Listado de Reglas del Convenio"
       description="Aquí puedes ver y gestionar las reglas asociadas al convenio seleccionado."
-      width="4xl"
+      width="5xl"
     >
-      <AgreementItemsTable
+      <div>{agreement?.name}</div>
+      <AgreementRulesTable
         rules={rules}
         setRuleToEdit={setRuleToEdit}
         handleOpenRuleForm={handleOpenRuleForm}

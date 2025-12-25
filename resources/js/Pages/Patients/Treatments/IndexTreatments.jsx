@@ -167,7 +167,7 @@ export default function IndexTreatments({
           treatment={selectedTreatment}
           doctors={doctors}
           session_types={session_types}
-          patient={patient}
+          preselectedPatient={patient}
           isDuplicate={isDuplicate}
           afterSubmitReloadOnly={["treatments"]}
         />

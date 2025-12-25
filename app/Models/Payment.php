@@ -24,10 +24,10 @@ class Payment extends Model
         'branch_id',
         'patient_id',
         'amount_clp', // Copago final
-        'amount_gross', // Copago final
-        'amount_insurance_primary', // Copago final
-        'amount_insurance_secondary', // Copago final
-        'discount',
+        'amount_gross_clp', // Copago final
+        'amount_insurance_primary_clp', // Copago final
+        'amount_insurance_secondary_clp', // Copago final
+        'discount_clp',
         'payment_date',
         'transaction_reference',
         'payment_method',

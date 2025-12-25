@@ -74,7 +74,7 @@ export default function WebpayTest({
   const calculateSessionsTotal = () => {
     return selectedSessions.reduce((sum, sessionId) => {
       const session = patientSessions.find((s) => s.id === sessionId);
-      return sum + (session?.patient_amount || 0);
+      return sum + (session?.patient_amount_clp || 0);
     }, 0);
   };
 
@@ -127,7 +127,7 @@ export default function WebpayTest({
     // Actualizar monto automáticamente
     const total = newSelected.reduce((sum, id) => {
       const session = patientSessions.find((s) => s.id === id);
-      return sum + (session?.patient_amount || 0);
+      return sum + (session?.patient_amount_clp || 0);
     }, 0);
     setData("amount_clp", total);
   };
@@ -166,7 +166,7 @@ export default function WebpayTest({
     setData("session_id", sessionId);
     const session = patientSessions.find((s) => s.id === parseInt(sessionId));
     if (session) {
-      setData("amount_clp", session.patient_amount);
+      setData("amount_clp", session.patient_amount_clp);
     }
   };
 
@@ -528,7 +528,7 @@ export default function WebpayTest({
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-blue-600">
-                                {formatCLP(session.patient_amount)}
+                                {formatCLP(session.patient_amount_clp)}
                               </p>
                             </div>
                           </label>
@@ -593,7 +593,7 @@ export default function WebpayTest({
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-gray-700">
-                                {formatCLP(session.patient_amount)}
+                                {formatCLP(session.patient_amount_clp)}
                               </p>
                             </div>
                           </label>

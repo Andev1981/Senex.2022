@@ -42,16 +42,16 @@ class Invoice extends Model
     'entity_id',
 
     // --- MONTOS CONTABLES (VITALES) ---
-    'amount_neto',        // Monto Afecto antes de IVA
-    'amount_exento',      // Monto que no paga IVA (Servicios Médicos)
-    'amount_iva',         // El 19% del Neto
-    'amount_total',       // Neto + Exento + IVA
+    'amount_neto_clp',        // Monto Afecto antes de IVA
+    'amount_exento_clp',      // Monto que no paga IVA (Servicios Médicos)
+    'amount_iva_clp',         // El 19% del Neto
+    'amount_total_clp',       // Neto + Exento + IVA
 
     // --- DESGLOSE DE COPAGO (CLÍNICO) ---
-    'amount_gross',              // Valor arancel total
-    'amount_insurance_primary',  // Aporte Isapre/Fonasa
-    'amount_insurance_secondary', // Aporte Seguro Complementario
-    'amount_patient',            // Lo que efectivamente sale del bolsillo del paciente
+    'amount_gross_clp',              // Valor arancel total
+    'amount_insurance_primary_clp',  // Aporte Isapre/Fonasa
+    'amount_insurance_secondary_clp', // Aporte Seguro Complementario
+    'amount_patient_clp',            // Lo que efectivamente sale del bolsillo del paciente
 
     // --- DATOS SII / DTE ---
     'dte_type',           // 33, 34, 39, 41, 61
@@ -90,6 +90,20 @@ class Invoice extends Model
   public function items(): HasMany
   {
     return $this->hasMany(InvoiceItem::class);
+  }
+
+  // "Tengo un DTE asociado (o varios si hubo notas de crédito)"
+  public function dtes()
+  {
+    return $this->morphMany(Dte::class, 'origin');
+  }
+
+  // Helper para obtener el DTE activo (vigente)
+  public function currentDte()
+  {
+    return $this->morphOne(Dte::class, 'origin')
+      ->where('estado_sii', '!=', 'ANULADO') // O tu lógica de status
+      ->latestOfMany();
   }
 
   /* public function treatmentSession(): HasMany
@@ -149,11 +163,11 @@ class Invoice extends Model
   // ===== Cálculo rápido (si necesitas recalcular) =====
   public function recalcTotalsFromItems(int $taxRate = 0, bool $taxExempt = true): void
   {
-    $subtotal = (float) $this->items()->sum('line_total');
-    $tax = $taxExempt ? 0 : round($subtotal * ($taxRate / 100), 2);
-    $this->subtotal = $subtotal;
+    $subtotal_clp = (float) $this->items()->sum('line_total');
+    $tax = $taxExempt ? 0 : round($subtotal_clp * ($taxRate / 100), 2);
+    $this->subtotal_clp = $subtotal_clp;
     $this->tax_amount = $tax;
-    $this->total_amount = $subtotal + $tax;
+    $this->total_amount = $subtotal_clp + $tax;
     $this->save();
   }
 

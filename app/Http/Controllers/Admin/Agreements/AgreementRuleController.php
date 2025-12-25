@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin\Agreements;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreAgreementItemRequest;
-use App\Http\Requests\UpdateAgreementItemRequest;
+use App\Http\Requests\StoreAgreementRuleRequest;
+use App\Http\Requests\UpdateAgreementRuleRequest;
 use App\Models\AgreementRule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class AgreementItemController extends Controller
+class AgreementRuleController extends Controller
 {
 
 
@@ -17,7 +17,7 @@ class AgreementItemController extends Controller
      * Almacena un nuevo AgreementRule.
      */
     // 💡 Usamos el FormRequest para la validación
-    public function store(StoreAgreementItemRequest $request)
+    public function store(StoreAgreementRuleRequest $request)
     {
         $validated = $request->validated();
 
@@ -36,7 +36,7 @@ class AgreementItemController extends Controller
             return back();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("AgreementItemController falló store: " . $e->getMessage());
+            Log::error("AgreementRuleController falló store: " . $e->getMessage());
             session()->flash('message', 'Pago registrado y boleta enviada al SII.');
             session()->flash('type', 'error');
             // Esto debería ser capturado por el FormRequest o Inertia automáticamente
@@ -48,18 +48,16 @@ class AgreementItemController extends Controller
     /**
      * Actualiza un AgreementRule existente.
      */
-    public function update(UpdateAgreementItemRequest $request, AgreementRule $agreementRule)
+    public function update(UpdateAgreementRuleRequest $request, AgreementRule $rule)
     {
         // La validación y la conversión de plan_id a NULL si es '' ocurren en el FormRequest
         $validated = $request->validated();
 
-        dd($validated, $agreementRule);
-
         try {
             DB::beginTransaction();
 
-            // Actualizamos el AgreementRule
-            $agreementRule->update($validated);
+            // Actualizamos el rule
+            $rule->update($validated);
 
             DB::commit();
 
@@ -69,7 +67,7 @@ class AgreementItemController extends Controller
             return back();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("AgreementItemController falló update: " . $e->getMessage());
+            Log::error("AgreementRuleController falló update: " . $e->getMessage());
             session()->flash('message', 'Pago registrado y boleta enviada al SII.');
             session()->flash('type', 'error');
             return back();
@@ -88,7 +86,7 @@ class AgreementItemController extends Controller
             session()->flash('type', 'success');
             return back();
         } catch (\Exception $e) {
-            Log::error("AgreementItemController falló destroy: " . $e->getMessage());
+            Log::error("AgreementRuleController falló destroy: " . $e->getMessage());
             session()->flash('message', 'Pago registrado y boleta enviada al SII.');
             session()->flash('type', 'error');
             return back();

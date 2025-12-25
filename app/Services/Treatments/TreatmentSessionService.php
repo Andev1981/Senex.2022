@@ -1,7 +1,6 @@
 <?php
-// app/Services/TreatmentSessionService.php
 
-namespace App\Services;
+namespace App\Services\Treatments;
 
 use App\Models\Treatment;
 use App\Models\Debt;
@@ -83,15 +82,15 @@ class TreatmentSessionService
                 );
             }
 
-            if (!isset($data['patient_amount'])) {
-                $data['patient_amount'] = $sessionType['base_price_clp'];
+            if (!isset($data['patient_amount_clp'])) {
+                $data['patient_amount_clp'] = $sessionType['base_price_clp'];
             }
-            if (!isset($data['doctor_amount'])) {
-                $data['doctor_amount'] = $doctorCommission['commission_value'];
+            if (!isset($data['doctor_amount_clp'])) {
+                $data['doctor_amount_clp'] = $doctorCommission['amount_clp'];
             }
 
-            if (!isset($data['clinic_amount'])) {
-                $data['clinic_amount'] = $sessionType['base_price_clp'] - $doctorCommission['commission_value'];
+            if (!isset($data['clinic_amount_clp'])) {
+                $data['clinic_amount_clp'] = $sessionType['base_price_clp'] - $doctorCommission['amount_clp'];
             }
 
             // ============================================
@@ -119,7 +118,7 @@ class TreatmentSessionService
             // ============================================
             // 3.- Calcular y guardar snapshot de comisión
             // ============================================
-            $data['commission_amount'] = $doctorCommission->calculateCommission($data['patient_amount']);
+            $data['commission_amount_clp'] = $doctorCommission->calculateCommission($data['patient_amount_clp']);
             $data['commission_percentage'] = $doctorCommission->commission_percentage;
             $data['commission_type'] = $doctorCommission->commission_type;
 
@@ -212,7 +211,7 @@ class TreatmentSessionService
                     $this->paymentService->createDebtForSession($session);
 
                     // --- [LÓGICA DE NOTIFICACIÓN] ---
-                    $totalDeuda = (int) $session->patient_amount; // Usamos el monto de la sesión
+                    $totalDeuda = (int) $session->patient_amount_clp; // Usamos el monto de la sesión
                     $session_type = $sessionType['name'];
                     $treatment_session = $session;
 

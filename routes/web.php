@@ -16,13 +16,17 @@ use App\Http\Controllers\Patient\AuthController as PatientAuthController;
 use App\Http\Controllers\{
   HomeController,
   AddressController,
+  AuthorizedFolioController,
+  CompanyController,
+  DteConfigurationController,
   DteController,
   DteFolioController,
   PatientContactController,
+  ProductController,
   TreatmentSessionController,
 };
 use App\Http\Controllers\Admin\Agreements\AgreementController;
-use App\Http\Controllers\Admin\Agreements\AgreementItemController;
+use App\Http\Controllers\Admin\Agreements\AgreementRuleController;
 use App\Http\Controllers\Admin\CompanySwitchController;
 use App\Http\Controllers\Admin\Doctors\DoctorAdminController;
 use App\Http\Controllers\Admin\Patients\PatientAdminController;
@@ -35,7 +39,11 @@ use App\Http\Controllers\Patient\PatientDashboardController;
 use App\Http\Controllers\Payments\WebpayController;
 use App\Http\Controllers\Admin\Payments\PaymentsController;
 use App\Http\Controllers\Admin\Plans\FamilyPlanController;
-
+use App\Http\Controllers\Admin\SessionTypes\BranchSessionTypeController;
+use App\Http\Controllers\KineMobile\DashboardController;
+use App\Http\Controllers\KineMobile\PatientController;
+use App\Http\Controllers\KineMobile\ProfileController;
+use App\Http\Controllers\KineMobile\SessionController;
 use App\Http\Controllers\PatientSearchController;
 
 //Reoptimized class loader:
@@ -174,6 +182,15 @@ Route::group(['middleware' => ['auth']], function () {
 
   Route::resource('sessions', TreatmentSessionAdminController::class)->names('sessions');
 
+  /* RUTAS PARA CONFIGURAR EXCEPCIONES POR SUCURSAL EN TIPOS DE SESIÓN */
+  // Ruta para OBTENER la configuración (para llenar el formulario)
+  Route::get('/session-types/{sessionType}/branches/{branch}/config', [BranchSessionTypeController::class, 'show'])
+    ->name('session-types.branch.show');
+
+  // Ruta para GUARDAR la configuración
+  Route::put('/session-types/{sessionType}/branches/{branch}/config', [BranchSessionTypeController::class, 'update'])
+    ->name('session-types.branch.update');
+
 
   Route::resource('insurances', InsuranceController::class)->names('insurances');
 
@@ -181,7 +198,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::resource('agreements', AgreementController::class)->names('agreements');
 
 
-  Route::resource('agreement/items', AgreementItemController::class)->names('agreement.items');
+  Route::resource('agreement/rules', AgreementRuleController::class)->names('agreement.rules');
 
 
   Route::resource('plans', PlanController::class)->names('plans');
@@ -205,6 +222,41 @@ Route::group(['middleware' => ['auth']], function () {
   Route::post('/payments/pos/abort', [PaymentsController::class, 'abortPos'])->name('payments.pos.abort');
 
 
+
+  // CRUD Básico de Empresas (Index, Create, Edit, Update)
+  Route::resource('companies', CompanyController::class);
+
+  // CRUD Básico de Productos (Index, Create, Edit, Update)
+  Route::resource('products', ProductController::class);
+
+  // Rutas para DTE y CAFs (Anidadas a una empresa específica)
+  Route::prefix('companies/{company}')->name('companies.')->group(function () {
+
+    // Guardar/Actualizar Configuración DTE (Certificado, Ambiente, Rut)
+    Route::post('/dte-config', [DteConfigurationController::class, 'storeOrUpdate'])
+      ->name('dte_config.store');
+
+    // Subir CAF (XML)
+    Route::post('/caf', [AuthorizedFolioController::class, 'store'])
+      ->name('caf.store');
+  });
+
+
+
+  // Dashboard-kines (próxima fase)
+  Route::get('/doctor/dashboard', [DashboardController::class, 'index'])
+    ->name('kine.dashboard');
+
+  Route::get('/doctor/dashboard/patients', [PatientController::class, 'index'])
+    ->name('kine.my-patients');
+
+  Route::get('/doctor/dashboard/sessions', [SessionController::class, 'index'])
+    ->name('kine.my-sessions');
+  Route::get('/doctor/dashboard/session/create', [SessionController::class, 'create'])
+    ->name('kine.sessions.create');
+
+  Route::get('/doctor/dashboard/profile', [ProfileController::class, 'index'])
+    ->name('kine.my-profile');
 
 
 
@@ -436,6 +488,12 @@ Route::prefix('patient')->name('patient.')->group(function () {
     Route::get('/dashboard', [PatientDashboardController::class, 'index'])
       ->name('dashboard');
   });
+
+
+
+  // Cerrar sesión
+  Route::post('/logout', [PatientAuthController::class, 'logout'])
+    ->name('logout');
 });
 
 

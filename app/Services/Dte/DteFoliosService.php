@@ -2,11 +2,11 @@
 
 namespace App\Services\Dte;
 
-use sasco\LibreDTE\Sii\Folios; 
+use sasco\LibreDTE\Sii\Folios;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB; // Usaremos la Facade DB
 
-class DteFoliosService 
+class DteFoliosService
 {
     // Ya no es necesario almacenar el objeto Folios en memoria, la DB es la fuente de verdad.
     // private $foliosPorTipo = []; 
@@ -18,16 +18,16 @@ class DteFoliosService
             throw new \Exception("Archivo CAF no encontrado en: " . $rutaArchivoCAF);
         }
         $xmlData = file_get_contents($rutaArchivoCAF);
-        
+
         try {
             $folios = new Folios($xmlData);
             $tipoDTE = $folios->getTipo();
             $rutEmisor = $folios->getEmisor(); // Se asume que el método getEmisor() existe
 
-            if (!$tipoDTE || !$rutEmisor) { 
-                 throw new \Exception("CAF no válido o faltan datos esenciales (TipoDTE/RutEmisor).");
+            if (!$tipoDTE || !$rutEmisor) {
+                throw new \Exception("CAF no válido o faltan datos esenciales (TipoDTE/RutEmisor).");
             }
-            
+
             // 2. Insertar en la Base de Datos
             DB::table('dte_folios')->insert([
                 'rut_emisor' => $rutEmisor,
@@ -35,7 +35,7 @@ class DteFoliosService
                 'folio_desde' => $folios->getDesde(),
                 'folio_hasta' => $folios->getHasta(),
                 // Al inicio, el último folio usado es 1 menos que el primero.
-                'ultimo_folio_usado' => $folios->getDesde() - 1, 
+                'ultimo_folio_usado' => $folios->getDesde() - 1,
                 'caf_xml' => $xmlData,
                 'fecha_vencimiento' => $folios->getFechaVencimiento(),
                 'activo' => true,
@@ -45,12 +45,11 @@ class DteFoliosService
 
             Log::info("CAF cargado exitosamente en DB para Tipo DTE: " . $tipoDTE);
             return $tipoDTE;
-
         } catch (\Exception $e) {
             throw new \Exception("Fallo al procesar o guardar el archivo CAF: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Reserva el siguiente folio disponible y devuelve el objeto Folios del core.
      * @param string $rutEmisor Rut del emisor.
@@ -58,7 +57,7 @@ class DteFoliosService
      * @return array [Folios $objetoFolios, int $folioReservado]
      * @throws \Exception si no hay folios disponibles.
      */
-    public function reservarFolio(int $company,string $rutEmisor, int $tipoDTE): array
+    public function reservarFolio(int $company, string $rutEmisor, int $tipoDTE): array
     {
         $folioReservado = null;
         $cafData = null;
@@ -98,13 +97,12 @@ class DteFoliosService
 
         // 2. Crear el objeto Folios fuera de la transacción (uso de CPU)
         if (is_null($cafData)) {
-             // Este caso solo ocurre si el lock falla, pero lo manejamos como fallback
-             throw new \Exception("Error desconocido en la reserva de folio.");
+            // Este caso solo ocurre si el lock falla, pero lo manejamos como fallback
+            throw new \Exception("Error desconocido en la reserva de folio.");
         }
         $objetoFolios = new Folios($cafData);
-        
+
         // 3. Devolver los resultados
         return [$objetoFolios, $folioReservado];
     }
-    
 }

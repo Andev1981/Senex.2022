@@ -86,7 +86,7 @@ export default function ResumeModal({
             <div className="flex justify-between">
               <span className="text-purple-700">Total:</span>
               <span className="font-semibold text-purple-900">
-                {fmtCLP(sessionData?.patient_amount)}
+                {fmtCLP(sessionData?.patient_amount_clp)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -95,12 +95,13 @@ export default function ResumeModal({
                 {fmtCLP(sessionData?.total_payment)}
               </span>
             </div>
-            {sessionData?.patient_amount - sessionData?.total_payment > 0 && (
+            {sessionData?.patient_amount_clp - sessionData?.total_payment >
+              0 && (
               <div className="flex justify-between pt-2 border-t border-purple-300">
                 <span className="font-bold text-purple-900">Saldo:</span>
                 <span className="font-bold text-purple-900">
                   {fmtCLP(
-                    sessionData?.patient_amount - sessionData?.total_payment
+                    sessionData?.patient_amount_clp - sessionData?.total_payment
                   )}
                 </span>
               </div>

@@ -13,7 +13,7 @@ class StoreSessionTypeRequest extends FormRequest
     public function authorize(): bool
     {
         // Ajustar según tu lógica de permisos (ej: $this->user()->can('manage_services'))
-        return true; 
+        return true;
     }
 
     /**
@@ -23,23 +23,16 @@ class StoreSessionTypeRequest extends FormRequest
     {
         // Obtener el ID del servicio actual para la exclusión en la regla 'unique'
         $sessionTypeId = $this->route('session_type') ? $this->route('session_type')->id : null;
-        
+
         // Asumimos que el company_id del usuario autenticado es el company_id del registro
-        $companyId = $this->user()->company_id; 
+        $companyId = $this->user()->company_id;
 
         return [
-            // --- 1. Control Multi-Empresa ---
-            'company_id' => [
-                'required', 
-                'integer', 
-                'exists:companies,id'
-            ],
-
             // --- 2. Identificación y Unicidad ---
             'name' => ['required', 'string', 'max:255'],
             'code' => [
-                'required', 
-                'string', 
+                'required',
+                'string',
                 'max:50',
                 // El código debe ser único DENTRO de la empresa
                 "unique:services,code,{$sessionTypeId},id,company_id,{$companyId}"
@@ -50,19 +43,25 @@ class StoreSessionTypeRequest extends FormRequest
             'base_price_clp' => ['required', 'integer', 'min:0'],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:300'],
             'plan_discount_clp' => [
-                'nullable', 
-                'integer', 
-                'min:0', 
+                'nullable',
+                'integer',
+                'min:0',
+                'lte:base_price_clp' // Descuento no puede ser mayor que el precio base
+            ],
+            'default_doctor_commission_clp' => [
+                'required',
+                'integer',
+                'min:0',
                 'lte:base_price_clp' // Descuento no puede ser mayor que el precio base
             ],
 
             // --- 4. Requisitos y Estado ---
-            'require_diagnosis' => ['required', 'boolean'],
-            'require_referral' => ['required', 'boolean'],
+            'requires_diagnosis' => ['required', 'boolean'],
+            'requires_referral' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],
         ];
     }
-    
+
     /**
      * Define los mensajes de error personalizados.
      */
@@ -83,7 +82,7 @@ class StoreSessionTypeRequest extends FormRequest
             'company_id.exists' => 'La empresa seleccionada no es válida.',
         ];
     }
-    
+
     /**
      * Define los nombres de atributos (para usar en los mensajes).
      */

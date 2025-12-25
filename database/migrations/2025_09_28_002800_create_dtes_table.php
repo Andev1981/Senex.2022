@@ -13,43 +13,46 @@ return new class extends Migration
     {
         Schema::create('dtes', function (Blueprint $table) {
             $table->id();
-            
+
             // --- LLAVES DE SEGREGACIÓN ---
             $table->foreignId('company_id')
-                  ->constrained() // Asume que la tabla 'companies' existe
-                  ->onDelete('cascade')
-                  ->comment('Empresa emisora del DTE (Multi-tenancy).');
-            
+                ->constrained() // Asume que la tabla 'companies' existe
+                ->onDelete('cascade')
+                ->comment('Empresa emisora del DTE (Multi-tenancy).');
+
             $table->foreignId('branch_id')
-                  ->nullable()
-                  ->constrained() // Asume que la tabla 'branches' existe
-                  ->onDelete('set null')
-                  ->comment('Sucursal donde se originó el DTE.');
+                ->nullable()
+                ->constrained() // Asume que la tabla 'branches' existe
+                ->onDelete('set null')
+                ->comment('Sucursal donde se originó el DTE.');
+
+            $table->nullableMorphs('origin');
+            // Polimorfismo para origen del DTE (Invoice, CreditNote, DebitNote, etc.)
 
             // --- DATOS PRINCIPALES DEL DTE ---
             $table->unsignedSmallInteger('type')->comment('Código DTE (ej: 33, 39, 61).');
             $table->unsignedInteger('folio')->comment('Número correlativo de la empresa.');
-            
+
             $table->string('rut_emisor', 10)->comment('RUT de la empresa (sin DV ni guion).');
             $table->string('rut_receptor', 10)->comment('RUT del receptor (sin DV ni guion).');
-            
-            $table->decimal('total_monto', 12, 2)->comment('Monto total del documento.');
-            
+
+            $table->decimal('total_monto_clp', 12, 2)->comment('Monto total del documento.');
+
             // --- SEGUIMIENTO SII ---
             $table->enum('estado_sii', ['PENDIENTE', 'ENVIADO', 'ACEPTADO', 'RECHAZADO', 'ACEPTADO_CON_REPAROS'])
-                  ->default('PENDIENTE');
+                ->default('PENDIENTE');
             $table->bigInteger('track_id')->nullable()->unique()->comment('Número de seguimiento del SII.');
             $table->mediumText('glosa_rechazo')->nullable()->comment('Detalle del error si fue rechazado por el SII.');
 
             // --- ARCHIVOS Y RELACIONES ---
             $table->mediumText('xml_data')->nullable()->comment('Contenido XML del DTE firmado.');
-            
+
             $table->foreignId('related_dte_id')
-                  ->nullable()
-                  ->constrained('dtes')
-                  ->onDelete('set null')
-                  ->comment('ID de un DTE relacionado (ej. factura original para NC).');
-            
+                ->nullable()
+                ->constrained('dtes')
+                ->onDelete('set null')
+                ->comment('ID de un DTE relacionado (ej. factura original para NC).');
+
             // Índice para asegurar unicidad por empresa y tipo.
             $table->unique(['company_id', 'type', 'folio']);
 

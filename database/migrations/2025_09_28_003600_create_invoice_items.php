@@ -13,34 +13,36 @@ return new class extends Migration {
     // invoice_items
     // -------------------------
     Schema::create('invoice_items', function (Blueprint $t) {
-        $t->id();
-        $t->foreignId('invoice_id')->constrained()->cascadeOnDelete();
+      $t->id();
+      $t->foreignId('invoice_id')->constrained()->cascadeOnDelete();
 
-        // Agregamos estas dos para que el Seeder y las consultas rápidas funcionen
-        $t->foreignId('company_id')->constrained()->cascadeOnDelete();
-        $t->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
+      // Agregamos estas dos para que el Seeder y las consultas rápidas funcionen
+      $t->foreignId('company_id')->constrained()->cascadeOnDelete();
+      $t->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
 
-        $t->foreignId('session_type_id')->nullable()->constrained();
-        $t->foreignId('treatment_session_id')->nullable()->constrained();
-        $t->foreignId('agreement_item_id')->nullable()->constrained();
+      /* $t->foreignId('session_type_id')->nullable()->constrained(); */
+      $t->foreignId('treatment_session_id')->nullable()->constrained();
+      $t->foreignId('agreement_rule_id')->nullable()->constrained();
+      $t->morphs('sellable');
 
-        $t->string('description');
-        $t->integer('quantity')->default(1);
-        
-        // Precios Unitarios (Homologados)
-        $t->integer('unit_price')->comment('Precio bruto unitario (100%)');
-        $t->integer('unit_patient')->default(0)->comment('Copago por unidad');
-        $t->integer('unit_insurance_primary')->default(0);
-        $t->integer('unit_insurance_secondary')->default(0);
+      $t->string('description');
+      $t->integer('quantity')->default(1);
 
-        // Totales de Línea
-        $t->integer('total_gross')->comment('unit_price * quantity');
-        $t->integer('total_patient')->comment('unit_patient * quantity');
-        
-        // Indicador IVA
-        $t->boolean('is_exento')->default(true)->comment('Define si el ítem es exento o afecto');
+      // Precios Unitarios (Homologados)
+      $t->integer('unit_price_clp')->comment('Precio bruto unitario (100%)');
+      $t->integer('unit_patient_clp')->default(0)->comment('Copago por unidad');
+      $t->integer('unit_insurance_primary_clp')->default(0);
+      $t->integer('unit_insurance_secondary_clp')->default(0);
 
-        $t->timestamps();
+      // Totales de Línea
+      $t->integer('total_gross_clp')->comment('unit_price_clp * quantity');
+      $t->integer('total_patient_clp')->comment('unit_patient_clp * quantity');
+
+      // Indicador IVA
+      $t->boolean('is_exento')->default(true)->comment('Define si el ítem es exento o afecto');
+
+
+      $t->timestamps();
     });
   }
 

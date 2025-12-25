@@ -3,7 +3,7 @@ import { Save, X } from "lucide-react";
 import SideModal from "@/Components/SideModal";
 import { useEffect, useState } from "react";
 
-export default function AgreementItemFormModal({
+export default function AgreementRuleFormModal({
   show,
   onClose,
   agreement,
@@ -30,7 +30,7 @@ export default function AgreementItemFormModal({
     id: "",
     session_type_id: "",
     plan_id: "", // Se enviará como null si está vacío
-    gross_price: 0,
+    gross_price_clp: 0,
     patient_share_clp: 0,
     insurance_share_clp: 0,
     patient_percentage: 0,
@@ -49,13 +49,13 @@ export default function AgreementItemFormModal({
       if (rule) {
         // MODO EDICIÓN: Cargamos los datos que vienen del prop
         setData({
-          agreement_id: agreement?.id,
           id: rule?.id,
+          agreement_id: agreement?.id,
           session_type_id: rule?.session_type_id || "",
           plan_id: rule?.plan_id ? String(rule.plan_id) : "",
 
           // Montos y Porcentajes ORIGINALES (Incluye ambos porcentajes)
-          gross_price: rule?.gross_price || 0,
+          gross_price_clp: rule?.gross_price_clp || 0,
           patient_share_clp: rule?.patient_share_clp || 0,
           insurance_share_clp: rule?.insurance_share_clp || 0,
           patient_percentage: rule?.patient_percentage || 0, // 💡 CAMPO DE COPAGO (%)
@@ -80,26 +80,29 @@ export default function AgreementItemFormModal({
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // 1. Definición dinámica de la ruta
     const routeName = isEdit
-      ? "agreement.items.update"
-      : "agreement.items.store";
+      ? "agreement.rules.update"
+      : "agreement.rules.store";
+
+    // ✅ Para STORE: undefined (la ruta es /agreement/rules)
+    // ✅ Para UPDATE: rule.id (la ruta es /agreement/rules/{rule})
+    // Ziggy es inteligente: si pasas un solo valor (rule.id), lo asigna al primer parámetro {rule}.
+    const routeParams = isEdit ? rule.id : undefined;
 
     const method = isEdit ? put : post;
-    const routeParams = isEdit ? { item: rule.id } : undefined;
-
-    // Preprocesar datos antes de enviarlos
-    transform((data) => ({
-      ...data,
-      // Convertir string vacío a null antes de que salga al servidor
-      plan_id: data.plan_id === "" ? null : data.plan_id,
-    }));
 
     method(route(routeName, routeParams), {
       onSuccess: () => {
-        reset(); // Limpiar al guardar exitosamente
+        reset();
         onClose();
+        // Opcional: una notificación toast aquí quedaría genial
       },
-      onError: (err) => console.error("Error al guardar regla:", err),
+      onError: (err) => {
+        console.error("Error al guardar regla:", err);
+        // Inertia maneja los errores de validación automáticamente en el prop 'errors',
+        // pero esto sirve para debug.
+      },
       preserveScroll: true,
     });
   };
@@ -108,7 +111,7 @@ export default function AgreementItemFormModal({
     const newValue = parseInt(value) || 0;
 
     let updates = { [field]: newValue };
-    let gross = field === "gross_price" ? newValue : data.gross_price;
+    let gross = field === "gross_price_clp" ? newValue : data.gross_price_clp;
     let patient =
       field === "patient_share_clp" ? newValue : data.patient_share_clp;
 
@@ -208,13 +211,17 @@ export default function AgreementItemFormModal({
             <input
               type="number"
               min="0"
-              value={data.gross_price}
-              onChange={(e) => handlePriceChange("gross_price", e.target.value)}
+              value={data.gross_price_clp}
+              onChange={(e) =>
+                handlePriceChange("gross_price_clp", e.target.value)
+              }
               className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
               required
             />
-            {errors.gross_price && (
-              <p className="mt-1 text-xs text-red-500">{errors.gross_price}</p>
+            {errors.gross_price_clp && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.gross_price_clp}
+              </p>
             )}
           </label>
 

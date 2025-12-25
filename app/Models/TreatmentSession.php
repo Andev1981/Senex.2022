@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,68 +13,49 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TreatmentSession extends Model
 {
-    use HasFactory, SoftDeletes, Multitenantable;
+    use HasFactory, SoftDeletes, Multitenantable, BelongsToTenant;
 
     protected $fillable = [
         'company_id',
-        /* 'branch_id', */
+        'branch_id',
         'treatment_id',
-        'appointment_id',
-        'doctor_id',
+        'appointment_id', // Puede ser null si es una sesión de emergencia sin cita previa
+        'doctor_id',      // Puede ser distinto al del tratamiento (un reemplazo)
         'patient_id',
         'session_type_id',
-        'room_id',
-        'month_session_number',
-        'consumes_plan',
+
+        // Control
         'date',
-        'time',
-        'duration',
-        'status',
-        // Evaluación del dolor
-        'pain_before',
-        'pain_after',
-        // ROM (Rango de Movimiento)
-        'rom_flexion_before',
-        'rom_flexion_after',
-        'rom_rotation_before',
-        'rom_rotation_after',
-        'rom_abduction_before',
-        'rom_abduction_after',
-        // Arrays
-        'techniques',
-        'exercises',
-        // Notas
-        'notes',
-        'homework',
-        'next_goals',
-        // Montos
-        'patient_amount', /* base price */
-        'doctor_amount', /* Commission */
-        'clinic_amount',
-        'cancellation_note',
+        'status',         // scheduled, attended, missed, cancelled
+        'consumes_plan',  // boolean (importante para packs de 10 sesiones)
+
+        // La Evolución Clínica (Flexible)
+        'pain_level',     // Integer 1-10 (Vale la pena tenerlo en columna propia para gráficas rápidas)
+        'evaluation_data', // JSON: Aquí guardas todos los ROMs dinámicos {flexion: 45, extension: 10...}
+        'activities_data', // JSON: Aquí guardas técnicas y ejercicios {techniques: [...], exercises: [...]}
+
+        // Notas SOAP
+        'subjective',     // "Paciente refiere..."
+        'objective',      // "Se observa edema..."
+        'assessment',     // "Buena tolerancia al ejercicio..." (Tu actual 'notes')
+        'plan',           // "Próxima sesión aumentar carga..." (Tu actual 'homework'/'next_goals')
+
+        // Finanzas (Snapshot)
+        'cost_breakdown', // JSON o columnas separadas. Si usas columnas separadas (como tienes ahora) es más fácil sumar con SQL.
+        'patient_amount_clp',
+        'doctor_amount_clp',
+        'clinic_amount_clp',
         'is_exento'
     ];
 
+    // Casts para que Laravel maneje el JSON como Array automáticamente
     protected $casts = [
-        'is_exento' => 'boolean',
-        'date' => 'date',
-        'time' => 'datetime:H:i',
-        'duration' => 'integer',
-        'pain_before' => 'integer',
-        'pain_after' => 'integer',
-        'rom_flexion_before' => 'integer',
-        'rom_flexion_after' => 'integer',
-        'rom_rotation_before' => 'integer',
-        'rom_rotation_after' => 'integer',
-        'rom_abduction_before' => 'integer',
-        'rom_abduction_after' => 'integer',
-        'techniques' => 'array',
-        'exercises' => 'array',
-        'patient_amount' => 'integer',
-        'doctor_amount' => 'integer',
-        'clinic_amount' => 'integer',
-        'month_session_number' => 'integer',
+        'evaluation_data' => 'array',
+        'activities_data' => 'array',
+        'cost_breakdown' => 'array',
         'consumes_plan' => 'boolean',
+        'is_exento' => 'boolean',
+        'date' => 'datetime'
     ];
 
     /**
@@ -188,6 +170,21 @@ class TreatmentSession extends Model
     /**
      * Métodos de utilidad
      */
+    public function calculateDoctorPayment()
+    {
+        // 1. Buscamos si hay un trato especial con este doctor
+        $specialRate = DoctorCommissionRate::where('doctor_id', $this->doctor_id)
+            ->where('session_type_id', $this->session_type_id)
+            ->first();
+
+        if ($specialRate) {
+            return $specialRate->amount_clp; // Retorna el valor personalizado (ej: 25.000)
+        }
+
+        // 2. Si no hay trato especial, retornamos el estándar del servicio
+        return $this->sessionType->default_doctor_commission_clp; // Retorna el base (ej: 20.000)
+    }
+
     public function isScheduled(): bool
     {
         return $this->status === 'Programada';

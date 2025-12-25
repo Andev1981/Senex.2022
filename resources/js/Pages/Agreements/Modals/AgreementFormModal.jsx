@@ -48,6 +48,10 @@ export default function AgreementFormModal({
 
     const method = isEdit ? put : post;
 
+    /*  console.log(method, routeName, routeParams);
+
+    return; */
+
     method(route(routeName, routeParams), {
       onSuccess: () => onClose(),
       onError: (err) => console.error(err),

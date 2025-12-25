@@ -11,9 +11,8 @@ import { ChevronDown, ChevronUp, Pencil, Trash2, Search } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TablePagination from "@/Components/TablePagination";
 
-export default function AgreementItemsTable({
+export default function AgreementRulesTable({
   rules,
-  handleOpenRuleForm,
   handleOpenModalEdit,
   handleOpenModalDelete,
   openPlanListModal,
@@ -36,8 +35,31 @@ export default function AgreementItemsTable({
     );
   }, [globalFilter, data]);
 
+  console.log(data);
+
   const columns = useMemo(
     () => [
+      {
+        accessorKey: "plan.name",
+        header: "PLAN",
+        cell: ({ getValue }) => (
+          <div className="font-medium uppercase truncate">{getValue()}</div>
+        ),
+      },
+      {
+        accessorKey: "session_type.name",
+        header: "TIPO DE SERVICIO",
+        cell: ({ getValue }) => (
+          <div className="font-medium uppercase">{getValue()}</div>
+        ),
+      },
+      {
+        accessorKey: "gross_price_clp",
+        header: "VALOR TOTAL (CLP)",
+        cell: ({ getValue }) => (
+          <div className="font-medium uppercase">{getValue()}</div>
+        ),
+      },
       {
         accessorKey: "insurance_share_clp",
         header: "VALOR ASEGURADORA (CLP)",
@@ -53,19 +75,20 @@ export default function AgreementItemsTable({
         ),
       },
       {
-        accessorKey: "patient_percentage",
-        header: "% PACIENTE",
-        cell: ({ getValue }) => (
-          <div className="text-gray-600">{getValue() || "-"}</div>
-        ),
-      },
-      {
         accessorKey: "patient_share_clp",
         header: "VALOR PACIENTE (CLP)",
         cell: ({ getValue }) => (
           <div className="text-gray-600">{getValue() || "-"}</div>
         ),
       },
+      {
+        accessorKey: "patient_percentage",
+        header: "% PACIENTE",
+        cell: ({ getValue }) => (
+          <div className="text-gray-600">{getValue() || "-"}</div>
+        ),
+      },
+
       {
         id: "actions",
         header: "",

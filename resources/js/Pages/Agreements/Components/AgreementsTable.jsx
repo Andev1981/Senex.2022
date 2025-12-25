@@ -115,7 +115,7 @@ export default function AgreementsTable({
             <PrimaryButton
               type="button"
               className={
-                row?.original?.items?.length > 0
+                row?.original?.rules?.length > 0
                   ? "p-1 bg-sky-400 btn gap-2 shadow-md hover:scale-105"
                   : "p-1 bg-gray-400 btn gap-2 shadow-md hover:scale-105"
               }
@@ -129,7 +129,7 @@ export default function AgreementsTable({
               onClick={() => handleOpenListRules(row?.original)}
             >
               <Search className="w-4 h-4" /> Ver Reglas (
-              {row.original.items.length})
+              {row.original.rules.length})
             </PrimaryButton>
           </div>
         ),

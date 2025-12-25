@@ -41,7 +41,7 @@ export default function Show({ invoice }) {
                 <td className="py-1">{it.description}</td>
                 <td className="py-1 text-center">{it.quantity}</td>
                 <td className="py-1 text-right">
-                  {Number(it.unit_price).toLocaleString("es-CL")}
+                  {Number(it.unit_price_clp).toLocaleString("es-CL")}
                 </td>
                 <td className="py-1 text-right">
                   {Number(it.line_total).toLocaleString("es-CL")}

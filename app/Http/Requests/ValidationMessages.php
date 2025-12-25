@@ -65,12 +65,12 @@ class ValidationMessages
             'next_goals.*.max'       => 'Cada meta próxima no puede superar 200 caracteres.',
 
             'attended_at.date'       => 'La fecha/hora de atención no es válida.',
-            'patient_amount.numeric' => 'El monto paciente debe ser numérico.',
-            'patient_amount.min'     => 'El monto paciente no puede ser negativo.',
-            'doctor_amount.numeric'  => 'El monto del doctor debe ser numérico.',
-            'doctor_amount.min'      => 'El monto del doctor no puede ser negativo.',
-            'clinic_amount.numeric'  => 'El monto de la clínica debe ser numérico.',
-            'clinic_amount.min'      => 'El monto de la clínica no puede ser negativo.',
+            'patient_amount_clp.numeric' => 'El monto paciente debe ser numérico.',
+            'patient_amount_clp.min'     => 'El monto paciente no puede ser negativo.',
+            'doctor_amount_clp.numeric'  => 'El monto del doctor debe ser numérico.',
+            'doctor_amount_clp.min'      => 'El monto del doctor no puede ser negativo.',
+            'clinic_amount_clp.numeric'  => 'El monto de la clínica debe ser numérico.',
+            'clinic_amount_clp.min'      => 'El monto de la clínica no puede ser negativo.',
 
             'meta.array'             => 'El campo meta debe ser un objeto/array.',
         ];
@@ -104,9 +104,9 @@ class ValidationMessages
             'homework' => 'tareas domiciliarias',
             'next_goals' => 'próximas metas',
             'attended_at' => 'atendido en',
-            'patient_amount' => 'monto paciente',
-            'doctor_amount' => 'monto doctor',
-            'clinic_amount' => 'monto clínica',
+            'patient_amount_clp' => 'monto paciente',
+            'doctor_amount_clp' => 'monto doctor',
+            'clinic_amount_clp' => 'monto clínica',
             'meta' => 'meta',
         ];
     }

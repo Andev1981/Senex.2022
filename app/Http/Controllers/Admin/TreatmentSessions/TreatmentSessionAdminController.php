@@ -8,7 +8,7 @@ use App\Http\Requests\UpdateTreatmentSessionRequest;
 use App\Models\TreatmentSession;
 use App\Models\Patient;
 use App\Services\Plans\PlanService;
-use App\Services\TreatmentSessionService;
+use App\Services\Treatments\TreatmentSessionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +21,7 @@ class TreatmentSessionAdminController extends Controller
      * Inyectar el service en el constructor
      */
     public function __construct(
-        private TreatmentSessionService $sessionService,    
+        private TreatmentSessionService $sessionService,
         private PlanService $planService
     ) {}
 
@@ -38,8 +38,8 @@ class TreatmentSessionAdminController extends Controller
             $data = ['status' => 'canceled'];
 
             if ($reason) {
-                $data['notes'] = ($session->notes ? $session->notes . "\n\n" : '') 
-                               . "Motivo de cancelación: {$reason}";
+                $data['notes'] = ($session->notes ? $session->notes . "\n\n" : '')
+                    . "Motivo de cancelación: {$reason}";
             }
 
             $session->update($data);
@@ -62,9 +62,9 @@ class TreatmentSessionAdminController extends Controller
      */
     public function store(StoreTreatmentSessionRequest $request)
     {
-     
+
         try {
-             // El service maneja toda la lógica:
+            // El service maneja toda la lógica:
             // - Asigna month_session_number automáticamente
             // - Valida disponibilidad del doctor
             // - Crea logs
@@ -75,16 +75,13 @@ class TreatmentSessionAdminController extends Controller
 
             session()->flash('message', 'Sesión creada exitosamente.');
             session()->flash('type', 'success');
-           
-
         } catch (\Exception $e) {
             Log::info('Error al crear sesión', [
                 $e->getMessage()
             ]);
-            
+
             session()->flash('message', 'Error al crear la sesión: ' . $e->getMessage());
             session()->flash('type', 'error');
-    
         }
     }
 
@@ -96,20 +93,16 @@ class TreatmentSessionAdminController extends Controller
     {
         try {
 
-           $session = TreatmentSession::findOrFail($session->id);
-            
+            $session = TreatmentSession::findOrFail($session->id);
+
             // El service recalcula month_session_number si cambió la fecha
             $session = $this->sessionService->updateSession($session, $request->validated());
 
             session()->flash('message', 'Sesión actualizada exitosamente.');
             session()->flash('type', 'success');
-
-          
-
         } catch (\Exception $e) {
             session()->flash('message', 'Error al actualizar la sesión: ' . $e->getMessage());
             session()->flash('type', 'error');
-   
         }
     }
 
@@ -122,19 +115,18 @@ class TreatmentSessionAdminController extends Controller
         try {
             // No permitir eliminar sesiones completadas
             if ($session->isCompleted()) {
-               
+
                 session()->flash('message', 'No se puede eliminar una sesión completada');
                 session()->flash('type', 'error');
                 return;
             }
 
             // Si es una sesión programada, solo la eliminamos
-/*             $session->delete(); */
+            /*             $session->delete(); */
             $this->sessionService->deleteSession($session);
 
             session()->flash('message', 'Sesión eliminada exitosamente.');
             session()->flash('type', 'success');
-
         } catch (\Exception $e) {
             session()->flash('message', 'Error al actualizar la sesión: ' . $e->getMessage());
             session()->flash('type', 'error');
@@ -148,17 +140,15 @@ class TreatmentSessionAdminController extends Controller
     public function complete(UpdateTreatmentSessionRequest $request, TreatmentSession $session)
     {
         try {
-              $session = TreatmentSession::findOrFail($session->id);
-            
+            $session = TreatmentSession::findOrFail($session->id);
+
             // El service marca como completada Y incrementa el contador del tratamiento
             $session = $this->sessionService->completeSession($session, $request->validated());
 
             session()->flash('message', 'Sesión completada exitosamente.');
             session()->flash('type', 'success');
-
-
         } catch (\Exception $e) {
-                session()->flash('message', 'Error al actualizar la sesión: ' . $e->getMessage());
+            session()->flash('message', 'Error al actualizar la sesión: ' . $e->getMessage());
             session()->flash('type', 'error');
         }
     }
@@ -180,7 +170,6 @@ class TreatmentSessionAdminController extends Controller
                 'message' => 'Sesión cancelada exitosamente',
                 'session' => $session->fresh(),
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -243,7 +232,6 @@ class TreatmentSessionAdminController extends Controller
                 'message' => 'Sesión duplicada exitosamente',
                 'session' => $newSession,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

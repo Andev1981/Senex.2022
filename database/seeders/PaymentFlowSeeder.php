@@ -22,14 +22,14 @@ class PaymentFlowSeeder extends Seeder
 
             $mockCartData = [
                 'final_shares' => [
-                    'amount_gross' => 50000,
-                    'amount_insurance_primary' => 35000,
-                    'amount_insurance_secondary' => 5000,
-                    'amount_patient' => 10000,
-                    'discount' => 0
+                    'amount_gross_clp' => 50000,
+                    'amount_insurance_primary_clp' => 35000,
+                    'amount_insurance_secondary_clp' => 5000,
+                    'amount_patient_clp' => 10000,
+                    'discount_clp' => 0
                 ],
                 'coverage_details' => [
-                    'insurance_id' => 1, 
+                    'insurance_id' => 1,
                     'secondary_insurance_id' => 2,
                     'external_transaction_code' => 'IMED-998877'
                 ],
@@ -38,10 +38,10 @@ class PaymentFlowSeeder extends Seeder
                         'session_type_id' => $sessionType->id,
                         'name' => $sessionType->name,
                         'quantity' => 1,
-                        'unit_price' => 50000,
-                        'unit_insurance_primary' => 35000,
-                        'unit_insurance_secondary' => 5000,
-                        'unit_patient' => 10000
+                        'unit_price_clp' => 50000,
+                        'unit_insurance_primary_clp' => 35000,
+                        'unit_insurance_secondary_clp' => 5000,
+                        'unit_patient_clp' => 10000
                     ]
                 ]
             ];
@@ -53,9 +53,9 @@ class PaymentFlowSeeder extends Seeder
                 'company_id' => 1,
                 'branch_id' => 1,
                 'amount_clp' => 10000,
-                'amount_gross' => 50000,
-                'amount_insurance_primary' => 35000,
-                'amount_insurance_secondary' => 5000,
+                'amount_gross_clp' => 50000,
+                'amount_insurance_primary_clp' => 35000,
+                'amount_insurance_secondary_clp' => 5000,
                 'payment_method' => 'cash',
                 'status' => 'completed',
                 'payment_date' => now(),
@@ -70,16 +70,16 @@ class PaymentFlowSeeder extends Seeder
                 'branch_id' => 1,
                 'patient_id' => $patient->id,
                 'payment_id' => $payment->id,
-                
+
                 // 🎯 CAMPOS AGREGADOS:
                 'entity_type' => 'Patient',
                 'entity_id'   => $patient->id,
-                
-                'amount_gross' => 50000,
-                'amount_patient' => 10000,
-                'amount_insurance_primary' => 35000,
-                'amount_insurance_secondary' => 5000,
-                'amount_total' => 10000, 
+
+                'amount_gross_clp' => 50000,
+                'amount_patient_clp' => 10000,
+                'amount_insurance_primary_clp' => 35000,
+                'amount_insurance_secondary_clp' => 5000,
+                'amount_total_clp' => 10000,
                 'dte_type' => 39,
                 'issue_date' => now(),
                 'dte_status' => 'PENDIENTE'
@@ -91,12 +91,12 @@ class PaymentFlowSeeder extends Seeder
                 'session_type_id' => $sessionType->id, // Faltaba este para la FK
                 'description' => $sessionType->name,
                 'quantity' => 1,
-                'unit_price' => 50000,
-                'total_gross' => 50000,
-                'total_patient' => 10000,
-                'unit_insurance_primary' => 35000,
-                'unit_insurance_secondary' => 5000,
-                'unit_patient' => 10000
+                'unit_price_clp' => 50000,
+                'total_gross_clp' => 50000,
+                'total_patient_clp' => 10000,
+                'unit_insurance_primary_clp' => 35000,
+                'unit_insurance_secondary_clp' => 5000,
+                'unit_patient_clp' => 10000
             ]);
 
             // 4. Receivables

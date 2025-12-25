@@ -19,7 +19,7 @@ class KineController extends Controller
     public function dashboard()
     {
         $doctor = Auth::user()->doctor;
-        
+
         if (!$doctor) {
             return redirect()->route('login');
         }
@@ -39,12 +39,12 @@ class KineController extends Controller
             'sessions_today' => $sessionsToday->count(),
             'completed_today' => $sessionsToday->where('status', 'Completada')->count(),
             'pending_today' => $sessionsToday->where('status', 'Programada')->count(),
-            'today_earnings' => $sessionsToday->sum('doctor_amount'),
-            'month_earnings' => $sessionsMont->sum('doctor_amount'),
+            'today_earnings' => $sessionsToday->sum('doctor_amount_clp'),
+            'month_earnings' => $sessionsMont->sum('doctor_amount_clp'),
         ];
 
         // Agenda del día
-        $agenda = TreatmentSession::with(['patient', 'treatment','sessionType'])
+        $agenda = TreatmentSession::with(['patient', 'treatment', 'sessionType'])
             ->where('doctor_id', $doctor->id)
             ->whereDate('date', $today)
             ->orderBy('time')
@@ -67,11 +67,11 @@ class KineController extends Controller
     public function myPatients()
     {
         $doctor = Auth::user()->doctor;
-        
+
         $patients = $doctor->patients()
-            ->with(['treatments' => function($q) use ($doctor) {
+            ->with(['treatments' => function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
-                  ->where('status', 'InProgress');
+                    ->where('status', 'InProgress');
             }])
             ->withCount(['sessions as total_sessions'])
             ->get();
@@ -88,7 +88,7 @@ class KineController extends Controller
     public function mySessions(Request $request)
     {
         $doctor = Auth::user()->doctor;
-        
+
         // Filtros
         $startDate = $request->input('start_date', Carbon::today()->startOfMonth());
         $endDate = $request->input('end_date', Carbon::today()->endOfMonth());
@@ -103,15 +103,15 @@ class KineController extends Controller
         }
 
         $sessions = $query->orderBy('date', 'desc')
-                         ->orderBy('time', 'desc')
-                         ->get();
+            ->orderBy('time', 'desc')
+            ->get();
 
         // Estadísticas
         $stats = [
             'total' => $sessions->count(),
             'completed' => $sessions->where('status', 'Completada')->count(),
             'pending' => $sessions->where('status', 'Programada')->count(),
-            'revenue' => $sessions->sum('doctor_amount'),
+            'revenue' => $sessions->sum('doctor_amount_clp'),
         ];
 
         return Inertia::render('KineMobile/MySessions', [
@@ -132,7 +132,7 @@ class KineController extends Controller
     public function myProfile()
     {
         $doctor = Auth::user()->doctor;
-        
+
         $doctor->load(['commissionRates.sessionType', 'branch']);
 
         // Estadísticas del mes
@@ -145,8 +145,8 @@ class KineController extends Controller
         $stats = [
             'sessions_month' => $sessions->count(),
             'patients_month' => $sessions->pluck('patient_id')->unique()->count(),
-            'revenue_month' => $sessions->sum('patient_amount'),
-            'commission_month' => $sessions->sum('doctor_amount'),
+            'revenue_month' => $sessions->sum('patient_amount_clp'),
+            'commission_month' => $sessions->sum('doctor_amount_clp'),
         ];
 
         return Inertia::render('KineMobile/MyProfile', [

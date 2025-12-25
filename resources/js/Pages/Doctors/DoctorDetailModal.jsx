@@ -23,6 +23,8 @@ export default function DoctorDetailModal({
   // Estado para saber si estamos ante un paciente que ya existe en otra sede
   const [isExistingInSystem, setIsExistingInSystem] = useState(false);
 
+  console.log(doctor);
+
   const { data, setData, errors, post, put, reset, processing } = useForm({
     id: doctor?.id || null,
     name: doctor?.name || "",
@@ -35,8 +37,8 @@ export default function DoctorDetailModal({
       ? moment.utc(doctor.birth_date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
     gender: doctor?.gender || "",
-    mobile_app_access: doctor?.branch?.mobile_app_access || false,
-    status: doctor?.branch?.status || "active",
+    mobile_app_access: doctor?.mobile_app_access || false,
+    status: doctor?.branch_status?.status || "active",
     status_reason: doctor?.branch?.status_reason || "",
     commune_id: doctor?.commune_id || "",
     province_id: doctor?.province_id || "",

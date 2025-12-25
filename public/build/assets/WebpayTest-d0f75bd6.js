@@ -84,7 +84,7 @@ function ke({
     $ = () =>
       i.reduce((t, s) => {
         const r = x.find((o) => o.id === s);
-        return t + ((r == null ? void 0 : r.patient_amount) || 0);
+        return t + ((r == null ? void 0 : r.patient_amount_clp) || 0);
       }, 0),
     E = () =>
       d.reduce((t, s) => {
@@ -119,7 +119,7 @@ function ke({
       D(s), c("session_ids", s);
       const r = s.reduce((o, y) => {
         const l = x.find((m) => m.id === y);
-        return o + ((l == null ? void 0 : l.patient_amount) || 0);
+        return o + ((l == null ? void 0 : l.patient_amount_clp) || 0);
       }, 0);
       c("amount_clp", r);
     },
@@ -142,7 +142,7 @@ function ke({
     B = (t) => {
       c("session_id", t);
       const s = x.find((r) => r.id === parseInt(t));
-      s && c("amount_clp", s.patient_amount);
+      s && c("amount_clp", s.patient_amount_clp);
     },
     h = (t) =>
       new Intl.NumberFormat("es-CL", {
@@ -560,7 +560,9 @@ function ke({
                                                 children: e("p", {
                                                   className:
                                                     "font-bold text-blue-600",
-                                                  children: h(t.patient_amount),
+                                                  children: h(
+                                                    t.patient_amount_clp
+                                                  ),
                                                 }),
                                               }),
                                             ],
@@ -679,7 +681,9 @@ function ke({
                                                 children: e("p", {
                                                   className:
                                                     "font-bold text-gray-700",
-                                                  children: h(t.patient_amount),
+                                                  children: h(
+                                                    t.patient_amount_clp
+                                                  ),
                                                 }),
                                               }),
                                             ],

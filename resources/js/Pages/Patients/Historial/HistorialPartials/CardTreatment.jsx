@@ -134,13 +134,13 @@ export default function CardTreatment({ treatment, handleTreatmentModal }) {
             <h3 className="mt-4 text-lg font-bold text-gray-900">
               {treatment?.name || "Tratamiento"}
             </h3>
-            <p className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600">
               Atendido por:
               <div className="flex gap-2 mt-2 ml-2 text-base text-gray-600">
                 <Stethoscope className="w-6 h-6" />
                 {treatment?.doctor?.name || "-"}
               </div>
-            </p>
+            </div>
           </div>
         </div>
 

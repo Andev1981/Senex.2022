@@ -3,64 +3,62 @@
 namespace App\Http\Controllers;
 
 use App\Models\Receivable;
-use App\Http\Requests\StoreReceivableRequest;
-use App\Http\Requests\UpdateReceivableRequest;
+use App\Models\ReceivablePayment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class ReceivableController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    // Listado de Deudores
+    public function index(Request $request)
     {
-        //
+        $query = Receivable::with(['customer', 'invoice'])
+            ->where('balance', '>', 0) // Solo mostrar quienes deben
+            ->orderBy('due_date', 'asc'); // Los más urgentes primero
+
+        return Inertia::render('Finance/Receivables/Index', [
+            'receivables' => $query->paginate(20),
+            'total_pending' => $query->sum('balance') // KPI rápido
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Registrar un Abono
+    public function storePayment(Request $request, Receivable $receivable)
     {
-        //
-    }
+        $request->validate([
+            'amount' => 'required|numeric|min:1|max:' . $receivable->balance,
+            'payment_method' => 'required|string',
+            'payment_date' => 'required|date'
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreReceivableRequest $request)
-    {
-        //
-    }
+        DB::transaction(function () use ($request, $receivable) {
+            // 1. Crear el registro del abono
+            ReceivablePayment::create([
+                'receivable_id' => $receivable->id,
+                'amount' => $request->amount,
+                'payment_date' => $request->payment_date,
+                'payment_method' => $request->payment_method,
+                'reference' => $request->reference,
+                'user_id' => auth()->id()
+            ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Receivable $receivable)
-    {
-        //
-    }
+            // 2. Actualizar la deuda principal
+            $receivable->amount_paid += $request->amount;
+            $receivable->balance = $receivable->amount_total - $receivable->amount_paid;
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Receivable $receivable)
-    {
-        //
-    }
+            // 3. Actualizar estado
+            if ($receivable->balance <= 0) {
+                $receivable->status = 'paid';
+            } else {
+                $receivable->status = 'partial';
+            }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateReceivableRequest $request, Receivable $receivable)
-    {
-        //
-    }
+            $receivable->save();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Receivable $receivable)
-    {
-        //
+            // Opcional: Actualizar el estado de la Invoice original también
+        });
+
+        return back()->with('success', 'Abono registrado correctamente.');
     }
 }

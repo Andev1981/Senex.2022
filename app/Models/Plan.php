@@ -57,9 +57,9 @@ class Plan extends Model
     }
 
     // Relación 1:M con ítems de Convenio (El plan define la regla específica en el tarifario)
-    public function agreementItems(): HasMany
+    public function agreementRules(): HasMany
     {
-        // La FK 'plan_id' está en la tabla 'agreement_items'
+        // La FK 'plan_id' está en la tabla 'agreement_rules'
         return $this->hasMany(AgreementRule::class);
     }
 

@@ -168,3 +168,13 @@
     background-position: -200% 0;
   }
 }
+
+/* Ocultar flechas en input number */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}

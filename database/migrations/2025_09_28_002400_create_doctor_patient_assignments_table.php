@@ -16,8 +16,9 @@ return new class extends Migration
         Schema::create('doctor_patient_assignments', function (Blueprint $t) {
             $t->id();
 
-             // 🎯 Seguridad Multiempresa
+            // 🎯 Seguridad Multiempresa
             $t->foreignId('company_id')->constrained()->onDelete('cascade');
+            $t->foreignId('branch_id')->constrained()->onDelete('cascade');
             $t->foreignId('doctor_id')->constrained('doctors')->cascadeOnDelete();
             $t->foreignId('patient_id')->constrained('patients')->cascadeOnDelete();
 

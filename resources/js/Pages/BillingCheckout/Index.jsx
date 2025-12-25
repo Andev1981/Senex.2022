@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import SearchSelect from "@/Components/SearchSelect";
-import { CheckCircle2, Plus, Trash2, UserPlus } from "lucide-react";
 import axios from "axios";
-import PaymentBlockingModal from "./PaymentBlockingModal";
 import Swal from "sweetalert2";
 
-const Index = ({
-  patients,
-  sessionTypes,
-  insurances,
-  plans,
-  paymentMethods,
-  agreements,
-  doctors,
-}) => {
+// --- IMPORTACIÓN DE COMPONENTES LOCALES ---
+import PatientCard from "./Components/PatientCard"; // <--- NUEVO
+import PaymentSummary from "./Components/PaymentSummary";
+import ServiceItem from "./Components/ServiceItem";
+import ServicesCard from "./Components/ServicesCard";
+import PaymentBlockingModal from "./PaymentBlockingModal";
+
+export default function PosIndex({
+  patients = [],
+  sessionTypes = [],
+  insurances = [],
+  plans = [],
+  paymentMethods = [],
+  agreements = [],
+  doctors = [],
+}) {
+  // ... (TUS ESTADOS MANTIENEN IGUAL) ...
   const [modalState, setModalState] = useState({
     isOpen: false,
     message: "",
@@ -24,6 +29,16 @@ const Index = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [localPatients, setLocalPatients] = useState(patients);
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
+
+  const [isImedMode, setIsImedMode] = useState(false);
+  const [isManualAdjustmentMode, setIsManualAdjustmentMode] = useState(false);
+  const [hasSecondaryInsurance, setHasSecondaryInsurance] = useState(false);
+  const [currentPaymentUuid, setCurrentPaymentUuid] = useState(null);
+  const [patientExtras, setPatientExtras] = useState({
+    debts: [],
+    active_plans: [],
+  });
+
   const [quickPatient, setQuickPatient] = useState({
     rut: "",
     name: "",
@@ -31,15 +46,8 @@ const Index = ({
     email: "",
     phone: "",
   });
-  const [isImedMode, setIsImedMode] = useState(false);
-  const [isManualAdjustmentMode, setIsManualAdjustmentMode] = useState(false);
-  const [hasSecondaryInsurance, setHasSecondaryInsurance] = useState(false);
-  const [patientExtras, setPatientExtras] = useState({
-    debts: [],
-    active_plans: [],
-  });
 
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, errors } = useForm({
     patient_id: "",
     user_id: null,
     company_id: null,
@@ -59,49 +67,55 @@ const Index = ({
       payment_date: new Date().toISOString().split("T")[0],
     },
     final_shares: {
-      amount_gross: 0,
-      amount_insurance_primary: 0,
-      amount_insurance_secondary: 0,
-      amount_patient: 0,
-      amount_neto: 0,
-      amount_iva: 0,
-      discount: 0,
+      amount_gross_clp: 0,
+      amount_insurance_primary_clp: 0,
+      amount_insurance_secondary_clp: 0,
+      amount_patient_clp: 0,
+      amount_neto_clp: 0,
+      amount_iva_clp: 0,
+      discount_clp: 0,
     },
   });
 
-  // 1. Cargar extras del paciente
+  // 1. Cargar extras del paciente al seleccionarlo
   useEffect(() => {
     if (data.patient_id) {
       axios
         .get(route("patients.status", data.patient_id))
-        .then((res) => setPatientExtras(res.data));
+        .then((res) => setPatientExtras(res.data))
+        .catch((err) => console.error("Error cargando paciente:", err));
     }
   }, [data.patient_id]);
 
-  // 2. Función para añadir deudas
+  // 2. Función para añadir deudas (CORREGIDA PARA _clp)
   const addDebtToBill = (debt) => {
     if (data.services_to_bill.some((s) => s.debt_id === debt.id)) return;
 
+    // Detectamos el nombre correcto de la variable en tu BD nueva
+    const debtAmount = debt.original_amount_clp || debt.original_amount || 0;
+
     const newItem = {
-      session_type_id: debt.treatment_session.session_type_id,
-      doctor_id: debt.treatment_session.doctor_id,
+      session_type_id: debt.treatment_session?.session_type_id,
+      doctor_id: debt.treatment_session?.doctor_id,
       quantity: 1,
-      unit_price: debt.original_amount,
-      name: debt.treatment_session.session_type.name,
+      unit_price_clp: debtAmount, // Precio fijo histórico
+      name:
+        debt.treatment_session?.session_type?.name || "Prestación Histórica",
       debt_id: debt.id,
       treatment_id: debt.treatment_id,
       session_id: debt.treatment_session_id,
       is_debt: true,
-      date_label: debt.treatment_session.date,
-      unit_insurance_primary: 0,
-      unit_insurance_secondary: 0,
-      unit_patient: debt.original_amount,
+      date_label: debt.treatment_session?.date || "S/F",
+      // Las deudas históricas suelen ser montos fijos ya calculados para el paciente
+      unit_insurance_primary_clp: 0,
+      unit_insurance_secondary_clp: 0,
+      unit_patient_clp: debtAmount,
     };
 
     setData("services_to_bill", [...data.services_to_bill, newItem]);
   };
 
-  // 3. MOTOR DE CÁLCULO CORE (Sincronizado y Reactivo)
+  // 3. 🧠 MOTOR DE CÁLCULO CORE (Corregido y protegido)
   useEffect(() => {
     if (isManualAdjustmentMode) return;
 
@@ -109,97 +123,147 @@ const Index = ({
     let totalPrimary = 0;
     let totalSecondary = 0;
 
-    // Calculamos los totales recorriendo los servicios actuales
+    // Recorremos cada servicio para calcular su desglose individual
     const calculatedServices = data.services_to_bill.map((s) => {
+      // Si es deuda, usamos sus valores fijos. Si es nuevo, buscamos en catálogo.
       const service = sessionTypes.find((t) => t.id == s.session_type_id);
-      const basePrice = s.unit_price || service?.base_price_clp || 0;
-      const subtotal = basePrice * s.quantity;
-      totalGross += subtotal;
+
+      // Prioridad: Precio definido en el ítem > Precio base del servicio > 0
+      const basePrice = s.is_debt
+        ? s.unit_price_clp
+        : service?.base_price_clp || 0;
+
+      const subtotal_clp = Math.round(basePrice * (s.quantity || 1));
+      totalGross += subtotal_clp;
 
       let primaryAmount = 0;
       let secondaryAmount = 0;
 
-      // Cálculo Seguro Primario
-      if (data.coverage_details.insurance_id && data.coverage_details.plan_id) {
-        let primaryRule = null;
-        agreements.forEach((ag) => {
-          const r = ag.items?.find(
-            (i) =>
-              i.plan_id == data.coverage_details.plan_id &&
-              i.session_type_id == s.session_type_id
-          );
-          if (r) primaryRule = r;
-        });
+      // Solo calculamos seguros si NO es una deuda antigua
+      if (!s.is_debt) {
+        // A. Seguro Primario (Isapre/Fonasa)
+        if (
+          data.coverage_details.insurance_id &&
+          data.coverage_details.plan_id
+        ) {
+          let primaryRule = null;
 
-        if (primaryRule) {
-          const primaryPct =
-            primaryRule.insurance_percentage ||
-            100 - primaryRule.patient_percentage;
-          primaryAmount = Math.round(subtotal * (primaryPct / 100));
+          // Protección contra agreements nulo
+          if (Array.isArray(agreements)) {
+            agreements.forEach((ag) => {
+              // Leemos cualquier variante del nombre de la relación
+              const rulesList =
+                ag.agreement_rules || ag.rules || ag.items || [];
+
+              if (Array.isArray(rulesList)) {
+                const r = rulesList.find(
+                  (i) =>
+                    i.plan_id == data.coverage_details.plan_id &&
+                    i.session_type_id == s.session_type_id
+                );
+                if (r) primaryRule = r;
+              }
+            });
+          }
+
+          if (primaryRule) {
+            if (primaryRule.insurance_share_clp > 0) {
+              // Caso: Monto Fijo
+              primaryAmount =
+                primaryRule.insurance_share_clp * (s.quantity || 1);
+            } else {
+              // Caso: Porcentaje
+              const primaryPct =
+                primaryRule.insurance_percentage ||
+                100 - primaryRule.patient_percentage;
+              primaryAmount = Math.round(subtotal_clp * (primaryPct / 100));
+            }
+          }
+        }
+
+        // B. Seguro Secundario
+        if (hasSecondaryInsurance && data.coverage_details.secondary_plan_id) {
+          const remainingAfterPrimary = subtotal_clp - primaryAmount;
+          let secondaryRule = null;
+
+          if (Array.isArray(agreements)) {
+            agreements.forEach((ag) => {
+              const rulesList =
+                ag.agreement_rules || ag.rules || ag.items || [];
+              if (Array.isArray(rulesList)) {
+                const r = rulesList.find(
+                  (i) =>
+                    i.plan_id == data.coverage_details.secondary_plan_id &&
+                    i.session_type_id == s.session_type_id
+                );
+                if (r) secondaryRule = r;
+              }
+            });
+          }
+
+          if (secondaryRule) {
+            if (secondaryRule.insurance_share_clp > 0) {
+              secondaryAmount =
+                secondaryRule.insurance_share_clp * (s.quantity || 1);
+              secondaryAmount = Math.min(
+                secondaryAmount,
+                remainingAfterPrimary
+              );
+            } else {
+              const secondaryPct =
+                secondaryRule.insurance_percentage ||
+                100 - secondaryRule.patient_percentage;
+              secondaryAmount = Math.round(
+                remainingAfterPrimary * (secondaryPct / 100)
+              );
+            }
+          }
         }
       }
+
       totalPrimary += primaryAmount;
-
-      // Cálculo Seguro Complementario
-      if (hasSecondaryInsurance && data.coverage_details.secondary_plan_id) {
-        let secondaryRule = null;
-        const remainingAfterPrimary = subtotal - primaryAmount;
-
-        agreements.forEach((ag) => {
-          const r = ag.items?.find(
-            (i) =>
-              i.plan_id == data.coverage_details.secondary_plan_id &&
-              i.session_type_id == s.session_type_id
-          );
-          if (r) secondaryRule = r;
-        });
-
-        if (secondaryRule) {
-          const secondaryPct =
-            secondaryRule.insurance_percentage ||
-            100 - secondaryRule.patient_percentage;
-          secondaryAmount = Math.round(
-            remainingAfterPrimary * (secondaryPct / 100)
-          );
-        }
-      }
       totalSecondary += secondaryAmount;
 
-      // Retornamos el objeto con sus valores de share calculados para que el Backend los reciba
       return {
         ...s,
-        unit_price: basePrice,
-        unit_insurance_primary: Math.round(primaryAmount / (s.quantity || 1)),
-        unit_insurance_secondary: Math.round(
+        unit_price_clp: basePrice,
+        unit_insurance_primary_clp: Math.round(
+          primaryAmount / (s.quantity || 1)
+        ),
+        unit_insurance_secondary_clp: Math.round(
           secondaryAmount / (s.quantity || 1)
         ),
-        unit_patient: Math.round(
-          (subtotal - primaryAmount - secondaryAmount) / (s.quantity || 1)
+        unit_patient_clp: Math.round(
+          (subtotal_clp - primaryAmount - secondaryAmount) / (s.quantity || 1)
         ),
       };
     });
 
     const finalPatientShare = Math.max(
       0,
-      totalGross - data.final_shares.discount - totalPrimary - totalSecondary
+      totalGross -
+        (data.final_shares.discount_clp || 0) -
+        totalPrimary -
+        totalSecondary
     );
 
-    // Comparamos si el total realmente cambió antes de actualizar para evitar renders innecesarios
+    // Actualización de estado (evita loops infinitos)
     if (
-      totalGross !== data.final_shares.amount_gross ||
-      totalPrimary !== data.final_shares.amount_insurance_primary ||
-      finalPatientShare !== data.final_shares.amount_patient
+      totalGross !== data.final_shares.amount_gross_clp ||
+      totalPrimary !== data.final_shares.amount_insurance_primary_clp ||
+      finalPatientShare !== data.final_shares.amount_patient_clp
     ) {
       setData((prev) => ({
         ...prev,
         services_to_bill: calculatedServices,
         final_shares: {
           ...prev.final_shares,
-          amount_gross: totalGross,
-          amount_insurance_primary: totalPrimary,
-          amount_insurance_secondary: totalSecondary,
-          amount_patient: finalPatientShare,
-          amount_neto: finalPatientShare,
+          amount_gross_clp: totalGross,
+          amount_insurance_primary_clp: totalPrimary,
+          amount_insurance_secondary_clp: totalSecondary,
+          amount_patient_clp: finalPatientShare,
+          amount_neto_clp: finalPatientShare,
+          amount_iva_clp: 0,
         },
         payment_details: {
           ...prev.payment_details,
@@ -208,16 +272,22 @@ const Index = ({
       }));
     }
   }, [
-    // 💡 LA CLAVE: JSON.stringify permite detectar cambios DENTRO de los objetos del array
-    JSON.stringify(data.services_to_bill),
+    JSON.stringify(
+      data.services_to_bill.map((s) => ({
+        id: s.session_type_id,
+        q: s.quantity,
+      }))
+    ),
     data.coverage_details.plan_id,
     data.coverage_details.secondary_plan_id,
-    data.final_shares.discount,
+    data.final_shares.discount_clp,
     hasSecondaryInsurance,
     isManualAdjustmentMode,
+    // Importante: Dependencia de agreements
+    JSON.stringify(agreements),
   ]);
 
-  // 4. Limpieza si es Particular
+  // 4. Limpieza si se selecciona "Particular"
   useEffect(() => {
     if (!data.coverage_details.insurance_id) {
       setData((prev) => ({
@@ -231,8 +301,8 @@ const Index = ({
         },
         final_shares: {
           ...prev.final_shares,
-          amount_insurance_primary: 0,
-          amount_insurance_secondary: 0,
+          amount_insurance_primary_clp: 0,
+          amount_insurance_secondary_clp: 0,
         },
       }));
       setHasSecondaryInsurance(false);
@@ -240,9 +310,10 @@ const Index = ({
     }
   }, [data.coverage_details.insurance_id]);
 
-  // 5. Limpieza si cambia el paciente
+  // 5. Gestión del Paciente (Selección y Reset)
   useEffect(() => {
     if (!data.patient_id) {
+      // RESET COMPLETO (Tu código original)
       setData((prev) => ({
         ...prev,
         coverage_details: {
@@ -251,6 +322,7 @@ const Index = ({
           secondary_insurance_id: "",
           secondary_plan_id: "",
           external_transaction_code: "",
+          affiliate_rut: "", // Aseguramos resetear esto también
         },
         services_to_bill: [],
         payment_details: {
@@ -259,77 +331,145 @@ const Index = ({
           payment_date: new Date().toISOString().split("T")[0],
         },
         final_shares: {
-          amount_gross: 0,
-          amount_insurance_primary: 0,
-          amount_insurance_secondary: 0,
-          amount_patient: 0,
-          amount_neto: 0,
-          amount_iva: 0,
-          discount: 0,
+          amount_gross_clp: 0,
+          amount_insurance_primary_clp: 0,
+          amount_insurance_secondary_clp: 0,
+          amount_patient_clp: 0,
+          amount_neto_clp: 0,
+          amount_iva_clp: 0,
+          discount_clp: 0,
         },
       }));
       setHasSecondaryInsurance(false);
       setIsImedMode(false);
       setIsManualAdjustmentMode(false);
       setPatientExtras({ debts: [], active_plans: [] });
+    } else {
+      // ✨ NUEVO: Si hay paciente, inyectamos su RUT automáticamente como Afiliado
+      const selectedPatient = localPatients.find(
+        (p) => p.id === data.patient_id
+      );
+      if (selectedPatient) {
+        setData((prev) => ({
+          ...prev,
+          coverage_details: {
+            ...prev.coverage_details,
+            affiliate_rut: selectedPatient.rut,
+          },
+        }));
+      }
     }
-  }, [data.patient_id]);
+  }, [data.patient_id]); // Dependencia
 
-  // 6. Manejo de ajuste manual
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isProcessing) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isProcessing]);
+
+  // 6. Manejador de Ajuste Manual
   const handleManualChange = (field, value) => {
     const val = parseInt(value) || 0;
     const current = data.final_shares;
     let newShares = { ...current };
 
-    if (field === "amount_patient") {
-      newShares.amount_patient = val;
-      newShares.amount_insurance_primary = Math.max(
+    const calcPatientShare = (gross, discount, primary, secondary) =>
+      Math.max(0, gross - discount - primary - secondary);
+
+    if (field === "amount_patient_clp") {
+      newShares.amount_patient_clp = val;
+      newShares.amount_insurance_primary_clp = Math.max(
         0,
-        current.amount_gross -
-          current.discount -
+        current.amount_gross_clp -
+          current.discount_clp -
           val -
-          current.amount_insurance_secondary
+          current.amount_insurance_secondary_clp
       );
-    } else if (field === "amount_insurance_primary") {
-      newShares.amount_insurance_primary = val;
-      newShares.amount_patient = Math.max(
-        0,
-        current.amount_gross -
-          current.discount -
-          val -
-          current.amount_insurance_secondary
+    } else if (field === "amount_insurance_primary_clp") {
+      newShares.amount_insurance_primary_clp = val;
+      newShares.amount_patient_clp = calcPatientShare(
+        current.amount_gross_clp,
+        current.discount_clp,
+        val,
+        current.amount_insurance_secondary_clp
       );
-    } else if (field === "amount_insurance_secondary") {
-      newShares.amount_insurance_secondary = val;
-      newShares.amount_patient = Math.max(
-        0,
-        current.amount_gross -
-          current.discount -
-          current.amount_insurance_primary -
-          val
+    } else if (field === "amount_insurance_secondary_clp") {
+      newShares.amount_insurance_secondary_clp = val;
+      newShares.amount_patient_clp = calcPatientShare(
+        current.amount_gross_clp,
+        current.discount_clp,
+        current.amount_insurance_primary_clp,
+        val
       );
     }
+
+    newShares.amount_neto_clp = newShares.amount_patient_clp;
 
     setData((prev) => ({
       ...prev,
       final_shares: newShares,
       payment_details: {
         ...prev.payment_details,
-        amount_paid: newShares.amount_patient,
+        amount_paid: newShares.amount_patient_clp,
       },
     }));
   };
 
-  const updateService = (index, field, value) => {
+  // --- HANDLER: AGREGAR NUEVA PRESTACIÓN VACÍA ---
+  const handleAddService = () => {
+    setData("services_to_bill", [
+      ...data.services_to_bill, // Mantenemos los que ya están
+      {
+        session_type_id: "", // Vacío para que el select muestre "Seleccionar..."
+        doctor_id: "", // Vacío
+        quantity: 1, // Cantidad inicial 1
+        unit_price_clp: 0, // Precio 0 hasta que elija el tipo
+        name: "", // Nombre vacío
+        is_debt: false, // Importante: Marcamos que NO es deuda histórica
+
+        // Inicializamos los montos de copago en 0
+        unit_insurance_primary_clp: 0,
+        unit_insurance_secondary_clp: 0,
+        unit_patient_clp: 0,
+      },
+    ]);
+  };
+
+  // --- HANDLER: ACTUALIZAR UNA FILA DE PRESTACIÓN ---
+  const handleUpdateService = (index, field, value) => {
+    // 1. Creamos una copia del array actual
     const newServices = [...data.services_to_bill];
+
+    // 2. Lógica especial si cambiamos el tipo de sesión (actualizar precio base)
     if (field === "session_type_id") {
       const service = sessionTypes.find((t) => t.id == value);
-      newServices[index].unit_price = service ? service.base_price_clp : 0;
+
+      // Actualizamos precio y nombre automáticamente desde el catálogo
+      newServices[index].unit_price_clp = service ? service.base_price_clp : 0;
+      newServices[index].name = service ? service.name : "";
     }
+
+    // 3. Actualizamos el campo específico (quantity, doctor_id, etc.)
     newServices[index][field] = value;
+
+    // 4. Guardamos en el estado
     setData("services_to_bill", newServices);
   };
 
+  // --- HANDLER: QUITAR UNA PRESTACIÓN ---
+  const handleRemoveService = (index) => {
+    // Filtramos el array dejando fuera el elemento que coincide con el índice
+    const newServices = data.services_to_bill.filter((_, i) => i !== index);
+
+    setData("services_to_bill", newServices);
+  };
+
+  // --- LOGICA PACIENTE RÁPIDO ---
   const handleQuickPatientSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -347,112 +487,181 @@ const Index = ({
         email: "",
         phone: "",
       });
+      Swal.fire({
+        icon: "success",
+        title: "Paciente creado",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } catch (error) {
-      alert("Error al procesar la solicitud.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo crear el paciente.",
+      });
     }
   };
 
-  const [currentPaymentUuid, setCurrentPaymentUuid] = useState(null);
-
+  // --- LOGICA POS / PAGO ---
   const handleAbortTransaction = async () => {
-    // Cerramos el modal inmediatamente para dar feedback visual
     setModalState((prev) => ({ ...prev, isOpen: false }));
-
     try {
       const response = await axios.post(route("payments.pos.abort"), {
         uuid: currentPaymentUuid,
       });
-
       if (response.data.status === "success") {
-        alert("Cobro cancelado en el terminal.");
+        Swal.fire("Cancelado", "Operación cancelada en POS", "info");
       }
       setCurrentPaymentUuid(null);
     } catch (error) {
-      alert("Error al abortar:", error);
-      alert(
-        "El terminal no respondió al aborto. Por favor, cancela manualmente en la máquina."
-      );
+      Swal.fire("Atención", "Cancela manualmente en el POS.", "warning");
     }
   };
 
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (isProcessing) {
-        e.preventDefault();
-        e.returnValue = ""; // Esto gatilla el diálogo estándar del navegador
+  const handleCoverageChange = (field, value) => {
+    setData("coverage_details", {
+      ...data.coverage_details,
+      [field]: value,
+    });
+  };
+
+  // --- VALIDACIÓN LOCAL DEL FORMULARIO ---
+  const validateForm = () => {
+    const errorList = [];
+
+    // 1. Validar Paciente
+    if (!data.patient_id) {
+      errorList.push("Debes seleccionar un <b>Paciente</b>.");
+    }
+
+    // 2. Validar que existan servicios
+    if (data.services_to_bill.length === 0) {
+      errorList.push("La venta debe tener al menos una <b>prestación</b>.");
+    }
+
+    // 3. Validar fila por fila (Prestación, Doctor, Cantidad)
+    data.services_to_bill.forEach((s, index) => {
+      const rowNum = index + 1;
+
+      // Si es deuda histórica, asumimos que viene bien, pero si es nueva (!is_debt):
+      if (!s.is_debt) {
+        if (!s.session_type_id) {
+          errorList.push(
+            `Fila ${rowNum}: Falta seleccionar la <b>Prestación</b>.`
+          );
+        }
+        if (!s.doctor_id) {
+          errorList.push(
+            `Fila ${rowNum}: Falta asignar al <b>Profesional</b>.`
+          );
+        }
       }
-    };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isProcessing]);
+      if (s.quantity < 1) {
+        errorList.push(`Fila ${rowNum}: La cantidad debe ser mayor a 0.`);
+      }
+    });
 
+    // 4. Validar Montos Negativos
+    if (data.final_shares.amount_patient_clp < 0) {
+      errorList.push("El <b>monto a pagar</b> no puede ser negativo.");
+    }
+
+    return errorList;
+  };
+
+  // --- SUBMIT MEJORADO CON VALIDACIÓN DETALLADA ---
   const submit = async (e) => {
     e.preventDefault();
 
-    const method = data.payment_details.payment_method;
+    // 1. EJECUTAR VALIDACIÓN PREVIA
+    const validationErrors = validateForm();
 
-    // 1. Configuración del Modal según el método
-    if (method === "pos_integrado") {
-      setModalState({
-        isOpen: true,
-        message: "Esperando confirmación en terminal POS...",
-        isAbortable: method === "pos_integrado", // Solo abortable si es el terminal físico
+    if (validationErrors.length > 0) {
+      // Si hay errores, mostramos una lista HTML en el SweetAlert
+      return Swal.fire({
+        title: "Faltan datos",
+        icon: "warning",
+        html: `
+          <ul style="text-align: left; font-size: 0.9em; line-height: 1.5;">
+            ${validationErrors
+              .map((err) => `<li style="margin-bottom: 4px;">• ${err}</li>`)
+              .join("")}
+          </ul>
+        `,
+        confirmButtonText: "Revisar",
+        confirmButtonColor: "#f59e0b", // Color naranja de advertencia
       });
     }
 
-    // 1. Ejecución de la lógica de pago
+    // 2. PREPARAR ESTADO DE CARGA
+    if (data.payment_details.payment_method === "pos_integrado") {
+      setModalState({
+        isOpen: true,
+        message: "Esperando tarjeta en terminal POS...",
+        isAbortable: true,
+      });
+    } else {
+      setIsProcessing(true);
+    }
+
     try {
-      // Para Webpay y POS usamos Axios porque esperamos un JSON de respuesta
-      if (method === "pos_integrado") {
-        const response = await axios.post(route("payments.store"), data);
+      // 3. ENVIAR DATOS
+      const response = await axios.post(route("payments.store"), data);
 
-        if (response.data.status === "success") {
-          // Cerramos el modal de bloqueo para que el usuario pueda corregir
-          setModalState({ isOpen: false, message: "", isAbortable: true });
-          Swal.fire({
-            title: "¡Pago Completado!",
-            text: "Redirigiendo al comprobante...",
-            icon: "success",
-            timer: 1500,
-            showConfirmButton: false,
-          }).then(() => {
-            // Guardamos el UUID que devuelve el controlador
-            if (response.data.uuid) {
-              setCurrentPaymentUuid(response.data.uuid);
-            }
+      if (response.data.status === "success") {
+        setModalState({ isOpen: false, message: "", isAbortable: true });
+        setIsProcessing(false);
 
-            if (response.data.url) {
-              // Redirección externa (Webpay) o interna (Success tras POS)
-              window.location.href = response.data.url;
-            }
-          });
-        }
-      }
-      // Para Cash y Transfer usamos Inertia post (comportamiento estándar de formulario)
-      else {
-        post(route("payments.store"), {
-          onStart: () => {
-            // Opcional: un pequeño loading de botón, pero no el modal gigante
-          },
-          onError: (errors) => {
-            // Inertia maneja los errores automáticamente en page.props.errors
-            // pero cerramos cualquier estado de carga si existiera
-          },
+        Swal.fire({
+          title: "¡Pago Aprobado!",
+          text: "Generando comprobante...",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        }).then(() => {
+          if (response.data.url) window.location.href = response.data.url;
         });
+      } else {
+        // Caso raro donde backend responde success: false pero sin lanzar excepción
+        throw new Error(
+          response.data.message || "La transacción no fue aprobada."
+        );
       }
     } catch (error) {
-      // 2. Manejo de errores para peticiones Axios
-      console.log("Error procesando pago:", error);
+      console.error("Error en pago:", error);
 
-      // Cerramos el modal de bloqueo para que el usuario pueda corregir
+      // Limpiar estados de carga
       setModalState({ isOpen: false, message: "", isAbortable: true });
+      setIsProcessing(false);
+
+      // 4. MANEJO INTELIGENTE DE ERRORES DEL SERVIDOR
+      let errorTitle = "Error en transacción";
+      let errorHtml = error.message || "Ocurrió un error inesperado.";
+
+      // Si es error de validación de Laravel (422) que se pasó de nuestra validación local
+      if (error.response?.status === 422) {
+        errorTitle = "Datos Inválidos (Servidor)";
+        const serverErrors = error.response.data.errors || {};
+        // Convertimos el objeto de errores de Laravel en lista HTML
+        const messages = Object.values(serverErrors).flat();
+
+        errorHtml = `
+            <ul style="text-align: left; font-size: 0.9em;">
+              ${messages.map((msg) => `<li>• ${msg}</li>`).join("")}
+            </ul>
+         `;
+      }
+      // Si el backend envió un mensaje específico (ej: POS rechazado)
+      else if (error.response?.data?.message) {
+        errorHtml = error.response.data.message;
+      }
 
       Swal.fire({
-        title: "Error en la transacción",
-        text: error.response?.data?.message || "Ocurrió un error inesperado",
+        title: errorTitle,
+        html: errorHtml, // Usamos HTML para poder poner listas
         icon: "error",
-        confirmButtonText: "Reintentar",
+        confirmButtonText: "Entendido",
         confirmButtonColor: "#d33",
       });
     }
@@ -460,535 +669,92 @@ const Index = ({
 
   return (
     <AuthenticatedLayout>
-      <Head title="Caja - POS" />
+      <Head title="Caja - Nueva Venta" />
       <div className="max-w-full p-4 mx-auto sm:p-6 lg:p-8">
         <form
           onSubmit={submit}
           className="grid grid-cols-1 gap-6 lg:grid-cols-3"
         >
-          {/* COLUMNA 1: IDENTIFICACIÓN */}
-          <div className="p-6 space-y-4 bg-white border border-gray-100 shadow-sm rounded-xl">
-            <h2 className="flex items-center text-xl font-black text-gray-800">
-              <span className="flex items-center justify-center w-8 h-8 mr-2 text-sm text-indigo-600 bg-indigo-100 rounded-full">
-                1
-              </span>
-              Identificación
-            </h2>
-            <div className="flex items-end gap-2">
-              <div className="flex-1">
-                <label className="block mb-4 text-xs font-black text-gray-500 uppercase">
-                  Buscar Paciente
-                </label>
-                <SearchSelect
-                  items={localPatients}
-                  value={data.patient_id}
-                  onChange={(value) => setData("patient_id", value)}
-                  config={{
-                    valueKey: "id",
-                    displayKey: "full_name",
-                    secondaryKeys: ["rut", "email", "phone"],
-                    searchKeys: [
-                      "name",
-                      "last_name",
-                      "email",
-                      "full_name",
-                      "rut",
-                    ],
-                  }}
-                  placeholder="Buscar paciente..."
-                  error={errors.patient_id}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsPatientModalOpen(true)}
-                className="p-2 text-indigo-600 transition rounded-lg bg-indigo-50 hover:bg-indigo-100"
-              >
-                <UserPlus className="w-6 h-6" />
-              </button>
-            </div>
+          {/* COLUMNA 1: IDENTIFICACIÓN (REFACTORIZADA) */}
+          <PatientCard
+            // Datos
+            patients={localPatients}
+            insurances={insurances}
+            plans={plans}
+            selectedPatientId={data.patient_id}
+            coverageDetails={data.coverage_details}
+            errors={errors}
+            // Estados UI
+            isImedMode={isImedMode}
+            hasSecondaryInsurance={hasSecondaryInsurance}
+            // Handlers
+            onPatientChange={(val) => setData("patient_id", val)}
+            onCoverageChange={handleCoverageChange}
+            onToggleImed={() => setIsImedMode(!isImedMode)}
+            onToggleSecondary={() =>
+              setHasSecondaryInsurance(!hasSecondaryInsurance)
+            }
+            onOpenNewPatient={() => setIsPatientModalOpen(true)}
+          />
 
-            <div className="pt-4 space-y-4 border-t">
-              <label className="block mb-1 text-xs font-black text-gray-500 uppercase">
-                Previsión / Seguro
-              </label>
-              <select
-                className="w-full text-sm border-gray-200 rounded-lg"
-                value={data.coverage_details.insurance_id}
-                onChange={(e) =>
-                  setData("coverage_details", {
-                    ...data.coverage_details,
-                    insurance_id: e.target.value,
-                  })
-                }
-              >
-                <option value="">Particular (Sin Seguro)</option>
-                {insurances.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.name}
-                  </option>
-                ))}
-              </select>
+          {/* COLUMNA 2: PRESTACIONES */}
+          <ServicesCard
+            servicesToBill={data.services_to_bill}
+            patientExtras={patientExtras}
+            sessionTypes={sessionTypes}
+            doctors={doctors}
+            onAddDebt={addDebtToBill}
+            onAddService={handleAddService}
+            onUpdateService={handleUpdateService}
+            onRemoveService={handleRemoveService}
+          />
 
-              {data.coverage_details.insurance_id && (
-                <div className="space-y-4 duration-300 animate-in fade-in">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-gray-700">
-                      Plan de Salud
-                    </span>
-                    <div className="flex items-center px-2 py-1 rounded bg-green-50">
-                      <input
-                        type="checkbox"
-                        id="imed"
-                        className="text-green-600 rounded"
-                        checked={isImedMode}
-                        onChange={() => setIsImedMode(!isImedMode)}
-                      />
-                      <label
-                        htmlFor="imed"
-                        className="ml-1 text-[10px] font-black text-green-700 uppercase"
-                      >
-                        I-Med
-                      </label>
-                    </div>
-                  </div>
-                  <select
-                    className="w-full text-sm border-gray-200 rounded-lg"
-                    value={data.coverage_details.plan_id}
-                    onChange={(e) =>
-                      setData("coverage_details", {
-                        ...data.coverage_details,
-                        plan_id: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">Seleccionar Plan...</option>
-                    {plans
-                      .filter(
-                        (p) =>
-                          p.insurance_id == data.coverage_details.insurance_id
-                      )
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                  </select>
-
-                  {isImedMode && (
-                    <input
-                      type="text"
-                      className="w-full text-sm border-green-200 rounded-lg bg-green-50"
-                      placeholder="Código de Transacción I-Med"
-                      value={data.coverage_details.external_transaction_code}
-                      onChange={(e) =>
-                        setData("coverage_details", {
-                          ...data.coverage_details,
-                          external_transaction_code: e.target.value,
-                        })
-                      }
-                      required={isImedMode}
-                    />
-                  )}
-
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setHasSecondaryInsurance(!hasSecondaryInsurance)
-                      }
-                      className="text-xs font-bold text-indigo-600 hover:underline"
-                    >
-                      {hasSecondaryInsurance
-                        ? "- Quitar Complementario"
-                        : "+ Añadir Seguro Complementario"}
-                    </button>
-                    {hasSecondaryInsurance && (
-                      <div className="p-3 mt-3 space-y-2 border border-indigo-100 rounded-lg bg-indigo-50">
-                        <select
-                          className="w-full text-xs border-indigo-200 rounded"
-                          value={data.coverage_details.secondary_insurance_id}
-                          onChange={(e) =>
-                            setData("coverage_details", {
-                              ...data.coverage_details,
-                              secondary_insurance_id: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Compañía Complementaria...</option>
-                          {insurances.map((i) => (
-                            <option key={i.id} value={i.id}>
-                              {i.name}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          className="w-full text-xs border-indigo-200 rounded"
-                          value={data.coverage_details.secondary_plan_id}
-                          onChange={(e) =>
-                            setData("coverage_details", {
-                              ...data.coverage_details,
-                              secondary_plan_id: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Seleccionar Plan...</option>
-                          {plans
-                            .filter(
-                              (p) =>
-                                p.insurance_id ==
-                                data.coverage_details.secondary_insurance_id
-                            )
-                            .map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* COLUMNA 2: SERVICIOS */}
-          <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl">
-            <h2 className="flex items-center mb-6 text-xl font-black text-gray-800">
-              <span className="flex items-center justify-center w-8 h-8 mr-2 text-sm text-indigo-600 bg-indigo-100 rounded-full">
-                2
-              </span>
-              Servicios
-            </h2>
-            {patientExtras.debts.length > 0 && (
-              <div className="p-4 mb-6 border-l-4 border-orange-500 rounded-r-lg shadow-sm bg-orange-50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-orange-800">
-                      Deudas Pendientes
-                    </h3>
-                    <p className="text-xs text-orange-700">
-                      Sesiones realizadas sin pagar.
-                    </p>
-                  </div>
-                  <span className="font-black text-orange-600">
-                    {patientExtras.debts.length}
-                  </span>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {patientExtras.debts.map((debt) => {
-                    const isAdded = data.services_to_bill.some(
-                      (s) => s.debt_id === debt.id
-                    );
-                    return (
-                      <button
-                        key={debt.id}
-                        type="button"
-                        disabled={isAdded}
-                        onClick={() => addDebtToBill(debt)}
-                        className={`w-full flex justify-between items-center p-2 border rounded text-xs transition ${
-                          isAdded
-                            ? "bg-green-100 border-green-200 text-green-700"
-                            : "bg-white border-orange-200 hover:bg-orange-100 text-orange-800"
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          {isAdded ? (
-                            <CheckCircle2 className="w-3 h-3 mr-2" />
-                          ) : (
-                            <Plus className="w-3 h-3 mr-2" />
-                          )}
-                          <span>
-                            {debt.treatment_session.session_type.name} (
-                            {debt.treatment_session.date})
-                          </span>
-                        </div>
-                        <span className="font-bold">
-                          {isAdded
-                            ? "AGREGADO"
-                            : `+ $${debt.original_amount.toLocaleString()}`}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <div className="space-y-3">
-              {data.services_to_bill.map((s, index) => (
-                <div
-                  key={index}
-                  className={`p-3 rounded-lg border ${
-                    s.is_debt
-                      ? "bg-orange-50 border-orange-200"
-                      : "bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      {s.is_debt ? (
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-black text-orange-600 uppercase">
-                            Deuda ({s.date_label})
-                          </span>
-                          <span className="text-sm font-bold text-gray-700">
-                            {s.name}
-                          </span>
-                        </div>
-                      ) : (
-                        <select
-                          className="w-full text-sm border-gray-200 rounded"
-                          value={s.session_type_id}
-                          onChange={(e) =>
-                            updateService(
-                              index,
-                              "session_type_id",
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option value="">Seleccionar prestación...</option>
-                          {sessionTypes.map((st) => (
-                            <option key={st.id} value={st.id}>
-                              {st.name}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </div>
-                    <input
-                      type="number"
-                      disabled
-                      className={`w-16 text-sm text-center rounded border-gray-200 ${
-                        s.is_debt ? "bg-orange-100 font-bold" : ""
-                      }`}
-                      value={s.quantity}
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setData(
-                          "services_to_bill",
-                          data.services_to_bill.filter((_, i) => i !== index)
-                        )
-                      }
-                      className="text-red-400 hover:text-red-600"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <select
-                    disabled={s.is_debt}
-                    className="w-full mt-2 text-xs border-gray-200 rounded"
-                    value={s.doctor_id}
-                    onChange={(e) =>
-                      updateService(index, "doctor_id", e.target.value)
-                    }
-                  >
-                    <option value="">Asignar Profesional...</option>
-                    {doctors.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-              <button
-                type="button"
-                className="w-full py-2 text-xs font-bold text-gray-400 transition border-2 border-gray-200 border-dashed rounded-lg hover:bg-gray-50"
-                onClick={() =>
-                  setData("services_to_bill", [
-                    ...data.services_to_bill,
-                    {
-                      session_type_id: "",
-                      doctor_id: "",
-                      quantity: 1,
-                      unit_price: 0,
-                    },
-                  ])
-                }
-              >
-                + Añadir Prestación
-              </button>
-            </div>
-          </div>
-
-          {/* COLUMNA 3: TOTALES */}
-          <div className="p-6 space-y-6 bg-white border border-gray-100 shadow-sm rounded-xl">
-            <div className="flex items-center justify-between pb-4 border-b">
-              <h2 className="text-xl font-black text-gray-800">Caja</h2>
-              <button
-                type="button"
-                onClick={() =>
-                  setIsManualAdjustmentMode(!isManualAdjustmentMode)
-                }
-                className={`text-[10px] px-2 py-1 rounded font-bold uppercase ${
-                  isManualAdjustmentMode
-                    ? "bg-red-600 text-white"
-                    : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {isManualAdjustmentMode
-                  ? "Ajuste Manual Activo"
-                  : "Activar Ajuste"}
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Total Bruto:</span>
-                <span className="font-bold">
-                  ${data.final_shares.amount_gross.toLocaleString("es-CL")}
-                </span>
-              </div>
-
-              {(!data.coverage_details.insurance_id ||
-                isManualAdjustmentMode) && (
-                <div className="flex items-center justify-between text-sm font-bold text-orange-600">
-                  <span>Descuento Particular:</span>
-                  <div className="flex items-center">
-                    <span className="mr-1">-$</span>
-                    <input
-                      type="number"
-                      className="w-24 h-8 p-1 text-sm text-right border-orange-200 rounded bg-orange-50"
-                      value={data.final_shares.discount}
-                      onChange={(e) =>
-                        setData("final_shares", {
-                          ...data.final_shares,
-                          discount: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              )}
-
-              {data.coverage_details.insurance_id && (
-                <>
-                  <div className="flex items-center justify-between text-sm font-bold text-green-600">
-                    <span>Aporte Isapre/Fonasa:</span>
-                    {isManualAdjustmentMode ? (
-                      <input
-                        type="number"
-                        className="w-24 h-8 p-1 text-sm text-right border-green-200 rounded"
-                        value={data.final_shares.amount_insurance_primary}
-                        onChange={(e) =>
-                          handleManualChange(
-                            "amount_insurance_primary",
-                            e.target.value
-                          )
-                        }
-                      />
-                    ) : (
-                      <span>
-                        -$
-                        {data.final_shares.amount_insurance_primary.toLocaleString(
-                          "es-CL"
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  {hasSecondaryInsurance && (
-                    <div className="flex items-center justify-between text-sm italic font-bold text-indigo-600">
-                      <span>Seguro Complementario:</span>
-                      {isManualAdjustmentMode ? (
-                        <input
-                          type="number"
-                          className="w-24 h-8 p-1 text-sm text-right border-indigo-200 rounded"
-                          value={data.final_shares.amount_insurance_secondary}
-                          onChange={(e) =>
-                            handleManualChange(
-                              "amount_insurance_secondary",
-                              e.target.value
-                            )
-                          }
-                        />
-                      ) : (
-                        <span>
-                          -$
-                          {data.final_shares.amount_insurance_secondary.toLocaleString(
-                            "es-CL"
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              <div className="pt-4 border-t border-gray-200 border-double">
-                <div className="flex items-center justify-between text-2xl font-black text-red-600">
-                  <span>COPAGO</span>
-                  {isManualAdjustmentMode ? (
-                    <input
-                      type="number"
-                      className="w-32 p-1 text-xl text-right border-red-300 rounded-lg"
-                      value={data.final_shares.amount_patient}
-                      onChange={(e) =>
-                        handleManualChange("amount_patient", e.target.value)
-                      }
-                    />
-                  ) : (
-                    <span>
-                      $
-                      {data.final_shares.amount_patient.toLocaleString("es-CL")}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-4 space-y-4 border-t">
-              <label className="text-xs font-bold text-gray-500 uppercase">
-                Forma de Pago
-              </label>
-              <select
-                className="w-full mt-1 border-gray-200 rounded-lg"
-                value={data.payment_details.payment_method}
-                onChange={(e) =>
-                  setData("payment_details", {
-                    ...data.payment_details,
-                    payment_method: e.target.value,
-                  })
-                }
-              >
-                {paymentMethods.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={processing || data.services_to_bill.length === 0}
-                className="w-full py-4 text-lg font-black text-white bg-indigo-600 rounded-xl disabled:bg-gray-200"
-              >
-                {processing ? "Procesando..." : "Finalizar Venta"}
-              </button>
-            </div>
-          </div>
+          {/* COLUMNA 3: CAJA */}
+          <PaymentSummary
+            finalShares={data.final_shares}
+            paymentDetails={data.payment_details}
+            coverageDetails={data.coverage_details}
+            isManualAdjustmentMode={isManualAdjustmentMode}
+            hasSecondaryInsurance={hasSecondaryInsurance}
+            paymentMethods={paymentMethods}
+            isProcessing={isProcessing}
+            canSubmit={data.services_to_bill.length > 0}
+            onToggleManualMode={() =>
+              setIsManualAdjustmentMode(!isManualAdjustmentMode)
+            }
+            onManualChange={handleManualChange}
+            onPaymentMethodChange={(val) =>
+              setData("payment_details", {
+                ...data.payment_details,
+                payment_method: val,
+              })
+            }
+          />
         </form>
       </div>
 
-      {/* Modal de Registro Rápido */}
+      {/* --- MODAL PACIENTE RÁPIDO --- */}
       {isPatientModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-xl">
-            <div className="flex items-center justify-between p-4 text-white bg-indigo-600">
-              <h3 className="font-bold">Registro Rápido de Paciente</h3>
-              <button onClick={() => setIsPatientModalOpen(false)}>✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl overflow-hidden animate-in zoom-in-95">
+            <div className="bg-indigo-600 p-4 flex justify-between items-center">
+              <h3 className="font-bold text-white">Registro Rápido</h3>
+              <button
+                onClick={() => setIsPatientModalOpen(false)}
+                className="text-white/80 hover:text-white"
+              >
+                ✕
+              </button>
             </div>
             <form onSubmit={handleQuickPatientSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   RUT / DNI
                 </label>
                 <input
                   type="text"
                   required
-                  className="w-full mt-1 border-gray-200 rounded-lg"
+                  className="w-full border-gray-200 rounded-lg"
                   value={quickPatient.rut}
                   onChange={(e) =>
                     setQuickPatient({ ...quickPatient, rut: e.target.value })
@@ -997,13 +763,13 @@ const Index = ({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                     Nombre
                   </label>
                   <input
                     type="text"
                     required
-                    className="w-full mt-1 border-gray-200 rounded-lg"
+                    className="w-full border-gray-200 rounded-lg"
                     value={quickPatient.name}
                     onChange={(e) =>
                       setQuickPatient({ ...quickPatient, name: e.target.value })
@@ -1011,13 +777,13 @@ const Index = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                     Apellido
                   </label>
                   <input
                     type="text"
                     required
-                    className="w-full mt-1 border-gray-200 rounded-lg"
+                    className="w-full border-gray-200 rounded-lg"
                     value={quickPatient.last_name}
                     onChange={(e) =>
                       setQuickPatient({
@@ -1029,38 +795,40 @@ const Index = ({
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Email
                 </label>
                 <input
                   type="email"
                   required
-                  className="w-full mt-1 border-gray-200 rounded-lg"
+                  className="w-full border-gray-200 rounded-lg"
                   value={quickPatient.email}
                   onChange={(e) =>
                     setQuickPatient({ ...quickPatient, email: e.target.value })
                   }
                 />
               </div>
-              <div className="flex gap-2 pt-4">
+              <div className="pt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setIsPatientModalOpen(false)}
-                  className="flex-1 py-2 font-bold text-gray-500"
+                  className="flex-1 py-2.5 text-gray-500 font-bold hover:bg-gray-50 rounded-lg"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 font-bold text-white bg-indigo-600 rounded-lg shadow-lg"
+                  className="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700"
                 >
-                  Guardar y Cobrar
+                  Guardar
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* --- MODAL POS --- */}
       <PaymentBlockingModal
         isOpen={modalState.isOpen}
         message={modalState.message}
@@ -1069,6 +837,4 @@ const Index = ({
       />
     </AuthenticatedLayout>
   );
-};
-
-export default Index;
+}

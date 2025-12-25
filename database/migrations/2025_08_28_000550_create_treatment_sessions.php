@@ -7,71 +7,95 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
   public function up(): void
   {
-
-    // -------------------------
-    // appointments
-    // -------------------------
     Schema::create('treatment_sessions', function (Blueprint $table) {
       $table->id();
-      $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
-      $table->foreignId('treatment_id')->constrained()->cascadeOnDelete();
-      $table->foreignId('room_id')
-        ->nullable()
-        ->constrained('rooms')
-        ->nullOnDelete();
-      // Definirlo como nullable es lo que permite que el paciente sea "Particular"
-      /* $table->foreignId('voucher_id')
-          ->nullable() 
-          ->constrained('vouchers')
-          ->nullOnDelete(); */
-      $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
-      $table->foreignId('doctor_id')->constrained()->restrictOnDelete();
-      $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
-      $table->foreignId('session_type_id')->nullable()->constrained()->nullOnDelete();
-      $table->unsignedTinyInteger('month_session_number')->default(1);
-      $table->date('date');
-      $table->time('time')->nullable();
-      $table->unsignedSmallInteger('duration')->default(45);
-      $table->enum('status', ['scheduled', 'completed', 'cancelled', 'not_attend', 'in_proggress'])->default('scheduled')->index();
 
-      // Evaluación & notas
-      $table->unsignedTinyInteger('pain_before')->nullable();
-      $table->unsignedTinyInteger('pain_after')->nullable();
-      $table->unsignedSmallInteger('rom_flexion_before')->nullable();
-      $table->unsignedSmallInteger('rom_flexion_after')->nullable();
-      $table->unsignedSmallInteger('rom_rotation_before')->nullable();
-      $table->unsignedSmallInteger('rom_rotation_after')->nullable();
-      $table->unsignedSmallInteger('rom_abduction_before')->nullable();
-      $table->unsignedSmallInteger('rom_abduction_after')->nullable();
-      $table->json('techniques')->nullable();
-      $table->json('exercises')->nullable();
-      $table->json('meta')->nullable()->comment('Datos adicionales en formato JSON');
-      $table->text('notes')->nullable();
-      $table->text('homework')->nullable();
-      $table->text('next_goals')->nullable();
+      // -----------------------------------------------------
+      // 1. CONTEXTO Y RELACIONES
+      // -----------------------------------------------------
+      $table->foreignId('company_id')->constrained()->comment('Empresa dueña del registro');
+      $table->foreignId('branch_id')->nullable()->constrained()->onDelete('restrict');
+
+      // Relación Madre: Si borran el tratamiento, se borran las sesiones
+      $table->foreignId('treatment_id')->constrained()->cascadeOnDelete();
+
+      $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
+
+      // OJO: Si tus doctores son usuarios del sistema, usa 'users'. Si tienes tabla 'doctors', usa esa.
+      $table->foreignId('doctor_id')->constrained('users')->restrictOnDelete();
+
+      $table->foreignId('session_type_id')->nullable()->constrained()->nullOnDelete();
+
+      // Logística de Citas
+      $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
+      $table->foreignId('room_id')->nullable()->constrained('rooms')->nullOnDelete();
+
+      // -----------------------------------------------------
+      // 2. LOGÍSTICA DE LA SESIÓN
+      // -----------------------------------------------------
+      $table->date('date')->index();
+      $table->time('time')->nullable();
+      $table->unsignedSmallInteger('duration')->default(45)->comment('Duración en minutos');
+
+      // Typos corregidos y estados estándar
+      $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'])
+        ->default('scheduled')
+        ->index();
+
+      $table->unsignedTinyInteger('month_session_number')->default(1)->comment('Sesión N° X del mes para el paciente');
+      $table->boolean('consumes_plan')->default(true)->comment('Si descuenta del total del tratamiento');
       $table->text('cancellation_note')->nullable();
 
-      $table->boolean('consumes_plan')->default(false);
+      // -----------------------------------------------------
+      // 3. DATOS CLÍNICOS (ESTRUCTURA SOAP)
+      // -----------------------------------------------------
 
-      // —— “Snapshot” de tarifa aplicada ——
+      // [S]UBJECTIVE: Lo que el paciente relata
+      $table->text('subjective')->nullable()->comment('S: Motivo específico hoy, dolor relatado, sensaciones.');
 
-      $table->unsignedBigInteger('patient_amount')->nullable(); // precio cobrado al paciente
-      $table->unsignedBigInteger('doctor_amount')->nullable();  // parte del doctor
-      $table->unsignedBigInteger('clinic_amount')->nullable();  // parte de la clínica
+      // [O]BJECTIVE: Lo que el Kine mide (Datos Duros)
+      // Reemplaza a las columnas rom_flexion, pain_before, etc.
+      /* Estructura:
+               {
+                 "pain": { "pre": 7, "post": 4 }, // EVA
+                 "biometrics": [
+                    { "type": "ROM", "segment": "Rodilla", "mov": "Flexión", "pre": 90, "post": 100 },
+                    { "type": "Fuerza", "segment": "Cuadriceps", "val": "M4" }
+                 ],
+                 "vitals": { "bp": "120/80", "hr": 70 }
+               }
+            */
+      $table->json('biometric_data')->nullable()->comment('O: Datos objetivos, mediciones y ROMs dinámicos');
+      $table->json('attachments')->nullable()->comment('Rutas de fotos/archivos adjuntos a la sesión');
 
-      /* exento */
-      $table->boolean('is_exento')->default(true); // En salud, la mayoría son exentos
+      // [A]SSESSMENT: Análisis profesional y Actividades realizadas
+      $table->text('assessment')->nullable()->comment('A: Análisis de la evolución y notas técnicas');
+      $table->json('techniques')->nullable()->comment('Listado de técnicas aplicadas (JSON Array)');
+      $table->json('exercises')->nullable()->comment('Listado de ejercicios realizados (JSON Array)');
+
+      // [P]LAN: Planificación futura
+      $table->text('plan')->nullable()->comment('P: Tareas para el hogar y objetivos próxima sesión');
+
+      // -----------------------------------------------------
+      // 4. FINANZAS (SNAPSHOT)
+      // -----------------------------------------------------
+      // Guardamos el valor histórico al momento de la sesión
+      $table->unsignedBigInteger('patient_amount_clp')->default(0);
+      $table->unsignedBigInteger('doctor_amount_clp')->default(0);
+      $table->unsignedBigInteger('clinic_amount_clp')->default(0);
+      $table->boolean('is_exento')->default(true);
+
+      // -----------------------------------------------------
+      // 5. METADATA Y TIMESTAMPS
+      // -----------------------------------------------------
+      $table->json('meta')->nullable()->comment('Datos extra del sistema o integraciones');
       $table->timestamps();
-
       $table->softDeletes();
 
-
-
-      // Búsquedas comunes
-      $table->index(['patient_id', 'date', 'time'], 'ts_patient_date_time_idx');
-      $table->index(['doctor_id', 'date', 'time'], 'ts_kine_date_time_idx');
-      $table->index(['company_id', 'date', 'is_exento']);
-      $table->index('room_id');
+      // Índices Optimizados
+      $table->index(['patient_id', 'date'], 'idx_patient_history'); // Para ver historial rápido
+      $table->index(['doctor_id', 'date'], 'idx_doctor_agenda');    // Para ver agenda del doctor
+      $table->index(['treatment_id', 'status']); // Para contar sesiones realizadas de un tratamiento
     });
   }
 
@@ -80,6 +104,3 @@ return new class extends Migration {
     Schema::dropIfExists('treatment_sessions');
   }
 };
-
-
-/* Error al crear el tratamiento. SQLSTATE[HY000]: General error: 1364 Field 'original_amount' doesn't have a default value (Connection: mysql, SQL: insert into `debts` (`patient_id`, `treatment_session_id`, `updated_at`, `created_at`) values (1, 82, 2025-11-29 15:32:28, 2025-11-29 15:32:28)) */

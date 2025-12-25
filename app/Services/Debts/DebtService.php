@@ -19,7 +19,7 @@ class DebtService
     {
         return DB::transaction(function () use ($session, $customAmount) {
 
-            $amount = $customAmount ?? ($session->patient_amount > 0 ? $session->patient_amount : 30000);
+            $amount = $customAmount ?? ($session->patient_amount_clp > 0 ? $session->patient_amount_clp : 30000);
 
             // 1. Crear la Deuda (La obligación global)
             $debt = Debt::create([

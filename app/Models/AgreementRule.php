@@ -13,7 +13,7 @@ class AgreementRule extends Model
         'session_type_id',       // FK al servicio/prestación al que aplica la regla
         'plan_id',               // FK al plan específico (Plan 300, Tramo B, etc.) - puede ser NULL para regla general
 
-        'gross_price',           // Precio Bruto total (Tarifa acordada con la aseguradora)
+        'gross_price_clp',           // Precio Bruto total (Tarifa acordada con la aseguradora)
         'patient_share_clp',     // Copago que debe pagar el paciente (Aporte Paciente)
         'insurance_share_clp',   // Monto que paga la aseguradora (Aporte Aseguradora)
 
@@ -22,7 +22,7 @@ class AgreementRule extends Model
     ];
 
     protected $casts = [
-        'gross_price' => 'integer',
+        'gross_price_clp' => 'integer',
         'patient_share_clp' => 'integer',
         'insurance_share_clp' => 'integer',
         'patient_percentage' => 'float',

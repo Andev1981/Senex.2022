@@ -2,21 +2,7 @@ import { FileText, Package, Receipt, FileCheck } from "lucide-react";
 
 /* Tipos de dte estilos */
 export const dtesTypes = {
-  39: {
-    code: 39,
-    name: "Boleta Electrónica",
-    icon: Receipt,
-    exento: false,
-    label: "Boleta",
-    styles: {
-      text: "text-blue-600",
-      border: "border-blue-500",
-      bg_cover: "bg-blue-500",
-      bg: "bg-blue-50",
-      badge: "bg-blue-100 text-blue-700",
-    },
-  },
-  41: {
+  1: {
     code: 41,
     name: "Boleta Electrónica Exenta",
     icon: Receipt,
@@ -30,7 +16,22 @@ export const dtesTypes = {
       badge: "bg-purple-100 text-purple-700",
     },
   },
-  33: {
+  2: {
+    code: 39,
+    name: "Boleta Electrónica",
+    icon: Receipt,
+    exento: false,
+    label: "Boleta",
+    styles: {
+      text: "text-blue-600",
+      border: "border-blue-500",
+      bg_cover: "bg-blue-500",
+      bg: "bg-blue-50",
+      badge: "bg-blue-100 text-blue-700",
+    },
+  },
+
+  3: {
     code: 33,
     name: "Factura Electrónica",
     icon: FileText,
@@ -44,7 +45,7 @@ export const dtesTypes = {
       badge: "bg-green-100 text-green-700",
     },
   },
-  34: {
+  4: {
     code: 34,
     name: "Factura Electrónica Exenta",
     icon: FileText,
@@ -58,7 +59,7 @@ export const dtesTypes = {
       badge: "bg-teal-100 text-teal-700",
     },
   },
-  46: {
+  5: {
     code: 46,
     name: "Factura de Compra",
     icon: FileCheck,
@@ -72,7 +73,7 @@ export const dtesTypes = {
       badge: "bg-orange-100 text-orange-700",
     },
   },
-  61: {
+  6: {
     code: 61,
     name: "Nota de Crédito",
     icon: FileText,
@@ -86,7 +87,7 @@ export const dtesTypes = {
       badge: "bg-red-100 text-red-700",
     },
   },
-  56: {
+  7: {
     code: 56,
     name: "Nota de Débito",
     icon: FileText,
@@ -100,7 +101,7 @@ export const dtesTypes = {
       badge: "bg-yellow-100 text-yellow-700",
     },
   },
-  52: {
+  8: {
     code: 52,
     name: "Guía de Despacho",
     icon: Package,

@@ -173,7 +173,7 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Total Bruto Atenciones</span>
                   <span className="font-medium">
-                    {formatMoney(payment.amount_gross)}
+                    {formatMoney(payment.amount_gross_clp)}
                   </span>
                 </div>
 
@@ -187,10 +187,10 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
                   </div>
                 ))}
 
-                {payment.discount > 0 && (
+                {payment.discount_clp > 0 && (
                   <div className="flex justify-between text-sm font-bold text-orange-600">
                     <span>Descuento Aplicado</span>
-                    <span>-{formatMoney(payment.discount)}</span>
+                    <span>-{formatMoney(payment.discount_clp)}</span>
                   </div>
                 )}
 

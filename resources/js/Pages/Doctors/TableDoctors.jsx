@@ -29,6 +29,8 @@ export default function TableDoctors({
   setIsModalOpen,
   setIsModalOpenDetail,
   setIsModalOpenAttendences,
+  getStatusBadge,
+  getMobileBadge,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
@@ -163,20 +165,12 @@ export default function TableDoctors({
         },
       },
       {
-        id: "branch.status",
-        accessorKey: "branch.status",
+        id: "branch_status",
+        accessorKey: "branch_status",
         header: "ESTADO",
         cell: ({ getValue }) => {
-          const status = getValue();
-          const color = status == "active" ? "bg-green-500" : "bg-gray-500";
-          const label = status == "active" ? "Activo" : "Inactivo";
-          return (
-            <span
-              className={`inline-flex text-white items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}
-            >
-              {label}
-            </span>
-          );
+          const branch_status = getValue();
+          return <span>{getStatusBadge(branch_status)}</span>;
         },
         filterFn: (row, columnId, filterValue) => {
           if (!filterValue) return true;
@@ -184,21 +178,13 @@ export default function TableDoctors({
         },
       },
       {
-        id: "branch.mobile_app_access",
-        accessorKey: "branch.mobile_app_access",
+        id: "mobile_app_access",
+        accessorKey: "mobile_app_access",
         header: "ACCESO MÓVIL",
         cell: ({ getValue }) => {
           const mobile_app_access = getValue();
-          const color =
-            mobile_app_access == true ? "bg-green-500" : "bg-gray-500";
-          const label = mobile_app_access == true ? "Con Acceso" : "Sin Acceso";
-          return (
-            <span
-              className={`inline-flex text-white items-center px-3 py-1 rounded-full text-xs font-semibold ${color}`}
-            >
-              {label}
-            </span>
-          );
+
+          return <span>{getMobileBadge(mobile_app_access)}</span>;
         },
         filterFn: (row, columnId, filterValue) => {
           if (!filterValue) return true;
@@ -230,14 +216,6 @@ export default function TableDoctors({
         cell: ({ row }) => (
           <div className="flex gap-2">
             <button
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-purple-200 text-purple-700 hover:bg-purple-50"
-              onClick={() => (
-                setSelectedDoctor(row.original), setIsModalOpen(true)
-              )}
-            >
-              Ficha
-            </button>
-            <button
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-amber-200 text-amber-700 hover:bg-amber-50"
               onClick={() => (
                 setSelectedDoctor(row.original), setIsModalOpenDetail(true)
@@ -245,6 +223,15 @@ export default function TableDoctors({
             >
               Detalles
             </button>
+            <button
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-purple-200 text-purple-700 hover:bg-purple-50"
+              onClick={() => (
+                setSelectedDoctor(row.original), setIsModalOpen(true)
+              )}
+            >
+              Ficha
+            </button>
+
             <button
               className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-green-200 text-green-700 hover:bg-green-50"
               onClick={() => (

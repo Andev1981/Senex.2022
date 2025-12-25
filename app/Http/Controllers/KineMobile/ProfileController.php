@@ -23,8 +23,8 @@ class ProfileController extends Controller
     {
         $doctor = Auth::user()->doctor;
         $user = Auth::user();
-        
-        $doctor->load(['commissionRates.sessionType', 'branch']);
+
+        $doctor->load(['commissionRates.sessionType']);
 
         // Estadísticas del mes actual
         $currentMonth = Carbon::now()->startOfMonth();
@@ -46,7 +46,7 @@ class ProfileController extends Controller
             $monthlyData[] = [
                 'month' => $month->format('M'),
                 'sessions' => $monthSessions->count(),
-                'earnings' => $monthSessions->sum('doctor_amount'),
+                'earnings' => $monthSessions->sum('doctor_amount_clp'),
             ];
         }
 
@@ -65,8 +65,8 @@ class ProfileController extends Controller
         $stats = [
             'sessions_month' => $sessions->count(),
             'patients_month' => $sessions->pluck('patient_id')->unique()->count(),
-            'revenue_month' => $sessions->sum('patient_amount'),
-            'commission_month' => $sessions->sum('doctor_amount'),
+            'revenue_month' => $sessions->sum('patient_amount_clp'),
+            'commission_month' => $sessions->sum('doctor_amount_clp'),
             'ranking' => $ranking ?: '-',
             'total_kines' => count($allDoctors),
         ];
@@ -117,7 +117,6 @@ class ProfileController extends Controller
                 'success' => true,
                 'message' => 'Perfil actualizado correctamente'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -155,7 +154,6 @@ class ProfileController extends Controller
                 'success' => true,
                 'message' => 'Contraseña actualizada correctamente'
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

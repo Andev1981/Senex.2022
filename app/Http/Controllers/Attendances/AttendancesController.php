@@ -25,7 +25,7 @@ class AttendancesController extends Controller
      */
     public function index(Request $request)
     {
-        
+
         try {
             // Obtener el primer día del mes actual (Ej: 2025-12-01)
             $inicioMes = now()->startOfMonth()->format('Y-m-d');
@@ -56,7 +56,7 @@ class AttendancesController extends Controller
                 $fechaFin = $temp;
             }
 
-            
+
 
             // Query base con relaciones
             $sessionsQuery = TreatmentSession::with([
@@ -65,23 +65,23 @@ class AttendancesController extends Controller
                 'sessionType',
                 'paymentAllocation',
             ])
-            ->whereBetween('date', [$fechaInicio, $fechaFin])
-            ->orderBy('date','desc')
-            ->orderBy('time','desc')
-            ->select([
-                'id',
-                'treatment_id',
-                'patient_id',
-                'doctor_id',
-                'session_type_id',
-                'date',
-                'time',
-                'month_session_number',
-                'status',
-                'patient_amount',
-                'doctor_amount',
-                'duration'
-            ]);
+                ->whereBetween('date', [$fechaInicio, $fechaFin])
+                ->orderBy('date', 'desc')
+                ->orderBy('time', 'desc')
+                ->select([
+                    'id',
+                    'treatment_id',
+                    'patient_id',
+                    'doctor_id',
+                    'session_type_id',
+                    'date',
+                    'time',
+                    'month_session_number',
+                    'status',
+                    'patient_amount_clp',
+                    'doctor_amount_clp',
+                    'duration'
+                ]);
 
             // Filtro por estado
             if ($estado !== 'all') {
@@ -117,13 +117,13 @@ class AttendancesController extends Controller
             $atenciones = $sessions->map(function ($session) {
                 return [
                     'session_id' => $session->id,
-                
+
                     // Información básica
                     'treatment_id' => $session->treatment_id,
                     'patient_id' => $session->patient->id,
                     'doctor_id' => $session->doctor_id,
                     'session_type_id' => $session->session_type_id,
-                    
+
                     // Nombres para mostrar
                     'patient_full_name' => $session->patient->full_name,
                     'patient_rut' => $session->patient->rut,
@@ -131,20 +131,20 @@ class AttendancesController extends Controller
                     'doctor_full_name' => $session->doctor->full_name,
                     'name_session_type' => $session->sessionType->name,
                     'session_type_base_price' => $session->sessionType->base_price,
-                    
+
                     // Fecha y hora
                     'date' => $session->date,
                     'formatted_date' => Carbon::parse($session->date)->format('d/m/Y'),
                     'time' => Carbon::parse($session->time)->format('H:i'),
                     'duration' => $session->duration,
-                    
+
                     // Estado
                     'status' => $session->status,
-                    
+
                     // Precios
-                    'patient_amount' => $session->patient_amount,
+                    'patient_amount_clp' => $session->patient_amount_clp,
                     'plan_session_value' => $session->plan_session_value ?? 0,
-                    
+
                     // Plan
                     'consumes_plan' => $session->consumes_plan,
                     'patient_plan_id' => $session->patient_plan_id,
@@ -154,7 +154,7 @@ class AttendancesController extends Controller
                         'sessions_remaining' => $session->patientPlan->sessions_remaining,
                         'price' => $session->patientPlan->plan->price
                     ] : null,
-                    
+
                     // Datos clínicos
                     'pain_before' => $session->pain_before ?? 0,
                     'pain_after' => $session->pain_after ?? 0,
@@ -166,10 +166,10 @@ class AttendancesController extends Controller
                     'notes' => $session->notes ?? '',
                     'homework' => $session->homework ?? '',
                     'next_goals' => $session->next_goals ?? '',
-                    
-             
+
+
                     'month_session_number' => $session->month_session_number,
-                    
+
                     // Totales
                     'total_payment' => $session->paymentAllocations ? $session->paymentAllocations->sum('amount_clp') : 0,
                     'copay_clp' => $session->payment ? $session->payment->sum('copay_clp') : 0,
@@ -182,56 +182,56 @@ class AttendancesController extends Controller
                 'completadas' => $sessions->where('status', 'completed')->count(),
                 'pendientes' => $sessions->where('status', 'scheduled')->count(),
                 'canceladas' => $sessions->where('status', 'cancelled')->count(),
-                'totalCobrado' =>  $sessions->whereIn('status', ['completed','in_progress','scheduled'])
-                ->filter(fn($session) => $session->paymentAllocations !== null)
-                ->sum(function ($session) {
-                    return $session->paymentAllocations->sum('amount_clp');
-                }) ?? 0,
-                'totalPorCobrar' => $sessions->whereIn('status', ['scheduled','completed','in_progress'])
-                    ->sum('patient_amount'),
+                'totalCobrado' =>  $sessions->whereIn('status', ['completed', 'in_progress', 'scheduled'])
+                    ->filter(fn($session) => $session->paymentAllocations !== null)
+                    ->sum(function ($session) {
+                        return $session->paymentAllocations->sum('amount_clp');
+                    }) ?? 0,
+                'totalPorCobrar' => $sessions->whereIn('status', ['scheduled', 'completed', 'in_progress'])
+                    ->sum('patient_amount_clp'),
             ];
 
 
             $patients = Patient::select('id', 'name', 'last_name', 'rut')
-                        ->with(['activePlans' => function ($query) {
-                            $query->active()  // ← Usar scope
-                                ->notExpired()
-                                ->withSessionsRemaining()
-                                ->select('id', 'patient_id', 'plan_id', 'sessions_included', 'sessions_used', 'expiry_date')
-                                ->with('plan:id,name,code,description');
-                        }])
-                        ->get()->map(fn($p) => [
-                            'id' => $p->id,
-                            'full_name' => $p->full_name,
-                            'rut' => $p->rut,
-                            'active_plans' => $p->activePlans->map(fn($plan) => [
-                                'id' => $plan->id,
-                                'plan_id' => $plan->plan_id,
-                                'plan_name' => $plan->plan->name,
-                                'plan_code' => $plan->plan->code,
-                                'plan_description' => $plan->plan->description,
-                                'sessions_included' => $plan->sessions_included,
-                                'sessions_used' => $plan->sessions_used,
-                                'sessions_remaining' => $plan->sessions_remaining,  // ← Accessor correcto
-                                'expiry_date' => $plan->expiry_date?->format('Y-m-d'),
-                                'is_expired' => $plan->is_expired,  // ← Accessor
-                                'is_exhausted' => $plan->is_exhausted,  // ← Accessor
-                            ]),
-                        ])->sortBy('full_name')->values();
-            
+                ->with(['activePlans' => function ($query) {
+                    $query->active()  // ← Usar scope
+                        ->notExpired()
+                        ->withSessionsRemaining()
+                        ->select('id', 'patient_id', 'plan_id', 'sessions_included', 'sessions_used', 'expiry_date')
+                        ->with('plan:id,name,code,description');
+                }])
+                ->get()->map(fn($p) => [
+                    'id' => $p->id,
+                    'full_name' => $p->full_name,
+                    'rut' => $p->rut,
+                    'active_plans' => $p->activePlans->map(fn($plan) => [
+                        'id' => $plan->id,
+                        'plan_id' => $plan->plan_id,
+                        'plan_name' => $plan->plan->name,
+                        'plan_code' => $plan->plan->code,
+                        'plan_description' => $plan->plan->description,
+                        'sessions_included' => $plan->sessions_included,
+                        'sessions_used' => $plan->sessions_used,
+                        'sessions_remaining' => $plan->sessions_remaining,  // ← Accessor correcto
+                        'expiry_date' => $plan->expiry_date?->format('Y-m-d'),
+                        'is_expired' => $plan->is_expired,  // ← Accessor
+                        'is_exhausted' => $plan->is_exhausted,  // ← Accessor
+                    ]),
+                ])->sortBy('full_name')->values();
+
             $doctors = Doctor::select('id', 'name', 'last_name', 'rut')
-                        ->orderBy('name')  // ← Cambiar a columna real
-                        ->get()
-                        ->map(function ($patient) {
-                            return [
-                                'id' => $patient->id,
-                                'full_name' => $patient->full_name,  // ← Aquí funciona el accessor
-                                'rut' => $patient->rut,
-                            ];
-                        });
-            
-            $session_types = SessionType::select('id', 'name','code','category','base_price_clp', 'plan_discount_clp')
-                         ->orderBy('name')
+                ->orderBy('name')  // ← Cambiar a columna real
+                ->get()
+                ->map(function ($patient) {
+                    return [
+                        'id' => $patient->id,
+                        'full_name' => $patient->full_name,  // ← Aquí funciona el accessor
+                        'rut' => $patient->rut,
+                    ];
+                });
+
+            $session_types = SessionType::select('id', 'name', 'code', 'category', 'base_price_clp', 'plan_discount_clp')
+                ->orderBy('name')
                 ->get();
 
 
@@ -275,20 +275,20 @@ class AttendancesController extends Controller
         }
     }
 
-     /**
+    /**
      * Crear nueva sesión
      */
     public function store(StoreAttendanceRequest $request)
     {
         $validated = $request->validated();
-        
+
         try {
             DB::beginTransaction();
 
-             // 🔍 VALIDACIÓN: Verificar que existe comisión asignada
+            // 🔍 VALIDACIÓN: Verificar que existe comisión asignada
             $doctor = Doctor::findOrFail($validated['doctor_id']);
             $sessionType = SessionType::findOrFail($validated['session_type_id']);
-            
+
             $commissionRate = DoctorCommissionRate::active()
                 ->forDoctor($validated['doctor_id'])
                 ->forSessionType($validated['session_type_id'])
@@ -301,7 +301,6 @@ class AttendancesController extends Controller
                     "Por favor, configure la comisión antes de agendar.");
                 session()->flash('type', 'error');
                 return back();
-                
             }
 
             // Si la comisión existe pero no tiene valores
@@ -321,7 +320,7 @@ class AttendancesController extends Controller
                 session()->flash('message',  "⚠️ La comisión de {$doctor->full_name} no tiene monto fijo asignado. " .
                     "Configure el valor antes de continuar.");
                 session()->flash('type', 'error');
-                
+
                 return back();
             }
 
@@ -347,7 +346,7 @@ class AttendancesController extends Controller
             );
 
             // 3. Calcular y guardar snapshot de comisión
-            $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount_cl']);
+            $validated['commission_amount_clp'] = $commissionRate->calculateCommission($validated['patient_amount_cl']);
             $validated['commission_percentage'] = $commissionRate->commission_percentage;
             $validated['commission_type'] = $commissionRate->commission_type;
 
@@ -356,13 +355,13 @@ class AttendancesController extends Controller
             // ============================================
             $consumePlan = $validated['consume_plan'] ?? false;
             $patientPlan = null;
-            
+
             if ($consumePlan) {
                 if (!$validated['patient_plan_id']) {
                     DB::rollBack();
                     return back()->with('error', 'Debe seleccionar un plan para consumir');
                 }
-                
+
                 // Buscar plan con scopes
                 $patientPlan = PatientPlan::where('id', $validated['patient_plan_id'])
                     ->where('patient_id', $validated['patient_id'])
@@ -370,7 +369,7 @@ class AttendancesController extends Controller
                     ->notExpired()
                     ->withSessionsRemaining()
                     ->first();
-                
+
                 if (!$patientPlan) {
                     DB::rollBack();
                     return back()->with('error', 'El plan seleccionado no está disponible o ha expirado');
@@ -386,7 +385,7 @@ class AttendancesController extends Controller
                 $plan = $patientPlan->plan;
                 if ($plan->session_types) {
                     $allowedTypes = $plan->session_types; // Ya es array, no necesita json_decode
-    
+
                     if (count($allowedTypes) > 0 && !in_array($validated['session_type_id'], $allowedTypes)) {
                         DB::rollBack();
                         return back()->with('error', '⚠️ El tipo de sesión seleccionado no está cubierto por este plan');
@@ -394,7 +393,7 @@ class AttendancesController extends Controller
                 }
             }
 
-            if($patientPlan) {
+            if ($patientPlan) {
                 Log::info("Plan válido para consumir", [
                     'patient_plan_id' => $patientPlan->id,
                     'plan_name' => $patientPlan->plan->name,
@@ -403,7 +402,7 @@ class AttendancesController extends Controller
             } else {
                 Log::info("No se consumirá plan para esta sesión");
             }
-        
+
 
             // ============================================
             // 4. Crear la sesión
@@ -423,8 +422,8 @@ class AttendancesController extends Controller
                     ->count() + 1,
                 'consumes_plan' => $consumePlan,
                 'patient_plan_id' => $patientPlan ? $patientPlan->id : null,
-                'patient_amount' => $validated['patient_amount'],
-                'doctor_amount' => $commissionRate['commission_amount'],
+                'patient_amount_clp' => $validated['patient_amount_clp'],
+                'doctor_amount_clp' => $commissionRate['commission_amount_clp'],
                 'techniques' => $request->techniques ?? [],
                 'exercises' => $request->exercises ?? [],
             ]);
@@ -434,10 +433,10 @@ class AttendancesController extends Controller
             // ============================================
             if ($consumePlan && $patientPlan) {
                 $patientPlan->increment('sessions_used');
-                
+
                 // Refrescar para obtener el valor actualizado
                 $patientPlan->refresh();
-                
+
                 Log::info("Sesión descontada del plan", [
                     'session_id' => $session->id,
                     'patient_plan_id' => $patientPlan->id,
@@ -445,7 +444,7 @@ class AttendancesController extends Controller
                     'sessions_used' => $patientPlan->sessions_used,
                     'sessions_remaining' => $patientPlan->sessions_remaining,
                 ]);
-                
+
                 // Marcar plan como exhausted si se agotaron las sesiones
                 if ($patientPlan->is_exhausted) {
                     $patientPlan->update(['status' => 'exhausted']);
@@ -468,7 +467,6 @@ class AttendancesController extends Controller
             session()->flash('type', 'success');
 
             return back();
-            
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             Log::error("Error al crear sesión 1: ", [
@@ -497,66 +495,68 @@ class AttendancesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        
+
         $session = TreatmentSession::findOrFail($id);
-        
-            $validated = $request->validate([
-                'patient_id' => 'required|exists:patients,id',
-                'consume_plan' => 'nullable|boolean',
-                'patient_plan_id' => 'nullable|exists:patient_plans,id',
-                'doctor_id' => 'required|exists:doctors,id',
-                'session_type_id' => 'required|exists:session_types,id',
-                'patient_amount' => 'required|numeric|min:0',
-                'date' => 'required|date',
-                'time' => 'required',
-                'duration' => 'required|integer|min:15',
-                'status' => 'required|in:scheduled,completed,in_progress',
-            
-                'consume_plan' => 'nullable|boolean',
-                'patient_plan_id' => 'nullable|exists:patient_plans,id',
-                // Datos clínicos
-                'pain_before' => 'nullable|integer|min:0|max:10',
-                'pain_after' => 'nullable|integer|min:0|max:10',
-                'rom_flexion_before' => 'nullable|integer|min:0|max:180',
-                'rom_flexion_after' => 'nullable|integer|min:0|max:180',
-                'rom_abduction_before' => 'nullable|integer|min:0|max:180',
-                'rom_abduction_after' => 'nullable|integer|min:0|max:180',
-                'rom_rotation_before' => 'nullable|integer|min:0|max:180',
-                'rom_rotation_after' => 'nullable|integer|min:0|max:180',
-                'notes' => 'nullable|string',
-                'techniques' => 'nullable|array',
-                'exercises' => 'nullable|array',
-                'patient_amount' => 'nullable|numeric|min:0',
-            ]);
 
-            
-            DB::beginTransaction();
-            try {
-              // 🔍 Si cambió el doctor o tipo de sesión, validar comisión
-                if ($session->doctor_id !== $validated['doctor_id'] || 
-                    $session->session_type_id !== $validated['session_type_id']) {
-                    
-                    $doctor = Doctor::findOrFail($validated['doctor_id']);
-                    $sessionType = SessionType::findOrFail($validated['session_type_id']);
-                    
-                    $commissionRate = DoctorCommissionRate::active()
-                        ->forDoctor($validated['doctor_id'])
-                        ->forSessionType($validated['session_type_id'])
-                        ->validAt(Carbon::parse($validated['date']))
-                        ->first();
+        $validated = $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'consume_plan' => 'nullable|boolean',
+            'patient_plan_id' => 'nullable|exists:patient_plans,id',
+            'doctor_id' => 'required|exists:doctors,id',
+            'session_type_id' => 'required|exists:session_types,id',
+            'patient_amount_clp' => 'required|numeric|min:0',
+            'date' => 'required|date',
+            'time' => 'required',
+            'duration' => 'required|integer|min:15',
+            'status' => 'required|in:scheduled,completed,in_progress',
 
-                    if (!$commissionRate) {
-                        DB::rollBack();
-                        session()->flash('message', "⚠️ No hay comisión configurada para {$doctor->full_name} en sesiones de tipo '{$sessionType->name}'.");
-            session()->flash('type', 'error');
-                        return back();
-                    }
+            'consume_plan' => 'nullable|boolean',
+            'patient_plan_id' => 'nullable|exists:patient_plans,id',
+            // Datos clínicos
+            'pain_before' => 'nullable|integer|min:0|max:10',
+            'pain_after' => 'nullable|integer|min:0|max:10',
+            'rom_flexion_before' => 'nullable|integer|min:0|max:180',
+            'rom_flexion_after' => 'nullable|integer|min:0|max:180',
+            'rom_abduction_before' => 'nullable|integer|min:0|max:180',
+            'rom_abduction_after' => 'nullable|integer|min:0|max:180',
+            'rom_rotation_before' => 'nullable|integer|min:0|max:180',
+            'rom_rotation_after' => 'nullable|integer|min:0|max:180',
+            'notes' => 'nullable|string',
+            'techniques' => 'nullable|array',
+            'exercises' => 'nullable|array',
+            'patient_amount_clp' => 'nullable|numeric|min:0',
+        ]);
 
-                    // Recalcular comisión con el nuevo rate
-                    $validated['commission_amount'] = $commissionRate->calculateCommission($validated['patient_amount']);
-                    $validated['commission_percentage'] = $commissionRate->commission_percentage;
-                    $validated['commission_type'] = $commissionRate->commission_type;
+
+        DB::beginTransaction();
+        try {
+            // 🔍 Si cambió el doctor o tipo de sesión, validar comisión
+            if (
+                $session->doctor_id !== $validated['doctor_id'] ||
+                $session->session_type_id !== $validated['session_type_id']
+            ) {
+
+                $doctor = Doctor::findOrFail($validated['doctor_id']);
+                $sessionType = SessionType::findOrFail($validated['session_type_id']);
+
+                $commissionRate = DoctorCommissionRate::active()
+                    ->forDoctor($validated['doctor_id'])
+                    ->forSessionType($validated['session_type_id'])
+                    ->validAt(Carbon::parse($validated['date']))
+                    ->first();
+
+                if (!$commissionRate) {
+                    DB::rollBack();
+                    session()->flash('message', "⚠️ No hay comisión configurada para {$doctor->full_name} en sesiones de tipo '{$sessionType->name}'.");
+                    session()->flash('type', 'error');
+                    return back();
                 }
+
+                // Recalcular comisión con el nuevo rate
+                $validated['commission_amount_clp'] = $commissionRate->calculateCommission($validated['patient_amount_clp']);
+                $validated['commission_percentage'] = $commissionRate->commission_percentage;
+                $validated['commission_type'] = $commissionRate->commission_type;
+            }
 
             // ============================================
             // Determinar qué se puede editar según estado
@@ -564,53 +564,80 @@ class AttendancesController extends Controller
             $allowedFields = [];
             $oldPlanId = $session->patient_plan_id;
             $oldConsumePlan = $session->consumes_plan;
-            
+
             switch ($session->status) {
                 case 'scheduled':
                     // Puede editar todo excepto datos clínicos
                     $allowedFields = [
-                        'patient_id', 'doctor_id', 'session_type_id',
-                        'date', 'time', 'duration', 'status',
-                        'consume_plan', 'patient_plan_id','patient_amount'
+                        'patient_id',
+                        'doctor_id',
+                        'session_type_id',
+                        'date',
+                        'time',
+                        'duration',
+                        'status',
+                        'consume_plan',
+                        'patient_plan_id',
+                        'patient_amount_clp'
                     ];
                     break;
-                    
+
                 case 'completed':
                     // Solo datos clínicos
                     $allowedFields = [
-                        'duration', 'session_type_id','date', 'time',
-                        'pain_before', 'pain_after',
-                        'rom_flexion_before', 'rom_flexion_after',
-                        'rom_abduction_before', 'rom_abduction_after',
-                        'rom_rotation_before', 'rom_rotation_after',
-                        'notes', 'techniques', 'exercises','patient_amount'
+                        'duration',
+                        'session_type_id',
+                        'date',
+                        'time',
+                        'pain_before',
+                        'pain_after',
+                        'rom_flexion_before',
+                        'rom_flexion_after',
+                        'rom_abduction_before',
+                        'rom_abduction_after',
+                        'rom_rotation_before',
+                        'rom_rotation_after',
+                        'notes',
+                        'techniques',
+                        'exercises',
+                        'patient_amount_clp'
                     ];
                     break;
-                    
+
                 case 'in_progress':
                     // Solo duración, tipo y datos clínicos
                     $allowedFields = [
-                        'duration', 'session_type_id','date', 'time',
-                        'pain_before', 'pain_after',
-                        'rom_flexion_before', 'rom_flexion_after',
-                        'rom_abduction_before', 'rom_abduction_after',
-                        'rom_rotation_before', 'rom_rotation_after',
-                        'notes', 'techniques', 'exercises','patient_amount'
+                        'duration',
+                        'session_type_id',
+                        'date',
+                        'time',
+                        'pain_before',
+                        'pain_after',
+                        'rom_flexion_before',
+                        'rom_flexion_after',
+                        'rom_abduction_before',
+                        'rom_abduction_after',
+                        'rom_rotation_before',
+                        'rom_rotation_after',
+                        'notes',
+                        'techniques',
+                        'exercises',
+                        'patient_amount_clp'
                     ];
                     break;
-                    
+
                 case 'cancelled':
                 case 'absent':
                     // No se puede editar
                     DB::rollBack();
-                     session()->flash('message', 'Esta sesión no puede ser editada');
-                     session()->flash('type', 'error');
+                    session()->flash('message', 'Esta sesión no puede ser editada');
+                    session()->flash('type', 'error');
                     return back();
-                    
+
                 default:
                     DB::rollBack();
-                     session()->flash('message', 'Estado de sesión no válido');
-                     session()->flash('type', 'error');
+                    session()->flash('message', 'Estado de sesión no válido');
+                    session()->flash('type', 'error');
                     return back();
             }
 
@@ -631,47 +658,47 @@ class AttendancesController extends Controller
                         ->notExpired()
                         ->withSessionsRemaining()
                         ->first();
-                    
+
                     if (!$patientPlan || $patientPlan->sessions_remaining <= 0) {
                         DB::rollBack();
                         session()->flash('message', 'El plan seleccionado no tiene sesiones disponibles');
-            session()->flash('type', 'error');
+                        session()->flash('type', 'error');
                         return back()->with('error', 'El plan seleccionado no tiene sesiones disponibles');
                     }
-                    
+
                     // Descontar del nuevo plan
                     $patientPlan->increment('sessions_used');
                     $patientPlan->refresh();
-                    
+
                     if ($patientPlan->is_exhausted) {
                         $patientPlan->update(['status' => 'exhausted']);
                     }
-                    
+
                     Log::info("Plan agregado a sesión existente", [
                         'session_id' => $session->id,
                         'patient_plan_id' => $patientPlan->id,
                     ]);
                 }
-                
+
                 // CASO 2: Cambió de SÍ consumir a NO consumir
                 if ($oldConsumePlan && !$newConsumePlan && $oldPlanId) {
                     $oldPlan = PatientPlan::find($oldPlanId);
                     if ($oldPlan) {
                         $oldPlan->decrement('sessions_used');
                         $oldPlan->refresh();
-                        
+
                         // Si estaba exhausted, reactivar
                         if ($oldPlan->status === 'exhausted' && $oldPlan->sessions_remaining > 0) {
                             $oldPlan->update(['status' => 'active']);
                         }
-                        
+
                         Log::info("Sesión liberada del plan", [
                             'session_id' => $session->id,
                             'patient_plan_id' => $oldPlanId,
                         ]);
                     }
                 }
-                
+
                 // CASO 3: Cambió de un plan a otro plan
                 if ($oldConsumePlan && $newConsumePlan && $oldPlanId && $newPlanId && $oldPlanId != $newPlanId) {
                     // Devolver al plan anterior
@@ -683,28 +710,28 @@ class AttendancesController extends Controller
                             $oldPlan->update(['status' => 'active']);
                         }
                     }
-                    
+
                     // Descontar del nuevo plan
                     $newPlan = PatientPlan::where('id', $newPlanId)
                         ->active()
                         ->notExpired()
                         ->withSessionsRemaining()
                         ->first();
-                    
+
                     if (!$newPlan || $newPlan->sessions_remaining <= 0) {
                         DB::rollBack();
                         session()->flash('message', 'El nuevo plan no tiene sesiones disponibles');
-            session()->flash('type', 'error');
+                        session()->flash('type', 'error');
                         return back()->with('error', 'El nuevo plan no tiene sesiones disponibles');
                     }
-                    
+
                     $newPlan->increment('sessions_used');
                     $newPlan->refresh();
-                    
+
                     if ($newPlan->is_exhausted) {
                         $newPlan->update(['status' => 'exhausted']);
                     }
-                    
+
                     Log::info("Plan cambiado en sesión", [
                         'session_id' => $session->id,
                         'old_plan_id' => $oldPlanId,
@@ -719,9 +746,9 @@ class AttendancesController extends Controller
             if (isset($dataToUpdate['patient_id']) || isset($dataToUpdate['doctor_id'])) {
                 $patientId = $dataToUpdate['patient_id'] ?? $session->treatment->patient_id;
                 $doctorId = $dataToUpdate['doctor_id'] ?? $session->treatment->doctor_id;
-                
+
                 $this->assignPatientToDoctor($patientId, $doctorId);
-                
+
                 $treatment = Treatment::firstOrCreate(
                     [
                         'patient_id' => $patientId,
@@ -734,7 +761,7 @@ class AttendancesController extends Controller
                         'start_date' => now(),
                     ]
                 );
-                
+
                 $dataToUpdate['treatment_id'] = $treatment->id;
             }
 
@@ -756,7 +783,6 @@ class AttendancesController extends Controller
             ]);
 
             return back()->with('success', 'Sesión actualizada correctamente');
-            
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
             session()->flash('message', 'Sesión no encontrada');
@@ -949,7 +975,7 @@ class AttendancesController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            
+
             Log::info("Paciente asignado a doctor", [
                 'patient_id' => $patientId,
                 'doctor_id' => $doctorId,
@@ -966,16 +992,16 @@ class AttendancesController extends Controller
             'scheduled_at_risk' => TreatmentSession::where('status', 'scheduled')
                 ->whereDate('date', '<', now())
                 ->count(),
-                
+
             'in_progress_at_risk' => TreatmentSession::where('status', 'in_progress')
                 ->whereDate('date', '<', now())
                 ->count(),
-                
+
             'last_auto_update' => Cache::get('last_auto_update_run', 'Nunca'),
-            
+
             'next_run' => now()->addMinutes(15)->format('H:i'),
         ];
-        
+
         return response()->json($stats);
     }
 }

@@ -23,13 +23,7 @@ import { DTES_STATUSES } from "@/constants/dtesStatuses";
 import HeaderDocuments from "./partials/HeaderDocuments";
 import List from "./partials/List";
 
-export default function IndexDocuments({
-  patients,
-  communes,
-  provinces,
-  regions,
-  invoices,
-}) {
+export default function IndexDocuments({ invoices }) {
   const [activeTab, setActiveTab] = useState("list");
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,29 +39,27 @@ export default function IndexDocuments({
       last_name: "",
     },
     items: [],
-    /* observations: "",
-    paymentMethod: "Efectivo",
-    referenceDoc: "",
-    metadata: "", */
   });
 
   // --- Helpers ---
   const calculateItemTotal = (item) => {
-    const subtotal =
+    const subtotal_clp =
       (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
-    const discountAmount = subtotal * ((Number(item.discount) || 0) / 100);
-    return Math.max(0, subtotal - discountAmount);
+    const discountAmount =
+      subtotal_clp * ((Number(item.discount_clp) || 0) / 100);
+    return Math.max(0, subtotal_clp - discountAmount);
   };
 
   const calculateTotals = () => {
-    const subtotal = data.items.reduce(
+    const subtotal_clp = data.items.reduce(
       (sum, item) => sum + calculateItemTotal(item),
       0
     );
     const docType = DTES_TYPES.find((dt) => dt.code === data.dte_type);
-    const iva = docType && !docType.exento ? Math.round(subtotal * 0.19) : 0;
-    const total = subtotal + iva;
-    return { subtotal, iva, total };
+    const iva =
+      docType && !docType.exento ? Math.round(subtotal_clp * 0.19) : 0;
+    const total = subtotal_clp + iva;
+    return { subtotal_clp, iva, total };
   };
 
   // --- Create ---
@@ -76,7 +68,7 @@ export default function IndexDocuments({
       ...f,
       items: [
         ...f.items,
-        { description: "", quantity: 1, unitPrice: 0, discount: 0 },
+        { description: "", quantity: 1, unitPrice: 0, discount_clp: 0 },
       ],
     }));
 
@@ -94,7 +86,7 @@ export default function IndexDocuments({
     });
 
   const handleCreateDocument = () => {
-    const { subtotal, iva, total } = calculateTotals();
+    const { subtotal_clp, iva, total } = calculateTotals();
     const docType = DTES_TYPES.find((dt) => dt.code === data.type);
     const newDoc = {
       id: invoices.length + 1,
@@ -104,7 +96,7 @@ export default function IndexDocuments({
       date: data.date,
       client: data.client,
       items: data.items,
-      subtotal,
+      subtotal_clp,
       iva,
       total,
       status: "Emitido",
@@ -131,7 +123,7 @@ export default function IndexDocuments({
         comuna: "",
         ciudad: "Santiago",
       },
-      items: [{ description: "", quantity: 1, unitPrice: 0, discount: 0 }],
+      items: [{ description: "", quantity: 1, unitPrice: 0, discount_clp: 0 }],
       observations: "",
       paymentMethod: "Efectivo",
       referenceDoc: "",
@@ -206,13 +198,14 @@ export default function IndexDocuments({
                   // 3. Lógica de activación
                   const active = data.dte_type === type.code;
 
+                  console.log(data);
                   return (
                     <button
                       // ✅ Usamos type.code como clave, ya que es único
                       key={type.code}
                       type="button"
                       // ✅ Guardamos el código numérico DTE en el estado
-                      onClick={() => setData("type", type.code)}
+                      onClick={() => setData("dte_type", type.code)}
                       className={`p-4 rounded-xl border-2 transition-all ${
                         active
                           ? `${styles.border} ${styles.bg}`
@@ -272,8 +265,8 @@ export default function IndexDocuments({
                             className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                           />
                         </div>
-                        {(data.type === 33 /* "factura" */ ||
-                          data.type === 34) /* "factura_exenta" */ && (
+                        {(data.dte_type === 33 /* "factura" */ ||
+                          data.dte_type === 34) /* "factura_exenta" */ && (
                           <div>
                             <label className="block mb-2 text-sm font-medium text-gray-700">
                               Fecha Vencimiento
@@ -317,8 +310,8 @@ export default function IndexDocuments({
                     </div>
 
                     {/* Referencia (para NC y ND) */}
-                    {(data.type === 61 /* "nota_credito" */ ||
-                      data.type === 56) /* "nota_debito" */ && (
+                    {(data.dte_type === 61 /* "nota_credito" */ ||
+                      data.dte_type === 56) /* "nota_debito" */ && (
                       <div className="p-4 mb-6 border-2 border-yellow-200 bg-yellow-50 rounded-xl">
                         <h3 className="mb-4 text-lg font-semibold text-gray-900">
                           Documento de Referencia
@@ -372,59 +365,134 @@ export default function IndexDocuments({
                         Datos del Cliente/Receptor
                       </h3>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {[
-                          {
-                            label: "RUT",
-                            key: "rut",
-                            placeholder: "12.345.678-9",
-                          },
-                          {
-                            label: "Razón Social",
-                            key: "razonSocial",
-                            placeholder: "Nombre o Razón Social",
-                          },
-                          {
-                            label: "Giro",
-                            key: "giro",
-                            placeholder: "Giro comercial",
-                          },
-                          {
-                            label: "Dirección",
-                            key: "direccion",
-                            placeholder: "Dirección completa",
-                          },
-                          {
-                            label: "Comuna",
-                            key: "comuna",
-                            placeholder: "Comuna",
-                          },
-                          {
-                            label: "Ciudad",
-                            key: "ciudad",
-                            placeholder: "Ciudad",
-                          },
-                        ].map((f) => (
-                          <div key={f.key}>
-                            <label className="block mb-2 text-sm font-medium text-gray-700">
-                              {f.label}
-                            </label>
-                            <input
-                              type="text"
-                              value={data.client[f.key]}
-                              onChange={(e) =>
-                                setData({
-                                  ...data,
-                                  client: {
-                                    ...data.client,
-                                    [f.key]: e.target.value,
-                                  },
-                                })
-                              }
-                              placeholder={f.placeholder}
-                              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                            />
-                          </div>
-                        ))}
+                        {/* CAMPO 1: RUT */}
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700">
+                            RUT
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="12.345.678-9"
+                            value={data?.client?.rut || ""}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                client: { ...data.client, rut: e.target.value },
+                              })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* CAMPO 2: Razón Social */}
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700">
+                            Razón Social
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Nombre o Razón Social"
+                            value={data?.client?.razonSocial || ""}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                client: {
+                                  ...data.client,
+                                  razonSocial: e.target.value,
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* CAMPO 3: Giro */}
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700">
+                            Giro
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Giro comercial"
+                            value={data?.client?.giro || ""}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                client: {
+                                  ...data.client,
+                                  giro: e.target.value,
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* CAMPO 4: Dirección */}
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700">
+                            Dirección
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Dirección completa"
+                            value={data?.client?.direccion || ""}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                client: {
+                                  ...data.client,
+                                  direccion: e.target.value,
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* CAMPO 5: Comuna */}
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700">
+                            Comuna
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Comuna"
+                            value={data?.client?.comuna || ""}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                client: {
+                                  ...data.client,
+                                  comuna: e.target.value,
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* CAMPO 6: Ciudad */}
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700">
+                            Ciudad
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ciudad"
+                            value={data?.client?.ciudad || ""}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                client: {
+                                  ...data.client,
+                                  ciudad: e.target.value,
+                                },
+                              })
+                            }
+                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -520,11 +588,11 @@ export default function IndexDocuments({
                                 <td className="px-4 py-2">
                                   <input
                                     type="number"
-                                    value={item.discount}
+                                    value={item.discount_clp}
                                     onChange={(e) =>
                                       updateItem(
                                         index,
-                                        "discount",
+                                        "discount_clp",
                                         parseFloat(e.target.value) || 0
                                       )
                                     }
@@ -566,10 +634,10 @@ export default function IndexDocuments({
                       >
                         <div className="space-y-3">
                           <div className="flex justify-between text-gray-700">
-                            <span>Subtotal:</span>
+                            <span>subtotal_clp:</span>
                             <span className="font-semibold">
                               $
-                              {calculateTotals().subtotal.toLocaleString(
+                              {calculateTotals().subtotal_clp.toLocaleString(
                                 "es-CL"
                               )}
                             </span>
@@ -649,7 +717,7 @@ export default function IndexDocuments({
                                 description: "",
                                 quantity: 1,
                                 unitPrice: 0,
-                                discount: 0,
+                                discount_clp: 0,
                               },
                             ],
                             observations: "",
@@ -996,7 +1064,7 @@ export default function IndexDocuments({
                                 (Number(item.unitPrice) || 0) -
                               (Number(item.quantity) || 0) *
                                 (Number(item.unitPrice) || 0) *
-                                ((Number(item.discount) || 0) / 100)
+                                ((Number(item.discount_clp) || 0) / 100)
                             ).toLocaleString("es-CL")}
                           </td>
                         </tr>
@@ -1009,9 +1077,9 @@ export default function IndexDocuments({
                 <div className="p-4 mb-6 border border-gray-200 rounded-lg bg-gray-50">
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-700">Subtotal:</span>
+                      <span className="text-gray-700">subtotal_clp:</span>
                       <span className="font-semibold">
-                        ${selectedDocument.subtotal.toLocaleString("es-CL")}
+                        ${selectedDocument.subtotal_clp.toLocaleString("es-CL")}
                       </span>
                     </div>
                     {selectedDocument.iva > 0 && (

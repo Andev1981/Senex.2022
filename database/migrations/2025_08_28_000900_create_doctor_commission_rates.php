@@ -24,11 +24,16 @@ return new class extends Migration {
       $t->enum('commission_type', ['fixed_amount', 'percentage'])->default('fixed_amount');
 
       // Si 'fixed_amount' => CLP; si 'percentage' => usa 'percentage'
-      $t->unsignedBigInteger('commission_value')->default(0);
+      $t->unsignedBigInteger('amount_clp')->default(0);
       $t->decimal('commission_percentage', 5, 2)->nullable(); // 0–100.00
 
+      // --- NUEVO: ¿Aplica recargos globales? ---
+      // Si es TRUE, el sistema buscará en 'commission_surcharges' si corresponde sumar plata extra.
+      // Si es FALSE, este doctor tiene tarifa plana pase lo que pase.
+      $t->boolean('apply_surcharges')->default(true);
+
       // Base de cálculo (por si la comisión se calcula sobre el cobro total o base neta)
-      $t->enum('base_on', ['patient_amount', 'net_base', 'custom'])->default('patient_amount');
+      $t->enum('base_on', ['patient_amount_clp', 'net_base', 'custom'])->default('patient_amount_clp');
 
 
       $t->date('effective_from');
@@ -51,7 +56,6 @@ return new class extends Migration {
         'ucr_doctor_app_clinic_type_from'
       );
     });
-
   }
 
   public function down(): void

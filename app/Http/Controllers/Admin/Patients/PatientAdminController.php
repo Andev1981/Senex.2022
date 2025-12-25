@@ -104,6 +104,8 @@ class PatientAdminController extends Controller
         $communes  = Commune::all(['id', 'name', 'province_id']);
         $regions   = Region::all(['id', 'name']);
 
+
+
         return Inertia::render('Patients/IndexPatients', compact('patients', 'communes', 'provinces', 'regions'));
     }
 
@@ -116,7 +118,7 @@ class PatientAdminController extends Controller
         $activeBranchId = session('active_branch_id');
         $companyId = session('current_company_id');
 
-        // 1. Tratamientos y Sesiones (Optimizado)
+        // 1. Tratamientos y Sesiones (Esto está bien para el historial de abajo)
         $treatments = Treatment::query()
             ->where('patient_id', $patient->id)
             ->where('company_id', $companyId)
@@ -124,7 +126,7 @@ class PatientAdminController extends Controller
             ->with([
                 'sessionType',
                 'doctor',
-                'diagnostic',
+                'diagnostic', // Aquí ya lo tenías bien
                 'sessions' => fn($q) => $q->orderBy('date', 'asc')->orderBy('time', 'asc'),
                 'sessions.doctor',
                 'sessions.debt'
@@ -132,19 +134,17 @@ class PatientAdminController extends Controller
             ->latest()
             ->get();
 
-
-        // Extraemos las sesiones de los tratamientos ya cargados
         $sessions = $treatments->flatMap->sessions;
 
-        // 2. Pagos filtrados por empresa/sucursal
+        // 2. Pagos (Sin cambios)
         $payments = Payment::where('patient_id', $patient->id)
-            ->where('company_id', $companyId) // 🎯 Seguridad
+            ->where('company_id', $companyId)
             ->where('branch_id', $activeBranchId)
             ->where('status', 'completed')
             ->latest()
             ->get();
 
-        // 3. Carga de datos del paciente
+        // 3. Carga de datos del paciente (AQUÍ ESTÁ LA MAGIA ✨)
         $patient->load([
             'address.region',
             'address.province',
@@ -154,19 +154,32 @@ class PatientAdminController extends Controller
             'allergies',
             'condition',
             'debts',
+            // MODIFICACIÓN: Cargamos treatments CON diagnostic
+            'treatments' => function ($query) use ($companyId, $activeBranchId) {
+                $query->where('company_id', $companyId)     // Seguridad: solo de esta empresa
+                    ->where('branch_id', $activeBranchId) // Seguridad: solo de esta sucursal
+                    ->whereIn('status', ['active', 'in_progress']) // Opcional: Filtra solo activos
+                    ->with('diagnostic') // <--- FUNDAMENTAL: Para mostrar el nombre en el modal
+                    ->latest();
+            }
         ]);
 
-        // 4. Listas para formularios (Filtradas por contexto)
 
-        // Solo doctores de esta empresa
+        // 4. CREAR EL ALIAS 'active_treatments' PARA EL FRONTEND 🚀
+        // Como el frontend espera "active_treatments", simplemente le asignamos
+        // la colección de tratamientos que acabamos de cargar en el paso 3.
+        $patient->setRelation('active_treatments', $patient->treatments);
+        /* dd($patient->active_treatments[0]->diagnostic); */
+
+        // 5. Listas para formularios (Sin cambios)
         $doctors = Doctor::whereHas('branches', function ($q) use ($activeBranchId) {
             $q->where('branches.id', $activeBranchId);
         })->select('id', 'name', 'last_name', 'phone', 'email')->get();
 
-        // Solo tipos de sesión de esta empresa
         $session_types = SessionType::where('company_id', $companyId)->get();
 
-        $diagnostics = Diagnostic::orderBy('description', 'asc')->get(['code', 'description']);
+        // OJO: Asegúrate de importar Diagnostic arriba
+        $diagnostics = Diagnostic::orderBy('description', 'asc')->where('is_active', true)->get(['code', 'description', 'version']);
 
         return Inertia::render('Patients/DetailPatient', [
             'patient'     => $patient,
@@ -180,8 +193,7 @@ class PatientAdminController extends Controller
             'conditions'  => $patient->condition,
             'doctors'     => $doctors,
             'session_types' => $session_types,
-            'diagnostics' => $diagnostics,
-            // Listas geográficas (Considerar cargar bajo demanda en el futuro)
+            'diagnostics' => $diagnostics, // Pasamos la lista completa para el select
             'regions'     => Region::all(['id', 'name']),
             'provinces'   => Province::all(['id', 'name', 'region_id']),
             'communes'    => Commune::all(['id', 'name', 'province_id']),
@@ -271,8 +283,12 @@ class PatientAdminController extends Controller
                 'latestVital',
                 'primaryContact',
                 'allergies',
-                'condition'
+                'condition',
+                'treatments' => function ($query) {
+                    $query->latest();
+                }
             ]);
+
             return response()->json([
                 'message' => 'Paciente guardado correctamente',
                 'patient' => $patient // Enviamos el ID para que React sepa a dónde redirigir

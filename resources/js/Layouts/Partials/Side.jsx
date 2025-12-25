@@ -19,6 +19,8 @@ import {
   DollarSign,
   BarChart3,
   Handshake,
+  Building,
+  Package,
 } from "lucide-react";
 import CompanySwitcher from "@/Components/CompanySwitcher";
 import BranchSwitcher from "@/Components/BranchSwitcher";
@@ -67,6 +69,13 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
         badge: "3",
       },
       { id: "documents", label: "Boleta", icon: FileText, badge: "8" },
+      {
+        id: "companies.index",
+        label: "Compañias",
+        icon: Building,
+        badge: null,
+      },
+      { id: "products.index", label: "Productos", icon: Package, badge: null },
       // ejemplo si tu ruta es pagos.index
       /* { id: "agenda", label: "Agenda", icon: Calendar, badge: null }, */
       /* { id: "pos", label: "POS", icon: Computer, badge: null }, */

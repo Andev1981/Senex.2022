@@ -5,139 +5,42 @@ namespace App\Http\Controllers\Admin\Treatments;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTreatmentRequest;
 use App\Http\Requests\UpdateTreatmentRequest;
-use App\Models\Commune;
-use App\Models\Diagnostic;
-use App\Models\Doctor;
 use App\Models\Treatment;
 use App\Models\Patient;
-use App\Models\Payment;
-use App\Models\Province;
-use App\Models\Region;
-use App\Models\SessionType;
-use App\Models\TreatmentSession;
 use App\Services\Treatments\TreatmentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
 class TreatmentAdminController extends Controller
 {
     /**
-     * INDEX - GET /patients/{patient}/treatments
-     * Retorna vista Inertia para mostrar lista de tratamientos
+     * Inyectar el service en el constructor
      */
-    public function index(Patient $patient): Response
-    {
-        $activeBranchId = session('active_branch_id');
-        $companyId = session('current_company_id');
-
-        $treatments = Treatment::where('patient_id', $patient->id)
-            ->where('branch_id', $activeBranchId)
-            ->with(['sessionType', 'doctor', 'sessions', 'sessions.doctor'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-
-        $sessions = TreatmentSession::where('patient_id', $patient->id)
-            ->where('branch_id', $activeBranchId)
-            ->with(['doctor', 'treatment', 'debt'])
-            ->orderBy('date', 'desc')
-            ->get();
-
-        $payments = Payment::where('patient_id', $patient->id)->where('status', 'completed')
-            ->where('branch_id', $activeBranchId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $patient->load([
-            'address.region',
-            'address.province',
-            'address.commune',
-            'latestVital',
-        ]);
-
-        $address = $patient->address;
-
-        $contact = $patient->primaryContact;
-
-        $allergies = $patient->allergies;
-
-        $conditions = $patient->condition;
-
-        $vital = $patient->latestVital;
-
-        $session_types = SessionType::where('branch_id', $activeBranchId)->get();
-
-
-        // Solo doctores de esta empresa
-        $doctors = Doctor::whereHas('companies', function ($q) use ($companyId) {
-            $q->where('companies.id', $companyId);
-        })->select('id', 'name', 'last_name')->get();
-
-
-
-        return Inertia::render('Patients/DetailPatient', [
-            'patient' => $patient,
-            'treatments' => $treatments,
-            'sessions' => $sessions,
-            'payments' => $payments,
-            'address' => $address,
-            'vital' => $vital,
-            'doctors' => $doctors,
-            'session_types' => $session_types,
-            'contact' => $contact,
-            'allergies' => $allergies,
-            'conditions' => $conditions,
-            'regions'     => Region::all(['id', 'name']),
-            'provinces'   => Province::all(['id', 'name', 'region_id']),
-            'communes'    => Commune::all(['id', 'name', 'province_id']),
-
-        ]);
-    }
-
-    /**
-     * SHOW - GET /treatments/{treatment}
-     * Retorna vista Inertia para mostrar un tratamiento específico
-     */
-    public function show(Treatment $treatment): Response
-    {
-        $treatment->load([
-            'patient',
-            'sessionType',
-            'doctor',
-            'sessions' => function ($query) {
-                $query->orderBy('date', 'desc');
-            }
-        ]);
-
-        return Inertia::render('Patients/Treatments/Show', [
-            'treatment' => $treatment,
-        ]);
-    }
+    public function __construct(
+        private TreatmentService $treatmentService,
+    ) {}
 
     /**
      * STORE - POST /treatments
      * Retorna JsonResponse para manejo desde formularios modales
      */
-    public function store(StoreTreatmentRequest $request, TreatmentService $treatmentService)
+    public function store(StoreTreatmentRequest $request)
     {
         try {
 
             // El Controller delega toda la lógica de negocio al Service
-            $treatmentService->createTreatment($request->validated());
-
-            // Si llegamos aquí, la transacción fue exitosa
-            session()->flash('message', 'Tratamiento creado correctamente.');
-            session()->flash('type', 'success');
+            $this->treatmentService->createTreatment($request->validated());
+            return back();
+            /* return response()->json([
+                'message' => 'Tratamiento creado exitosamente.',
+            ], 200); */
         } catch (\Exception $e) {
             // Manejo de errores de la lógica de negocio
             Log::error('Error creando tratamiento: ' . $e->getMessage());
-
-            session()->flash('message', 'Error al crear el tratamiento. ' . $e->getMessage());
-            session()->flash('type', 'error');
+            return back();
+            /* return response()->json(['error' => $e->getMessage()], 400); */
         }
     }
 

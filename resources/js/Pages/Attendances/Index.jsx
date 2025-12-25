@@ -48,7 +48,7 @@ export default function Index({
     time: "",
     duration: 45,
     status: "scheduled",
-    patient_amount: 0,
+    patient_amount_clp: 0,
     total_payment: 0,
     plan_session_value: 0,
     copay_clp: 0,

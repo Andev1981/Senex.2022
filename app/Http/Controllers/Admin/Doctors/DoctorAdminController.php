@@ -25,78 +25,136 @@ use Inertia\Inertia;
 
 class DoctorAdminController extends Controller
 {
-    
+
     public function index()
     {
         $currentCompanyId = session('current_company_id');
         $activeBranchId = session('active_branch_id');
 
-        // 1. Subconsulta para obtener el ID de la dirección principal o la última creada
+        // --- 1. Obtener el "Catálogo Maestro" de Sesiones ---
+        // Esto es vital para que el frontend sepa cuáles son los valores "Por Defecto" (Gris)
+        // Filtramos solo por la empresa actual y que estén activos.
+        $sessionTypes = SessionType::where('company_id', $currentCompanyId)
+            ->where('is_active', true)
+            ->get(['id', 'name', 'base_price_clp', 'default_doctor_commission_clp']);
+
+        // --- 2. Query de Doctores (Tu lógica de direcciones + Seguridad) ---
+        // Mantenemos tu subconsulta de direcciones, está perfecta.
         $addrPick = DB::table('addresses as a')
             ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
-            ->where('a.addressable_type', 'Doctor')
+            ->where('a.addressable_type', 'Doctor') // O 'App\Models\Doctor' según tu morfología
             ->groupBy('a.addressable_id');
 
         $doctors = Doctor::query()
-            // Unimos la subconsulta para saber QUÉ ID de dirección tomar
+            // 🔒 SEGURIDAD: Filtrar siempre por empresa
+            ->where('doctors.company_id', $currentCompanyId)
+
+            // Joins de Dirección (Tu lógica original)
             ->leftJoinSub($addrPick, 'addr_pick', function ($join) {
                 $join->on('addr_pick.addressable_id', '=', 'doctors.id');
             })
-            // Unimos la tabla addresses usando el ID filtrado arriba (aquí estaba el error)
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
-            // Unimos comunas usando el alias 'addr'
             ->leftJoin('communes', 'addr.commune_id', '=', 'communes.id')
+
+            // Filtro de Sucursal Activa
             ->when($activeBranchId, function ($query) use ($activeBranchId) {
-                // 🎯 Ahora simplemente preguntamos: 
-                // "¿Está este paciente vinculado a esta sucursal en la tabla pivot?"
                 $query->whereHas('branches', function ($q) use ($activeBranchId) {
                     $q->where('branches.id', $activeBranchId);
                 });
-            })->select([
-                'doctors.id',
-                'doctors.name',
-                'doctors.last_name',
-                'doctors.email',
-                'doctors.birth_date',
-                'doctors.rut',
-                'doctors.phone',
-                'doctors.speciality',
-                'doctors.gender',
+            })
+            ->select([
+                // Tus campos seleccionados...
                 'doctors.*',
                 DB::raw("CONCAT_WS(' ', doctors.name, doctors.last_name) as full_name"),
-
-                'addr.id as address_id',
                 'addr.street as street',
                 'addr.number as number',
                 'addr.details as details',
-                'addr.region_id as region_id',
-                'addr.province_id as province_id',
                 'addr.commune_id as commune_id',
-
+                'addr.province_id as province_id',
+                'addr.region_id as region_id',
                 'communes.name as comuna_name',
                 DB::raw("CONCAT_WS(' ', addr.street, addr.number) as full_address"),
-            ])->with(['commissionRates','patientAssignments','patients','sessions','sessions.patient','sessions.sessionType'])->get();
+            ])
+            // ⚡ EAGER LOADING OPTIMIZADO
+            // Cargamos 'commissionRates' filtrando solo las de esta empresa (por seguridad redundante)
+            ->with(['commissionRates' => function ($q) use ($currentCompanyId) {
+                $q->where('company_id', $currentCompanyId);
+            }])
+            ->with(['patientAssignments', 'branches']) // Agregué branches por si quieres mostrar dónde trabaja
+            ->get();
 
-        $doctor_commission_rates = DoctorCommissionRate::all();
-        $doctor_patient_assignment = DoctorPatientAssignment::all();
-        $sessionTypes = SessionType::all();
-        $patients = Patient::where('status','active')->get();
+        // --- 3. Transformación de Datos (Opcional pero Recomendada) ---
+        // Inyectamos la "Foto" de las tarifas para que el frontend no tenga que calcular tanto.
+        // Esto mapea las tarifas personalizadas vs las globales.
 
+        // NOTA: Si tienes MUCHOS doctores, es mejor hacer esto en el frontend. 
+        // Si son < 100, hacerlo aquí es cómodo.
+        $doctors->transform(function ($doctor) use ($sessionTypes) {
+            // Creamos un mapa de las excepciones de este doctor: [session_type_id => rate_object]
+            $customRates = $doctor->commissionRates->keyBy('session_type_id');
+
+            // Como filtramos arriba, la colección 'branches' tendrá 0 o 1 elemento.
+            $currentBranch = $doctor->branches->first();
+
+            // Creamos propiedades directas para el frontend
+            $doctor->branch_status = $currentBranch ? $currentBranch->pivot->status : 'unassigned';
+            $doctor->mobile_app_access = $currentBranch ? (bool)$currentBranch->pivot->mobile_app_access : false;
+
+            // ... (Aquí va tu lógica de rates_summary que hicimos antes) ...
+
+            // Limpiamos la relación para no enviar basura al front
+            unset($doctor->branches);
+
+            // Adjuntamos un resumen de tarifas listo para usar en la tabla "Editar Tarifas"
+            $doctor->rates_summary = $sessionTypes->map(function ($st) use ($customRates) {
+                $custom = $customRates->get($st->id);
+
+                return [
+                    'session_type_id' => $st->id,
+                    'name' => $st->name,
+
+                    // LÓGICA DE HERENCIA:
+                    // Si existe custom, usalo. Si no, usa el default del SessionType.
+                    'price_to_patient' => $st->base_price_clp ?? 0,
+                    'current_value' => $custom ? $custom->amount_clp : $st->default_doctor_commission_clp,
+                    'default_value' => $st->default_doctor_commission_clp,
+
+                    // Flags visuales
+                    'is_customized' => (bool) $custom, // True = Azul/Negrita, False = Gris
+                    'commission_type' => $custom ? $custom->commission_type : 'fixed_amount'
+                ];
+            });
+
+            return $doctor;
+        });
+
+
+        // Listas auxiliares para filtros o formularios de creación
+        // Quitamos DoctorCommissionRate::all() porque ya viene dentro de cada $doctor
+        $patients = Patient::where('company_id', $currentCompanyId)->where('status', 'active')->get(); // Ojo con el company_id
         $provinces = Province::all(['id', 'name', 'region_id']);
         $communes  = Commune::all(['id', 'name', 'province_id']);
         $regions   = Region::all(['id', 'name']);
 
-        return Inertia::render('Doctors/DoctorsIndex', compact('doctors','doctor_commission_rates','doctor_patient_assignment','sessionTypes','patients',  'communes', 'provinces', 'regions'));
+        return Inertia::render('Doctors/Index', compact(
+            'doctors',
+            'sessionTypes', // Enviamos el catálogo base para los headers o modales
+            'patients',
+            'communes',
+            'provinces',
+            'regions'
+        ));
     }
 
-    public function store(StoreDoctorRequest $request){
-   
+    public function store(StoreDoctorRequest $request)
+    {
+
         $validated = $request->validated();
-        
+
         DB::beginTransaction();
 
-        try{
-            
+        try {
+
             // CREAR USUARIO
             $user = User::create([
                 'name' => $validated['name'],
@@ -109,18 +167,28 @@ class DoctorAdminController extends Controller
 
             // Separar datos del paciente y la dirección
             $doctorData = Arr::except($validated, [
-                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
+                'street',
+                'number',
+                'details',
+                'region_id',
+                'province_id',
+                'commune_id'
             ]);
 
             $addressData = Arr::only($validated, [
-                'street', 'number', 'details', 'region_id', 'province_id', 'commune_id'
+                'street',
+                'number',
+                'details',
+                'region_id',
+                'province_id',
+                'commune_id'
             ]);
 
             $doctorData['user_id'] = $user->id;
 
             $doctor = Doctor::create($doctorData);
 
-             // Crear dirección asociada polimórficamente
+            // Crear dirección asociada polimórficamente
             $doctor->addresses()->create([
                 'type' => 'home',
                 'is_primary' => true,
@@ -131,7 +199,7 @@ class DoctorAdminController extends Controller
             // ENVIAR EMAIL CON CREDENCIALES
             try {
                 Mail::to($user->email)->send(
-                    new \App\Mail\WelcomeKineEmail($user, temporalPassword :$validated['rut'])
+                    new \App\Mail\WelcomeKineEmail($user, temporalPassword: $validated['rut'])
                 );
             } catch (\Exception $e) {
                 Log::warning('Error enviando email de bienvenida', [
@@ -144,13 +212,12 @@ class DoctorAdminController extends Controller
             /* Log::info('Datos al crear kine: ', [
                 $doctor, $user
             ]); */
-            
+
             DB::commit();
 
             session()->flash('message', 'Kine cread@ correctamente.');
             session()->flash('type', 'success');
-
-        }catch(\Throwable $e){
+        } catch (\Throwable $e) {
             DB::rollBack();
             Log::info('Error al crear kine: ', [
                 $e->getMessage()
@@ -161,39 +228,50 @@ class DoctorAdminController extends Controller
         }
     }
 
-    public function update(UpdateDoctorRequest $request, Doctor $doctor){
+    public function update(UpdateDoctorRequest $request, Doctor $doctor)
+    {
 
         $activeBranchId = session('active_branch_id');
         $validated = $request->validated();
-        
+
         DB::beginTransaction();
 
-         try {
-            
+        try {
+
             // -------------------------------
             // Separar datos
             // -------------------------------
             $doctorData = Arr::only($validated, [
-                'name', 'last_name', 'rut',
-                'email', 'phone', 'speciality',
-                'birth_date', 'gender'
+                'name',
+                'last_name',
+                'rut',
+                'email',
+                'phone',
+                'speciality',
+                'birth_date',
+                'gender'
             ]);
 
-            
+
             $addressData = Arr::only($validated, [
-                'street', 'number', 'details',
-                'region_id', 'province_id', 'commune_id'
+                'street',
+                'number',
+                'details',
+                'region_id',
+                'province_id',
+                'commune_id'
             ]);
 
-            
-            $branchData = Arr::only($validated, [
-                'mobile_app_access', 'status', 'status_reason'
-            ]);
-
-            if($validated['status'] !== 'active'){
-                $validated['status'] = false;
+            if ($validated['status'] !== 'active') {
+                $validated['mobile_app_access'] = false;
             }
-            
+
+            $branchData = Arr::only($validated, [
+                'mobile_app_access',
+                'status',
+                'status_reason'
+            ]);
+
 
             // 🎯 LA MAGIA: syncWithoutDetaching permite pasar datos adicionales
             // Si no existe, lo crea con esos datos. Si ya existe, NO borra los otros sedes.
@@ -201,15 +279,9 @@ class DoctorAdminController extends Controller
                 $activeBranchId => $branchData
             ]);
 
-            if(!$doctor->user->hasRole('kine')){
+            if (!$doctor->user->hasRole('kine')) {
                 // Evitar cambiar email de kinesiologo
                 $doctor->user->assignRole('kine');
-
-            }
-            
-            if(!empty($validated['mobile_app_access'])){
-
-                $validated['mobile_app_access'] = $request->boolean('mobile_app_access');
             }
             // -------------------------------
             // 1. Lógica de CAMBIO DE STATUS
@@ -222,10 +294,10 @@ class DoctorAdminController extends Controller
                 // ¿El estado realmente cambió?
                 if ($newStatus !== $oldStatus) {
 
-                    
+
                     $branchData['status_changed_at'] = now();
 
-                    
+
                     if ($newStatus !== 'active') {
 
                         if (empty($validated['status_reason'])) {
@@ -235,13 +307,12 @@ class DoctorAdminController extends Controller
                         $branchData['status_reason'] = $validated['status_reason'];
                     }
 
-                    
+
                     if ($newStatus === 'active') {
                         $branchData['status_reason'] = null;
                     }
-
                 } else {
-                    
+
                     unset($branchData['status']);
                 }
             }
@@ -276,8 +347,7 @@ class DoctorAdminController extends Controller
 
             session()->flash('message', 'Kine actualizad@ correctamente.');
             session()->flash('type', 'success');
-
-        }catch(\Throwable $e){
+        } catch (\Throwable $e) {
             DB::rollBack();
             Log::info('Error al actualizar kine', [
                 $e->getMessage()
@@ -290,49 +360,76 @@ class DoctorAdminController extends Controller
 
     public function updateCommissionRules(Request $request, Doctor $doctor)
     {
-    
-
+        // 1. Validación (Value ahora es nullable para permitir borrar/heredar)
         $validated = $request->validate([
             'rules' => 'required|array',
             'rules.*.session_type_id' => 'required|exists:session_types,id',
             'rules.*.type' => 'required|in:fixed_amount,percentage',
-            'rules.*.value' => 'required|numeric|min:0',
+            'rules.*.value' => 'nullable|numeric|min:0', // Nullable para permitir "borrar"
         ]);
 
-         try {
-  
-        
-            // Crear nuevas reglas
-            foreach ($validated['rules'] as $rule) {
-         
+        try {
+            DB::beginTransaction();
 
-                $doctor->commissionRates()->updateOrCreate(
-                [
-                    'session_type_id' => $rule['session_type_id'],
-                ],
-                [
-                    'commission_type'  => $rule['type'],
-                    'commission_value' => $rule['value'],
-                    'effective_from'   => now(),
-                ]
-            );
+            foreach ($validated['rules'] as $rule) {
+                // Si el valor es NULL, significa que el usuario borró el input.
+                // Borramos la excepción para que vuelva a heredar el valor global.
+                if (is_null($rule['value'])) {
+                    $doctor->commissionRates()
+                        ->where('session_type_id', $rule['session_type_id'])
+                        ->delete();
+                } else {
+                    // Si hay valor, actualizamos o creamos la excepción (Upsert)
+                    $doctor->commissionRates()->updateOrCreate(
+                        [
+                            'session_type_id' => $rule['session_type_id'],
+                        ],
+                        [
+                            'commission_type'  => $rule['type'],
+                            'amount_clp' => $rule['value'],
+                            // Estos campos extras no suelen ir aquí si ya están en session_types, 
+                            // pero los dejo por compatibilidad con tu código:
+                            'effective_from'   => now(),
+                        ]
+                    );
+                }
             }
 
-            session()->flash('message', 'Comisión actualizada correctamente.');
-            session()->flash('type', 'success');
-            return back();
+            DB::commit();
 
-        } catch (\Throwable $e) {
-          
-              Log::info('Error al crear comisión: ', [
-                $e->getMessage()
+            // --- CLAVE DEL ÉXITO ---
+            // Recalculamos el 'rates_summary' aquí mismo para devolverlo al frontend.
+            // Esto asegura que el frontend reciba la verdad absoluta de la BD.
+            $companyId = $doctor->company_id;
+            $sessionTypes = SessionType::where('company_id', $companyId)
+                ->where('is_active', true)
+                ->get(['id', 'name', 'base_price_clp', 'default_doctor_commission_clp']);
+
+            $customRates = $doctor->commissionRates()->get()->keyBy('session_type_id');
+
+            $updatedSummary = $sessionTypes->map(function ($st) use ($customRates) {
+                $custom = $customRates->get($st->id);
+                return [
+                    'session_type_id' => $st->id,
+                    'name' => $st->name,
+                    'price_to_patient' => $st->base_price_clp, // ARREGLO VISUAL: Aseguramos que este campo viaje
+                    'current_value' => $custom ? $custom->amount_clp : $st->default_doctor_commission_clp, // Ojo: amount_clp vs amount_clp según tu BD
+                    'default_value' => $st->default_doctor_commission_clp,
+                    'is_customized' => (bool) $custom,
+                    'commission_type' => $custom ? $custom->commission_type : 'fixed_amount'
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tarifas actualizadas correctamente',
+                'updated_summary' => $updatedSummary
             ]);
-
-            session()->flash('message', 'Error al actualizar comisión.');
-            session()->flash('type', 'error');
-
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Error updating commissions: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error al guardar'], 500);
         }
-
     }
 
     public function assignPatient(Request $request, Doctor $doctor)
@@ -342,54 +439,59 @@ class DoctorAdminController extends Controller
         ]);
 
         $currentCompanyId = session('current_company_id');
-        $activeBranchId = session('active_branch_id');
+        $activeBranchId = session('active_branch_id'); // Puede ser null
 
-        $validated = array_merge(
-            ['company_id' => $currentCompanyId, 'branch_id' => $activeBranchId], // defaults primero
-            $validated // los valores del request sobrescriben
-        );
-       
+        try {
+            // Datos extra para la tabla pivote (company_id, branch_id, timestamps, etc.)
+            $pivotData = [
+                'company_id' => $currentCompanyId,
+                'branch_id' => $activeBranchId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
 
-        try{
-            
-            // Verificar que no esté ya asignado
-            if (!$doctor->patients()->where('patient_id', $validated['patient_id'])->exists()) {
-                $doctor->patients()->attach($validated['patient_id'],$validated);
-            }
-
-            session()->flash('message', 'Paciente asignado correctamente');
-            session()->flash('type', 'success');
-        } catch (\Throwable $e) {
-          
-              Log::info('Error al asignar', [
-                $e->getMessage()
+            // ⚡ OPTIMIZACIÓN: syncWithoutDetaching
+            // Esto hace lo mismo que tu "if exists", pero en una sola línea.
+            // Si ya existe, no hace nada (o actualiza los datos pivote). Si no existe, lo crea.
+            $doctor->patients()->syncWithoutDetaching([
+                $validated['patient_id'] => $pivotData
             ]);
 
-            session()->flash('message', 'Error al asignar paciente.');
-            session()->flash('type', 'error');
+            // ✅ RESPUESTA JSON PARA AXIOS
+            return response()->json([
+                'success' => true,
+                'message' => 'Paciente asignado correctamente'
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error al asignar paciente: ' . $e->getMessage());
 
+            // ❌ ERROR JSON
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al asignar paciente.'
+            ], 500);
         }
-
     }
 
     public function unassignPatient(Doctor $doctor, Patient $patient)
     {
-        try{
-        $doctor->patients()->detach($patient->id);
-        session()->flash('message', 'Removida asignación');
-            session()->flash('type', 'success');
-        } catch (\Throwable $e) {
-          
-              Log::info('Error al crear quitar asignación: ', [
-                $e->getMessage()
+        try {
+            $doctor->patients()->detach($patient->id);
+
+            // ✅ RESPUESTA JSON PARA AXIOS
+            return response()->json([
+                'success' => true,
+                'message' => 'Asignación removida correctamente'
             ]);
+        } catch (\Throwable $e) {
+            Log::error('Error al quitar asignación: ' . $e->getMessage());
 
-            session()->flash('message', 'Error al quitar asignación.');
-            session()->flash('type', 'error');
-
+            // ❌ ERROR JSON
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al quitar asignación.'
+            ], 500);
         }
-
-     
     }
 
     public function toggleActive(Request $request, Doctor $doctor)
@@ -398,33 +500,29 @@ class DoctorAdminController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
-        try{
+        try {
 
-            
+
             $doctor->update(['is_active' => $validated['is_active']]);
 
             session()->flash('message', 'Kine Activad@');
             session()->flash('type', 'success');
-
         } catch (\Throwable $e) {
-          
-              Log::info('Error al activar kine: ', [
+
+            Log::info('Error al activar kine: ', [
                 $e->getMessage()
             ]);
 
             session()->flash('message', 'Error al activar.');
             session()->flash('type', 'error');
-
         }
-
-    
     }
 
     public function checkExisting(Request $request)
     {
         $request->validate(['rut' => 'required']);
         $activeBranchId = session('active_branch_id');
-        
+
         // El Trait Multitenantable ya filtra por la empresa actual, 
         // así que no necesitamos preocuparnos por otras clínicas.
         /* $doctor = Doctor::with('branch')->where('rut', $request->rut)->first(); */
@@ -443,11 +541,11 @@ class DoctorAdminController extends Controller
             })
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
             ->leftJoin('communes', 'addr.commune_id', '=', 'communes.id')
-            
+
             // --- 🎯 EL SELECT CRUCIAL ---
             ->select([
                 'doctors.*', // 1. CRUCIAL: Trae todas las columnas del modelo Doctor para que 'with' funcione
-                
+
                 // 2. Trae las columnas de dirección con un alias que no colisione
                 'addr.street as street',
                 'addr.number as number',
@@ -459,15 +557,15 @@ class DoctorAdminController extends Controller
             ])
             // 3. Eager Loading de la relación branches
             ->with([
-                'branches' => function($q) use ($activeBranchId) {
+                'branches' => function ($q) use ($activeBranchId) {
                     // Solo cargamos la información de la sucursal activa, si existe
                     $q->where('branches.id', $activeBranchId);
                 }
             ])
             ->first();
 
-            
-            if ($doctor) {
+
+        if ($doctor) {
 
             return response()->json([
                 'status' => 'exists',
@@ -495,6 +593,4 @@ class DoctorAdminController extends Controller
 
         return response()->json(['status' => 'new']);
     }
-
-
 }

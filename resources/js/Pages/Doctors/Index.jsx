@@ -8,8 +8,9 @@ import DoctorDetailModal from "./DoctorDetailModal";
 import DoctorAttendances from "./DoctorAttendances";
 import Kpis from "./Partials/Kpis";
 import { HeaderDoctors } from "./Partials/HeaderDoctor";
+import { Smartphone, ShieldBan } from "lucide-react";
 
-export default function DoctorsIndex({
+export default function Index({
   doctors,
   sessionTypes,
   patients,
@@ -23,6 +24,60 @@ export default function DoctorsIndex({
   const [isModalOpenDetail, setIsModalOpenDetail] = useState(false);
   const [isModalOpenAttendences, setIsModalOpenAttendences] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "active":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+            <span className="w-1.5 h-1.5 mr-1.5 bg-green-600 rounded-full"></span>
+            Activo
+          </span>
+        );
+      case "suspended":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+            Suspendido
+          </span>
+        );
+      case "cancelled": // o inactivo
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+            Cancelado
+          </span>
+        );
+      default: // unassigned
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+            Sin Asignar
+          </span>
+        );
+    }
+  };
+
+  const getMobileBadge = (mobile_app_access) => {
+    if (mobile_app_access) {
+      return (
+        <div
+          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"
+          title="Tiene acceso a la App Móvil"
+        >
+          <Smartphone className="w-3.5 h-3.5" strokeWidth={2.5} />
+          <span>App Móvil</span>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-400 border border-gray-200 opacity-80"
+        title="No tiene acceso a la App"
+      >
+        <ShieldBan className="w-3.5 h-3.5" />
+        <span>Sin App</span>
+      </div>
+    );
+  };
 
   return (
     <AuthenticatedLayout>
@@ -45,6 +100,8 @@ export default function DoctorsIndex({
           setIsModalOpen={setIsModalOpen}
           setIsModalOpenDetail={setIsModalOpenDetail}
           setIsModalOpenAttendences={setIsModalOpenAttendences}
+          getStatusBadge={getStatusBadge}
+          getMobileBadge={getMobileBadge}
         />
       </div>
       {/* Modal */}
@@ -59,6 +116,7 @@ export default function DoctorsIndex({
           setIsModalOpen={setIsModalOpen}
           sessionTypes={sessionTypes}
           patients={patients}
+          getStatusBadge={getStatusBadge}
         />
       </SideModal>
 

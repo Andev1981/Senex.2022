@@ -20,7 +20,7 @@ class AttendanceStoreRequest extends FormRequest
       'treatment_id'    => ['nullable', 'integer'],
       'appointment_id'  => ['nullable', 'integer'],
       'attended_at'     => ['nullable', 'date'],
-      'patient_amount'  => ['nullable', 'numeric', 'min:0'],
+      'patient_amount_clp'  => ['nullable', 'numeric', 'min:0'],
       'notes'           => ['nullable', 'string', 'max:1000'],
 
       'payment.mode'    => ['nullable', 'in:now,debt,planOnly'],

@@ -22,7 +22,7 @@ class Payroll extends Model
     'period_start',
     'period_end',
     'total_sessions',
-    'total_patient_amount',
+    'total_patient_amount_clp',
     'total_doctor_amount',
     'total_clinic_amount',
     'status',
@@ -33,7 +33,7 @@ class Payroll extends Model
   protected $casts = [
     'period_start'         => 'date',
     'period_end'           => 'date',
-    'total_patient_amount' => 'decimal:2',
+    'total_patient_amount_clp' => 'decimal:2',
     'total_doctor_amount'  => 'decimal:2',
     'total_clinic_amount'  => 'decimal:2',
     'paid_at'              => 'datetime',
@@ -66,9 +66,9 @@ class Payroll extends Model
   public function recalcTotals(): void
   {
     $this->total_sessions       = (int) $this->details()->count();
-    $this->total_patient_amount = (float) $this->details()->sum('patient_amount');
-    $this->total_doctor_amount  = (float) $this->details()->sum('doctor_amount');
-    $this->total_clinic_amount  = (float) ($this->total_patient_amount - $this->total_doctor_amount);
+    $this->total_patient_amount_clp = (float) $this->details()->sum('patient_amount_clp');
+    $this->total_doctor_amount  = (float) $this->details()->sum('doctor_amount_clp');
+    $this->total_clinic_amount  = (float) ($this->total_patient_amount_clp - $this->total_doctor_amount);
     $this->save();
   }
 }

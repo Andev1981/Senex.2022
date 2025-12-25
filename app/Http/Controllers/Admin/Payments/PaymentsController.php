@@ -90,7 +90,7 @@ class PaymentsController extends Controller
         return Inertia::render('BillingCheckout/Index', [
             'patients' => $patients,
             'sessionTypes' => $sessionTypes,
-            'agreements' => Agreement::with('items')->get(),
+            'agreements' => Agreement::with('rules')->get(),
             'insurances' => $insurances,
             'plans' => $plans,
             'paymentMethods' => $paymentMethods,
@@ -124,8 +124,8 @@ class PaymentsController extends Controller
             // 3. Manejar la respuesta
             if ($result['status'] === 'success') {
                 return response()->json([
-                    'message' => 'Cobro y cobertura calculados. Copago: ' . number_format($result['patient_share'], 0, ',', '.'),
-                    'patient_share' => $result['patient_share']
+                    'message' => 'Cobro y cobertura calculados. Copago: ' . number_format($result['patient_share_clp'], 0, ',', '.'),
+                    'patient_share_clp' => $result['patient_share_clp']
                 ], 200);
             }
         } catch (\Exception $e) {
@@ -262,22 +262,24 @@ class PaymentsController extends Controller
         }
     }
 
+    /* Creador principal de Dte 41 */
     public function store(StorePaymentRequest $request)
     {
         $data = $request->validated();
         $paymentMethod = $data['payment_details']['payment_method'];
 
+        // --- FASE 1: PROCESAR Y ASEGURAR EL PAGO ---
         DB::beginTransaction();
         try {
-            // 1. PROCESAR EL PAGO BASE (Sesiones y Deudas en pending)
+            // 1. Procesar lógica base del pago
             $payment = $this->paymentService->processPayment($data);
 
-            // 2. LÓGICA DE COBRO SEGÚN MÉTODO
+            // 2. Cobro según método
             if ($paymentMethod === 'pos_integrado') {
                 $posResult = $this->posService->sendTransaction($payment->amount_clp, $payment->id);
 
                 if (!$posResult['success']) {
-                    throw new \Exception("POS rechazado: " . $posResult['error']);
+                    throw new \Exception("POS rechazado: " . ($posResult['error'] ?? 'Error desconocido'));
                 }
 
                 $payment->update([
@@ -288,49 +290,51 @@ class PaymentsController extends Controller
                     'metadata' => array_merge($payment->metadata ?? [], ['pos_raw' => $posResult['raw']])
                 ]);
             } else {
-                // Efectivo, Transferencia, etc. (Ya está en poder de la clínica)
+                // Efectivo, Transferencia
                 $payment->update([
                     'status' => 'completed',
                     'paid_at' => now()
                 ]);
             }
 
-            // 3. PROCESAR BOLETA (Con manejo de errores no fatales)
-            $hasInvoiceError = false;
-            try {
-                $invoice = $this->invoiceService->processInvoice($payment, $data);
-                EmitDteJob::dispatch($invoice->id);
-            } catch (\Exception $eInvoice) {
-                Log::error("Pago #{$payment->id} OK, pero falló boleta: " . $eInvoice->getMessage());
-                $hasInvoiceError = true;
-            }
-
-            // 4. ¡IMPORTANTE! Hacer el commit ANTES de devolver cualquier respuesta
+            // 3. COMMIT CRÍTICO: El dinero ya está seguro.
             DB::commit();
-
-            // 5. RESPUESTA SEGÚN RESULTADO
-            if ($hasInvoiceError) {
-                return response()->json([
-                    'status' => 'partial_success',
-                    'uuid' => $payment->uuid,
-                    'warning' => 'Pago registrado con éxito, pero la boleta falló. Puede generarla manualmente en el historial.'
-                ]);
-            }
-
-            return response()->json([
-                'status' => 'success',
-                'uuid' => $payment->uuid,
-                'url' => route('payments.success', ['uuid' => $payment->uuid])
-            ]);
         } catch (\Exception $ePayment) {
             DB::rollBack();
             Log::critical("Error fatal al procesar pago: " . $ePayment->getMessage());
-
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error: ' . $ePayment->getMessage()
+                'message' => $ePayment->getMessage()
             ], 422);
         }
+
+        // --- FASE 2: EMISIÓN DE BOLETA (Delegada al Servicio Híbrido) ---
+
+        // Llamamos al servicio. Él intentará emitir síncronamente.
+        // Si falla el SII, él mismo capturará el error, despachará el Job y te devolverá la Invoice en estado 'PENDING_RETRY'.
+        // Por lo tanto, aquí NO hace falta try/catch.
+        $invoice = $this->invoiceService->processInvoice($payment, $data);
+
+        // --- FASE 3: RESPUESTA AL FRONTEND ---
+
+        // Verificamos el estado para decirle a la UI si mostrar "Éxito" o "En Proceso"
+        // Asumimos que si está en 'CREATED' o 'PENDING_RETRY', es que no se completó síncronamente.
+        $isDtePending = !in_array($invoice->dte_status, ['ENVIADO', 'ACEPTADO', 'PAID']); // Ajusta según tus constantes reales
+
+        $warningMessage = $isDtePending
+            ? "El documento se está generando en segundo plano (SII lento). Llegará al correo en breve."
+            : null;
+
+        return response()->json([
+            'status' => 'success',
+            'uuid' => $payment->uuid,
+            'url' => route('payments.success', ['uuid' => $payment->uuid]),
+
+            // Flags para Success.jsx
+            'is_dte_pending' => $isDtePending,
+            'dte_folio' => $invoice->dte_folio, // Puede ser null si quedó pendiente
+            'warning_message' => $warningMessage
+        ]);
     }
 
     public function commit(Request $request)
@@ -519,7 +523,7 @@ class PaymentsController extends Controller
         $this->authorize('update', $session);
         /* $result = $svc->createWebpayTransaction(
       $session->patient_id,
-      (float)$session->patient_amount,
+      (float)$session->patient_amount_clp,
       ['treatment_session_id' => $session->id]
     ); */
 

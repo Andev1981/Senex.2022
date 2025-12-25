@@ -40,9 +40,9 @@ class DashboardController extends Controller
                     'completed_today' => $sessionsToday->where('status', 'Completada')->count(),
                     'pending_today' => $sessionsToday->where('status', 'Programada')->count(),
                     'cancelled_today' => $sessionsToday->where('status', 'Cancelada')->count(),
-                    'today_earnings' => $sessionsToday->where('status', 'Completada')->sum('doctor_amount'),
+                    'today_earnings' => $sessionsToday->where('status', 'Completada')->sum('doctor_amount_clp'),
                     'month_sessions' => $sessionsMonth->count(),
-                    'month_earnings' => $sessionsMonth->where('status', 'Completada')->sum('doctor_amount'),
+                    'month_earnings' => $sessionsMonth->where('status', 'Completada')->sum('doctor_amount_clp'),
                 ];
             }
         );
@@ -53,8 +53,17 @@ class DashboardController extends Controller
             'treatment:id,diagnosis',
             'sessionType:id,name,duration_minutes'
         ])
-            ->select('id', 'patient_id', 'treatment_id', 'session_type_id', 
-                     'date', 'time', 'status', 'doctor_amount', 'notes')
+            ->select(
+                'id',
+                'patient_id',
+                'treatment_id',
+                'session_type_id',
+                'date',
+                'time',
+                'status',
+                'doctor_amount_clp',
+                'notes'
+            )
             ->where('doctor_id', $doctor->id)
             ->whereDate('date', $today)
             ->orderBy('time')
@@ -69,7 +78,7 @@ class DashboardController extends Controller
                     'session_type' => $session->sessionType->name,
                     'duration' => $session->sessionType->duration_minutes,
                     'diagnosis' => $session->treatment->diagnosis ?? 'Sin diagnóstico',
-                    'earnings' => $session->doctor_amount,
+                    'earnings' => $session->doctor_amount_clp,
                 ];
             });
 
@@ -83,7 +92,7 @@ class DashboardController extends Controller
         $activePatientsCount = $doctor->patients()
             ->whereHas('treatments', function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
-                  ->where('status', 'InProgress');
+                    ->where('status', 'InProgress');
             })
             ->count();
 

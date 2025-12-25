@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { router } from "@inertiajs/react";
+import axios from "axios"; // 1. Importar Axios
 import {
-  Calendar,
   Mail,
   Percent,
   Phone,
@@ -9,46 +8,148 @@ import {
   Search,
   UserCog,
   UserMinus,
-  UserPlus,
   Users,
+  ChevronDown,
+  Loader2, // Icono de carga
 } from "lucide-react";
-import { t } from "@/constants/translations";
 import { fmtCLP } from "@/utils/utils";
+import Swal from "sweetalert2"; // Para alertas bonitas
+import InputPesoChileno from "@/Components/InputPesoChileno";
 
 export default function DoctorModalForm({
   selectedDoctor,
   setIsModalOpen,
-  sessionTypes = [],
   patients = [],
+  getStatusBadge,
 }) {
+  // ESTADO LOCAL: Copia del doctor para manipularlo instantáneamente
+  const [localDoctor, setLocalDoctor] = useState(selectedDoctor);
+
   const [isEditingCommission, setIsEditingCommission] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // Estado de carga
   const [commissionDraft, setCommissionDraft] = useState({});
   const [patientQuery, setPatientQuery] = useState("");
+  const [patientsDraft, setPatientsDraft] = useState([]);
 
-  // Sincronizar commission_rates cuando cambia selectedDoctor
+  const [openSection, setOpenSection] = useState("commissions");
+
+  // Sincronizar estado local cuando cambia la prop (al abrir otro doctor)
   useEffect(() => {
-    if (selectedDoctor && !isEditingCommission) {
-      setCommissionDraft({});
+    if (selectedDoctor) {
+      setLocalDoctor(selectedDoctor); // Actualizamos la copia local
+      setPatientsDraft(selectedDoctor.patients || []);
+      if (!isEditingCommission) {
+        setCommissionDraft({});
+      }
     }
-    setPatientsDraft(selectedDoctor?.patients || []);
-  }, [
-    selectedDoctor?.id,
-    selectedDoctor?.commission_rates,
-    selectedDoctor?.patients,
-  ]);
+  }, [selectedDoctor?.id]); // Solo si cambia el ID del doctor
 
-  const [patientsDraft, setPatientsDraft] = useState(
-    selectedDoctor?.patients || []
-  );
+  // --- LÓGICA DE COMISIONES (Actualizada) ---
+  const getRuleDisplay = (summaryItem) => {
+    const sessionTypeId = summaryItem.session_type_id;
 
-  // Obtener pacientes asignados del doctor seleccionado
+    // Si estamos editando esa celda, mostramos el borrador
+    if (commissionDraft[sessionTypeId]) {
+      return { ...commissionDraft[sessionTypeId], is_dirty: true };
+    }
+
+    return {
+      type: "fixed_amount",
+      value: summaryItem.is_customized ? summaryItem.current_value : "",
+      price_to_patient: summaryItem.price_to_patient,
+      is_customized: summaryItem.is_customized,
+      current_value: summaryItem.current_value,
+      default_value: summaryItem.default_value,
+    };
+  };
+
+  const setDraft = (sessionTypeId, value) => {
+    setCommissionDraft((prev) => {
+      // Nota: Usamos localDoctor.rates_summary para tener siempre la data más fresca
+      const originalSummary = localDoctor.rates_summary.find(
+        (r) => r.session_type_id === sessionTypeId
+      );
+      const currentDraft = prev[sessionTypeId] || {
+        type: "fixed_amount",
+        value: originalSummary.is_customized
+          ? originalSummary.current_value
+          : "",
+      };
+      return { ...prev, [sessionTypeId]: { ...currentDraft, value: value } };
+    });
+  };
+
+  const saveCommissionRules = async () => {
+    if (!localDoctor) return;
+
+    setIsSaving(true); // Activar spinner
+
+    const rules = Object.entries(commissionDraft).map(([stId, draft]) => {
+      const rawValue = String(draft.value).replace(/[^0-9.]/g, "");
+      // Enviamos null si está vacío para que el backend borre el registro
+      const numValue = rawValue === "" ? null : Number(rawValue);
+
+      // SOLUCIÓN AL BUG VISUAL (Linea 309): Enviamos el precio base por si acaso el backend lo necesita
+      const original = localDoctor.rates_summary.find(
+        (r) => r.session_type_id === Number(stId)
+      );
+
+      return {
+        session_type_id: Number(stId),
+        type: "fixed_amount",
+        value: numValue,
+        base_price_clp: original?.price_to_patient || 0, // Enviamos dato extra
+      };
+    });
+
+    if (rules.length === 0) {
+      setIsEditingCommission(false);
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      // USO DE AXIOS
+      const response = await axios.post(
+        route("doctors.commission-rules.update", localDoctor.id),
+        { rules }
+      );
+
+      if (response.data.success) {
+        // ACTUALIZACIÓN DE ESTADO LOCAL (Instantánea)
+        // Reemplazamos el summary viejo con el nuevo que calculó el backend
+        setLocalDoctor((prev) => ({
+          ...prev,
+          rates_summary: response.data.updated_summary,
+        }));
+
+        setIsEditingCommission(false);
+        setCommissionDraft({});
+
+        Swal.fire({
+          icon: "success",
+          title: "Actualizado",
+          text: "Las tarifas se han guardado correctamente.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron guardar los cambios.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- LÓGICA DE PACIENTES (Sin cambios mayores, solo referencias a localDoctor) ---
   const assignedPatientIds = new Set(patientsDraft.map((p) => p.id));
-
-  const statusPill = (isActive) =>
-    isActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700";
-
   const availablePatients = useMemo(() => {
-    if (!selectedDoctor) return [];
+    if (!localDoctor) return [];
     return patients.filter(
       (p) =>
         !assignedPatientIds.has(p.id) &&
@@ -58,440 +159,479 @@ export default function DoctorModalForm({
             .toLowerCase()
             .includes(patientQuery.toLowerCase()))
     );
-  }, [selectedDoctor, patientQuery, patients, patientsDraft]);
+  }, [localDoctor, patientQuery, patients, patientsDraft]);
 
-  const saveCommissionRules = () => {
-    if (!selectedDoctor) return;
+  // --- LÓGICA DE PACIENTES CON AXIOS ---
 
-    // Normaliza valores a número entero
-    const rules = Object.entries(commissionDraft)
-      .filter(([_, v]) => v && v.value !== "")
-      .map(([sessionTypeId, v]) => ({
-        session_type_id: Number(sessionTypeId),
-        type: v.label || (v.type === "Fijo" ? "fixed_amount" : "percentage"),
-        value: Math.max(0, Number(String(v.value).replace(/[^0-9.]/g, ""))),
-      }));
+  const assignPatient = async (patientId) => {
+    if (!localDoctor) return;
 
-    // Enviar al backend
-    router.post(
-      route("doctors.commission-rules.update", selectedDoctor.id),
-      { rules },
-      {
-        onSuccess: () => {
-          setIsEditingCommission(false);
-          // No limpiamos el draft aquí para que se vea el cambio inmediatamente
-        },
-        preserveScroll: true,
-        preserveState: true,
-      }
-    );
-  };
+    // 1. Buscamos el objeto paciente completo en la lista global (props)
+    //    para poder agregarlo visualmente a la lista local.
+    const patientObj = patients.find((p) => p.id === patientId);
+    if (!patientObj) return;
 
-  // Utils comisión: obtiene draft o valor actual para una fila
-  const getRuleFor = (sessionTypeId) => {
-    // 1) ¿Existe borrador para este tipo?
-    if (commissionDraft[sessionTypeId]) {
-      return commissionDraft[sessionTypeId];
-    }
+    try {
+      // 2. Llamada asíncrona al Backend
+      const response = await axios.post(
+        route("doctors.patients.assign", localDoctor.id),
+        {
+          patient_id: patientId,
+        }
+      );
 
-    // 2) Si no hay borrador, caemos en la regla original
-    const rate = selectedDoctor?.commission_rates?.find(
-      (r) => r.session_type_id === sessionTypeId
-    );
+      // 3. Si el backend dice OK...
+      if (response.data.success) {
+        // Actualizamos la lista visualmente al instante
+        setPatientsDraft((prev) => [...prev, patientObj]);
+        setPatientQuery(""); // Limpiamos el buscador
 
-    if (rate) {
-      // Mapear correctamente el tipo
-      const isPercentage = rate.commission_type === "percentage";
-      return {
-        type: isPercentage ? "percentage" : "fixed_amount",
-        label: rate.commission_type,
-        value: String(rate.commission_value || 0),
-      };
-    }
-
-    // 3) Nunca hubo regla → valores por defecto
-    return { type: "fixed_amount", label: "fixed_amount", value: "" };
-  };
-
-  const setDraft = (sessionTypeId, field, value) => {
-    setCommissionDraft((prev) => {
-      const currentRule = prev[sessionTypeId] || getRuleFor(sessionTypeId);
-
-      // Si cambiamos el tipo, actualizar también el label
-      if (field === "type") {
-        return {
-          ...prev,
-          [sessionTypeId]: {
-            ...currentRule,
-            type: value,
-            label: value === "fixed_amount" ? "fixed_amount" : "percentage",
+        // Feedback visual suave (Toast)
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
           },
-        };
+        });
+        Toast.fire({
+          icon: "success",
+          title: "Paciente asignado",
+        });
       }
-
-      return {
-        ...prev,
-        [sessionTypeId]: {
-          ...currentRule,
-          [field]: value,
-        },
-      };
-    });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo asignar el paciente. Intenta nuevamente.",
+      });
+    }
   };
 
-  const assignPatient = (patientId) => {
-    if (!selectedDoctor) return;
+  const unassignPatient = async (patientId) => {
+    if (!localDoctor) return;
 
-    const patient = patients.find((p) => p.id === patientId);
-    if (!patient) return;
+    try {
+      // 1. Llamada DELETE al backend
+      const response = await axios.delete(
+        route("doctors.patients.unassign", [localDoctor.id, patientId])
+      );
 
-    router.post(
-      route("doctors.patients.assign", selectedDoctor.id),
-      { patient_id: patientId },
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-          setPatientsDraft((prev) => [...prev, patient]), setPatientQuery("");
-        },
-        onError: () => {
-          // Rollback si falla
-          setPatientsDraft((prev) => prev.filter((p) => p.id !== patientId));
-        },
+      // 2. Si el backend dice OK...
+      if (response.data.success) {
+        // Filtramos la lista local para quitar al paciente eliminado
+        setPatientsDraft((prev) => prev.filter((p) => p.id !== patientId));
+
+        // Feedback visual suave
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+        Toast.fire({
+          icon: "success",
+          title: "Paciente desvinculado",
+        });
       }
-    );
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo desvincular al paciente.",
+      });
+    }
   };
 
-  const unassignPatient = (patientId) => {
-    if (!selectedDoctor) return;
-
-    router.delete(
-      route("doctors.patients.unassign", [selectedDoctor.id, patientId]),
-      {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-          setPatientsDraft((prev) => prev.filter((p) => p.id !== patientId));
-        },
-        onError: () => {
-          // Rollback: re-agregamos
-          const patient = patients.find((p) => p.id === patientId);
-          if (patient) {
-            setPatientsDraft((prev) => [...prev, patient]);
-          }
-        },
+  const getAccordionClasses = (sectionName) => {
+    const isActive = openSection === sectionName;
+    return `
+      border rounded-xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col
+      ${
+        isActive
+          ? "border-blue-400 ring-4 ring-blue-50 shadow-lg flex-1 min-h-0 z-10"
+          : "border-gray-200 bg-white flex-none opacity-90 hover:opacity-100 hover:border-gray-300"
       }
-    );
-  };
-
-  const toggleActive = () => {
-    if (!selectedDoctor) return;
-
-    router.patch(
-      route("doctors.toggle-active", selectedDoctor.id),
-      { is_active: !selectedDoctor.is_active },
-      {
-        preserveScroll: true,
-        preserveState: true,
-      }
-    );
-  };
-
-  const editDoctor = () => {
-    if (!selectedDoctor) return;
-    // Abrir modal de edición
-    setIsModalOpen(true);
+    `;
   };
 
   return (
-    <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
-      {!selectedDoctor ? (
-        <div>
-          <h3 className="flex items-center gap-2 mb-4 text-lg font-bold text-gray-900">
-            <UserCog className="w-5 h-5 text-blue-600" /> Ficha del Profesional
-          </h3>
-          <div className="p-6 text-center text-gray-500 border-2 border-gray-200 border-dashed rounded-lg">
-            Selecciona un profesional para ver su detalle.
-          </div>
+    <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl h-full flex flex-col overflow-hidden">
+      {!localDoctor ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+          <UserCog className="w-12 h-12 mb-3 text-gray-200" />
+          <p>Selecciona un profesional de la lista</p>
         </div>
       ) : (
-        <div>
-          <h3 className="flex items-center gap-2 mb-4 text-lg font-bold text-gray-900">
-            <UserCog className="w-5 h-5 text-blue-600" /> Ficha del Profesional
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusPill(
-                selectedDoctor.status === "active"
-              )}`}
-            >
-              {t("doctorStatus", selectedDoctor.status)}
-            </span>
-          </h3>
-          <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-12 h-12 font-bold text-white rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
-              {selectedDoctor?.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-gray-900">
-                    {selectedDoctor?.name} {selectedDoctor?.last_name}
-                  </p>
-                  <p className="text-sm text-gray-600">{selectedDoctor?.rut}</p>
-                  <p className="text-sm text-gray-500">
-                    {selectedDoctor?.speciality}
-                  </p>
-                </div>
+        <>
+          {/* HEADER */}
+          <div className="mb-5 flex-none">
+            <h3 className="flex items-center gap-2 mb-4 text-lg font-bold text-gray-900">
+              <UserCog className="w-5 h-5 text-blue-600" /> Ficha del
+              Profesional
+              {getStatusBadge(localDoctor.branch_status)}
+            </h3>
+
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-14 h-14 text-xl font-bold text-white rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm">
+                {localDoctor.name.charAt(0)}
+                {localDoctor.last_name.charAt(0)}
               </div>
-              <div className="grid grid-cols-1 gap-1 mt-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  {selectedDoctor?.phone}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  {selectedDoctor?.user?.email || selectedDoctor?.email}
-                </div>
-                {selectedDoctor?.availability && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    Disponibilidad: {selectedDoctor?.availability.join(", ")}
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* KPIs personales */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="p-3 text-center border border-gray-200 rounded-lg bg-gray-50">
-                <p className="text-xs text-gray-600">Sesiones mes</p>
-                <p className="text-xl font-bold">
-                  {selectedDoctor?.sessions_month || 0}
+              <div>
+                <h4 className="font-bold text-gray-900 text-lg leading-tight">
+                  {localDoctor.name} {localDoctor.last_name}
+                </h4>
+                <p className="text-sm text-gray-500 font-medium">
+                  {localDoctor.speciality}
                 </p>
-              </div>
-              <div className="p-3 text-center border border-gray-200 rounded-lg bg-gray-50">
-                <p className="text-xs text-gray-600">Ingresos mes</p>
-                <p className="text-xl font-bold">
-                  {fmtCLP(selectedDoctor?.revenue_month || 0)}
-                </p>
-              </div>
-              <div className="p-3 text-center border border-gray-200 rounded-lg bg-gray-50">
-                <p className="text-xs text-gray-600">Pacientes</p>
-                <p className="text-xl font-bold">
-                  {selectedDoctor?.sessions?.length || 0}
-                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <Mail className="w-3 h-3" /> {localDoctor.email}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> {localDoctor.phone}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Comisiones por tratamiento */}
-          <div className="mt-6 border border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-              <div className="flex items-center gap-2 font-semibold text-gray-900">
-                <Percent className="w-4 h-4 text-purple-600" /> Estructura de
-                comisión por tratamiento
-              </div>
-              {!isEditingCommission ? (
-                <button
-                  onClick={() => setIsEditingCommission(true)}
-                  className="text-sm px-3 py-1.5 rounded-lg border-2 border-purple-200 text-purple-700 hover:bg-purple-50"
-                >
-                  Editar
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={saveCommissionRules}
-                    className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    Guardar
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditingCommission(false);
-                      setCommissionDraft({});
-                    }}
-                    className="text-sm px-3 py-1.5 rounded-lg border-2 border-gray-200 text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left border-b-2 border-gray-200">
-                      <th className="px-3 py-2 text-xs font-bold text-gray-600 uppercase">
-                        Tipo de Sesión
-                      </th>
-                      <th className="px-3 py-2 text-xs font-bold text-gray-600 uppercase">
-                        Tipo
-                      </th>
-                      <th className="px-3 py-2 text-xs font-bold text-gray-600 uppercase">
-                        Valor
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {sessionTypes?.map((sty) => {
-                      const rule = getRuleFor(sty.id);
-                      return (
-                        <tr key={sty.id}>
-                          <td className="flex px-3 py-2 text-sm text-gray-800">
-                            {sty.name}{" "}
-                            <p className="pl-2 italic text-gray-600">
-                              ({fmtCLP(sty.base_price_clp)})
-                            </p>
-                          </td>
-                          <td className="px-3 py-2 text-sm">
-                            {isEditingCommission ? (
-                              <select
-                                value={rule.type}
-                                onChange={(e) =>
-                                  setDraft(sty.id, "type", e.target.value)
-                                }
-                                className="px-2 py-1 text-sm border-2 border-gray-200 rounded-lg"
-                              >
-                                <option value="fixed_amount">
-                                  {t("fichaKine", "fixed_amount")}
-                                </option>
-                                <option value="percentage">
-                                  {t("fichaKine", "percentage")}
-                                </option>
-                              </select>
-                            ) : (
-                              <span className="text-gray-700">
-                                {t("fichaKine", rule.label)}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-sm">
-                            {isEditingCommission ? (
-                              <input
-                                type="number"
-                                value={Number(rule.value) || 0}
-                                onChange={(e) =>
-                                  setDraft(sty.id, "value", e.target.value)
-                                }
-                                placeholder={
-                                  rule.type === "percentage" ? "%" : "$"
-                                }
-                                className="w-32 px-2 py-1 text-sm border-2 border-gray-200 rounded-lg"
-                              />
-                            ) : (
-                              <span className="text-gray-800">
-                                {rule.type === "percentage"
-                                  ? `${rule.value || 0}%`
-                                  : fmtCLP(Number(rule.value || 0))}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-3 text-xs text-gray-500">
-                * Valor fijo en CLP por sesión; porcentaje aplicado sobre el
-                ingreso bruto de la sesión.
-              </p>
-            </div>
-          </div>
-
-          {/* Asignación de Pacientes */}
-          <div className="mt-6 border border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-              <div className="flex items-center gap-2 font-semibold text-gray-900">
-                <Users className="w-4 h-4 text-blue-600" /> Pacientes asignados
-              </div>
-            </div>
-
-            <div className="p-4 space-y-3">
-              {patientsDraft?.length === 0 ? (
-                <div className="text-sm text-gray-500">
-                  Aún no hay pacientes asignados a este profesional.
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {patientsDraft?.map((asp) => (
-                    <div
-                      key={asp.id}
-                      className="flex items-center justify-between gap-2 p-2 border border-gray-200 rounded-lg"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {asp.full_name}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {asp.rut} · {asp.phone}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => unassignPatient(asp.id)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border-2 border-red-200 text-red-700 hover:bg-red-50"
-                      >
-                        <UserMinus className="w-3.5 h-3.5" /> Quitar
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Buscador para asignar */}
-              <div className="mt-4">
-                <label className="text-xs font-bold text-gray-700">
-                  Asignar nuevo paciente
-                </label>
-                <div className="flex items-center gap-2 px-3 py-2 mt-2 border-2 border-gray-200 rounded-lg focus-within:border-blue-500">
-                  <Search className="w-4 h-4 text-gray-400" />
-                  <input
-                    value={patientQuery}
-                    onChange={(e) => setPatientQuery(e.target.value)}
-                    placeholder="Buscar por nombre, RUT, fono..."
-                    className="w-full text-sm outline-none"
+          <div className="flex-1 flex flex-col gap-3 min-h-0 pb-1">
+            {/* ACORDEÓN COMISIONES */}
+            <div className={getAccordionClasses("commissions")}>
+              <button
+                onClick={() => setOpenSection("commissions")}
+                className={`w-full flex items-center justify-between px-4 py-3 transition-colors flex-none
+                        ${
+                          openSection === "commissions"
+                            ? "bg-blue-50/50 text-blue-800"
+                            : "bg-gray-50 hover:bg-gray-100 text-gray-700"
+                        }`}
+              >
+                <div className="flex items-center gap-2 font-semibold text-sm">
+                  <Percent
+                    className={`w-4 h-4 ${
+                      openSection === "commissions"
+                        ? "text-blue-600"
+                        : "text-gray-400"
+                    }`}
                   />
+                  Estructura de Comisiones
                 </div>
-                <div className="mt-3 space-y-2 overflow-auto max-h-48">
-                  {availablePatients?.length === 0 ? (
-                    <div className="text-xs text-gray-500">
-                      {patientQuery
-                        ? "Sin resultados disponibles."
-                        : "Busca un paciente para asignar"}
-                    </div>
-                  ) : (
-                    availablePatients?.map((avp) => (
-                      <div
-                        key={avp.id}
-                        className="flex items-center justify-between gap-2 p-2 border border-gray-200 rounded-lg"
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform duration-300 ${
+                    openSection === "commissions"
+                      ? "rotate-180 text-blue-500"
+                      : "text-gray-400"
+                  }`}
+                />
+              </button>
+
+              {openSection === "commissions" && (
+                <div className="flex-1 flex flex-col min-h-0 bg-white animate-in slide-in-from-top-2 duration-200">
+                  <div className="flex justify-end px-4 py-2 border-b border-gray-100 bg-white/50 backdrop-blur-sm flex-none">
+                    {!isEditingCommission ? (
+                      <button
+                        onClick={() => setIsEditingCommission(true)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
                       >
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {avp.full_name}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {avp.rut} · {avp.phone}
-                          </p>
-                        </div>
+                        Editar Tarifas
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => assignPatient(avp.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+                          disabled={isSaving}
+                          onClick={() => {
+                            setIsEditingCommission(false);
+                            setCommissionDraft({});
+                          }}
+                          className="text-xs font-medium px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
                         >
-                          <UserPlus className="w-3.5 h-3.5" /> Asignar
+                          Cancelar
+                        </button>
+                        <button
+                          disabled={isSaving}
+                          onClick={saveCommissionRules}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-colors disabled:opacity-50"
+                        >
+                          {isSaving ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Save className="w-3.5 h-3.5" />
+                          )}
+                          {isSaving ? "Guardando..." : "Guardar"}
                         </button>
                       </div>
-                    ))
-                  )}
+                    )}
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold bg-gray-50">
+                            Prestación
+                          </th>
+                          <th className="px-4 py-3 font-semibold text-center w-28 bg-gray-50">
+                            Tipo
+                          </th>
+                          <th className="px-4 py-3 font-semibold text-right w-36 bg-gray-50">
+                            {isEditingCommission
+                              ? "Tarifa Personal"
+                              : "Valor Pago"}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {/* USAMOS localDoctor PARA RENDERIZAR */}
+                        {localDoctor.rates_summary?.map((summaryItem) => {
+                          const rule = getRuleDisplay(summaryItem);
+
+                          // CORRECCIÓN VISUAL: price_to_patient a veces viene como string '20000' o numero.
+                          // Aseguramos que fmtCLP reciba número.
+                          const basePrice = Number(
+                            summaryItem.price_to_patient ||
+                              summaryItem.base_price_clp ||
+                              0
+                          );
+
+                          return (
+                            <tr
+                              key={summaryItem.session_type_id}
+                              className="hover:bg-gray-50 group"
+                            >
+                              <td className="px-4 py-2.5">
+                                <div className="font-medium text-gray-900">
+                                  {summaryItem.name}
+                                </div>
+                                {/* Aquí estaba el error visual (309-311): Ahora usamos basePrice seguro */}
+                                <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-xs mt-0.5">
+                                  {/* 1. Lo que paga el paciente */}
+                                  <span
+                                    className="text-gray-500"
+                                    title="Precio Cobrado al Paciente"
+                                  >
+                                    Cobro: {fmtCLP(basePrice)}
+                                  </span>
+
+                                  <span className="text-gray-300 hidden sm:inline">
+                                    |
+                                  </span>
+
+                                  {/* 2. Lo que paga la empresa normalmente (TU NUEVO DATO) */}
+                                  <span
+                                    className="text-indigo-400 font-medium"
+                                    title="Pago Estándar definido en la Ficha del Servicio"
+                                  >
+                                    Base Kine:{" "}
+                                    {fmtCLP(summaryItem.default_value)}
+                                  </span>
+                                </div>
+                              </td>
+
+                              <td className="px-4 py-2.5 text-center">
+                                <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded border border-gray-200">
+                                  Monto Fijo
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 text-right align-top">
+                                {isEditingCommission ? (
+                                  <div className="flex flex-col items-end relative group">
+                                    {/* COMPONENTE DE PESO CHILENO INTEGRADO */}
+                                    <InputPesoChileno
+                                      // Usamos 'price' porque así se llama la prop en tu componente
+                                      price={rule.value}
+                                      // Manejador de cambios (tu componente devuelve {target: {value: rawValue}})
+                                      onChange={(e) =>
+                                        setDraft(
+                                          summaryItem.session_type_id,
+                                          e.target.value
+                                        )
+                                      }
+                                      // El placeholder muestra la herencia
+                                      placeholder={
+                                        summaryItem.default_value > 0
+                                          ? fmtCLP(summaryItem.default_value)
+                                          : "$0"
+                                      }
+                                      // Mismos estilos dinámicos que tenías, adaptados
+                                      className={`w-32 text-right text-sm border transition-all duration-200 rounded-md py-1.5 px-2.5 outline-none focus:ring-2 
+          ${
+            rule.value
+              ? "border-blue-300 bg-blue-50 text-blue-700 font-bold focus:ring-blue-200"
+              : "border-gray-200 bg-white text-gray-900 focus:border-blue-400 focus:ring-blue-100 placeholder:text-gray-400"
+          }`}
+                                    />
+
+                                    <div className="mt-1 mr-1">
+                                      {rule.value ? (
+                                        <span className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full animate-in fade-in zoom-in duration-200">
+                                          Personalizado
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] text-gray-400 italic flex items-center gap-1">
+                                          {summaryItem.default_value > 0
+                                            ? `Hereda: ${fmtCLP(
+                                                summaryItem.default_value
+                                              )}`
+                                            : "Sin comisión base"}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  /* MODO LECTURA (Se mantiene igual) */
+                                  <div className="flex flex-col items-end justify-center h-full">
+                                    {!rule.is_customized &&
+                                    (!summaryItem.default_value ||
+                                      summaryItem.default_value === 0) ? (
+                                      <span className="text-sm text-gray-400 italic">
+                                        Sin valor definido
+                                      </span>
+                                    ) : (
+                                      <span
+                                        className={`text-sm font-medium tracking-tight ${
+                                          rule.is_customized
+                                            ? "text-blue-700"
+                                            : "text-gray-600"
+                                        }`}
+                                      >
+                                        {fmtCLP(
+                                          rule.is_customized
+                                            ? rule.current_value
+                                            : summaryItem.default_value
+                                        )}
+                                      </span>
+                                    )}
+
+                                    <div className="mt-0.5">
+                                      {rule.is_customized ? (
+                                        <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                                          Personalizado
+                                        </span>
+                                      ) : summaryItem.default_value > 0 ? (
+                                        <span className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
+                                          Estándar
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 font-medium">
+                                          Configurar
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
+
+            {/* ACORDEÓN PACIENTES */}
+            <div className={getAccordionClasses("patients")}>
+              {/* ... (Tu código de pacientes se mantiene igual, usando patientsDraft) ... */}
+              {/* Copia el bloque de pacientes del código anterior, ya funciona bien */}
+              <button
+                onClick={() => setOpenSection("patients")}
+                className={`w-full flex items-center justify-between px-4 py-3 transition-colors flex-none border-b border-gray-100
+                    ${
+                      openSection === "patients"
+                        ? "bg-blue-50/50 text-blue-800"
+                        : "bg-gray-50 hover:bg-gray-100 text-gray-700"
+                    }`}
+              >
+                <div className="flex items-center gap-2 font-semibold text-sm">
+                  <Users
+                    className={`w-4 h-4 ${
+                      openSection === "patients"
+                        ? "text-blue-600"
+                        : "text-gray-400"
+                    }`}
+                  />
+                  Pacientes Asignados
+                  <span className="ml-2 bg-gray-200 text-gray-600 text-xs py-0.5 px-2 rounded-full">
+                    {patientsDraft.length}
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform duration-300 ${
+                    openSection === "patients"
+                      ? "rotate-180 text-blue-500"
+                      : "text-gray-400"
+                  }`}
+                />
+              </button>
+              {openSection === "patients" && (
+                <div className="flex-1 flex flex-col min-h-0 bg-white p-4 animate-in slide-in-from-bottom-2 duration-200">
+                  {/* Reutiliza tu lógica de renderizado de pacientes aquí */}
+                  {/* Buscador + Lista */}
+                  <div className="relative mb-3 flex-none">
+                    <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+                    <input
+                      className="w-full pl-9 pr-4 py-2 text-sm border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white transition-colors"
+                      placeholder="Buscar paciente para asignar..."
+                      value={patientQuery}
+                      onChange={(e) => setPatientQuery(e.target.value)}
+                    />
+                    {patientQuery && availablePatients.length > 0 && (
+                      <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-20">
+                        {availablePatients.map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => assignPatient(p.id)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm flex justify-between items-center group border-b border-gray-50 last:border-0"
+                          >
+                            <div>
+                              <p className="font-medium text-gray-800">
+                                {p.full_name}
+                              </p>
+                              <p className="text-xs text-gray-500">{p.rut}</p>
+                            </div>
+                            <span className="text-xs text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition-opacity bg-blue-100 px-2 py-1 rounded">
+                              Asignar
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 overflow-y-auto border border-gray-100 rounded-xl bg-gray-50/50 p-2 space-y-2">
+                    {patientsDraft.map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between p-3 bg-white border border-gray-200 shadow-sm rounded-lg group hover:border-blue-300 transition-all"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {p.full_name}
+                          </p>
+                          <p className="text-xs text-gray-500">{p.rut}</p>
+                        </div>
+                        <button
+                          onClick={() => unassignPatient(p.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

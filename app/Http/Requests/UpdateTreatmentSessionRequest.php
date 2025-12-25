@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTreatmentSessionRequest extends FormRequest
 {
-     /**
+    /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
@@ -32,7 +32,7 @@ class UpdateTreatmentSessionRequest extends FormRequest
      */
     public function rules(): array
     {
-        
+
         return [
             'company_id' => 'sometimes|exists:companies,id',
             'treatment_id' => 'sometimes|exists:treatments,id',
@@ -57,11 +57,11 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'rom_abduction_after' => 'nullable|integer|min:0|max:180',
             'rom_rotation_before' => 'nullable|integer|min:0|max:180',
             'rom_rotation_after' => 'nullable|integer|min:0|max:180',
-            
+
             // Arrays JSON
             'techniques' => 'nullable|array',
             'exercises' => 'nullable|array',
-            
+
             // Notas
             'notes' => 'nullable|string',
             'homework' => 'nullable|string',
@@ -69,9 +69,9 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'cancellation_note' => 'nullable|string',
 
             // Montos
-             'patient_amount' => 'nullable|integer|min:0',
-             'doctor_amount' => 'nullable|integer|min:0',
-             'clinic_amount' => 'nullable|integer|min:0',
+            'patient_amount_clp' => 'nullable|integer|min:0',
+            'doctor_amount_clp' => 'nullable|integer|min:0',
+            'clinic_amount_clp' => 'nullable|integer|min:0',
         ];
     }
 
@@ -139,5 +139,4 @@ class UpdateTreatmentSessionRequest extends FormRequest
             ]
         ]);
     }
-
 }

@@ -57,11 +57,11 @@ export default function DoctorAttendances({
   const stats = useMemo(() => {
     const total = filteredSessions.length;
     const totalRevenue = filteredSessions.reduce(
-      (sum, s) => sum + (s.patient_amount || 0),
+      (sum, s) => sum + (s.patient_amount_clp || 0),
       0
     );
     const totalCommission = filteredSessions.reduce(
-      (sum, s) => sum + (s.doctor_amount || 0),
+      (sum, s) => sum + (s.doctor_amount_clp || 0),
       0
     );
     const uniquePatients = new Set(filteredSessions.map((s) => s.patient_id))
@@ -164,7 +164,7 @@ export default function DoctorAttendances({
           session.patient?.full_name || "-",
           session.session_type?.name || "-",
           statusMap[session.status] || session.status,
-          fmtCLP(session.doctor_amount || 0),
+          fmtCLP(session.doctor_amount_clp || 0),
         ];
       });
 
@@ -515,10 +515,10 @@ export default function DoctorAttendances({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-right text-gray-900 whitespace-nowrap">
-                      {fmtCLP(session.patient_amount)}
+                      {fmtCLP(session.patient_amount_clp)}
                     </td>
                     <td className="px-6 py-4 text-sm font-semibold text-right text-purple-700 whitespace-nowrap">
-                      {fmtCLP(session.doctor_amount)}
+                      {fmtCLP(session.doctor_amount_clp)}
                     </td>
                   </tr>
                 ))}

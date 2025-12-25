@@ -24,7 +24,7 @@ class SessionController extends Controller
     public function index(Request $request): Response
     {
         $doctor = Auth::user()->doctor;
-        
+
         // Filtros
         $startDate = $request->input('start_date', Carbon::today()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::today()->endOfMonth()->format('Y-m-d'));
@@ -110,7 +110,7 @@ class SessionController extends Controller
                 'homework' => $session->homework,
                 'next_goals' => $session->next_goals,
                 'duration_actual' => $session->duration_actual,
-                
+
                 // Métricas clínicas
                 'pain_before' => $session->pain_before,
                 'pain_after' => $session->pain_after,
@@ -122,7 +122,7 @@ class SessionController extends Controller
                 'rom_rotation_after' => $session->rom_rotation_after,
                 'techniques' => $session->techniques ?? [],
                 'exercises' => $session->exercises ?? [],
-                
+
                 'patient' => [
                     'id' => $session->patient->id,
                     'name' => $session->patient->name . ' ' . $session->patient->last_name,
@@ -139,8 +139,8 @@ class SessionController extends Controller
                     'base_price' => $session->sessionType->base_price,
                 ],
                 'payment' => [
-                    'patient_amount' => $session->patient_amount,
-                    'doctor_amount' => $session->doctor_amount,
+                    'patient_amount_clp' => $session->patient_amount_clp,
+                    'doctor_amount_clp' => $session->doctor_amount_clp,
                     'commission_rate' => $session->commission_rate,
                 ],
                 'timestamps' => [
@@ -158,7 +158,7 @@ class SessionController extends Controller
     {
         $doctor = Auth::user()->doctor;
         $doctor->load('commissionRates.sessionType');
-        
+
         // Obtener pacientes asignados al kine
         /* $patients = $doctor->patients()
             ->select('id', 'name', 'last_name', 'rut')
@@ -191,8 +191,7 @@ class SessionController extends Controller
             });
 
         // Obtener tipos de sesión
-        $sessionTypes = SessionType::where('active', true)
-            ->select('id', 'name', 'base_price', 'duration_minutes')
+        $sessionTypes = SessionType::select('id', 'name', 'base_price_clp', 'duration_minutes')
             ->orderBy('name')
             ->get();
 
@@ -230,7 +229,7 @@ class SessionController extends Controller
             'date' => 'required|date|after_or_equal:today',
             'time' => 'required',
             'duration' => 'nullable|integer|min:15|max:180',
-            
+
             // Métricas clínicas
             'pain_before' => 'nullable|integer|min:0|max:10',
             'pain_after' => 'nullable|integer|min:0|max:10',
@@ -242,15 +241,15 @@ class SessionController extends Controller
             'rom_rotation_after' => 'nullable|integer|min:0|max:180',
             'techniques' => 'nullable|array',
             'exercises' => 'nullable|array',
-            
+
             // Notas
             'notes' => 'nullable|string|max:2000',
             'homework' => 'nullable|string|max:2000',
             'next_goals' => 'nullable|string|max:2000',
-            
+
             // Pagos
-            'patient_amount' => 'required|numeric|min:0',
-            'doctor_amount' => 'required|numeric|min:0',
+            'patient_amount_clp' => 'required|numeric|min:0',
+            'doctor_amount_clp' => 'required|numeric|min:0',
             'commission_rate' => 'nullable|numeric|min:0',
         ]);
 
@@ -262,8 +261,8 @@ class SessionController extends Controller
 
         DB::beginTransaction();
         try {
-         
-            
+
+
             $monthSessionNumber = TreatmentSession::where('treatment_id', $treatment->id)
                 ->whereYear('date', Carbon::parse($validated['date'])->year)
                 ->whereMonth('date', Carbon::parse($validated['date'])->month)
@@ -282,7 +281,7 @@ class SessionController extends Controller
                 'time' => $validated['time'],
                 'duration' => $validated['duration'] ?? $sessionType->duration_minutes,
                 'status' => 'scheduled',
-                
+
                 // Métricas clínicas
                 'pain_before' => $validated['pain_before'] ?? 0,
                 'pain_after' => $validated['pain_after'] ?? 0,
@@ -294,16 +293,16 @@ class SessionController extends Controller
                 'rom_rotation_after' => $validated['rom_rotation_after'] ?? 0,
                 'techniques' => $validated['techniques'] ?? [],
                 'exercises' => $validated['exercises'] ?? [],
-                
+
                 // Notas
                 'notes' => $validated['notes'],
                 'homework' => $validated['homework'],
                 'next_goals' => $validated['next_goals'],
-                
+
                 // Pagos
-                'patient_amount' => $validated['patient_amount'],
-                'doctor_amount' => $validated['doctor_amount'],
-                'doctor_amount' => $validated['commission_rate'] ?? 0,
+                'patient_amount_clp' => $validated['patient_amount_clp'],
+                'doctor_amount_clp' => $validated['doctor_amount_clp'],
+                'doctor_amount_clp' => $validated['commission_rate'] ?? 0,
             ]);
 
             DB::commit();
@@ -316,10 +315,9 @@ class SessionController extends Controller
 
             return redirect()->route('kine.dashboard')
                 ->with('success', 'Sesión creada exitosamente');
-
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Error al crear sesión', [
                 'doctor_id' => $doctor->id,
                 'error' => $e->getMessage(),
@@ -358,49 +356,49 @@ class SessionController extends Controller
         $doctor->load('commissionRates.sessionType');
 
         $session = [
-                'id' => $session->id,
-                'patient_id' => $session->patient_id,
-                'treatment_id' => $session->treatment_id,
-                'session_type_id' => $session->session_type_id,
-                'month_session_number' => $session->month_session_number,
-                'date' => $session->date,
-                'time' => $session->time,
-                'duration' => $session->duration,
-                'status' => $session->status,
-                
-                // Métricas clínicas
-                'pain_before' => $session->pain_before ?? 0,
-                'pain_after' => $session->pain_after ?? 0,
-                'rom_flexion_before' => $session->rom_flexion_before ?? 0,
-                'rom_flexion_after' => $session->rom_flexion_after ?? 0,
-                'rom_abduction_before' => $session->rom_abduction_before ?? 0,
-                'rom_abduction_after' => $session->rom_abduction_after ?? 0,
-                'rom_rotation_before' => $session->rom_rotation_before ?? 0,
-                'rom_rotation_after' => $session->rom_rotation_after ?? 0,
-                'techniques' => $session->techniques ?? [],
-                'exercises' => $session->exercises ?? [],
-                
-                // Notas
-                'notes' => $session->notes,
-                'homework' => $session->homework,
-                'next_goals' => $session->next_goals,
-                
-                'patient' => [
-                    'id' => $session->patient->id,
-                    'name' => $session->patient->name . ' ' . $session->patient->last_name,
-                    'rut' => $session->patient->rut,
-                ],
-                'treatment' => [
-                    'diagnosis' => $session->treatment->diagnosis,
-                ],
-                'payment' => [
-                    'patient_amount' => $session->patient_amount,
-                    'doctor_amount' => $session->doctor_amount,
-                    'commission_rate' => $session->commission_rate,
-                ],
-            ];
+            'id' => $session->id,
+            'patient_id' => $session->patient_id,
+            'treatment_id' => $session->treatment_id,
+            'session_type_id' => $session->session_type_id,
+            'month_session_number' => $session->month_session_number,
+            'date' => $session->date,
+            'time' => $session->time,
+            'duration' => $session->duration,
+            'status' => $session->status,
 
-            dd($session);
+            // Métricas clínicas
+            'pain_before' => $session->pain_before ?? 0,
+            'pain_after' => $session->pain_after ?? 0,
+            'rom_flexion_before' => $session->rom_flexion_before ?? 0,
+            'rom_flexion_after' => $session->rom_flexion_after ?? 0,
+            'rom_abduction_before' => $session->rom_abduction_before ?? 0,
+            'rom_abduction_after' => $session->rom_abduction_after ?? 0,
+            'rom_rotation_before' => $session->rom_rotation_before ?? 0,
+            'rom_rotation_after' => $session->rom_rotation_after ?? 0,
+            'techniques' => $session->techniques ?? [],
+            'exercises' => $session->exercises ?? [],
+
+            // Notas
+            'notes' => $session->notes,
+            'homework' => $session->homework,
+            'next_goals' => $session->next_goals,
+
+            'patient' => [
+                'id' => $session->patient->id,
+                'name' => $session->patient->name . ' ' . $session->patient->last_name,
+                'rut' => $session->patient->rut,
+            ],
+            'treatment' => [
+                'diagnosis' => $session->treatment->diagnosis,
+            ],
+            'payment' => [
+                'patient_amount_clp' => $session->patient_amount_clp,
+                'doctor_amount_clp' => $session->doctor_amount_clp,
+                'commission_rate' => $session->commission_rate,
+            ],
+        ];
+
+        dd($session);
 
         return Inertia::render('KineMobile/SessionForm', [
             'session' => $session,
@@ -446,7 +444,7 @@ class SessionController extends Controller
         if ($editRules['time_limit_hours'] && $session->completed_at) {
             $hoursLimit = $editRules['time_limit_hours'];
             $completedAt = Carbon::parse($session->completed_at);
-            
+
             if ($completedAt->diffInHours(now()) > $hoursLimit) {
                 return back()->withErrors([
                     'error' => "Solo puedes editar sesiones completadas dentro de las primeras {$hoursLimit} horas"
@@ -455,15 +453,25 @@ class SessionController extends Controller
         }
 
         // Determinar campos editables
-        $allowedFields = $editRules['fields'] === 'all' 
+        $allowedFields = $editRules['fields'] === 'all'
             ? [
-                'session_type_id', 'date', 'time', 'duration',
-                'pain_before', 'pain_after',
-                'rom_flexion_before', 'rom_flexion_after',
-                'rom_abduction_before', 'rom_abduction_after',
-                'rom_rotation_before', 'rom_rotation_after',
-                'techniques', 'exercises',
-                'notes', 'homework', 'next_goals',
+                'session_type_id',
+                'date',
+                'time',
+                'duration',
+                'pain_before',
+                'pain_after',
+                'rom_flexion_before',
+                'rom_flexion_after',
+                'rom_abduction_before',
+                'rom_abduction_after',
+                'rom_rotation_before',
+                'rom_rotation_after',
+                'techniques',
+                'exercises',
+                'notes',
+                'homework',
+                'next_goals',
             ]
             : $editRules['fields'];
 
@@ -495,7 +503,7 @@ class SessionController extends Controller
 
         // Filtrar solo las reglas de campos permitidos
         $validationRules = array_intersect_key(
-            $allValidationRules, 
+            $allValidationRules,
             array_flip(array_merge($allowedFields, $editRules['requires_reason'] ? ['reason'] : []))
         );
 
@@ -508,7 +516,7 @@ class SessionController extends Controller
         try {
             // Solo actualizar campos permitidos
             $dataToUpdate = array_intersect_key($validated, array_flip($allowedFields));
-            
+
             $session->update($dataToUpdate);
 
             Log::info('Sesión actualizada', [
@@ -521,7 +529,6 @@ class SessionController extends Controller
 
             return redirect()->route('kine.sessions.show', $session->id)
                 ->with('success', 'Sesión actualizada exitosamente');
-
         } catch (\Exception $e) {
             Log::error('Error al actualizar sesión', [
                 'session_id' => $session->id,
@@ -533,7 +540,7 @@ class SessionController extends Controller
                 ->withErrors(['error' => 'Error al actualizar la sesión']);
         }
     }
-    
+
 
     /**
      * Completar sesión rápidamente
@@ -575,7 +582,7 @@ class SessionController extends Controller
             // Actualizar contadores del tratamiento
             $treatment = $session->treatment;
             $treatment->increment('completed_sessions');
-            
+
             // Verificar si se completó el tratamiento
             if ($treatment->total_sessions && $treatment->completed_sessions >= $treatment->total_sessions) {
                 $treatment->update(['status' => 'Completed']);
@@ -595,7 +602,7 @@ class SessionController extends Controller
             $todayEarnings = TreatmentSession::where('doctor_id', $doctor->id)
                 ->whereDate('date', today())
                 ->where('status', 'Completada')
-                ->sum('doctor_amount');
+                ->sum('doctor_amount_clp');
 
             return response()->json([
                 'success' => true,
@@ -609,10 +616,9 @@ class SessionController extends Controller
                     ],
                 ],
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Error al completar sesión', [
                 'session_id' => $session->id,
                 'error' => $e->getMessage()
@@ -655,8 +661,8 @@ class SessionController extends Controller
         try {
             $session->update([
                 'status' => 'Cancelada',
-                'notes' => ($session->notes ? $session->notes . "\n\n" : '') . 
-                          "CANCELADA: " . $validated['cancellation_reason'],
+                'notes' => ($session->notes ? $session->notes . "\n\n" : '') .
+                    "CANCELADA: " . $validated['cancellation_reason'],
             ]);
 
             Log::info('Sesión cancelada por kine', [
@@ -669,7 +675,6 @@ class SessionController extends Controller
                 'success' => true,
                 'message' => 'Sesión cancelada correctamente',
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error al cancelar sesión', [
                 'session_id' => $session->id,
@@ -710,7 +715,6 @@ class SessionController extends Controller
 
             return redirect()->route('kine.my-sessions')
                 ->with('success', 'Sesión eliminada exitosamente');
-
         } catch (\Exception $e) {
             Log::error('Error al eliminar sesión', [
                 'session_id' => $session->id,
@@ -749,7 +753,6 @@ class SessionController extends Controller
                 'success' => true,
                 'message' => 'Notas guardadas correctamente'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error al guardar notas', [
                 'session_id' => $session->id,

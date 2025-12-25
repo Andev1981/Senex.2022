@@ -84,7 +84,7 @@ class PaymentService
             'debt_id' => $debt->id,
             'treatment_session_id' => $debt->treatment_session_id,
             // Usamos el monto unitario que paga el paciente
-            'amount_clp' => $item['unit_patient'],
+            'amount_clp' => $item['unit_patient_clp'],
         ]);
 
         $debt->update([
@@ -128,7 +128,7 @@ class PaymentService
                 'date' => $data['payment_details']['payment_date'] ?? now(),
                 'time' => now()->toTimeString(),
                 // La sesión registra lo que el paciente debe (copago)
-                'patient_amount' => $consumesPlan ? 0 : $item['unit_patient'],
+                'patient_amount_clp' => $consumesPlan ? 0 : $item['unit_patient_clp'],
                 'consumes_plan' => $consumesPlan,
                 'status' => 'completed',
             ]);
@@ -138,8 +138,8 @@ class PaymentService
                     'company_id' => $data['company_id'],
                     'patient_id' => $data['patient_id'],
                     'treatment_session_id' => $session->id,
-                    'original_amount' => $session->patient_amount,
-                    'paid_amount' => $session->patient_amount,
+                    'original_amount' => $session->patient_amount_clp,
+                    'paid_amount' => $session->patient_amount_clp,
                     'status' => 'paid',
                 ]);
 
@@ -147,7 +147,7 @@ class PaymentService
                     'payment_id' => $payment->id,
                     'debt_id' => $debt->id,
                     'treatment_session_id' => $session->id,
-                    'amount_clp' => $session->patient_amount,
+                    'amount_clp' => $session->patient_amount_clp,
                 ]);
             }
         }
@@ -158,28 +158,28 @@ class PaymentService
         $shares = $data['final_shares'];
 
         // Seguro Primario (Isapre/Fonasa)
-        if ($shares['amount_insurance_primary'] > 0) {
+        if ($shares['amount_insurance_primary_clp'] > 0) {
             Receivable::create([
                 'company_id' => $data['company_id'],
                 'branch_id' => $data['branch_id'],
                 'payment_id' => $payment->id,
                 'patient_id' => $data['patient_id'],
                 'insurance_id' => $data['coverage_details']['insurance_id'],
-                'amount_clp' => $shares['amount_insurance_primary'],
+                'amount_clp' => $shares['amount_insurance_primary_clp'],
                 'status' => 'pending',
                 'due_date' => now()->addDays(30),
             ]);
         }
 
         // Seguro Secundario (Complementario)
-        if ($shares['amount_insurance_secondary'] > 0) {
+        if ($shares['amount_insurance_secondary_clp'] > 0) {
             Receivable::create([
                 'company_id' => $data['company_id'],
                 'branch_id' => $data['branch_id'],
                 'payment_id' => $payment->id,
                 'patient_id' => $data['patient_id'],
                 'insurance_id' => $data['coverage_details']['secondary_insurance_id'],
-                'amount_clp' => $shares['amount_insurance_secondary'],
+                'amount_clp' => $shares['amount_insurance_secondary_clp'],
                 'status' => 'pending',
                 'due_date' => now()->addDays(30),
             ]);
@@ -232,7 +232,7 @@ class PaymentService
             $totals = $calculation['totals'];
 
             // El monto a pagar por el paciente es el Copago calculado
-            $copagoAmount = $totals['patient_share'];
+            $copagoAmount = $totals['patient_share_clp'];
 
             // 2. CREAR LAS INVOICES (Paciente por Copago, Aseguradora por Cobertura)
             $invoiceIds = $this->createInvoicesFromCoverage(
@@ -335,7 +335,7 @@ class PaymentService
                 Log::info("Servicio {$sessionId} no cubierto por convenio. Cobrado particular.");
             } else {
                 // Aplicar montos del tarifario interno
-                $gross = $coverageItem->gross_price * $quantity;
+                $gross = $coverageItem->gross_price_clp * $quantity;
                 $patient = $coverageItem->patient_share_clp * $quantity;
                 $insurance = $coverageItem->insurance_share_clp * $quantity;
                 $agreementId = $coverageItem->id;
@@ -350,7 +350,7 @@ class PaymentService
                 'company_id' => $this->companyId,
                 'branch_id' => $this->branchId,
                 'session_type_id' => $sessionId,
-                'agreement_item_id' => $agreementId,
+                'agreement_rule_id' => $agreementId,
                 'description' => $service->name,
                 'quantity' => $quantity,
                 'unit_price_clp' => $gross / $quantity,
@@ -366,8 +366,8 @@ class PaymentService
             'insurance_id' => $activePlan->pivot->insurance_id,
             'totals' => [
                 'total_gross_amount' => $totalGross,
-                'patient_share' => $totalPatientShare,
-                'insurance_share' => $totalInsuranceShare,
+                'patient_share_clp' => $totalPatientShare,
+                'insurance_share_clp' => $totalInsuranceShare,
             ],
             'items' => $invoiceItems,
         ];
@@ -385,13 +385,13 @@ class PaymentService
         $invoiceIds = ['patient_invoice_id' => null, 'insurance_invoice_id' => null];
 
         // 1. FACTURA PACIENTE (COPAGO)
-        if ($totals['patient_share'] > 0) {
+        if ($totals['patient_share_clp'] > 0) {
             $patientInvoice = $this->createInvoice(
                 'Patient',
                 $patient->id,
                 $patient,
                 $insuranceId,
-                $totals['patient_share'],
+                $totals['patient_share_clp'],
                 $totals
             );
             $patientInvoice->items()->createMany($items);
@@ -399,13 +399,13 @@ class PaymentService
         }
 
         // 2. FACTURA ASEGURADORA (CUENTAS POR COBRAR)
-        if ($totals['insurance_share'] > 0) {
+        if ($totals['insurance_share_clp'] > 0) {
             $insuranceInvoice = $this->createInvoice(
                 'Insurance',
                 $insuranceId, // El ID de la aseguradora
                 $patient,
                 $insuranceId,
-                $totals['insurance_share'],
+                $totals['insurance_share_clp'],
                 $totals
             );
             $insuranceInvoice->items()->createMany($items);
@@ -439,8 +439,8 @@ class PaymentService
             'insurance_id' => $insuranceId,
 
             'total_gross_amount' => $totals['total_gross_amount'],
-            'patient_share_clp' => $totals['patient_share'],
-            'insurance_share_clp' => $totals['insurance_share'],
+            'patient_share_clp' => $totals['patient_share_clp'],
+            'insurance_share_clp' => $totals['insurance_share_clp'],
 
             'net_clp' => $isPatient ? $payableAmount : 0,
             'iva_clp' => 0,
@@ -487,7 +487,7 @@ class PaymentService
                 'invoice_id' => null,
                 'debt_id' => $sessionId->debt->id,
                 'treatment_session_id' => $sessionId->id,
-                'amount_clp' => $sessionId->patient_amount,
+                'amount_clp' => $sessionId->patient_amount_clp,
             ]);
 
             // Actualizar sesión como pagada
@@ -538,7 +538,7 @@ class PaymentService
                 'company_id' => $companyId,
                 'branch_id' => $branchId,
                 'session_type_id' => $sessionId,
-                'agreement_item_id' => null, // No se usó ningún convenio
+                'agreement_rule_id' => null, // No se usó ningún convenio
                 'description' => $service->name,
                 'quantity' => $quantity,
                 'unit_price_clp' => $service->base_price_clp,
@@ -554,8 +554,8 @@ class PaymentService
             'insurance_id' => null, // No hay aseguradora involucrada
             'totals' => [
                 'total_gross_amount' => $totalGross,
-                'patient_share' => $totalGross, // El total bruto es el copago del paciente
-                'insurance_share' => 0,
+                'patient_share_clp' => $totalGross, // El total bruto es el copago del paciente
+                'insurance_share_clp' => 0,
             ],
             'items' => $invoiceItems,
         ];
@@ -979,7 +979,7 @@ class PaymentService
         }
 
         // Sin plan, usar precio de la sesión o default
-        return $session->patient_amount ?? $this->getDefaultSessionPrice($session);
+        return $session->patient_amount_clp ?? $this->getDefaultSessionPrice($session);
     }
 
     /**

@@ -8,29 +8,44 @@ use Illuminate\Database\Eloquent\Model;
 class SessionType extends Model
 {
     use Multitenantable;
-    
+
     protected $fillable = [
         'company_id',
         'name',
         'code',
         'category',
-        'base_price_clp',
         'duration_minutes',
-        'require_diagnosis',
-        'require_referral',
+        'base_price_clp',
         'plan_discount_clp',
+        'default_doctor_commission_clp',
+        'requires_diagnosis',
+        'requires_referral',
         'is_active'
     ];
 
     protected $casts = [
+        'requires_diagnosis' => 'boolean',
+        'requires_referral' => 'boolean',
         'is_active' => 'boolean',
-        'require_diagnosis' => 'boolean',
-        'require_referral' => 'boolean',
     ];
 
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function branchSettings()
+    {
+        return $this->belongsToMany(Branch::class, 'branch_session_type')
+            ->withPivot([
+                'custom_price_clp',
+                'custom_doctor_commission_clp',
+                'custom_duration_minutes',
+                'is_active_in_branch',
+                'custom_code',
+            ])
+            ->using(BranchSessionType::class) // Vinculamos el modelo Pivot
+            ->withTimestamps();
     }
 
     // Relaciones sugeridas (ajusta nombres de modelos si difieren)

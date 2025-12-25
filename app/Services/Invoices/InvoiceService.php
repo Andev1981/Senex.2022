@@ -2,157 +2,177 @@
 
 namespace App\Services\Invoices;
 
-use App\Models\{Invoice, InvoiceItem, TreatmentSession, PatientPlan, CompanySetting, Payment, SessionType};
-use Carbon\Carbon;
+use App\Models\Invoice;
+use App\Models\Payment;
+use App\Services\Dte\DteService;
+use App\Jobs\Dte\EmitDteJob; // Importamos el Job para el fallback
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 class InvoiceService
 {
-  public function processInvoice(Payment $payment, array $data, string $type = Invoice::TYPE_BOLETA): Invoice
+  // Inyectamos tu DteService, que es el que orquesta toda la lógica compleja (Folios, Mapper, Provider)
+  public function __construct(
+    protected DteService $dteService
+  ) {}
+
+  /**
+   * Proceso Híbrido: Crea el registro y trata de emitir DTE.
+   * Si falla el DTE, no rompe el flujo, sino que encola el Job.
+   */
+  public function processInvoice(Payment $payment, array $data): Invoice
   {
-    return DB::transaction(function () use ($payment, $data, $type) {
+    // 1. CREACIÓN LOCAL (Transacción DB)
+    // Separamos la creación de la emisión. Primero aseguramos el registro en BD.
+    $invoice = $this->createLocalInvoice($payment, $data);
 
-      $invoice = $this->createInvoice($payment, $data);
+    // 2. INTENTO DE EMISIÓN SÍNCRONA (Best Effort)
+    try {
+      // Llamamos a tu DteService que ya maneja folios, payload y firma.
+      $trackId = $this->dteService->issueInvoiceDte($invoice);
 
-      return $invoice->load('items');
-    });
+      // Si llegamos acá, ¡Éxito inmediato!
+      $invoice->refresh(); // Recargamos para tener el folio y status actualizados
+
+    } catch (\Throwable $e) {
+      // 3. FALLBACK: SI FALLA EL DTE (SII caído, Timeout, etc.)
+      // No lanzamos la excepción para no romper la venta en el POS.
+      Log::warning("Fallo emisión síncrona DTE Factura ID {$invoice->id}. Delegando a Job: " . $e->getMessage());
+
+      // Despachamos tu Job existente para que reintente en background
+      // Usamos delay para dar tiempo a que se estabilice la conexión
+      EmitDteJob::dispatch($invoice->id)->delay(now()->addSeconds(10));
+
+      // Opcional: Marcar estado interno indicando problema
+      $invoice->update([
+        'dte_status' => 'PENDING_RETRY',
+        'dte_notes'  => 'Fallo intento síncrono: ' . substr($e->getMessage(), 0, 200)
+      ]);
+    }
+
+    return $invoice->load('items');
   }
 
   /**
-   * Crea el registro de pago
+   * Crea SOLO el registro en base de datos (Lógica contable pura)
    */
-  private function createInvoice(Payment $payment, array $data): Invoice
+  protected function createLocalInvoice(Payment $payment, array $data): Invoice
   {
     return DB::transaction(function () use ($payment, $data) {
-
       $totalNeto = 0;
       $totalIva = 0;
       $totalExento = 0;
 
-      // 1. Primero iteramos los ítems para calcular los totales legales
+      // 1. Cálculos Contables
       foreach ($data['services_to_bill'] as $item) {
-        $subtotalItem = ($item['unit_patient'] ?? 0) * ($item['quantity'] ?? 1);
+        $subtotalItem = ($item['unit_patient_clp'] ?? 0) * ($item['quantity'] ?? 1);
 
-        // Determinamos si el ítem es afecto (por defecto en salud es exento: false)
+        // Lógica de Afecto/Exento
         $isAfecto = isset($item['is_product']) && $item['is_product'] === true;
 
         if ($isAfecto && $subtotalItem > 0) {
-          // Desglosamos el IVA (Total / 1.19)
           $neto = round($subtotalItem / 1.19);
           $iva = $subtotalItem - $neto;
-
           $totalNeto += $neto;
           $totalIva += $iva;
         } else {
-          // Todo a exento (Prestaciones médicas)
           $totalExento += $subtotalItem;
         }
       }
 
       $totalDocumento = $totalNeto + $totalIva + $totalExento;
 
-      // 2. Creamos el encabezado con los montos calculados
+      // 2. Crear Encabezado
       $invoice = Invoice::create([
-        'uuid'       => (string) \Illuminate\Support\Str::uuid(),
+        'uuid'       => (string) Str::uuid(),
         'company_id' => $payment->company_id,
         'branch_id'  => $payment->branch_id,
-        'user_id'    => auth()->id(),
+        'user_id'    => auth()->id(), // Ojo con esto si es Job, auth() puede ser null
         'patient_id' => $payment->patient_id,
         'payment_id' => $payment->id,
         'entity_type' => 'App\Models\Patient',
-        'entity_id'   => $payment->patient_id,
+        'entity_id'  => $payment->patient_id,
 
-        // Montos Contables Reales
-        'amount_neto'   => $totalNeto,
-        'amount_iva'    => $totalIva,
-        'amount_exento' => $totalExento,
-        'amount_total'  => $totalDocumento,
+        // Montos
+        'amount_neto_clp'   => $totalNeto,
+        'amount_iva_clp'    => $totalIva,
+        'amount_exento_clp' => $totalExento,
+        'amount_total_clp'  => $totalDocumento,
 
         // Desglose Clínico
-        'amount_gross'               => $data['final_shares']['amount_gross'] ?? 0,
-        'amount_insurance_primary'   => $data['final_shares']['amount_insurance_primary'] ?? 0,
-        'amount_insurance_secondary' => $data['final_shares']['amount_insurance_secondary'] ?? 0,
-        'amount_patient'             => $payment->amount_clp,
+        'amount_gross_clp'               => $data['final_shares']['amount_gross_clp'] ?? 0,
+        'amount_insurance_primary_clp'   => $data['final_shares']['amount_insurance_primary_clp'] ?? 0,
+        'amount_insurance_secondary_clp' => $data['final_shares']['amount_insurance_secondary_clp'] ?? 0,
+        'amount_patient_clp'             => $payment->amount_clp,
 
         'issue_date'     => now(),
-        // Lógica de tipo de DTE: Si hay Neto, es Boleta Afecta (39), si no, es Exenta (41)
-        'dte_type'       => ($totalNeto > 0) ? 39 : 41,
-        'dte_status'     => Invoice::SII_STATUS_PENDING,
-        'payment_status' => Invoice::PAYMENT_STATUS_PAID,
+        'dte_type'       => ($totalNeto > 0) ? 39 : 41, // 39: Boleta Afecta, 41: Exenta
+        'dte_status'     => 'CREATED', // Estado inicial interno
+        'payment_status' => 'PAID',
       ]);
 
       // 3. Crear los ítems vinculados (invoice_items)
       foreach ($data['services_to_bill'] as $item) {
-        // Calculamos totales por línea para mayor precisión
-        $qty = $item['quantity'] ?? 1;
-        $uPatient = $item['unit_patient'] ?? 0;
-        $uInsurance1 = $item['unit_insurance_primary'] ?? 0;
-        $uInsurance2 = $item['unit_insurance_secondary'] ?? 0;
-        $uPrice = $item['unit_price'] ?? 0; // Precio arancel base
 
-        $invoice->items()->create([
+        // A. Preparar variables básicas
+        $qty = $item['quantity'] ?? 1;
+        $uPrice = $item['unit_price_clp'] ?? 0;
+        $uPatient = $item['unit_patient_clp'] ?? 0;
+
+        // B. Lógica Polimórfica (El corazón del cambio)
+        // El frontend debe enviar 'type': 'product' o 'session' (o inferirlo por is_product)
+        $isProduct = isset($item['type']) && $item['type'] === 'product';
+
+        // Definimos el MorphMap (debe coincidir con AppServiceProvider)
+        $sellableType = $isProduct ? 'Products' : 'SessionTypes';
+
+        // Si es sesión, usamos el session_type_id; si es producto, el id del producto
+        $sellableId = $isProduct ? ($item['id'] ?? null) : ($item['session_type_id'] ?? null);
+
+        // C. Crear el registro
+        $invoiceItem = $invoice->items()->create([
           'company_id'      => $payment->company_id,
           'branch_id'       => $payment->branch_id,
 
-          // Relaciones Clínicas
-          'session_type_id'      => $item['session_type_id'] ?? null,
-          'treatment_session_id' => $item['treatment_session_id'] ?? null,
-          'agreement_item_id'    => $item['agreement_item_id'] ?? null,
+          // --- CAMPOS POLIMÓRFICOS (NUEVO) ---
+          'sellable_type'   => $sellableType,
+          'sellable_id'     => $sellableId,
 
-          // Datos del ítem
-          'description' => $item['name'] ?? 'Prestación de salud',
-          'quantity'    => $qty,
+          // --- CAMPOS MÉDICOS LEGADOS (SOLO SI ES SESIÓN) ---
+          'treatment_session_id' => !$isProduct ? ($item['treatment_session_id'] ?? null) : null,
+          'agreement_rule_id'    => !$isProduct ? ($item['agreement_rule_id'] ?? null) : null,
 
-          // Desglose de Precios Unitarios
-          'unit_price'               => $uPrice,
-          'unit_insurance_primary'   => $uInsurance1,
-          'unit_insurance_secondary' => $uInsurance2,
-          'unit_patient'             => $uPatient,
+          // --- DATOS FINANCIEROS ---
+          'description'     => $item['name'] ?? 'Ítem de venta',
+          'quantity'        => $qty,
 
-          // Totales de la línea
-          'total_gross'   => $uPrice * $qty,    // Total arancelario
-          'total_patient' => $uPatient * $qty,  // Lo que efectivamente paga el paciente (Base de la boleta)
+          'unit_price_clp'               => $uPrice,
+          'unit_insurance_primary_clp'   => $item['unit_insurance_primary_clp'] ?? 0,
+          'unit_insurance_secondary_clp' => $item['unit_insurance_secondary_clp'] ?? 0,
+          'unit_patient_clp'             => $uPatient,
 
-          // Identificador tributario (Basado en lo que definimos antes)
-          'is_exento' => $item['is_exento'] ?? true,
+          'total_gross_clp'   => $uPrice * $qty,
+          'total_patient_clp' => $uPatient * $qty,
+
+          // Si es producto, usa su flag 'is_exempt'. Si es sesión, por defecto es exento (true)
+          'is_exento'         => $isProduct ? ($item['is_exempt'] ?? false) : true,
         ]);
+
+        // D. Descuento de Stock (Solo si es Producto)
+        if ($isProduct && $sellableId) {
+          // Buscamos el producto (usando el modelo Product importado)
+          $productModel = Product::find($sellableId);
+
+          // Si existe y maneja stock, descontamos
+          if ($productModel && $productModel->manage_stock) {
+            $productModel->decrement('stock', $qty);
+          }
+        }
       }
 
       return $invoice;
     });
-  }
-
-  /**
-   * Simulación de envío a SII mediante proveedor (LibreDTE / etc.)
-   * Aquí deberías:
-   *  - construir el payload del documento,
-   *  - llamar al API del proveedor,
-   *  - guardar track_id, número, PDF/XML.
-   */
-  public function sendToSii(Invoice $invoice): void
-  {
-    // TODO: integrar proveedor real. Simulación:
-    $invoice->sii_status = Invoice::SII_STATUS_ACCEPTED;
-    $invoice->document_number = $invoice->id; // (simulado)
-    $invoice->sii_track_id = 'TRACK-' . $invoice->id;
-    $meta = $invoice->meta ?? [];
-    $meta['provider'] = 'SIMULATED';
-    $invoice->meta = $meta;
-    $invoice->save();
-  }
-
-  public function cancelWithCreditNote(Invoice $invoice, string $reason): Invoice
-  {
-    // TODO: emitir nota de crédito contra $invoice y actualizar estados
-    $invoice->status = Invoice::SII_STATUS_REJECTED;
-    $meta = $invoice->meta ?? [];
-    $meta['cancellation_note'] = $reason;
-    $invoice->meta = $meta;
-    $invoice->save();
-
-    return $invoice->fresh();
   }
 }

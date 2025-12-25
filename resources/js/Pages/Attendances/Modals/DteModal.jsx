@@ -48,7 +48,7 @@ export default function DteModal({
             <div className="flex justify-between text-base">
               <span className="font-bold text-gray-900">Total:</span>
               <span className="font-bold text-gray-900">
-                {fmtCLP(sessionData?.patient_amount)}
+                {fmtCLP(sessionData?.patient_amount_clp)}
               </span>
             </div>
           </div>

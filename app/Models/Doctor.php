@@ -40,15 +40,15 @@ class Doctor extends Model
         // Usa la tabla pivote 'company_doctor'. 
         // withPivot() te permite acceder a campos de la tabla pivote (como la tarifa).
         return $this->belongsToMany(Company::class, 'company_doctor')
-        ->withPivot('tarifa_acordada','porcentaje_comision','estado_convenio')
-        ->withTimestamps();
+            ->withPivot('tarifa_acordada', 'porcentaje_comision', 'estado_convenio')
+            ->withTimestamps();
     }
 
     public function branches()
     {
         return $this->belongsToMany(Branch::class, 'branch_doctor')
-                    ->withPivot(['status','mobile_app_access','status_reason','status_changed_at'])
-                    ->withTimestamps();
+            ->withPivot(['status', 'mobile_app_access', 'status_reason', 'status_changed_at'])
+            ->withTimestamps();
     }
 
     public function patientAssignments(): HasMany
@@ -56,20 +56,26 @@ class Doctor extends Model
         return $this->hasMany(DoctorPatientAssignment::class);
     }
 
-    public function patients(): BelongsToMany
+    public function patients()
     {
-        // sigue sirviendo belongsToMany para consultar “solo pacientes”
-          return $this->belongsToMany(Patient::class, 'doctor_patient_assignments')
-        ->select('patients.*', DB::raw('patients.id as patient_id'))
-        ->withPivot(['role', 'started_at', 'ended_at', 'notes', 'meta'])
-        ->withTimestamps();
+        return $this->belongsToMany(Patient::class, 'doctor_patient_assignments')
+            ->withPivot([
+                'company_id',   // <--- CRÍTICO: Para que funcione tu controller
+                'branch_id',    // <--- CRÍTICO: Para que funcione tu controller
+                'role',         // 'therapist', 'primary', etc.
+                'is_primary',
+                'started_at',
+                'ended_at'
+            ])
+            ->withTimestamps();
     }
 
-    public function sessions() : HasMany{
+    public function sessions(): HasMany
+    {
         return $this->hasMany(TreatmentSession::class);
     }
 
-     public function user() : BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -106,17 +112,17 @@ class Doctor extends Model
 
         return $rate->calculateCommission($basePrice);
     }
-        
+
     /* -------------- Attributes GETTERS ---------------- */
 
     /* Sesiones del mes */
     public function sessionsMonth(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->sessions()
-                            ->whereMonth('date', now()->month)
-                            ->whereYear('date', now()->year)
-                            ->count()
+            get: fn() => $this->sessions()
+                ->whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
+                ->count()
         );
     }
 
@@ -124,30 +130,29 @@ class Doctor extends Model
     public function revenueMonth(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->sessions()
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
-            ->sum('doctor_amount')
+            get: fn() => $this->sessions()
+                ->whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
+                ->sum('doctor_amount_clp')
         );
     }
-    
+
     /* Pacientes asignados */
-     public function assignedPatients(): Attribute
+    public function assignedPatients(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->patients ? $this->patients : null,
+            get: fn() => $this->patients ? $this->patients : null,
         );
     }
 
     /* Edad */
-    public function age() : Attribute
+    public function age(): Attribute
     {
         return Attribute::make(
-            get : fn () => trim(
-               $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
+            get: fn() => trim(
+                $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
             ),
         );
-       
     }
 
     /* Dirección completa */
@@ -155,32 +160,31 @@ class Doctor extends Model
     {
         return Attribute::make(
             // El Closure para el GETTER (lectura)
-            get: fn () => trim(
-               // 1. Acceso a la Calle: Usa Nullsafe en la relación ($this->address?->street)
+            get: fn() => trim(
+                // 1. Acceso a la Calle: Usa Nullsafe en la relación ($this->address?->street)
                 //    y la coalescencia de null (??) para asegurar una cadena vacía.
-                ($this->address?->street ?? '') 
-                
-                // 2. Acceso al Número: Nullsafe en la relación
-                . ' ' . ($this->address?->number ?? '') 
-                
-                // 3. Acceso a la Comuna: Nullsafe en la relación (address) Y en la sub-relación (commune)
-                . ' '. ($this->address?->commune?->name ?? '') 
-                
-                // 4. Acceso a la Provincia: Nullsafe en ambas relaciones
-                . ' '. ($this->address?->province?->name ?? '')
-                
-                // 5. Acceso a la Región: Nullsafe en ambas relaciones
-                . ' '. ($this->address?->region?->name ?? '')
+                ($this->address?->street ?? '')
+
+                    // 2. Acceso al Número: Nullsafe en la relación
+                    . ' ' . ($this->address?->number ?? '')
+
+                    // 3. Acceso a la Comuna: Nullsafe en la relación (address) Y en la sub-relación (commune)
+                    . ' ' . ($this->address?->commune?->name ?? '')
+
+                    // 4. Acceso a la Provincia: Nullsafe en ambas relaciones
+                    . ' ' . ($this->address?->province?->name ?? '')
+
+                    // 5. Acceso a la Región: Nullsafe en ambas relaciones
+                    . ' ' . ($this->address?->region?->name ?? '')
             ),
         );
-            
     }
 
     /* Nombre completo */
-     public function fullName(): Attribute
+    public function fullName(): Attribute
     {
         return Attribute::make(
-            get: fn () => trim(
+            get: fn() => trim(
                 ($this->name ?? '') . ' ' . ($this->last_name ?? '')
             ),
         );
@@ -193,9 +197,9 @@ class Doctor extends Model
         if (!$activeBranchId) return null;
 
         $branch = $this->branches()
-                    ->where('branches.id', $activeBranchId)
-                    ->withPivot(['id','status','mobile_app_access','status_reason','status_changed_at'])->first();
-        
+            ->where('branches.id', $activeBranchId)
+            ->withPivot(['id', 'status', 'mobile_app_access', 'status_reason', 'status_changed_at'])->first();
+
         if (!$branch) return null;
 
         // Retornamos un objeto limpio con los datos de la pivot a primer nivel si quieres

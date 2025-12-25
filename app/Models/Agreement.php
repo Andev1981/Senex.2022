@@ -39,7 +39,7 @@ class Agreement extends Model
     }
 
     // Un Acuerdo tiene muchas reglas de precio (AgreementRule)
-    public function items()
+    public function rules()
     {
         return $this->hasMany(AgreementRule::class);
     }

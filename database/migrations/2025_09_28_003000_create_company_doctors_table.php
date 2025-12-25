@@ -17,20 +17,20 @@ return new class extends Migration
 
             // Llaves Foráneas (Parte de la llave única compuesta)
             $table->foreignId('company_id')
-                  ->constrained()
-                  ->onDelete('cascade')
-                  ->comment('ID de la empresa/clínica que tiene el convenio.');
+                ->constrained()
+                ->onDelete('cascade')
+                ->comment('ID de la empresa/clínica que tiene el convenio.');
 
             $table->foreignId('doctor_id')
-                  ->constrained() // Asume que la tabla 'doctors' existe
-                  ->onDelete('cascade')
-                  ->comment('ID del doctor/profesional.');
+                ->constrained() // Asume que la tabla 'doctors' existe
+                ->onDelete('cascade')
+                ->comment('ID del doctor/profesional.');
 
             // Datos específicos del convenio
-            $table->decimal('tarifa_acordada', 10, 2)->nullable()->comment('Tarifa pactada con esta empresa.');
+            $table->decimal('tarifa_acordada_clp', 10, 2)->nullable()->comment('Tarifa pactada con esta empresa.');
             $table->unsignedDecimal('porcentaje_comision', 5, 2)->default(0.00)->comment('Porcentaje de comisión para la liquidación de esta empresa.');
             $table->enum('estado_convenio', ['activo', 'inactivo', 'pendiente'])->default('activo');
-            
+
             // Restricción: Un doctor solo puede tener una relación con una empresa
             $table->unique(['company_id', 'doctor_id']);
 

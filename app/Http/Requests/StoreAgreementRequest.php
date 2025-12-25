@@ -3,12 +3,10 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAgreementRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -16,13 +14,14 @@ class StoreAgreementRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        // 💡 Inyectar el company_id del usuario actual si no fue enviado
+        // 1. Inyectar company_id del usuario si no viene en el request
         if (!$this->has('company_id') && $this->user() && $this->user()->company_id) {
             $this->merge([
                 'company_id' => $this->user()->company_id,
             ]);
         }
-        // Aseguramos que 'is_active' sea booleano
+
+        // 2. Convertir is_active a booleano real
         if ($this->has('is_active')) {
             $this->merge(['is_active' => filter_var($this->input('is_active'), FILTER_VALIDATE_BOOLEAN)]);
         }
@@ -30,16 +29,33 @@ class StoreAgreementRequest extends FormRequest
 
     public function rules(): array
     {
-        // Validamos la unicidad: no puede haber dos convenios activos para la misma aseguradora/compañía
-        $uniqueRule = 'unique:agreements,insurance_id,' . ($this->agreement->id ?? 'NULL') . ',id,company_id,' . $this->input('company_id') . ',is_active,1';
+        $rules = [
+            'company_id'   => ['required', 'integer', 'exists:companies,id'],
+            'insurance_id' => ['required', 'integer', 'exists:insurances,id'],
+            'name'         => ['required', 'string', 'max:255'],
+            'version'      => ['nullable', 'string', 'max:50'],
+            'start_date'   => ['required', 'date'],
+            'is_active'    => ['required', 'boolean'],
+        ];
 
+        // LOGICA DE UNICIDAD CONDICIONAL:
+        // Solo verificamos duplicados si el usuario está intentando crear un convenio ACTIVO.
+        // Si is_active es false, permitimos crear el registro sin comprobar duplicados.
+        if ($this->boolean('is_active')) {
+            $rules['insurance_id'][] = Rule::unique('agreements', 'insurance_id')
+                ->where(function ($query) {
+                    return $query->where('company_id', $this->input('company_id'))
+                        ->where('is_active', true);
+                });
+        }
+
+        return $rules;
+    }
+
+    public function messages()
+    {
         return [
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
-            'insurance_id' => ['required', 'integer', 'exists:insurances,id', $uniqueRule],
-            'name' => ['required', 'string', 'max:255'],
-            'version' => ['nullable', 'string', 'max:50'],
-            'start_date' => ['required', 'date'],
-            'is_active' => ['required', 'boolean'],
+            'insurance_id.unique' => 'Ya existe un convenio activo para esta aseguradora en tu empresa.',
         ];
     }
 }

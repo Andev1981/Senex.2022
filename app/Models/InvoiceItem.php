@@ -12,22 +12,29 @@ class InvoiceItem extends Model
 
   protected $fillable = [
     'invoice_id',
-     'company_id',
+    'company_id',
     'branch_id',
-        'session_type_id',
-        'treatment_session_id',
-        'agreement_item_id',
-        'description',
-        'quantity',
-        'unit_price',
-        'unit_insurance_primary',
-        'unit_insurance_secondary',
-        'unit_patient',
-        'total_gross',
-        'total_patient',
-        'is_exento',
+    'session_type_id',
+    'treatment_session_id',
+    'agreement_rule_id',
+    'sellable_id',
+    'sellable_type',
+    'description',
+    'quantity',
+    'unit_price_clp',
+    'unit_insurance_primary_clp',
+    'unit_insurance_secondary_clp',
+    'unit_patient_clp',
+    'total_gross_clp',
+    'total_patient_clp',
+    'is_exento',
   ];
 
+  public function sellable()
+  {
+    // Esto permite que el ítem sea un "TreatmentSession" O un "Product"
+    return $this->morphTo();
+  }
 
   public function invoice()
   {
@@ -38,7 +45,7 @@ class InvoiceItem extends Model
   {
     return $this->belongsTo(TreatmentSession::class);
   }
-  
+
   public function sessionType()
   {
     return $this->belongsTo(SessionType::class);
@@ -48,7 +55,7 @@ class InvoiceItem extends Model
   public function syncLineTotal(): void
   {
     $qty = max(1, (int)$this->quantity);
-    $this->line_total = max(0, ($this->unit_price * $qty) - (float)$this->discount_amount);
+    $this->line_total = max(0, ($this->unit_price_clp * $qty) - (float)$this->discount_amount);
     $this->save();
   }
 }

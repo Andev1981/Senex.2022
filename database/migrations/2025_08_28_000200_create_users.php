@@ -10,7 +10,7 @@ return new class extends Migration {
         // Users base (ajusta si ya la tienes)
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+            $table->foreignId('company_id')->constrained()->comment('Llave foránea a la empresa dueña de este registro.');
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
@@ -19,8 +19,6 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
         });
-
-      
     }
 
     public function down(): void

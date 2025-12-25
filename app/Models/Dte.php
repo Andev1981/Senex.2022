@@ -9,4 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 class Dte extends Model
 {
     use HasFactory, Multitenantable;
+
+    // Relación inversa: "Dime quién me generó"
+    public function origin()
+    {
+        return $this->morphTo();
+    }
 }

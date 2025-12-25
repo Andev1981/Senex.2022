@@ -17,15 +17,50 @@ class TreatmentService
 
 
     /**
-     * Crea un tratamiento.
+     * Crea un tratamiento de forma manual (Desde botón "Nuevo Tratamiento").
      */
     public function createTreatment(array $data): Treatment
     {
-        // 1. Aseguramos que todas las operaciones se completen o ninguna (Transacción)
         return DB::transaction(function () use ($data) {
+            $patientId = $data['patient_id'];
 
-            // 1.1. Obtener la información necesaria
+            // ---------------------------------------------------------
+            // 1. HIGIENE AUTOMÁTICA (Zombies)
+            // ---------------------------------------------------------
+            // Cerramos tratamientos abandonados (sin movimiento > 60 días)
+            // Esto evita acumular basura histórica.
+            Treatment::where('patient_id', $patientId)
+                ->whereIn('status', ['evaluation', 'in_progress'])
+                ->where('updated_at', '<', now()->subDays(60))
+                ->update([
+                    'status' => 'interrupted',
+                    'outcome' => 'Cierre automático al crear nuevo tratamiento manual.'
+                ]);
+
+            // ---------------------------------------------------------
+            // 2. PAUSA INTENCIONAL (Controlado por el Usuario)
+            // ---------------------------------------------------------
+            // Si el frontend envía un checkbox "Pausar tratamientos anteriores", lo obedecemos.
+            // Esto es útil si el paciente dice "Ya no vendré por el hombro, ahora veamos la rodilla".
+            if (isset($data['should_pause_previous']) && $data['should_pause_previous']) {
+                Treatment::where('patient_id', $patientId)
+                    ->whereIn('status', ['evaluation', 'in_progress'])
+                    ->update(['status' => 'paused']);
+            }
+
+            // ---------------------------------------------------------
+            // 3. CREACIÓN (Trait se encarga del company_id)
+            // ---------------------------------------------------------
+            // Aseguramos valores por defecto si no vienen
+            $data['status'] = $data['status'] ?? 'evaluation';
+            $data['completed_sessions'] = 0;
+
+            // Si es manual, asumimos que el usuario definió 'total_sessions'. 
+            // Si no, ponemos un default (ej: 10 sesiones es estándar en bonos).
+            $data['total_sessions'] = $data['total_sessions'] ?? 10;
+
             $treatment = Treatment::create($data);
+
             return $treatment;
         });
     }
@@ -35,25 +70,60 @@ class TreatmentService
      */
     public function createTreatmentFromSession(array $data): Treatment
     {
-        // 1. Aseguramos que todas las operaciones se completen o ninguna (Transacción)
         return DB::transaction(function () use ($data) {
 
-            // 1.1. Obtener la información necesaria
-            $treatment = Treatment::firstOrCreate([
-                'patient_id' => $data['patient_id'],
-                'status' => 'evaluation'
-            ], [
-                'company_id' => $data['company_id'],
-                'branch_id' => $data['branch_id'],
-                'session_type_id' => $data['session_type_id'],
-                'patient_id' => $data['patient_id'],
-                'doctor_id' => $data['doctor_id'],
-                'start_date' => !empty($data['date']) ? $data['date'] : date('Y-m-d'),
-                'status' => "evaluation",
-                'is_indefinite' => true,
-                'current_phase' => 'functional_restoration'
+            $patientId = $data['patient_id'];
+
+            // ---------------------------------------------------------
+            // PASO 1: LIMPIEZA DE "ZOMBIES" (Higiene de Datos)
+            // ---------------------------------------------------------
+            // Buscamos tratamientos que quedaron abiertos pero están abandonados
+            // Criterio: Sin movimiento (updated_at) hace más de 60 días
+            Treatment::where('patient_id', $patientId)
+                ->whereIn('status', ['evaluation', 'in_progress'])
+                ->where('updated_at', '<', now()->subDays(60)) // 2 meses de inactividad
+                ->update([
+                    'status' => 'interrupted', // O 'paused'
+                    'outcome' => 'Cierre automático por inactividad al abrir nuevo tratamiento.'
+                ]);
+
+            // ---------------------------------------------------------
+            // PASO 2: BUSCAR ACTIVO (Reutilización)
+            // ---------------------------------------------------------
+            // Ahora buscamos si queda alguno realmente activo (Reciente)
+            $activeTreatment = Treatment::where('patient_id', $patientId)
+                ->whereIn('status', ['evaluation', 'in_progress'])
+                ->latest('updated_at')
+                ->first();
+
+            // Si encontramos uno activo reciente, ASUMIMOS que la sesión es para ese.
+            // NOTA: Si el Kine quería uno nuevo para otra lesión, debió crearlo manualmente en el Dashboard.
+            // Este método automático asume continuidad por defecto.
+            if ($activeTreatment) {
+                return $activeTreatment;
+            }
+
+            // ---------------------------------------------------------
+            // PASO 3: CREAR NUEVO (Si no hay activos recientes)
+            // ---------------------------------------------------------
+            $description = isset($data['diagnostic_code'])
+                ? "Tratamiento Auto ({$data['diagnostic_code']})"
+                : "Atención automática " . ($data['date'] ?? date('d-m-Y'));
+
+            return Treatment::create([
+                // Trait inyecta company_id / branch_id
+                'session_type_id' => $data['session_type_id'] ?? null,
+                'patient_id'      => $patientId,
+                'doctor_id'       => $data['doctor_id'],
+                'start_date'      => $data['date'] ?? now(),
+                'status'          => 'evaluation',
+                'total_sessions'  => 1,
+                'completed_sessions' => 0,
+                'is_indefinite'   => false,
+                'current_phase'   => 'evaluation',
+                'description'     => $description,
+                'diagnostic_code' => $data['diagnostic_code'] ?? null,
             ]);
-            return $treatment;
         });
     }
 

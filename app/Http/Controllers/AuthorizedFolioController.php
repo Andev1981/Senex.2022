@@ -3,64 +3,64 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuthorizedFolio;
-use App\Http\Requests\StoreAuthorizedFolioRequest;
-use App\Http\Requests\UpdateAuthorizedFolioRequest;
+use App\Models\Company;
+use Illuminate\Http\Request;
+use sasco\LibreDTE\Sii\Folios;
+use Illuminate\Support\Facades\DB;
 
 class AuthorizedFolioController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Company $company)
     {
-        //
+        return inertia('Dte/Folios/Index', [
+            'company' => $company,
+            'folios' => AuthorizedFolio::where('company_id', $company->id)
+                ->orderByDesc('created_at')
+                ->get()
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(Request $request, Company $company)
     {
-        //
-    }
+        $request->validate([
+            'archivo_caf' => 'required|file|mimes:xml,txt', // El CAF es un XML
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreAuthorizedFolioRequest $request)
-    {
-        //
-    }
+        try {
+            // 1. Leer el contenido del XML
+            $xmlContent = file_get_contents($request->file('archivo_caf')->getRealPath());
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(AuthorizedFolio $authorizedFolio)
-    {
-        //
-    }
+            // 2. Parsear con LibreDTE
+            // Nota: Folios hace validaciones internas de firma.
+            $foliosDte = new Folios($xmlContent);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(AuthorizedFolio $authorizedFolio)
-    {
-        //
-    }
+            // 3. Extraer datos automáticamente
+            $rutEmisor = $foliosDte->getEmisor();
+            $tipoDte = $foliosDte->getTipo();
+            $desde = $foliosDte->getDesde();
+            $hasta = $foliosDte->getHasta();
+            $fechaVenc = $foliosDte->getFechaVencimiento(); // Puede retornar string Y-m-d
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateAuthorizedFolioRequest $request, AuthorizedFolio $authorizedFolio)
-    {
-        //
-    }
+            // Validar que el CAF corresponda a la empresa actual
+            // Asumimos que company->rut tiene formato 12345678-9, LibreDTE suele devolver lo mismo
+            // Es buena práctica normalizar ambos antes de comparar.
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(AuthorizedFolio $authorizedFolio)
-    {
-        //
+            // 4. Guardar en Base de Datos
+            AuthorizedFolio::create([
+                'company_id' => $company->id,
+                'rut_emisor' => $rutEmisor,
+                'tipo_dte' => $tipoDte,
+                'folio_desde' => $desde,
+                'folio_hasta' => $hasta,
+                'ultimo_folio_usado' => $desde - 1, // Inicializamos antes del primero
+                'caf_xml' => $xmlContent, // Guardamos el XML crudo para firmar después
+                'fecha_vencimiento' => $fechaVenc,
+                'activo' => true
+            ]);
+
+            return back()->with('success', "CAF cargado: Tipo $tipoDte, Rango [$desde - $hasta]");
+        } catch (\Exception $e) {
+            return back()->withErrors(['archivo_caf' => 'Error al procesar el CAF: ' . $e->getMessage()]);
+        }
     }
 }

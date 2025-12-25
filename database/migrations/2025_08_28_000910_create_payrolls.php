@@ -24,10 +24,10 @@ return new class extends Migration {
       $t->date('period_end');
 
       $t->unsignedBigInteger('total_sessions')->default(0);
-      $t->unsignedBigInteger('total_patient_amount')->default(0);   // suma cobros base
-      $t->unsignedBigInteger('total_commission_amount')->default(0); // suma comisiones doctor
-      $t->unsignedBigInteger('total_adjustments')->default(0);       // bonos/descuentos
-      $t->unsignedBigInteger('total_payable')->default(0);           // neto a pagar
+      $t->unsignedBigInteger('total_patient_amount_clp')->default(0);   // suma cobros base
+      $t->unsignedBigInteger('total_commission_amount_clp')->default(0); // suma comisiones doctor
+      $t->unsignedBigInteger('total_adjustments_clp')->default(0);       // bonos/descuentos
+      $t->unsignedBigInteger('total_payable_clp')->default(0);           // neto a pagar
       $t->enum('status', ['draft', 'approved', 'paid', 'unpaid'])->default('draft')->index();
 
       // Pago
@@ -41,7 +41,6 @@ return new class extends Migration {
       // Evita duplicar liquidaciones del mismo médico para el mismo período
       $t->unique(['doctor_id', 'period_start', 'period_end'], 'uq_payroll_doctor_period');
     });
-
   }
 
   public function down(): void

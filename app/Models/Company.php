@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Company extends Model
 {
@@ -19,10 +22,21 @@ class Company extends Model
     ];
 
 
-    public function dteConfiguration()
+    // Configuración DTE (1 a 1)
+    public function dteConfiguration(): HasOne
     {
-        // Se recomienda usar el nombre en singular para la función
         return $this->hasOne(DteConfiguration::class);
     }
 
+    // Folios Autorizados - CAF (1 a Muchos) -> ESTA FALTABA
+    public function authorizedFolios(): HasMany
+    {
+        return $this->hasMany(AuthorizedFolio::class);
+    }
+
+    // Logo (Polimórfica)
+    public function logo(): MorphOne
+    {
+        return $this->morphOne(Image::class, 'imageable')->where('type', 'logo');
+    }
 }

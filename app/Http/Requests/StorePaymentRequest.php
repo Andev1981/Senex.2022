@@ -24,10 +24,10 @@ class StorePaymentRequest extends FormRequest
             'user_id'  => $this->user_id  ?: $userId,
         ]);
 
-        // 2. Sincronizar campo raíz amount_total para validación (Desde final_shares)
-        if ($this->has('final_shares.amount_patient')) {
+        // 2. Sincronizar campo raíz amount_total_clp para validación (Desde final_shares)
+        if ($this->has('final_shares.amount_patient_clp')) {
             $this->merge([
-                'amount_total' => $this->input('final_shares.amount_patient'),
+                'amount_total_clp' => $this->input('final_shares.amount_patient_clp'),
             ]);
         }
 
@@ -43,10 +43,10 @@ class StorePaymentRequest extends FormRequest
                     'session_type_id' => $item['session_type_id'],
                     'doctor_id'       => $item['doctor_id'] ?: null,
                     'quantity'        => $item['quantity'] ?: 1,
-                    'unit_price'      => (int) ($item['unit_price'] ?: 0),
-                    'unit_insurance_primary'   => (int) ($item['unit_insurance_primary'] ?? 0),
-                    'unit_insurance_secondary' => (int) ($item['unit_insurance_secondary'] ?? 0),
-                    'unit_patient'             => (int) ($item['unit_patient'] ?? 0),
+                    'unit_price_clp'      => (int) ($item['unit_price_clp'] ?: 0),
+                    'unit_insurance_primary_clp'   => (int) ($item['unit_insurance_primary_clp'] ?? 0),
+                    'unit_insurance_secondary_clp' => (int) ($item['unit_insurance_secondary_clp'] ?? 0),
+                    'unit_patient_clp'             => (int) ($item['unit_patient_clp'] ?? 0),
                     'debt_id'         => $item['debt_id'] ?? null,
                     'treatment_id'    => $item['treatment_id'] ?? null,
                     'session_id'      => $item['session_id'] ?? null,
@@ -65,7 +65,7 @@ class StorePaymentRequest extends FormRequest
             'patient_id' => ['required', 'exists:patients,id'],
             'company_id' => ['required', 'exists:companies,id'],
             'branch_id'  => ['required', 'exists:branches,id'],
-            'amount_total' => ['required', 'numeric', 'min:0'], // El copago a validar en raíz
+            'amount_total_clp' => ['required', 'numeric', 'min:0'], // El copago a validar en raíz
 
             // --- Cobertura (Metadata) ---
             'coverage_details' => ['nullable', 'array'],
@@ -79,8 +79,8 @@ class StorePaymentRequest extends FormRequest
             'services_to_bill' => ['required', 'array', 'min:1'],
             'services_to_bill.*.session_type_id' => ['required', 'exists:session_types,id'],
             'services_to_bill.*.quantity'        => ['required', 'numeric', 'min:1'],
-            'services_to_bill.*.unit_price'      => ['required', 'numeric'],
-            'services_to_bill.*.unit_patient'    => ['required', 'numeric'],
+            'services_to_bill.*.unit_price_clp'      => ['required', 'numeric'],
+            'services_to_bill.*.unit_patient_clp'    => ['required', 'numeric'],
             'services_to_bill.*.doctor_id'       => ['required_without:services_to_bill.*.debt_id', 'nullable', 'exists:doctors,id'],
 
             // --- Detalles del Pago Físico ---
@@ -91,11 +91,11 @@ class StorePaymentRequest extends FormRequest
 
             // --- Shares Finales (Para Invoices y Receivables) ---
             'final_shares' => ['required', 'array'],
-            'final_shares.amount_gross'               => ['required', 'numeric'],
-            'final_shares.amount_insurance_primary'   => ['required', 'numeric'],
-            'final_shares.amount_insurance_secondary' => ['required', 'numeric'],
-            'final_shares.amount_patient'             => ['required', 'numeric'],
-            'final_shares.discount'                   => ['required', 'numeric'],
+            'final_shares.amount_gross_clp'               => ['required', 'numeric'],
+            'final_shares.amount_insurance_primary_clp'   => ['required', 'numeric'],
+            'final_shares.amount_insurance_secondary_clp' => ['required', 'numeric'],
+            'final_shares.amount_patient_clp'             => ['required', 'numeric'],
+            'final_shares.discount_clp'                   => ['required', 'numeric'],
         ];
     }
 
@@ -117,7 +117,7 @@ class StorePaymentRequest extends FormRequest
             'services_to_bill.min'      => 'Debes seleccionar al menos un servicio para facturar.',
             'services_to_bill.*.session_type_id.required' => 'Falta el tipo de prestación en una de las líneas.',
             'services_to_bill.*.doctor_id.required_without' => 'Debes asignar un profesional a las nuevas prestaciones.',
-            'services_to_bill.*.unit_price.required' => 'El precio unitario no puede estar vacío.',
+            'services_to_bill.*.unit_price_clp.required' => 'El precio unitario no puede estar vacío.',
 
             // Mensajes de Pago
             'payment_details.payment_method.required' => 'Selecciona un medio de pago (Efectivo, Webpay, etc.).',
@@ -125,19 +125,19 @@ class StorePaymentRequest extends FormRequest
             'payment_details.payment_date.required'   => 'La fecha del pago es obligatoria.',
 
             // Mensajes de Totales (Consistencia)
-            'final_shares.amount_gross.required' => 'Error en el cálculo: Falta el total bruto.',
-            'final_shares.amount_patient.required' => 'Error en el cálculo: El copago no ha sido definido.',
-            'final_shares.amount_patient.min' => 'El copago no puede ser un valor negativo.',
+            'final_shares.amount_gross_clp.required' => 'Error en el cálculo: Falta el total bruto.',
+            'final_shares.amount_patient_clp.required' => 'Error en el cálculo: El copago no ha sido definido.',
+            'final_shares.amount_patient_clp.min' => 'El copago no puede ser un valor negativo.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'final_shares.amount_gross' => 'Total Bruto',
-            'final_shares.amount_insurance_primary' => 'Aporte Isapre',
-            'final_shares.amount_insurance_secondary' => 'Aporte Complementario',
-            'final_shares.amount_patient' => 'Copago',
+            'final_shares.amount_gross_clp' => 'Total Bruto',
+            'final_shares.amount_insurance_primary_clp' => 'Aporte Isapre',
+            'final_shares.amount_insurance_secondary_clp' => 'Aporte Complementario',
+            'final_shares.amount_patient_clp' => 'Copago',
             'payment_details.payment_method' => 'Medio de Pago',
             'services_to_bill.*.doctor_id' => 'Profesional',
         ];
