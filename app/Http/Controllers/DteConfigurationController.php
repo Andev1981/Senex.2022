@@ -13,11 +13,13 @@ class DteConfigurationController extends Controller
 {
     public function storeOrUpdate(Request $request, Company $company)
     {
+        $this->authorize('update', $company);
         $request->validate([
             'rut_empresa' => 'required|string',
             'certificado_file' => 'nullable|file|mimes:p12,pfx|max:2048', // PFX suele ser p12
             'certificado_password' => 'required_with:certificado_file|string',
             'ambiente' => 'required|in:homologacion,produccion',
+            'simulation_mode' => 'required|boolean',
         ]);
 
         DB::beginTransaction();
@@ -27,6 +29,7 @@ class DteConfigurationController extends Controller
 
             $config->rut_empresa = $request->rut_empresa;
             $config->ambiente = $request->ambiente;
+            $config->simulation_mode = $request->simulation_mode;
 
             // Lógica de Certificado Digital
             if ($request->hasFile('certificado_file')) {

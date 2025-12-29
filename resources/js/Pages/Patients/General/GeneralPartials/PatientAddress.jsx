@@ -72,57 +72,64 @@ export default function PatientAddress({
   );
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="flex items-center justify-between mb-4 text-xl font-bold text-gray-900">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-green-600" />
-          Dirección
+    <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-[2rem] relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+      
+      <h2 className="flex items-center justify-between mb-8 text-lg font-black text-gray-900 tracking-tight uppercase relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-50 rounded-xl text-green-600">
+            <MapPin className="w-5 h-5" />
+          </div>
+          Localización
         </div>
-        <div
-          className="hover:cursor-pointer"
+        <button
           onClick={() => setOpenAddressModal(true)}
+          className="p-2.5 text-gray-300 hover:text-brand-primary hover:bg-brand-secondary/10 rounded-xl transition-all active:scale-90"
         >
-          <Edit className="w-5 h-5 text-gray-300 transition-colors hover:text-gray-400" />
-        </div>
+          <Edit className="w-5 h-5" />
+        </button>
       </h2>
-      <div className="p-4 border-l-4 border-green-500 rounded-lg bg-green-50">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="">
-            <p className="mb-1 text-sm text-gray-600">Región</p>
-            <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {address?.region?.name}
+
+      <div className="p-6 border-2 border-gray-50 rounded-3xl bg-gray-50/30 relative z-10">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Región</p>
+            <p className="text-sm font-black text-gray-700 uppercase tracking-tight">
+              {address?.region?.name || 'No especificada'}
             </p>
           </div>
-          <div className="">
-            <p className="mb-1 text-sm text-gray-600">Provincia</p>
-            <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {address?.province?.name}
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Provincia</p>
+            <p className="text-sm font-black text-gray-700 uppercase tracking-tight">
+              {address?.province?.name || 'No especificada'}
             </p>
           </div>
-          <div className="">
-            <p className="mb-1 text-sm text-gray-600">Comuna</p>
-            <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {address?.commune?.name}
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Comuna</p>
+            <p className="text-sm font-black text-gray-700 uppercase tracking-tight">
+              {address?.commune?.name || 'No especificada'}
             </p>
           </div>
-          <div className="col-span-2">
-            <p className="mb-1 text-sm text-gray-600">Calle</p>
-            <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {address?.street}
+          <div className="col-span-2 space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Calle / Avenida</p>
+            <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
+              {address?.street || 'Sin información'}
             </p>
           </div>
-          <div className="">
-            <p className="mb-1 text-sm text-gray-600">Número</p>
-            <p className="flex items-center gap-2 font-semibold text-gray-900">
-              #{address?.number}
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">N°</p>
+            <p className="text-sm font-black text-brand-primary font-mono">
+              #{address?.number || '---'}
             </p>
           </div>
-          <div className="">
-            <p className="mb-1 text-sm text-gray-600">Detalles</p>
-            <p className="flex items-center gap-2 font-semibold text-gray-900">
-              {address?.details}
-            </p>
-          </div>
+          {address?.details && (
+            <div className="col-span-3 space-y-1 pt-4 border-t border-gray-100">
+                <p className="enterprise-label !text-[8px] opacity-60">Observaciones de Entrega / Acceso</p>
+                <p className="text-xs font-bold text-gray-500 uppercase italic">
+                {address?.details}
+                </p>
+            </div>
+          )}
         </div>
       </div>
       <ResourceFormModal

@@ -16,8 +16,16 @@ import {
   BrickWallShield,
   Plus,
   ListCheck,
+  Layers,
+  Database,
+  CheckCircle2,
+  XCircle,
+  Users,
+  DollarSign
 } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
+import TablePagination from "@/Components/TablePagination";
+import { fmtCLP } from "@/utils/utils";
 
 export default function TablePlans({
   plans,
@@ -28,139 +36,98 @@ export default function TablePlans({
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
-  const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
 
   const data = useMemo(() => plans || [], [plans]);
 
-  const filteredData = useMemo(() => {
-    if (!globalFilter) return data;
-    const filter = globalFilter.toLowerCase();
-    return data.filter((row) =>
-      Object.values(row).some(
-        (val) => val && val.toString().toLowerCase().includes(filter)
-      )
-    );
-  }, [globalFilter, data]);
-
-  const columns = useMemo(
-    () => [
-      {
+  const columns = useMemo(() => [
+    {
+        accessorKey: "name",
+        header: "Nombre del Plan",
+        cell: ({ getValue, row }) => (
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-brand-primary/10 text-brand-primary rounded-xl">
+                    <Database className="w-4 h-4" />
+                </div>
+                <div>
+                    <p className="text-[11px] font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{getValue()}</p>
+                    <p className="font-mono text-[9px] font-bold text-gray-400 uppercase">Ref: {row.original.code || 'S/C'}</p>
+                </div>
+            </div>
+        )
+    },
+    {
+        accessorKey: "billing_type",
+        header: "Facturación",
+        cell: ({ getValue }) => (
+            <div className="px-3 py-1 bg-gray-50 rounded-lg border border-gray-100 w-fit">
+                <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">{getValue() || 'Estándar'}</span>
+            </div>
+        )
+    },
+    {
+        accessorKey: "is_family",
+        header: "Alcance",
+        cell: ({ getValue }) => (
+            <div className={`flex items-center gap-2 px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border w-fit ${getValue() ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>
+                <Users className="w-3 h-3" />
+                {getValue() ? 'Familiar' : 'Individual'}
+            </div>
+        )
+    },
+    {
+        accessorKey: "coverage_percentage",
+        header: "Cobertura",
+        cell: ({ getValue }) => (
+            <div className="text-center font-mono font-black text-xs text-brand-primary">
+                {getValue()}%
+            </div>
+        )
+    },
+    {
+        accessorKey: "is_active",
+        header: "Estado",
+        cell: ({ getValue }) => (
+            <div className="text-center">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${
+                    getValue() ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+                }`}>
+                    {getValue() ? 'Activo' : 'Baja'}
+                </span>
+            </div>
+        )
+    },
+    {
         id: "actions",
-        header: "",
+        header: "Acciones",
         cell: ({ row }) => (
-          <div className="flex gap-1">
-            <PrimaryButton
-              type="button"
-              className="p-1 btn"
-              onClick={() => handleOpenModalPlanEdit(row?.original)}
+          <div className="flex items-center justify-end gap-1">
+            <button
+              className="p-2 text-gray-400 hover:text-brand-primary hover:bg-brand-secondary/10 rounded-xl transition-all active:scale-90"
+              onClick={() => handleOpenModalPlanEdit(row.original)}
             >
               <Pencil className="w-4 h-4" />
-            </PrimaryButton>
-            <PrimaryButton
-              type="button"
-              className="p-1 bg-red-600 btn"
-              onClick={() => handleOpenModalPlanDelete(row?.original)}
+            </button>
+            <button
+              className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-90"
+              onClick={() => handleOpenModalPlanDelete(row.original)}
             >
               <Trash2 className="w-4 h-4" />
-            </PrimaryButton>
+            </button>
           </div>
         ),
         enableSorting: false,
-      },
-      {
-        accessorKey: "name",
-        header: "NOMBRE",
-        cell: ({ getValue }) => (
-          <div className="font-medium uppercase">{getValue()}</div>
-        ),
-      },
-      {
-        accessorKey: "code",
-        header: "CÓDIGO",
-        cell: ({ getValue }) => (
-          <div className="text-gray-600">{getValue()}</div>
-        ),
-      },
-      {
-        accessorKey: "billing_type",
-        header: "TIPO DE PAGO",
-        cell: ({ getValue }) => (
-          <div className="text-gray-600">{getValue() || "-"}</div>
-        ),
-      },
-      {
-        accessorKey: "is_family",
-        header: "PLAN FAMILIAR",
-        cell: ({ getValue }) => {
-          const isActive = getValue();
-          return (
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                isActive
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
-              {isActive ? "Activo" : "Inactivo"}
-            </span>
-          );
-        },
-      },
-      {
-        accessorKey: "price",
-        header: "PRECIO",
-        cell: ({ getValue }) => (
-          <div className="text-gray-600">{getValue() || "-"}</div>
-        ),
-      },
-      {
-        accessorKey: "coverage_percentage",
-        header: "COVERTURA %",
-        cell: ({ getValue }) => (
-          <div className="text-gray-600">{getValue() || "-"}</div>
-        ),
-      },
-      {
-        accessorKey: "is_active",
-        header: "ESTADO",
-        cell: ({ getValue }) => {
-          const isActive = getValue();
-          return (
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                isActive
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
-              }`}
-            >
-              {isActive ? "Activo" : "Inactivo"}
-            </span>
-          );
-        },
-        filterFn: "equals",
-      },
-    ],
-    [handleOpenModalPlanEdit, handleOpenModalPlanDelete]
-  );
+    }
+  ], [handleOpenModalPlanEdit, handleOpenModalPlanDelete]);
 
   const table = useReactTable({
-    data: filteredData,
+    data,
     columns,
-    state: {
-      sorting,
-      globalFilter,
-      columnFilters,
-      pagination: { pageSize, pageIndex },
-    },
+    state: { sorting, globalFilter, pagination: { pageSize, pageIndex } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
     onPaginationChange: (updater) => {
-      const newState =
-        typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
-          : updater;
+      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
       setPageIndex(newState.pageIndex);
       setPageSize(newState.pageSize);
     },
@@ -172,134 +139,84 @@ export default function TablePlans({
   });
 
   return (
-    <div>
-      <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow mb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-            <ListCheck className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {insurance && "Planes: " + insurance?.name}
-            </h1>
-            <p className="text-sm text-gray-600">Gestión de planes</p>
-          </div>
+    <div className="flex flex-col h-full bg-white animate-in fade-in duration-500">
+      {/* HEADER HERO INTERNO */}
+      <div className="p-8 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between gap-6 shrink-0 rounded-t-[2rem]">
+        <div className="flex items-center gap-4">
+            <div className="p-3 bg-brand-primary text-white rounded-2xl shadow-xl shadow-brand-primary/20 transform rotate-3">
+                <ListCheck className="w-6 h-6" />
+            </div>
+            <div>
+                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">Portafolio de Planes</h2>
+                <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em] flex items-center gap-2">
+                    <BrickWallShield className="w-3.5 h-3.5 opacity-40" /> {insurance?.name}
+                </p>
+            </div>
         </div>
-        <div className="flex gap-2">
-          <button
+        <button
             onClick={() => handleOpenModalPlanEdit()}
-            className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
-          >
-            <Plus className="w-4 h-4" />
-            Nuevo Plan
-          </button>
-        </div>
+            className="flex items-center gap-3 px-6 py-3 font-black uppercase tracking-widest text-[9px] text-white transition-all bg-brand-primary rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
+        >
+            <Plus className="w-4 h-4" /> Nuevo Plan
+        </button>
       </div>
 
-      {/* Global Filter */}
-      <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow mb-4">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute w-4 h-4 text-gray-400 top-2 left-2" />
+      <div className="flex-1 p-8 space-y-6 overflow-y-auto custom-scrollbar">
+        {/* FILTRO RÁPIDO */}
+        <div className="relative group max-w-md">
+          <Search className="absolute w-4 h-4 text-brand-gray transform -translate-y-1/2 left-4 top-1/2 group-focus-within:text-brand-primary transition-colors" />
           <input
             value={globalFilter ?? ""}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Buscar plan..."
-            className="w-full py-2 pl-8 pr-3 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Buscar por nombre o código..."
+            className="w-full py-3.5 pl-12 pr-4 border-gray-100 bg-gray-50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary text-xs font-bold transition-all outline-none"
           />
         </div>
+
+        {/* TABLA TANSTACK COMPACTA */}
+        <div className="bg-white border border-gray-100 shadow-xl rounded-[2rem] overflow-hidden">
+            <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full border-collapse">
+                    <thead>
+                        {table.getHeaderGroups().map(headerGroup => (
+                            <tr key={headerGroup.id} className="bg-gray-50/50 border-b border-gray-100">
+                                {headerGroup.headers.map(header => (
+                                    <th key={header.id} className="px-6 py-4 text-left select-none group cursor-pointer" onClick={header.column.getToggleSortingHandler()}>
+                                        <div className={`flex items-center gap-2 ${header.column.id === 'actions' ? 'justify-end' : ''} ${['is_active', 'coverage_percentage'].includes(header.column.id) ? 'justify-center' : ''}`}>
+                                            <span className="enterprise-label !mb-0 text-gray-900 group-hover:text-brand-primary transition-colors">
+                                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                            </span>
+                                            {header.column.getCanSort() && (
+                                                header.column.getIsSorted() === "asc" ? <ChevronUp className="w-3 h-3 text-brand-primary" /> : <ChevronDown className="w-3 h-3 text-brand-primary" />
+                                            )}
+                                        </div>
+                                    </th>
+                                ))}
+                            </tr>
+                        ))}
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {table.getRowModel().rows.length > 0 ? (
+                            table.getRowModel().rows.map(row => (
+                                <tr key={row.id} className="hover:bg-brand-secondary/5 transition-all group">
+                                    {row.getVisibleCells().map(cell => (
+                                        <td key={cell.id} className="px-6 py-3 whitespace-nowrap">
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : (
+                            <tr><td colSpan="6" className="py-20 text-center opacity-30 enterprise-label italic">Sin planes configurados para esta entidad</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+            <div className="bg-gray-50/30 border-t border-gray-100">
+                <TablePagination table={table} total={plans.length} pageSize={pageSize} setPageSize={setPageSize} pageSizeOptions={[5, 10, 20]} />
+            </div>
+        </div>
       </div>
-
-      <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow mb-4">
-        <table className="min-w-[700px] w-full border-collapse border border-gray-200 shadow-sm rounded-md overflow-hidden">
-          <thead className="bg-gray-100">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className="px-2 py-1 text-sm font-semibold text-left text-gray-700 transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
-                    scope="col"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    <span>
-                      {header.column.getIsSorted() === "asc" ? (
-                        <ChevronUp className="inline w-4 h-4 ml-1" />
-                      ) : header.column.getIsSorted() === "desc" ? (
-                        <ChevronDown className="inline w-4 h-4 ml-1" />
-                      ) : null}
-                    </span>
-
-                    {header.column.getCanFilter() &&
-                      header.column.id === "is_active" && (
-                        <div className="mt-1">
-                          <select
-                            value={header.column.getFilterValue() ?? ""}
-                            onChange={(e) =>
-                              header.column.setFilterValue(
-                                e.target.value !== ""
-                                  ? e.target.value === "true"
-                                  : undefined
-                              )
-                            }
-                            className="w-full p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          >
-                            <option value="">All</option>
-                            <option value="true">Active</option>
-                            <option value="false">Inactive</option>
-                          </select>
-                        </div>
-                      )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="py-6 text-center text-gray-500"
-                >
-                  No se han creado planes
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="transition even:bg-gray-50 hover:bg-gray-100"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-2 py-1 text-sm border border-gray-200"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {/* <TablePagination
-        table={table}
-        total={plans.length}
-        pageSize={pageSize}
-        setPageSize={setPageSize}
-        pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]}
-      /> */}
     </div>
   );
 }

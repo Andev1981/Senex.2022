@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/Components/SideModal";
-import DoctorModalForm from "./DoctorModalForm";
 import TableDoctors from "./TableDoctors";
 import DoctorDetailModal from "./DoctorDetailModal";
-import DoctorAttendances from "./DoctorAttendances";
+import DoctorCommissions from "./Partials/DoctorCommissions";
+import DoctorPatients from "./Partials/DoctorPatients";
 import Kpis from "./Partials/Kpis";
 import { HeaderDoctors } from "./Partials/HeaderDoctor";
-import { Smartphone, ShieldBan } from "lucide-react";
+import { Smartphone, ShieldBan, ShieldCheck, AlertCircle, XCircle, UserCog } from "lucide-react";
 
 export default function Index({
   doctors,
@@ -18,135 +18,104 @@ export default function Index({
   provinces,
   regions,
 }) {
-  // Estado principal de doctores (para poder editar)
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpenDetail, setIsModalOpenDetail] = useState(false);
-  const [isModalOpenAttendences, setIsModalOpenAttendences] = useState(false);
+  const [isModalOpenCommissions, setIsModalOpenCommissions] = useState(false);
+  const [isModalOpenPatients, setIsModalOpenPatients] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (statusObj) => {
+    const status = typeof statusObj === 'object' ? statusObj?.status : statusObj;
     switch (status) {
       case "active":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-            <span className="w-1.5 h-1.5 mr-1.5 bg-green-600 rounded-full"></span>
-            Activo
+          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-green-50 text-green-600 border border-green-100 shadow-sm shadow-green-500/5">
+            <span className="w-1.5 h-1.5 mr-2 bg-green-500 rounded-full animate-pulse"></span>
+            Operativo
           </span>
         );
       case "suspended":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-amber-50 text-amber-600 border border-amber-100 shadow-sm">
+            <AlertCircle className="w-3 h-3 mr-1.5" />
             Suspendido
           </span>
         );
-      case "cancelled": // o inactivo
+      case "cancelled":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-            Cancelado
+          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-red-50 text-red-600 border border-red-100 shadow-sm">
+            <XCircle className="w-3 h-3 mr-1.5" />
+            Inactivo
           </span>
         );
-      default: // unassigned
+      default:
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-            Sin Asignar
+          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-gray-50 text-gray-400 border border-gray-100">
+            Desconocido
           </span>
         );
     }
   };
 
   const getMobileBadge = (mobile_app_access) => {
-    if (mobile_app_access) {
-      return (
-        <div
-          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200"
-          title="Tiene acceso a la App Móvil"
-        >
-          <Smartphone className="w-3.5 h-3.5" strokeWidth={2.5} />
-          <span>App Móvil</span>
-        </div>
-      );
-    }
-
     return (
-      <div
-        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-400 border border-gray-200 opacity-80"
-        title="No tiene acceso a la App"
-      >
-        <ShieldBan className="w-3.5 h-3.5" />
-        <span>Sin App</span>
-      </div>
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] border shadow-sm transition-all ${
+            mobile_app_access 
+            ? "bg-brand-secondary/10 text-brand-primary border-brand-secondary/20" 
+            : "bg-gray-50 text-gray-300 border-gray-100 opacity-60"
+        }`}>
+            {mobile_app_access ? <Smartphone className="w-3 h-3" /> : <ShieldBan className="w-3 h-3" />}
+            {mobile_app_access ? 'Mobile Link' : 'No App'}
+        </div>
     );
   };
 
   return (
     <AuthenticatedLayout>
-      <Head title="Kinesiólogos" />
+      <Head title="Especialistas Médicos" />
 
-      <div className="min-h-screen p-4 bg-gray-50">
-        {/* Header */}
+      <div className="min-h-screen p-6 md:p-10 bg-gray-50/50 space-y-10">
         <HeaderDoctors
           setSelectedDoctor={setSelectedDoctor}
           setIsModalOpenDetail={setIsModalOpenDetail}
         />
 
-        {/* KPIs */}
         <Kpis doctors={doctors} />
 
-        {/* TableDoctor */}
         <TableDoctors
           doctors={doctors}
           setSelectedDoctor={setSelectedDoctor}
-          setIsModalOpen={setIsModalOpen}
+          setIsModalOpenCommissions={setIsModalOpenCommissions}
+          setIsModalOpenPatients={setIsModalOpenPatients}
           setIsModalOpenDetail={setIsModalOpenDetail}
-          setIsModalOpenAttendences={setIsModalOpenAttendences}
           getStatusBadge={getStatusBadge}
           getMobileBadge={getMobileBadge}
         />
       </div>
-      {/* Modal */}
-      <SideModal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={"Ficha de Kine"}
-        width="4xl" // sm, md, lg, xl, 2xl, 3xl, full
-      >
-        <DoctorModalForm
-          selectedDoctor={selectedDoctor}
-          setIsModalOpen={setIsModalOpen}
+
+      {/* MODAL: TARIFARIO & COMISIONES */}
+      <SideModal open={isModalOpenCommissions} onClose={() => setIsModalOpenCommissions(false)} width="4xl">
+        <DoctorCommissions
+          doctor={selectedDoctor}
           sessionTypes={sessionTypes}
-          patients={patients}
-          getStatusBadge={getStatusBadge}
         />
       </SideModal>
 
-      <SideModal
-        open={isModalOpenDetail}
-        onClose={() => setIsModalOpenDetail(false)}
-        title={"Detalle Kine"}
-        width="4xl" // sm, md, lg, xl, 2xl, 3xl, full
-      >
+      {/* MODAL: CARTERA DE PACIENTES */}
+      <SideModal open={isModalOpenPatients} onClose={() => setIsModalOpenPatients(false)} width="4xl">
+        <DoctorPatients
+          doctor={selectedDoctor}
+          patients={patients}
+        />
+      </SideModal>
+
+      {/* MODAL: REGISTRO & DIRECCIÓN */}
+      <SideModal open={isModalOpenDetail} onClose={() => setIsModalOpenDetail(false)} width="4xl">
         <DoctorDetailModal
           doctor={selectedDoctor}
           provinces={provinces}
           regions={regions}
           communes={communes}
           setIsModalOpenDetail={setIsModalOpenDetail}
-        />
-      </SideModal>
-
-      <SideModal
-        open={isModalOpenAttendences}
-        onClose={() => setIsModalOpenAttendences(false)}
-        title={"Atenciones Kine"}
-        width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
-      >
-        <DoctorAttendances
-          doctor={selectedDoctor}
-          sessions={selectedDoctor?.sessions?.filter(
-            (s) => s.status === "completed"
-          )}
-          setIsModalOpenAttendences={setIsModalOpenAttendences}
         />
       </SideModal>
     </AuthenticatedLayout>

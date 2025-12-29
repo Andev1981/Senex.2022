@@ -82,7 +82,21 @@ export default function PosIndex({
     if (data.patient_id) {
       axios
         .get(route("patients.status", data.patient_id))
-        .then((res) => setPatientExtras(res.data))
+        .then((res) => {
+          setPatientExtras(res.data);
+          
+          // Si el paciente tiene seguro activo, lo inyectamos automáticamente
+          if (res.data.insurance) {
+            setData((prev) => ({
+              ...prev,
+              coverage_details: {
+                ...prev.coverage_details,
+                insurance_id: res.data.insurance.id,
+                plan_id: res.data.insurance.plan_id,
+              }
+            }));
+          }
+        })
         .catch((err) => console.error("Error cargando paciente:", err));
     }
   }, [data.patient_id]);
@@ -139,8 +153,8 @@ export default function PosIndex({
       let primaryAmount = 0;
       let secondaryAmount = 0;
 
-      // Solo calculamos seguros si NO es una deuda antigua
-      if (!s.is_debt) {
+      // Solo calculamos seguros si NO es una deuda antigua Y NO usa plan
+      if (!s.is_debt && !s.use_plan_id) {
         // A. Seguro Primario (Isapre/Fonasa)
         if (
           data.coverage_details.insurance_id &&
@@ -224,6 +238,10 @@ export default function PosIndex({
       totalPrimary += primaryAmount;
       totalSecondary += secondaryAmount;
 
+      const unitPatientClp = s.use_plan_id 
+        ? 0 
+        : Math.round((subtotal_clp - primaryAmount - secondaryAmount) / (s.quantity || 1));
+
       return {
         ...s,
         unit_price_clp: basePrice,
@@ -233,9 +251,7 @@ export default function PosIndex({
         unit_insurance_secondary_clp: Math.round(
           secondaryAmount / (s.quantity || 1)
         ),
-        unit_patient_clp: Math.round(
-          (subtotal_clp - primaryAmount - secondaryAmount) / (s.quantity || 1)
-        ),
+        unit_patient_clp: unitPatientClp,
       };
     });
 
@@ -735,55 +751,59 @@ export default function PosIndex({
 
       {/* --- MODAL PACIENTE RÁPIDO --- */}
       {isPatientModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl overflow-hidden animate-in zoom-in-95">
-            <div className="bg-indigo-600 p-4 flex justify-between items-center">
-              <h3 className="font-bold text-white">Registro Rápido</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-md p-4">
+          <div className="w-full max-w-lg bg-white shadow-2xl rounded-[2.5rem] overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-brand-primary p-8 flex justify-between items-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+              <h3 className="font-black text-white uppercase tracking-widest text-sm relative z-10">Registro Rápido</h3>
               <button
                 onClick={() => setIsPatientModalOpen(false)}
-                className="text-white/80 hover:text-white"
+                className="text-white/80 hover:text-white transition-colors relative z-10 bg-white/10 p-2 rounded-xl"
               >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleQuickPatientSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+            <form onSubmit={handleQuickPatientSubmit} className="p-10 space-y-6">
+              <div className="space-y-1">
+                <label className="enterprise-label ml-1">
                   RUT / DNI
                 </label>
                 <input
                   type="text"
                   required
-                  className="w-full border-gray-200 rounded-lg"
+                  placeholder="12.345.678-9"
+                  className="w-full border-gray-100 rounded-2xl py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all"
                   value={quickPatient.rut}
                   onChange={(e) =>
                     setQuickPatient({ ...quickPatient, rut: e.target.value })
                   }
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="enterprise-label ml-1">
                     Nombre
                   </label>
                   <input
                     type="text"
                     required
-                    className="w-full border-gray-200 rounded-lg"
+                    placeholder="Juan"
+                    className="w-full border-gray-100 rounded-2xl py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all"
                     value={quickPatient.name}
                     onChange={(e) =>
                       setQuickPatient({ ...quickPatient, name: e.target.value })
                     }
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                <div className="space-y-1">
+                  <label className="enterprise-label ml-1">
                     Apellido
                   </label>
                   <input
                     type="text"
                     required
-                    className="w-full border-gray-200 rounded-lg"
+                    placeholder="Pérez"
+                    className="w-full border-gray-100 rounded-2xl py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all"
                     value={quickPatient.last_name}
                     onChange={(e) =>
                       setQuickPatient({
@@ -794,33 +814,34 @@ export default function PosIndex({
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                  Email
+              <div className="space-y-1">
+                <label className="enterprise-label ml-1">
+                  Email de Contacto
                 </label>
                 <input
                   type="email"
                   required
-                  className="w-full border-gray-200 rounded-lg"
+                  placeholder="juan.perez@ejemplo.com"
+                  className="w-full border-gray-100 rounded-2xl py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all"
                   value={quickPatient.email}
                   onChange={(e) =>
                     setQuickPatient({ ...quickPatient, email: e.target.value })
                   }
                 />
               </div>
-              <div className="pt-2 flex gap-3">
+              <div className="pt-4 flex gap-4">
                 <button
                   type="button"
                   onClick={() => setIsPatientModalOpen(false)}
-                  className="flex-1 py-2.5 text-gray-500 font-bold hover:bg-gray-50 rounded-lg"
+                  className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all border-2 border-transparent"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700"
+                  className="flex-1 py-4 bg-brand-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20 active:scale-95"
                 >
-                  Guardar
+                  Guardar Paciente
                 </button>
               </div>
             </form>

@@ -39,7 +39,7 @@ return new class extends Migration
             $table->decimal('total_monto_clp', 12, 2)->comment('Monto total del documento.');
 
             // --- SEGUIMIENTO SII ---
-            $table->enum('estado_sii', ['PENDIENTE', 'ENVIADO', 'ACEPTADO', 'RECHAZADO', 'ACEPTADO_CON_REPAROS'])
+            $table->enum('estado_sii', ['PENDIENTE', 'ENVIADO', 'ACEPTADO', 'RECHAZADO', 'ACEPTADO_CON_REPAROS', 'ERROR'])
                 ->default('PENDIENTE');
             $table->bigInteger('track_id')->nullable()->unique()->comment('Número de seguimiento del SII.');
             $table->mediumText('glosa_rechazo')->nullable()->comment('Detalle del error si fue rechazado por el SII.');

@@ -144,7 +144,7 @@ class PatientAdminController extends Controller
             ->latest()
             ->get();
 
-        // 3. Carga de datos del paciente (AQUÍ ESTÁ LA MAGIA ✨)
+        // 3. Carga de datos del paciente
         $patient->load([
             'address.region',
             'address.province',
@@ -154,12 +154,14 @@ class PatientAdminController extends Controller
             'allergies',
             'condition',
             'debts',
-            // MODIFICACIÓN: Cargamos treatments CON diagnostic
+            'attachments.treatment', // Cargar archivos clínicos renombrado
+            'invoices.currentDte', // Cargar DTEs
+            // Cargamos treatments CON diagnostic
             'treatments' => function ($query) use ($companyId, $activeBranchId) {
                 $query->where('company_id', $companyId)     // Seguridad: solo de esta empresa
                     ->where('branch_id', $activeBranchId) // Seguridad: solo de esta sucursal
-                    ->whereIn('status', ['active', 'in_progress']) // Opcional: Filtra solo activos
-                    ->with('diagnostic') // <--- FUNDAMENTAL: Para mostrar el nombre en el modal
+                    ->whereIn('status', ['active', 'in_progress', 'evaluation']) // Incluimos evaluación
+                    ->with(['diagnostic', 'doctor', 'sessionType']) // Cargamos relaciones necesarias
                     ->latest();
             }
         ]);
@@ -340,6 +342,34 @@ class PatientAdminController extends Controller
         }
     }
 
+
+    public function document_post(Request $request)
+    {
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'treatment_id' => 'nullable|exists:treatments,id',
+            'title' => 'required|string|max:255',
+            'file' => 'required|file|max:10240', // 10MB max
+        ]);
+
+        $patient = Patient::findOrFail($request->patient_id);
+        $this->authorize('view', $patient); // Usamos view para verificar acceso al paciente
+
+        $file = $request->file('file');
+        $path = $file->store('attachments/' . $patient->id, 'public');
+
+        $attachment = \App\Models\Attachment::create([
+            'company_id' => session('current_company_id'),
+            'patient_id' => $patient->id,
+            'treatment_id' => $request->treatment_id,
+            'title' => $request->title,
+            'mime_type' => $file->getMimeType(),
+            'size_bytes' => $file->getSize(),
+            'storage_path' => $path,
+        ]);
+
+        return back()->with('success', 'Documento clínico cargado correctamente.');
+    }
 
     public function update(UpdatePatientRequest $request, Patient $patient)
     {

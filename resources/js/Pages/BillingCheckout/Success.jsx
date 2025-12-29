@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import axios from "axios";
+import Swal from "sweetalert2";
 import {
   CheckCircle2,
   Printer,
+  Download,
   ArrowLeft,
   Plus,
   Calendar,
@@ -16,6 +19,15 @@ import {
 const Success = ({ payment, invoice, is_dte_pending }) => {
   const [email, setEmail] = useState(payment?.patient?.email || "");
   const [sending, setSending] = useState(false);
+
+  const paymentMethodsMap = {
+    'cash': 'Efectivo',
+    'pos_integrado': 'Tarjeta (POS)',
+    'transfer': 'Transferencia',
+    'clinic_plan': 'Plan Clínica',
+    'webpay': 'Webpay Online'
+  };
+
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("es-CL", {
       style: "currency",
@@ -35,17 +47,26 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
   };
 
   const sendVoucher = async () => {
+    if (!invoice) {
+        Swal.fire("Aviso", "No hay una boleta generada para enviar.", "info");
+        return;
+    }
+    
     setSending(true);
     try {
-      await axios.post(route("payments.send-receipt", props.payment.uuid), {
+      await axios.post(route("invoices.send_email", invoice.id), {
         email,
       });
-      toast.success("Copia enviada a " + email);
+      Swal.fire("¡Éxito!", "Boleta enviada correctamente a " + email, "success");
     } catch (e) {
-      toast.error("No se pudo enviar el correo");
+      Swal.fire("Error", "No se pudo enviar el correo: " + (e.response?.data?.message || "Fallo técnico"), "error");
     } finally {
       setSending(false);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -57,70 +78,70 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
         <div className="mb-6 print:hidden">
           <Link
             href={route("payments.index")}
-            className="inline-flex items-center text-sm font-bold text-gray-500 transition hover:text-indigo-600"
+            className="inline-flex items-center text-xs font-black text-brand-gray uppercase tracking-widest transition hover:text-brand-primary"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Volver a la Caja
           </Link>
         </div>
 
-        <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-3xl print:shadow-none print:border-none">
+        <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-[2rem] print:shadow-none print:border-none print:m-0">
           {/* Header de Éxito */}
-          <div className="p-8 text-center border-b border-green-100 bg-gradient-to-b from-green-50 to-white print:bg-white">
-            <div className="flex justify-center mb-4 print:hidden">
-              <div className="p-3 bg-green-500 rounded-full shadow-lg shadow-green-200">
+          <div className="p-10 text-center border-b border-gray-50 bg-gradient-to-b from-gray-50/50 to-white print:bg-white print:pt-0">
+            <div className="flex justify-center mb-6 print:hidden">
+              <div className="p-4 bg-brand-primary rounded-3xl shadow-xl shadow-brand-primary/20 transform rotate-12">
                 <CheckCircle2 className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h1 className="text-3xl font-black text-gray-900 print:text-2xl">
+            <h1 className="text-3xl font-black text-gray-900 print:text-2xl tracking-tight">
               ¡Pago Recibido!
             </h1>
-            <p className="mt-2 font-medium text-gray-500 print:text-sm">
-              Comprobante de Transacción #
+            <p className="mt-2 font-mono text-[10px] font-black uppercase tracking-[0.2em] text-brand-gray">
+              Transacción #
               {payment.uuid.substring(0, 8).toUpperCase()}
             </p>
           </div>
 
-          <div className="p-8 space-y-8">
+          <div className="p-10 space-y-10 print:p-0 print:mt-8">
             {/* 1. Información de Cabecera */}
-            <div className="grid grid-cols-1 gap-8 pb-8 border-b border-gray-100 md:grid-cols-3">
-              <div className="space-y-1">
-                <span className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">
+            <div className="grid grid-cols-1 gap-8 pb-10 border-b border-gray-50 md:grid-cols-3 print:grid-cols-3 print:gap-4">
+              <div className="space-y-2">
+                <span className="enterprise-label">
                   Paciente
                 </span>
-                <div className="flex items-center font-bold text-gray-700">
-                  <User className="w-4 h-4 mr-2 text-indigo-500" />
+                <div className="flex items-center font-black text-gray-900 uppercase text-sm tracking-tight">
+                  <User className="w-4 h-4 mr-2 text-brand-primary" />
                   {payment.patient.full_name ||
                     `${payment.patient.name} ${payment.patient.last_name}`}
                 </div>
-                <span className="block ml-6 text-xs text-gray-500">
+                <span className="block ml-6 font-mono text-[11px] font-bold text-brand-gray">
                   RUT: {payment.patient.rut}
                 </span>
               </div>
 
-              <div className="space-y-1">
-                <span className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">
+              <div className="space-y-2">
+                <span className="enterprise-label">
                   Sucursal
                 </span>
-                <div className="flex items-center font-bold text-gray-700">
-                  <Building2 className="w-4 h-4 mr-2 text-indigo-500" />
+                <div className="flex items-center font-black text-gray-900 uppercase text-sm tracking-tight">
+                  <Building2 className="w-4 h-4 mr-2 text-brand-primary" />
                   {payment.branch?.name || "Casa Central"}
                 </div>
-                <span className="block ml-6 text-xs text-gray-500">
+                <span className="block ml-6 font-mono text-[11px] font-bold text-brand-gray uppercase">
                   {formatDate(payment.paid_at || payment.created_at)}
                 </span>
               </div>
 
-              <div className="space-y-1">
-                <span className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">
+              <div className="space-y-2">
+                <span className="enterprise-label">
                   Método de Pago
                 </span>
-                <div className="flex items-center font-bold text-gray-700 capitalize">
-                  <CreditCard className="w-4 h-4 mr-2 text-indigo-500" />
-                  {payment.payment_method.replace("_", " ")}
+                <div className="flex items-center font-black text-gray-900 uppercase text-sm tracking-tight">
+                  <CreditCard className="w-4 h-4 mr-2 text-brand-primary" />
+                  {paymentMethodsMap[payment.payment_method] || payment.payment_method}
                 </div>
                 {payment.transaction_reference && (
-                  <span className="block ml-6 text-xs text-gray-500 uppercase">
+                  <span className="block ml-6 font-mono text-[11px] font-bold text-brand-gray uppercase tracking-widest">
                     Ref: {payment.transaction_reference}
                   </span>
                 )}
@@ -129,35 +150,35 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
 
             {/* 2. Detalle de Sesiones Pagadas */}
             <div>
-              <h3 className="mb-4 text-xs font-black tracking-wider text-gray-400 uppercase">
+              <h3 className="mb-6 enterprise-label">
                 Detalle de Prestaciones
               </h3>
-              <div className="overflow-hidden border border-gray-100 rounded-2xl">
-                <table className="min-w-full divide-y divide-gray-100">
-                  <thead className="bg-gray-50">
+              <div className="overflow-hidden border border-gray-100 rounded-2xl shadow-sm">
+                <table className="min-w-full divide-y divide-gray-50">
+                  <thead className="bg-gray-50/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-[10px] font-black text-gray-500 uppercase">
+                      <th className="px-6 py-4 text-left enterprise-label !mb-0">
                         Servicio
                       </th>
-                      <th className="px-6 py-3 text-right text-[10px] font-black text-gray-500 uppercase">
+                      <th className="px-6 py-4 text-right enterprise-label !mb-0">
                         Monto Bruto
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-50">
                     {payment?.payment_allocation?.map((alloc) => (
-                      <tr key={alloc.id}>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-bold text-gray-800">
+                      <tr key={alloc.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-5">
+                          <div className="text-sm font-black text-gray-900 uppercase tracking-tight">
                             {alloc.treatment_session?.session_type?.name ||
                               "Atención Médica"}
                           </div>
-                          <div className="text-[10px] text-gray-400 font-bold uppercase">
+                          <div className="mt-1 font-mono text-[10px] font-bold text-brand-gray uppercase tracking-widest">
                             Sesión ID: {alloc.treatment_session_id} | Cod:{" "}
-                            {alloc.treatment_session?.session_type.code}
+                            {alloc.treatment_session?.session_type?.code}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm font-bold text-right text-gray-700">
+                        <td className="px-6 py-5 text-sm font-black text-right text-gray-900 font-mono">
                           {formatMoney(alloc.amount_clp)}
                         </td>
                       </tr>
@@ -169,36 +190,36 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
 
             {/* 3. Desglose Financiero Final */}
             <div className="flex justify-end">
-              <div className="w-full p-6 space-y-3 border border-gray-100 md:w-80 bg-gray-50 rounded-2xl">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Total Bruto Atenciones</span>
-                  <span className="font-medium">
+              <div className="w-full p-8 space-y-4 border border-gray-100 md:w-96 bg-gray-50/50 rounded-3xl shadow-inner">
+                <div className="flex justify-between items-center">
+                  <span className="enterprise-label !mb-0 text-brand-gray">Total Bruto</span>
+                  <span className="font-mono font-bold text-gray-700">
                     {formatMoney(payment.amount_gross_clp)}
                   </span>
                 </div>
 
-                {payment.receivables.map((rec) => (
+                {payment.receivables?.map((rec) => (
                   <div
                     key={rec.id}
-                    className="flex justify-between text-sm italic font-bold text-green-600"
+                    className="flex justify-between items-center"
                   >
-                    <span>Cobertura {rec.insurance?.name}</span>
-                    <span>-{formatMoney(rec.amount_clp)}</span>
+                    <span className="enterprise-label !mb-0 text-green-600">Cobertura {rec.insurance?.name}</span>
+                    <span className="font-mono font-black text-green-600">-{formatMoney(rec.amount_clp)}</span>
                   </div>
                 ))}
 
                 {payment.discount_clp > 0 && (
-                  <div className="flex justify-between text-sm font-bold text-orange-600">
-                    <span>Descuento Aplicado</span>
-                    <span>-{formatMoney(payment.discount_clp)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="enterprise-label !mb-0 text-orange-600">Descuento</span>
+                    <span className="font-mono font-black text-orange-600">-{formatMoney(payment.discount_clp)}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between pt-4 border-t-2 border-gray-200 border-dashed">
-                  <span className="text-lg font-black text-gray-900">
-                    COPAGO PAGADO
+                <div className="flex justify-between pt-6 border-t-2 border-gray-200 border-dashed items-center">
+                  <span className="text-lg font-black text-gray-900 uppercase tracking-tighter">
+                    Copago Pagado
                   </span>
-                  <span className="text-lg font-black text-indigo-600">
+                  <span className="text-3xl font-black text-brand-primary font-mono tracking-tighter">
                     {formatMoney(payment.amount_clp)}
                   </span>
                 </div>
@@ -208,80 +229,94 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
             {/* 4. Estado de la Boleta (DTE) */}
             {invoice && (
               <div
-                className={`p-4 rounded-xl border flex items-center justify-between ${
+                className={`p-8 rounded-[2rem] border-2 flex flex-col md:flex-row items-center justify-between gap-6 transition-all ${
                   is_dte_pending
-                    ? "bg-amber-50 border-amber-100"
-                    : "bg-blue-50 border-blue-100"
+                    ? "bg-amber-50/50 border-amber-100"
+                    : "bg-blue-50/50 border-blue-100 shadow-lg shadow-blue-500/5"
                 }`}
               >
-                <div className="flex items-center">
-                  <Receipt
-                    className={`w-5 h-5 mr-3 ${
-                      is_dte_pending ? "text-amber-500" : "text-blue-500"
-                    }`}
-                  />
+                <div className="flex items-center text-center md:text-left">
+                  <div className={`p-4 rounded-2xl mr-6 transform -rotate-6 shadow-sm ${is_dte_pending ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                    <Receipt className="w-8 h-8" />
+                  </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-800">
+                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${is_dte_pending ? 'text-amber-700' : 'text-blue-700'}`}>
+                      Documento SII
+                    </p>
+                    <p className="text-lg font-black text-gray-900 tracking-tight leading-none mb-1">
                       {is_dte_pending
-                        ? "Boleta Electrónica en Proceso"
-                        : `Boleta Generada: Folio #${
+                        ? "Generación en proceso"
+                        : `${invoice.type_name || 'Boleta Electrónica'} Folio #${
                             invoice.dte_folio || "S/N"
                           }`}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 font-bold uppercase tracking-tight opacity-70">
                       {is_dte_pending
-                        ? "El documento se está firmando y enviando al SII."
-                        : "El documento tributario ya fue emitido correctamente."}
+                        ? "Validando con los servidores del SII..."
+                        : "Emitida y validada correctamente"}
                     </p>
                   </div>
                 </div>
                 {!is_dte_pending && (
                   <a
-                    /*  href={route("invoices.download", invoice.id)} */
-                    className="text-xs font-black tracking-tighter text-blue-600 uppercase hover:underline"
+                    href={route("invoices.pdf", invoice.id)}
+                    target="_blank"
+                    className="w-full md:w-auto px-8 py-4 bg-white border-2 border-blue-100 text-blue-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95"
                   >
-                    Descargar PDF
+                    <Printer className="w-4 h-4" /> Ver Boleta SII
                   </a>
                 )}
               </div>
             )}
 
-            <div className="p-4 mt-6 bg-gray-50 rounded-2xl">
-              <label className="block mb-2 text-sm font-bold text-gray-700">
-                Enviar comprobante por email:
+            <div className="p-8 mt-10 bg-gray-50/50 border border-gray-100 rounded-[2rem] print:hidden">
+              <label className="enterprise-label mb-4 block">
+                Enviar por Correo Electrónico
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 border-gray-200 rounded-xl"
-                />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-gray" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="correo@ejemplo.cl"
+                    className="w-full pl-12 pr-4 py-4 border-gray-100 rounded-2xl bg-white focus:ring-brand-primary focus:border-brand-primary transition-all text-sm font-bold"
+                  />
+                </div>
                 <button
                   onClick={sendVoucher}
                   disabled={sending}
-                  className="px-4 py-2 text-white bg-indigo-600 rounded-xl"
+                  className="px-10 py-4 text-[10px] font-black uppercase tracking-widest text-white bg-brand-primary rounded-2xl hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20 disabled:opacity-50 active:scale-95"
                 >
-                  {sending ? "Enviando..." : "Enviar"}
+                  {sending ? "Enviando..." : "Enviar Comprobante"}
                 </button>
               </div>
             </div>
 
             {/* Acciones Finales (Ocultas en impresión) */}
-            <div className="flex flex-col gap-4 pt-6 md:flex-row print:hidden">
+            <div className="flex flex-col gap-4 pt-10 md:flex-row print:hidden">
               <button
-                onClick={() => window.print()}
-                className="flex items-center justify-center flex-1 px-8 py-4 font-black text-gray-700 transition-all border-2 border-gray-200 rounded-2xl hover:bg-gray-50 active:scale-95"
+                onClick={handlePrint}
+                className="flex items-center justify-center flex-1 px-8 py-5 font-black text-brand-gray uppercase tracking-widest text-[10px] transition-all border-2 border-gray-100 rounded-2xl hover:bg-white hover:border-brand-primary hover:text-brand-primary active:scale-95 shadow-sm"
               >
-                <Printer className="w-5 h-5 mr-2" />
-                Imprimir Comprobante
+                <Printer className="w-5 h-5 mr-3" />
+                Imprimir
               </button>
+
+              <a
+                href={route("payments.pdf", { uuid: payment.uuid, download: 'download' })}
+                className="flex items-center justify-center flex-1 px-8 py-5 font-black text-white uppercase tracking-widest text-[10px] transition-all bg-brand-primary shadow-xl shadow-brand-primary/20 rounded-2xl hover:brightness-110 active:scale-95"
+              >
+                <Download className="w-5 h-5 mr-3" />
+                Descargar PDF
+              </a>
 
               <Link
                 href={route("payments.index")}
-                className="flex items-center justify-center flex-1 px-8 py-4 font-black text-white transition-all bg-indigo-600 shadow-lg rounded-2xl hover:bg-indigo-700 shadow-indigo-100 active:scale-95"
+                className="flex items-center justify-center flex-1 px-8 py-5 font-black text-brand-gray uppercase tracking-widest text-[10px] transition-all bg-white border-2 border-gray-100 rounded-2xl hover:bg-gray-50 active:scale-95 shadow-sm"
               >
-                <Plus className="w-5 h-5 mr-2" />
+                <Plus className="w-5 h-5 mr-3 text-brand-primary" />
                 Nueva Venta
               </Link>
             </div>
@@ -289,10 +324,10 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
         </div>
 
         {/* Footer del recibo (Solo impresión) */}
-        <div className="hidden print:block mt-12 text-center text-[10px] text-gray-400">
-          <p>Este documento es un comprobante interno de pago.</p>
-          <p>
-            Gracias por confiar en {payment.company?.name || "nuestra clínica"}.
+        <div className="hidden print:block mt-16 text-center text-[10px] font-black uppercase tracking-[0.2em] text-brand-gray opacity-50">
+          <p>Este documento es un comprobante interno de recepción de pago.</p>
+          <p className="mt-2">
+            Gracias por confiar en {payment.company?.business_name || "nuestra clínica"}.
           </p>
         </div>
       </div>

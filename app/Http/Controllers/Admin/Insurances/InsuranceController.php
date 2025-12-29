@@ -40,17 +40,19 @@ class InsuranceController extends Controller
 
     public function index()
     {
-        // Traemos las aseguradoras con sus planes para mostrarlas en la tabla/modales.
-        $insurances = Insurance::with('plans')->get();
+        $currentCompanyId = session('current_company_id');
 
-        $sessionTypes = SessionType::get(['id', 'name', 'base_price_clp']);
+        // Traemos las aseguradoras con sus planes para mostrarlas en la tabla/modales.
+        $insurances = Insurance::where('company_id', $currentCompanyId)->with('plans')->get();
+
+        $sessionTypes = SessionType::where('company_id', $currentCompanyId)->get(['id', 'name', 'base_price_clp']);
 
         return Inertia::render('Insurances/InsuranceIndex', [
             'insurances' => $insurances,
             'sessionTypes' => $sessionTypes,
+            'user' => auth()->user()->load('roles'),
         ]);
     }
-
     public function store(Request $request)
     {
         $validated = $request->validate([

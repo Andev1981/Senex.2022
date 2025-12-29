@@ -115,25 +115,38 @@ class Doctor extends Model
 
     /* -------------- Attributes GETTERS ---------------- */
 
-    /* Sesiones del mes */
+    /* Sesiones asistidas del mes */
     public function sessionsMonth(): Attribute
     {
         return Attribute::make(
             get: fn() => $this->sessions()
+                ->where('status', 'attended')
                 ->whereMonth('date', now()->month)
                 ->whereYear('date', now()->year)
                 ->count()
         );
     }
 
-    /* Ganancias del mes */
+    /* Ganancias validadas del mes */
     public function revenueMonth(): Attribute
     {
         return Attribute::make(
             get: fn() => $this->sessions()
+                ->where('status', 'attended')
                 ->whereMonth('date', now()->month)
                 ->whereYear('date', now()->year)
                 ->sum('doctor_amount_clp')
+        );
+    }
+
+    /* Conteo de sesiones pendientes (Programadas para el futuro) */
+    public function pendingSessionsCount(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->sessions()
+                ->where('status', 'scheduled')
+                ->where('date', '>=', now()->toDateString())
+                ->count()
         );
     }
 
@@ -219,6 +232,7 @@ class Doctor extends Model
         'assigned_patients',/* Pacientes Asignados */
         'sessions_month',/* Sesiones del mes */
         'revenue_month',/* Ganancias del mes */
+        'pending_sessions_count', /* Pendientes */
         'full_name',/* Nombre completo */
         'branch'
     ];

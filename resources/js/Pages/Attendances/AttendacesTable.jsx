@@ -14,7 +14,6 @@ import {
   ArrowUpDown,
   Calendar,
   CheckCircle2,
-  Clipboard,
   Clock,
   DollarSign,
   Filter,
@@ -24,39 +23,21 @@ import {
   Timer,
   Users,
   XCircle,
+  Play,
+  CheckCircle,
+  UserX,
+  FileText,
+  ChevronUp,
+  ChevronDown,
+  Receipt,
+  ClipboardList,
+  Activity,
 } from "lucide-react";
 import { router } from "@inertiajs/react";
-import { fmtCLP, fmtDate } from "@/utils/utils";
+import { fmtCLP, fmtDate, fmtTime } from "@/utils/utils";
 import { estadoClass, estadoTexto } from "@/helpers/status";
-
-const Chip = ({ color, text }) => (
-  <span
-    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${color}`}
-  >
-    {text}
-  </span>
-);
-
-const getMonthRange = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-
-  // 1. Primer día del mes (Start Date):
-  // Crea la fecha usando UTC para evitar el desfase de zona horaria.
-  const firstDay = new Date(Date.UTC(year, month, 1));
-
-  // 2. Último día del mes (End Date):
-  // Crea el primer día del *siguiente* mes y resta un milisegundo (el día 0).
-  const lastDay = new Date(Date.UTC(year, month + 1, 1, 0, 0, 0, -1));
-
-  // 3. Formateo: Usamos toISOString().split("T")[0]
-  // Esto es seguro porque las fechas ya fueron creadas en UTC.
-  const fechaInicio = firstDay.toISOString().split("T")[0];
-  const fechaFin = lastDay.toISOString().split("T")[0];
-
-  return { fechaInicio, fechaFin };
-};
+import SecondaryButton from "@/Components/SecondaryButton";
+import PrimaryButton from "@/Components/PrimaryButton";
 
 export default function AttendacesTable({
   atenciones,
@@ -79,146 +60,94 @@ export default function AttendacesTable({
     filtros.fecha_fin || new Date().toISOString().split("T")[0]
   );
 
-  const { fechaInicio: defaultFechaInicio, fechaFin: defaultFechaFin } =
-    getMonthRange();
-
   const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
   const [pageSize, setPageSize] = useState(10);
-  const [selected, setSelected] = useState(null);
+  const [pageIndex, setPageIndex] = useState(0);
 
-  // Aplicar filtros del servidor
   const applyFilters = () => {
     router.get(
       route("attendances.index"),
-      {
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin,
-        estado: estado === "all" ? "all" : estado,
-        query,
-      },
+      { fecha_inicio: fechaInicio, fecha_fin: fechaFin, estado, query },
       { preserveState: true, preserveScroll: true }
     );
   };
 
-  // Limpiar filtros y volver al día actual
-  const clearFilters = () => {
-    setFechaInicio(defaultFechaInicio);
-    setFechaFin(defaultFechaFin);
-    setEstado("all");
-    setQuery("");
-
-    router.get(
-      route("attendances.index"),
-      {
-        fecha_inicio: defaultFechaInicio,
-        fecha_fin: defaultFechaFin,
-        estado: "all",
-        query: "",
-      },
-      { preserveState: false, preserveScroll: true }
-    );
-  };
-
-  // Definición de columnas para TanStack Table
   const columns = useMemo(
     () => [
       {
-        accessorKey: "patient_full_name",
-        header: "Paciente",
-        cell: ({ row }) => {
-          const { patient_full_name, session_type_name } = row.original;
-          const initials = patient_full_name
-            .split(" ")
-            .map((n) => n[0])
-            .join("");
-          return (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center font-bold text-white rounded-lg w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600">
-                {initials}
-              </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-gray-900 truncate">
-                  {patient_full_name}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {session_type_name}
-                </p>
+        id: "paciente",
+        header: "Identidad & Servicio",
+        accessorFn: (row) => row.patient_full_name,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 text-xs font-black uppercase border shadow-sm text-brand-primary rounded-xl bg-brand-secondary/10 border-brand-secondary/20 shrink-0">
+              {row.original.patient_full_name[0]}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate leading-none mb-1.5">
+                {row.original.patient_full_name}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black text-brand-primary uppercase tracking-widest">
+                  {row.original.name_session_type}
+                </span>
+                <div className="w-1 h-1 bg-gray-200 rounded-full"></div>
+                <span className="font-mono text-[10px] font-bold text-gray-400">
+                  #{row.original.month_session_number}
+                </span>
               </div>
             </div>
-          );
-        },
-        size: 250,
-      },
-      {
-        accessorKey: "month_session_number",
-        header: "#",
-        cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">#{getValue()}</span>
+          </div>
         ),
-        size: 180,
       },
       {
         accessorKey: "date",
-        header: "Fecha",
-        cell: ({ row }) => {
-          const { date } = row.original;
-          return (
-            <div className="flex text-sm text-gray-500 whitespace-nowrap">
-              <Calendar className="w-4 h-4 pt-1 pr-1 " />
-              <span className="text-gray-500">{fmtDate(date)}</span>
+        header: "Cronología",
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 font-mono text-[11px] font-black text-gray-700">
+              <Calendar className="w-3 h-3 text-brand-primary opacity-40" />{" "}
+              {fmtDate(row.original.date)}
             </div>
-          );
-        },
-        size: 150,
-      },
-      {
-        accessorKey: "time",
-        header: "Hora",
-        cell: ({ getValue }) => (
-          <span className="flex font-semibold text-gray-600">
-            <Clock className="w-4 h-4 pt-1 pr-1 " />
-            {getValue()}
-          </span>
+            <div className="flex items-center gap-2 font-mono text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              <Clock className="w-3 h-3 opacity-30" />{" "}
+              {fmtTime(row.original.time)}
+            </div>
+          </div>
         ),
-        size: 80,
       },
       {
         accessorKey: "doctor_full_name",
-        header: "Profesional",
+        header: "Especialista",
         cell: ({ getValue }) => (
-          <span className="flex text-sm text-gray-700">
-            {" "}
-            <Stethoscope className="w-4 h-4 pt-1 pr-1 " />
-            {getValue()}
-          </span>
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gray-50 rounded-lg">
+              <Stethoscope className="w-3.5 h-3.5 text-brand-primary opacity-40" />
+            </div>
+            <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
+              {getValue()}
+            </span>
+          </div>
         ),
-        size: 180,
       },
-
-      {
-        accessorKey: "name_session_type",
-        header: "TIPO",
-        cell: ({ getValue }) => (
-          <span className="text-sm text-gray-700">{getValue()}</span>
-        ),
-        size: 180,
-      },
-
       {
         accessorKey: "status",
-        header: "Estado",
+        header: "Estatus Clínico",
         cell: ({ getValue }) => (
-          <Chip
-            color={estadoClass(getValue())}
-            text={estadoTexto(getValue())}
-          />
+          <div className="text-center">
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${estadoClass(
+                getValue()
+              )}`}
+            >
+              {estadoTexto(getValue())}
+            </span>
+          </div>
         ),
-        size: 120,
       },
       {
-        accessorKey: "total",
-        header: "Pago",
+        id: "pago",
+        header: "Balance (CLP)",
         cell: ({ row }) => {
           const { payment_total, patient_amount_clp } = row.original;
           const saldo = Math.max(
@@ -226,275 +155,259 @@ export default function AttendacesTable({
             (patient_amount_clp || 0) - (payment_total || 0)
           );
           return (
-            <div className="text-sm text-gray-700 whitespace-nowrap">
-              {fmtCLP(payment_total)}{" "}
-              <span className="text-gray-400">
-                / {fmtCLP(patient_amount_clp)}
-              </span>
+            <div className="flex flex-col items-end gap-1 text-right">
+              <p className="font-mono text-xs font-black tracking-tighter text-gray-900">
+                {fmtCLP(payment_total)}{" "}
+                <span className="text-[10px] opacity-20">/</span>{" "}
+                {fmtCLP(patient_amount_clp)}
+              </p>
               {saldo > 0 && (
-                <div className="text-xs font-semibold text-amber-600">
-                  Saldo: {fmtCLP(saldo)}
-                </div>
+                <span className="text-[8px] font-black text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md border border-orange-100 uppercase tracking-widest">
+                  Deuda: {fmtCLP(saldo)}
+                </span>
               )}
             </div>
           );
         },
-        size: 150,
       },
       {
         id: "acciones",
-        header: () => <div className="text-center">Acciones</div>,
+        header: "Gestión",
         cell: ({ row }) => {
           const a = row.original;
           return (
-            <div className="flex items-center justify-center gap-1">
-              <button
-                onClick={() => openCreateUpdateSessionModal(a)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-yellow-200 text-yellow-700 hover:bg-yellow-50"
-                title="Editar"
-              >
-                Editar
-              </button>
+            <div className="flex items-center justify-end gap-1.5">
+              {/* Acciones de Flujo */}
               {a.status === "scheduled" && (
-                <>
-                  <button
-                    onClick={() => openStartModal(a)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-blue-200 text-blue-700 hover:bg-blue-50"
-                  >
-                    Iniciar
-                  </button>
-                  <button
-                    onClick={() => openCancelModal(a)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={() => openAbsentModal(a)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-red-200 text-red-700 hover:bg-red-50"
-                  >
-                    Ausente
-                  </button>
-                </>
+                <button
+                  onClick={() => openStartModal(a)}
+                  className="p-2 text-blue-600 transition-all border border-blue-100 shadow-sm bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white active:scale-90"
+                  title="Iniciar"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                </button>
               )}
               {a.status === "in_progress" && (
-                <>
-                  <button
-                    onClick={() => openCompletedModal(a)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                  >
-                    Completar
-                  </button>
-                  <button
-                    onClick={() => openCancelModal(a)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-gray-200 text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                </>
+                <button
+                  onClick={() => openCompletedModal(a)}
+                  className="p-2 text-green-600 transition-all border border-green-100 shadow-sm bg-green-50 rounded-xl hover:bg-green-600 hover:text-white active:scale-90"
+                  title="Finalizar"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                </button>
               )}
+
+              {/* Auditoría / DTE */}
               {(a.status === "completed" ||
                 a.status === "scheduled" ||
                 a.status === "in_progress") && (
                 <button
                   onClick={() => openDTEModal(a)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-purple-200 text-purple-700 hover:bg-purple-50"
+                  className="p-2 text-purple-600 transition-all border border-purple-100 shadow-sm bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
+                  title="DTE"
                 >
-                  Emitir DTE
+                  <Receipt className="w-4 h-4" />
                 </button>
               )}
+
+              {/* Menú Maestro */}
               <button
                 onClick={() => openResumenModal(a)}
-                className="p-2 rounded-lg hover:bg-gray-100"
-                title="Más"
+                className="p-2 text-gray-400 transition-all border border-gray-100 bg-gray-50 rounded-xl hover:bg-gray-900 hover:text-white active:scale-90"
+                title="Resumen"
               >
-                <MoreVertical className="w-4 h-4 text-gray-400" />
+                <FileText className="w-4 h-4" />
+              </button>
+
+              <div className="w-px h-6 mx-1 bg-gray-100"></div>
+
+              {/* Edición Principal */}
+              <button
+                onClick={() => openCreateUpdateSessionModal(a)}
+                className="p-2 transition-all border text-brand-primary bg-brand-secondary/10 border-brand-secondary/20 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
+                title="Editar Parámetros"
+              >
+                <MoreVertical className="w-4 h-4" />
               </button>
             </div>
           );
         },
-        size: 400,
         enableSorting: false,
       },
     ],
-    []
+    [atenciones]
   );
 
-  // Inicializar TanStack Table
   const table = useReactTable({
     data: atenciones,
     columns,
-    state: {
-      sorting,
-      columnFilters,
-    },
+    state: { sorting, pagination: { pageSize, pageIndex } },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: (updater) => {
+      const newState =
+        typeof updater === "function"
+          ? updater({ pageIndex, pageSize })
+          : updater;
+      setPageIndex(newState.pageIndex);
+      setPageSize(newState.pageSize);
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
   });
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Tabla con TanStack Table */}
-      <div className="bg-white border border-gray-200 shadow-sm lg:col-span-2 rounded-xl">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
-            <Clipboard className="w-5 h-5 text-blue-600" />
-            Listado de Atenciones
+    <div className="grid grid-cols-1 gap-8 duration-700 lg:grid-cols-12 animate-in fade-in">
+      {/* Tabla Maestro */}
+      <div className="bg-white border border-gray-100 shadow-xl lg:col-span-9 rounded-[2rem] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-gray-50 bg-gray-50/30">
+          <h2 className="flex items-center gap-3 text-sm font-black tracking-tight text-gray-900 uppercase">
+            <ClipboardList className="w-5 h-5 text-brand-primary" /> Nómina de
+            Atenciones
           </h2>
-          <span className="text-sm text-gray-600">
-            {table.getFilteredRowModel().rows.length} resultados
+          <span className="text-[9px] font-black text-brand-gray uppercase tracking-[0.2em] bg-white px-4 py-1.5 rounded-xl shadow-sm border border-gray-100">
+            {atenciones.length} Sesiones Detectadas
           </span>
         </div>
 
-        {/* Filtros */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex flex-col gap-3">
-            {/* Primera fila: Búsqueda */}
-            <div className="flex items-center gap-2 px-3 py-2 border-2 border-gray-200 rounded-lg focus-within:border-blue-500">
-              <Search className="w-4 h-4 text-gray-400" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar por paciente, tratamiento o profesional..."
-                className="w-full text-sm outline-none"
-              />
+        {/* Barra de Filtros Inteligente */}
+        <div className="flex flex-col gap-6 p-6 bg-white border-b border-gray-50">
+          <div className="relative max-w-2xl group">
+            <Search className="absolute w-4 h-4 transition-colors transform -translate-y-1/2 text-brand-gray left-4 top-1/2 group-focus-within:text-brand-primary" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscador global: Paciente, RUT, Especialista o Diagnóstico..."
+              className="w-full py-4 pl-12 pr-4 text-sm font-bold transition-all shadow-inner outline-none border-gray-50 bg-gray-50/50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 px-4 py-2 border border-gray-100 bg-gray-50 rounded-xl">
+                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                  Desde
+                </label>
+                <input
+                  type="date"
+                  value={fechaInicio}
+                  onChange={(e) => setFechaInicio(e.target.value)}
+                  className="p-0 font-mono text-xs font-black text-gray-700 bg-transparent border-none focus:ring-0"
+                />
+              </div>
+              <div className="flex items-center gap-3 px-4 py-2 border border-gray-100 bg-gray-50 rounded-xl">
+                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">
+                  Hasta
+                </label>
+                <input
+                  type="date"
+                  value={fechaFin}
+                  onChange={(e) => setFechaFin(e.target.value)}
+                  className="p-0 font-mono text-xs font-black text-gray-700 bg-transparent border-none focus:ring-0"
+                />
+              </div>
             </div>
 
-            {/* Segunda fila: Filtros de fecha, estado y acciones */}
-            <div className="flex flex-col items-stretch gap-3 lg:flex-row lg:items-center">
-              {/* Rango de fechas */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 border-2 border-gray-200 rounded-lg">
-                  <label className="text-xs font-semibold text-gray-600 whitespace-nowrap">
-                    Desde:
-                  </label>
-                  <input
-                    type="date"
-                    value={fechaInicio}
-                    onChange={(e) => setFechaInicio(e.target.value)}
-                    className="text-sm outline-none"
-                  />
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2 border-2 border-gray-200 rounded-lg">
-                  <label className="text-xs font-semibold text-gray-600 whitespace-nowrap">
-                    Hasta:
-                  </label>
-                  <input
-                    type="date"
-                    value={fechaFin}
-                    onChange={(e) => setFechaFin(e.target.value)}
-                    className="text-sm outline-none"
-                  />
-                </div>
-              </div>
+            <select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+              className="px-4 py-2 text-[10px] font-black uppercase text-brand-gray border-gray-100 bg-gray-50 rounded-xl focus:ring-brand-primary"
+            >
+              <option value="all">Todos los Estados</option>
+              <option value="scheduled">Programada</option>
+              <option value="in_progress">En Curso</option>
+              <option value="completed">Completada</option>
+              <option value="absent">Ausente</option>
+            </select>
 
-              {/* Estado */}
-              <select
-                value={estado}
-                onChange={(e) => setEstado(e.target.value)}
-                className="px-3 py-2 text-sm font-medium border-2 border-gray-200 rounded-lg"
+            <div className="flex gap-2 ml-auto">
+              <PrimaryButton
+                onClick={applyFilters}
+                className="!py-3 !px-6 !text-[9px] shadow-lg shadow-brand-primary/20"
               >
-                <option value="all">Todos los estados</option>
-                <option value="scheduled">Programada</option>
-                <option value="completed">Completada</option>
-                <option value="cancelled">Cancelada</option>
-                <option value="absent">Ausente</option>
-              </select>
-
-              {/* Botones de acción */}
-              <div className="flex gap-2 lg:ml-auto">
-                <button
-                  onClick={applyFilters}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-                >
-                  <Filter className="w-4 h-4" /> Aplicar
-                </button>
-                <button
-                  onClick={clearFilters}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
-                >
-                  <XCircle className="w-4 h-4" /> Limpiar
-                </button>
-              </div>
+                Filtrar
+              </PrimaryButton>
+              <SecondaryButton
+                onClick={() => router.get(route("attendances.index"))}
+                className="!py-3 !px-6 !text-[9px]"
+              >
+                Reiniciar
+              </SecondaryButton>
             </div>
           </div>
         </div>
 
-        {/* Tabla */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="flex-1 w-full overflow-x-auto custom-scrollbar">
+          <table className="w-full border-collapse">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr
                   key={headerGroup.id}
-                  className="text-left border-b-2 border-gray-200"
+                  className="border-b border-gray-100 bg-gray-50/50"
                 >
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-xs font-bold text-gray-600 uppercase"
-                      style={{ width: header.getSize() }}
+                      className="px-8 py-5 text-left cursor-pointer select-none group"
+                      onClick={header.column.getToggleSortingHandler()}
                     >
-                      {header.isPlaceholder ? null : (
-                        <div
-                          className={
-                            header.column.getCanSort()
-                              ? "cursor-pointer select-none flex items-center gap-2"
-                              : ""
-                          }
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
+                      <div
+                        className={`flex items-center gap-2 ${
+                          header.column.id === "pago" ? "justify-end" : ""
+                        } ${
+                          header.column.id === "status" ? "justify-center" : ""
+                        } ${
+                          header.column.id === "acciones" ? "justify-end" : ""
+                        }`}
+                      >
+                        <span className="enterprise-label !mb-0 text-gray-900 group-hover:text-brand-primary transition-colors">
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
-                          {header.column.getCanSort() && (
-                            <span>
-                              {header.column.getIsSorted() === "asc" ? (
-                                <ArrowUp className="w-4 h-4" />
-                              ) : header.column.getIsSorted() === "desc" ? (
-                                <ArrowDown className="w-4 h-4" />
-                              ) : (
-                                <ArrowUpDown className="w-4 h-4 text-gray-400" />
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                        </span>
+                        {header.column.getCanSort() && (
+                          <div className="transition-opacity opacity-0 group-hover:opacity-100">
+                            {header.column.getIsSorted() === "asc" ? (
+                              <ChevronUp className="w-3 h-3 text-brand-primary" />
+                            ) : (
+                              <ChevronDown className="w-3 h-3 text-brand-primary" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </th>
                   ))}
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-50">
               {table.getRowModel().rows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-4 py-8 text-center text-gray-500"
+                    className="px-8 py-24 text-center"
                   >
-                    No hay atenciones para mostrar
+                    <div className="flex flex-col items-center justify-center space-y-4 opacity-30">
+                      <div className="p-6 bg-gray-50 rounded-[2.5rem]">
+                        <Calendar className="w-12 h-12" />
+                      </div>
+                      <p className="enterprise-label">
+                        Sin atenciones registradas en el período
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="transition-colors hover:bg-gray-50"
+                    className="transition-all hover:bg-brand-secondary/5 group"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
-                        className="px-4 py-3 text-sm text-ellipsis truncate"
+                        className="px-8 py-3.5 whitespace-nowrap"
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -508,164 +421,79 @@ export default function AttendacesTable({
             </tbody>
           </table>
         </div>
-        {/* Paginación */}
-        <TablePagination
-          table={table}
-          total={table.getFilteredRowModel().rows.length}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]}
-        />
+
+        <div className="border-t border-gray-100 bg-gray-50/30">
+          <TablePagination
+            table={table}
+            total={atenciones.length}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            pageSizeOptions={[10, 20, 50]}
+          />
+        </div>
       </div>
 
-      {/* Panel lateral (sin cambios) */}
-      <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
-        <h3 className="flex items-center gap-2 mb-4 text-lg font-bold text-gray-900">
-          <Users className="w-5 h-5 text-blue-600" />
-          {fechaInicio === fechaFin ? "Resumen del Día" : "Resumen del Período"}
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              <span className="text-sm">Completadas</span>
+      {/* Panel de Control Lateral */}
+      <div className="space-y-6 lg:col-span-3">
+        <div className="p-8 bg-white border border-gray-100 shadow-xl rounded-[2.5rem] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
+          <h3 className="enterprise-label !text-brand-primary flex items-center gap-3 mb-8 relative z-10">
+            <Activity className="w-5 h-5" /> Productividad
+          </h3>
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center justify-between p-5 transition-all border border-green-100 bg-green-50 rounded-2xl group hover:bg-green-600">
+              <span className="text-[10px] font-black uppercase tracking-widest text-green-700 group-hover:text-white">
+                Asistidas
+              </span>
+              <span className="font-mono text-xl font-black text-green-900 group-hover:text-white">
+                {kpis.completadas || 0}
+              </span>
             </div>
-            <span className="font-bold">{kpis.completadas || 0}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="flex items-center gap-3">
-              <Timer className="w-5 h-5 text-amber-600" />
-              <span className="text-sm">Pendientes</span>
+            <div className="flex items-center justify-between p-5 transition-all border bg-amber-50 rounded-2xl border-amber-100 group hover:bg-amber-600">
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 group-hover:text-white">
+                Pendientes
+              </span>
+              <span className="font-mono text-xl font-black text-amber-900 group-hover:text-white">
+                {kpis.pendientes || 0}
+              </span>
             </div>
-            <span className="font-bold">{kpis.pendientes || 0}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="flex items-center gap-3">
-              <XCircle className="w-5 h-5 text-gray-600" />
-              <span className="text-sm">Canceladas</span>
+            <div className="flex flex-col gap-1 p-5 border bg-brand-primary/5 rounded-2xl border-brand-primary/10">
+              <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary opacity-60">
+                Recaudación Validada
+              </span>
+              <span className="font-mono text-lg font-black tracking-tighter text-brand-primary">
+                {fmtCLP(kpis.totalCobrado || 0)}
+              </span>
             </div>
-            <span className="font-bold">{kpis.canceladas || 0}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-5 h-5 text-purple-600" />
-              <span className="text-sm">Cobrado</span>
+            <div className="flex flex-col gap-1 p-5 text-white bg-gray-900 shadow-xl rounded-2xl">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                Saldo en Cartera
+              </span>
+              <span className="font-mono text-lg font-black tracking-tighter text-brand-secondary">
+                {fmtCLP(kpis.totalPorCobrar || 0)}
+              </span>
             </div>
-            <span className="font-bold">{fmtCLP(kpis.totalCobrado || 0)}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-5 h-5 text-orange-600" />
-              <span className="text-sm">Por cobrar</span>
-            </div>
-            <span className="font-bold">
-              {fmtCLP(kpis.totalPorCobrar || 0)}
-            </span>
           </div>
         </div>
 
-        <div className="mt-6">
-          <h4 className="mb-3 text-sm font-bold text-gray-700">
-            Acciones Rápidas
-          </h4>
-          <div className="grid grid-cols-1 gap-2">
+        <div className="p-8 bg-brand-primary text-white shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 transition-transform duration-1000 rounded-full bg-white/10 blur-2xl group-hover:scale-150"></div>
+          <div className="relative z-10">
+            <CheckCircle2 className="w-10 h-10 mb-6 opacity-40" />
+            <h4 className="mb-2 text-xl font-black leading-tight tracking-tight uppercase">
+              Acción Directa
+            </h4>
+            <p className="mb-8 text-xs font-bold tracking-widest uppercase text-white/60">
+              Gestión de Citas
+            </p>
             <button
               onClick={() => openCreateUpdateSessionModal({})}
-              className="w-full px-4 py-2 font-semibold text-white rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow"
+              className="w-full py-4 bg-white text-brand-primary font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-brand-secondary transition-all active:scale-95 shadow-xl"
             >
-              Registrar sesión
+              Agendar Atención
             </button>
-            {/*   <button className="w-full px-4 py-2 font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50">
-                  Agendar próxima cita
-                </button>
-                <button className="w-full px-4 py-2 font-semibold text-purple-700 border-2 border-purple-200 rounded-lg hover:bg-purple-50">
-                  Emitir boleta (DTE)
-                </button> */}
           </div>
         </div>
-
-        {selected && (
-          <div className="pt-6 mt-6 border-t border-gray-200">
-            <div className="flex items-start justify-between mb-2">
-              <h4 className="text-sm font-bold text-gray-900">
-                Detalle de la atención
-              </h4>
-              <button
-                className="p-2 -mr-2 rounded-lg hover:bg-gray-100"
-                onClick={() => setSelected(null)}
-              >
-                <XCircle className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Paciente</span>
-                <span className="font-semibold">{selected.paciente}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Hora</span>
-                <span className="font-semibold">{selected.hora}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Profesional</span>
-                <span className="font-semibold">{selected.doctor}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Tipo</span>
-                <span className="font-semibold capitalize">
-                  {selected.tipo}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Estado</span>
-                <span className="font-semibold">
-                  {estadoTexto(selected.estado)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Pago</span>
-                <span className="font-semibold">
-                  {fmtCLP(selected.pagado)}{" "}
-                  <span className="font-normal text-gray-400">
-                    / {fmtCLP(selected.total)}
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              {selected.estado === "scheduled" && (
-                <>
-                  <button
-                    onClick={() => startSession(selected)}
-                    className="px-3 py-2 text-xs font-semibold text-blue-700 border-2 border-blue-200 rounded-lg hover:bg-blue-50"
-                  >
-                    Iniciar
-                  </button>
-                  <button
-                    onClick={() => openCancelModal(selected)}
-                    className="px-3 py-2 text-xs font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                </>
-              )}
-              {selected.estado === "in_progress" && (
-                <button
-                  onClick={() => openCompletedModal(selected)}
-                  className="col-span-2 px-3 py-2 text-xs font-semibold border-2 rounded-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                >
-                  Completar
-                </button>
-              )}
-              <button
-                onClick={() => issueDTE(selected)}
-                className="col-span-2 px-3 py-2 text-xs font-semibold text-purple-700 border-2 border-purple-200 rounded-lg hover:bg-purple-50"
-              >
-                Emitir DTE
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

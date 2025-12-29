@@ -88,45 +88,54 @@ export default function EmergencyContact({ patient, contact }) {
   );
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="flex items-center justify-between gap-2 mb-4 text-xl font-bold text-gray-900">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-red-600" />
-          Contacto de Emergencia
+    <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-[2rem] relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+      
+      <h2 className="flex items-center justify-between mb-8 text-lg font-black text-gray-900 tracking-tight uppercase relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-50 rounded-xl text-red-600">
+            <AlertCircle className="w-5 h-5" />
+          </div>
+          Red de Contacto
         </div>
-
-        <div className="hover:cursor-pointer">
-          <Edit
-            className="w-5 h-5 text-gray-300 transition-colors hover:text-gray-400"
-            onClick={() => setOpenContactModal(true)}
-          />
-        </div>
+        <button
+          onClick={() => setOpenContactModal(true)}
+          className="p-2.5 text-gray-300 hover:text-brand-primary hover:bg-brand-secondary/10 rounded-xl transition-all active:scale-90"
+        >
+          <Edit className="w-5 h-5" />
+        </button>
       </h2>
-      <div className="p-4 border-l-4 border-red-500 rounded-lg bg-red-50">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div>
-            <p className="text-sm text-gray-600">Nombre</p>
-            <p className="font-semibold text-gray-900">{mainContact?.name}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Relación</p>
-            <p className="font-semibold text-gray-900 first-letter:uppercase">
-              {mainContact?.relationship}
+
+      <div className="p-6 border-2 border-gray-50 rounded-3xl bg-gray-50/30 relative z-10">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Nombre Completo</p>
+            <p className="text-sm font-black text-gray-700 uppercase tracking-tight">
+                {mainContact?.name || 'No registrado'}
             </p>
           </div>
-          <div>
-            <p className="text-sm text-gray-600">Teléfono</p>
-            <p className="font-semibold text-gray-900">{mainContact?.phone}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Email</p>
-            <p className="font-semibold text-gray-900">{mainContact?.email}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Tipo</p>
-            <p className="font-semibold text-gray-900">
-              {t("contactType", mainContact?.type)}
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Vínculo / Parentesco</p>
+            <p className="text-sm font-black text-brand-primary uppercase tracking-widest">
+              {mainContact?.relationship || '---'}
             </p>
+          </div>
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Teléfono Directo</p>
+            <p className="text-sm font-black text-gray-700 font-mono tracking-tighter">
+                {mainContact?.phone || '---'}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="enterprise-label !text-[8px] opacity-60">Email</p>
+            <p className="text-sm font-bold text-gray-500 lowercase truncate">
+                {mainContact?.email || '---'}
+            </p>
+          </div>
+          <div className="col-span-2 pt-4 border-t border-gray-100">
+            <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black bg-white border border-gray-100 text-brand-gray uppercase tracking-[0.2em] shadow-sm">
+                Rol: {t("contactType", mainContact?.type) || 'Emergencia'}
+            </span>
           </div>
         </div>
       </div>

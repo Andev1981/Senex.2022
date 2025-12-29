@@ -79,15 +79,18 @@ class PatientWelcomeNotification extends Notification implements ShouldQueue, Wh
      */
     public function toTwilioWhatsAppChannel($notifiable): array
     {
-        // Usamos la "inteligencia" del Trait (como un atributo dinámico)
         $nombreRecibe = $this->getFirstName($this->getRecipientName($notifiable));
         $referencia = $this->getPatientReference($notifiable);
         $clinica = config('app.name');
 
         return [
-            'body' => "¡Hola {$nombreRecibe}! 👋 Bienvenido/a a {$clinica}.\n\n" .
-                "Hemos registrado correctamente la ficha{$referencia}. Por este medio te enviaremos recordatorios de citas y estados de cuenta.\n\n" .
-                "¡Estamos felices de tenerte con nosotros!",
+            'body' => "🌟 *¡Bienvenido/a a {$clinica}!* 🌟\n\n" .
+                "Hola {$nombreRecibe}, es un gusto saludarte. Hemos activado con éxito tu ficha digital{$referencia} en nuestro sistema médico.\n\n" .
+                "A partir de ahora, este será nuestro canal oficial para:\n" .
+                "✅ Confirmación de citas\n" .
+                "✅ Recordatorios de atención\n" .
+                "✅ Estados de cuenta y boletas\n\n" .
+                "Estamos comprometidos con tu bienestar. ¡Nos vemos pronto!",
             'event_key' => 'patient.welcome'
         ];
     }
@@ -100,14 +103,20 @@ class PatientWelcomeNotification extends Notification implements ShouldQueue, Wh
         $recipientName = $this->getRecipientName($notifiable);
         $firstName = $this->getFirstName($recipientName);
         $referencia = $this->getPatientReference($notifiable);
+        $clinica = config('app.name');
 
         return (new MailMessage)
-            ->subject("¡Bienvenido/a a KineMobile!")
+            ->subject("✨ ¡Te damos la bienvenida a {$clinica}!")
             ->greeting("Hola {$firstName},")
-            ->line("Te damos la más cordial bienvenida a nuestra clínica.")
-            ->line("Hemos creado exitosamente la ficha de atención{$referencia}.")
-            ->line("Desde ahora, recibirás por este medio información sobre tus citas y estados de pago.")
-            ->salutation("Saludos equipo, " . config('app.name'));
+            ->line("Es un placer saludarte. Te informamos que hemos creado exitosamente tu expediente clínico{$referencia} en nuestra plataforma.")
+            ->line("En {$clinica} nos esforzamos por ofrecerte una atención de excelencia, apoyada por tecnología de vanguardia para el seguimiento de tu tratamiento.")
+            ->line("A través de este correo te mantendremos informado sobre:")
+            ->line("• Agendamiento y reprogramación de sesiones.")
+            ->line("• Documentos tributarios y comprobantes de pago.")
+            ->line("• Evolución y objetivos de tu plan de salud.")
+            ->action("Ver mi Ficha en Línea", url('/'))
+            ->line("Gracias por confiar en nuestro equipo de profesionales.")
+            ->salutation("Cordialmente,\nEquipo " . $clinica);
     }
 
     /**

@@ -13,7 +13,7 @@ import TablePlans from "./Partials/TablePlans";
 
 // --- COMPONENTE PRINCIPAL ---
 
-const InsuranceIndex = ({ insurances, sessionTypes }) => {
+const InsuranceIndex = ({ insurances, sessionTypes, user }) => {
   const addButtonRef = useRef(null);
   // 1. Estado para el Modal de Edición/Creación de Aseguradora
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -67,37 +67,41 @@ const InsuranceIndex = ({ insurances, sessionTypes }) => {
   return (
     <AuthenticatedLayout>
       <Head title="Gestión de Aseguradoras y Planes" />
-      <div className="p-4">
-        <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-              <BrickWallShield className="w-6 h-6 text-white" />
+      <div className="min-h-screen p-6 bg-gray-50/50 space-y-8">
+        {/* Header */}
+        <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-[2rem] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-14 h-14 shadow-xl shadow-brand-primary/20 bg-brand-primary rounded-2xl transform rotate-3">
+                <BrickWallShield className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1">Aseguradoras & Isapres</h1>
+                <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
+                  Maestro de Previsión • Senex Enterprise
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Aseguradoras / Isapres
-              </h1>
-              <p className="text-sm text-gray-600">
-                Gestión de aseguradoras / Isapres
-              </p>
+            <div className="flex gap-2">
+              <button
+                ref={addButtonRef}
+                onClick={() => openFormModal()}
+                className="flex items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva Aseguradora
+              </button>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              ref={addButtonRef}
-              onClick={() => openFormModal()}
-              className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
-            >
-              <Plus className="w-4 h-4" />
-              Nueva Aseguradora
-            </button>
           </div>
         </div>
+        
         <TableInsurances
           insurances={insurances}
           handleOpenModalEdit={openFormModal}
           handleOpenModalDelete={() => {}}
           openPlanListModal={openPlanListModal}
+          user={user}
         />
       </div>
 
@@ -116,13 +120,10 @@ const InsuranceIndex = ({ insurances, sessionTypes }) => {
           handleOpenModalPlanDelete={handleOpenModalPlanDelete}
         />
       </SideModal>
-      {/* Modal de Edición/Creación de Aseguradora (Ahora solo para la entidad padre) */}
       <Modal
         open={isFormModalOpen}
         onClose={closeFormModal}
-        title={editingInsurance ? "Actualizando datos" : "Creando nuevos datos"}
-        description="Edite/Cree los datos principales de la Isapre/Aseguradora."
-        width="3xl"
+        maxWidth="3xl"
       >
         <InsuranceFormModal
           onClose={closeFormModal}
@@ -135,8 +136,6 @@ const InsuranceIndex = ({ insurances, sessionTypes }) => {
       <SideModal
         open={isPlansModalOpen}
         onClose={closePlansFormModal}
-        title={editingInsurance && "Planes: " + editingInsurance?.name}
-        description="Asigne los montos y vigencia para la prestación seleccionada."
         width="4xl"
       >
         <PlanEditForm

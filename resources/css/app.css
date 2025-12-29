@@ -178,3 +178,33 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+:root {
+    --font-enterprise: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --color-brand-primary: #3292b3;
+    --color-brand-gray: #858793;
+}
+
+/* === Global Enterprise Typography === */
+label, .enterprise-label {
+  font-family: var(--font-enterprise);
+  font-size: 10px;
+  font-weight: 900; /* font-black */
+  text-transform: uppercase;
+  letter-spacing: 0.15em; /* tracking-widest */
+  color: var(--color-brand-gray);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.enterprise-label-dark {
+  color: var(--color-brand-primary);
+}
+
+.enterprise-title {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #111827; /* text-gray-900 */
+}

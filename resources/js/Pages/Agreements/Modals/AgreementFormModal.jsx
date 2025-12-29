@@ -2,6 +2,20 @@ import { useForm } from "@inertiajs/react";
 import Modal from "@/Components/Modal";
 import { useEffect } from "react";
 import { fmtDateISO } from "@/utils/utils";
+import {
+  Handshake,
+  Database,
+  FileCheck,
+  Calendar,
+  Hash,
+  CheckCircle2,
+  AlertCircle,
+  Link as LinkIcon,
+} from "lucide-react";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SecondaryButton from "@/Components/SecondaryButton";
+import TextInput from "@/Components/TextInput";
+import Switch from "@/Components/Switch";
 
 export default function AgreementFormModal({
   show,
@@ -9,9 +23,7 @@ export default function AgreementFormModal({
   agreement,
   insurances,
 }) {
-  // ... (Lógica de useForm y handleSubmit, la cual se mantiene igual) ...
   const isEdit = !!agreement;
-  // Inicializamos vacío (los datos reales entran por el useEffect)
   const { data, setData, post, put, processing, errors, reset, clearErrors } =
     useForm({
       insurance_id: "",
@@ -21,10 +33,8 @@ export default function AgreementFormModal({
       start_date: "",
     });
 
-  // 2. LA MAGIA: Sincronizar Props con Inertia Form
   useEffect(() => {
     if (agreement) {
-      // MODO EDICIÓN: Cargamos los datos que vienen del prop
       setData({
         insurance_id: agreement.insurance_id,
         name: agreement.name,
@@ -33,28 +43,22 @@ export default function AgreementFormModal({
         start_date: agreement.start_date,
       });
     } else {
-      // MODO CREACIÓN: Si se abre y no hay convenio, limpiamos
       if (show) {
         reset();
         clearErrors();
       }
     }
-  }, [agreement, show]); // Se ejecuta cada vez que cambia el convenio seleccionado
+  }, [agreement, show]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const routeName = isEdit ? "agreements.update" : "agreements.store";
-    const routeParams = isEdit ? agreement.id : undefined;
-
+    const url = isEdit
+      ? route("agreements.update", agreement.id)
+      : route("agreements.store");
     const method = isEdit ? put : post;
 
-    /*  console.log(method, routeName, routeParams);
-
-    return; */
-
-    method(route(routeName, routeParams), {
+    method(url, {
       onSuccess: () => onClose(),
-      onError: (err) => console.error(err),
       preserveScroll: true,
     });
   };
@@ -63,103 +67,175 @@ export default function AgreementFormModal({
     <Modal
       open={show}
       onClose={() => onClose()}
-      title="Nuevo convenio"
-      description="Datos del nuevo convenio"
-      width="4xl"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4 p-6">
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">
-            Aseguradora (Vínculo)
-          </span>
-          <select
-            value={data.insurance_id}
-            onChange={(e) => setData("insurance_id", parseInt(e.target.value))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-            disabled={isEdit}
-            required
+      maxWidth="3xl"
+      title={isEdit ? "Optimizar Acuerdo" : "Nuevo Marco Legal"}
+      subtitle="Configuración de Convenio Corporativo"
+      icon={Handshake}
+      footer={
+        <>
+          <SecondaryButton
+            onClick={() => {
+              reset();
+              onClose();
+            }}
+            className="!px-10 !py-4"
           >
-            <option value="">Seleccione Aseguradora</option>
-            {insurances?.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.name}
-              </option>
-            ))}
-          </select>
-          {errors.insurance_id && (
-            <div className="text-red-500 text-xs mt-1">
-              {errors.insurance_id}
+            Descartar
+          </SecondaryButton>
+          <PrimaryButton
+            disabled={processing}
+            onClick={handleSubmit}
+            type="button"
+            className="!px-14 !py-4 shadow-xl shadow-brand-primary/20"
+          >
+            {processing
+              ? "Sincronizando..."
+              : isEdit
+              ? "Actualizar Acuerdo"
+              : "Registrar Convenio"}
+          </PrimaryButton>
+        </>
+      }
+    >
+      <div className="space-y-10">
+        {isEdit && (
+          <div className="flex justify-end">
+            <div
+              className={`px-4 py-2 rounded-xl border flex items-center gap-3 ${
+                data.is_active
+                  ? "bg-green-50 border-green-100 text-green-600"
+                  : "bg-red-50 border-red-100 text-red-600"
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                {data.is_active ? "Vigente" : "Suspendido"}
+              </span>
             </div>
-          )}
-        </label>
+          </div>
+        )}
+        {/* BLOQUE 1: IDENTIDAD DEL CONTRATO */}
+        <div className="space-y-6">
+          <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+            <FileCheck className="w-4 h-4" /> Especificaciones del Contrato
+          </h3>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
+            <div className="space-y-1 md:col-span-12">
+              <label className="ml-1 enterprise-label opacity-60">
+                Aseguradora Mandante
+              </label>
+              <div className="relative">
+                <LinkIcon className="absolute w-4 h-4 -translate-y-1/2 left-4 top-1/2 text-brand-gray opacity-40" />
+                <select
+                  value={data.insurance_id}
+                  onChange={(e) =>
+                    setData("insurance_id", parseInt(e.target.value))
+                  }
+                  className="w-full py-4 pl-12 pr-4 text-sm font-black uppercase border-gray-100 shadow-inner rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                  disabled={isEdit}
+                  required
+                >
+                  <option value="">-- Seleccionar Institución --</option>
+                  {insurances?.map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.insurance_id && (
+                <p className="text-red-500 text-[10px] font-black uppercase mt-1 ml-1">
+                  {errors.insurance_id}
+                </p>
+              )}
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              Nombre del Contrato
-            </span>
-            <input
-              type="text"
-              value={data.name}
-              onChange={(e) => setData("name", e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              required
-            />
-            {errors.name && (
-              <div className="text-red-500 text-xs mt-1">{errors.name}</div>
-            )}
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">Versión</span>
-            <input
-              type="text"
-              value={data.version}
-              onChange={(e) => setData("version", e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-            />
-            {errors.version && (
-              <div className="text-red-500 text-xs mt-1">{errors.version}</div>
-            )}
-          </label>
+            <div className="space-y-1 md:col-span-8">
+              <label className="ml-1 enterprise-label opacity-60">
+                Nombre del Convenio / Campaña
+              </label>
+              <TextInput
+                value={data.name}
+                onChange={(e) => setData("name", e.target.value)}
+                required
+                className="w-full !rounded-2xl !py-4 font-black uppercase text-sm shadow-inner"
+                placeholder="EJ: CONVENIO MARCO PRESTACIONES 2025"
+              />
+              {errors.name && (
+                <p className="text-red-500 text-[10px] font-black uppercase mt-1 ml-1">
+                  {errors.name}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1 md:col-span-4">
+              <label className="ml-1 enterprise-label opacity-60">
+                Versión
+              </label>
+              <div className="relative">
+                <Hash className="absolute w-4 h-4 -translate-y-1/2 left-4 top-1/2 text-brand-gray opacity-40" />
+                <input
+                  type="text"
+                  value={data.version}
+                  onChange={(e) => setData("version", e.target.value)}
+                  className="w-full py-4 pl-12 pr-4 font-mono text-sm font-black border-gray-100 shadow-inner rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                  placeholder="1.0"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={data.is_active}
-            onChange={(e) => setData("is_active", e.target.checked)}
-            className="rounded border-gray-300 text-indigo-600 shadow-sm"
-          />
-          <span className="text-sm text-gray-700">Convenio Activo</span>
-        </label>
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">
-            Fecha de Inicio (Vigencia)
-          </span>
-          <input
-            type="date"
-            value={fmtDateISO(data.start_date)}
-            onChange={(e) => setData("start_date", e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-            required // CRÍTICO: Debe ser requerida
-          />
-          {errors.start_date && (
-            <div className="text-red-500 text-xs mt-1">{errors.start_date}</div>
-          )}
-        </label>
+        {/* BLOQUE 2: VIGENCIA & ESTADO */}
+        <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
+          <div className="relative z-10 grid items-end grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="enterprise-label !text-brand-primary flex items-center gap-2 ml-1">
+                <Calendar className="w-3.5 h-3.5" /> Inicio de Vigencia
+              </label>
+              <input
+                type="date"
+                value={fmtDateISO(data.start_date)}
+                onChange={(e) => setData("start_date", e.target.value)}
+                className="w-full px-5 py-4 font-mono font-black text-gray-700 transition-all bg-white border-gray-100 shadow-sm rounded-2xl focus:ring-brand-primary"
+                required
+              />
+              {errors.start_date && (
+                <p className="text-red-500 text-[10px] font-black uppercase mt-1 ml-1">
+                  {errors.start_date}
+                </p>
+              )}
+            </div>
 
-        <button
-          type="submit"
-          disabled={processing}
-          className="w-full py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition duration-150"
-        >
-          {processing
-            ? "Guardando..."
-            : isEdit
-            ? "Actualizar Convenio"
-            : "Crear Convenio"}
-        </button>
-      </form>
+            <div className="flex items-center justify-between p-6 bg-white border border-gray-100 shadow-sm rounded-2xl">
+              <div className="flex items-center gap-4">
+                <div
+                  className={`p-2 rounded-xl transition-colors ${
+                    data.is_active
+                      ? "bg-green-50 text-green-600"
+                      : "bg-red-50 text-red-600"
+                  }`}
+                >
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className="mb-1 text-xs font-black leading-none tracking-tight text-gray-900 uppercase">
+                    Estado Operativo
+                  </p>
+                  <p className="text-[8px] font-bold text-gray-400 uppercase">
+                    Habilitar para facturación
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={data.is_active}
+                onChange={(e) => setData("is_active", e.target.checked)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </Modal>
   );
 }

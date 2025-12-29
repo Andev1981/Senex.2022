@@ -29,28 +29,31 @@ class DteService
 
     public function issueInvoiceDte(Invoice $invoice): string
     {
-        // 1. Cargar Configuración (Aquí viene el RUT de la empresa)
+        // 1. Cargar Configuración
         $config = $this->cargarConfiguracion($invoice->company_id);
 
-        // 2. Determinar Tipo (33, 39, 41)
-        $tipoDte = $this->calculator->calculateAndDetermineType($invoice);
-
-        // Actualizamos el invoice
-        $invoice->dte_type = $tipoDte;
-        $invoice->save();
+        // 2. Determinar Tipo
+        $tipoDte = $invoice->dte_type ?: $this->calculator->calculateAndDetermineType($invoice);
 
         // ---------------------------------------------------------
-        // 3. RESERVAR FOLIO (CORREGIDO)
+        // 3. GESTIÓN DE FOLIOS (REINTENTO INTELIGENTE)
         // ---------------------------------------------------------
-        // Ahora pasamos los 3 argumentos que tu servicio espera:
-        // 1. ID Empresa, 2. RUT Emisor, 3. Tipo DTE
-        list($objetoFolios, $folioReservado) = $this->foliosService->reservarFolio(
-            $invoice->company_id,       // int $company
-            $config['rut_empresa'],     // string $rutEmisor (Lo sacamos de la config cargada)
-            $tipoDte                    // int $tipoDTE
-        );
+        $folioAUsar = $invoice->dte_folio;
+        $objetoFolios = null;
 
-        $invoice->dte_folio = $folioReservado;
+        // REGLA: Si tiene folio y NO fue rechazado formalmente por el SII (o sea, es nuevo o error técnico), reutilizamos.
+        if ($folioAUsar && $invoice->dte_status !== Invoice::SII_STATUS_REJECTED) {
+            $objetoFolios = $this->foliosService->recuperarCAF($invoice->company_id, $tipoDte);
+        } else {
+            // Si no tiene folio o el SII rechazó el anterior, reservamos uno nuevo.
+            list($objetoFolios, $folioAUsar) = $this->foliosService->reservarFolio(
+                $invoice->company_id,
+                $config['rut_empresa'],
+                $tipoDte
+            );
+            $invoice->dte_folio = $folioAUsar;
+        }
+
         $invoice->save();
 
         // 4. Generar Payload
@@ -60,8 +63,10 @@ class DteService
         $result = $this->dteProvider->issue($payloadArray, $config, $objetoFolios);
         list($trackId, $xmlFirmado) = $result;
 
-        // 6. Guardar Registro
-        $this->guardarRegistroDte($invoice, $tipoDte, $folioReservado, $trackId, $xmlFirmado);
+        // 6. Guardar Registro y Actualizar Factura
+        $this->guardarRegistroDte($invoice, $tipoDte, $folioAUsar, $trackId, $xmlFirmado);
+        
+        $invoice->update(['dte_status' => Invoice::SII_STATUS_SENT]);
 
         return $trackId;
     }
@@ -146,17 +151,34 @@ class DteService
      * @param int $companyId El ID de la empresa para cargar la configuración.
      * @return string El estado final del DTE.
      */
-    public function checkDteStatus(string $trackId, int $companyId): string
+    public function checkDteStatus(string $trackId, int $companyId): array
     {
-        $config = $this->cargarConfiguracion($companyId);
+        try {
+            $config = $this->cargarConfiguracion($companyId);
 
-        // Llama al método status() definido en la Interfaz DteServiceProvider
-        $status = $this->dteProvider->status($trackId, $config);
+            // Llama al método status() que ahora devuelve un array [estado, glosa]
+            $result = $this->dteProvider->status($trackId, $config);
 
-        // Lógica de negocio para actualizar el estado en el modelo Dte.
-        Dte::where('track_id', $trackId)->update(['estado_sii' => $status]);
+            if (!is_array($result)) {
+                $result = [
+                    'estado' => 'ERROR_INTERNO',
+                    'glosa' => 'El proveedor de DTE no devolvió un formato válido.'
+                ];
+            }
 
-        return $status;
+            // Lógica de negocio para actualizar el estado y la glosa en el modelo Dte.
+            \App\Models\Dte::where('track_id', $trackId)->update([
+                'estado_sii' => $result['estado'] ?? 'ERROR',
+                'glosa_rechazo' => $result['glosa'] ?? 'Sin detalle'
+            ]);
+
+            return $result;
+        } catch (\Exception $e) {
+            return [
+                'estado' => 'ERROR',
+                'glosa' => $e->getMessage()
+            ];
+        }
     }
 
     // --- MÉTODOS AUXILIARES ---
@@ -167,7 +189,7 @@ class DteService
     protected function cargarConfiguracion(int $companyId): array
     {
         // Buscar la configuración en la tabla 'dte_configuracion'
-        $config = Company::findOrFail($companyId)->dteConfig; // Asume una relación 1:1
+        $config = Company::findOrFail($companyId)->dteConfiguration; // Nombre corregido
 
         if (!$config) {
             throw new Exception("Configuración DTE no encontrada para la Compañía ID: {$companyId}");
@@ -175,7 +197,7 @@ class DteService
 
         // Retorna un array con las credenciales necesarias
         return [
-            'rut_empresa' => $config->rut_emisor, // Usado en el XML
+            'rut_empresa' => $config->rut_empresa, // Nombre de columna corregido
             'ambiente' => $config->ambiente,
             'path' => storage_path('app/' . $config->certificado_path), // Ruta completa del PFX
             'password' => decrypt($config->certificado_password), // Importante: desencriptar
@@ -183,21 +205,28 @@ class DteService
     }
 
     /**
-     * Guarda el registro final del DTE en la tabla 'dtes'.
+     * Guarda o actualiza el registro final del DTE en la tabla 'dtes'.
      */
-    protected function guardarRegistroDte(Invoice $invoice, string $trackId, string $xmlFirmado): Dte
+    protected function guardarRegistroDte(Invoice $invoice, int $tipo, int $folio, string $trackId, string $xmlFirmado): Dte
     {
-        return Dte::create([
-            'company_id' => $invoice->company_id,
-            'branch_id' => $invoice->branch_id,
-            'type' => $invoice->type,
-            'folio' => $invoice->folio,
-            'rut_emisor' => $invoice->rut_emisor, // O tomarlo de la configuración
-            'xml_data' => $xmlFirmado,
-            'track_id' => $trackId,
-            'estado_sii' => 'ENVIADO', // Estado inicial tras la recepción del Track ID
-            // ... otros campos DTE
-        ]);
+        return Dte::updateOrCreate(
+            [
+                'company_id' => $invoice->company_id,
+                'type' => $tipo,
+                'folio' => $folio
+            ],
+            [
+                'branch_id' => $invoice->branch_id,
+                'rut_emisor' => $invoice->company->rut ?? '76000000-1',
+                'rut_receptor' => data_get($invoice->metadata, 'client.rut', '1-9'),
+                'total_monto_clp' => $invoice->amount_total_clp,
+                'xml_data' => $xmlFirmado,
+                'track_id' => $trackId,
+                'estado_sii' => 'ENVIADO',
+                'origin_type' => 'Invoice',
+                'origin_id' => $invoice->id
+            ]
+        );
     }
 
     public function calcularYDeterminarTipo(Invoice $invoice)

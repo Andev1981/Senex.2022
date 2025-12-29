@@ -54,17 +54,16 @@ const TablePagination = ({
   };
 
   return (
-    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="px-6 py-5 border-t border-gray-100 bg-gray-50/30">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {/* Info izquierda */}
-        <div className="flex items-center gap-3">
-          <p className="text-sm text-gray-700">
-            Página <span className="font-semibold">{currentPage}</span> de{" "}
-            <span className="font-semibold">{pageCount || 1}</span> | Mostrando{" "}
-            <span className="font-semibold">
-              {total ? `${startRow}–${endRow}` : 0}
-            </span>{" "}
-            de <span className="font-semibold">{total ?? 0}</span> registros
+        <div className="flex items-center gap-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-brand-gray opacity-70">
+            Página <span className="text-gray-900">{currentPage}</span> de{" "}
+            <span className="text-gray-900">{pageCount || 1}</span> 
+            <span className="mx-2 opacity-30">|</span> 
+            Registros <span className="text-gray-900">{total ? `${startRow}–${endRow}` : 0}</span> 
+            <span className="mx-1 opacity-30">de</span> <span className="text-gray-900">{total ?? 0}</span>
           </p>
 
           <select
@@ -75,7 +74,7 @@ const TablePagination = ({
               table.setPageSize(newSize); // TanStack
               table.setPageIndex(0); // reset a primera página
             }}
-            className="px-3 py-1.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+            className="px-4 py-2 bg-white border border-gray-100 rounded-xl focus:ring-brand-primary focus:border-brand-primary text-[10px] font-black uppercase tracking-widest text-brand-gray cursor-pointer shadow-sm transition-all"
           >
             {pageSizeOptions.map((size) => (
               <option key={size} value={size}>
@@ -86,60 +85,62 @@ const TablePagination = ({
         </div>
 
         {/* Controles derecha */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
-            className="p-2 transition-colors border-2 border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => goToPage(1)}
             disabled={!table.getCanPreviousPage()}
             aria-label="Primera página"
           >
-            {"<<"}
+            <span className="text-xs font-black">«</span>
           </button>
           <button
-            className="p-2 transition-colors border-2 border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
             aria-label="Página anterior"
           >
-            {"<"}
+            <span className="text-xs font-black">‹</span>
           </button>
 
-          {pages.map((p) =>
-            typeof p === "string" && p.startsWith("ellipsis-") ? (
-              <span key={p} className="px-2 select-none">
-                …
-              </span>
-            ) : (
-              <button
-                key={p}
-                onClick={() => goToPage(p)}
-                className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-                  currentPage === p
-                    ? "bg-blue-600 text-white"
-                    : "border-2 border-gray-200 hover:bg-gray-100 text-gray-700"
-                }`}
-                aria-current={currentPage === p ? "page" : undefined}
-              >
-                {p}
-              </button>
-            )
-          )}
+          <div className="flex items-center gap-1 px-2">
+            {pages.map((p) =>
+                typeof p === "string" && p.startsWith("ellipsis-") ? (
+                <span key={p} className="px-2 text-brand-gray/30 font-black">
+                    …
+                </span>
+                ) : (
+                <button
+                    key={p}
+                    onClick={() => goToPage(p)}
+                    className={`min-w-[40px] h-10 rounded-enterprise-sm text-[10px] font-black transition-all active:scale-90 ${
+                    currentPage === p
+                        ? "bg-brand-primary text-white shadow-lg shadow-brand-primary/20"
+                        : "bg-white border border-gray-100 text-brand-gray hover:bg-gray-50"
+                    }`}
+                    aria-current={currentPage === p ? "page" : undefined}
+                >
+                    {p}
+                </button>
+                )
+            )}
+          </div>
 
           <button
-            className="p-2 transition-colors border-2 border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
             aria-label="Página siguiente"
           >
-            {">"}
+            <span className="text-xs font-black">›</span>
           </button>
           <button
-            className="p-2 transition-colors border-2 border-gray-200 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => goToPage(pageCount)}
             disabled={!table.getCanNextPage()}
             aria-label="Última página"
           >
-            {">>"}
+            <span className="text-xs font-black">»</span>
           </button>
         </div>
       </div>

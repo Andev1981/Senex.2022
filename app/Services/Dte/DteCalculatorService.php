@@ -18,62 +18,63 @@ class DteCalculatorService
 
     // 1. Iterar y Calcular (Matemática)
     foreach ($invoice->items as $item) {
-      // Calculamos el total de la línea (Precio x Cantidad)
-      // Asumimos que guardas el total bruto en 'total_gross_clp' en invoice_items
-      $totalLinea = $item->total_gross_clp;
+      // El precio guardado en la BD es el NETO según el flujo actual
+      $netoLinea = $item->total_gross_clp; 
 
       if ($item->is_exento) {
-        $exentoTotal += $totalLinea;
+        $exentoTotal += $netoLinea;
       } else {
         $tieneItemsAfectos = true;
 
-        // Desglosar IVA (19%) desde el Bruto
-        // Fórmula: Neto = Bruto / 1.19
-        $netoLinea = round($totalLinea / 1.19);
-        $ivaLinea = $totalLinea - $netoLinea;
-
+        // Calculamos el IVA (19%) sobre el neto
+        $ivaLinea = (int) round($netoLinea * 0.19);
+        
         $netoTotal += $netoLinea;
         $ivaTotal += $ivaLinea;
       }
     }
 
+    // Aplicar descuento global proporcional si existe (Regla de negocio: se descuenta del neto primero)
+    $globalDiscount = $invoice->global_discount_clp ?? 0;
+    if ($globalDiscount > 0) {
+        if ($netoTotal >= $globalDiscount) {
+            $netoTotal -= $globalDiscount;
+        } else {
+            $diff = $globalDiscount - $netoTotal;
+            $netoTotal = 0;
+            $exentoTotal = max(0, $exentoTotal - $diff);
+        }
+        // Recalcular IVA tras el descuento global sobre el neto
+        $ivaTotal = (int) round($netoTotal * 0.19);
+    }
+
     // 2. Actualizar el Modelo Invoice (Persistencia)
-    // Guardamos los cálculos para que coincidan EXACTAMENTE con lo que enviaremos al SII
     $invoice->amount_neto_clp = $netoTotal;
     $invoice->amount_exento_clp = $exentoTotal;
     $invoice->amount_iva_clp = $ivaTotal;
     $invoice->amount_total_clp = $netoTotal + $ivaTotal + $exentoTotal;
 
-    // 3. Determinar el Tipo DTE (Tu lógica, refinada)
+    // 3. Determinar el Tipo DTE (Regla 1)
     $tipoDte = $this->determineType($invoice, $tieneItemsAfectos);
 
     $invoice->dte_type = $tipoDte;
-    $invoice->save(); // Guardamos todo en la BD
+    $invoice->save(); 
 
     return $tipoDte;
   }
 
   private function determineType(Invoice $invoice, bool $tieneItemsAfectos): int
   {
-    // Lógica para detectar si es B2B (Factura)
-    // Puede ser por un flag manual o si el receptor es una Empresa
-    $esFactura = $invoice->requires_factura
-      || ($invoice->entity_type === 'App\Models\Company');
+    // B2B: Si el RUT es de empresa (> 50M) o el receptor es una Company
+    $rutNumerico = (int) str_replace(['.', '-'], '', $invoice->metadata['client']['rut'] ?? '0');
+    $esEmpresa = $rutNumerico > 50000000 || ($invoice->entity_type === 'App\Models\Company');
 
-    // CASO 1: FACTURA (B2B)
-    if ($esFactura) {
-      // Si hay items afectos, es Factura Electrónica (33)
-      // Si TODO es exento, es Factura Exenta (34)
+    if ($esEmpresa) {
+      // Factura Electrónica (33) si hay afectos, Factura Exenta (34) si todo es exento
       return $tieneItemsAfectos ? 33 : 34;
     }
 
-    // CASO 2: BOLETA (B2C)
-    if ($tieneItemsAfectos) {
-      // Si hay al menos un ítem afecto (o mixto), es Boleta Electrónica (39)
-      return 39;
-    }
-
-    // Si TODO es exento (solo salud), es Boleta Exenta (41)
-    return 41;
+    // B2C: Boleta Electrónica (39) si hay afectos (mixta), Boleta Exenta (41) si 100% exento
+    return $tieneItemsAfectos ? 39 : 41;
   }
 }

@@ -17,94 +17,62 @@ import {
   List,
   Shell,
   DollarSign,
-  BarChart3,
+  MapPin,
   Handshake,
   Building,
   Package,
+  Building2,
 } from "lucide-react";
 import CompanySwitcher from "@/Components/CompanySwitcher";
 import BranchSwitcher from "@/Components/BranchSwitcher";
+import ContextSelectorModal from "@/Components/ContextSelectorModal";
 
 function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
   const { props } = usePage();
-  const { current_company } = props;
+  const { current_company, current_branch } = props;
+  const [isContextModalOpen, setIsContextModalOpen] = useState(false);
   // Trae la URL actual para reaccionar a cambios de ruta
   const { url } = usePage();
 
   // Define tus items con los IDs como NOMBRES DE RUTA de Ziggy
   const menuItems = useMemo(
     () => [
-      { id: "/", label: "Dashboard", icon: Home, badge: null },
-      { id: "patients.index", label: "Pacientes", icon: Users, badge: "50" },
-      { id: "doctors.index", label: "Kines", icon: Stethoscope, badge: "50" },
+      { id: "/", label: "Dashboard", icon: Home },
       {
-        id: "session-types.index",
-        label: "Tipo de Sesiones",
-        icon: Shell,
-        badge: null,
-      },
-      {
-        id: "insurances.index",
-        label: "Aseguradoras",
-        icon: Shield,
-        badge: null,
-      },
-      {
-        id: "agreements.index",
-        label: "Convenios",
-        icon: Handshake,
-        badge: null,
-      },
-
-      {
-        id: "attendances.index",
-        label: "Tratamientos",
-        icon: List,
-        badge: null,
-      },
-      {
-        id: "payments.index",
-        label: "Pagos",
-        icon: DollarSign,
-        badge: "3",
-      },
-      { id: "documents", label: "Boleta", icon: FileText, badge: "8" },
-      {
-        id: "companies.index",
-        label: "Compañias",
-        icon: Building,
-        badge: null,
-      },
-      { id: "products.index", label: "Productos", icon: Package, badge: null },
-      // ejemplo si tu ruta es pagos.index
-      /* { id: "agenda", label: "Agenda", icon: Calendar, badge: null }, */
-      /* { id: "pos", label: "POS", icon: Computer, badge: null }, */
-      /*  {
-        id: "invoices.index",
-        label: "Facturas",
-        icon: BarChart3,
-        badge: null,
-      }, */
-      /*{ id: "inventario", label: "Inventario", icon: Package, badge: null },*/
-      /* { id: "plans.index", label: "Planes", icon: NotebookText, badge: null }, */
-      /*{
-        id: "documentos", // si no es una ruta real, deja como contenedor
-        label: "Documentos",
-        icon: FileText,
-        badge: null,
+        id: "clinical_management",
+        label: "Gestión Clínica",
+        icon: Stethoscope,
         submenu: [
-          {
-            id: "doc-tributarios",
-            label: "Documentos Tributarios",
-            icon: Receipt,
-          },
-          {
-            id: "doc-clinicos",
-            label: "Documentos Clínicos",
-            icon: Stethoscope,
-          },
+          { id: "patients.index", label: "Pacientes", icon: Users },
+          { id: "doctors.index", label: "Kines", icon: Stethoscope },
+          { id: "attendances.index", label: "Atenciones", icon: List },
+          { id: "session-types.index", label: "Tipos de Sesión", icon: Shell },
         ],
-      }, */
+      },
+      {
+        id: "finance_admin",
+        label: "Administración",
+        icon: Building,
+        submenu: [
+          { id: "agreements.index", label: "Convenios", icon: Handshake },
+          { id: "insurances.index", label: "Aseguradoras", icon: Shield },
+          { id: "payrolls.index", label: "Liquidaciones", icon: NotebookText },
+          { id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign },
+          { id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package },
+          { id: "payments.index", label: "Caja / POS", icon: DollarSign },
+          { id: "documents", label: "Boleta SII", icon: FileText },
+        ],
+      },
+      {
+        id: "system_config",
+        label: "Configuración",
+        icon: Computer,
+        submenu: [
+          { id: "companies.index", label: "Compañias", icon: Building },
+          { id: "products.index", label: "Productos", icon: Package },
+          { id: "subscription.index", label: "Mi Suscripción", icon: Shield },
+        ],
+      }
     ],
     []
   );
@@ -155,59 +123,85 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
   }, [url, menuItems]);
 
   return (
-    <div className="sticky top-0 z-40 flex flex-col bg-white border-r border-gray-200 h-dvh">
+    <div className="sticky top-0 z-40 flex flex-col bg-white border-r border-gray-100 shadow-2xl h-dvh shadow-gray-500/5">
       {/* Header del sidebar */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+      <div className="flex items-center justify-between h-20 px-6 border-b border-gray-50">
         {sidebarOpen ? (
           <>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl">
-                <Stethoscope className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex items-center justify-center w-10 h-10 shadow-lg bg-brand-primary rounded-xl shadow-brand-primary/20 shrink-0">
+                <HeartPulse className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className="font-bold text-gray-900">
-                  <div className="company-info">
-                    {current_company ? (
-                      <span className="font-bold">
-                        {current_company.business_name}
-                      </span>
-                    ) : (
-                      <span className="italic text-gray-400">
-                        Contexto Global
-                      </span>
-                    )}
-                  </div>
+              <div className="min-w-0">
+                <h1 className="font-black text-gray-900 uppercase text-[11px] tracking-tight truncate leading-none mb-1">
+                  {current_company?.business_name || "Senex Gestion"}
                 </h1>
-                <p className="text-xs text-gray-500">Gestión</p>
+                <p className="text-[9px] font-black text-brand-gray uppercase tracking-widest leading-none">
+                  Enterprise
+                </p>
               </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 transition-all hover:bg-gray-50 rounded-xl text-brand-gray hover:text-brand-primary"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
           </>
         ) : (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex justify-center w-full p-2 transition-colors rounded-lg hover:bg-gray-100"
+            className="flex justify-center w-full p-2 transition-all rounded-xl hover:bg-gray-50 text-brand-gray"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         )}
       </div>
 
       {/* Navegación */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <div className="flex-col items-center gap-4 mb-2">
-          {/* Solo Superadmins ven este */}
-          {userIsSuperAdmin && <CompanySwitcher />}
+      <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
+        <div className="mb-8">
+          {/* BOTÓN DE CONTEXTO (Enterprise Style) */}
+          <button
+            onClick={() => setIsContextModalOpen(true)}
+            className={`w-full group flex items-center transition-all duration-300 rounded-[1.5rem] p-1.5 border-2 ${
+              sidebarOpen
+                ? "bg-gray-50 border-gray-100 hover:border-brand-primary/30 hover:bg-white hover:shadow-lg hover:shadow-brand-primary/5"
+                : "bg-white border-transparent hover:border-brand-primary/20"
+            }`}
+          >
+            <div
+              className={`shrink-0 flex items-center justify-center bg-brand-primary text-white rounded-2xl shadow-lg shadow-brand-primary/20 transition-all duration-500 ${
+                sidebarOpen ? "w-12 h-12" : "w-12 h-12 mx-auto"
+              }`}
+            >
+              <Building2 className="w-6 h-6" />
+            </div>
 
-          {/* Todos ven este (si tienen > 1 sucursal) */}
-          <BranchSwitcher />
+            {sidebarOpen && (
+              <div className="ml-4 overflow-hidden text-left">
+                <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest truncate">
+                  {current_company?.business_name || "Seleccionar..."}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <MapPin className="w-3 h-3 text-brand-gray" />
+                  <span className="text-[9px] font-bold text-brand-gray uppercase truncate tracking-tight">
+                    {current_branch?.name || "Sin Sucursal"}
+                  </span>
+                </div>
+              </div>
+            )}
+          </button>
         </div>
-        <div className="space-y-1">
+
+        <div className="space-y-1.5">
+          <p
+            className={`enterprise-label px-3 mb-4 opacity-50 transition-opacity duration-300 ${
+              !sidebarOpen ? "opacity-0 h-0 overflow-hidden" : ""
+            }`}
+          >
+            Menú Principal
+          </p>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isItemActive(item);
@@ -218,10 +212,11 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
               : false;
 
             const baseBtnClasses =
-              "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all";
+              "w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group";
             const activeClasses =
-              "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30";
-            const inactiveClasses = "text-gray-700 hover:bg-gray-100";
+              "bg-brand-primary text-white shadow-xl shadow-brand-primary/25 transform scale-[1.02]";
+            const inactiveClasses =
+              "text-gray-500 hover:bg-gray-50 hover:text-brand-primary hover:pl-5";
 
             // Si el item NO tiene ruta propia (solo contenedor), evitamos Link principal
             const isContainerOnly = hasSubmenu && !route().has(item.id);
@@ -232,9 +227,6 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
                 onClick={() => {
                   if (hasSubmenu) {
                     toggleMenu(item.id);
-                  } else if (route().has(item.id)) {
-                    // Navegación programática si quieres; aquí usamos Link abajo
-                    // Innecesario si usas <Link>
                   }
                 }}
                 className={`${baseBtnClasses} ${
@@ -244,30 +236,32 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
               >
                 <div className="flex items-center min-w-0 gap-3">
                   <Icon
-                    className={`w-5 h-5 flex-shrink-0 ${
-                      active ? "text-white" : "text-gray-500"
+                    className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                      active
+                        ? "text-white"
+                        : "text-gray-400 group-hover:text-brand-primary"
                     }`}
                   />
                   {sidebarOpen && (
-                    <span className="font-medium truncate">{item.label}</span>
+                    <span
+                      className={`text-[11px] font-black uppercase tracking-widest truncate ${
+                        active ? "text-white" : ""
+                      }`}
+                    >
+                      {item.label}
+                    </span>
                   )}
                 </div>
                 {sidebarOpen && (
                   <div className="flex items-center gap-2">
-                    {item.badge && (
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                          active
-                            ? "bg-white/20 text-white"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
+                    {item.badge && !active && (
+                      <span className="text-[9px] px-2 py-0.5 rounded-lg font-black bg-brand-secondary/10 text-brand-primary uppercase tracking-tighter">
                         {item.badge}
                       </span>
                     )}
                     {hasSubmenu && (
                       <ChevronDown
-                        className={`w-4 h-4 transition-transform ${
+                        className={`w-3 h-3 transition-transform duration-300 ${
                           open ? "rotate-180" : ""
                         }`}
                       />
@@ -285,48 +279,33 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
                 ) : isContainerOnly ? (
                   MainButton
                 ) : hasSubmenu ? (
-                  // Si tiene submenu y también ruta (opcional), puedes decidir:
-                  // - Click navega al primero del submenu
-                  // - O dejar solo toggle. Aquí dejamos toggle y submenu con Links.
                   MainButton
                 ) : (
-                  // Fallback (si no existe la ruta)
                   MainButton
                 )}
 
                 {/* Submenu */}
                 {hasSubmenu && sidebarOpen && open && (
-                  <div className="mt-1 ml-4 space-y-1">
+                  <div className="pl-4 mt-2 ml-6 space-y-1 duration-300 border-l-2 border-gray-50 animate-in slide-in-from-left-2">
                     {item.submenu.map((sub) => {
                       const SubIcon = sub.icon;
                       const subActive = isRouteActive(sub.id);
                       return route().has(sub.id) ? (
                         <Link key={sub.id} href={route(sub.id)}>
                           <div
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
                               subActive
-                                ? "bg-blue-50 text-blue-700"
-                                : "text-gray-600 hover:bg-gray-50"
+                                ? "text-brand-primary font-black"
+                                : "text-gray-400 hover:text-brand-primary"
                             }`}
                           >
                             <SubIcon className="w-4 h-4" />
-                            <span className="text-sm font-medium">
+                            <span className="text-[10px] font-black uppercase tracking-widest">
                               {sub.label}
                             </span>
                           </div>
                         </Link>
-                      ) : (
-                        <div
-                          key={sub.id}
-                          className="flex items-center w-full gap-3 px-3 py-2 text-gray-400 rounded-lg cursor-not-allowed"
-                          title="Ruta no disponible"
-                        >
-                          <SubIcon className="w-4 h-4" />
-                          <span className="text-sm font-medium">
-                            {sub.label}
-                          </span>
-                        </div>
-                      );
+                      ) : null;
                     })}
                   </div>
                 )}
@@ -337,32 +316,18 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
       </nav>
 
       {/* Menú inferior */}
-      <div className="p-3 space-y-1 border-t border-gray-200">
-        {bottomMenuItems.map((item) => {
-          const Icon = item.icon;
-          const active = isRouteActive(item.id);
-          const row = (
-            <div
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                active
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-              title={!sidebarOpen ? item.label : ""}
-            >
-              <Icon className="w-5 h-5 text-gray-500" />
-              {sidebarOpen && <span className="font-medium">{item.label}</span>}
-            </div>
-          );
-          return route().has(item.id) ? (
-            <Link key={item.id} href={route(item.id)}>
-              {row}
-            </Link>
-          ) : (
-            <div key={item.id}>{row}</div>
-          );
-        })}
+      <div className="p-4 border-t border-gray-50">
+        <div className="p-4 bg-gray-50/50 rounded-3xl">
+          <p className="text-[9px] font-black text-brand-gray text-center uppercase tracking-[0.2em] opacity-40">
+            SysMed v1.0
+          </p>
+        </div>
       </div>
+
+      <ContextSelectorModal
+        isOpen={isContextModalOpen}
+        onClose={() => setIsContextModalOpen(false)}
+      />
     </div>
   );
 }

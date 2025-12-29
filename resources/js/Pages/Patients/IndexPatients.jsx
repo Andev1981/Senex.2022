@@ -15,11 +15,9 @@ export default function IndexPatients({
 }) {
   const addButtonRef = useRef(null);
   const [openPatientModal, setOpenPatientModal] = useState(false);
-  // 1. Obtenemos las acciones de Zustand
   const patients = usePatientStore((state) => state.patients);
   const setPatients = usePatientStore((state) => state.setPatients);
 
-  // 2. Sincronizamos cuando cambien las props de Inertia
   useEffect(() => {
     if (initialPatients) {
       setPatients(initialPatients);
@@ -28,102 +26,96 @@ export default function IndexPatients({
 
   return (
     <AuthenticatedLayout>
-      <Head title="Pacientes" />
-      <div className="min-h-screen p-4 bg-gray-50">
-        {/* Header */}
-        <div className="p-6 mb-6 bg-white border border-gray-200 shadow-sm rounded-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-                <Users className="w-6 h-6 text-white" />
+      <Head title="Directorio de Pacientes" />
+      <div className="min-h-screen p-6 md:p-10 bg-gray-50/50 space-y-10">
+        
+        {/* HEADER HERO PREMIUM */}
+        <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-5">
+              <div className="flex items-center justify-center w-16 h-16 bg-brand-primary text-white rounded-2xl shadow-xl shadow-brand-primary/20 transform rotate-3">
+                <Users className="w-8 h-8" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Pacientes</h1>
-                <p className="text-sm text-gray-600">
-                  Gestión de pacientes registrados
+                <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight leading-none mb-2">Directorio de Pacientes</h1>
+                <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
+                  Gestión Centralizada • Base de Datos Clínica
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
+            <button
                 ref={addButtonRef}
                 onClick={() => setOpenPatientModal(true)}
-                className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
-              >
-                <Plus className="w-4 h-4" />
-                Nuevo Paciente
-              </button>
-            </div>
+                className="flex items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
+            >
+                <Plus className="w-4 h-4" /> Registrar Paciente
+            </button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
-          <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="mb-1 text-sm text-gray-600">Total Pacientes</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {patients.length}
-                </p>
+        {/* Stats Cards Enterprise */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+          <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-6">
+              <div className="p-3 bg-brand-secondary/10 text-brand-primary rounded-xl group-hover:rotate-12 transition-transform">
+                <User className="w-6 h-6" />
               </div>
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
-                <User className="w-6 h-6 text-blue-600" />
-              </div>
+              <span className="enterprise-label !mb-0 opacity-40 text-[8px]">Universo</span>
             </div>
+            <p className="enterprise-label opacity-60 mb-1">Total Registrados</p>
+            <p className="text-4xl font-black text-gray-900 tracking-tighter leading-none">
+              {patients.length}
+            </p>
           </div>
 
-          <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="mb-1 text-sm text-gray-600">Activos</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {patients.filter((p) => p.status === "active").length}
-                </p>
+          <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group border-b-4 border-b-green-500">
+            <div className="flex items-center justify-between mb-6">
+              <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:rotate-12 transition-transform">
+                <Check className="w-6 h-6" />
               </div>
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
-                <Check className="w-6 h-6 text-green-600" />
-              </div>
+              <span className="enterprise-label !mb-0 text-green-600 opacity-60 text-[8px]">Operativos</span>
             </div>
+            <p className="enterprise-label opacity-60 mb-1 text-green-700/60">Pacientes Activos</p>
+            <p className="text-4xl font-black text-green-600 tracking-tighter leading-none">
+              {patients.filter((p) => p.status === "active").length}
+            </p>
           </div>
 
-          <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="mb-1 text-sm text-gray-600">Al Día</p>
-                <p className="text-3xl font-bold text-teal-600">
-                  {patients.filter((p) => p.payment_status === "ok").length}
-                </p>
+          <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-6">
+              <div className="p-3 bg-brand-secondary/10 text-brand-primary rounded-xl group-hover:rotate-12 transition-transform">
+                <FileText className="w-6 h-6" />
               </div>
-              <div className="flex items-center justify-center w-12 h-12 bg-teal-100 rounded-lg">
-                <FileText className="w-6 h-6 text-teal-600" />
-              </div>
+              <span className="enterprise-label !mb-0 text-brand-primary opacity-60 text-[8px]">Sanidad</span>
             </div>
+            <p className="enterprise-label opacity-60 mb-1">Fichas al Día</p>
+            <p className="text-4xl font-black text-brand-primary tracking-tighter leading-none">
+              {patients.filter((p) => p.payment_status === "ok").length}
+            </p>
           </div>
 
-          <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="mb-1 text-sm text-gray-600">Con Deuda</p>
-                <p className="text-3xl font-bold text-orange-600">
-                  {patients.filter((p) => p.payment_status === "due").length}
-                </p>
+          <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group border-b-4 border-b-orange-500">
+            <div className="flex items-center justify-between mb-6">
+              <div className="p-3 bg-orange-50 text-orange-600 rounded-xl group-hover:rotate-12 transition-transform">
+                <AlertCircle className="w-6 h-6" />
               </div>
-              <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg">
-                <AlertCircle className="w-6 h-6 text-orange-600" />
-              </div>
+              <span className="enterprise-label !mb-0 text-orange-600 opacity-60 text-[8px]">Riesgo</span>
             </div>
+            <p className="enterprise-label opacity-60 mb-1 text-orange-700/60">Saldo Pendiente</p>
+            <p className="text-4xl font-black text-orange-600 tracking-tighter leading-none">
+              {patients.filter((p) => p.payment_status === "due").length}
+            </p>
           </div>
         </div>
 
         <TablePatients patients={patients} communes={communes} />
       </div>
+
       <SideModal
         open={openPatientModal}
         onClose={() => setOpenPatientModal(false)}
-        title="Nuevo Paciente"
-        description="Datos del nuevo paciente"
-        width="4xl"
+        width="5xl"
       >
         <ModalCreateEditPatient
           patient={null}

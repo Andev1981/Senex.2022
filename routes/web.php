@@ -120,7 +120,7 @@ Route::group(['middleware' => ['auth']], function () {
 
   Route::get('/', [HomeController::class, 'index'])->name('/');
 
-  Route::get('informes', [PatientAdminController::class, 'informes'])->name('informes');
+  Route::get('informes', [\App\Http\Controllers\Admin\Reports\ReportsController::class, 'index'])->name('informes');
   Route::get('agenda', [PatientAdminController::class, 'agenda'])->name('agenda');
   Route::get('tratamientos', [PatientAdminController::class, 'tratamientos'])->name('tratamientos');
   Route::post('patients-documents', [PatientAdminController::class, 'document_post'])->name('patient.documents.store');
@@ -201,10 +201,33 @@ Route::group(['middleware' => ['auth']], function () {
   Route::resource('agreement/rules', AgreementRuleController::class)->names('agreement.rules');
 
 
+  Route::resource('payrolls', \App\Http\Controllers\Admin\Payroll\PayrollController::class)->names('payrolls');
+  Route::post('payrolls/{payroll}/approve', [\App\Http\Controllers\Admin\Payroll\PayrollController::class, 'approve'])->name('payrolls.approve');
+  Route::post('payrolls/{payroll}/pay', [\App\Http\Controllers\Admin\Payroll\PayrollController::class, 'markPaid'])->name('payrolls.pay');
+
+
   Route::resource('plans', PlanController::class)->names('plans');
   Route::post('/plans/{plan}/assign-family', [FamilyPlanController::class, 'assign'])
     ->name('plans.assign.family');
 
+  // New: Acquisitions Module Routes
+  Route::prefix('acquisitions')->name('acquisitions.')->group(function () {
+    Route::resource('suppliers', \App\Http\Controllers\Admin\Acquisitions\SupplierController::class);
+    Route::resource('purchase-orders', \App\Http\Controllers\Admin\Acquisitions\PurchaseOrderController::class);
+    Route::post('purchase-orders/{order}/status', [\App\Http\Controllers\Admin\Acquisitions\PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status');
+  });
+
+  // New: Finance Module Routes
+  Route::prefix('finance')->name('finance.')->group(function () {
+    Route::get('receivables', [\App\Http\Controllers\Admin\Finance\ReceivablesController::class, 'index'])->name('receivables.index');
+  });
+
+  // New: Subscription Module Routes
+  Route::prefix('subscription')->name('subscription.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Admin\Subscription\SubscriptionController::class, 'index'])->name('index');
+    Route::post('/', [\App\Http\Controllers\Admin\Subscription\SubscriptionController::class, 'store'])->name('store');
+  });
+  
   Route::get('/patients/search', [PatientSearchController::class, 'search']);
 
 
@@ -216,6 +239,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   Route::resource('payments', PaymentsController::class)->names('payments');
+  Route::get('/payments/{uuid}/pdf/{download?}', [PaymentsController::class, 'downloadReceiptPdf'])->name('payments.pdf');
   Route::get('patient/status/{id}', [PaymentsController::class, 'getPatientStatus'])->name('patients.status');
   Route::post('payment/process', [PaymentsController::class, 'processPayment'])->name('payments.process');
   Route::get('/payments/success/{uuid}', [PaymentsController::class, 'success'])->name('payments.success');
@@ -291,6 +315,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::post('/dte/emit', [DteController::class, 'enviarDte'])->name('dte.emit');
   Route::post('/dte/check', [DteController::class, 'checkDteStatus'])->name('dte.check');
   Route::get('/dte/lookup/{folio}', [DteController::class, 'lookupByFolio'])->name('dte.lookup');
+  Route::get('/dte/consultar-rut/{rut}', [DteController::class, 'consultContribuyente'])->name('dte.consultar_rut');
 
   /* Nuevas dte */
   Route::post('/dte/issue/{invoiceId}', [DteController::class, 'issueDte'])->name('dte.issue');
@@ -391,6 +416,8 @@ Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'de
     ->name('invoices.cancel');
   Route::get('/invoices/{invoice}/pdf', [InvoicesController::class, 'downloadPdf'])
     ->name('invoices.pdf');
+  Route::post('/invoices/{invoice}/send-email', [InvoicesController::class, 'sendEmail'])
+    ->name('invoices.send_email');
 });
 
 

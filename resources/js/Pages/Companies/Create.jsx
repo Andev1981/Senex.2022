@@ -37,177 +37,187 @@ export default function Create() {
     <AuthenticatedLayout>
       <Head title="Nueva Empresa" />
 
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-          {/* Header con botón Volver */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <Building2 className="w-6 h-6 text-indigo-600" />
+      <div className="min-h-screen p-6 bg-gray-50/50 space-y-8">
+        {/* Header Hero */}
+        <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-[2rem] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-14 h-14 shadow-xl shadow-brand-primary/20 bg-brand-primary rounded-2xl transform rotate-3">
+                <Building2 className="w-7 h-7 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                Registrar Nueva Empresa
-              </h2>
+              <div>
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1">Registro de Entidad</h1>
+                <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
+                  Alta de Nueva Empresa o Holding • Senex Enterprise
+                </p>
+              </div>
             </div>
             <Link
               href={route("companies.index")}
-              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:text-brand-primary transition-all"
             >
               <ArrowLeft className="w-4 h-4" /> Volver al listado
             </Link>
           </div>
+        </div>
 
-          {/* Formulario */}
-          <div className="bg-white shadow-sm sm:rounded-xl border border-gray-100 overflow-hidden">
-            <form onSubmit={submit} className="p-6 md:p-8 space-y-6">
+        {/* Formulario */}
+        <div className="max-w-4xl mx-auto w-full">
+          <div className="bg-white shadow-xl rounded-[2.5rem] border border-gray-100 overflow-hidden">
+            <form onSubmit={submit} className="p-10 space-y-8">
               {/* Sección 1: Datos Principales */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* RUT */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
-                    RUT Empresa <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej: 76123456-K"
-                    className={`w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
-                      errors.rut ? "border-red-500" : ""
-                    }`}
-                    value={data.rut}
-                    onChange={(e) => setData("rut", e.target.value)}
-                  />
-                  {errors.rut && (
-                    <p className="mt-1 text-xs text-red-500">{errors.rut}</p>
-                  )}
-                </div>
+              <div className="space-y-6">
+                <h3 className="enterprise-label !text-brand-primary border-b border-gray-50 pb-2">Identificación Legal</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* RUT */}
+                    <div className="space-y-1">
+                    <label className="enterprise-label ml-1">
+                        RUT Empresa <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="Ej: 76.123.456-K"
+                        className={`w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white ${
+                        errors.rut ? "border-red-500" : ""
+                        }`}
+                        value={data.rut}
+                        onChange={(e) => setData("rut", e.target.value)}
+                    />
+                    {errors.rut && (
+                        <p className="mt-1 text-xs text-red-500 font-bold">{errors.rut}</p>
+                    )}
+                    </div>
 
-                {/* Razón Social */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
-                    Razón Social <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Nombre legal o de fantasía"
-                    className={`w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
-                      errors.business_name ? "border-red-500" : ""
-                    }`}
-                    value={data.business_name}
-                    onChange={(e) => setData("business_name", e.target.value)}
-                  />
-                  {errors.business_name && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.business_name}
-                    </p>
-                  )}
-                </div>
+                    {/* Razón Social */}
+                    <div className="space-y-1">
+                    <label className="enterprise-label ml-1">
+                        Razón Social <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="Nombre legal completo"
+                        className={`w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white ${
+                        errors.business_name ? "border-red-500" : ""
+                        }`}
+                        value={data.business_name}
+                        onChange={(e) => setData("business_name", e.target.value)}
+                    />
+                    {errors.business_name && (
+                        <p className="mt-1 text-xs text-red-500 font-bold">{errors.business_name}</p>
+                    )}
+                    </div>
 
-                {/* Giro (Opcional pero recomendado para DTE) */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
-                    Giro Comercial
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ej: Servicios de Kinesiología y Salud"
-                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    value={data.giro}
-                    onChange={(e) => setData("giro", e.target.value)}
-                  />
+                    {/* Giro */}
+                    <div className="md:col-span-2 space-y-1">
+                    <label className="enterprise-label ml-1">
+                        Giro Comercial
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="Ej: Prestación de Servicios de Salud"
+                        className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white"
+                        value={data.giro}
+                        onChange={(e) => setData("giro", e.target.value)}
+                    />
+                    </div>
                 </div>
               </div>
 
-              <hr className="border-gray-100" />
-
               {/* Sección 2: Contacto y Marca */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
-                    Correo Electrónico
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    value={data.email}
-                    onChange={(e) => setData("email", e.target.value)}
-                  />
-                </div>
-
-                {/* Teléfono */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">
-                    Teléfono
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    value={data.phone}
-                    onChange={(e) => setData("phone", e.target.value)}
-                  />
-                </div>
-
-                {/* Logo Upload con Preview */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Logo Corporativo
-                  </label>
-                  <div className="flex items-center gap-6">
-                    {/* Preview Circle */}
-                    <div className="shrink-0">
-                      <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
-                        {preview ? (
-                          <img
-                            src={preview}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <ImageIcon className="w-8 h-8 text-gray-300" />
-                        )}
-                      </div>
+              <div className="space-y-6">
+                <h3 className="enterprise-label !text-brand-primary border-b border-gray-50 pb-2">Contacto & Branding</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Email */}
+                    <div className="space-y-1">
+                    <label className="enterprise-label ml-1">
+                        Correo Corporativo
+                    </label>
+                    <input
+                        type="email"
+                        placeholder="admin@clinica.cl"
+                        className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white"
+                        value={data.email}
+                        onChange={(e) => setData("email", e.target.value)}
+                    />
                     </div>
 
-                    {/* Input File */}
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoChange}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition"
-                      />
-                      <p className="mt-1 text-xs text-gray-500">
-                        PNG, JPG o GIF hasta 2MB.
-                      </p>
-                      {errors.logo && (
-                        <p className="mt-1 text-xs text-red-500">
-                          {errors.logo}
+                    {/* Teléfono */}
+                    <div className="space-y-1">
+                    <label className="enterprise-label ml-1">
+                        Teléfono de Contacto
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="+56 9 ..."
+                        className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white"
+                        value={data.phone}
+                        onChange={(e) => setData("phone", e.target.value)}
+                    />
+                    </div>
+
+                    {/* Logo Upload con Preview */}
+                    <div className="md:col-span-2">
+                    <label className="enterprise-label ml-1 mb-4">
+                        Imagen de Marca (Logo)
+                    </label>
+                    <div className="flex items-center gap-8 p-6 bg-gray-50/50 rounded-[2rem] border border-gray-100">
+                        {/* Preview Circle */}
+                        <div className="shrink-0">
+                        <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-white overflow-hidden shadow-inner transform -rotate-3">
+                            {preview ? (
+                            <img
+                                src={preview}
+                                alt="Preview"
+                                className="w-full h-full object-cover"
+                            />
+                            ) : (
+                            <ImageIcon className="w-10 h-10 text-gray-200" />
+                            )}
+                        </div>
+                        </div>
+
+                        {/* Input File */}
+                        <div className="flex-1">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            className="block w-full text-[10px] font-black uppercase tracking-widest text-gray-400 file:mr-6 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-brand-primary file:text-white hover:file:brightness-110 transition-all cursor-pointer"
+                        />
+                        <p className="mt-2 text-[10px] font-bold text-brand-gray uppercase tracking-widest opacity-60">
+                            Recomendado: PNG Transparente • Máximo 2MB
                         </p>
-                      )}
+                        {errors.logo && (
+                            <p className="mt-1 text-xs text-red-500 font-black">
+                            {errors.logo}
+                            </p>
+                        )}
+                        </div>
                     </div>
-                  </div>
+                    </div>
                 </div>
               </div>
 
               {/* Footer con acciones */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-end gap-4 pt-8 border-t border-gray-50">
                 <Link
                   href={route("companies.index")}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all"
                 >
                   Cancelar
                 </Link>
                 <button
                   type="submit"
                   disabled={processing}
-                  className="flex items-center gap-2 px-6 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-3 px-10 py-4 text-[10px] font-black uppercase tracking-widest text-white bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 disabled:opacity-50 transition-all active:scale-95"
                 >
                   {processing ? (
-                    "Guardando..."
+                    <div className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      Guardar Empresa
+                      Finalizar Registro
                     </>
                   )}
                 </button>

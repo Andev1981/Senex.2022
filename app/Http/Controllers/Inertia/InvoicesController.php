@@ -10,11 +10,14 @@ use App\Models\PatientPlan;
 use App\Services\Invoices\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendInvoiceMail;
 
 class InvoicesController extends Controller
 {
   public function index(Request $req)
   {
+    $this->authorize('viewAny', Invoice::class);
     $q = Invoice::with('patient')->get();
 
     if ($req->filled('status'))    $q->where('status', $req->status);
@@ -60,8 +63,25 @@ class InvoicesController extends Controller
 
   public function downloadPdf(Invoice $invoice)
   {
-    $this->authorize('view', $invoice);
+    $this->authorize('download', $invoice);
     abort_unless($invoice->pdf_path, 404);
     return Storage::download($invoice->pdf_path);
+  }
+
+  public function sendEmail(Invoice $invoice)
+  {
+    $this->authorize('sendEmail', $invoice);
+    $patient = $invoice->patient;
+
+    if (!$patient->email) {
+        return response()->json(['message' => 'El receptor no tiene un correo electrónico registrado.'], 422);
+    }
+
+    try {
+        Mail::to($patient->email)->send(new SendInvoiceMail($invoice));
+        return response()->json(['message' => "Correo enviado exitosamente a {$patient->email}"]);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Error al enviar el correo: ' . $e->getMessage()], 500);
+    }
   }
 }

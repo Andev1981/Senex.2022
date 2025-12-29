@@ -37,6 +37,8 @@ return new class extends Migration {
       // 🎯 Campo 'plan_eligible' es muy genérico, lo reemplazamos por el valor de descuento:
       $table->unsignedBigInteger('plan_discount_clp')->default(0)->comment('Monto de descuento estándar aplicado si se usa un paquete de sesiones.');
 
+      $table->boolean('is_exempt')->default(true)->comment('TRUE si el servicio está exento de IVA.');
+
       // Eliminamos 'plan_session_value', ya que la liquidación se calcula con el % del plan.
 
       // ===== 4. ESTADO Y AUDITORÍA =====

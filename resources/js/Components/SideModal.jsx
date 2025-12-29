@@ -1,17 +1,31 @@
-import React, { Fragment, useRef } from "react";
+import React, { Fragment } from "react";
 import {
   Dialog,
   DialogPanel,
   Transition,
   TransitionChild,
 } from "@headlessui/react";
+import { X } from "lucide-react";
 
+/**
+ * Componente SideModal Enterprise (Lateral)
+ * @param {Object} props
+ * @param {boolean} props.open - Estado de visibilidad
+ * @param {function} props.onClose - Función para cerrar
+ * @param {string} props.title - Título principal (Estilo Hero)
+ * @param {string} props.subtitle - Subtítulo secundario (Estilo Hero)
+ * @param {React.ElementType} props.icon - Icono de Lucide para el Hero
+ * @param {React.ReactNode} props.footer - Contenido para el footer fijo (botones)
+ * @param {string} props.width - Ancho (sm, md, lg, xl, 2xl, 3xl, 4xl, 5xl, 6xl, full)
+ */
 export default function SideModal({
   children,
   open,
   onClose,
   title,
-  description,
+  subtitle,
+  icon: Icon,
+  footer,
   width = "md",
 }) {
   const widthClass = {
@@ -27,16 +41,10 @@ export default function SideModal({
     full: "max-w-full w-full",
   }[width];
 
-  const addButtonRef = useRef(null);
-
   return (
     <Transition show={open} leave="duration-200">
-      <Dialog
-        onClose={onClose}
-        className="relative z-50"
-        initialFocus={addButtonRef}
-      >
-        {/* Fondo oscuro */}
+      <Dialog onClose={onClose} className="relative z-50">
+        {/* Backdrop con desenfoque */}
         <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
@@ -46,10 +54,9 @@ export default function SideModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/30" />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
         </TransitionChild>
 
-        {/* Contenedor del modal lateral */}
         <div className="fixed inset-0 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="fixed inset-y-0 right-0 flex max-w-full pl-10 pointer-events-none">
@@ -65,35 +72,58 @@ export default function SideModal({
                 <DialogPanel
                   className={`pointer-events-auto w-screen ${widthClass}`}
                 >
-                  <div className="flex flex-col h-full bg-white shadow-xl dark:bg-gray-800">
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center gap-2">
-                        <label className="text-lg font-bold text-primary-light">
-                          {title}
-                        </label>
-                      </div>
-                      <button
-                        onClick={onClose}
-                        className="px-2 py-1.5 border border-primary text-primary rounded-lg text-sm font-medium leading-4 bg-white hover:bg-blue-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                      >
-                        X
-                      </button>
-                    </div>
+                  <div className="flex flex-col h-full bg-white shadow-2xl relative overflow-hidden">
+                    {/* 1. HEADER HERO PREMIUM */}
+                    {title ? (
+                        <div className="flex items-center justify-between px-10 py-8 border-b border-gray-100 bg-gray-50/50 shrink-0 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                            
+                            <div className="flex items-center gap-5 relative z-10">
+                                {Icon && (
+                                    <div className="p-3 bg-brand-primary text-white rounded-2xl shadow-xl shadow-brand-primary/20 transform rotate-3">
+                                        <Icon className="w-6 h-6" />
+                                    </div>
+                                )}
+                                <div>
+                                    <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">
+                                        {title}
+                                    </h2>
+                                    {subtitle && (
+                                        <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em] opacity-60">
+                                            {subtitle}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
 
-                    {/* Descripción opcional */}
-                    {description && (
-                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {description}
-                        </p>
-                      </div>
+                            <button
+                                onClick={onClose}
+                                className="p-3 text-gray-400 hover:text-brand-primary hover:bg-white rounded-2xl transition-all active:scale-90 border border-transparent hover:border-gray-100 shadow-sm relative z-10"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                    ) : (
+                        /* Botón de cierre discreto si no hay título */
+                        <button
+                            onClick={onClose}
+                            className="absolute top-6 right-6 z-50 p-3 text-gray-400 hover:text-brand-primary bg-white/80 backdrop-blur rounded-2xl transition-all active:scale-90 border border-gray-100 shadow-xl"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     )}
 
-                    {/* Contenido del modal con scroll */}
-                    <div className="flex-1 px-4 py-4 overflow-y-auto">
+                    {/* 2. CONTENIDO SCROLLABLE */}
+                    <div className={`flex-1 overflow-y-auto custom-scrollbar ${title ? 'p-10' : 'p-0'}`}>
                       {children}
                     </div>
+
+                    {/* 3. FOOTER FIJO (Opcional) */}
+                    {footer && (
+                        <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 shrink-0">
+                            {footer}
+                        </div>
+                    )}
                   </div>
                 </DialogPanel>
               </TransitionChild>

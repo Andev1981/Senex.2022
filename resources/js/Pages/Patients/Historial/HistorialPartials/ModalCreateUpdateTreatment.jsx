@@ -5,6 +5,7 @@ import {
   Target,
   Activity,
   FileText,
+  ClipboardList,
   AlertTriangle, // <--- Importamos el icono de alerta
 } from "lucide-react";
 import SearchSelect from "@/Components/SearchSelect";
@@ -118,263 +119,265 @@ export default function ModalCreateUpdateTreatment({
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-3 space-y-6 bg-white dark:bg-gray-800 rounded-2xl"
+      className="p-8 space-y-10 bg-white rounded-enterprise"
     >
-      {/* Encabezado */}
-      <header className="pb-4 border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
-          {isEditing ? "Editar" : "Crear"} Evaluación / Tratamiento
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Paciente: <strong>{patient?.name}</strong>
-        </p>
-
-        {isLocked && (
-          <div className="p-3 mt-4 text-sm font-medium text-yellow-800 bg-yellow-100 border border-yellow-300 rounded-lg">
-            ⚠️ Edición estructural bloqueada por estado finalizado.
-          </div>
-        )}
+      {/* Encabezado Enterprise */}
+      <header className="flex items-center justify-between pb-8 border-b border-gray-100">
+        <div>
+          <h1 className="mb-2 text-3xl font-black leading-none tracking-tight text-gray-900 uppercase">
+            {isEditing ? "Optimizar" : "Nuevo"} Protocolo Clínico
+          </h1>
+          <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
+            Paciente:{" "}
+            <span className="text-brand-primary">
+              {patient?.name} {patient?.last_name}
+            </span>
+          </p>
+        </div>
+        <div className="flex items-center justify-center w-16 h-16 bg-brand-secondary/10 text-brand-primary rounded-[1.5rem] transform rotate-6">
+          <ClipboardList className="w-8 h-8" />
+        </div>
       </header>
+
+      {isLocked && (
+        <div className="flex items-center gap-4 p-6 text-xs font-black tracking-widest uppercase border-2 text-amber-700 bg-amber-50 border-amber-100 rounded-3xl animate-pulse">
+          <AlertCircle className="w-6 h-6 shrink-0" />
+          Protocolo finalizado: La estructura administrativa está bloqueada para
+          edición.
+        </div>
+      )}
 
       {/* --- SECCIÓN DE ADVERTENCIA (TRATAMIENTOS ACTIVOS) --- */}
       {!isEditing && hasActiveTreatments && (
-        <div className="p-4 border-l-4 border-yellow-400 bg-yellow-50 rounded-r-xl dark:bg-yellow-900/20 dark:border-yellow-600">
-          <div className="flex">
+        <div className="p-8 border-2 border-orange-100 bg-orange-50/30 rounded-[2rem] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 -mt-12 -mr-12 rounded-full bg-orange-200/20 blur-2xl"></div>
+          <div className="relative z-10 flex gap-6">
             <div className="flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 text-yellow-400" />
+              <div className="p-3 text-orange-500 bg-white shadow-sm rounded-2xl">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                Tratamientos Activos Detectados
+            <div className="flex-1">
+              <h3 className="mb-2 text-sm font-black tracking-tight text-orange-800 uppercase">
+                Continuidad de Atención
               </h3>
-              <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-400">
-                <p>
-                  El paciente ya tiene{" "}
-                  <b>{activeTreatments.length} tratamiento(s)</b> en curso.
-                </p>
-              </div>
-              <div className="mt-4">
-                <label className="flex items-center gap-3 p-2 cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/40 rounded-lg transition">
-                  <input
-                    type="checkbox"
-                    className="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-                    checked={data.should_pause_previous}
-                    onChange={(e) =>
-                      setData("should_pause_previous", e.target.checked)
-                    }
-                  />
-                  <div>
-                    <span className="block text-sm font-bold text-yellow-800 dark:text-yellow-200">
-                      Pausar tratamientos anteriores
-                    </span>
-                    <span className="block text-xs text-yellow-600">
-                      Marca esto si este nuevo tratamiento reemplaza a los
-                      actuales. Déjalo vacío si es una lesión paralela.
-                    </span>
-                  </div>
-                </label>
-              </div>
+              <p className="mb-6 text-xs font-medium leading-relaxed text-orange-700/80">
+                Hemos detectado <b>{activeTreatments.length} plan(es)</b>{" "}
+                vigentes. ¿Este nuevo registro reemplaza la atención actual o es
+                una patología paralela?
+              </p>
+
+              <label className="flex items-center gap-4 p-4 transition-all border-2 border-orange-100 cursor-pointer bg-white/60 hover:bg-white rounded-2xl group">
+                <input
+                  type="checkbox"
+                  className="w-6 h-6 text-orange-600 border-orange-200 rounded-xl focus:ring-orange-500"
+                  checked={data.should_pause_previous}
+                  onChange={(e) =>
+                    setData("should_pause_previous", e.target.checked)
+                  }
+                />
+                <div>
+                  <span className="block text-xs font-black tracking-widest text-orange-900 uppercase">
+                    Pausar planes anteriores
+                  </span>
+                  <span className="block text-[10px] text-orange-600 font-bold uppercase opacity-60">
+                    Archivar casos previos para priorizar esta nueva evaluación
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
         </div>
       )}
 
       {/* --- 1. Información General --- */}
-      <div className="p-6 border border-blue-100 rounded-xl dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20">
-        <h3 className="flex items-center gap-2 mb-4 text-xl font-semibold text-blue-700 dark:text-blue-400">
-          <Stethoscope className="w-6 h-6" /> Información Principal
-        </h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {/* Kinesiólogo */}
-          <div className="md:col-span-1">
-            <SearchSelect
-              items={doctors}
-              value={data?.doctor_id}
-              onChange={(value) => setData("doctor_id", value)}
-              config={{
-                valueKey: "id",
-                displayKey: "full_name",
-                secondaryKeys: ["email"],
-                searchKeys: ["name", "last_name"],
-              }}
-              label="Kinesiólogo a Cargo *"
-              placeholder="Buscar profesional..."
-              error={errors?.doctor_id}
-              disabled={isLocked}
-            />
-          </div>
-
-          {/* Estado */}
-          <div className="md:col-span-1">
-            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Estado del Tratamiento *
-            </label>
-            <select
-              value={data?.status}
-              onChange={(e) => setData("status", e.target.value)}
-              className={baseInputClasses}
-              required
-            >
-              {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {errors.status && (
-              <p className="mt-1 text-sm text-red-600">{errors.status}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* --- 2. Diagnóstico --- */}
-      <div className="p-6 border border-gray-200 rounded-xl dark:border-gray-700">
-        <h3 className="flex items-center gap-2 mb-4 text-xl font-semibold text-purple-600 dark:text-purple-400">
-          <FileText className="w-6 h-6" /> Diagnóstico y Plan
-        </h3>
-        <div className="grid grid-cols-1 gap-6">
-          <div>
-            <SearchSelect
-              items={diagnostics}
-              value={data?.diagnostic_code}
-              onChange={(value) => setData("diagnostic_code", value)}
-              config={{
-                valueKey: "code",
-                displayKey: "description",
-                secondaryKeys: ["code"],
-                searchKeys: ["code", "description"],
-              }}
-              label="Diagnóstico CIE-10 *"
-              placeholder="Buscar código..."
-              error={errors?.diagnostic_code}
-              disabled={isLocked}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Código seleccionado:{" "}
-              <strong>{data?.diagnostic_code || "-"}</strong>
-            </p>
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Descripción / Plan
-            </label>
-            <textarea
-              value={data?.description ?? ""}
-              onChange={(e) => setData("description", e.target.value)}
-              rows="3"
-              className={baseInputClasses}
-              disabled={isLocked}
-              name="description" // Name para el focus en error
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* --- 3. Programación --- */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="p-6 border border-gray-200 rounded-xl dark:border-gray-700">
-          <h3 className="flex items-center gap-2 mb-4 text-xl font-semibold text-teal-600">
-            <Calendar className="w-6 h-6" /> Fechas y Sesiones
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Fecha Inicio *
-              </label>
-              <input
-                type="date"
-                value={fmtDateISO(data.start_date) ?? ""}
-                onChange={(e) => setData("start_date", e.target.value)}
-                className={baseInputClasses}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="space-y-8">
+          <div className="p-8 border border-gray-100 rounded-[2rem] bg-gray-50/30 space-y-6">
+            <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+              <Stethoscope className="w-4 h-4" /> Asignación Médica
+            </h3>
+            <div className="space-y-6">
+              {/* Kinesiólogo */}
+              <SearchSelect
+                items={doctors}
+                value={data?.doctor_id}
+                onChange={(value) => setData("doctor_id", value)}
+                config={{
+                  valueKey: "id",
+                  displayKey: "full_name",
+                  secondaryKeys: ["email"],
+                  searchKeys: ["name", "last_name"],
+                }}
+                label="Especialista Responsable *"
+                placeholder="Buscar en el staff..."
+                error={errors?.doctor_id}
                 disabled={isLocked}
+                className="!rounded-2xl"
               />
-              {errors.start_date && (
-                <p className="text-sm text-red-600">{errors.start_date}</p>
-              )}
-            </div>
 
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700">
-                  Total Sesiones
+              {/* Estado */}
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label">
+                  Estado Operativo *
                 </label>
-                <input
-                  type="number"
-                  value={data.total_sessions ?? ""}
-                  onChange={(e) => setData("total_sessions", e.target.value)}
-                  className={baseInputClasses}
-                  disabled={isLocked || data.is_indefinite}
-                  placeholder={data.is_indefinite ? "∞" : "Ej: 10"}
-                />
-                {errors.total_sessions && (
-                  <p className="text-sm text-red-600">
-                    {errors.total_sessions}
+                <select
+                  value={data?.status}
+                  onChange={(e) => setData("status", e.target.value)}
+                  className="w-full px-5 py-4 text-sm font-bold text-gray-700 transition-all bg-white border-gray-100 rounded-2xl focus:ring-brand-primary"
+                  required
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.status && (
+                  <p className="mt-1 text-[10px] font-black text-red-600 uppercase tracking-widest">
+                    {errors.status}
                   </p>
                 )}
               </div>
-              <div className="flex items-center mt-6">
-                <label className="flex items-center gap-2 cursor-pointer">
+            </div>
+          </div>
+
+          {/* Programación */}
+          <div className="p-8 border border-gray-100 rounded-[2rem] bg-white shadow-inner space-y-6">
+            <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+              <Calendar className="w-4 h-4" /> Planificación
+            </h3>
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label">
+                  Fecha de Inicio *
+                </label>
+                <input
+                  type="date"
+                  value={fmtDateISO(data.start_date) ?? ""}
+                  onChange={(e) => setData("start_date", e.target.value)}
+                  className="w-full px-5 py-4 font-mono font-black text-gray-700 transition-all rounded-2xl border-gray-50 bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
+                  disabled={isLocked}
+                />
+                {errors.start_date && (
+                  <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">
+                    {errors.start_date}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-end gap-4">
+                <div className="flex-1 space-y-1">
+                  <label className="ml-1 text-gray-400 enterprise-label">
+                    Total Sesiones
+                  </label>
+                  <input
+                    type="number"
+                    value={data.total_sessions ?? ""}
+                    onChange={(e) => setData("total_sessions", e.target.value)}
+                    className="w-full px-5 py-4 font-mono font-black text-gray-700 transition-all border-gray-100 rounded-2xl focus:ring-brand-primary disabled:bg-gray-100 disabled:opacity-40"
+                    disabled={isLocked || data.is_indefinite}
+                    placeholder={data.is_indefinite ? "∞" : "10"}
+                  />
+                </div>
+                <label className="flex items-center gap-3 mb-4 cursor-pointer group shrink-0">
                   <input
                     type="checkbox"
                     checked={data.is_indefinite}
                     onChange={(e) => setData("is_indefinite", e.target.checked)}
-                    className="rounded text-teal-600 focus:ring-teal-500"
+                    className="w-6 h-6 border-gray-200 rounded-xl text-brand-primary focus:ring-brand-primary"
                     disabled={isLocked}
                   />
-                  <span className="text-sm text-gray-700">Indefinido</span>
+                  <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest group-hover:text-brand-primary transition-colors">
+                    Indefinido
+                  </span>
                 </label>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-6 border border-gray-200 rounded-xl dark:border-gray-700">
-          <h3 className="flex items-center gap-2 mb-4 text-xl font-semibold text-orange-600">
-            <Target className="w-6 h-6" /> Metas
-          </h3>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Objetivos
-            </label>
+        {/* Columna Derecha */}
+        <div className="space-y-8">
+          {/* Diagnóstico */}
+          <div className="p-8 border border-gray-100 rounded-[2rem] bg-white space-y-6">
+            <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Diagnóstico SII/CIE-10
+            </h3>
+            <div className="space-y-6">
+              <SearchSelect
+                items={diagnostics}
+                value={data?.diagnostic_code}
+                onChange={(value) => setData("diagnostic_code", value)}
+                config={{
+                  valueKey: "code",
+                  displayKey: "description",
+                  secondaryKeys: ["code"],
+                  searchKeys: ["code", "description"],
+                }}
+                label="Patología Detectada *"
+                placeholder="Buscar en el catálogo oficial..."
+                error={errors?.diagnostic_code}
+                disabled={isLocked}
+                className="!rounded-2xl"
+              />
+
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label">
+                  Observaciones / Plan de Trabajo
+                </label>
+                <textarea
+                  value={data?.description ?? ""}
+                  onChange={(e) => setData("description", e.target.value)}
+                  rows="4"
+                  placeholder="Describa el plan de tratamiento detallado..."
+                  className="w-full px-5 py-4 text-sm font-medium text-gray-700 transition-all resize-none rounded-2xl border-gray-50 bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
+                  disabled={isLocked}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Metas */}
+          <div className="p-8 border border-gray-100 rounded-[2rem] bg-slate-50/50 space-y-6">
+            <h3 className="enterprise-label !text-orange-600 flex items-center gap-2">
+              <Target className="w-4 h-4" /> Objetivos Terapéuticos
+            </h3>
             <textarea
               value={data.objectives ?? ""}
               onChange={(e) => setData("objectives", e.target.value)}
               rows="4"
-              className={baseInputClasses}
+              className="w-full px-5 py-4 text-xs font-bold tracking-wide text-orange-800 uppercase transition-all bg-white border-gray-100 resize-none rounded-2xl focus:ring-orange-500 placeholder:text-orange-200"
               disabled={isLocked}
-              placeholder="Ej: Reducir dolor a 2/10, Mejorar ROM de hombro..."
+              placeholder="EJ: REDUCIR DOLOR A 2/10, MEJORAR RANGO DE MOVIMIENTO..."
             />
           </div>
         </div>
       </div>
 
-      {/* --- 4. Resultados (Solo visible si completed/interrupted o editando) --- */}
+      {/* --- 4. Resultados Finales --- */}
       {isEditing && ["completed", "cancelled"].includes(data.status) && (
-        <div className="p-6 border border-red-200 rounded-xl bg-red-50 dark:bg-red-900/10 dark:border-red-800">
-          <h3 className="flex items-center gap-2 mb-4 text-xl font-semibold text-red-700">
-            <Activity className="w-6 h-6" /> Resultados Finales
+        <div className="p-10 border-2 border-brand-primary/20 rounded-[2.5rem] bg-brand-secondary/5 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-brand-primary/5 to-transparent"></div>
+          <h3 className="relative z-10 flex items-center gap-3 mb-8 text-xl font-black tracking-tight uppercase text-brand-primary">
+            <Activity className="w-6 h-6" /> Resultados de Evolución
           </h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs font-bold text-gray-600 uppercase">
-                Dolor Final (0-10)
+          <div className="relative z-10 grid grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label">
+                Dolor Final (VAS 0-10)
               </label>
               <input
                 type="number"
                 max="10"
                 value={data.pain_reduction ?? ""}
                 onChange={(e) => setData("pain_reduction", e.target.value)}
-                className={baseInputClasses}
+                className="w-full px-5 py-4 text-lg font-black text-gray-900 border-gray-100 rounded-2xl focus:ring-brand-primary"
               />
             </div>
-            <div>
-              <label className="text-xs font-bold text-gray-600 uppercase">
-                Mejora Movilidad %
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label">
+                Mejora Movilidad (%)
               </label>
               <input
                 type="number"
@@ -383,44 +386,44 @@ export default function ModalCreateUpdateTreatment({
                 onChange={(e) =>
                   setData("mobility_improvement", e.target.value)
                 }
-                className={baseInputClasses}
+                className="w-full px-5 py-4 text-lg font-black text-gray-900 border-gray-100 rounded-2xl focus:ring-brand-primary"
               />
             </div>
-            <div className="col-span-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Outcome / Alta
+            <div className="col-span-1 space-y-1 md:col-span-3">
+              <label className="ml-1 enterprise-label">
+                Outcome / Resumen de Alta
               </label>
               <textarea
                 value={data.outcome ?? ""}
                 onChange={(e) => setData("outcome", e.target.value)}
-                className={baseInputClasses}
-                placeholder="Resumen del alta..."
+                className="w-full px-5 py-4 text-sm font-medium text-gray-700 transition-all bg-white border-gray-100 resize-none rounded-2xl focus:ring-brand-primary"
+                placeholder="Indique los resultados finales y recomendaciones post-alta..."
               />
             </div>
           </div>
         </div>
       )}
 
-      {/* Botones */}
-      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+      {/* Botones Enterprise */}
+      <div className="flex justify-end gap-4 pt-10 border-t border-gray-100">
         <button
           type="button"
           onClick={() => setOpenTreatmentModal(false)}
-          className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+          className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all"
           disabled={processing}
         >
-          Cancelar
+          Descartar
         </button>
         <button
           type="submit"
-          className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-brand-primary rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 disabled:opacity-50 transition-all active:scale-95 transform"
           disabled={processing}
         >
           {processing
-            ? "Guardando..."
+            ? "Procesando..."
             : isEditing
-            ? "Actualizar"
-            : "Crear Tratamiento"}
+            ? "Actualizar Protocolo"
+            : "Registrar Tratamiento"}
         </button>
       </div>
     </form>

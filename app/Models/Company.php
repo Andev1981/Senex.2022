@@ -22,6 +22,24 @@ class Company extends Model
     ];
 
 
+    protected static function booted()
+    {
+        static::created(function ($company) {
+            $company->branches()->create([
+                'name' => 'Casa Matriz',
+                'codigo_sucursal_sii' => '0', // O el código que uses para la casa matriz
+                'email' => $company->email,
+                'phone' => $company->phone,
+                'active' => true,
+            ]);
+        });
+    }
+
+    public function branches(): HasMany
+    {
+        return $this->hasMany(Branch::class);
+    }
+
     // Configuración DTE (1 a 1)
     public function dteConfiguration(): HasOne
     {

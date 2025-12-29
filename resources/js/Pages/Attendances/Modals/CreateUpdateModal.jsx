@@ -5,13 +5,22 @@ import {
   Calendar,
   Activity,
   User,
-  ListChecks,
-  Stethoscope, // Icono visual
+  CheckCircle2,
+  Stethoscope,
   ClipboardList,
   Target,
-  Info, // Icono de información
+  Info,
+  ChevronRight,
+  Plus,
+  XCircle,
+  Database,
+  Search,
+  UserCheck,
+  Edit3
 } from "lucide-react";
 import SearchSelect from "@/Components/SearchSelect";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SecondaryButton from "@/Components/SecondaryButton";
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "📅 Programada" },
@@ -21,19 +30,18 @@ const STATUS_OPTIONS = [
 ];
 
 export default function SessionFormModal({
-  setShowModal,
+  setShowModal, // Función para cerrar
   sessionData = null,
   patients = [],
   doctors = [],
-  // diagnoses = [], // YA NO ES NECESARIO PASAR LA LISTA COMPLETA
   session_types = [],
   preselectedPatient = null,
   isDuplicate = false,
 }) {
-  const isEditing = !!sessionData?.id && !isDuplicate;
+  // 🎯 Determinar si es Edición o Creación Real
+  const isEditing = !!(sessionData?.session_id || sessionData?.id) && !isDuplicate;
   const currentStatus = sessionData?.status || "scheduled";
 
-  // Formatear doctores
   const formattedDoctors = useMemo(() => {
     return doctors.map((d) => ({
       ...d,
@@ -42,8 +50,7 @@ export default function SessionFormModal({
   }, [doctors]);
 
   const { data, setData, post, patch, processing, errors, reset } = useForm({
-    id: sessionData?.id || "",
-    // Eliminamos diagnosis_id del formulario porque pertenece al treatment
+    id: sessionData?.session_id || sessionData?.id || "",
     treatment_id:
       sessionData?.treatment_id ||
       preselectedPatient?.active_treatments?.[0]?.id ||
@@ -51,24 +58,18 @@ export default function SessionFormModal({
     patient_id: sessionData?.patient_id || preselectedPatient?.id || "",
     doctor_id: sessionData?.doctor_id || "",
     session_type_id: sessionData?.session_type_id || "",
-
-    // Control
     date: sessionData?.date
       ? moment.utc(sessionData.date).format("YYYY-MM-DD")
       : moment().format("YYYY-MM-DD"),
     time: sessionData?.time || "",
     duration: sessionData?.duration || 45,
     status: sessionData?.status || "scheduled",
-    consumes_plan: sessionData?.consumes_plan || false,
-
-    // SOAP
+    consumes_plan: !!sessionData?.consumes_plan,
     pain_level: sessionData?.pain_level || 0,
     subjective: sessionData?.subjective || "",
     objective: sessionData?.objective || "",
     assessment: sessionData?.assessment || "",
     plan: sessionData?.plan || "",
-
-    // JSONs
     evaluation_data: sessionData?.evaluation_data || {
       rom: {
         flexion: { before: 0, after: 0 },
@@ -81,117 +82,59 @@ export default function SessionFormModal({
       techniques: [],
       exercises: [],
     },
-
-    // Finanzas
     patient_amount_clp: sessionData?.patient_amount_clp || 0,
     patient_plan_id: sessionData?.patient_plan_id || "",
   });
 
-  // Estado local para MOSTRAR el diagnóstico actual (solo lectura)
   const [currentDiagnosisName, setCurrentDiagnosisName] = useState(null);
-
   const [techniqueInput, setTechniqueInput] = useState("");
 
-  // ... Helpers de ROM y Activities (Igual que antes) ...
   const handleRomChange = (type, moment, value) => {
     const currentRom = data.evaluation_data.rom || {};
     setData("evaluation_data", {
       ...data.evaluation_data,
-      rom: {
-        ...currentRom,
-        [type]: { ...currentRom[type], [moment]: parseInt(value) || 0 },
-      },
+      rom: { ...currentRom, [type]: { ...currentRom[type], [moment]: parseInt(value) || 0 } },
     });
   };
+
   const handleActivityChange = (category, item, action) => {
     const currentList = data.activities_data[category] || [];
-    const newList =
-      action === "add"
-        ? [...new Set([...currentList, item])]
-        : currentList.filter((i) => i !== item);
-    setData("activities_data", {
-      ...data.activities_data,
-      [category]: newList,
-    });
+    const newList = action === "add" ? [...new Set([...currentList, item])] : currentList.filter((i) => i !== item);
+    setData("activities_data", { ...data.activities_data, [category]: newList });
   };
+
   const isFieldEditable = (fieldType) => {
-    if (!isEditing && !isDuplicate) return true;
-    if (isDuplicate) return true;
-    if (currentStatus === "cancelled" || currentStatus === "missed")
-      return false;
+    if (!isEditing) return true;
+    if (currentStatus === "cancelled" || currentStatus === "missed") return false;
     if (currentStatus === "attended") return fieldType === "clinical";
     return true;
   };
 
-  // --- LÓGICA CLAVE MEJORADA ---
   useEffect(() => {
-    // 1. Identificar al paciente seleccionado
-    // Prioridad: Buscar en la lista (si es cambio manual) O usar el preseleccionado
-    const selectedPatient =
-      patients.find((p) => p.id === parseInt(data.patient_id)) ||
-      preselectedPatient;
-
+    const selectedPatient = patients.find((p) => p.id === parseInt(data.patient_id)) || preselectedPatient;
     if (!selectedPatient) {
       setCurrentDiagnosisName(null);
       return;
     }
-
-    // 2. BUSCAR TRATAMIENTO ACTIVO DE FORMA ROBUSTA
-    // Intentamos leer 'active_treatments' (nuestro alias custom) O 'treatments' (relación estándar)
-    // El backend ordena por 'latest', así que el [0] suele ser el actual.
-    const treatmentsList =
-      selectedPatient.active_treatments || selectedPatient.treatments || [];
-
-    // Filtramos opcionalmente por estatus si el objeto treatment tiene esa prop
-    // Si no, asumimos que el primero es el bueno.
-    const activeTreatment =
-      treatmentsList.length > 0 ? treatmentsList[0] : null;
+    const treatmentsList = selectedPatient.active_treatments || selectedPatient.treatments || [];
+    const activeTreatment = treatmentsList.length > 0 ? treatmentsList[0] : null;
 
     if (activeTreatment) {
-      // Asignar el ID del tratamiento al formulario (oculto) si no está seteado
-      // (Importante: comparar como strings o números para evitar errores de tipo)
-      if (
-        !isEditing &&
-        String(data.treatment_id) !== String(activeTreatment.id)
-      ) {
+      if (!isEditing && String(data.treatment_id) !== String(activeTreatment.id)) {
         setData((prev) => ({ ...prev, treatment_id: activeTreatment.id }));
-      } // EXTRAER EL NOMBRE DEL DIAGNÓSTICO PARA VISUALIZAR
-
-      // Intentamos leer 'diagnostic' (nombre relación Laravel) O 'diagnosis' (por si acaso)
-      const diagnosticObj =
-        activeTreatment.diagnostic || activeTreatment.diagnosis;
-
-      // Construimos el string a mostrar. Puede ser Code, Description o ambos.
-      const diagName = diagnosticObj
-        ? `${diagnosticObj.code || ""} ${
-            diagnosticObj.description || ""
-          }`.trim()
-        : "Sin diagnóstico registrado";
-
-      setCurrentDiagnosisName(
-        diagName === "" ? "Sin diagnóstico registrado" : diagName
-      );
+      }
+      const diagnosticObj = activeTreatment.diagnostic || activeTreatment.diagnosis;
+      setCurrentDiagnosisName(diagnosticObj ? `${diagnosticObj.code || ""} ${diagnosticObj.description || ""}`.trim() : "Sin diagnóstico registrado");
     } else {
       setCurrentDiagnosisName(null);
     }
-  }, [data.patient_id, patients, preselectedPatient]); // Dependencias
+  }, [data.patient_id, patients, preselectedPatient]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!data.patient_id) return alert("Selecciona un paciente");
-    if (!data.doctor_id) return alert("Selecciona un kinesiólogo");
-    // if (!data.treatment_id) return alert("El paciente no tiene un tratamiento activo."); // Opcional, buena validación
-
-    const opts = {
-      onSuccess: () => {
-        reset();
-        setShowModal(false);
-      },
-      onError: () => alert("Revisa los errores."),
-    };
-    isEditing
-      ? patch(route("sessions.update", data.id), opts)
-      : post(route("sessions.store"), opts);
+    const opts = { onSuccess: () => { reset(); setShowModal(); }, preserveScroll: true };
+    isEditing ? patch(route("sessions.update", data.id), opts) : post(route("sessions.store"), opts);
   };
 
   const activePlans = (() => {
@@ -201,418 +144,179 @@ export default function SessionFormModal({
     return patientObj?.active_plans || [];
   })();
 
+  const selectedPatientFinal = useMemo(() => {
+    return preselectedPatient || patients.find(p => p.id === parseInt(data.patient_id));
+  }, [preselectedPatient, data.patient_id, patients]);
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl max-h-[90vh] overflow-y-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* HEADER */}
-        <header className="sticky top-0 z-10 flex items-center justify-between pt-2 pb-4 bg-white border-b border-gray-200 dark:bg-gray-800">
-          <div className="flex items-center gap-3">
-            <ListChecks className="w-8 h-8 text-blue-600" />
+    <div className="relative flex flex-col h-full bg-white">
+      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        {/* HEADER HERO DISTINTIVO */}
+        <div className={`flex flex-col justify-between gap-6 p-10 border-b border-gray-100 md:flex-row md:items-center shrink-0 transition-colors duration-500 ${isEditing ? 'bg-indigo-50/50' : 'bg-gray-50/50'}`}>
+          <div className="flex items-center gap-4">
+            <div className={`flex items-center justify-center text-white transform shadow-xl w-14 h-14 rounded-2xl rotate-3 transition-colors ${isEditing ? 'bg-indigo-600 shadow-indigo-200' : 'bg-brand-primary shadow-brand-primary/20'}`}>
+              {isEditing ? <Edit3 className="w-7 h-7" /> : <Plus className="w-7 h-7" />}
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {isEditing ? "Editar Sesión" : "Nueva Sesión"}
+              <h1 className="mb-1 text-2xl font-black leading-none tracking-tight text-gray-900 uppercase">
+                {isEditing ? "Actualizar Atención" : "Nueva Atención Clínica"}
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Ficha Clínica SOAP + Gestión
+              <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
+                {isEditing ? `Modificando Registro #${data.id}` : "Apertura de Protocolo SOAP"}
               </p>
             </div>
           </div>
-          <div className="w-48">
-            <label className="block mb-1 text-xs font-bold text-gray-500 uppercase">
-              Estado
-            </label>
+
+          <div className="flex flex-col w-full gap-1 md:w-64">
+            <label className="ml-1 enterprise-label opacity-60">Estado de Sesión</label>
             <select
               value={data.status}
               onChange={(e) => setData("status", e.target.value)}
-              className="w-full text-sm border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              className="w-full text-[10px] font-black uppercase tracking-widest border-gray-100 rounded-xl bg-white focus:ring-brand-primary transition-all py-3 shadow-sm"
             >
               {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           </div>
-        </header>
+        </div>
 
-        <div className="px-6 pb-6 space-y-8">
-          {/* 1. DATOS ADMINISTRATIVOS */}
-          <div className="p-5 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-900/50 dark:border-gray-700">
-            <h2 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              Datos Generales
+        <div className="flex-1 p-10 space-y-12 overflow-y-auto custom-scrollbar">
+          {/* PACIENTE */}
+          <div className="space-y-6">
+            <h2 className="enterprise-label !text-brand-primary flex items-center gap-3 ml-1">
+              <UserCheck className="w-4 h-4" /> Sujeto de Atención
             </h2>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Paciente */}
-              {preselectedPatient ? (
-                <div className="p-3 bg-white border border-gray-300 rounded-lg dark:bg-gray-800 dark:border-gray-600">
-                  <label className="block text-xs font-bold text-gray-500 uppercase">
-                    Paciente
-                  </label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <User className="w-5 h-5 text-gray-400" />
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {preselectedPatient.full_name}
-                    </span>
-                  </div>
+            {selectedPatientFinal ? (
+                <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+                    <div className="flex items-center gap-6 relative z-10">
+                        <div className="flex items-center justify-center w-16 h-16 bg-brand-secondary/10 text-brand-primary rounded-2xl shadow-inner group-hover:rotate-3 transition-transform">
+                            <User className="w-8 h-8" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[9px] font-black text-brand-gray uppercase tracking-[0.2em] mb-1 opacity-60">Identidad Confirmada</p>
+                            <p className="text-xl font-black text-gray-900 uppercase tracking-tight leading-none mb-2">{selectedPatientFinal.full_name || `${selectedPatientFinal.name} ${selectedPatientFinal.last_name}`}</p>
+                            <span className="font-mono text-[10px] font-bold text-brand-gray opacity-60 uppercase tracking-widest">{selectedPatientFinal.rut}</span>
+                        </div>
+                    </div>
+                    {!preselectedPatient && !isEditing && (
+                        <button type="button" onClick={() => setData("patient_id", "")} className="p-3 text-gray-300 hover:text-red-500 rounded-xl transition-all active:scale-90 relative z-10"><XCircle className="w-5 h-5" /></button>
+                    )}
                 </div>
-              ) : (
+            ) : (
                 <SearchSelect
-                  label="Paciente *"
-                  items={patients}
-                  value={data.patient_id}
-                  onChange={(val) => setData("patient_id", val)}
-                  disabled={!isFieldEditable("patient_id")}
-                  config={{
-                    valueKey: "id",
-                    displayKey: "full_name",
-                    secondaryKeys: ["rut"],
-                    searchKeys: ["full_name", "rut"],
-                    renderItem: (item) => <p>{item.full_name}</p>,
-                  }}
+                    label="Buscar Paciente *"
+                    items={patients}
+                    value={data.patient_id}
+                    onChange={(val) => setData("patient_id", val)}
+                    className="!rounded-[1.5rem] !py-6 !px-8 shadow-xl shadow-gray-500/5"
+                    config={{ displayKey: "full_name", secondaryKeys: ["rut"], searchKeys: ["full_name", "rut"] }}
                 />
-              )}
+            )}
+          </div>
 
-              {/* Kinesiólogo */}
+          {/* SESIÓN */}
+          <div className="space-y-8">
+            <h2 className="enterprise-label !text-brand-primary flex items-center gap-3 ml-1">
+              <Calendar className="w-4 h-4" /> Parámetros de la Cita
+            </h2>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               <SearchSelect
-                label="Kinesiólogo/a *"
+                label="Profesional Tratante *"
                 items={formattedDoctors}
                 value={data.doctor_id}
                 onChange={(val) => setData("doctor_id", val)}
                 disabled={!isFieldEditable("doctor_id")}
-                config={{
-                  valueKey: "id",
-                  displayKey: "full_name",
-                  searchKeys: ["full_name"],
-                  renderItem: (item) => <p>{item.full_name}</p>,
-                }}
+                className="!rounded-2xl"
+                config={{ valueKey: "id", displayKey: "full_name", searchKeys: ["full_name"] }}
               />
-
-              {/* --- INFORMACIÓN DE DIAGNÓSTICO (READ ONLY) --- */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="enterprise-label ml-1 opacity-60">Fecha</label>
+                  <input type="date" value={data.date} onChange={(e) => setData("date", e.target.value)} disabled={!isFieldEditable("date")} className="w-full px-5 py-4 font-mono font-black text-sm text-gray-700 border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary shadow-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="enterprise-label ml-1 opacity-60">Hora</label>
+                  <input type="time" value={data.time} onChange={(e) => setData("time", e.target.value)} disabled={!isFieldEditable("time")} className="w-full px-5 py-4 font-mono font-black text-sm text-gray-700 border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary shadow-sm" />
+                </div>
+              </div>
               <div className="md:col-span-2">
-                <div
-                  className={`flex items-start gap-3 p-3 rounded-lg border ${
-                    currentDiagnosisName
-                      ? "bg-teal-50 border-teal-200"
-                      : "bg-gray-100 border-gray-200"
-                  }`}
-                >
-                  <div className="mt-1">
-                    <Stethoscope
-                      className={`w-5 h-5 ${
-                        currentDiagnosisName ? "text-teal-600" : "text-gray-400"
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                      Diagnóstico del Tratamiento Activo
-                    </h4>
-                    {currentDiagnosisName ? (
-                      <p className="text-sm font-medium text-teal-800 dark:text-teal-300">
-                        {currentDiagnosisName}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-500 italic">
-                        Selecciona un paciente con tratamiento activo para ver
-                        el diagnóstico.
-                      </p>
-                    )}
+                <div className={`p-6 rounded-[1.5rem] border-2 flex items-start gap-5 transition-all ${currentDiagnosisName ? "bg-green-50/30 border-green-100" : "bg-gray-50 border-gray-100 opacity-60"}`}>
+                  <div className={`p-3 rounded-xl shadow-sm ${currentDiagnosisName ? 'bg-white text-green-600' : 'bg-white text-gray-300'}`}><Stethoscope className="w-6 h-6" /></div>
+                  <div className="flex-1">
+                    <p className="enterprise-label !text-gray-400 !mb-1">Protocolo Activo</p>
+                    <p className={`text-sm font-black uppercase tracking-tight ${currentDiagnosisName ? 'text-gray-900' : 'text-gray-400'}`}>{currentDiagnosisName || "Sin tratamiento activo"}</p>
                   </div>
                 </div>
-                {/* Campo oculto por si necesitas depurar, pero no se muestra al usuario */}
-                <input
-                  type="hidden"
-                  name="treatment_id"
-                  value={data.treatment_id}
-                />
               </div>
-
-              {/* Fechas y Horas */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Fecha
-                  </label>
-                  <input
-                    type="date"
-                    value={data.date}
-                    onChange={(e) => setData("date", e.target.value)}
-                    disabled={!isFieldEditable("date")}
-                    className="w-full border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="enterprise-label ml-1 opacity-60">Servicio</label>
+                  <SearchSelect items={session_types} value={data.session_type_id} onChange={(val) => { const type = session_types.find((t) => t.id === val); setData((prev) => ({ ...prev, session_type_id: val, patient_amount_clp: type ? Number(type.base_price_clp) : 0 })); }} className="!rounded-2xl" config={{ valueKey: "id", displayKey: "name" }} />
                 </div>
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Hora
-                  </label>
-                  <input
-                    type="time"
-                    value={data.time}
-                    onChange={(e) => setData("time", e.target.value)}
-                    disabled={!isFieldEditable("time")}
-                    className="w-full border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Finanzas */}
-              <div className="grid grid-cols-2 gap-4">
-                <SearchSelect
-                  label="Tipo Sesión"
-                  items={session_types}
-                  value={data.session_type_id}
-                  onChange={(val) => {
-                    const type = session_types.find((t) => t.id === val);
-                    setData((prev) => ({
-                      ...prev,
-                      session_type_id: val,
-                      patient_amount_clp: type
-                        ? Number(type.base_price_clp)
-                        : 0,
-                    }));
-                  }}
-                  config={{
-                    valueKey: "id",
-                    displayKey: "name",
-                    renderItem: (i) => <span>{i.name}</span>,
-                  }}
-                />
-                <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Plan
-                  </label>
-                  <select
-                    value={data.consumes_plan ? "yes" : "no"}
-                    onChange={(e) =>
-                      setData("consumes_plan", e.target.value === "yes")
-                    }
-                    className="w-full border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                  >
-                    <option value="no">Pago Individual</option>
-                    <option value="yes" disabled={activePlans.length === 0}>
-                      Descontar de Pack (
-                      {activePlans.length > 0 ? "Disponible" : "Sin planes"})
-                    </option>
+                <div className="space-y-1">
+                  <label className="enterprise-label ml-1 opacity-60">Modalidad de Cobro</label>
+                  <select value={data.consumes_plan ? "yes" : "no"} onChange={(e) => setData("consumes_plan", e.target.value === "yes")} className="w-full px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary">
+                    <option value="no">Recaudación Directa</option>
+                    <option value="yes" disabled={activePlans.length === 0}>Usar Plan Activo ({activePlans.length > 0 ? "Disponible" : "Sin Cupos"})</option>
                   </select>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* --- 2. EVOLUCIÓN CLÍNICA (SOAP) --- */}
+          {/* SOAP */}
           {["attended", "scheduled"].includes(data.status) && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                <ClipboardList className="w-6 h-6 text-teal-600" />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Evolución Clínica (SOAP)
-                </h2>
+            <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center gap-3 px-1 pb-4 border-b border-gray-100">
+                <div className="p-2.5 bg-green-50 rounded-xl text-green-600"><ClipboardList className="w-6 h-6" /></div>
+                <div>
+                  <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">Evolución Clínica (SOAP)</h2>
+                  <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest opacity-60">Documentación obligatoria</p>
+                </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 {/* S: SUBJECTIVE */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-teal-700 dark:text-teal-400">
-                    <User className="w-5 h-5" /> Subjetivo (S)
-                  </h3>
-                  <div className="mb-4">
-                    <div className="flex justify-between mb-1">
-                      <label className="text-sm font-medium text-gray-700">
-                        Nivel de Dolor (EVA)
-                      </label>
-                      <span
-                        className={`font-bold text-lg ${
-                          data.pain_level > 7 ? "text-red-600" : "text-blue-600"
-                        }`}
-                      >
-                        {data.pain_level}/10
-                      </span>
+                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all">
+                  <h3 className="enterprise-label !text-brand-primary flex items-center gap-3 mb-6"><User className="w-4 h-4" /> Subjetivo (S)</h3>
+                  <div className="p-6 mb-8 border shadow-inner bg-gray-50/50 rounded-3xl border-gray-50">
+                    <div className="flex items-end justify-between px-1 mb-4">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dolor (EVA)</label>
+                      <span className={`text-2xl font-mono font-black ${data.pain_level > 7 ? "text-red-600" : "text-brand-primary"}`}>{data.pain_level} <span className="text-[10px] opacity-30 tracking-widest">/ 10</span></span>
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={data.pain_level}
-                      onChange={(e) =>
-                        setData("pain_level", parseInt(e.target.value))
-                      }
-                      className="w-full accent-teal-600"
-                    />
+                    <input type="range" min="0" max="10" value={data.pain_level} onChange={(e) => setData("pain_level", parseInt(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-primary" />
                   </div>
-                  <textarea
-                    value={data.subjective}
-                    onChange={(e) => setData("subjective", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="3"
-                    placeholder="Paciente refiere..."
-                  />
+                  <textarea value={data.subjective} onChange={(e) => setData("subjective", e.target.value)} className="w-full text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]" placeholder="Refiere el paciente..." />
                 </div>
-
                 {/* O: OBJECTIVE */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-blue-700 dark:text-blue-400">
-                    <Activity className="w-5 h-5" /> Objetivo (O)
-                  </h3>
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg dark:bg-blue-900/20">
-                    <p className="text-xs font-bold text-blue-800 uppercase mb-2">
-                      ROM (Grados)
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["flexion", "abduction"].map((romType) => (
-                        <div key={romType}>
-                          <label className="text-xs text-gray-600 capitalize">
-                            {romType}
-                          </label>
-                          <div className="flex gap-1">
-                            <input
-                              type="number"
-                              placeholder="Pre"
-                              className="w-1/2 px-2 py-1 text-xs border rounded"
-                              value={
-                                data.evaluation_data.rom?.[romType]?.before ||
-                                ""
-                              }
-                              onChange={(e) =>
-                                handleRomChange(
-                                  romType,
-                                  "before",
-                                  e.target.value
-                                )
-                              }
-                            />
-                            <input
-                              type="number"
-                              placeholder="Post"
-                              className="w-1/2 px-2 py-1 text-xs border rounded"
-                              value={
-                                data.evaluation_data.rom?.[romType]?.after || ""
-                              }
-                              onChange={(e) =>
-                                handleRomChange(
-                                  romType,
-                                  "after",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </div>
+                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all">
+                  <h3 className="enterprise-label !text-blue-600 flex items-center gap-3 mb-6"><Activity className="w-4 h-4" /> Objetivo (O)</h3>
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    {["flexion", "abduction"].map((romType) => (
+                      <div key={romType} className="p-5 bg-blue-50/30 rounded-[1.5rem] border border-blue-50 shadow-inner">
+                        <label className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] block mb-4 text-center">ROM: {romType}</label>
+                        <div className="flex items-center justify-center gap-3">
+                          <input type="number" className="w-16 text-center font-mono font-black text-sm border-none bg-white rounded-xl py-2.5 shadow-sm focus:ring-blue-500" value={data.evaluation_data.rom?.[romType]?.before || ""} onChange={(e) => handleRomChange(romType, "before", e.target.value)} />
+                          <ChevronRight className="w-4 h-4 text-blue-200" />
+                          <input type="number" className="w-16 text-center font-mono font-black text-sm border-none bg-white rounded-xl py-2.5 shadow-sm focus:ring-blue-500" value={data.evaluation_data.rom?.[romType]?.after || ""} onChange={(e) => handleRomChange(romType, "after", e.target.value)} />
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                  <textarea
-                    value={data.objective}
-                    onChange={(e) => setData("objective", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="2"
-                    placeholder="Se observa..."
-                  />
-                </div>
-
-                {/* A: ASSESSMENT */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">
-                    <ClipboardList className="w-5 h-5" /> Análisis (A)
-                  </h3>
-                  <textarea
-                    value={data.assessment}
-                    onChange={(e) => setData("assessment", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="3"
-                    placeholder="Evolución positiva..."
-                  />
-                </div>
-
-                {/* P: PLAN */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-green-700 dark:text-green-400">
-                    <Target className="w-5 h-5" /> Plan (P)
-                  </h3>
-                  <div className="mb-3">
-                    <div className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={techniqueInput}
-                        onChange={(e) => setTechniqueInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleActivityChange(
-                              "techniques",
-                              techniqueInput,
-                              "add"
-                            );
-                            setTechniqueInput("");
-                          }
-                        }}
-                        className="flex-1 text-xs border-gray-300 rounded"
-                        placeholder="Técnica/Ejercicio..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleActivityChange(
-                            "techniques",
-                            techniqueInput,
-                            "add"
-                          );
-                          setTechniqueInput("");
-                        }}
-                        className="bg-green-600 text-white px-2 rounded"
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {data.activities_data.techniques?.map((t, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full flex items-center gap-1"
-                        >
-                          {t}{" "}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleActivityChange("techniques", t, "remove")
-                            }
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <textarea
-                    value={data.plan}
-                    onChange={(e) => setData("plan", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="2"
-                    placeholder="Próxima sesión..."
-                  />
+                  <textarea value={data.objective} onChange={(e) => setData("objective", e.target.value)} className="w-full text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]" placeholder="Hallazgos físicos..." />
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* FOOTER */}
-        <div className="sticky bottom-0 flex justify-end gap-3 p-4 bg-gray-50 border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-          <button
-            type="button"
-            onClick={() => setShowModal(false)}
-            className="px-4 py-2 text-sm text-gray-700 bg-white border rounded-lg hover:bg-gray-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            disabled={processing}
-          >
-            {processing ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
-          </button>
+        {/* FOOTER PREMIUM */}
+        <div className="sticky bottom-0 z-30 flex justify-end gap-4 p-10 border-t border-gray-100 bg-white/90 backdrop-blur-md shrink-0">
+          <SecondaryButton onClick={() => setShowModal()} className="!px-10 !py-4">Descartar Cambios</SecondaryButton>
+          <PrimaryButton type="submit" disabled={processing} className={`!px-14 !py-4 shadow-xl ${isEditing ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'shadow-brand-primary/20'}`}>
+            {processing ? "Sincronizando..." : isEditing ? "Actualizar Registro" : "Confirmar Atención"}
+          </PrimaryButton>
         </div>
       </form>
     </div>

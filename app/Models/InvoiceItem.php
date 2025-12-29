@@ -20,6 +20,7 @@ class InvoiceItem extends Model
     'sellable_id',
     'sellable_type',
     'description',
+    'comment',
     'quantity',
     'unit_price_clp',
     'unit_insurance_primary_clp',
@@ -27,6 +28,7 @@ class InvoiceItem extends Model
     'unit_patient_clp',
     'total_gross_clp',
     'total_patient_clp',
+    'discount_percentage',
     'is_exento',
   ];
 

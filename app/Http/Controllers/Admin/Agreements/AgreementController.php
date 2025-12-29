@@ -24,8 +24,12 @@ class AgreementController extends Controller
 
     public function index()
     {
-        // 1. Cargamos Agreements (El trait hace el where company_id)
-        $agreements = Agreement::with('insurance', 'rules', 'rules.plan', 'rules.sessionType')->get();
+        $currentCompanyId = session('current_company_id');
+
+        // 1. Cargamos Agreements filtrando por la compañía actual
+        $agreements = Agreement::where('company_id', $currentCompanyId)
+            ->with('insurance', 'rules', 'rules.plan', 'rules.sessionType')
+            ->get();
 
         // 2. Cargamos SessionTypes (El trait hace el where company_id si aplica)
         $sessionTypes = SessionType::get(['id', 'name', 'base_price_clp']);
@@ -42,10 +46,10 @@ class AgreementController extends Controller
             'agreements' => $agreements,
             'insurances' => $insurances,
             'sessionTypes' => $sessionTypes,
-            'plans' => $plans
+            'plans' => $plans,
+            'user' => auth()->user()->load('roles'),
         ]);
     }
-
     public function create()
     {
         // 1. Cargamos Aseguradoras (El trait hace el where company_id)

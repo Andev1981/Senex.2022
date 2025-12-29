@@ -13,28 +13,28 @@ export default function ServicesCard({
   onRemoveService,
 }) {
   return (
-    <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-xl h-fit hover:scale-[1.01] transition-transform duration-200">
+    <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-3xl h-fit hover:scale-[1.01] transition-all duration-300">
       {/* Título */}
-      <h2 className="flex items-center mb-6 text-xl font-black text-gray-800">
-        <span className="flex items-center justify-center w-8 h-8 mr-2 text-sm text-indigo-600 bg-indigo-100 rounded-full">
+      <h2 className="flex items-center mb-8 text-xl font-black text-gray-800 tracking-tight">
+        <span className="flex items-center justify-center w-8 h-8 mr-3 text-xs font-black text-brand-primary bg-brand-secondary/10 rounded-xl">
           2
         </span>
         Prestaciones
       </h2>
 
       {/* Sección Deudas (si existen) */}
-      {patientExtras.debts.length > 0 && (
-        <div className="p-4 mb-4 border border-orange-200 rounded-xl bg-orange-50/50">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-orange-800 flex items-center gap-2">
+      {patientExtras.debts?.length > 0 && (
+        <div className="p-6 mb-6 border-2 border-orange-100 rounded-[2rem] bg-orange-50/30 shadow-inner">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[10px] font-black text-orange-700 uppercase tracking-widest flex items-center gap-2">
               <Calculator className="w-4 h-4" /> Deudas Pendientes
             </h3>
-            <span className="px-2 py-0.5 bg-orange-200 text-orange-800 rounded-full text-[10px] font-bold">
+            <span className="px-3 py-1 bg-orange-200 text-orange-800 rounded-xl text-[10px] font-black">
               {patientExtras.debts.length}
             </span>
           </div>
 
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
             {patientExtras.debts.map((debt) => {
               const isAdded = servicesToBill.some((s) => s.debt_id === debt.id);
               const displayAmount =
@@ -46,25 +46,25 @@ export default function ServicesCard({
                   type="button"
                   disabled={isAdded}
                   onClick={() => onAddDebt(debt)}
-                  className={`w-full flex justify-between items-center px-3 py-2.5 text-xs rounded-lg border transition-all duration-200 ${
+                  className={`w-full flex justify-between items-center px-4 py-4 text-xs rounded-2xl border-2 transition-all duration-300 ${
                     isAdded
-                      ? "bg-green-100 border-green-200 text-green-700 opacity-60 cursor-default"
-                      : "bg-white border-orange-200 text-orange-800 hover:bg-orange-100 hover:shadow-sm transform hover:-translate-y-0.5"
+                      ? "bg-green-100 border-green-200 text-green-700 opacity-60 cursor-default shadow-none"
+                      : "bg-white border-orange-100 text-orange-800 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-200/50 transform hover:-translate-y-1"
                   }`}
                 >
                   <div className="flex flex-col items-start">
-                    <span className="font-bold">
+                    <span className="font-black uppercase tracking-tight text-sm">
                       {debt.treatment_session?.session_type?.name || "Sesión"}
                     </span>
-                    <span className="text-[10px] opacity-80">
+                    <span className="mt-1 font-mono text-[10px] font-bold opacity-60">
                       {debt.treatment_session?.date}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono font-black text-base">
                       ${displayAmount.toLocaleString("es-CL")}
                     </span>
-                    {isAdded && <CheckCircle2 className="w-4 h-4" />}
+                    {isAdded && <CheckCircle2 className="w-5 h-5" />}
                   </div>
                 </button>
               );
@@ -74,10 +74,13 @@ export default function ServicesCard({
       )}
 
       {/* Lista de Servicios Agregados */}
-      <div className="space-y-4">
-        {servicesToBill.length === 0 && patientExtras.debts.length === 0 && (
-          <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
-            <p className="text-sm text-gray-400">No hay servicios agregados.</p>
+      <div className="space-y-5">
+        {servicesToBill.length === 0 && (!patientExtras.debts || patientExtras.debts.length === 0) && (
+          <div className="text-center py-16 border-2 border-dashed border-gray-100 rounded-[2.5rem] bg-gray-50/30">
+            <div className="flex justify-center mb-4">
+                <Plus className="w-12 h-12 text-gray-200" />
+            </div>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No hay servicios agregados</p>
           </div>
         )}
 
@@ -88,6 +91,7 @@ export default function ServicesCard({
             index={index}
             sessionTypes={sessionTypes}
             doctors={doctors}
+            patientExtras={patientExtras}
             onUpdate={onUpdateService}
             onRemove={onRemoveService}
           />
@@ -97,12 +101,12 @@ export default function ServicesCard({
         <button
           type="button"
           onClick={onAddService}
-          className="w-full py-3.5 text-xs font-bold text-indigo-500 transition-all border-2 border-indigo-100 border-dashed rounded-xl hover:bg-indigo-50 hover:border-indigo-200 flex items-center justify-center gap-2 group"
+          className="w-full py-5 text-[10px] font-black text-brand-primary transition-all border-2 border-brand-secondary/20 border-dashed rounded-[2rem] hover:bg-brand-secondary/10 hover:border-brand-primary/50 flex items-center justify-center gap-3 uppercase tracking-widest group active:scale-95 shadow-sm"
         >
-          <div className="bg-indigo-100 text-indigo-600 rounded-full p-1 group-hover:bg-indigo-200 transition-colors">
+          <div className="bg-brand-secondary/20 text-brand-primary rounded-full p-1.5 group-hover:bg-brand-primary group-hover:text-white transition-all">
             <Plus className="w-4 h-4" />
           </div>
-          AÑADIR NUEVA PRESTACIÓN
+          Añadir Nueva Prestación
         </button>
       </div>
     </div>

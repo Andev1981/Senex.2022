@@ -1,7 +1,22 @@
 import { useForm } from "@inertiajs/react";
-import { Save, X } from "lucide-react";
+import {
+  Save,
+  X,
+  ShieldCheck,
+  Database,
+  DollarSign,
+  Calendar,
+  Percent,
+  ArrowRight,
+  ClipboardList,
+  Info,
+  ChevronRight,
+} from "lucide-react";
 import SideModal from "@/Components/SideModal";
 import { useEffect, useState } from "react";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SecondaryButton from "@/Components/SecondaryButton";
+import InputPesoChileno from "@/Components/InputPesoChileno";
 
 export default function AgreementRuleFormModal({
   show,
@@ -12,96 +27,62 @@ export default function AgreementRuleFormModal({
   sessionTypes,
 }) {
   const isEdit = !!rule;
-
   const [plansList, setPlansList] = useState([]);
 
-  const {
-    data,
-    setData,
-    post,
-    put,
-    processing,
-    errors,
-    reset,
-    clearErrors,
-    transform,
-  } = useForm({
-    agreement_id: "",
-    id: "",
-    session_type_id: "",
-    plan_id: "", // Se enviará como null si está vacío
-    gross_price_clp: 0,
-    patient_share_clp: 0,
-    insurance_share_clp: 0,
-    patient_percentage: 0,
-    insurance_percentage: 0,
-    start_date: new Date().toISOString().slice(0, 10),
-    end_date: "",
-    notes: "",
-  });
+  const { data, setData, post, put, processing, errors, reset, clearErrors } =
+    useForm({
+      agreement_id: "",
+      id: "",
+      session_type_id: "",
+      plan_id: "",
+      gross_price_clp: 0,
+      patient_share_clp: 0,
+      insurance_share_clp: 0,
+      patient_percentage: 0,
+      insurance_percentage: 0,
+      start_date: new Date().toISOString().slice(0, 10),
+      end_date: "",
+      notes: "",
+    });
 
-  // 2. LA MAGIA: Sincronizar Props con Inertia Form
   useEffect(() => {
-    if (plans) {
-      setPlansList(plans.filter((p) => p.id !== rule?.plan_id) || []);
-    }
+    if (plans) setPlansList(plans.filter((p) => p.id !== rule?.plan_id) || []);
     if (show) {
       if (rule) {
-        // MODO EDICIÓN: Cargamos los datos que vienen del prop
         setData({
           id: rule?.id,
           agreement_id: agreement?.id,
           session_type_id: rule?.session_type_id || "",
           plan_id: rule?.plan_id ? String(rule.plan_id) : "",
-
-          // Montos y Porcentajes ORIGINALES (Incluye ambos porcentajes)
           gross_price_clp: rule?.gross_price_clp || 0,
           patient_share_clp: rule?.patient_share_clp || 0,
           insurance_share_clp: rule?.insurance_share_clp || 0,
-          patient_percentage: rule?.patient_percentage || 0, // 💡 CAMPO DE COPAGO (%)
-          insurance_percentage: rule?.insurance_percentage || 0, // 💡 CAMPO DE COBERTURA (%)
-
-          // Vigencia y Notas
+          patient_percentage: rule?.patient_percentage || 0,
+          insurance_percentage: rule?.insurance_percentage || 0,
           start_date: rule?.start_date || new Date().toISOString().slice(0, 10),
           end_date: rule?.end_date || "",
           notes: rule?.notes || "",
         });
       } else {
-        // MODO CREACIÓN: Si se abre y no hay convenio, limpiamos
-        if (show) {
-          reset();
-          clearErrors();
-          setData("agreement_id", agreement?.id || "");
-        }
+        reset();
+        clearErrors();
+        setData("agreement_id", agreement?.id || "");
       }
     }
-  }, [agreement, show, rule]); // Se ejecuta cada vez que cambia el convenio seleccionado
+  }, [agreement, show, rule]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // 1. Definición dinámica de la ruta
     const routeName = isEdit
       ? "agreement.rules.update"
       : "agreement.rules.store";
-
-    // ✅ Para STORE: undefined (la ruta es /agreement/rules)
-    // ✅ Para UPDATE: rule.id (la ruta es /agreement/rules/{rule})
-    // Ziggy es inteligente: si pasas un solo valor (rule.id), lo asigna al primer parámetro {rule}.
     const routeParams = isEdit ? rule.id : undefined;
-
     const method = isEdit ? put : post;
 
     method(route(routeName, routeParams), {
       onSuccess: () => {
         reset();
         onClose();
-        // Opcional: una notificación toast aquí quedaría genial
-      },
-      onError: (err) => {
-        console.error("Error al guardar regla:", err);
-        // Inertia maneja los errores de validación automáticamente en el prop 'errors',
-        // pero esto sirve para debug.
       },
       preserveScroll: true,
     });
@@ -109,7 +90,6 @@ export default function AgreementRuleFormModal({
 
   const handlePriceChange = (field, value) => {
     const newValue = parseInt(value) || 0;
-
     let updates = { [field]: newValue };
     let gross = field === "gross_price_clp" ? newValue : data.gross_price_clp;
     let patient =
@@ -120,261 +100,205 @@ export default function AgreementRuleFormModal({
 
     let insurancePct = 0;
     let patientPct = 0;
-
     if (gross > 0) {
-      // Porcentaje de Cobertura (Aseguradora)
       insurancePct = Math.round((insuranceShare / gross) * 100);
-      // Porcentaje de Copago (Paciente)
       patientPct = 100 - insurancePct;
     }
-
     updates.insurance_percentage = insurancePct;
-    updates.patient_percentage = patientPct; // 💡 Actualización del campo patient_percentage
+    updates.patient_percentage = patientPct;
 
-    setData((prevData) => ({
-      ...prevData,
-      ...updates,
-    }));
+    setData((prev) => ({ ...prev, ...updates }));
   };
 
   return (
     <SideModal
       open={show}
       onClose={() => onClose()}
-      title={isEdit ? "Editar Regla de Convenio" : "Nueva Regla de Convenio"}
-      description={
-        isEdit
-          ? `Editando regla #${rule?.id}`
-          : "Defina los valores para esta prestación."
-      }
       width="4xl"
-    >
-      <form onSubmit={handleSubmit} className="m-4 space-y-4">
-        {/* Vínculos */}
-        <div className="grid grid-cols-2 gap-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              Servicio/Prestación
-            </span>
-            <select
-              value={data.session_type_id}
-              onChange={(e) => setData("session_type_id", e.target.value)}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-              required
-            >
-              <option value="">Seleccione Servicio</option>
-              {sessionTypes.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} (Base: ${s.base_price_clp?.toLocaleString() || 0})
-                </option>
-              ))}
-            </select>
-            {errors.session_type_id && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.session_type_id}
-              </p>
-            )}
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              Plan Aplicable (Opcional)
-            </span>
-            <select
-              value={data.plan_id}
-              onChange={(e) => setData("plan_id", e.target.value)}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-            >
-              <option value="">(Regla General para Aseguradora)</option>
-              {plansList.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.code})
-                </option>
-              ))}
-            </select>
-            {errors.plan_id && (
-              <p className="mt-1 text-xs text-red-500">{errors.plan_id}</p>
-            )}
-          </label>
-        </div>
-
-        {/* Montos */}
-        <h3 className="pt-4 text-base font-semibold text-gray-700 border-t">
-          Definición de Tarifas (CLP)
-        </h3>
-        <div className="grid grid-cols-2 gap-4">
-          {/* Precio Bruto Total */}
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              Precio Bruto Total
-            </span>
-            <input
-              type="number"
-              min="0"
-              value={data.gross_price_clp}
-              onChange={(e) =>
-                handlePriceChange("gross_price_clp", e.target.value)
-              }
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-              required
-            />
-            {errors.gross_price_clp && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.gross_price_clp}
-              </p>
-            )}
-          </label>
-
-          {/* Copago (Paciente) en CLP */}
-          <label className="block">
-            <span className="text-sm font-bold text-red-700">
-              Copago (Paciente) CLP
-            </span>
-            <input
-              type="number"
-              min="0"
-              value={data.patient_share_clp}
-              onChange={(e) =>
-                handlePriceChange("patient_share_clp", e.target.value)
-              }
-              className="block w-full mt-1 border-red-300 rounded-md shadow-sm"
-              required
-            />
-            {errors.patient_share_clp && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.patient_share_clp}
-              </p>
-            )}
-          </label>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {/* Aporte Aseguradora en CLP */}
-          <label className="block">
-            <span className="text-sm font-medium text-green-700">
-              Aporte Aseguradora CLP
-            </span>
-            <input
-              type="number"
-              min="0"
-              value={data.insurance_share_clp}
-              disabled
-              className="block w-full mt-1 border-green-300 rounded-md shadow-sm bg-green-50"
-            />
-          </label>
-
-          {/* Copago del Paciente en Porcentaje (%) */}
-          <label className="block">
-            <span className="text-sm font-bold text-red-700">Copago (%)</span>
-            <input
-              disabled
-              type="number"
-              min="0"
-              max="100"
-              value={data.patient_percentage}
-              className="block w-full mt-1 border-red-300 rounded-md shadow-sm bg-red-50"
-            />
-            {errors.patient_percentage && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.patient_percentage}
-              </p>
-            )}
-          </label>
-
-          {/* Porcentaje de Cobertura de la Aseguradora (Añadido en un nuevo grupo para más espacio) */}
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              Cobertura Aseguradora (%)
-            </span>
-            <input
-              disabled
-              type="number"
-              min="0"
-              max="100"
-              value={data.insurance_percentage}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm bg-gray-50"
-            />
-            {errors.insurance_percentage && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.insurance_percentage}
-              </p>
-            )}
-          </label>
-        </div>
-
-        {/* Vigencia y Notas */}
-        <h3 className="pt-4 text-base font-semibold text-gray-700 border-t">
-          Vigencia y Notas
-        </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              Fecha de Aplicación (Vigencia)
-            </span>
-            <input
-              type="date"
-              value={data.start_date}
-              onChange={(e) => setData("start_date", e.target.value)}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-              required
-            />
-            {errors.start_date && (
-              <p className="mt-1 text-xs text-red-500">{errors.start_date}</p>
-            )}
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              Fecha de Fin (Opcional, para historial)
-            </span>
-            <input
-              type="date"
-              value={data.end_date}
-              onChange={(e) => setData("end_date", e.target.value)}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-            />
-            {errors.end_date && (
-              <p className="mt-1 text-xs text-red-500">{errors.end_date}</p>
-            )}
-          </label>
-        </div>
-
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">
-            Notas Internas
-          </span>
-          <textarea
-            rows="2"
-            value={data.notes}
-            onChange={(e) => setData("notes", e.target.value)}
-            className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-          ></textarea>
-        </label>
-
-        {/* Botones de Acción */}
-        <div className="flex justify-end pt-4 space-x-2 border-t">
-          <button
-            type="button"
+      title={isEdit ? "Optimizar Regla" : "Nueva Regla de Cobro"}
+      subtitle="Configuración de Tarifas & Porcentajes"
+      icon={ShieldCheck}
+      footer={
+        <>
+          <SecondaryButton
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100"
+            type="button"
+            className="!px-10 !py-4"
           >
-            <X className="inline w-4 h-4 mr-1" /> Cancelar
-          </button>
-          <button
-            type="submit"
+            Descartar
+          </SecondaryButton>
+          <PrimaryButton
             disabled={processing}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-indigo-300"
+            onClick={handleSubmit}
+            type="button"
+            className="!px-14 !py-4 shadow-xl shadow-brand-primary/20"
           >
-            {processing ? (
-              "Guardando..."
-            ) : (
-              <span className="flex items-center">
-                <Save className="w-4 h-4 mr-1" />{" "}
-                {isEdit ? "Actualizar Regla" : "Crear Regla"}
-              </span>
-            )}
-          </button>
+            {processing
+              ? "Sincronizando..."
+              : isEdit
+              ? "Actualizar Regla"
+              : "Confirmar Tarifa"}
+          </PrimaryButton>
+        </>
+      }
+    >
+      <div className="space-y-10">
+        {/* BLOQUE 1: VÍNCULOS */}
+        <div className="space-y-6">
+          <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+            <Database className="w-4 h-4" /> Definición de Cobertura
+          </h3>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label opacity-60">
+                Servicio / Prestación
+              </label>
+              <select
+                value={data.session_type_id}
+                onChange={(e) => setData("session_type_id", e.target.value)}
+                className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl focus:ring-brand-primary bg-gray-50/50"
+                required
+              >
+                <option value="">-- Seleccionar Servicio --</option>
+                {sessionTypes.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              {errors.session_type_id && (
+                <p className="text-red-500 text-[10px] font-black uppercase mt-1">
+                  {errors.session_type_id}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label opacity-60">
+                Plan Específico (Opcional)
+              </label>
+              <select
+                value={data.plan_id}
+                onChange={(e) => setData("plan_id", e.target.value)}
+                className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl focus:ring-brand-primary bg-gray-50/50"
+              >
+                <option value="">-- Regla General (Aseguradora) --</option>
+                {plansList.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
-      </form>
+
+        {/* BLOQUE 2: TARIFARIO */}
+        <div className="p-8 bg-brand-primary/5 border border-brand-primary/10 rounded-[2.5rem] space-y-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
+          <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 relative z-10">
+            <DollarSign className="w-4 h-4" /> Estructura de Valores (CLP)
+          </h3>
+
+          <div className="relative z-10 grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label">
+                Precio Bruto (SII/Convenio)
+              </label>
+              <InputPesoChileno
+                price={data.gross_price_clp}
+                onChange={(e) =>
+                  handlePriceChange("gross_price_clp", e.target.value)
+                }
+                className="!rounded-2xl !py-4 !px-5 font-black text-lg bg-white shadow-sm border-gray-100"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="enterprise-label !text-red-600 ml-1">
+                Copago Paciente
+              </label>
+              <InputPesoChileno
+                price={data.patient_share_clp}
+                onChange={(e) =>
+                  handlePriceChange("patient_share_clp", e.target.value)
+                }
+                className="!rounded-2xl !py-4 !px-5 font-black text-lg bg-white shadow-sm border-red-100 text-red-700"
+              />
+            </div>
+          </div>
+
+          <div className="relative z-10 grid grid-cols-1 gap-6 pt-4 md:grid-cols-3">
+            <div className="p-5 bg-white border border-gray-100 shadow-sm rounded-2xl">
+              <p className="enterprise-label !text-[8px] opacity-60 mb-1">
+                Aporte Isapre/Fonasa
+              </p>
+              <p className="font-mono text-sm font-black text-green-600">
+                ${data.insurance_share_clp.toLocaleString("es-CL")}
+              </p>
+            </div>
+            <div className="p-5 border border-red-100 shadow-sm bg-red-50 rounded-2xl">
+              <p className="enterprise-label !text-[8px] text-red-600 mb-1">
+                Copago (%)
+              </p>
+              <p className="font-mono text-sm font-black text-red-700">
+                {data.patient_percentage}%
+              </p>
+            </div>
+            <div className="p-5 border shadow-sm bg-brand-secondary/10 rounded-2xl border-brand-secondary/20">
+              <p className="enterprise-label !text-[8px] text-brand-primary mb-1">
+                Cobertura (%)
+              </p>
+              <p className="font-mono text-sm font-black text-brand-primary">
+                {data.insurance_percentage}%
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* BLOQUE 3: CRONOLOGÍA & NOTAS */}
+        <div className="space-y-6">
+          <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+            <Calendar className="w-4 h-4" /> Vigencia Operativa
+          </h3>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label opacity-60">
+                Inicio Vigencia
+              </label>
+              <input
+                type="date"
+                value={data.start_date}
+                onChange={(e) => setData("start_date", e.target.value)}
+                className="w-full px-5 py-4 font-mono text-sm font-black border-gray-100 rounded-2xl bg-gray-50 focus:bg-white"
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label opacity-60">
+                Término (Opcional)
+              </label>
+              <input
+                type="date"
+                value={data.end_date}
+                onChange={(e) => setData("end_date", e.target.value)}
+                className="w-full px-5 py-4 font-mono text-sm font-black border-gray-100 rounded-2xl bg-gray-50 focus:bg-white"
+              />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <label className="ml-1 enterprise-label opacity-60">
+                Observaciones de Aplicación
+              </label>
+              <textarea
+                rows="3"
+                value={data.notes}
+                onChange={(e) => setData("notes", e.target.value)}
+                className="w-full px-5 py-4 text-xs font-medium transition-all border-gray-100 shadow-inner resize-none rounded-2xl bg-gray-50/30 focus:bg-white focus:ring-brand-primary"
+                placeholder="Glosa interna sobre esta tarifa..."
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </SideModal>
   );
 }

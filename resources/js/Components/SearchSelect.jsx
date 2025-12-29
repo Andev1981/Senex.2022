@@ -310,7 +310,7 @@ export default function SearchSelect({
       {/* Dropdown de resultados */}
       {isOpen && !disabled && (
         <div
-          className={`absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-auto dark:bg-gray-800 dark:border-gray-600 ${finalConfig.maxHeight}`}
+          className={`absolute z-[9999] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-2xl overflow-auto dark:bg-gray-800 dark:border-gray-600 ${finalConfig.maxHeight}`}
         >
           {filteredItems.length > 0 ? (
             <ul className="py-1">

@@ -7,134 +7,68 @@ use App\Channels\TwilioWhatsAppChannel;
 use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\Patient;
 use App\Models\PatientContact;
-use App\Models\TreatmentSession;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Traits\NotificationUtils;
-use Illuminate\Support\Facades\Log;
 
 class PatientTutorWelcomeNotification extends Notification implements ShouldQueue, WhatsAppNotificationInterface
 {
     use Queueable, NotificationUtils;
 
-    protected PatientContact $patientContact;
     protected Patient $patient;
-    protected TreatmentSession $treatment_session;
-    protected string $session_type;
-    protected $totalAmount;
-    protected $itemCount;
-    protected $channels;
+    protected PatientContact $contact;
 
-    /**
-     * Create a new notification instance.
-     *
-     * @param int $totalAmount Total de la deuda en CLP
-     * @param int $itemCount Cantidad de items pendientes
-     * @param array $channels Canales: ['mail', 'sms', 'whatsapp']
-     */
-    public function __construct(Patient $patient, PatientContact $patientContact, array $channels = ['mail'])
+    public function __construct(Patient $patient, PatientContact $contact)
     {
-
-        $this->patientContact = $patientContact;
         $this->patient = $patient;
-        $this->channels = $channels;
+        $this->contact = $contact;
     }
 
-
-    /**
-     * Get the notification's delivery channels.
-     */
     public function via($notifiable): array
     {
-        if (!$this->patient->opt_out_reminders) {
-            return [];
-        }
-
-        $channels = [];
-
-        // 2. Filtro para Email
-        if ($this->patient->prefers_mail && $notifiable->email) {
-            $channels[] = 'mail';
-        }
-
-        // 3. Filtro para WhatsApp (Usando tu canal personalizado)
-        if ($this->patient->prefers_whatsapp && $notifiable->phone) {
+        // En este caso el $notifiable es el PatientContact (el tutor)
+        $channels = ['mail'];
+        if (config('services.twilio.whatsapp_from')) {
             $channels[] = TwilioWhatsAppChannel::class;
         }
-
-        // 4. Filtro para SMS (Si lo tienes implementado)
-        if ($this->patient->prefers_sms && $notifiable->phone) {
-            $channels[] = TwilioSmsChannel::class;
-        }
-
-        // Si después de los filtros el array sigue vacío, lanzamos la alerta
-        if (empty($channels)) {
-            $errorMsg = "La notificación de bienvenida no se envió porque el paciente (ID: {$this->patient->id}) " .
-                "no tiene canales habilitados o faltan datos en el contacto (ID: {$notifiable->id}).";
-
-            // Opción 1: Solo Log (Seguro para producción)
-            Log::warning($errorMsg);
-
-            // Opción 2: Lanzar Excepción (Solo si estás en desarrollo para que el sistema "explote" y te des cuenta)
-            if (config('app.env') === 'local') {
-                throw new \Exception($errorMsg);
-            }
-        }
-
         return $channels;
     }
 
-    /**
-     * Get the WhatsApp representation.
-     */
     public function toTwilioWhatsAppChannel($notifiable): array
     {
-        // Usamos la "inteligencia" del Trait (como un atributo dinámico)
-        // Usamos el Trait para limpiar los nombres si quieres
-        $nombreTutor = $this->getFirstName($this->patientContact->name);
-        $nombrePaciente = $this->patient->name; // El nombre del niño/a
+        $nombreTutor = $this->getFirstName($notifiable->name);
+        $nombrePaciente = $this->patient->name;
+        $clinica = config('app.name');
 
         return [
-            'body' => "¡Hola {$nombreTutor}! 👋\n\n" .
-                "Le damos la bienvenida a Senex Senior. Hemos registrado la ficha clínica de *{$nombrePaciente}*.\n\n" .
-                "Desde ahora, usted recibirá las notificaciones de citas y estados de pago correspondientes a su pupilo.",
+            'body' => "🤝 *¡Hola {$nombreTutor}! Bienvenido/a a {$clinica}* 🤝\n\n" .
+                "Te informamos que has sido registrado como *Tutor Responsable* de la ficha médica de *{$nombrePaciente}*.\n\n" .
+                "Como apoderado, recibirás por este canal:\n" .
+                "📅 Agendamiento de citas\n" .
+                "💳 Estados de cuenta y recaudación\n" .
+                "📈 Seguimiento del plan de salud\n\n" .
+                "Estamos a tu disposición para cualquier consulta. ¡Gracias por confiar en nosotros!",
             'event_key' => 'tutor.welcome'
         ];
     }
 
-    /**
-     * Get the mail representation.
-     */
     public function toMail($notifiable): MailMessage
     {
-        $nombreTutor = $this->getFirstName($this->patientContact->name);
-        $nombrePaciente = $this->patient->name;
-        $clinica = config('app.name', 'Senex Senior');
+        $nombreTutor = $this->getFirstName($notifiable->name);
+        $nombrePaciente = $this->patient->full_name;
+        $clinica = config('app.name');
 
         return (new MailMessage)
-            ->subject("Bienvenido a {$clinica} - Registro de {$nombrePaciente}")
+            ->subject("🤝 Registro de Tutor Responsable - {$clinica}")
             ->greeting("Hola {$nombreTutor},")
-            ->line("Le damos la bienvenida a nuestra clínica.")
-            ->line("Se ha registrado correctamente la ficha de atención de **{$nombrePaciente}**, y usted ha sido asignado como el contacto responsable.")
-            ->line("A partir de ahora, recibirá en este correo:")
-            ->line("• Confirmaciones y recordatorios de citas.")
-            ->line("• Estados de cuenta y boletas.")
-            ->line("• Información relevante sobre el tratamiento.")
-            ->line("Si tiene alguna duda, puede contactarnos respondiendo a este correo.")
-            ->salutation("Saludos cordiales, Equipo {$clinica}");
-    }
-
-    /**
-     * Get the SMS representation.
-     */
-    public function toSms($notifiable): array
-    {
-        $portalUrl = route('portal.pago');
-
-        return [
-            'body' => "KineMobile: Tienes pagos pendientes por " . $this->formatCLP($this->totalAmount) . ". Paga fácil en: {$portalUrl}",
-        ];
+            ->line("Te damos la bienvenida a {$clinica}. Este correo confirma que has sido registrado como el apoderado responsable de la ficha clínica de:")
+            ->line("**Paciente:** {$nombrePaciente}")
+            ->line("Como tutor, centralizaremos contigo toda la información técnica y administrativa relacionada con el tratamiento.")
+            ->line("Desde ahora recibirás notificaciones sobre citas, planes de tratamiento y documentos de facturación.")
+            ->action("Acceder al Portal", url('/'))
+            ->line("Agradecemos tu confianza en nuestro equipo médico.")
+            ->salutation("Cordialmente,\nEquipo " . $clinica);
     }
 }

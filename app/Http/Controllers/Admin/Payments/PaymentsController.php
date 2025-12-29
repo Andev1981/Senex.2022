@@ -28,6 +28,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Pdf;
 
 class PaymentsController extends Controller
 {
@@ -433,7 +434,7 @@ class PaymentsController extends Controller
             'payment' => $payment,
             'invoice' => $invoice,
             // Pasamos una bandera si el DTE aún está en proceso de firma
-            'is_dte_pending' => $invoice ? $invoice->dte_status === 'PENDIENTE' : false
+            'is_dte_pending' => $invoice ? in_array($invoice->dte_status, [Invoice::SII_STATUS_PENDING, 'CREATED', 'PENDING_RETRY', Invoice::SII_STATUS_SENT]) : false
         ]);
     }
 
@@ -478,9 +479,41 @@ class PaymentsController extends Controller
         }
     }
 
+    public function downloadReceiptPdf($uuid, $download = null)
+    {
+        $payment = Payment::where('uuid', $uuid)
+            ->with([
+                'patient',
+                'company',
+                'branch',
+                'paymentAllocation.treatmentSession.sessionType',
+                'receivables.insurance'
+            ])
+            ->firstOrFail();
+
+        // 🎯 Usamos la Policy para asegurar que solo personas autorizadas bajen el PDF
+        if (auth()->user()->company_id !== $payment->company_id && !auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $pdf = Pdf::loadView('pdf.payment_receipt', compact('payment'));
+        
+        $filename = 'Comprobante_Pago_' . strtoupper(substr($payment->uuid, 0, 8)) . '.pdf';
+        
+        if ($download === 'download') {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
+    }
+
     // Enviamos mediante el paciente la información de sus sesiones y pagos pendientes
     public function getPatientStatus($id)
     {
+        $patient = Patient::with(['insurances' => function($q) {
+            $q->wherePivot('is_active', true);
+        }])->findOrFail($id);
+
         // 1. Buscamos deudas activas relacionadas con sesiones
         $debts = Debt::where('patient_id', $id)
             ->where('status', 'pending') // o 'partial'
@@ -498,14 +531,18 @@ class PaymentsController extends Controller
                 return [
                     'id' => $pp->id,
                     'plan_name' => $pp->plan->name,
-                    'session_type_id' => $pp->plan->session_type_id, // El ID que debe coincidir en el POS
+                    'session_type_id' => $pp->plan->session_type_id ?? null, // El ID que debe coincidir en el POS
                     'available' => $pp->sessions_included - $pp->sessions_used,
                 ];
             });
 
         return response()->json([
             'debts' => $debts,
-            'activePlans' => $activePlans
+            'activePlans' => $activePlans,
+            'insurance' => $patient->insurances->first() ? [
+                'id' => $patient->insurances->first()->id,
+                'plan_id' => $patient->insurances->first()->pivot->plan_id,
+            ] : null
         ]);
     }
 

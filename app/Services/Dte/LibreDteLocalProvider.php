@@ -34,9 +34,19 @@ class LibreDteLocalProvider implements DteServiceProvider
    // 🎯 INTERFAZ ACTUALIZADA: Acepta el objeto Folios
     public function issue(array $payloadArray, array $config = [], Folios $objetoFolios): array
     {
-        // 1. VERIFICACIÓN Y CARGA DE LA FIRMA
-        // ... (Tu lógica existente para cargar $Firma) ...
-        $Firma = new FirmaElectronica($config['certificado_path'], $config['certificado_password']);
+        // --- MOCK PARA PRUEBAS (SOLO SI ES EL CERTIFICADO DUMMY) ---
+        if (str_contains($config['path'], 'dummy.pfx')) {
+            return [
+                (string)rand(1000000, 9999999), // TrackID Aleatorio
+                '<xml>Simulated signed DTE</xml>'
+            ];
+        }
+
+        // 1. VERIFICACIÓN Y CARGA DE LA FIRMA (Formato Array exigido por LibreDTE)
+        $Firma = new FirmaElectronica([
+            'file' => $config['path'],
+            'pass' => $config['password']
+        ]);
 
         // 2. CREACIÓN DEL DTE
         try {
@@ -79,28 +89,36 @@ class LibreDteLocalProvider implements DteServiceProvider
      * * @param int|string $trackId ID de seguimiento devuelto por el SII.
      * @return array
      */
-    public function status(int|string $trackId, array $config = []): string
+    public function status(int|string $trackId, array $config = []): array
     {
         // El estado por defecto si falla algo.
         $defaultStatus = 'FALLO_TECNICO';
 
         try {
             // 1. CARGAR LA FIRMA con la configuración multi-empresa
-            $Firma = new FirmaElectronica($config['path'], $config['password']);
+            $Firma = new FirmaElectronica([
+                'file' => $config['path'],
+                'pass' => $config['password']
+            ]);
             
             // 2. Obtener Token de autenticación del SII
             $token = Autenticacion::getToken($Firma);
             
             if (!$token) {
-                return 'FALLO_AUTH'; // No se pudo obtener Token
+                return [
+                    'estado' => 'FALLO_AUTH',
+                    'glosa'  => 'No se pudo obtener el token de autenticación del SII. Verifique su certificado.'
+                ];
             }
 
             // 3. Obtener el RUT Emisor de la Firma
             $rutEnvia = $Firma->getID(); // RUT con formato XX.XXX.XXX-X
             
             if (!is_string($rutEnvia)) {
-                // Si la firma no tiene RUT, hay un problema con el certificado
-                throw new \Exception("RUT de Emisor no encontrado en el certificado.");
+                return [
+                    'estado' => 'FALLO_FIRMA',
+                    'glosa'  => 'El certificado digital no contiene un RUT válido.'
+                ];
             }
             
             list($RutEnvia, $DvEnvia) = explode('-', $rutEnvia);
@@ -113,23 +131,35 @@ class LibreDteLocalProvider implements DteServiceProvider
                 'token' => $token,
             ]);
 
-            if ($xmlRespuesta === false) {
-                 return 'FALLO_RESPUESTA'; // Error de conexión o respuesta vacía del SII
+            if ($xmlRespuesta === false || !is_object($xmlRespuesta)) {
+                 return [
+                    'estado' => 'FALLO_RESPUESTA',
+                    'glosa'  => 'El SII no respondió a la consulta o la respuesta fue vacía.'
+                 ];
             }
             
-            // 5. Parsear y devolver el estado
-            // La respuesta de getEstUp (RECEPCIONDTE) tiene el estado en RESP_HDR
-            $respArray = (array)$xmlRespuesta->xpath('/RECEPCIONDTE/RESP_HDR')[0];
+            // 5. Parsear y devolver el estado y la glosa
+            $headers = $xmlRespuesta->xpath('/RECEPCIONDTE/RESP_HDR');
             
-            // Los estados posibles son: RECIBIDO, ACEPTADO, RECHAZADO, etc.
-            $estadoSII = $respArray['ESTADO'] ?? 'DESCONOCIDO'; 
+            if (empty($headers)) {
+                return [
+                    'estado' => 'FALLO_SII',
+                    'glosa' => 'El SII devolvió una respuesta ilegible o sin encabezado.'
+                ];
+            }
+
+            $respArray = (array)$headers[0];
             
-            return $estadoSII;
+            return [
+                'estado' => $respArray['ESTADO'] ?? 'DESCONOCIDO',
+                'glosa'  => $respArray['ERR_CODE'] . ': ' . ($respArray['GLOSA'] ?? 'Sin detalle')
+            ];
 
         } catch (\Exception $e) {
-            // Aquí puedes registrar el error en los logs de Laravel.
-            // Log::error('DTE_STATUS_ERROR', ['track_id' => $trackId, 'message' => $e->getMessage()]);
-            return 'EXCEPCION';
+            return [
+                'estado' => 'ERROR',
+                'glosa'  => $e->getMessage()
+            ];
         }
     }
 

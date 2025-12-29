@@ -26,6 +26,7 @@ return new class extends Migration {
       $t->nullableMorphs('sellable'); // Permite nulos para ítems manuales
 
       $t->string('description');
+      $t->string('comment')->nullable();
       $t->integer('quantity')->default(1);
 
       // Precios Unitarios (Homologados)
@@ -37,6 +38,9 @@ return new class extends Migration {
       // Totales de Línea
       $t->integer('total_gross_clp')->comment('unit_price_clp * quantity');
       $t->integer('total_patient_clp')->comment('unit_patient_clp * quantity');
+
+      // Descuentos
+      $t->decimal('discount_percentage', 5, 2)->default(0);
 
       // Indicador IVA
       $t->boolean('is_exento')->default(true)->comment('Define si el ítem es exento o afecto');

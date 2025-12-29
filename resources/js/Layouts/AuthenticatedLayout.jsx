@@ -9,11 +9,11 @@ export default function AuthenticatedLayout({ header, children }) {
   const userIsSuperAdmin = usePage().props.auth.roles.includes("superadmin");
 
   return (
-    <div className="flex w-full overflow-hidden min-h-dvh bg-slate-50">
+    <div className="flex w-full overflow-hidden min-h-dvh bg-gray-50/50">
       <aside
         className={`${
-          sidebarOpen ? "w-52" : "w-18"
-        } flex-none sticky top-0 h-dvh overflow-y-auto transition-all duration-300`}
+          sidebarOpen ? "w-72" : "w-24"
+        } flex-none sticky top-0 h-dvh overflow-y-auto transition-all duration-500 ease-in-out print:hidden`}
       >
         <Side
           sidebarOpen={sidebarOpen}
@@ -21,13 +21,15 @@ export default function AuthenticatedLayout({ header, children }) {
           userIsSuperAdmin={userIsSuperAdmin}
         />
       </aside>
-      <div className="flex flex-col flex-1 min-w-0 h-dvh">
-        <Nav
-          user={user}
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+      <div className="flex flex-col flex-1 min-w-0 h-dvh relative">
+        <div className="print:hidden">
+            <Nav
+            user={user}
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            />
+        </div>
+        <main className="flex-1 overflow-y-auto custom-scrollbar">{children}</main>
       </div>
     </div>
   );

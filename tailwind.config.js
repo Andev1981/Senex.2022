@@ -12,8 +12,21 @@ module.exports = {
 
   theme: {
     extend: {
+      colors: {
+        brand: {
+          primary: "#3292b3",
+          secondary: "#79d0ec",
+          gray: "#858793",
+        },
+      },
+      borderRadius: {
+        'enterprise': '2rem',
+        'enterprise-xl': '2.5rem',
+        'enterprise-sm': '1.25rem',
+      },
       spacing: {
         "safe-bottom": "env(safe-area-inset-bottom)",
+        "table-py": "0.625rem", // py-2.5 estándar
       },
     },
   },

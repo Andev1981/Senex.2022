@@ -1,4 +1,13 @@
-import { Dumbbell, Edit, Stethoscope, Tag, Target, Timer } from "lucide-react";
+import {
+  Dumbbell,
+  Edit,
+  Stethoscope,
+  Activity,
+  Target,
+  Timer,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { fmtDateISO, pct } from "@/utils/utils";
 import { statusColors } from "@/helpers/status";
 import { getStatusConfig } from "@/constants/treatmentStatuses";
@@ -29,266 +38,291 @@ export default function CardTreatment({ treatment, handleTreatmentModal }) {
   return (
     <div
       key={treatment?.id}
-      className="p-6 transition-shadow border-l-4 border-teal-500 bg-gradient-to-r from-teal-50 to-transparent rounded-r-xl hover:shadow-md"
+      className={`p-8 bg-white border border-gray-100 shadow-xl rounded-[2.5rem] relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-[1.01] border-l-8 ${
+        statusKey === "in_progress"
+          ? "border-l-brand-primary"
+          : statusKey === "evaluation"
+          ? "border-l-amber-400"
+          : "border-l-gray-200"
+      }`}
     >
+      <div className="absolute top-0 right-0 w-48 h-48 -mt-24 -mr-24 rounded-full opacity-50 bg-gray-50 blur-3xl"></div>
+
       {/* Encabezado */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <div
-                className="flex items-center justify-center bg-teal-100 rounded-lg shadow-lg cursor-pointer w-14 h-14"
-                onClick={() => handleTreatmentModal(treatment)}
-              >
-                <Edit className="w-6 h-6 text-teal-600 hover:text-teal-400" />
-              </div>
-
-              {/* TIPO DE SESIÓN */}
-              {treatment?.session_type?.name && (
-                <div className="flex items-center gap-3 p-2 border border-green-300 rounded-lg bg-teal-50 dark:bg-teal-900/20">
-                  {/* Icono / Indicador Visual */}
-                  <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-teal-200 rounded-full dark:bg-teal-600">
-                    <Dumbbell className="w-5 h-5 text-teal-700 dark:text-white" />
-                  </div>
-
-                  <div>
-                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Tipo de Sesión
-                    </span>
-                    <span className="block text-base font-semibold text-teal-700 dark:text-teal-300">
-                      {treatment.session_type.name}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* STATUS */}
-              {treatment?.status && (
-                <div
-                  className={`flex items-center gap-3 p-2 rounded-lg bg-teal-50 dark:bg-teal-900/20 ${statusConfig.className}`}
-                >
-                  <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-teal-200 rounded-full dark:bg-teal-600">
-                    <Tag className={`w-5 h-5`} />
-                  </div>
-                  <div>
-                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Estado del Tratamiento
-                    </span>
-                    <span
-                      className={`block text-base font-semibold whitespace-nowrap`}
-                    >
-                      {statusConfig.label}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* FASE ACTUAL */}
-              {treatment?.current_phase && (
-                <div
-                  className={`flex items-center gap-3 p-2 rounded-lg bg-teal-50 dark:bg-teal-900/20 ${phaseConfig.className}`}
-                  title="Fase actual del plan de tratamiento"
-                >
-                  <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-teal-200 rounded-full dark:bg-teal-600">
-                    {/* Puedes usar íconos condicionales aquí (ej: Stethoscope para 'evaluation', Dumbbell para 'restoration') */}
-                    <Target className={`w-4 h-4`} />
-                  </div>
-
-                  {/* Contenedor principal con fondo suave (usando las clases de la fase) */}
-                  <div>
-                    {/* Ícono dentro de un círculo resaltado */}
-                    {/* Usamos text-white para el icono si el fondo es claro */}
-                    {/* Etiqueta / Label (Para indicar qué información es) */}
-                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Fase Actual:
-                    </span>
-
-                    {/* Texto de la Fase */}
-                    <span className="text-sm font-semibold whitespace-nowrap">
-                      {phaseConfig.label}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* INDEFINIDO (por cantidad de sesiones) */}
-              {isIndef && (
-                <div className="flex items-center gap-3 p-2 border border-green-300 rounded-lg bg-teal-50 dark:bg-teal-900/20">
-                  {/* Icono / Indicador Visual */}
-                  <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-teal-200 rounded-full dark:bg-teal-600">
-                    <Timer className="w-5 h-5 text-teal-700 dark:text-white" />
-                  </div>
-
-                  <div>
-                    <span className="block text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Duración
-                    </span>
-                    <span className="block text-base font-semibold text-teal-700 dark:text-teal-300">
-                      Sin límite de sesiones
-                    </span>
-                  </div>
-                </div>
-              )}
+      <div className="relative z-10 flex flex-col items-start justify-between gap-8 mb-8 xl:flex-row">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            {/* STATUS BADGE */}
+            <div
+              className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-sm border ${
+                statusKey === "in_progress"
+                  ? "bg-green-50 text-green-600 border-green-100"
+                  : statusKey === "evaluation"
+                  ? "bg-amber-50 text-amber-600 border-amber-100"
+                  : "bg-gray-100 text-gray-500 border-gray-200"
+              }`}
+            >
+              {statusConfig.label}
             </div>
 
-            <h3 className="mt-4 text-lg font-bold text-gray-900">
-              {treatment?.name || "Tratamiento"}
-            </h3>
-            <div className="text-sm text-gray-600">
-              Atendido por:
-              <div className="flex gap-2 mt-2 ml-2 text-base text-gray-600">
-                <Stethoscope className="w-6 h-6" />
-                {treatment?.doctor?.name || "-"}
+            {/* FASE BADGE */}
+            {treatment?.current_phase && (
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-brand-secondary/10 border border-brand-secondary/20 rounded-xl">
+                <Target className="w-3.5 h-3.5 text-brand-primary" />
+                <span className="text-[9px] font-black text-brand-primary uppercase tracking-widest">
+                  Fase: {phaseConfig.label}
+                </span>
+              </div>
+            )}
+
+            {/* INDEFINIDO */}
+            {isIndef && (
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-purple-50 border border-purple-100 rounded-xl">
+                <Timer className="w-3.5 h-3.5 text-purple-600" />
+                <span className="text-[9px] font-black text-purple-600 uppercase tracking-widest">
+                  Sesiones Ilimitadas
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-start gap-6">
+            <div
+              className="flex items-center justify-center w-16 h-16 text-white transition-transform transform shadow-lg cursor-pointer bg-brand-primary rounded-2xl shadow-brand-primary/20 hover:scale-110 active:scale-95 shrink-0"
+              onClick={() => handleTreatmentModal(treatment)}
+            >
+              <Edit className="w-7 h-7" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="mb-2 text-2xl font-black leading-none tracking-tight text-gray-900 uppercase truncate">
+                {treatment?.name || "Protocolo de Rehabilitación"}
+              </h3>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-6 h-6 border border-gray-100 rounded-lg bg-gray-50">
+                    <Stethoscope className="w-3.5 h-3.5 text-brand-primary" />
+                  </div>
+                  <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">
+                    Dr. {treatment?.doctor?.name || "Por asignar"}
+                  </span>
+                </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-6 h-6 border border-gray-100 rounded-lg bg-gray-50">
+                    <Dumbbell className="w-3.5 h-3.5 text-green-600" />
+                  </div>
+                  <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">
+                    {treatment?.session_type?.name || "Atención General"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Fechas (mostrar siempre fin, aunque sea indefinido en sesiones) */}
-        <div className="text-right">
-          <p className="text-sm text-gray-600">
-            Inicio: {fmtDateISO(treatment?.start_date)}
-          </p>
-          <p className="text-sm text-gray-600">
-            Fin: {fmtDateISO(treatment?.end_date)}
-          </p>
+        {/* Timeline Metadata */}
+        <div className="flex flex-col items-end gap-3 shrink-0">
+          <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-right min-w-[180px]">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-4">
+                <span className="enterprise-label !text-[8px] !mb-0">
+                  Apertura
+                </span>
+                <span className="font-mono text-xs font-black text-gray-700">
+                  {fmtDateISO(treatment?.start_date)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="enterprise-label !text-[8px] !mb-0">
+                  Cierre Est.
+                </span>
+                <span className="font-mono text-xs font-black text-gray-400">
+                  {fmtDateISO(treatment?.end_date) || "--/--/--"}
+                </span>
+              </div>
+            </div>
+          </div>
 
-          {/* Ejemplo adicional: dolor si existiera */}
           {treatment?.pain_reduction != null && (
-            <div className="mt-2">
-              <span className="text-xs text-gray-600">Dolor: </span>
-              <span
-                className={`font-bold ${
-                  treatment?.pain_reduction >= 7
-                    ? "text-red-600"
-                    : treatment?.pain_reduction >= 4
-                    ? "text-orange-600"
-                    : "text-green-600"
-                }`}
-              >
-                {treatment?.pain_reduction}/10
+            <div className="flex items-center gap-3 px-4 py-2 border border-orange-100 bg-orange-50 rounded-xl">
+              <span className="text-[9px] font-black text-orange-600 uppercase tracking-widest">
+                Nivel de Dolor
               </span>
+              <div className="flex items-center gap-1 font-mono font-black text-orange-700">
+                {treatment.pain_reduction}
+                <span className="text-[8px] opacity-40">/10</span>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Bloques principales */}
-      <div className="grid grid-cols-1 gap-4 my-4 md:grid-cols-2">
-        <div>
-          <p className="mb-1 text-sm font-semibold text-gray-700">
-            Diagnóstico
-          </p>
-          <p className="text-sm text-gray-600 uppercase ml-2">
-            {treatment?.diagnostic
-              ? treatment.diagnostic.code +
-                " " +
-                treatment.diagnostic.description
-              : "No se ha ingresado"}
-          </p>
-          <p className="mb-1 text-sm font-semibold text-gray-700">
-            Descripción
-          </p>
-          <p className="ml-2">{treatment.description}</p>
-        </div>
-
-        <div>
-          <p className="mb-1 text-sm font-semibold text-gray-700">
-            Objetivos del tratamiento
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {objectives.length > 0 ? (
-              objectives.map((o, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-1 text-xs text-blue-700 border border-blue-200 rounded-full bg-blue-50"
-                >
-                  {o}
+      {/* Grid de Información Detallada */}
+      <div className="relative z-10 grid grid-cols-1 gap-8 mb-8 xl:grid-cols-12">
+        <div className="space-y-6 xl:col-span-7">
+          <div className="p-6 border bg-slate-50/50 border-slate-100 rounded-3xl">
+            <p className="enterprise-label !text-brand-primary mb-3">
+              Diagnóstico Médico
+            </p>
+            <p className="text-sm font-bold leading-relaxed text-gray-700 uppercase">
+              {treatment?.diagnostic ? (
+                <span className="flex items-start gap-2">
+                  <span className="px-2 py-0.5 bg-brand-primary text-white rounded font-mono text-xs">
+                    {treatment.diagnostic.code}
+                  </span>
+                  {treatment.diagnostic.description}
                 </span>
-              ))
-            ) : (
-              <span className="text-sm text-gray-500">—</span>
-            )}
+              ) : (
+                "Sin diagnóstico codificado"
+              )}
+            </p>
+            <div className="pt-4 mt-4 border-t border-slate-100">
+              <p className="enterprise-label !text-[8px] mb-2">
+                Descripción del Cuadro
+              </p>
+              <p className="text-xs italic font-medium leading-relaxed text-gray-500">
+                {treatment.description ||
+                  "No se ha ingresado descripción adicional."}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 xl:col-span-5">
+          <div className="p-6 bg-white border border-gray-100 shadow-inner rounded-3xl">
+            <p className="enterprise-label !text-brand-primary mb-4">
+              Metas Terapéuticas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {objectives.length > 0 ? (
+                objectives.map((o, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1.5 text-[9px] font-black text-brand-primary uppercase tracking-widest border border-brand-secondary/30 rounded-xl bg-brand-secondary/5"
+                  >
+                    {o}
+                  </span>
+                ))
+              ) : (
+                <div className="flex items-center gap-2 text-xs italic text-gray-400">
+                  <Activity className="w-4 h-4 opacity-30" />
+                  Sin objetivos definidos
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* NUEVOS CAMPOS */}
-      <div className="grid grid-cols-1 gap-4 mb-4 md:grid-cols-3">
-        {/* FRECUENCIA */}
-        <div className="p-3 bg-white border border-gray-100 rounded-lg">
-          <p className="mb-1 text-xs font-semibold text-gray-600">Frecuencia</p>
-          <p className="text-sm text-gray-800">
-            {treatment?.frequency
-              ? `${treatment.frequency} veces / ${treatment?.frequency_time} `
-              : "-"}
-          </p>
+      {/* Métricas de Evolución */}
+      <div className="relative z-10 grid grid-cols-1 gap-4 mb-8 md:grid-cols-3">
+        <div className="flex items-center justify-between p-5 transition-all bg-white border border-gray-100 rounded-2xl group hover:border-brand-primary/30">
+          <div>
+            <p className="enterprise-label !text-[8px] opacity-60 !mb-0">
+              Frecuencia
+            </p>
+            <p className="text-sm font-black tracking-tight text-gray-900 uppercase">
+              {treatment?.frequency
+                ? `${treatment.frequency} Sesiones / ${treatment?.frequency_time}`
+                : "-"}
+            </p>
+          </div>
+          <div className="p-2 transition-all bg-gray-50 rounded-xl text-brand-gray group-hover:bg-brand-primary/10 group-hover:text-brand-primary">
+            <Activity className="w-4 h-4" />
+          </div>
         </div>
 
-        {/* MEJORA MOVILIDAD */}
-        <div className="p-3 bg-white border border-gray-100 rounded-lg">
-          <p className="mb-1 text-xs font-semibold text-gray-600">
-            Mejora de movilidad
-          </p>
-          <p className="text-sm text-gray-800">
-            {pct(treatment?.mobility_improvement) || "-"}
-          </p>
+        <div className="flex items-center justify-between p-5 transition-all bg-white border border-gray-100 rounded-2xl group hover:border-green-300">
+          <div>
+            <p className="enterprise-label !text-[8px] text-green-600 !mb-0">
+              Movilidad (ROM)
+            </p>
+            <p className="font-mono text-sm font-black tracking-tight text-green-700 uppercase">
+              {pct(treatment?.mobility_improvement) || "Estable"}
+            </p>
+          </div>
+          <div className="p-2 text-green-600 bg-green-50 rounded-xl">
+            <TrendingUp className="w-4 h-4" />
+          </div>
         </div>
 
-        {/* GANANCIA DE FUERZA */}
-        <div className="p-3 bg-white border border-gray-100 rounded-lg">
-          <p className="mb-1 text-xs font-semibold text-gray-600">
-            Ganancia de fuerza
-          </p>
-          <p className="text-sm text-gray-800">
-            {pct(treatment?.strength_gain) || "-"}
-          </p>
+        <div className="flex items-center justify-between p-5 transition-all bg-white border border-gray-100 rounded-2xl group hover:border-brand-primary/30">
+          <div>
+            <p className="enterprise-label !text-[8px] text-brand-primary !mb-0">
+              Ganancia Fuerza
+            </p>
+            <p className="font-mono text-sm font-black tracking-tight uppercase text-brand-primary">
+              {pct(treatment?.strength_gain) || "Estable"}
+            </p>
+          </div>
+          <div className="p-2 bg-brand-secondary/10 rounded-xl text-brand-primary">
+            <Zap className="w-4 h-4" />
+          </div>
         </div>
       </div>
 
-      {/* PROGRESO DE SESIONES (solo si NO es indefinido) */}
-      {!isIndef && (total > 0 || done > 0) && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium text-gray-700">
-              Progreso de sesiones
-            </span>
-            <span className="text-sm text-gray-600">
-              {done}/{total} ({progress}%)
+      {/* Footer: Progreso de Sesiones */}
+      <div className="relative z-10 p-6 border border-gray-100 bg-gray-50 rounded-3xl">
+        {!isIndef && (total > 0 || done > 0) ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 font-black bg-white border border-gray-200 shadow-sm rounded-xl text-brand-primary">
+                  {done}
+                </div>
+                <div>
+                  <p className="text-xs font-black tracking-tight text-gray-900 uppercase">
+                    Registro de Avance
+                  </p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Total sesiones: {total}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-mono text-sm font-black text-brand-primary">
+                  {progress}%
+                </p>
+                <p className="text-[8px] font-black text-brand-gray uppercase tracking-[0.2em]">
+                  Completado
+                </p>
+              </div>
+            </div>
+            <div className="h-3 w-full bg-white rounded-full overflow-hidden border border-gray-200 p-0.5 shadow-inner">
+              <div
+                className="h-full bg-brand-primary rounded-full shadow-[0_0_10px_rgba(50,146,179,0.2)] transition-all duration-1000 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        ) : isIndef ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 font-black text-purple-600 bg-white border border-gray-200 shadow-sm rounded-xl">
+                {done}
+              </div>
+              <p className="text-xs font-black tracking-tight text-gray-900 uppercase">
+                Sesiones Realizadas Históricas
+              </p>
+            </div>
+            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg border border-purple-100">
+              Plan Abierto
             </span>
           </div>
-          <div className="w-full h-2 overflow-hidden bg-gray-200 rounded-full">
-            <div
-              className="h-full bg-teal-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      )}
+        ) : null}
+      </div>
 
-      {/* CONTADOR PARA PLANES INDEFINIDOS */}
-      {isIndef && (
-        <div className="mb-4">
-          <span className="text-sm font-medium text-gray-700">
-            Sesiones realizadas: <span className="font-semibold">{done}</span>
-          </span>
-        </div>
-      )}
-
-      {/* OUTCOME / NOTAS */}
       {treatment?.outcome && (
-        <div className="p-3 mb-3 bg-white rounded-lg">
-          <p className="mb-1 text-sm font-semibold text-gray-700">
-            Notas Clínicas
+        <div className="p-6 mt-6 border border-blue-100 bg-blue-50/30 rounded-3xl">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-4 h-4 text-blue-600" />
+            <p className="enterprise-label !text-blue-700 !mb-0">
+              Resumen de la Evolución
+            </p>
+          </div>
+          <p className="text-xs italic font-bold leading-relaxed text-blue-800">
+            {treatment.outcome}
           </p>
-          <p className="text-sm text-gray-600">{treatment?.outcome}</p>
-        </div>
-      )}
-
-      {/* TOTAL SESIONES RECOMENDADAS (oculto si es indefinido) */}
-      {!isIndef && treatment?.total_sessions > 0 && (
-        <div className="inline-block px-3 py-1 text-sm font-medium text-teal-700 bg-teal-100 rounded-full">
-          {treatment.total_sessions} sesiones recomendadas
         </div>
       )}
     </div>

@@ -64,14 +64,20 @@ class DteFoliosService
 
         // 1. Usar transacción y LOCK FOR UPDATE para garantizar atomicidad
         DB::transaction(function () use ($company, $rutEmisor, $tipoDTE, &$folioReservado, &$cafData) {
+            // Normalizar RUT emisor que viene del controlador (quitar todo lo que no sea número)
+            $rutLimpio = preg_replace('/[^0-9]/', '', $rutEmisor);
+
             // A. Buscar el rango de folios activo para este DTE y bloquearlo
+            // Usamos REPLACE en la base de datos para comparar manzanas con manzanas
             $registroFolio = DB::table('authorized_folios')
                 ->where('company_id', $company)
-                ->where('rut_emisor', $rutEmisor)
                 ->where('tipo_dte', $tipoDTE)
                 ->where('activo', true)
                 ->whereColumn('ultimo_folio_usado', '<', 'folio_hasta')
-                ->lockForUpdate() // ⬅️ CLAVE: Bloquea el registro para otros procesos
+                ->where(function($query) use ($rutLimpio) {
+                    $query->where(DB::raw("REGEXP_REPLACE(rut_emisor, '[^0-9]', '')"), $rutLimpio);
+                })
+                ->lockForUpdate()
                 ->first();
 
             if (!$registroFolio) {
@@ -104,5 +110,23 @@ class DteFoliosService
 
         // 3. Devolver los resultados
         return [$objetoFolios, $folioReservado];
+    }
+
+    /**
+     * Recupera el objeto Folios (CAF) para un tipo de DTE sin incrementar nada.
+     */
+    public function recuperarCAF(int $company, int $tipoDTE): Folios
+    {
+        $registro = DB::table('authorized_folios')
+            ->where('company_id', $company)
+            ->where('tipo_dte', $tipoDTE)
+            ->where('activo', true)
+            ->first();
+
+        if (!$registro) {
+            throw new \Exception("No se encontró un CAF activo para el tipo: $tipoDTE");
+        }
+
+        return new Folios($registro->caf_xml);
     }
 }

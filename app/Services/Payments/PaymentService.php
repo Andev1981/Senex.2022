@@ -50,10 +50,13 @@ class PaymentService
                 'branch_id' => $data['branch_id'],
                 // Homologado: usamos amount_paid del frontend
                 'amount_clp' => $data['payment_details']['amount_paid'],
+                'amount_gross_clp' => $data['final_shares']['amount_gross_clp'] ?? 0,
+                'amount_insurance_primary_clp' => $data['final_shares']['amount_insurance_primary_clp'] ?? 0,
+                'amount_insurance_secondary_clp' => $data['final_shares']['amount_insurance_secondary_clp'] ?? 0,
+                'discount_clp' => $data['final_shares']['discount_clp'] ?? 0,
                 'payment_method' => $data['payment_details']['payment_method'],
                 'payment_date' => $data['payment_details']['payment_date'] ?? now(),
                 // Homologado: liquidation_payor_id es el seguro primario
-                'liquidation_payor_id' => $data['coverage_details']['insurance_id'] ?? null,
                 'status' => 'pending',
                 'transaction_reference' => $data['coverage_details']['external_transaction_code'] ?? null,
                 'metadata' => $data, // Congelamos el carrito para el Invoice posterior

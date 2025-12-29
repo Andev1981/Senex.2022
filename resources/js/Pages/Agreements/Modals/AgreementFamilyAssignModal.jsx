@@ -1,72 +1,60 @@
 import React, { useState } from "react";
 import { useForm } from "@inertiajs/react";
-import { User, Users, X, CheckCircle, Search } from "lucide-react";
-import axios from "axios"; // 💡 Importamos Axios
+import { 
+    User, 
+    Users, 
+    X, 
+    CheckCircle, 
+    Search,
+    ShieldCheck,
+    Briefcase,
+    UserCheck,
+    Plus,
+    Trash2,
+    Info
+} from "lucide-react";
+import axios from "axios";
+import Modal from "@/Components/Modal";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SecondaryButton from "@/Components/SecondaryButton";
+import TextInput from "@/Components/TextInput";
 
 export default function AgreementFamilyAssignModal({ plan, isOpen, onClose }) {
-  // Estado para el formulario de Inertia
   const { data, setData, post, processing, errors, reset } = useForm({
     holder_id: null,
     beneficiary_ids: [],
-    holder_info: null, // Objeto para mostrar la info del titular
-    beneficiaries_info: [], // Array de objetos para mostrar beneficiarios
+    holder_info: null,
+    beneficiaries_info: [],
   });
 
-  // Estado para manejar la búsqueda de pacientes (simulado)
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
 
-  // Función de búsqueda de pacientes (¡AJUSTADA A AXIOS!)
   const handleSearch = async (query) => {
     if (query.length < 3) return setSearchResults([]);
-
     const url = route("api.patients.search", { q: query });
-
     try {
-      // 💡 Usamos axios.get
       const response = await axios.get(url);
-
-      // Axios devuelve los datos parseados directamente en response.data
       const patientData = response.data;
-
-      // Filtramos resultados para excluir a los ya seleccionados (titular y beneficiarios)
-      // Es importante convertir los IDs a string si vienen como número y viceversa para la comparación
       const selectedIds = [data.holder_id, ...data.beneficiary_ids]
         .filter(Boolean)
         .map((id) => id.toString());
-
       const filtered = patientData.filter(
         (p) => !selectedIds.includes(p.id.toString())
       );
-
       setSearchResults(filtered);
     } catch (error) {
-      // Axios maneja 404/500 aquí
-      console.error(
-        "Error al buscar pacientes:",
-        error.response ? error.response.data : error.message
-      );
-      // Puedes mostrar una alerta de error al usuario aquí si lo deseas
+      console.error("Error al buscar pacientes:", error.response ? error.response.data : error.message);
       setSearchResults([]);
     }
   };
 
-  // --- Lógica de Asignación ---
-
   const handleSelectPatient = (patient, role) => {
     setSearchTerm("");
     setSearchResults([]);
-
     if (role === "holder") {
-      setData({
-        ...data,
-        holder_id: patient.id,
-        holder_info: patient,
-      });
-    } else if (
-      role === "beneficiary" &&
-      !data.beneficiary_ids.includes(patient.id)
-    ) {
+      setData({ ...data, holder_id: patient.id, holder_info: patient });
+    } else if (role === "beneficiary" && !data.beneficiary_ids.includes(patient.id)) {
       setData({
         ...data,
         beneficiary_ids: [...data.beneficiary_ids, patient.id],
@@ -79,25 +67,15 @@ export default function AgreementFamilyAssignModal({ plan, isOpen, onClose }) {
     setData({
       ...data,
       beneficiary_ids: data.beneficiary_ids.filter((id) => id !== patientId),
-      beneficiaries_info: data.beneficiaries_info.filter(
-        (p) => p.id !== patientId
-      ),
+      beneficiaries_info: data.beneficiaries_info.filter((p) => p.id !== patientId),
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!data.holder_id) {
-      alert("Debe seleccionar un Titular para el plan familiar.");
-      return;
-    }
-
-    // Envía el POST al endpoint de asignación que creamos antes
-    // Asumiendo que la ruta se llama 'plans.assign.family'
+    if (!data.holder_id) return;
     post(route("plans.assign.family", plan.id), {
       onSuccess: () => {
-        alert(`Plan Familiar ${plan.name} asignado con éxito.`);
         onClose();
         reset();
       },
@@ -105,161 +83,147 @@ export default function AgreementFamilyAssignModal({ plan, isOpen, onClose }) {
     });
   };
 
-  // Solo renderizar si el modal está abierto
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white">
-        {/* Cabecera del Modal */}
-        <div className="flex justify-between items-center pb-3 border-b">
-          <h3 className="text-2xl font-bold text-indigo-700 flex items-center">
-            <Users className="w-6 h-6 mr-2" /> Asignar Plan Familiar:{" "}
-            {plan.name}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="4xl"
+      title="Configuración de Grupo Familiar"
+      subtitle={`Vinculación para: ${plan?.name}`}
+      icon={Users}
+      footer={
+        <>
+          <SecondaryButton onClick={onClose} className="!px-10 !py-4">Descartar</SecondaryButton>
+          <PrimaryButton 
+            disabled={processing || !data.holder_id} 
+            onClick={handleSubmit}
+            className="!px-14 !py-4 shadow-xl shadow-brand-primary/20"
           >
-            <X className="w-6 h-6" />
-          </button>
+            {processing ? "Sincronizando..." : "Asignar Plan Familiar"}
+          </PrimaryButton>
+        </>
+      }
+    >
+      <div className="space-y-10">
+        {/* BUSCADOR */}
+        <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+            <div className="space-y-4 relative z-10">
+                <label className="enterprise-label !text-brand-primary flex items-center gap-2 ml-1">
+                    <Search className="w-4 h-4" /> Localizador de Pacientes
+                </label>
+                <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-gray group-focus-within:text-brand-primary transition-colors" />
+                    <TextInput
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            handleSearch(e.target.value);
+                        }}
+                        className="w-full pl-12 !rounded-2xl !py-4 shadow-inner text-sm font-bold uppercase"
+                        placeholder="RUN O NOMBRE COMPLETO (MIN 3 CARACTERES)..."
+                    />
+                </div>
+
+                {/* RESULTADOS */}
+                {searchResults.length > 0 && (
+                    <div className="mt-4 bg-white border border-gray-100 rounded-2xl shadow-xl divide-y divide-gray-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                        {searchResults.map((patient) => (
+                            <div key={patient.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                <div className="flex flex-col">
+                                    <span className="text-[11px] font-black text-gray-900 uppercase tracking-tight">{patient.name}</span>
+                                    <span className="text-[9px] font-bold text-brand-gray uppercase font-mono">{patient.run}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleSelectPatient(patient, "holder")}
+                                        className="px-4 py-2 text-[9px] font-black uppercase tracking-widest bg-brand-primary text-white rounded-xl shadow-lg shadow-brand-primary/10 hover:brightness-110 active:scale-95 transition-all"
+                                    >
+                                        Definir Titular
+                                    </button>
+                                    <button
+                                        onClick={() => handleSelectPatient(patient, "beneficiary")}
+                                        className="px-4 py-2 text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
+                                    >
+                                        Añadir Carga
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
 
-        {/* Cuerpo del Formulario */}
-        <form onSubmit={handleSubmit} className="mt-4 space-y-6">
-          {/* Sección 1: Búsqueda y Selección de Pacientes */}
-          <div className="p-4 border rounded-lg bg-gray-50">
-            <label className="block mb-2">
-              <span className="text-sm font-medium text-gray-700 flex items-center">
-                <Search className="w-4 h-4 mr-1" /> Buscar Paciente (RUN o
-                Nombre)
-              </span>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  handleSearch(e.target.value);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                placeholder="Escribe al menos 3 caracteres..."
-              />
-            </label>
-
-            {/* Resultados de Búsqueda */}
-            {searchResults.length > 0 && (
-              <div className="mt-3 max-h-40 overflow-y-auto border border-indigo-200 rounded-md bg-white">
-                {searchResults.map((patient) => (
-                  <div
-                    key={patient.id}
-                    className="p-2 border-b last:border-b-0 flex justify-between items-center hover:bg-indigo-50"
-                  >
-                    <span>
-                      {patient.name} ({patient.run})
-                    </span>
-                    <div className="space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectPatient(patient, "holder")}
-                        className="px-3 py-1 text-xs bg-indigo-500 text-white rounded hover:bg-indigo-600"
-                      >
-                        Asignar Titular
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSelectPatient(patient, "beneficiary")
-                        }
-                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
-                      >
-                        Asignar Beneficiario
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Sección 2: Miembros Seleccionados */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* A. Titular (Holder) */}
-            <div>
-              <h4 className="font-semibold text-lg border-b pb-1 text-indigo-600 flex items-center">
-                <User className="w-5 h-5 mr-1" /> Titular del Contrato
-                (Requerido)
-              </h4>
-              <div
-                className={`mt-2 p-3 rounded-lg border-2 ${
-                  data.holder_info
-                    ? "border-green-400 bg-green-50"
-                    : "border-red-400 bg-red-50"
-                }`}
-              >
-                {data.holder_info ? (
-                  <span className="font-bold flex items-center">
-                    <CheckCircle className="w-5 h-5 mr-2 text-green-600" />{" "}
-                    {data.holder_info.name} ({data.holder_info.run})
-                  </span>
-                ) : (
-                  <span className="text-red-700">Aún no seleccionado.</span>
-                )}
-              </div>
+        {/* ASIGNACIONES ACTUALES */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* TITULAR */}
+            <div className="space-y-4">
+                <h3 className="enterprise-label flex items-center gap-2 ml-1">
+                    <UserCheck className="w-4 h-4 text-brand-primary" /> Titular del Plan
+                </h3>
+                <div className={`p-6 rounded-[2rem] border-2 transition-all min-h-[120px] flex items-center justify-center ${
+                    data.holder_info ? 'bg-white border-brand-primary/20 shadow-xl' : 'bg-gray-50 border-gray-100 border-dashed'
+                }`}>
+                    {data.holder_info ? (
+                        <div className="flex items-center gap-5 w-full">
+                            <div className="w-12 h-12 bg-brand-primary text-white rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
+                                <User className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{data.holder_info.name}</p>
+                                <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest font-mono">{data.holder_info.run}</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center space-y-2">
+                            <Info className="w-6 h-6 text-gray-300 mx-auto" />
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Sin titular asignado</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* B. Beneficiarios */}
-            <div>
-              <h4 className="font-semibold text-lg border-b pb-1 text-green-600 flex items-center">
-                <Users className="w-5 h-5 mr-1" /> Beneficiarios (
-                {data.beneficiaries_info.length})
-              </h4>
-              <div className="mt-2 p-3 h-32 overflow-y-auto border rounded-lg">
-                {data.beneficiaries_info.length === 0 ? (
-                  <span className="text-gray-500">
-                    Ningún beneficiario añadido.
-                  </span>
-                ) : (
-                  <ul className="space-y-1">
-                    {data.beneficiaries_info.map((patient) => (
-                      <li
-                        key={patient.id}
-                        className="flex justify-between items-center text-sm p-1 border-b last:border-b-0"
-                      >
-                        <span>{patient.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveBeneficiary(patient.id)}
-                          className="text-red-500 hover:text-red-700 text-xs ml-2"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+            {/* BENEFICIARIOS */}
+            <div className="space-y-4">
+                <h3 className="enterprise-label flex items-center gap-2 ml-1">
+                    <Users className="w-4 h-4 text-green-600" /> Cargas Familiares ({data.beneficiaries_info.length})
+                </h3>
+                <div className="bg-white border border-gray-100 rounded-[2rem] shadow-sm divide-y divide-gray-50 h-[120px] overflow-y-auto custom-scrollbar">
+                    {data.beneficiaries_info.length === 0 ? (
+                        <div className="h-full flex items-center justify-center">
+                            <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest">No hay beneficiarios</p>
+                        </div>
+                    ) : (
+                        data.beneficiaries_info.map((p) => (
+                            <div key={p.id} className="p-4 flex items-center justify-between group">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">{p.name}</span>
+                                    <span className="text-[8px] font-bold text-gray-400 uppercase font-mono">{p.run}</span>
+                                </div>
+                                <button
+                                    onClick={() => handleRemoveBeneficiary(p.id)}
+                                    className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
-          </div>
+        </div>
 
-          {/* Mensajes de Error de Backend (ej: Unicidad) */}
-          {errors.assignment_error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-              {errors.assignment_error}
+        {errors.assignment_error && (
+            <div className="p-6 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-4">
+                <div className="p-2 bg-white rounded-xl text-red-500 shadow-sm">
+                    <X className="w-5 h-5" />
+                </div>
+                <p className="text-[10px] font-black text-red-700 uppercase tracking-widest">{errors.assignment_error}</p>
             </div>
-          )}
-
-          {/* Footer del Modal */}
-          <div className="flex justify-end pt-4 border-t">
-            <button
-              type="submit"
-              disabled={processing || !data.holder_id}
-              className="px-6 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-400 transition"
-            >
-              {processing ? "Asignando Contrato..." : "Asignar Plan Familiar"}
-            </button>
-          </div>
-        </form>
+        )}
       </div>
-    </div>
+    </Modal>
   );
+}
 }

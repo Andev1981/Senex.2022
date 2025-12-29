@@ -23,18 +23,18 @@ export default function PatientCard({
   onOpenNewPatient,
 }) {
   return (
-    <div className="p-6 space-y-4 bg-white border border-gray-100 shadow-sm rounded-xl h-fit hover:scale-[1.01] transition-transform duration-200">
-      <h2 className="flex items-center text-xl font-black text-gray-800">
-        <span className="flex items-center justify-center w-8 h-8 mr-2 text-sm text-indigo-600 bg-indigo-100 rounded-full">
+    <div className="p-8 space-y-6 bg-white border border-gray-100 shadow-sm rounded-3xl h-fit hover:scale-[1.01] transition-all duration-300">
+      <h2 className="flex items-center text-xl font-black text-gray-800 tracking-tight">
+        <span className="flex items-center justify-center w-8 h-8 mr-3 text-xs font-black text-brand-primary bg-brand-secondary/10 rounded-xl">
           1
         </span>
-        Identificación Paciente
+        Identificación
       </h2>
 
       {/* 1. BUSCADOR DE PACIENTE */}
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-3">
         <div className="flex-1">
-          <label className="block mb-2 text-xs font-black text-gray-500 uppercase">
+          <label className="enterprise-label ml-1">
             Paciente
           </label>
           <SearchSelect
@@ -49,12 +49,13 @@ export default function PatientCard({
             }}
             placeholder="Buscar por nombre o RUT..."
             error={errors.patient_id}
+            className="!rounded-2xl border-gray-100"
           />
         </div>
         <button
           type="button"
           onClick={onOpenNewPatient}
-          className="p-2.5 mb-[2px] text-white transition rounded-lg bg-indigo-600 hover:bg-indigo-700"
+          className="p-4 mb-[2px] text-white transition-all rounded-2xl bg-brand-primary hover:brightness-110 shadow-lg shadow-brand-primary/20 active:scale-95"
           title="Nuevo Paciente"
         >
           <UserPlus className="w-5 h-5" />
@@ -62,12 +63,12 @@ export default function PatientCard({
       </div>
 
       {/* 2. SELECCIÓN DE PREVISIÓN */}
-      <div className="pt-4 space-y-4 border-t border-gray-100">
-        <label className="block mb-1 text-xs font-black text-gray-500 uppercase">
-          Previsión
+      <div className="pt-6 space-y-5 border-t border-gray-50">
+        <label className="enterprise-label ml-1">
+          Previsión / Seguro
         </label>
         <select
-          className="w-full text-sm border-gray-200 rounded-lg focus:ring-indigo-500"
+          className="w-full text-sm font-bold text-gray-700 border-gray-100 rounded-2xl focus:ring-brand-primary focus:border-brand-primary bg-gray-50/50"
           value={coverageDetails.insurance_id}
           onChange={(e) => onCoverageChange("insurance_id", e.target.value)}
         >
@@ -81,28 +82,28 @@ export default function PatientCard({
 
         {/* 3. DETALLES DEL PLAN (Solo si hay seguro) */}
         {coverageDetails.insurance_id && (
-          <div className="p-4 space-y-3 rounded-lg bg-gray-50 animate-in fade-in slide-in-from-top-2">
+          <div className="p-6 space-y-4 rounded-3xl bg-gray-50/50 border border-gray-100 animate-in fade-in slide-in-from-top-4 duration-500">
             {/* Header Plan + I-MED */}
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-gray-700">
-                Plan Específico
+              <span className="enterprise-label !mb-0">
+                Plan Asociado
               </span>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <span className="text-[10px] font-bold text-green-700 uppercase">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <span className="text-[10px] font-black text-green-600 uppercase tracking-widest group-hover:text-green-700 transition-colors">
                   I-MED
                 </span>
                 <input
                   type="checkbox"
                   checked={isImedMode}
                   onChange={onToggleImed}
-                  className="text-green-600 rounded focus:ring-green-500"
+                  className="text-green-500 rounded-lg focus:ring-green-500 border-gray-200 w-5 h-5"
                 />
               </label>
             </div>
 
             {/* Selector de Plan Primario */}
             <select
-              className="w-full text-sm border-gray-200 rounded-lg"
+              className="w-full text-sm font-bold text-gray-700 border-gray-100 rounded-2xl bg-white focus:ring-brand-primary"
               value={coverageDetails.plan_id}
               onChange={(e) => onCoverageChange("plan_id", e.target.value)}
             >
@@ -116,14 +117,14 @@ export default function PatientCard({
                 ))}
             </select>
 
-            {/* RUT del Afiliado (Nuevo) */}
+            {/* RUT del Afiliado */}
             <div>
-              <label className="block mb-1 text-[10px] font-black text-gray-400 uppercase">
-                RUT Titular / Afiliado
+              <label className="enterprise-label ml-1">
+                RUT Titular
               </label>
               <input
                 type="text"
-                className="w-full text-sm border-gray-200 rounded-lg bg-white focus:ring-indigo-500"
+                className="w-full text-sm font-bold border-gray-100 rounded-2xl bg-white focus:ring-brand-primary"
                 placeholder="Ej: 12.345.678-9"
                 value={coverageDetails.affiliate_rut}
                 onChange={(e) =>
@@ -134,23 +135,28 @@ export default function PatientCard({
 
             {/* Input Código I-MED */}
             {isImedMode && (
-              <input
-                type="text"
-                className="w-full text-sm border-green-300 rounded-lg bg-green-50 placeholder:text-green-700/50 focus:ring-green-500"
-                placeholder="N° Operación / Código I-Med"
-                value={coverageDetails.external_transaction_code}
-                onChange={(e) =>
-                  onCoverageChange("external_transaction_code", e.target.value)
-                }
-              />
+              <div className="space-y-1 animate-in zoom-in-95">
+                <label className="enterprise-label !text-green-600 ml-1">N° Operación I-Med</label>
+                <input
+                  type="text"
+                  className="w-full text-sm font-mono font-black border-green-100 rounded-2xl bg-green-50 text-green-700 placeholder:text-green-700/30 focus:ring-green-500 focus:border-green-500"
+                  placeholder="00000000"
+                  value={coverageDetails.external_transaction_code}
+                  onChange={(e) =>
+                    onCoverageChange("external_transaction_code", e.target.value)
+                  }
+                />
+              </div>
             )}
 
             {/* 4. SEGURO COMPLEMENTARIO */}
-            <div className="pt-2 mt-2 border-t border-gray-200">
+            <div className="pt-4 mt-2 border-t border-gray-200/50">
               <button
                 type="button"
                 onClick={onToggleSecondary}
-                className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800"
+                className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                  hasSecondaryInsurance ? "text-red-500 hover:text-red-600" : "text-brand-primary hover:brightness-110"
+                }`}
               >
                 {hasSecondaryInsurance ? (
                   <Trash2 className="w-3 h-3" />
@@ -159,19 +165,19 @@ export default function PatientCard({
                 )}
                 {hasSecondaryInsurance
                   ? "Quitar Complementario"
-                  : "Agregar Seguro Complementario"}
+                  : "Agregar Complementario"}
               </button>
 
               {hasSecondaryInsurance && (
-                <div className="mt-2 space-y-2 animate-in fade-in">
+                <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
                   <select
-                    className="w-full text-xs border-indigo-200 rounded focus:ring-indigo-500"
+                    className="w-full text-xs font-bold border-gray-100 rounded-xl bg-white focus:ring-brand-primary"
                     value={coverageDetails.secondary_insurance_id}
                     onChange={(e) =>
                       onCoverageChange("secondary_insurance_id", e.target.value)
                     }
                   >
-                    <option value="">Seleccionar Cía. Complementaria...</option>
+                    <option value="">Seleccionar Cía...</option>
                     {insurances.map((i) => (
                       <option key={i.id} value={i.id}>
                         {i.name}
@@ -179,7 +185,7 @@ export default function PatientCard({
                     ))}
                   </select>
                   <select
-                    className="w-full text-xs border-indigo-200 rounded focus:ring-indigo-500"
+                    className="w-full text-xs font-bold border-gray-100 rounded-xl bg-white focus:ring-brand-primary"
                     value={coverageDetails.secondary_plan_id}
                     onChange={(e) =>
                       onCoverageChange("secondary_plan_id", e.target.value)

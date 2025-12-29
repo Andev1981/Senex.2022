@@ -15,6 +15,11 @@ class TreatmentSession extends Model
 {
     use HasFactory, SoftDeletes, Multitenantable, BelongsToTenant;
 
+    public const STATUS_SCHEDULED = 'scheduled';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_MISSED = 'no_show';
+
     protected $fillable = [
         'company_id',
         'branch_id',
@@ -111,17 +116,17 @@ class TreatmentSession extends Model
      */
     public function scopeScheduled($query)
     {
-        return $query->where('status', 'Programada');
+        return $query->where('status', self::STATUS_SCHEDULED);
     }
 
     public function scopeCompleted($query)
     {
-        return $query->where('status', 'Completada');
+        return $query->where('status', self::STATUS_COMPLETED);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('status', 'Cancelada');
+        return $query->where('status', self::STATUS_CANCELLED);
     }
 
     public function scopeForPatient($query, $patientId)
@@ -187,27 +192,27 @@ class TreatmentSession extends Model
 
     public function isScheduled(): bool
     {
-        return $this->status === 'Programada';
+        return $this->status === self::STATUS_SCHEDULED;
     }
 
     public function isCompleted(): bool
     {
-        return $this->status === 'Completada';
+        return $this->status === self::STATUS_COMPLETED;
     }
 
     public function isCancelled(): bool
     {
-        return $this->status === 'Cancelada';
+        return $this->status === self::STATUS_CANCELLED;
     }
 
     public function didNotAttend(): bool
     {
-        return $this->status === 'No Asistió';
+        return $this->status === self::STATUS_MISSED;
     }
 
     public function markAsCompleted(): void
     {
-        $this->update(['status' => 'Completada']);
+        $this->update(['status' => self::STATUS_COMPLETED]);
 
         // Incrementar sesiones completadas del tratamiento
         if ($this->treatment) {
@@ -217,12 +222,12 @@ class TreatmentSession extends Model
 
     public function markAsCancelled(): void
     {
-        $this->update(['status' => 'Cancelada']);
+        $this->update(['status' => self::STATUS_CANCELLED]);
     }
 
     public function markAsNoShow(): void
     {
-        $this->update(['status' => 'No Asistió']);
+        $this->update(['status' => self::STATUS_MISSED]);
     }
 
     public function calculatePainProgress(): float

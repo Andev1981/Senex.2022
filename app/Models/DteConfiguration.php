@@ -17,7 +17,13 @@ class DteConfiguration extends Model
         'certificado_path',
         'certificado_password',
         'ambiente',
-        'fecha_caducidad'
+        'fecha_caducidad',
+        'simulation_mode',
+    ];
+
+    protected $casts = [
+        'simulation_mode' => 'boolean',
+        'fecha_caducidad' => 'date',
     ];
 
     public function company() : BelongsTo

@@ -160,6 +160,11 @@ class Patient extends Authenticatable
         return $this->morphOne(Address::class, 'addressable'); // 1 a 1 polimórfico
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
     public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');

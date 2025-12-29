@@ -82,6 +82,11 @@ class Treatment extends Model
         return $this->hasMany(TreatmentSession::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
     /**
      * Scopes
      */

@@ -52,6 +52,7 @@ return new class extends Migration
       $table->string('transaction_number')->nullable()->comment('N° de operación/comprobante');
       $table->date('transaction_date')->nullable();
       $table->integer('global_discount_clp')->default(0)->comment('Descuento global aplicado al subtotal');
+      $table->text('observations')->nullable();
 
       $table->json('metadata')->nullable();
 

@@ -1,84 +1,72 @@
+import React from "react";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   Calendar,
   CheckCircle2,
   DollarSign,
   Timer,
+  Activity,
+  Wallet
 } from "lucide-react";
 import { fmtCLP, fmtShortDate } from "@/utils/utils";
-import { useState } from "react";
 
 export default function Kpis({ kpis, filtros }) {
-  const [fechaInicio, setFechaInicio] = useState(
-    filtros.fecha_inicio || new Date().toISOString().split("T")[0]
-  );
-  const [fechaFin, setFechaFin] = useState(
-    filtros.fecha_fin || new Date().toISOString().split("T")[0]
-  );
+  const fechaInicio = filtros.fecha_inicio || new Date().toISOString().split("T")[0];
+  const fechaFin = filtros.fecha_fin || new Date().toISOString().split("T")[0];
+
   return (
-    <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
-      <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
-            <Calendar className="w-5 h-5 text-white" />
+    <div className="grid grid-cols-1 gap-6 mb-10 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-top-4 duration-700">
+      {/* TOTAL ATENCIONES */}
+      <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group border-b-4 border-b-brand-primary">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 bg-brand-secondary/10 text-brand-primary rounded-xl group-hover:bg-brand-primary group-hover:text-white transition-all">
+            <Calendar className="w-5 h-5" />
           </div>
-          <span className="text-xs font-semibold text-gray-500">
-            {fechaInicio === fechaFin
-              ? fmtShortDate(fechaInicio)
-              : `${fmtShortDate(fechaInicio)} - ${fmtShortDate(fechaFin)}`}
+          <span className="text-[8px] font-black text-brand-gray uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-lg">
+            {fechaInicio === fechaFin ? fmtShortDate(fechaInicio) : 'Período'}
           </span>
         </div>
-        <p className="text-sm text-gray-600">
-          {fechaInicio === fechaFin
-            ? "Atenciones del día"
-            : "Atenciones del período"}
-        </p>
-        <p className="text-3xl font-bold text-gray-900">{kpis.total || 0}</p>
+        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Volumen Total</p>
+        <p className="text-3xl font-black text-gray-900 font-mono tracking-tighter">{kpis.total || 0}</p>
       </div>
-      <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600">
-            <CheckCircle2 className="w-5 h-5 text-white" />
+
+      {/* COMPLETADAS */}
+      <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group border-b-4 border-b-green-500">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:bg-green-600 group-hover:text-white transition-all">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
-          <span className="inline-flex items-center text-xs font-semibold text-emerald-600">
-            <ArrowUpRight className="w-4 h-4" />
-            ok
-          </span>
+          <span className="text-[8px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-lg">Realizadas</span>
         </div>
-        <p className="text-sm text-gray-600">Completadas</p>
-        <p className="text-3xl font-bold text-gray-900">
-          {kpis.completadas || 0}
-        </p>
+        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Sesiones Éxito</p>
+        <p className="text-3xl font-black text-green-700 font-mono tracking-tighter">{kpis.completadas || 0}</p>
       </div>
-      <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600">
-            <Timer className="w-5 h-5 text-white" />
+
+      {/* PENDIENTES */}
+      <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group border-b-4 border-b-amber-400">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl group-hover:bg-amber-600 group-hover:text-white transition-all">
+            <Timer className="w-5 h-5" />
           </div>
-          <span className="inline-flex items-center text-xs font-semibold text-amber-600">
-            <ArrowDownRight className="w-4 h-4" />
-            pend
-          </span>
+          <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-2 py-1 rounded-lg">Agendadas</span>
         </div>
-        <p className="text-sm text-gray-600">Pendientes</p>
-        <p className="text-3xl font-bold text-gray-900">
-          {kpis.pendientes || 0}
-        </p>
+        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Citas en Espera</p>
+        <p className="text-3xl font-black text-amber-700 font-mono tracking-tighter">{kpis.pendientes || 0}</p>
       </div>
-      <div className="p-5 bg-white border border-gray-200 shadow-sm rounded-xl">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
-            <DollarSign className="w-5 h-5 text-white" />
+
+      {/* FINANZAS */}
+      <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group border-b-4 border-b-purple-500">
+        <div className="flex items-center justify-between mb-4">
+          <div className="p-3 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-600 group-hover:text-white transition-all">
+            <Wallet className="w-5 h-5" />
           </div>
+          <span className="text-[8px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-2 py-1 rounded-lg">Caja</span>
         </div>
-        <p className="text-sm text-gray-600">Cobrado / Por cobrar</p>
-        <p className="text-xl font-bold text-gray-900">
-          {fmtCLP(kpis.totalCobrado || 0)}{" "}
-          <span className="font-medium text-gray-400">
-            / {fmtCLP(kpis.totalPorCobrar || 0)}
-          </span>
-        </p>
+        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Cobrado / Pendiente</p>
+        <div className="flex items-baseline gap-2">
+            <p className="text-lg font-black text-gray-900 font-mono tracking-tighter">{fmtCLP(kpis.totalCobrado || 0)}</p>
+            <span className="text-[10px] font-bold text-gray-300">/</span>
+            <p className="text-xs font-bold text-brand-primary font-mono">{fmtCLP(kpis.totalPorCobrar || 0)}</p>
+        </div>
       </div>
     </div>
   );

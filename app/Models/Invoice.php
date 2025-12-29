@@ -24,7 +24,8 @@ class Invoice extends Model
   public const SII_STATUS_PENDING  = 'pending';  // Aún no enviado al SII
   public const SII_STATUS_SENT     = 'sent';     // Enviado, esperando respuesta
   public const SII_STATUS_ACCEPTED  = 'accepted'; // ¡Todo OK!
-  public const SII_STATUS_REJECTED  = 'rejected'; // Hubo un error (ej. Folio duplicado)
+  public const SII_STATUS_REJECTED  = 'rejected'; // Rechazo legal del SII (Folio invalidado)
+  public const SII_STATUS_ERROR     = 'error';    // Error técnico (Certificado, Conexión, etc. Folio reusable)
 
   // ===== Estados FINANCIEROS (Relación con tu caja) =====
   public const PAYMENT_STATUS_UNPAID  = 'unpaid';  // Emitida pero no pagada (ej. Factura a 30 días)
@@ -76,9 +77,14 @@ class Invoice extends Model
   ];
 
   // ===== Relaciones =====
-  public function companySetting(): BelongsTo
+  public function company(): BelongsTo
   {
     return $this->belongsTo(Company::class);
+  }
+
+  public function branch(): BelongsTo
+  {
+    return $this->belongsTo(Branch::class);
   }
 
   public function patient(): BelongsTo

@@ -1,8 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "@inertiajs/react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/Components/SideModal";
+import TablePagination from "@/Components/TablePagination";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  getFilteredRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import {
   Edit,
   Trash2,
@@ -19,6 +28,8 @@ import {
   Check,
   ListChecksIcon,
   Stethoscope,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import SessionTypeModal from "./SessionTypeModal";
 import { fmtCLP } from "../../utils/utils";
@@ -28,6 +39,9 @@ export default function Index({ sessionTypes }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sorting, setSorting] = useState([]);
+  const [pageSize, setPageSize] = useState(10);
+  const [pageIndex, setPageIndex] = useState(0);
 
   const handleCreate = () => {
     setSelectedType(null);
@@ -49,320 +63,314 @@ export default function Index({ sessionTypes }) {
     }
   };
 
-  const filteredTypes = sessionTypes.filter((type) =>
-    type.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Nombre Servicio",
+        cell: ({ row }) => {
+          const sessionType = row.original;
+          return (
+            <div>
+              <div className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                {sessionType.name}
+              </div>
+              <div className="mt-0.5 font-mono text-[9px] font-bold text-brand-gray uppercase">
+                {fmtCLP(sessionType.base_price_clp / sessionType.duration_minutes)} / min
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "category",
+        header: "Categoría",
+        cell: ({ getValue }) => (
+          <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded-md">
+            {getValue()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "duration_minutes",
+        header: "Duración",
+        cell: ({ getValue }) => (
+          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-700">
+            <Clock className="w-3.5 h-3.5 text-brand-primary opacity-50" />
+            {getValue()} MIN
+          </div>
+        ),
+      },
+      {
+        accessorKey: "code",
+        header: "Código",
+        cell: ({ getValue }) => (
+          <span className="font-mono text-[10px] font-black text-brand-primary bg-brand-secondary/10 px-2 py-0.5 rounded-md">
+            {getValue()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "base_price_clp",
+        header: "Precio Base",
+        cell: ({ getValue }) => (
+          <span className="text-xs font-black text-gray-900 font-mono">
+            {fmtCLP(getValue())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "plan_discount_clp",
+        header: "Precio Plan",
+        cell: ({ getValue }) => (
+          <span className="text-xs font-black text-brand-primary font-mono">
+            {fmtCLP(getValue())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "default_doctor_commission_clp",
+        header: "Costo Kine",
+        cell: ({ getValue }) => (
+          <span className="text-xs font-black text-orange-600 font-mono">
+            {fmtCLP(getValue())}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "is_active",
+        header: "Estado",
+        cell: ({ getValue }) => {
+          const isActive = getValue();
+          return (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                isActive ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
+              }`}
+            >
+              {isActive ? "Activo" : "Inactivo"}
+            </span>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "Acciones",
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center gap-1">
+            <button
+              onClick={() => handleEdit(row.original)}
+              className="p-2 text-brand-primary hover:bg-brand-secondary/10 transition-all rounded-xl border border-transparent"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(row.original)}
+              className="p-2 text-red-400 hover:bg-red-50 transition-all rounded-xl border border-transparent"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ),
+        enableSorting: false,
+      },
+    ],
+    []
   );
+
+  const table = useReactTable({
+    data: sessionTypes,
+    columns,
+    state: {
+      sorting,
+      globalFilter: searchTerm,
+      pagination: { pageSize, pageIndex },
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setSearchTerm,
+    onPaginationChange: (updater) => {
+      const newState =
+        typeof updater === "function"
+          ? updater({ pageIndex, pageSize })
+          : updater;
+      setPageIndex(newState.pageIndex);
+      setPageSize(newState.pageSize);
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: "includesString",
+  });
 
   const activeCount = sessionTypes.filter((t) => t.is_active).length;
   const planEligibleCount = sessionTypes.filter(
     (t) => t.plan_discount_clp > 0
   ).length;
 
-  console.log(selectedType);
-
   return (
     <AuthenticatedLayout>
       <Head title="Sesiones Pacientes" />
-      <div className="p-4">
+      <div className="min-h-screen p-6 bg-gray-50/50 space-y-8">
         {/* Header */}
-
-        <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-              <Shell className="w-6 h-6 text-white" />
+        <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-[2rem] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center w-14 h-14 shadow-xl shadow-brand-primary/20 bg-brand-primary rounded-2xl transform rotate-3">
+                <Shell className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1">Portafolio de Servicios</h1>
+                <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
+                  Configuración de Prestaciones • Senex Enterprise
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Tipo de Sesiones
-              </h1>
-              <p className="text-sm text-gray-600">
-                Gestión de tipos de sesiones
-              </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleCreate()}
+                className="flex items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva Prestación
+              </button>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleCreate()}
-              className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
-            >
-              <Plus className="w-4 h-4" />
-              Nuevo Tipo
-            </button>
           </div>
         </div>
 
-        <div className="my-6">
-          {/* Stats */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="p-4 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg dark:bg-blue-900/20">
-                  <CheckCircle className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Total
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {sessionTypes.length}
-                  </p>
-                </div>
+        {/* Stats */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-3xl hover:scale-[1.02] transition-all duration-300 group">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-brand-secondary/10 rounded-2xl text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all duration-500">
+                <Shell className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="enterprise-label opacity-60">Total Servicios</p>
+                <p className="text-4xl font-black text-gray-900 tracking-tighter">{sessionTypes.length}</p>
               </div>
             </div>
+          </div>
 
-            <div className="p-4 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg dark:bg-green-900/20">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Activos
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {activeCount}
-                  </p>
-                </div>
+          <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-3xl hover:scale-[1.02] transition-all duration-300 group border-b-4 border-b-green-500">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-green-50 rounded-2xl text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all duration-500">
+                <CheckCircle className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="enterprise-label opacity-60 text-green-600">Disponibles</p>
+                <p className="text-4xl font-black text-green-600 tracking-tighter">{activeCount}</p>
               </div>
             </div>
+          </div>
 
-            <div className="p-4 bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg dark:bg-purple-900/20">
-                  <CreditCard className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Elegibles para Plan
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {planEligibleCount}
-                  </p>
-                </div>
+          <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-3xl hover:scale-[1.02] transition-all duration-300 group">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-brand-secondary/10 rounded-2xl text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all duration-500">
+                <CreditCard className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="enterprise-label opacity-60">En Planes</p>
+                <p className="text-4xl font-black text-gray-900 tracking-tighter">{planEligibleCount}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Search */}
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+        <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-3xl">
+          <div className="relative group">
+            <Search className="absolute w-4 h-4 text-brand-gray transform -translate-y-1/2 left-4 top-1/2 group-focus-within:text-brand-primary transition-colors" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar tipos de sesiones..."
-              className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+              placeholder="Buscador inteligente de servicios..."
+              className="w-full py-4 pl-12 pr-4 transition-all border-gray-50 bg-gray-50/50 rounded-2xl focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/5 focus:bg-white text-sm font-bold outline-none"
             />
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700">
+        <div className="bg-white border border-gray-100 shadow-xl rounded-[2.5rem] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Nombre
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Categoría
-                  </th>
-
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Duración
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Requiere Diagnóstico (CIE-10) para facturar
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Requiere orden médica para cobro a terceros.
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Código
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Precio Base
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Precio En Planes
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Precio Base Kines
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-400"></th>
-                </tr>
+            <table className="w-full border-collapse">
+              <thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id} className="bg-gray-50/50 border-b border-gray-100">
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        onClick={header.column.getToggleSortingHandler()}
+                        className="px-6 py-3 text-left transition-colors cursor-pointer select-none hover:bg-gray-100 group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="enterprise-label !mb-0 text-gray-900 group-hover:text-brand-primary transition-colors">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          </span>
+                          {header.column.getCanSort() && (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              {header.column.getIsSorted() === "asc" ? (
+                                <ChevronUp className="w-3 h-3 text-brand-primary" />
+                              ) : header.column.getIsSorted() === "desc" ? (
+                                <ChevronDown className="w-3 h-3 text-brand-primary" />
+                              ) : (
+                                <div className="w-3 h-3 border-2 border-brand-primary/20 rounded-full"></div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                ))}
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                {filteredTypes.length === 0 ? (
+              <tbody className="divide-y divide-gray-50">
+                {table.getRowModel().rows.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="11"
-                      className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
-                    >
+                    <td colSpan="9" className="px-6 py-12 text-center enterprise-label opacity-40">
                       {searchTerm
-                        ? "No se encontraron tipos de sesiones"
-                        : "No hay tipos de sesiones registrados"}
+                        ? "No se encontraron coincidencias"
+                        : "No hay registros configurados"}
                     </td>
                   </tr>
                 ) : (
-                  filteredTypes.map((sessionType) => (
+                  table.getRowModel().rows.map((row) => (
                     <tr
-                      key={sessionType.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                      key={row.id}
+                      className="transition-all hover:bg-brand-secondary/5 group"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {sessionType.name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {fmtCLP(
-                                sessionType.base_price_clp /
-                                  sessionType.duration_minutes
-                              )}{" "}
-                              / min
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-white">
-                          <Type className="w-4 h-4 text-green-600" />
-                          {sessionType.category}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
-                          <ListChecksIcon className="w-4 h-4 text-blue-600" />
-                          {sessionType.code}
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
-                          {sessionType.requires_diagnosis ? (
-                            <>
-                              <Check className="w-4 h-4 text-green-600" />
-                              SI Requiere (CIE-10)
-                            </>
-                          ) : (
-                            <>
-                              <X className="w-4 h-4 text-red-600" />
-                              NO Requiere (CIE-10)
-                            </>
-                          )}
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
-                          {sessionType.requires_referral ? (
-                            <>
-                              <Check className="w-4 h-4 text-green-600" />
-                              SI Requiere Orden
-                            </>
-                          ) : (
-                            <>
-                              <X className="w-4 h-4 text-red-600" />
-                              NO Requiere Orden
-                            </>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
-                          <Clock className="w-4 h-4 text-blue-600" />
-                          {sessionType.duration_minutes} min
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-white">
-                          {/* <DollarSign className="w-4 h-4 text-green-600" /> */}
-                          {fmtCLP(sessionType.base_price_clp)}
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
-                          <ArrowBigDown className="w-4 h-4 text-red-600" />
-                          {fmtCLP(sessionType.plan_discount_clp)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
-                          <Stethoscope className="w-4 h-4 text-red-600" />
-                          {fmtCLP(sessionType.default_doctor_commission_clp)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          /*  onClick={() => handleToggleActive(sessionType)} */
-                          className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                            sessionType.is_active
-                              ? "bg-green-100 text-green-700 hover:bg-green-200"
-                              : "bg-red-100 text-red-700 hover:bg-red-200"
-                          }`}
-                        >
-                          {sessionType.is_active ? (
-                            <>
-                              <CheckCircle className="w-3 h-3" />
-                              Activo
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="w-3 h-3" />
-                              Inactivo
-                            </>
-                          )}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleEdit(sessionType)}
-                            className="p-2 text-blue-600 transition-colors rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/20"
-                            title="Editar"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(sessionType)}
-                            className="p-2 text-red-600 transition-colors rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-6 py-2.5">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
+          <TablePagination
+            table={table}
+            total={sessionTypes.length}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]}
+          />
         </div>
 
         {/* Modal */}
-        <SideModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={
-            selectedType ? "Editando Tipo de Sesión" : "Creando Tipo de Sesión"
-          }
-          width="3xl" // sm, md, lg, xl, 2xl, 3xl, full
-        >
-          <SessionTypeModal
-            selectedType={selectedType}
-            setIsModalOpen={setIsModalOpen}
-          />
-        </SideModal>
+      <SideModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        width="3xl"
+      >
+        <SessionTypeModal
+          setIsModalOpen={setIsModalOpen}
+          selectedType={selectedType}
+        />
+      </SideModal>
       </div>
     </AuthenticatedLayout>
   );

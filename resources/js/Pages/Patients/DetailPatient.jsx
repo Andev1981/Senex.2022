@@ -1,14 +1,18 @@
-import { useEffect, lazy, Suspense } from "react";
-import { Head, useRemember } from "@inertiajs/react";
+import { useEffect, lazy, Suspense, useState } from "react";
+import { Head, useRemember, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import PatientSidebar from "./Partials/PatientSidebar"; // <--- Importamos el nuevo Sidebar
+import PatientSidebar from "./Partials/PatientSidebar"; 
+import Modal from "@/Components/Modal";
+import SideModal from "@/Components/SideModal";
+import SessionFormModal from "../Attendances/Modals/CreateUpdateModal";
+import { Plus, ArrowLeft } from "lucide-react";
 
-// Lazy components (Mantenemos los que ya tenías)
+// Lazy components
 const IndexGeneral = lazy(() => import("./General/IndexGeneral"));
 const IndexHistorial = lazy(() => import("./Historial/IndexHistorial"));
 const IndexTreatments = lazy(() => import("./Treatments/IndexTreatments"));
 const IndexPayments = lazy(() => import("./Payments/IndexPayments"));
-const PatientDashboard = lazy(() => import("./Dashboard/PatientDashboard")); // <--- El Dashboard nuevo que hicimos ayer
+const PatientDashboard = lazy(() => import("./Dashboard/PatientDashboard"));
 
 function useSyncedTab(defaultTab = "dashboard") {
   const initial =
@@ -26,54 +30,97 @@ function useSyncedTab(defaultTab = "dashboard") {
 
 export default function DetailPatient(props) {
   const [activeTab, setActiveTab] = useSyncedTab("dashboard");
-  const { patient } = props;
+  const { patient, doctors, session_types } = props;
+  const [showSessionModal, setShowSessionModal] = useState(false);
 
   return (
     <AuthenticatedLayout>
       <Head title={`${patient.name} - Ficha Clínica`} />
 
-      <div className="flex min-h-screen bg-gray-50">
-        {/* 1. COLUMNA IZQUIERDA (Sidebar Fijo) */}
-        <PatientSidebar
-          patient={patient}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+      <div className="flex flex-col xl:flex-row min-h-screen bg-gray-50/50">
+        {/* 1. COLUMNA IZQUIERDA (Sidebar Anidado) */}
+        <div className="xl:w-80 w-full flex-none">
+            <PatientSidebar
+            patient={patient}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            />
+        </div>
 
         {/* 2. COLUMNA DERECHA (Contenido Dinámico) */}
-        {/* Agregamos ml-80 para dejar espacio al sidebar fixed de ancho 80 (20rem) */}
-        <main className="flex-1 p-8 ml-0 transition-all md:ml-80">
-          {/* Título de la sección actual (Opcional, para contexto) */}
-          <header className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">
-              {activeTab === "dashboard" && "Resumen del Paciente"}
-              {activeTab === "general" && "Información Completa"}
-              {activeTab === "history" && "Historial Clínico"}
-              {activeTab === "payments" && "Gestión Financiera"}
-            </h1>
+        <main className="flex-1 p-6 md:p-10 transition-all">
+          {/* Título de la sección actual (Diseño Enterprise) */}
+          <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1 uppercase">
+                {activeTab === "dashboard" && "Dashboard Clínico"}
+                {activeTab === "general" && "Expediente del Paciente"}
+                {activeTab === "history" && "Historial de Atenciones"}
+                {activeTab === "payments" && "Balance & Transacciones"}
+                {activeTab === "treatments" && "Planes de Tratamiento"}
+                </h1>
+                <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em] mt-2">Ficha Digital • ID {patient.id}</p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => setShowSessionModal(true)}
+                    className="px-6 py-3 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-brand-primary/20 transition-all active:scale-95 flex items-center gap-2"
+                >
+                    <Plus className="w-4 h-4" /> Registrar Atención
+                </button>
+                <Link
+                    href={route("patients.index")}
+                    className="px-6 py-3 bg-white border border-gray-100 text-brand-gray rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-all shadow-sm flex items-center gap-2 w-fit"
+                >
+                    <ArrowLeft className="w-4 h-4" /> Directorio
+                </Link>
+            </div>
           </header>
 
-          {/* Área de Contenido con Suspense */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-[500px] p-6">
+          {/* Área de Contenido con Suspense (Estilo Carpeta Premium) */}
+          <div className="bg-white rounded-enterprise shadow-xl border border-gray-100 min-h-[600px] p-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
+            
             <Suspense
               fallback={
-                <div className="flex items-center justify-center h-64 text-gray-400">
-                  Cargando módulo...
+                <div className="flex flex-col items-center justify-center h-96 text-brand-gray">
+                  <div className="w-12 h-12 border-4 border-brand-secondary/20 border-t-brand-primary rounded-full animate-spin mb-4"></div>
+                  <p className="text-[10px] font-black uppercase tracking-widest animate-pulse">Sincronizando Módulo...</p>
                 </div>
               }
             >
-              {activeTab === "dashboard" && <PatientDashboard {...props} />}
-              {activeTab === "general" && <IndexGeneral {...props} />}
-              {activeTab === "history" && <IndexHistorial {...props} />}
-              {activeTab === "treatments" && (
-                <IndexTreatments {...props} />
-              )}{" "}
-              {/* Quizás quieras fusionar esto con history */}
-              {activeTab === "payments" && <IndexPayments {...props} />}
+              <div className="relative z-10">
+                {activeTab === "dashboard" && (
+                    <PatientDashboard 
+                        {...props} 
+                        openSessionModal={() => setShowSessionModal(true)} 
+                    />
+                )}
+                {activeTab === "general" && <IndexGeneral {...props} />}
+                {activeTab === "history" && <IndexHistorial {...props} />}
+                {activeTab === "treatments" && (
+                    <IndexTreatments {...props} />
+                )}
+                {activeTab === "payments" && <IndexPayments {...props} />}
+              </div>
             </Suspense>
           </div>
         </main>
       </div>
+
+      <SideModal
+        open={showSessionModal}
+        onClose={() => setShowSessionModal(false)}
+        width="5xl"
+      >
+        <SessionFormModal
+          setShowModal={setShowSessionModal}
+          preselectedPatient={patient}
+          doctors={doctors}
+          session_types={session_types}
+        />
+      </SideModal>
     </AuthenticatedLayout>
   );
 }

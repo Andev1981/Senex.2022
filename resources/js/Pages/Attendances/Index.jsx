@@ -179,14 +179,6 @@ export default function Index({
         <SideModal
           open={showCreateSessionModal}
           onClose={() => setShowCreateSessionModal(false)}
-          title={
-            sessionData?.session_id ? "✏️ Editar Sesión" : "📋 Nueva Atención"
-          }
-          /* description={
-            sessionData?.id
-              ? `Editando sesión para ${sessionData.paciente}`
-              : "Registra una nueva sesión seleccionando paciente, profesional y tipo"
-          } */
           width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
         >
           <CreateUpdateModal

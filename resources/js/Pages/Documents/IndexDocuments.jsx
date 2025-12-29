@@ -1,39 +1,64 @@
-import React, { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   FileText,
   Plus,
-  Search,
   Users,
-  Download,
-  Send,
-  Eye,
   Printer,
   CheckCircle,
   XCircle,
-  Calendar,
-  TrendingUp,
-  DollarSign,
   FileCheck,
   Trash2,
+  AlertTriangle,
+  Layers,
+  Wallet,
+  Calculator,
+  UploadCloud,
+  RefreshCw,
+  ShieldCheck,
+  Receipt,
 } from "lucide-react";
 import { Head, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { DTES_TYPES, getDtesConfigByCode } from "@/constants/dtesTypes";
-import { DTES_STATUSES } from "@/constants/dtesStatuses";
-import HeaderDocuments from "./partials/HeaderDocuments";
 import List from "./partials/List";
+import CafUploadModal from "./partials/CafUploadModal";
+import DteConfigModal from "./partials/DteConfigModal";
 import RutInput from "@/Components/RutInput";
 import SearchSelect from "@/Components/SearchSelect";
+import Modal from "@/Components/Modal";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SecondaryButton from "@/Components/SecondaryButton";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { fmtDate } from "@/utils/utils";
 
-export default function IndexDocuments({ invoices, communes, patients, sellables }) {
+export default function IndexDocuments({
+  company,
+  dte_config,
+  is_configured,
+  invoices,
+  communes,
+  patients,
+  sellables,
+  caf_stats,
+}) {
   const [activeTab, setActiveTab] = useState("list");
   const [selectedDocument, setSelectedDocument] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("todos");
-  const [filterType, setFilterType] = useState("todos");
-  // 🎯 VERIFICAR: La desestructuración debe estar al principio
+  const [isCafModalOpen, setIsCafModalOpen] = useState(false);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isChangingType, setIsChangingType] = useState(false);
+  const [isLoadingRut, setIsLoadingRut] = useState(false);
+
+  const COLORS = ["#3292b3", "#79d0ec", "#858793", "#ef4444", "#f59e0b"];
+
+  const tabs = [
+    { id: "list", label: "Registro de Ventas", icon: FileText },
+    { id: "create", label: "Nueva Emisión", icon: Plus },
+  ];
+
+  const active_caf = caf_stats || [];
+
   const { data, setData, post, processing, errors, reset } = useForm({
     dte_type: "",
     issue_date: new Date().toISOString().split("T")[0],
@@ -50,752 +75,939 @@ export default function IndexDocuments({ invoices, communes, patients, sellables
     items: [],
     global_discount: 0,
     payment_method: "Efectivo",
-    transaction_number: "", // Nuevo campo
-    transaction_date: "",   // Nuevo campo opcional
+    transaction_number: "",
+    transaction_date: "",
     observations: "",
     reference_doc: "",
+    ref_code: "1",
     reason: "",
     simulate: true,
   });
 
-  // --- Helpers ---
+  const dashboardStats = useMemo(() => {
+    const netos = invoices.reduce(
+      (sum, d) => sum + (d.amount_neto_clp || 0),
+      0
+    );
+    const exentos = invoices.reduce(
+      (sum, d) => sum + (d.amount_exento_clp || 0),
+      0
+    );
+    const ivas = invoices.reduce((sum, d) => sum + (d.amount_iva_clp || 0), 0);
+    const total = netos + exentos + ivas;
+    const pendientes_pago = invoices
+      .filter((d) => d.payment_status !== "paid")
+      .reduce((sum, d) => sum + (d.amount_total_clp || 0), 0);
+    return {
+      totalMonto: total,
+      ticketPromedio:
+        invoices.length > 0 ? Math.round(total / invoices.length) : 0,
+      deudaPendiente: pendientes_pago,
+      rechazados: invoices.filter((d) => d.dte_status === "rejected").length,
+      aceptados: invoices.filter((d) => d.dte_status === "accepted").length,
+      incomeData: [
+        { name: "Neto", value: netos },
+        { name: "Exento", value: exentos },
+        { name: "IVA", value: ivas },
+      ],
+    };
+  }, [invoices]);
+
+  const esRutEmpresa = (rut) => {
+    if (!rut) return false;
+    const num = parseInt(rut.replace(/\./g, "").split("-")[0]);
+    return num > 50000000;
+  };
+
   const calculateItemTotal = (item) => {
-    const subtotal_clp =
+    const subtotal =
       (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
-    const discountAmount =
-      subtotal_clp * ((Number(item.discount_clp) || 0) / 100);
-    return Math.max(0, subtotal_clp - discountAmount);
+    const discount = subtotal * ((Number(item.discount_clp) || 0) / 100);
+    return Math.max(0, subtotal - discount);
   };
 
   const calculateTotals = () => {
     let net_subtotal = 0;
     let exempt_subtotal = 0;
-    const subtotal_items = data.items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
-    const docType = DTES_TYPES.find((dt) => dt.code === data.dte_type);
-    const isDocExempt = docType?.exento;
-
-    // Clasificar montos item por item
-    data.items.forEach(item => {
-        const lineTotal = calculateItemTotal(item);
-        // Si el documento es exento, TODO es exento.
-        // Si el documento es afecto, miramos si el ítem individual es exento.
-        if (isDocExempt || item.is_exempt) {
-            exempt_subtotal += lineTotal;
-        } else {
-            net_subtotal += lineTotal;
-        }
+    data.items.forEach((item) => {
+      const lineTotal = calculateItemTotal(item);
+      if (item.is_exempt) exempt_subtotal += lineTotal;
+      else net_subtotal += lineTotal;
     });
-
-    // Aplicar descuento global proporcionalmente (simple approach: restar del neto primero)
-    // Nota: Para precisión contable estricta se debería prorratear, pero para este flujo:
-    const discount_global = Number(data.global_discount) || 0;
-    
-    // Si hay descuento, lo descontamos del neto primero (beneficio cliente), luego exento si sobra
-    let remainingDiscount = discount_global;
-    
-    if (net_subtotal >= remainingDiscount) {
-        net_subtotal -= remainingDiscount;
-        remainingDiscount = 0;
-    } else {
-        remainingDiscount -= net_subtotal;
-        net_subtotal = 0;
-        exempt_subtotal = Math.max(0, exempt_subtotal - remainingDiscount);
+    let remainingDiscount = Number(data.global_discount) || 0;
+    if (net_subtotal >= remainingDiscount) net_subtotal -= remainingDiscount;
+    else {
+      remainingDiscount -= net_subtotal;
+      net_subtotal = 0;
+      exempt_subtotal = Math.max(0, exempt_subtotal - remainingDiscount);
     }
-
     const iva = Math.round(net_subtotal * 0.19);
-    const subtotal_clp = net_subtotal; // Base Imponible
     const total = net_subtotal + exempt_subtotal + iva;
 
-    return { subtotal_items, discount_global, subtotal_clp, exempt_subtotal, iva, total };
+    let suggestedType = null;
+    if (data.items.length > 0 && data.client.rut) {
+      const isExemptOnly = data.items.every((i) => i.is_exempt);
+      const isB2B =
+        esRutEmpresa(data.client.rut) ||
+        (data.client.giro && data.client.giro !== "Particular");
+      suggestedType = isB2B ? (isExemptOnly ? 34 : 33) : isExemptOnly ? 41 : 39;
+    }
+
+    return {
+      subtotal_items: data.items.reduce(
+        (sum, i) => sum + calculateItemTotal(i),
+        0
+      ),
+      subtotal_clp: net_subtotal,
+      exempt_subtotal,
+      iva,
+      total,
+      suggestedType,
+    };
   };
 
-  // --- Create ---
-  const addItem = (sellable = null) =>
-    setData((f) => ({
-      ...f,
-      items: [
-        ...f.items,
-        { 
-            description: sellable ? sellable.name : "", 
-            quantity: 1, 
-            unitPrice: sellable ? sellable.price : 0, 
-            discount_clp: 0,
-            comment: "",
-            is_exempt: sellable ? (sellable.is_exempt ? true : false) : false, // Capturar exención
-            sellable_type: sellable 
-                ? (sellable.type === 'Producto' ? 'App\\Models\\Product' : 'App\\Models\\SessionType') 
-                : undefined,
-            sellable_id: sellable ? sellable.id : undefined
-        },
-      ],
-    }));
-
-  const removeItem = (index) =>
-    setData((f) => ({
-      ...f,
-      items: f.items.filter((_, i) => i !== index),
-    }));
-
-  const updateItem = (index, field, value) =>
-    setData((f) => {
-      const items = [...f.items];
-      items[index][field] = value;
-      return { ...f, items };
-    });
+  const addItem = (sellable = null) => {
+    setData("items", [
+      ...data.items,
+      {
+        description: sellable ? sellable.name : "",
+        quantity: 1,
+        unitPrice: sellable ? sellable.price : 0,
+        discount_clp: 0,
+        comment: "",
+        is_exempt: sellable ? !!sellable.is_exempt : false,
+        sellable_id: sellable ? sellable.id : undefined,
+      },
+    ]);
+  };
 
   const handleTypeChange = (newType) => {
-      setData(current => ({
-          ...current,
-          dte_type: newType,
-          items: [], // Limpiar items al cambiar tipo (precios/impuestos pueden variar)
-          reference_doc: "",
-          reason: "",
-          // Mantenemos client, fecha, etc.
+    if (newType === data.dte_type) return;
+    const performChange = () => {
+      setIsChangingType(true);
+      setData((current) => ({
+        ...current,
+        dte_type: newType,
+        patient_id: null,
+        client: {
+          rut: "",
+          razonSocial: "",
+          giro: "",
+          direccion: "",
+          comuna: "",
+          ciudad: "Santiago",
+        },
+        items: [],
+        reference_doc: "",
+        reason: "",
+        observations: "",
       }));
-  };
-
-  const handleReferenceBlur = async () => {
-      if (!data.reference_doc) return;
-      
-      try {
-          const response = await axios.get(route('dte.lookup', data.reference_doc));
-          const doc = response.data;
-          
-          if (doc.found) {
-              setData(d => ({
-                  ...d,
-                  patient_id: doc.patient_id,
-                  client: doc.client,
-                  reason: d.reason || `Referencia a ${doc.type_name} del ${doc.issue_date}`, // Sugerencia de motivo
-              }));
-              
-              const Toast = Swal.mixin({
-                  toast: true,
-                  position: 'top-end',
-                  showConfirmButton: false,
-                  timer: 3000,
-                  timerProgressBar: true,
-              });
-              
-              Toast.fire({
-                  icon: 'success',
-                  title: 'Documento referenciado encontrado'
-              });
-          }
-      } catch (error) {
-          if (error.response && error.response.status === 404) {
-              Swal.fire({
-                  icon: 'warning',
-                  title: 'Documento no encontrado',
-                  text: 'No se encontró un documento emitido con este folio en el sistema.',
-              });
-          }
-      }
+      setTimeout(() => setIsChangingType(false), 400);
+    };
+    if (data.items.length > 0 || data.client.rut) {
+      Swal.fire({
+        title: "¿Cambiar Tipo?",
+        text: "Se perderán los datos actuales del borrador.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3292b3",
+      }).then((result) => result.isConfirmed && performChange());
+    } else performChange();
   };
 
   const handleCreateDocument = (e) => {
     e.preventDefault();
+    const totals = calculateTotals();
+    const emitirDTE = (finalType = data.dte_type) => {
+      post(route("documents.store"), {
+        onBefore: () => {
+          data.dte_type = finalType;
+        },
+        onSuccess: () => {
+          setActiveTab("list");
+          reset();
+          Swal.fire("¡Éxito!", "Documento generado correctamente.", "success");
+        },
+      });
+    };
+    if (
+      ![61, 56].includes(data.dte_type) &&
+      totals.suggestedType !== data.dte_type
+    ) {
+      const configSugerida = getDtesConfigByCode(totals.suggestedType);
+      Swal.fire({
+        title: "DTE Sugerido",
+        text: `Según los datos, el documento debería ser: ${configSugerida.label}. ¿Desea corregir y emitir?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, corregir",
+        cancelButtonText: "Mantener actual",
+      }).then((result) =>
+        result.isConfirmed ? emitirDTE(totals.suggestedType) : emitirDTE()
+      );
+      return;
+    }
+    Swal.fire({
+      title: "¿Confirmar Emisión?",
+      text: "El documento será procesado oficialmente ante el SII.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3292b3",
+    }).then((result) => result.isConfirmed && emitirDTE());
+  };
+
+  const handleRetrySII = async (invoice) => {
+    const isSent = invoice.dte_status === "sent";
+    const identifier = invoice.dte_folio
+      ? `folio ${invoice.dte_folio}`
+      : `documento #${invoice.id}`;
 
     Swal.fire({
-      title: "¿Emitir Documento?",
-      text: data.simulate 
-        ? "Se generará en MODO SIMULACIÓN (No válido ante SII)" 
-        : "Se enviará al SII. Esta acción no se puede deshacer.",
-      icon: "warning",
+      title: isSent ? "Sincronizar con SII" : "¿Emitir al SII?",
+      text: isSent
+        ? `Se consultará el estado del ${identifier} en el SII.`
+        : `Se intentará emitir el ${identifier} oficialmente.`,
+      icon: "info",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, emitir",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: isSent ? "Consultar" : "Sí, emitir",
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        try {
+          const endpoint = isSent
+            ? route("dte.status", invoice.id)
+            : route("dte.issue", invoice.id);
+          const response = await axios[isSent ? "get" : "post"](endpoint);
+          return response.data;
+        } catch (error) {
+          Swal.showValidationMessage(
+            `Error: ${error.response?.data?.message || "Fallo"}`
+          );
+        }
+      },
+      allowOutsideClick: () => !Swal.isLoading(),
     }).then((result) => {
-      if (result.isConfirmed) {
-        post(route("documents.store"), {
-          onSuccess: () => {
-            setActiveTab("list");
-            reset();
-            Swal.fire(
-              "¡Emitido!",
-              "El documento ha sido generado correctamente.",
-              "success"
-            );
-          },
-          onError: () => {
-             Swal.fire(
-              "Error",
-              "Hubo un problema al emitir el documento.",
-              "error"
-            );
-          }
-        });
+      if (result.isConfirmed && result.value?.success) {
+        Swal.fire("Éxito", result.value.message, "success").then(() =>
+          window.location.reload()
+        );
       }
     });
   };
 
-  // --- Filtros y métricas ---
-  const filteredDocuments = invoices.filter((doc) => {
-    const matchesSearch =
-      doc.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.patient.rut.includes(searchTerm);
-    const matchesStatus =
-      filterStatus === "todos" || doc.status === filterStatus;
-    const matchesType = filterType === "todos" || doc.dte_type === filterType;
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const handleDuplicate = (invoice) => {
+    setData({
+      ...data,
+      dte_type: invoice.dte_type,
+      patient_id: invoice.patient_id,
+      client: {
+        rut: invoice.patient?.rut || "",
+        razonSocial: invoice.patient?.full_name || "",
+        giro: invoice.metadata?.client?.giro || "Particular",
+        direccion: invoice.metadata?.client?.direccion || "",
+        comuna: invoice.metadata?.client?.comuna || "",
+        ciudad: invoice.metadata?.client?.ciudad || "Santiago",
+      },
+      items: (invoice.items || []).map((item) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unit_price_clp,
+        discount_clp: item.discount_percentage || 0,
+        comment: item.comment || "",
+        is_exempt: !!item.is_exento,
+        sellable_id: item.sellable_id,
+      })),
+      global_discount: invoice.global_discount_clp || 0,
+      payment_method: invoice.metadata?.payment_method || "Efectivo",
+      observations: invoice.observations || "",
+      reference_doc: "",
+      reason: "",
+    });
+    setActiveTab("create");
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "info",
+      title: "Documento cargado",
+      text: "Puede editar y generar una nueva versión.",
+      showConfirmButton: false,
+      timer: 4000,
+    });
+  };
 
-  const totalMonto = invoices.reduce((sum, d) => sum + d.total, 0);
+  const handleRutBlur = async () => {
+    if (!data.client.rut || data.client.rut.length < 8 || data.dte_type === 61)
+      return;
+    setIsLoadingRut(true);
+    try {
+      const response = await axios.get(
+        route("dte.consultar_rut", data.client.rut)
+      );
+      const res = response.data;
+      if (res.success) {
+        setData((d) => ({
+          ...d,
+          client: {
+            ...d.client,
+            razonSocial: res.razon_social,
+            giro: res.giro,
+            direccion: res.direccion || d.client.direccion,
+            comuna: res.comuna || d.client.comuna,
+          },
+        }));
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "RUT validado",
+          showConfirmButton: false,
+          timer: 3000,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoadingRut(false);
+    }
+  };
 
-  const tabs = [
-    { id: "list", label: "Documentos", icon: FileText },
-    { id: "create", label: "Nuevo Documento", icon: Plus },
-    { id: "stats", label: "Estadísticas", icon: TrendingUp },
-  ];
+  const handleReferenceBlur = async () => {
+    if (!data.reference_doc) return;
+    try {
+      const response = await axios.get(route("dte.lookup", data.reference_doc));
+      const doc = response.data;
+      if (doc.found) {
+        setData((d) => ({
+          ...d,
+          patient_id: doc.patient_id,
+          client: doc.client,
+          global_discount: doc.global_discount || 0,
+          observations: doc.observations || "",
+          items: (doc.items || []).map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discount_clp: item.discount_clp || 0,
+            comment: item.comment || "",
+            is_exempt: item.is_exempt || false,
+            sellable_id: item.sellable_id,
+          })),
+          reason:
+            d.reason || `Referencia a ${doc.type_name} del ${doc.issue_date}`,
+        }));
+      }
+    } catch (error) {
+      if (error.response?.status === 404)
+        Swal.fire({ icon: "warning", title: "No encontrado" });
+    }
+  };
 
-  // 🎯 Calcula la configuración del documento seleccionado
   const selectedDte = getDtesConfigByCode(data.dte_type);
   const docStyles = selectedDte.styles || {};
+  const esNotaCredito = data.dte_type === 61;
 
   return (
     <AuthenticatedLayout>
-      <Head title="Emitir Documento Tributario Electrónico" />
-      <div className="min-h-screen p-4 bg-gray-50">
-        {/* Header */}
-        <HeaderDocuments
-          setActiveTab={setActiveTab}
-          tabs={tabs}
-          activeTab={activeTab}
-        />
+      <Head title="Centro de Facturación SII" />
+      <div className="min-h-screen p-6 md:p-10 bg-gray-50/50">
+        <div className="max-w-[1600px] mx-auto space-y-10">
+          {/* HEADER HERO ENTERPRISE */}
+          <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-enterprise">
+            <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full opacity-50 bg-brand-primary/5 blur-3xl"></div>
 
-        <div className="mx-auto">
-          {/* Lista de Documentos */}
-          {activeTab === "list" && (
-            <List
-              invoices={invoices}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filterType={filterType}
-              setFilterType={setFilterType}
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-              filteredDocuments={filteredDocuments}
-              setSelectedDocument={setSelectedDocument}
-              DTES_TYPES={DTES_TYPES}
-              DTES_STATUSES={DTES_STATUSES}
-            />
-          )}
-
-          {/* Crear Documento */}
-          {activeTab === "create" && (
-            <>
-              <div className="grid grid-cols-4 gap-4 px-6 md:grid-cols-8">
-                {DTES_TYPES.map((type) => {
-                  // 1. Desestructuración de datos de la lista
-                  const Icon = type.icon;
-
-                  // 2. Acceso directo al objeto de estilos
-                  const styles = type.styles ?? {};
-
-                  // 3. Lógica de activación
-                  const active = data.dte_type === type.code;
-
-                  console.log(data);
-                  return (
-                    <button
-                      // ✅ Usamos type.code como clave, ya que es único
-                      key={type.code}
-                      type="button"
-                      // ✅ Guardamos el código numérico DTE en el estado
-                      onClick={() => handleTypeChange(type.code)}
-                      className={`p-4 rounded-xl border-2 transition-all ${
-                        active
-                          ? `${styles.border} ${styles.bg}`
-                          : "border-gray-200 hover:border-gray-300 bg-white scale-90"
-                      }`}
-                    >
-                      <Icon
-                        className={`w-8 h-8 mx-auto mb-2 ${
-                          styles.text || "text-gray-600"
-                        }`}
-                      />
-                      <p className="text-sm font-semibold text-center text-gray-900">
-                        {type.label}
-                      </p>
-                      <p className="mt-1 text-xs text-center text-gray-500">
-                        Código {type.code}
-                      </p>
-                    </button>
-                  );
-                })}
+            <div className="relative z-10 flex flex-col justify-between gap-8 md:flex-row md:items-center">
+              <div className="flex items-center gap-5">
+                <div className="flex items-center justify-center w-16 h-16 text-white transform shadow-xl bg-brand-primary rounded-2xl shadow-brand-primary/20 rotate-3">
+                  <Receipt className="w-8 h-8" />
+                </div>
+                <div>
+                  <h1 className="mb-2 text-3xl font-black leading-none tracking-tight text-gray-900 uppercase">
+                    Facturación Electrónica
+                  </h1>
+                  <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em] flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                    Conexión Directa con SII • {company.business_name}
+                  </p>
+                </div>
               </div>
 
-              <div className="p-6 -mt-10 bg-white border border-gray-200 shadow-sm rounded-xl">
-                {/*          <h2 className="mb-6 text-2xl font-bold text-gray-900">
-                Crear Nuevo Documento Tributario
-              </h2> */}
+              <div className="flex p-1.5 bg-gray-100 rounded-2xl w-fit shrink-0">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${
+                      activeTab === tab.id
+                        ? "bg-white text-brand-primary shadow-sm"
+                        : "text-brand-gray hover:text-gray-600"
+                    }`}
+                  >
+                    <tab.icon className="w-4 h-4" /> {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
-                {/* Selección de Tipo de Documento */}
-                <div className="mb-8">
-                  {/*        <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                  Seleccione el tipo de documento
-                </h3> */}
+          <div className="duration-500 animate-in fade-in">
+            {activeTab === "list" && (
+              <div className="space-y-10">
+                {/* DASHBOARD STATS */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-12">
+                  <div className="flex items-center p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise lg:col-span-3 group hover:scale-[1.02] transition-all">
+                    <div className="flex-shrink-0 w-24 h-24">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={dashboardStats.incomeData}
+                            innerRadius={20}
+                            outerRadius={32}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {dashboardStats.incomeData.map((entry, index) => (
+                              <Cell
+                                key={index}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(val) => `$${(val / 1000).toFixed(0)}k`}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="ml-4">
+                      <p className="enterprise-label !text-[8px] opacity-60 mb-1">
+                        Ventas Mes
+                      </p>
+                      <p className="font-mono text-2xl font-black leading-none text-gray-900">
+                        ${(dashboardStats.totalMonto / 1000).toFixed(0)}k
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-center p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise lg:col-span-2 hover:scale-[1.02] transition-all">
+                    <p className="enterprise-label !text-[8px] opacity-60 mb-2 flex items-center gap-2">
+                      <Calculator className="w-3 h-3 text-purple-400" /> Ticket
+                      Promedio
+                    </p>
+                    <p className="font-mono text-xl font-black text-gray-900">
+                      ${(dashboardStats.ticketPromedio / 1000).toFixed(0)}k
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-orange-400 border-gray-100 shadow-sm rounded-enterprise lg:col-span-2 hover:scale-[1.02] transition-all">
+                    <p className="enterprise-label !text-[8px] text-orange-600 mb-2 flex items-center gap-2">
+                      <Wallet className="w-3 h-3" /> Por Cobrar
+                    </p>
+                    <p className="font-mono text-xl font-black text-gray-900">
+                      ${(dashboardStats.deudaPendiente / 1000).toFixed(0)}k
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-green-500 border-gray-100 shadow-sm rounded-enterprise lg:col-span-2 hover:scale-[1.02] transition-all">
+                    <p className="enterprise-label !text-[8px] text-green-600 mb-2 flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3" /> Aceptados
+                    </p>
+                    <p className="font-mono text-xl font-black text-gray-900">
+                      {dashboardStats.aceptados}
+                    </p>
+                  </div>
+
+                  <div
+                    className={`p-6 bg-white border-b-4 border-gray-100 shadow-sm rounded-enterprise flex flex-col justify-center lg:col-span-3 transition-all hover:scale-[1.02] ${
+                      dashboardStats.rechazados > 0
+                        ? "border-red-500 bg-red-50/10"
+                        : ""
+                    }`}
+                  >
+                    <p
+                      className={`enterprise-label !text-[8px] mb-2 flex items-center gap-2 ${
+                        dashboardStats.rechazados > 0
+                          ? "text-red-600"
+                          : "opacity-60"
+                      }`}
+                    >
+                      <XCircle
+                        className={`w-3 h-3 ${
+                          dashboardStats.rechazados > 0 ? "text-red-500" : ""
+                        }`}
+                      />{" "}
+                      Rechazos SII
+                    </p>
+                    <p
+                      className={`text-xl font-black font-mono ${
+                        dashboardStats.rechazados > 0
+                          ? "text-red-700"
+                          : "text-gray-900"
+                      }`}
+                    >
+                      {dashboardStats.rechazados}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid items-start grid-cols-1 gap-8 lg:grid-cols-12">
+                  <div className="lg:col-span-9">
+                    <List
+                      invoices={invoices}
+                      setSelectedDocument={setSelectedDocument}
+                      DTES_TYPES={DTES_TYPES}
+                      onRetrySII={handleRetrySII}
+                      onDuplicate={handleDuplicate}
+                    />
+                  </div>
+
+                  <div className="space-y-6 lg:col-span-3 lg:sticky lg:top-10">
+                    {/* CAF WIDGET */}
+                    <div className="p-8 bg-white border border-gray-100 shadow-xl rounded-[2.5rem] relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
+                      <div className="relative z-10 flex items-center gap-3 mb-8">
+                        <div className="p-2 bg-brand-secondary/10 text-brand-primary rounded-xl">
+                          <Layers className="w-5 h-5" />
+                        </div>
+                        <p className="text-gray-900 enterprise-label !mb-0">
+                          Folios Autorizados
+                        </p>
+                      </div>
+
+                      <div className="relative z-10 space-y-6">
+                        {active_caf.length > 0 ? (
+                          active_caf.map((caf, idx) => {
+                            const dteConfig = getDtesConfigByCode(caf.type);
+                            const progress = Math.min(
+                              100,
+                              (caf.used / caf.total) * 100
+                            );
+                            return (
+                              <div key={idx} className="space-y-3">
+                                <div className="flex items-end justify-between">
+                                  <div>
+                                    <p className="text-[10px] font-black text-gray-700 uppercase tracking-tight mb-1">
+                                      {dteConfig.label}
+                                    </p>
+                                    <p className="text-[9px] font-bold text-gray-400 uppercase font-mono">
+                                      Rango: {caf.from}-{caf.to}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <span
+                                      className={`font-mono font-black text-base ${
+                                        caf.available < 10
+                                          ? "text-red-600 animate-pulse"
+                                          : "text-brand-primary"
+                                      }`}
+                                    >
+                                      {caf.available}
+                                    </span>
+                                    <p className="text-[8px] font-bold text-gray-400 uppercase">
+                                      Libres
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="w-full h-2 overflow-hidden border border-gray-100 rounded-full bg-gray-50">
+                                  <div
+                                    className={`h-full transition-all duration-1000 ${
+                                      caf.available < 10
+                                        ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]"
+                                        : "bg-brand-secondary"
+                                    }`}
+                                    style={{ width: `${progress}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="py-10 text-center opacity-30">
+                            <AlertTriangle className="w-10 h-10 mx-auto mb-3" />
+                            <p className="text-[9px] font-black uppercase tracking-widest">
+                              Sin folios activos
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => setIsCafModalOpen(true)}
+                        className="w-full mt-8 py-4 bg-brand-primary text-white rounded-2xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-brand-primary/20 hover:brightness-110 transition-all flex items-center justify-center gap-2 active:scale-95"
+                      >
+                        <UploadCloud className="w-4 h-4" /> Cargar Nuevo CAF
+                      </button>
+                    </div>
+
+                    {/* CONFIG SII WIDGET */}
+                    <div className="p-8 bg-gray-900 text-white shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 transition-transform duration-700 rounded-full bg-white/5 blur-2xl group-hover:scale-150"></div>
+                      <div className="relative z-10 flex items-center gap-3 mb-6">
+                        <ShieldCheck
+                          className={`w-5 h-5 ${
+                            is_configured ? "text-green-400" : "text-orange-400"
+                          }`}
+                        />
+                        <p className="text-white/80 enterprise-label !mb-0">
+                          Configuración SII
+                        </p>
+                      </div>
+                      <div className="relative z-10">
+                        <p className="mb-6 text-xl font-black tracking-tight">
+                          {is_configured
+                            ? "Certificado Activo"
+                            : "Pendiente Configurar"}
+                        </p>
+                        <button
+                          onClick={() => setIsConfigModalOpen(true)}
+                          className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-black uppercase tracking-widest text-[9px] transition-all border border-white/10"
+                        >
+                          Gestionar Credenciales
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "create" && (
+              <div className="flex flex-col gap-10">
+                {!is_configured && (
+                  <div className="p-8 border-2 border-orange-100 bg-orange-50/50 rounded-[2.5rem] flex items-center justify-between gap-6 animate-pulse">
+                    <div className="flex items-center gap-5">
+                      <div className="p-4 text-orange-500 bg-white shadow-sm rounded-2xl">
+                        <AlertTriangle className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">
+                          Configuración Requerida
+                        </p>
+                        <p className="text-sm font-bold text-orange-700/70">
+                          Debe vincular su Certificado Digital para realizar
+                          emisiones reales.
+                        </p>
+                      </div>
+                    </div>
+                    <SecondaryButton
+                      onClick={() => setIsConfigModalOpen(true)}
+                      className="!border-orange-200 !text-orange-700"
+                    >
+                      Configurar Ahora
+                    </SecondaryButton>
+                  </div>
+                )}
+
+                {/* SELECTOR TIPO DTE PREMIUM */}
+                <div className="flex flex-wrap justify-center gap-3 p-2 bg-white border border-gray-100 shadow-xl rounded-3xl">
+                  {DTES_TYPES.map((type) => (
+                    <button
+                      key={type.code}
+                      type="button"
+                      onClick={() => handleTypeChange(type.code)}
+                      className={`px-6 py-3 rounded-2xl border-2 flex items-center gap-3 transition-all text-[10px] font-black uppercase tracking-widest ${
+                        data.dte_type === type.code
+                          ? `${type.styles.border} ${type.styles.bg} ${type.styles.text} shadow-lg scale-105`
+                          : "border-transparent bg-white text-gray-400 hover:bg-gray-50"
+                      }`}
+                    >
+                      <type.icon className="w-4 h-4" /> {type.label}
+                    </button>
+                  ))}
                 </div>
 
                 {data.dte_type ? (
-                  <>
-                    {/* Buscador Principal de Paciente */}
-                    <div className="mb-6 p-6 bg-white border border-blue-100 shadow-sm rounded-xl">
-                        <label className="block mb-2 text-lg font-semibold text-gray-900">
-                            Buscar Paciente / Cliente
-                        </label>
-                        <div className="flex gap-4 items-start">
-                            <div className="flex-1">
-                                <SearchSelect
-                                    items={patients}
-                                    value={null}
-                                    onChange={(val, p) => {
-                                        if (p) {
-                                            setData(d => ({
-                                                ...d,
-                                                patient_id: p.id,
-                                                client: {
-                                                    rut: p.rut,
-                                                    razonSocial: p.full_name,
-                                                    giro: "Particular",
-                                                    direccion: p.address ? `${p.address.street} ${p.address.number || ''}` : '',
-                                                    comuna: p.address?.commune_name || '',
-                                                    ciudad: p.address?.region_name || 'Santiago',
-                                                    insurance_name: p.insurance_name // Guardamos esto visualmente en client si queremos, o usamos estado local
-                                                }
-                                            }));
-                                        }
-                                    }}
-                                    config={{
-                                        displayKey: "full_name",
-                                        secondaryKeys: ["rut", "insurance_name"],
-                                        searchKeys: ["full_name", "rut"],
-                                        emptyMessage: "Paciente no encontrado. Ingrese los datos manualmente abajo."
-                                    }}
-                                    placeholder="Buscar por Nombre o RUT..."
-                                />
-                            </div>
-                            {data.client.razonSocial && (
-                                <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <p className="text-xs text-blue-600 font-bold uppercase">Previsión</p>
-                                    <p className="text-sm font-semibold text-blue-900">
-                                        {patients.find(p => p.rut === data.client.rut)?.insurance_name || 'Desconocida'}
-                                    </p>
+                  <div
+                    className={`grid grid-cols-1 lg:grid-cols-12 gap-8 items-start transition-all duration-500 ${
+                      isChangingType
+                        ? "opacity-30 blur-sm scale-95"
+                        : "opacity-100"
+                    }`}
+                  >
+                    <div className="space-y-10 lg:col-span-8">
+                      {/* FORMULARIO PRINCIPAL */}
+                      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                        {/* RECEPTOR */}
+                        <div className="bg-white border border-gray-100 shadow-xl rounded-[2.5rem] overflow-hidden">
+                          <div className="flex items-center gap-3 p-6 border-b border-gray-100 bg-gray-50/50">
+                            <Users className="w-4 h-4 text-brand-primary" />
+                            <h3 className="enterprise-label !mb-0">
+                              Identificación del Receptor
+                            </h3>
+                          </div>
+                          <div className="p-8 space-y-6">
+                            <SearchSelect
+                              items={patients}
+                              placeholder="Buscar en base de datos..."
+                              onChange={(val, p) =>
+                                p &&
+                                setData((d) => ({
+                                  ...d,
+                                  patient_id: p.id,
+                                  client: {
+                                    rut: p.rut,
+                                    razonSocial: p.full_name,
+                                    giro: "Particular",
+                                    direccion: p.address
+                                      ? `${p.address.street} ${
+                                          p.address.number || ""
+                                        }`
+                                      : "",
+                                    comuna: p.address?.commune_name || "",
+                                    ciudad:
+                                      p.address?.region_name || "Santiago",
+                                  },
+                                }))
+                              }
+                              config={{
+                                displayKey: "full_name",
+                                secondaryKeys: ["rut"],
+                                searchKeys: ["full_name", "rut"],
+                              }}
+                            />
+                            <div className="grid grid-cols-2 gap-6">
+                              <div className="space-y-1">
+                                <label className="ml-1 enterprise-label opacity-60">
+                                  RUT Fiscal
+                                </label>
+                                <div className="relative">
+                                  <RutInput
+                                    value={data.client.rut}
+                                    onChange={(v) =>
+                                      setData((d) => ({
+                                        ...d,
+                                        client: { ...d.client, rut: v },
+                                      }))
+                                    }
+                                    onBlur={handleRutBlur}
+                                    disabled={esNotaCredito || isLoadingRut}
+                                    className="w-full !rounded-2xl !py-4 font-mono font-black"
+                                  />
+                                  {isLoadingRut && (
+                                    <RefreshCw className="absolute w-4 h-4 right-4 top-4 text-brand-primary animate-spin" />
+                                  )}
                                 </div>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="ml-1 enterprise-label opacity-60">
+                                  Giro Actividad
+                                </label>
+                                <input
+                                  type="text"
+                                  value={data.client.giro}
+                                  onChange={(e) =>
+                                    setData((d) => ({
+                                      ...d,
+                                      client: {
+                                        ...d.client,
+                                        giro: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  readOnly={esNotaCredito}
+                                  className="w-full px-5 py-4 text-sm font-bold border-gray-100 rounded-2xl bg-gray-50/30"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="ml-1 enterprise-label opacity-60">
+                                Razón Social / Nombre
+                              </label>
+                              <input
+                                type="text"
+                                value={data.client.razonSocial}
+                                onChange={(e) =>
+                                  setData((d) => ({
+                                    ...d,
+                                    client: {
+                                      ...d.client,
+                                      razonSocial: e.target.value,
+                                    },
+                                  }))
+                                }
+                                readOnly={esNotaCredito}
+                                className="w-full px-5 py-4 text-sm font-black uppercase border-gray-100 rounded-2xl"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CONFIGURACIÓN */}
+                        <div className="bg-white border border-gray-100 shadow-xl rounded-[2.5rem] overflow-hidden">
+                          <div className="flex items-center gap-3 p-6 border-b border-gray-100 bg-gray-50/50">
+                            <FileText className="w-4 h-4 text-brand-primary" />
+                            <h3 className="enterprise-label !mb-0">
+                              Parámetros del Documento
+                            </h3>
+                          </div>
+                          <div className="p-8 space-y-6">
+                            <div className="grid grid-cols-2 gap-6">
+                              <div className="space-y-1">
+                                <label className="ml-1 enterprise-label opacity-60">
+                                  Fecha Emisión
+                                </label>
+                                <input
+                                  type="date"
+                                  value={data.issue_date}
+                                  onChange={(e) =>
+                                    setData("issue_date", e.target.value)
+                                  }
+                                  className="w-full px-5 py-4 font-mono text-sm font-black border-gray-100 rounded-2xl"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="ml-1 enterprise-label opacity-60">
+                                  Medio de Pago
+                                </label>
+                                <select
+                                  value={data.payment_method}
+                                  onChange={(e) =>
+                                    setData("payment_method", e.target.value)
+                                  }
+                                  className="w-full px-5 py-4 text-sm font-bold border-gray-100 rounded-2xl"
+                                >
+                                  <option>Efectivo</option>
+                                  <option>Transferencia</option>
+                                  <option>Tarjeta de Débito</option>
+                                  <option>Tarjeta de Crédito</option>
+                                </select>
+                              </div>
+                            </div>
+                            {esNotaCredito && (
+                              <div className="p-6 bg-orange-50 border border-orange-100 rounded-[1.5rem] space-y-4 animate-in slide-in-from-top-4">
+                                <div className="space-y-1">
+                                  <label className="enterprise-label !text-orange-700 ml-1">
+                                    Folio a Anular/Corregir
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={data.reference_doc}
+                                    onBlur={handleReferenceBlur}
+                                    onChange={(e) =>
+                                      setData("reference_doc", e.target.value)
+                                    }
+                                    className="w-full px-4 py-3 font-mono font-black text-orange-900 border-orange-200 rounded-xl"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="enterprise-label !text-orange-700 ml-1">
+                                    Tipo de Corrección
+                                  </label>
+                                  <select
+                                    value={data.ref_code}
+                                    onChange={(e) =>
+                                      setData("ref_code", e.target.value)
+                                    }
+                                    className="w-full px-4 py-3 text-xs font-bold text-orange-900 border-orange-200 rounded-xl"
+                                  >
+                                    <option value="1">
+                                      1: Anular Documento
+                                    </option>
+                                    <option value="2">2: Corregir Texto</option>
+                                    <option value="3">3: Corregir Monto</option>
+                                  </select>
+                                </div>
+                              </div>
                             )}
-                        </div>
-                    </div>
-
-                    {/* Datos del Documento */}
-                    <div
-                      className={`mb-6 p-4 border-l-4 rounded-xl ${
-                        docStyles.bg || "bg-gray-50"
-                      } ${docStyles.border || "border-gray-200"}`}
-                    >
-                      <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                        Datos del Documento
-                      </h3>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            Fecha Emisión
-                          </label>
-                          <input
-                            type="date"
-                            value={data.issue_date}
-                            onChange={(e) =>
-                              setData({ ...data, issue_date: e.target.value })
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-                        {(data.dte_type === 33 /* "factura" */ ||
-                          data.dte_type === 34) /* "factura_exenta" */ && (
-                          <div>
-                            <label className="block mb-2 text-sm font-medium text-gray-700">
-                              Fecha Vencimiento
-                            </label>
-                            <input
-                              type="date"
-                              value={data.expiration_date}
-                              onChange={(e) =>
-                                setData({
-                                  ...data,
-                                  expiration_date: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                            />
-                          </div>
-                        )}
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            Forma de Pago
-                          </label>
-                          <select
-                            value={data.payment_method}
-                            onChange={(e) =>
-                              setData({
-                                ...data,
-                                payment_method: e.target.value,
-                              })
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          >
-                            <option value="Efectivo">Efectivo</option>
-                            <option value="Transferencia">Transferencia</option>
-                            <option value="Cheque">Cheque</option>
-                            <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
-                            <option value="Tarjeta de Débito">Tarjeta de Débito</option>
-                            <option value="Crédito">Crédito</option>
-                          </select>
-                        </div>
-                      </div>
-                      
-                      {/* Campos condicionales de Pago */}
-                      {['Transferencia', 'Tarjeta de Crédito', 'Tarjeta de Débito', 'Cheque'].includes(data.payment_method) && (
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mt-4 pt-4 border-t border-gray-200">
-                             <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-700">
-                                    N° Comprobante / Operación
-                                </label>
-                                <input
-                                    type="text"
-                                    value={data.transaction_number}
-                                    onChange={(e) => setData('transaction_number', e.target.value)}
-                                    placeholder="Ej: 12345678"
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                                />
-                             </div>
-                             <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-700">
-                                    Fecha de Transacción
-                                </label>
-                                <input
-                                    type="date"
-                                    value={data.transaction_date || data.issue_date}
-                                    onChange={(e) => setData('transaction_date', e.target.value)}
-                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                                />
-                             </div>
-                          </div>
-                      )}
-                    </div>
-
-                    {/* Referencia (para NC y ND) */}
-                    {(data.dte_type === 61 /* "nota_credito" */ ||
-                      data.dte_type === 56) /* "nota_debito" */ && (
-                      <div className="p-4 mb-6 border-2 border-yellow-200 bg-yellow-50 rounded-xl">
-                        <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                          Documento de Referencia
-                        </h3>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <div>
-                            <label className="block mb-2 text-sm font-medium text-gray-700">
-                              Documento Referenciado
-                            </label>
-                            <input
-                              type="text"
-                              value={data.reference_doc}
-                              onChange={(e) =>
-                                setData({
-                                  ...data,
-                                  reference_doc: e.target.value,
-                                })
-                              }
-                              onBlur={handleReferenceBlur}
-                              placeholder="Ej: Factura 1234"
-                              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block mb-2 text-sm font-medium text-gray-700">
-                              Motivo
-                            </label>
-                            <input
-                              type="text"
-                              value={data.reason}
-                              onChange={(e) =>
-                                setData({
-                                  ...data,
-                                  reason: e.target.value,
-                                })
-                              }
-                              placeholder="Motivo de la emisión"
-                              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                            />
                           </div>
                         </div>
                       </div>
-                    )}
 
-                    {/* Datos del Cliente */}
-                    <div
-                      className={`mb-6 p-4 border-l-4 rounded-xl ${
-                        docStyles.bg || "bg-gray-50"
-                      } ${docStyles.border || "border-gray-200"}`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Datos del Cliente/Receptor
-                        </h3>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {/* CAMPO 1: RUT */}
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            RUT
-                          </label>
-                          <RutInput
-                            value={data?.client?.rut || ""}
-                            onChange={(val) =>
-                              setData({
-                                ...data,
-                                client: { ...data.client, rut: val },
-                              })
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                            placeholder="12.345.678-9"
-                          />
+                      {/* DETALLE DE ÍTEMS */}
+                      <div className="bg-white border border-gray-100 shadow-xl rounded-[2.5rem] overflow-hidden">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
+                          <div className="flex-1 max-w-sm">
+                            {!esNotaCredito && (
+                              <SearchSelect
+                                items={sellables}
+                                placeholder="Añadir Producto o Servicio..."
+                                onChange={(val, item) => item && addItem(item)}
+                                config={{
+                                  displayKey: "name",
+                                  secondaryKeys: ["price"],
+                                  searchKeys: ["name"],
+                                }}
+                              />
+                            )}
+                          </div>
+                          {!esNotaCredito && (
+                            <button
+                              onClick={() => addItem(null)}
+                              className="px-6 py-2 bg-white border border-brand-primary/20 text-brand-primary rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all"
+                            >
+                              + Manual
+                            </button>
+                          )}
                         </div>
-
-                        {/* CAMPO 2: Razón Social */}
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            Razón Social
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Nombre o Razón Social"
-                            value={data?.client?.razonSocial || ""}
-                            onChange={(e) =>
-                              setData({
-                                ...data,
-                                client: {
-                                  ...data.client,
-                                  razonSocial: e.target.value,
-                                },
-                              })
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-
-                        {/* CAMPO 3: Giro */}
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            Giro
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Giro comercial"
-                            value={data?.client?.giro || ""}
-                            onChange={(e) =>
-                              setData({
-                                ...data,
-                                client: {
-                                  ...data.client,
-                                  giro: e.target.value,
-                                },
-                              })
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-
-                        {/* CAMPO 4: Dirección */}
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            Dirección
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Dirección completa"
-                            value={data?.client?.direccion || ""}
-                            onChange={(e) =>
-                              setData({
-                                ...data,
-                                client: {
-                                  ...data.client,
-                                  direccion: e.target.value,
-                                },
-                              })
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-
-                        {/* CAMPO 5: Comuna */}
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            Comuna
-                          </label>
-                          <select
-                            value={data?.client?.comuna || ""}
-                            onChange={(e) => {
-                              const selectedName = e.target.value;
-                              const selectedCommune = communes.find(c => c.name === selectedName);
-                              
-                              setData({
-                                ...data,
-                                client: {
-                                  ...data.client,
-                                  comuna: selectedName,
-                                  ciudad: selectedCommune ? selectedCommune.region_name : (data.client.ciudad || '')
-                                },
-                              });
-                            }}
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          >
-                            <option value="">Seleccione una comuna</option>
-                            {communes.map((commune) => (
-                              <option key={commune.id} value={commune.name}>
-                                {commune.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* CAMPO 6: Ciudad */}
-                        <div>
-                          <label className="block mb-2 text-sm font-medium text-gray-700">
-                            Ciudad
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Ciudad"
-                            value={data?.client?.ciudad || ""}
-                            onChange={(e) =>
-                              setData({
-                                ...data,
-                                client: {
-                                  ...data.client,
-                                  ciudad: e.target.value,
-                                },
-                              })
-                            }
-                            className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Detalle de Items */}
-                    <div
-                      className={`mb-6 p-4 border-l-4 rounded-xl ${
-                        docStyles.bg || "bg-gray-50"
-                      } ${docStyles.border || "border-gray-200"}`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex-1 mr-4">
-                             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                Detalle del Documento
-                             </h3>
-                             <div className="max-w-xl">
-                                <SearchSelect 
-                                    items={sellables}
-                                    onChange={(val, item) => {
-                                        if (item) addItem(item);
-                                    }}
-                                    config={{
-                                        displayKey: 'name',
-                                        secondaryKeys: ['price', 'type'],
-                                        searchKeys: ['name'],
-                                        renderSelected: (item) => `${item.name} - $${item.price}`,
-                                        valueKey: 'unique_id'
-                                    }}
-                                    placeholder="Buscar Producto o Servicio para agregar..."
-                                />
-                             </div>
-                        </div>
-                        <button
-                          onClick={() => addItem(null)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 mt-6"
-                        >
-                          <Plus className="w-4 h-4" /> Agregar Línea Manual
-                        </button>
-                      </div>
-                      <div className="overflow-hidden border-2 border-gray-200 rounded-xl">
-                        <table className="w-full">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-3 text-xs font-bold text-left text-gray-600 uppercase">
-                                Descripción
-                              </th>
-                              <th className="px-4 py-3 text-xs font-bold text-left text-gray-600 uppercase w-64">
-                                Comentario/Detalle
-                              </th>
-                              <th className="w-24 px-4 py-3 text-xs font-bold text-center text-gray-600 uppercase">
-                                Cantidad
-                              </th>
-                              <th className="w-32 px-4 py-3 text-xs font-bold text-right text-gray-600 uppercase">
-                                Precio Unit.
-                              </th>
-                              <th className="w-24 px-4 py-3 text-xs font-bold text-center text-gray-600 uppercase">
-                                Desc %
-                              </th>
-                              <th className="w-32 px-4 py-3 text-xs font-bold text-right text-gray-600 uppercase">
-                                Total
-                              </th>
-                              <th className="w-16 px-4 py-3"></th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {data.items.map((item, index) => (
-                              <tr key={index}>
-                                <td className="px-4 py-2">
-                                  <input
-                                    type="text"
-                                    value={item.description}
-                                    onChange={(e) =>
-                                      updateItem(
-                                        index,
-                                        "description",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="Descripción del producto o servicio"
-                                    className="w-full px-2 py-1 border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
-                                  />
-                                </td>
-                                <td className="px-4 py-2">
-                                  <input
-                                    type="text"
-                                    value={item.comment}
-                                    onChange={(e) =>
-                                      updateItem(
-                                        index,
-                                        "comment",
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder="Detalle adicional (opcional)"
-                                    className="w-full px-2 py-1 text-sm border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
-                                  />
-                                </td>
-                                <td className="px-4 py-2">
-                                  <input
-                                    type="number"
-                                    value={item.quantity}
-                                    onChange={(e) =>
-                                      updateItem(
-                                        index,
-                                        "quantity",
-                                        parseInt(e.target.value) || 0
-                                      )
-                                    }
-                                    min="1"
-                                    step="1"
-                                    className="w-full px-2 py-1 text-center border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
-                                  />
-                                </td>
-                                <td className="px-4 py-2">
-                                  <div className="relative">
-                                    <span className="absolute left-2 top-1.5 text-gray-500">$</span>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="border-b border-gray-100 bg-gray-50/30">
+                              <tr className="enterprise-label">
+                                <th className="px-8 py-4 text-left">
+                                  Detalle de la Prestación
+                                </th>
+                                <th className="w-24 px-4 py-4 text-center">
+                                  Cant
+                                </th>
+                                <th className="w-32 px-4 py-4 text-right">
+                                  Precio Unit.
+                                </th>
+                                <th className="w-24 px-4 py-4 text-center">
+                                  Exento
+                                </th>
+                                <th className="w-40 px-8 py-4 text-right">
+                                  Total Línea
+                                </th>
+                                {!esNotaCredito && <th className="w-16"></th>}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                              {data.items.map((item, index) => (
+                                <tr
+                                  key={index}
+                                  className="transition-colors hover:bg-gray-50/50"
+                                >
+                                  <td className="px-8 py-4">
+                                    <input
+                                      type="text"
+                                      value={item.description}
+                                      onChange={(e) =>
+                                        updateItem(
+                                          index,
+                                          "description",
+                                          e.target.value
+                                        )
+                                      }
+                                      readOnly={esNotaCredito}
+                                      className="w-full p-0 text-xs font-black text-gray-800 uppercase bg-transparent border-none focus:ring-0"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={item.comment || ""}
+                                      onChange={(e) =>
+                                        updateItem(
+                                          index,
+                                          "comment",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Nota adicional..."
+                                      className="w-full border-none p-0 focus:ring-0 text-[10px] text-gray-400 font-bold bg-transparent italic"
+                                    />
+                                  </td>
+                                  <td className="px-4 py-4">
+                                    <input
+                                      type="number"
+                                      value={item.quantity}
+                                      onChange={(e) =>
+                                        updateItem(
+                                          index,
+                                          "quantity",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-full p-0 text-sm font-black text-center border-none focus:ring-0"
+                                    />
+                                  </td>
+                                  <td className="px-4 py-4">
                                     <input
                                       type="number"
                                       value={item.unitPrice}
@@ -803,629 +1015,374 @@ export default function IndexDocuments({ invoices, communes, patients, sellables
                                         updateItem(
                                           index,
                                           "unitPrice",
-                                          parseInt(e.target.value) || 0
+                                          e.target.value
                                         )
                                       }
-                                      min="0"
-                                      step="1"
-                                      className="w-full pl-6 pr-2 py-1 text-right border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
+                                      className="w-full p-0 font-mono text-sm font-black text-right border-none focus:ring-0"
                                     />
-                                  </div>
-                                </td>
-                                <td className="px-4 py-2">
-                                  <input
-                                    type="number"
-                                    value={item.discount_clp}
-                                    onChange={(e) =>
-                                      updateItem(
-                                        index,
-                                        "discount_clp",
-                                        parseFloat(e.target.value) || 0
-                                      )
-                                    }
-                                    min="0"
-                                    max="100"
-                                    step="0.1"
-                                    className="w-full px-2 py-1 text-center border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
-                                  />
-                                </td>
-                                <td className="px-4 py-2 font-semibold text-right">
-                                  $
-                                  {calculateItemTotal(item).toLocaleString(
-                                    "es-CL"
+                                  </td>
+                                  <td className="px-4 py-4 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={item.is_exempt}
+                                      onChange={(e) =>
+                                        updateItem(
+                                          index,
+                                          "is_exempt",
+                                          e.target.checked
+                                        )
+                                      }
+                                      className="border-gray-200 rounded text-brand-primary"
+                                    />
+                                  </td>
+                                  <td className="px-8 py-4 font-mono text-sm font-black text-right text-brand-primary">
+                                    $
+                                    {calculateItemTotal(item).toLocaleString(
+                                      "es-CL"
+                                    )}
+                                  </td>
+                                  {!esNotaCredito && (
+                                    <td className="px-4 text-center">
+                                      <button
+                                        onClick={() =>
+                                          setData(
+                                            "items",
+                                            data.items.filter(
+                                              (_, i) => i !== index
+                                            )
+                                          )
+                                        }
+                                        className="p-2 text-gray-300 transition-all rounded-lg hover:text-red-500 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </td>
                                   )}
-                                </td>
-                                <td className="px-4 py-2 text-center">
-                                  <button
-                                    onClick={() => removeItem(index)}
-                                    className="p-2 text-red-600 rounded-lg hover:bg-red-50"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Totales */}
-                    <div className="mb-6">
-                      <div
-                        /* className="max-w-md p-6 ml-auto border border-gray-200 bg-gray-50 rounded-xl" */ className={`max-w-md p-6 ml-auto mb-6 border-l-4 rounded-xl ${
-                          docStyles.bg || "bg-gray-50"
-                        } ${docStyles.border || "border-gray-200"}`}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex justify-between text-gray-700">
-                            <span>Subtotal Items:</span>
-                            <span className="font-semibold">
-                              $
-                              {calculateTotals().subtotal_items.toLocaleString(
-                                "es-CL"
-                              )}
-                            </span>
-                          </div>
-                          
-                          <div className="flex justify-between items-center text-gray-700">
-                            <span>Descuento Global ($):</span>
-                            <input 
-                                type="number"
-                                value={data.global_discount}
-                                onChange={(e) => setData('global_discount', parseFloat(e.target.value) || 0)}
-                                className="w-32 px-2 py-1 text-right border border-gray-300 rounded focus:border-blue-500 focus:outline-none text-sm"
-                                min="0"
-                            />
-                          </div>
-                          
-                          <div className="flex justify-between text-gray-700 pt-2 border-t border-gray-200">
-                            <span>Monto Neto (Base):</span>
-                            <span className="font-semibold">
-                              $
-                              {calculateTotals().subtotal_clp.toLocaleString(
-                                "es-CL"
-                              )}
-                            </span>
-                          </div>
-
-                          {!DTES_TYPES.find((dt) => dt.code === data.dte_type)
-                            ?.exento && (
-                            <div className="flex justify-between text-gray-700">
-                              <span>IVA (19%):</span>
-                              <span className="font-semibold">
-                                ${calculateTotals().iva.toLocaleString("es-CL")}
+                    {/* RESUMEN LATERAL */}
+                    <div className="space-y-8 lg:col-span-4 lg:sticky lg:top-10">
+                      <div className="bg-white border border-gray-100 shadow-2xl rounded-[2.5rem] overflow-hidden">
+                        <div
+                          className={`p-6 text-white text-center font-black uppercase tracking-[0.3em] text-[11px] ${docStyles.bg_cover}`}
+                        >
+                          Resumen de Emisión
+                        </div>
+                        <div className="p-8 space-y-8">
+                          <div className="space-y-4 enterprise-label !text-gray-400 border-b border-gray-50 pb-6">
+                            <div className="flex items-center justify-between">
+                              <span>Subtotal Bruto</span>
+                              <span className="font-mono font-black text-gray-900">
+                                $
+                                {calculateTotals().subtotal_items.toLocaleString(
+                                  "es-CL"
+                                )}
                               </span>
                             </div>
-                          )}
-                          <div className="flex justify-between pt-3 text-xl font-bold text-gray-900 border-t-2 border-gray-200">
-                            <span>Total a Pagar:</span>
-                            <span>
+                            <div className="flex items-center justify-between">
+                              <span>Descuento Global</span>
+                              <input
+                                type="number"
+                                value={data.global_discount}
+                                onChange={(e) =>
+                                  setData("global_discount", e.target.value)
+                                }
+                                className="w-24 px-2 py-1 font-mono font-black text-right text-gray-900 border-gray-100 rounded-lg"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-4 enterprise-label !text-gray-400">
+                            <div className="flex items-center justify-between">
+                              <span>Monto Neto</span>
+                              <span className="font-mono font-black text-gray-900">
+                                $
+                                {calculateTotals().subtotal_clp.toLocaleString(
+                                  "es-CL"
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span>Monto Exento</span>
+                              <span className="font-mono font-black text-gray-900">
+                                $
+                                {calculateTotals().exempt_subtotal.toLocaleString(
+                                  "es-CL"
+                                )}
+                              </span>
+                            </div>
+                            {!selectedDte.exento && (
+                              <div className="flex items-center justify-between text-brand-primary">
+                                <span>IVA (19%)</span>
+                                <span className="font-mono font-black">
+                                  $
+                                  {calculateTotals().iva.toLocaleString(
+                                    "es-CL"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className={`p-8 rounded-[2rem] flex flex-col items-center gap-2 ${docStyles.bg}`}
+                          >
+                            <span
+                              className={`enterprise-label !mb-0 opacity-60 ${docStyles.text}`}
+                            >
+                              Total a Facturar
+                            </span>
+                            <span
+                              className={`text-4xl font-black font-mono tracking-tighter ${docStyles.text}`}
+                            >
                               ${calculateTotals().total.toLocaleString("es-CL")}
                             </span>
                           </div>
+                          <PrimaryButton
+                            onClick={handleCreateDocument}
+                            disabled={
+                              data.items.length === 0 ||
+                              !data.client.rut ||
+                              processing
+                            }
+                            className={`w-full !py-6 !rounded-[1.5rem] !text-[11px] font-black uppercase tracking-widest shadow-2xl transition-all ${
+                              data.items.length === 0 ||
+                              !data.client.rut ||
+                              processing
+                                ? "bg-gray-100 text-gray-300"
+                                : `${docStyles.bg_cover} text-white hover:brightness-110 shadow-brand-primary/20`
+                            }`}
+                          >
+                            {processing ? (
+                              <RefreshCw className="w-6 h-6 animate-spin" />
+                            ) : (
+                              <>
+                                <FileCheck className="w-5 h-5" /> Emitir
+                                Documento SII
+                              </>
+                            )}
+                          </PrimaryButton>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Observaciones */}
-                    <div
-                      className={`mb-6 p-4 border-l-4 rounded-xl ${
-                        docStyles.bg || "bg-gray-50"
-                      } ${docStyles.border || "border-gray-200"}`}
-                    >
-                      <label className="block mb-2 text-sm font-medium text-gray-700">
-                        Observaciones
-                      </label>
-                      <textarea
-                        value={data.observations}
-                        onChange={(e) =>
-                          setData({
-                            ...data,
-                            observations: e.target.value,
-                          })
-                        }
-                        rows="3"
-                        placeholder="Observaciones adicionales (opcional)"
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                      ></textarea>
+                      <div className="p-8 bg-white border border-gray-100 shadow-xl rounded-[2.5rem] space-y-6">
+                        <div className="space-y-2">
+                          <label className="ml-1 enterprise-label opacity-60">
+                            Observaciones Públicas
+                          </label>
+                          <textarea
+                            value={data.observations}
+                            onChange={(e) =>
+                              setData("observations", e.target.value)
+                            }
+                            rows="3"
+                            placeholder="Estas notas aparecerán en el PDF..."
+                            className="w-full p-4 text-xs font-medium transition-all resize-none border-gray-50 bg-gray-50/50 rounded-2xl focus:bg-white focus:ring-brand-primary"
+                          />
+                        </div>
+                        <label className="flex items-center gap-4 p-4 transition-all border border-gray-100 cursor-pointer bg-gray-50/50 rounded-2xl hover:bg-white group">
+                          <input
+                            type="checkbox"
+                            checked={data.simulate}
+                            onChange={(e) =>
+                              setData("simulate", e.target.checked)
+                            }
+                            className="w-6 h-6 border-gray-200 rounded-xl text-brand-primary focus:ring-brand-primary"
+                          />
+                          <span className="enterprise-label !mb-0 opacity-60 group-hover:opacity-100">
+                            Modo Simulación (Sin SII)
+                          </span>
+                        </label>
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-2 mb-4 ml-2">
-                       <input 
-                          type="checkbox" 
-                          id="simulate"
-                          checked={data.simulate} 
-                          onChange={(e) => setData('simulate', e.target.checked)}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="simulate" className="text-sm font-medium text-gray-700">Modo Simulación (No enviar al SII)</label>
-                    </div>
-
-                    {/* Botones de Acción */}
-                    <div
-                      /*  className="flex gap-3"   */ className={`flex gap-4 mb-6 p-4 border-l-4 rounded-xl ${
-                        docStyles.bg || "bg-gray-50"
-                      } ${docStyles.border || "border-gray-200"}`}
-                    >
-                      <button
-                        onClick={handleCreateDocument}
-                        disabled={data.items.length === 0 || !data.client.rut || processing}
-                        className={`flex rounded-lg items-center justify-center flex-1 gap-2 py-3 font-bold text-gray-50  transition-colors border-2 ${
-                            data.items.length === 0 || !data.client.rut || processing
-                            ? "bg-gray-400 border-gray-400 cursor-not-allowed opacity-50"
-                            : `${docStyles.bg_cover} hover:${docStyles.bg} hover:${docStyles.border} hover:${docStyles.text}`
-                        }`}
-                      >
-                        <FileCheck className="w-5 h-5" /> Emitir{" "}
-                        {selectedDte?.name}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setActiveTab("list");
-                          setData({
-                            dte_type: "",
-                            issue_date: new Date().toISOString().split("T")[0],
-                            expiration_date: "",
-                            client: {
-                              rut: "",
-                              razonSocial: "",
-                              giro: "",
-                              direccion: "",
-                              comuna: "",
-                              ciudad: "Santiago",
-                            },
-                            items: [],
-                            observations: "",
-                            payment_method: "Efectivo",
-                            reference_doc: "",
-                            reason: "",
-                          });
-                        }}
-                        className="px-6 py-3 font-bold text-gray-700 transition-colors bg-gray-200 rounded-lg hover:bg-gray-300"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </>
+                  </div>
                 ) : (
-                  <div>
-                    <div
-                      className={`mb-6 p-4 border-l-4 rounded-xl ${
-                        docStyles.bg || "bg-gray-50"
-                      } ${docStyles.border || "border-gray-200"}`}
-                    >
-                      <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                        Seleccione el tipo de documento
+                  <div className="bg-white border-2 border-dashed border-gray-100 rounded-[3rem] p-32 text-center flex flex-col items-center justify-center space-y-6">
+                    <div className="w-24 h-24 bg-gray-50 rounded-[2rem] flex items-center justify-center text-gray-200 transform rotate-12 group-hover:rotate-0 transition-transform">
+                      <FileText className="w-12 h-12" />
+                    </div>
+                    <div>
+                      <h3 className="mb-2 text-2xl font-black tracking-tight text-gray-900 uppercase">
+                        Generador de Documentos
                       </h3>
+                      <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em] opacity-60">
+                        Seleccione un tipo de DTE para comenzar la emisión
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
-            </>
-          )}
+            )}
+          </div>
 
-          {/* Estadísticas */}
-          {activeTab === "stats" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Por Tipo de Documento */}
-                <div className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
-                  <h3 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
-                    <FileText className="w-5 h-5 text-blue-600" /> Documentos
-                    por Tipo
-                  </h3>
-                  <div className="space-y-3">
-                    {DTES_TYPES.map((type) => {
-                      const count = invoices.filter(
-                        (d) => d.type === type.id
-                      ).length;
-                      const total = invoices
-                        .filter((d) => d.type === type.id)
-                        .reduce((sum, d) => sum + d.total, 0);
-                      if (count === 0) return null;
-                      const style = DTES_TYPES[type.id] || {
-                        text: "text-gray-600",
-                      };
-                      const Icon = type.icon;
-                      return (
-                        <div
-                          key={type.id}
-                          className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon className={`w-5 h-5 ${style.text}`} />
-                            <span className="font-medium text-gray-900">
-                              {type.name}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-gray-900">
-                              {count} docs
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              ${total.toLocaleString("es-CL")}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Por Estado */}
-                <div className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
-                  <h3 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
-                    <CheckCircle className="w-5 h-5 text-green-600" />{" "}
-                    Documentos por Estado
-                  </h3>
-                  <div className="space-y-3">
-                    {["Emitido", "Aceptado", "Rechazado", "Anulado"].map(
-                      (status) => {
-                        const count = invoices.filter(
-                          (d) => d.status === status
-                        ).length;
-                        const total = documents
-                          .filter((d) => d.status === status)
-                          .reduce((sum, d) => sum + d.total, 0);
-                        if (count === 0) return null;
-                        const dot =
-                          status === "Aceptado"
-                            ? "bg-green-500"
-                            : status === "Emitido"
-                            ? "bg-blue-500"
-                            : status === "Rechazado"
-                            ? "bg-red-500"
-                            : "bg-gray-500";
-                        return (
-                          <div
-                            key={status}
-                            className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-3 h-3 rounded-full ${dot}`}
-                              ></div>
-                              <span className="font-medium text-gray-900">
-                                {status}
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-gray-900">
-                                {count} docs
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                ${total.toLocaleString("es-CL")}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      }
-                    )}
-                  </div>
-                </div>
-
-                {/* Resumen Mensual */}
-                <div className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
-                  <h3 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
-                    <Calendar className="w-5 h-5 text-purple-600" /> Resumen del
-                    Mes
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="p-4 border border-blue-100 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100">
-                      <p className="mb-1 text-sm text-blue-700">
-                        Total Documentos
-                      </p>
-                      <p className="text-3xl font-bold text-blue-900">
-                        {documents.length}
-                      </p>
-                    </div>
-                    <div className="p-4 border border-green-100 rounded-lg bg-gradient-to-r from-green-50 to-green-100">
-                      <p className="mb-1 text-sm text-green-700">
-                        Facturación Total
-                      </p>
-                      <p className="text-3xl font-bold text-green-900">
-                        ${totalMonto.toLocaleString("es-CL")}
-                      </p>
-                    </div>
-                    <div className="p-4 border border-purple-100 rounded-lg bg-gradient-to-r from-purple-50 to-purple-100">
-                      <p className="mb-1 text-sm text-purple-700">IVA Total</p>
-                      <p className="text-3xl font-bold text-purple-900">
-                        $
-                        {documents
-                          .reduce((sum, d) => sum + d.iva, 0)
-                          .toLocaleString("es-CL")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Clientes Frecuentes */}
-                <div className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
-                  <h3 className="flex items-center gap-2 mb-4 text-xl font-bold text-gray-900">
-                    <Users className="w-5 h-5 text-orange-600" /> Top Clientes
-                  </h3>
-                  <div className="space-y-3">
-                    {Object.values(
-                      documents.reduce((acc, doc) => {
-                        const key =
-                          doc.client?.rut || doc.patient?.rut || "unknown";
-                        if (!acc[key])
-                          acc[key] = {
-                            rut: key,
-                            name:
-                              doc.client?.razonSocial ||
-                              doc.patient?.name ||
-                              "Cliente",
-                            count: 0,
-                            total: 0,
-                          };
-                        acc[key].count++;
-                        acc[key].total += doc.total;
-                        return acc;
-                      }, {})
-                    )
-                      .sort((a, b) => b.total - a.total)
-                      .slice(0, 5)
-                      .map((client) => (
-                        <div
-                          key={client.rut}
-                          className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-                        >
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {client.name}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              {client.rut}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-gray-900">
-                              {client.count} docs
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              ${client.total.toLocaleString("es-CL")}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Modal Detalle Documento */}
-        {selectedDocument && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200">
-              <div className="p-6 text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl">
-                <div className="flex items-start justify-between">
+          {/* DETALLE DOCUMENTO MODAL */}
+          <Modal
+            open={!!selectedDocument}
+            onClose={() => setSelectedDocument(null)}
+            title="Visor de Documento Fiscal"
+            maxWidth="4xl"
+          >
+            {selectedDocument && (
+              <div className="flex flex-col">
+                <div
+                  className={`p-8 text-white flex justify-between items-center ${
+                    getDtesConfigByCode(selectedDocument.dte_type).styles
+                      ?.bg_cover || "bg-brand-primary"
+                  }`}
+                >
                   <div>
-                    <h2 className="mb-2 text-2xl font-bold">
-                      {selectedDocument.typeName}
-                    </h2>
-                    <p className="text-blue-100">
-                      Folio: {selectedDocument.folio}
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
+                      Estatus SII
                     </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedDocument(null)}
-                    className="text-white hover:text-blue-100"
-                  >
-                    <XCircle className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                {/* Info del Documento */}
-                <div className="grid grid-cols-2 gap-4 pb-6 mb-6 border-b border-gray-200">
-                  <div>
-                    <p className="text-sm text-gray-600">Fecha Emisión</p>
-                    <p className="font-semibold">
-                      {new Date(selectedDocument.date).toLocaleDateString(
-                        "es-CL"
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Estado</p>
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                        DTES_STATUSES[selectedDocument.status] ||
-                        "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {selectedDocument.status}
+                    <span className="px-3 py-1 text-xs font-black tracking-widest uppercase rounded-lg bg-white/20">
+                      {selectedDocument.dte_status}
                     </span>
                   </div>
-                  {selectedDocument.expirationDate && (
-                    <div>
-                      <p className="text-sm text-gray-600">Fecha Vencimiento</p>
-                      <p className="font-semibold">
-                        {new Date(
-                          selectedDocument.expirationDate
-                        ).toLocaleDateString("es-CL")}
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
+                      Folio Oficial
+                    </p>
+                    <p className="font-mono text-2xl font-black">
+                      {selectedDocument.dte_folio || "S/N"}
+                    </p>
+                  </div>
+                </div>
+                <div className="p-10 space-y-10">
+                  <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+                    <div className="space-y-1">
+                      <p className="enterprise-label opacity-60">Emisión</p>
+                      <p className="font-black text-gray-900">
+                        {fmtDate(selectedDocument.issue_date)}
                       </p>
                     </div>
-                  )}
-                  <div>
-                    <p className="text-sm text-gray-600">Forma de Pago</p>
-                    <p className="font-semibold">
-                      {selectedDocument.metadata?.payment_method || selectedDocument.paymentMethod || 'Efectivo'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Detalles Específicos del Pago (Si aplica) */}
-                {selectedDocument.metadata?.transaction_number && (
-                    <div className="mb-6 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                        <h4 className="text-xs font-bold text-blue-800 uppercase mb-2">Detalle de Transacción</h4>
-                        <div className="flex gap-6">
-                            <div>
-                                <p className="text-xs text-blue-600">N° Operación/Comprobante</p>
-                                <p className="text-sm font-mono font-medium text-blue-900">{selectedDocument.metadata.transaction_number}</p>
-                            </div>
-                            {selectedDocument.metadata.transaction_date && (
-                                <div>
-                                    <p className="text-xs text-blue-600">Fecha Transacción</p>
-                                    <p className="text-sm font-medium text-blue-900">{new Date(selectedDocument.metadata.transaction_date).toLocaleDateString('es-CL')}</p>
-                                </div>
-                            )}
-                        </div>
+                    <div className="space-y-1">
+                      <p className="enterprise-label opacity-60">Tipo</p>
+                      <p className="text-xs font-black uppercase text-brand-primary">
+                        {selectedDocument.type_name}
+                      </p>
                     </div>
-                )}
-
-                {/* Datos del Cliente */}
-                <div className="pb-6 mb-6 border-b border-gray-200">
-                  <h3 className="mb-3 font-bold text-gray-900">
-                    Datos del Cliente
-                  </h3>
-                  <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-                    <p className="font-semibold text-gray-900">
-                      {selectedDocument.client.razonSocial}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      RUT: {selectedDocument.client.rut}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Giro: {selectedDocument.client.giro}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {selectedDocument.client.direccion}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {selectedDocument.client.comuna},{" "}
-                      {selectedDocument.client.ciudad}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Detalle Items */}
-                <div className="pb-6 mb-6 border-b border-gray-200">
-                  <h3 className="mb-3 font-bold text-gray-900">Detalle</h3>
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 py-2 text-xs font-bold text-left text-gray-600">
-                          Descripción
-                        </th>
-                        <th className="px-3 py-2 text-xs font-bold text-center text-gray-600">
-                          Cant.
-                        </th>
-                        <th className="px-3 py-2 text-xs font-bold text-right text-gray-600">
-                          P. Unit.
-                        </th>
-                        <th className="px-3 py-2 text-xs font-bold text-right text-gray-600">
-                          Total
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {selectedDocument.items.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="px-3 py-2 text-sm">
-                            {item.description}
-                          </td>
-                          <td className="px-3 py-2 text-sm text-center">
-                            {item.quantity}
-                          </td>
-                          <td className="px-3 py-2 text-sm text-right">
-                            ${item.unitPrice.toLocaleString("es-CL")}
-                          </td>
-                          <td className="px-3 py-2 text-sm font-semibold text-right">
-                            $
-                            {(
-                              (Number(item.quantity) || 0) *
-                                (Number(item.unitPrice) || 0) -
-                              (Number(item.quantity) || 0) *
-                                (Number(item.unitPrice) || 0) *
-                                ((Number(item.discount_clp) || 0) / 100)
-                            ).toLocaleString("es-CL")}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Totales */}
-                <div className="p-4 mb-6 border border-gray-200 rounded-lg bg-gray-50">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-700">subtotal_clp:</span>
-                      <span className="font-semibold">
-                        ${selectedDocument.subtotal_clp.toLocaleString("es-CL")}
-                      </span>
+                    <div className="space-y-1">
+                      <p className="enterprise-label opacity-60">Pago</p>
+                      <p className="text-xs font-black text-gray-900 uppercase">
+                        {selectedDocument.metadata?.payment_method || "---"}
+                      </p>
                     </div>
-                    {selectedDocument.iva > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">IVA (19%):</span>
-                        <span className="font-semibold">
-                          ${selectedDocument.iva.toLocaleString("es-CL")}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between pt-2 text-xl font-bold text-gray-900 border-t-2 border-gray-200">
-                      <span>Total:</span>
-                      <span>
-                        ${selectedDocument.total.toLocaleString("es-CL")}
-                      </span>
+                    <div className="space-y-1">
+                      <p className="enterprise-label opacity-60">
+                        Total Recaudado
+                      </p>
+                      <p className="font-mono text-xl font-black text-brand-primary">
+                        $
+                        {(
+                          selectedDocument.amount_total_clp || 0
+                        ).toLocaleString("es-CL")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-8 bg-gray-50 border border-gray-100 rounded-[2rem] grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <p className="mb-2 enterprise-label opacity-40">
+                        Receptor
+                      </p>
+                      <p className="font-black text-gray-800 uppercase">
+                        {selectedDocument.patient?.full_name || "Particular"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="mb-2 enterprise-label opacity-40">RUT</p>
+                      <p className="font-mono font-black text-brand-gray">
+                        {selectedDocument.patient?.rut || "---"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="enterprise-label !text-brand-primary">
+                      Detalle de Cobro
+                    </p>
+                    <div className="overflow-hidden border border-gray-100 shadow-sm rounded-3xl">
+                      <table className="w-full text-sm">
+                        <thead className="border-b border-gray-100 bg-gray-50">
+                          <tr className="enterprise-label text-[9px]">
+                            <th className="px-6 py-4 text-left">Descripción</th>
+                            <th className="w-20 px-4 py-4 text-center">Cant</th>
+                            <th className="w-32 px-4 py-4 text-right">
+                              Precio
+                            </th>
+                            <th className="w-32 px-6 py-4 text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {(selectedDocument.items || []).map((item, idx) => (
+                            <tr
+                              key={idx}
+                              className="transition-colors hover:bg-gray-50"
+                            >
+                              <td className="px-6 py-4 text-xs font-bold text-gray-700 uppercase">
+                                {item.description}
+                              </td>
+                              <td className="px-4 py-4 font-black text-center">
+                                {item.quantity}
+                              </td>
+                              <td className="px-4 py-4 font-mono text-right text-gray-500">
+                                $
+                                {(item.unit_price_clp || 0).toLocaleString(
+                                  "es-CL"
+                                )}
+                              </td>
+                              <td className="px-6 py-4 font-mono font-black text-right text-brand-primary">
+                                $
+                                {(item.total_gross_clp || 0).toLocaleString(
+                                  "es-CL"
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
-
-                {/* Referencia */}
-                {selectedDocument.referenceDoc && (
-                  <div className="p-4 mb-6 border-2 border-yellow-200 rounded-lg bg-yellow-50">
-                    <p className="mb-1 text-sm text-gray-600">
-                      Documento Referenciado
-                    </p>
-                    <p className="font-semibold text-gray-900">
-                      {selectedDocument.referenceDoc}
-                    </p>
-                    {selectedDocument.reason && (
-                      <>
-                        <p className="mt-2 mb-1 text-sm text-gray-600">
-                          Motivo
-                        </p>
-                        <p className="text-sm text-gray-900">
-                          {selectedDocument.reason}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Timbre Electrónico */}
-                <div className="p-4 mb-6 border-2 border-blue-200 rounded-lg bg-blue-50">
-                  <p className="mb-2 text-sm font-semibold text-blue-600">
-                    Timbre Electrónico Digital (TED)
-                  </p>
-                  <p className="font-mono text-xs text-gray-600 break-all">
-                    {selectedDocument.ted}
-                  </p>
-                </div>
-
-                {/* Acciones */}
-                <div className="flex gap-2">
-                  <button className="flex items-center justify-center flex-1 gap-2 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                    <Download className="w-4 h-4" /> Descargar PDF
-                  </button>
-                  <button className="flex items-center justify-center flex-1 gap-2 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700">
+                <div className="flex justify-end gap-4 p-10 border-t border-gray-100 bg-gray-50/50">
+                  <SecondaryButton
+                    onClick={() =>
+                      window.open(
+                        route("invoices.pdf", selectedDocument.id),
+                        "_blank"
+                      )
+                    }
+                    className="!px-8 !py-4 flex items-center gap-2"
+                  >
                     <Printer className="w-4 h-4" /> Imprimir
-                  </button>
-                  <button className="flex items-center justify-center flex-1 gap-2 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700">
-                    <Send className="w-4 h-4" /> Enviar Email
-                  </button>
+                  </SecondaryButton>
+                  <PrimaryButton
+                    onClick={() => setSelectedDocument(null)}
+                    className="!px-10 !py-4 shadow-xl shadow-brand-primary/20"
+                  >
+                    Cerrar Visor
+                  </PrimaryButton>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
+          </Modal>
+
+          <CafUploadModal
+            isOpen={isCafModalOpen}
+            onClose={() => setIsCafModalOpen(false)}
+            company={company}
+          />
+          <DteConfigModal
+            isOpen={isConfigModalOpen}
+            onClose={() => setIsConfigModalOpen(false)}
+            company={company}
+            dteConfig={dte_config}
+          />
+        </div>
       </div>
     </AuthenticatedLayout>
   );

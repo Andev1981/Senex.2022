@@ -1,4 +1,5 @@
 import { fmtCLP, fmtDate } from "@/utils/utils";
+import { RefreshCw } from "lucide-react";
 
 export default function DteModal({
   sessionData,

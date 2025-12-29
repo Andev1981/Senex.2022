@@ -72,7 +72,36 @@ class CompanyController extends Controller
 
     public function update(Request $request, Company $company)
     {
-        // Actualización básica de datos de empresa...
-        // (Implementar similar al store)
+        $this->authorize('update', $company);
+
+        $data = $request->validate([
+            'rut' => 'required|string|unique:companies,rut,' . $company->id,
+            'business_name' => 'required|string',
+            'giro' => 'nullable|string',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string',
+            'logo' => 'nullable|image|max:2048'
+        ]);
+
+        $company->update($data);
+
+        // Guardar Logo Polimórfico si viene nuevo
+        if ($request->hasFile('logo')) {
+            // Opcional: Borrar anterior si existe
+            if ($company->logo) {
+                Storage::delete($company->logo->path);
+            }
+
+            $path = $request->file('logo')->store('logos', 'public');
+            $company->logo()->updateOrCreate(
+                ['type' => 'logo'],
+                [
+                    'path' => $path,
+                    'url' => Storage::url($path),
+                ]
+            );
+        }
+
+        return back()->with('success', 'Datos corporativos actualizados correctamente.');
     }
 }

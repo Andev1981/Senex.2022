@@ -79,6 +79,8 @@ class AppServiceProvider extends ServiceProvider
             'Patient' => Patient::class,
             'Doctor' => Doctor::class,
             'User' => User::class,
+            'Invoice' => \App\Models\Invoice::class,
+            'Dte' => \App\Models\Dte::class,
         ]);
     }
 }

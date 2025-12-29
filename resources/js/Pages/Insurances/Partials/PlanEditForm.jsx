@@ -1,73 +1,65 @@
 import React, { useEffect, useState } from "react";
-import { Head, useForm, router } from "@inertiajs/react";
-import { Plus, Save, Trash2, Info, ListCheck } from "lucide-react";
-import { v4 as uuidv4 } from "uuid"; // Para IDs temporales en el frontend
+import { useForm } from "@inertiajs/react";
+import { 
+  Plus, 
+  Save, 
+  Trash2, 
+  Info, 
+  ListCheck, 
+  ShieldCheck, 
+  DollarSign, 
+  Calendar, 
+  Layout,
+  Briefcase,
+  Users,
+  CheckCircle2,
+  Database,
+  Hash
+} from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SecondaryButton from "@/Components/SecondaryButton";
+import Switch from "@/Components/Switch";
+import TextInput from "@/Components/TextInput";
+import InputPesoChileno from "@/Components/InputPesoChileno";
 
 export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
   const isEdit = !!plan;
-  const [filteredSessionTypes, setFilteredSessionTypes] =
-    useState(sessionTypes);
+  const [filteredSessionTypes, setFilteredSessionTypes] = useState(sessionTypes);
 
-  const { data, setData, post, put, processing, errors, clearErrors } = useForm(
-    {
-      // Identificadores y Tipo
-      name: plan?.name || "",
-      code: plan?.code || "",
-      type: plan?.type || "external", // internal o external
-      insurance_id: plan?.insurance_id || editingInsurance?.id,
+  const { data, setData, post, put, processing, errors, clearErrors, reset } = useForm({
+    name: plan?.name || "",
+    code: plan?.code || "",
+    type: plan?.type || "external",
+    insurance_id: plan?.insurance_id || editingInsurance?.id,
+    billing_type: plan?.billing_type || "prepaid",
+    insurance_policy_type: plan?.insurance_policy_type || "complementary",
+    price: plan?.price || 0,
+    initial_fee: plan?.initial_fee || 0,
+    valid_months: plan?.valid_months || 0,
+    start_date: plan?.start_date || "",
+    end_date: plan?.end_date || "",
+    is_family: !!plan?.is_family,
+    is_active: plan ? !!plan.is_active : true,
+    description: plan?.description || "",
+    coverage_percentage: plan?.coverage_percentage || 100,
+    content: plan?.session_types?.map((st) => ({
+      id: uuidv4(),
+      session_type_id: st.id.toString(),
+      max_sessions: st.pivot.max_sessions,
+      coverage_percentage: st.pivot.coverage_percentage || 100,
+    })) || [],
+  });
 
-      // Reglas de Negocio
-      billing_type: plan?.billing_type || "prepaid",
-      insurance_policy_type: plan?.insurance_policy_type || "complementary",
+  const [showInitialFeeInput, setShowInitialFeeInput] = useState(data.initial_fee > 0);
 
-      // Precios y Matrícula
-      price: plan?.price || 0,
-      initial_fee: plan?.initial_fee || 0,
-
-      // Vigencia y Atributos
-      valid_months: plan?.valid_months || 0,
-      start_date: plan?.start_date || "",
-      end_date: plan?.end_date || "",
-      is_family: plan?.is_family || false,
-      is_active: plan?.is_active ?? 1,
-      description: plan?.description || "",
-      coverage_percentage: plan?.coverage_percentage || 100,
-
-      // Contenido del Plan (Pivot)
-      content:
-        plan?.session_types?.map((st) => ({
-          id: uuidv4(),
-          session_type_id: st.id.toString(),
-          max_sessions: st.pivot.max_sessions,
-          coverage_percentage: st.pivot.coverage_percentage || 100,
-        })) || [],
-    }
-  );
-
-  const [showInitialFeeInput, setShowInitialFeeInput] = useState(
-    data.initial_fee > 0
-  );
-  // Filtrado para evitar servicios duplicados
   useEffect(() => {
-    const selectedIds = data.content
-      .map((item) => item.session_type_id)
-      .filter((id) => id !== "");
-    const newFilteredList = sessionTypes.filter(
-      (s) => !selectedIds.includes(s.id.toString())
-    );
-    setFilteredSessionTypes(newFilteredList);
+    const selectedIds = data.content.map(item => item.session_type_id).filter(id => id !== "");
+    setFilteredSessionTypes(sessionTypes.filter(s => !selectedIds.includes(s.id.toString())));
   }, [data.content, sessionTypes]);
 
   const addContentItem = () => {
-    setData("content", [
-      ...data.content,
-      {
-        id: uuidv4(),
-        session_type_id: "",
-        max_sessions: 1,
-        coverage_percentage: 100,
-      },
-    ]);
+    setData("content", [...data.content, { id: uuidv4(), session_type_id: "", max_sessions: 1, coverage_percentage: 100 }]);
     clearErrors("content");
   };
 
@@ -77,396 +69,243 @@ export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
     setData("content", newContent);
   };
 
-  const removeContentItem = (id) => {
-    setData(
-      "content",
-      data.content.filter((item) => item.id !== id)
-    );
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (
-      data.type === "internal" &&
-      data.billing_type === "prepaid" &&
-      data.content.length === 0
-    ) {
-      alert("Un Plan Prepago debe incluir al menos un servicio.");
-      return;
-    }
     const method = isEdit ? put : post;
-    method(
-      route(
-        isEdit ? "plans.update" : "plans.store",
-        isEdit ? plan.id : undefined
-      )
-    );
+    method(route(isEdit ? "plans.update" : "plans.store", isEdit ? plan.id : undefined));
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow mb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-            <ListCheck className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {editingInsurance && "Planes: " + editingInsurance?.name}
-            </h1>
-            <p className="text-sm text-gray-600">Gestión de planes</p>
-          </div>
-        </div>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="px-6 py-4 space-y-6 bg-white border border-gray-100 rounded-lg shadow-sm"
-      >
-        {/* SECCIÓN 1: DEFINICIÓN ESTRATÉGICA */}
-        <div className="grid grid-cols-2 gap-6 p-4 bg-gray-100 rounded-xl">
-          <label className="block">
-            <span className="text-sm font-bold text-gray-700">
-              Tipo de Plan
-            </span>
-            <select
-              value={data.type}
-              onChange={(e) => setData("type", e.target.value)}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="external">Externo (Aseguradora/Fonasa)</option>
-              <option value="internal">Interno (Producto de la Clínica)</option>
-            </select>
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-bold text-gray-700">
-              Modelo de Cobro
-            </span>
-            <select
-              value={data.billing_type}
-              onChange={(e) => setData("billing_type", e.target.value)}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="prepaid">Prepago (Se paga pack al inicio)</option>
-              <option value="membership">Membresía (Cuota + Descuento)</option>
-              <option value="postpaid">Convenio (Pago por Empresa)</option>
-            </select>
-          </label>
-        </div>
-
-        {/* SECCIÓN 2: INTEGRACIÓN CON SEGUROS */}
-        <div className="grid grid-cols-2 gap-6 p-4 bg-gray-100 rounded-xl">
-          <label className="block">
-            <span className="flex items-center text-sm font-medium text-gray-700">
-              Relación con Seguros Primarios{" "}
-              <Info className="w-3 h-3 ml-1 text-gray-400" />
-            </span>
-            <select
-              value={data.insurance_policy_type}
-              onChange={(e) => setData("insurance_policy_type", e.target.value)}
-              className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-            >
-              <option value="complementary">
-                Complementario (Cubre Copago Fonasa)
-              </option>
-              <option value="standalone">
-                Precio Fijo (Independiente del Seguro)
-              </option>
-            </select>
-          </label>
-
-          <div className="flex items-center pt-6 space-x-3">
-            <input
-              type="checkbox"
-              id="is_family"
-              checked={data.is_family}
-              onChange={(e) => setData("is_family", e.target.checked)}
-              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-            />
-            <label
-              htmlFor="is_family"
-              className="text-sm font-medium text-gray-700"
-            >
-              ¿Es un Plan Familiar / Multiusuario?
-            </label>
-          </div>
-        </div>
-
-        {/* SECCIÓN 3: PRECIOS Y MATRÍCULA (SÓLO INTERNOS) */}
-        {data.type === "internal" && (
-          <div className="grid grid-cols-3 gap-4 p-4 border border-indigo-100 rounded-md bg-indigo-50">
-            <label className="block">
-              <span className="text-xs font-bold text-indigo-800 uppercase">
-                Precio del Plan (CLP)
-              </span>
-              <input
-                type="number"
-                value={data.price}
-                onChange={(e) => setData("price", e.target.value)}
-                className="block w-full mt-1 border-indigo-200 rounded-md shadow-sm focus:ring-indigo-500"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-xs font-bold text-indigo-800 uppercase">
-                Vigencia (Meses)
-              </span>
-              <input
-                type="number"
-                value={data.valid_months}
-                onChange={(e) => setData("valid_months", e.target.value)}
-                className="block w-full mt-1 border-indigo-200 rounded-md shadow-sm focus:ring-indigo-500"
-              />
-            </label>
-
-            <div className="space-y-1">
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={showInitialFeeInput}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setShowInitialFeeInput(checked);
-                      if (!checked) setData("initial_fee", 0); // Si desmarca, reseteamos a 0
-                    }}
-                    className="mr-2 border-gray-300 rounded"
-                  />
-                  ¿Aplica cobro de incorporación/matrícula?
-                </label>
-
-                {showInitialFeeInput && (
-                  <input
-                    type="number"
-                    placeholder="Monto $"
-                    value={data.initial_fee}
-                    onChange={(e) => setData("initial_fee", e.target.value)}
-                    className="w-32 text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SECCIÓN 4: CONTENIDO DEL PAQUETE */}
-        {data.type === "internal" && data.billing_type === "prepaid" && (
-          <div className="p-4 pt-4 space-y-4 bg-purple-100 border-t rounded-xl">
-            <div className="flex items-center justify-between">
-              <h3 className="flex items-center text-sm font-bold text-gray-800">
-                Servicios Incluidos en el Pack
-              </h3>
-              <button
-                type="button"
-                onClick={addContentItem}
-                className="flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-800"
-              >
-                <Plus className="w-4 h-4 mr-1" /> AGREGAR PRESTACIÓN
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {data.content.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="grid items-end grid-cols-12 gap-3 p-3 bg-white border border-gray-200 rounded-md"
-                >
-                  <div className="col-span-6">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase">
-                      Servicio
-                    </span>
-                    <select
-                      value={item.session_type_id}
-                      onChange={(e) =>
-                        updateContentItem(
-                          index,
-                          "session_type_id",
-                          e.target.value
-                        )
-                      }
-                      className="block w-full mt-1 text-sm border-gray-300 rounded-md"
-                    >
-                      <option value="">Seleccione...</option>
-                      {filteredSessionTypes.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))}
-                      {/* Opción seleccionada por si ya no está en la lista filtrada */}
-                      {item.session_type_id &&
-                        !filteredSessionTypes.find(
-                          (s) => s.id.toString() === item.session_type_id
-                        ) && (
-                          <option value={item.session_type_id}>
-                            {
-                              sessionTypes.find(
-                                (s) => s.id.toString() === item.session_type_id
-                              )?.name
-                            }
-                          </option>
-                        )}
-                    </select>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase text-center block">
-                      Cant.
-                    </span>
-                    <input
-                      type="number"
-                      value={item.max_sessions}
-                      onChange={(e) =>
-                        updateContentItem(index, "max_sessions", e.target.value)
-                      }
-                      className="block w-full mt-1 text-sm text-center border-gray-300 rounded-md"
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase text-center block">
-                      Cobertura (%)
-                    </span>
-                    <input
-                      type="number"
-                      value={item.coverage_percentage}
-                      onChange={(e) =>
-                        updateContentItem(
-                          index,
-                          "coverage_percentage",
-                          e.target.value
-                        )
-                      }
-                      className="block w-full mt-1 text-sm text-center border-gray-300 rounded-md"
-                    />
-                  </div>
-                  <div className="col-span-1 text-center">
-                    <button
-                      type="button"
-                      onClick={() => removeContentItem(item.id)}
-                      className="text-red-400 transition-colors hover:text-red-600"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+    <div className="flex flex-col h-full bg-white">
+      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        {/* HEADER HERO */}
+        <div className="flex items-center justify-between gap-6 p-8 border-b border-gray-100 bg-gray-50/50 shrink-0">
+            <div className="flex items-center gap-4">
+                <div className="p-3 text-white transform shadow-xl bg-brand-primary rounded-2xl shadow-brand-primary/20 rotate-3">
+                    <ListCheck className="w-6 h-6" />
                 </div>
-              ))}
+                <div>
+                    <h2 className="mb-1 text-xl font-black leading-none tracking-tight text-gray-900 uppercase">
+                        {isEdit ? 'Editar Estructura de Plan' : 'Nuevo Plan de Previsión'}
+                    </h2>
+                    <p className="text-[9px] font-black text-brand-gray uppercase tracking-[0.2em]">
+                        Convenio: <span className="text-brand-primary">{editingInsurance?.name}</span>
+                    </p>
+                </div>
+            </div>
+            {isEdit && (
+                <div className={`px-3 py-1 rounded-lg border flex items-center gap-2 ${data.is_active ? 'bg-green-50 border-green-100 text-green-600' : 'bg-red-50 border-red-100 text-red-600'}`}>
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span className="text-[8px] font-black uppercase tracking-widest">{data.is_active ? 'Vigente' : 'Inactivo'}</span>
+                </div>
+            )}
+        </div>
+
+        {/* CONTENIDO SCROLLABLE */}
+        <div className="flex-1 p-8 space-y-10 overflow-y-auto custom-scrollbar">
+          
+          {/* SECCIÓN 1: DEFINICIÓN ESTRATÉGICA */}
+          <div className="space-y-6">
+            <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+                <Briefcase className="w-3.5 h-3.5" /> Arquitectura del Plan
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50/50 border border-gray-100 rounded-[2rem]">
+                <div className="space-y-1">
+                    <label className="ml-1 enterprise-label opacity-60">Origen del Plan</label>
+                    <select
+                        value={data.type}
+                        onChange={(e) => setData("type", e.target.value)}
+                        className="w-full px-4 py-3 text-xs font-bold transition-all bg-white border-gray-100 shadow-sm rounded-xl focus:ring-brand-primary"
+                    >
+                        <option value="external">Externo (Isapre / Fonasa)</option>
+                        <option value="internal">Interno (Clínica / Pack)</option>
+                    </select>
+                </div>
+                <div className="space-y-1">
+                    <label className="ml-1 enterprise-label opacity-60">Modelo de Facturación</label>
+                    <select
+                        value={data.billing_type}
+                        onChange={(e) => setData("billing_type", e.target.value)}
+                        className="w-full px-4 py-3 text-xs font-bold transition-all bg-white border-gray-100 shadow-sm rounded-xl focus:ring-brand-primary"
+                    >
+                        <option value="prepaid">Prepago (Pago anticipado)</option>
+                        <option value="membership">Membresía (Cuota mensual)</option>
+                        <option value="postpaid">Convenio Directo (Empresa)</option>
+                    </select>
+                </div>
             </div>
           </div>
-        )}
 
-        {/* SECCIÓN 5: INFORMACIÓN TÉCNICA (NOMBRE, CÓDIGO, DESCRIPCIÓN) */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-          <div className="col-span-2 space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">
-                Nombre Público del Plan
-              </span>
-              <input
-                type="text"
-                value={data.name}
-                onChange={(e) => setData("name", e.target.value)}
-                className="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500"
-                required
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">
-                Descripción / Notas Internas
-              </span>
-              <textarea
-                rows="2"
-                value={data.description}
-                onChange={(e) => setData("description", e.target.value)}
-                className="block w-full mt-1 text-sm border-gray-300 rounded-md shadow-sm"
-                placeholder="Ej: Solo aplicable para pacientes Fonasa B y C..."
-              ></textarea>
-            </label>
-          </div>
-          <div className="col-span-1 space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">
-                Código Interno
-              </span>
-              <input
-                type="text"
-                value={data.code}
-                onChange={(e) => setData("code", e.target.value)}
-                className="block w-full mt-1 border-gray-300 rounded-md shadow-sm"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">Estado</span>
-              <select
-                value={data.is_active}
-                onChange={(e) => setData("is_active", e.target.value)}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm font-bold ${
-                  data.is_active ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                <option value={1}>ACTIVO</option>
-                <option value={0}>INACTIVO</option>
-              </select>
-            </label>
-          </div>
-        </div>
+          {/* SECCIÓN 2: INTEGRACIÓN & FAMILIA */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="p-6 bg-white border border-gray-100 rounded-[1.5rem] shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="p-2 bg-brand-secondary/10 text-brand-primary rounded-xl">
+                        <ShieldCheck className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="mb-1 text-xs font-black leading-none tracking-tight text-gray-900 uppercase">Política de Seguro</p>
+                        <select
+                            value={data.insurance_policy_type}
+                            onChange={(e) => setData("insurance_policy_type", e.target.value)}
+                            className="text-[10px] font-black text-brand-primary bg-transparent border-none p-0 focus:ring-0 uppercase cursor-pointer"
+                        >
+                            <option value="complementary">Complementario</option>
+                            <option value="standalone">Independiente</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-        {/* SECCIÓN 6: VENTANA DE DISPONIBILIDAD (OFERTA TEMPORAL) */}
-        <div className="p-4 border rounded-md bg-amber-50 border-amber-100">
-          <div className="flex items-center mb-3">
-            <h3 className="flex items-center text-sm font-bold uppercase text-amber-800">
-              Vigencia de la Oferta / Disponibilidad en Catálogo
+            <div className="p-6 bg-white border border-gray-100 rounded-[1.5rem] shadow-sm flex items-center justify-between group cursor-pointer hover:border-brand-primary/30 transition-all">
+                <div className="flex items-center gap-4">
+                    <div className="p-2 text-purple-600 bg-purple-50 rounded-xl">
+                        <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="mb-1 text-xs font-black leading-none tracking-tight text-gray-900 uppercase">Grupo Familiar</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase">¿Permitir múltiples usuarios?</p>
+                    </div>
+                </div>
+                <Switch checked={data.is_family} onChange={e => setData("is_family", e.target.checked)} />
+            </div>
+          </div>
+
+          {/* SECCIÓN 3: PARÁMETROS ECONÓMICOS (SÓLO INTERNOS) */}
+          {data.type === "internal" && (
+            <div className="p-8 bg-brand-primary/5 border border-brand-primary/10 rounded-[2.5rem] space-y-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-3xl"></div>
+                <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 relative z-10">
+                    <DollarSign className="w-3.5 h-3.5" /> Configuración de Precios
+                </h3>
+                <div className="relative z-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div className="space-y-1">
+                        <label className="enterprise-label !text-[8px] ml-1">Valor del Pack (CLP)</label>
+                        <InputPesoChileno price={data.price} onChange={e => setData("price", e.target.value)} className="!rounded-xl !py-3 !px-4 font-black text-sm bg-white" />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="enterprise-label !text-[8px] ml-1">Vigencia (Meses)</label>
+                        <input type="number" value={data.valid_months} onChange={e => setData("valid_months", e.target.value)} className="w-full px-4 py-3 text-sm font-black bg-white border-gray-100 rounded-xl focus:ring-brand-primary" />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="enterprise-label !text-[8px] ml-1">Matrícula / Inicio</label>
+                        <div className="flex items-center gap-3">
+                            <Switch checked={showInitialFeeInput} onChange={e => { setShowInitialFeeInput(e.target.checked); if (!e.target.checked) setData("initial_fee", 0); }} />
+                            {showInitialFeeInput && (
+                                <InputPesoChileno price={data.initial_fee} onChange={e => setData("initial_fee", e.target.value)} className="!rounded-xl !py-2 !px-3 font-bold text-xs bg-white border-brand-primary/20" />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+          )}
+
+          {/* SECCIÓN 4: CONTENIDO DEL PAQUETE */}
+          {data.type === "internal" && data.billing_type === "prepaid" && (
+            <div className="space-y-6">
+                <div className="flex items-center justify-between ml-1">
+                    <h3 className="enterprise-label !text-brand-primary !mb-0 flex items-center gap-2">
+                        <Database className="w-3.5 h-3.5" /> Servicios Incluidos
+                    </h3>
+                    <button type="button" onClick={addContentItem} className="flex items-center gap-2 text-[9px] font-black text-brand-primary uppercase tracking-widest bg-brand-secondary/10 px-4 py-2 rounded-xl hover:bg-brand-primary hover:text-white transition-all">
+                        <Plus className="w-3.5 h-3.5" /> Añadir Prestación
+                    </button>
+                </div>
+
+                <div className="space-y-3">
+                    {data.content.map((item, index) => (
+                        <div key={item.id} className="grid items-end grid-cols-1 gap-4 p-4 transition-all bg-white border border-gray-100 shadow-sm md:grid-cols-12 rounded-2xl group hover:border-brand-primary/30">
+                            <div className="space-y-1 md:col-span-6">
+                                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Servicio Autorizado</label>
+                                <select value={item.session_type_id} onChange={e => updateContentItem(index, "session_type_id", e.target.value)} className="w-full rounded-xl border-gray-50 bg-gray-50/50 py-2.5 px-4 text-xs font-bold text-gray-700">
+                                    <option value="">Seleccione...</option>
+                                    {filteredSessionTypes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    {item.session_type_id && !filteredSessionTypes.find(s => s.id.toString() === item.session_type_id) && (
+                                        <option value={item.session_type_id}>{sessionTypes.find(s => s.id.toString() === item.session_type_id)?.name}</option>
+                                    )}
+                                </select>
+                            </div>
+                            <div className="space-y-1 md:col-span-2">
+                                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest text-center block">Cant.</label>
+                                <input type="number" value={item.max_sessions} onChange={e => updateContentItem(index, "max_sessions", e.target.value)} className="w-full rounded-xl border-gray-50 bg-gray-50/50 py-2.5 px-4 text-center text-xs font-black" />
+                            </div>
+                            <div className="space-y-1 md:col-span-3">
+                                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest text-center block">Cobertura (%)</label>
+                                <input type="number" value={item.coverage_percentage} onChange={e => updateContentItem(index, "coverage_percentage", e.target.value)} className="w-full rounded-xl border-gray-50 bg-gray-50/50 py-2.5 px-4 text-center text-xs font-black text-brand-primary" />
+                            </div>
+                            <div className="flex justify-center pb-1 md:col-span-1">
+                                <button type="button" onClick={() => setData("content", data.content.filter(i => i.id !== item.id))} className="p-2 text-gray-300 transition-all rounded-lg hover:text-red-500 hover:bg-red-50">
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {data.content.length === 0 && (
+                        <div className="py-10 text-center border-2 border-gray-100 border-dashed rounded-3xl opacity-30">
+                            <Database className="w-10 h-10 mx-auto mb-3" />
+                            <p className="text-[10px] font-black uppercase tracking-widest">Sin prestaciones configuradas</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+          )}
+
+          {/* SECCIÓN 5: INFORMACIÓN TÉCNICA */}
+          <div className="grid grid-cols-1 gap-8 pt-8 border-t border-gray-100 md:grid-cols-3">
+            <div className="space-y-6 md:col-span-2">
+                <div className="space-y-1">
+                    <label className="ml-1 enterprise-label opacity-60">Nombre Comercial del Plan</label>
+                    <TextInput value={data.name} onChange={e => setData("name", e.target.value)} required className="w-full !rounded-2xl !py-4 font-black uppercase text-sm" placeholder="EJ: PACK 10 SESIONES KINESIOLOGÍA" />
+                </div>
+                <div className="space-y-1">
+                    <label className="ml-1 enterprise-label opacity-60">Descripción / Glosa Interna</label>
+                    <textarea rows="3" value={data.description} onChange={e => setData("description", e.target.value)} className="w-full px-5 py-4 text-xs font-medium transition-all border-gray-100 shadow-inner resize-none rounded-2xl bg-gray-50/30 focus:bg-white focus:ring-brand-primary" placeholder="Notas sobre el alcance del convenio..." />
+                </div>
+            </div>
+            <div className="space-y-6">
+                <div className="space-y-1">
+                    <label className="ml-1 enterprise-label opacity-60">Código Interno</label>
+                    <div className="relative">
+                        <Hash className="absolute w-4 h-4 -translate-y-1/2 left-4 top-1/2 text-brand-gray opacity-40" />
+                        <input type="text" value={data.code} onChange={e => setData("code", e.target.value.toUpperCase())} className="w-full py-4 pl-12 pr-4 font-mono text-sm font-black transition-all border-gray-100 shadow-inner rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary" placeholder="PLN-001" />
+                    </div>
+                </div>
+                <div className="flex items-center justify-between p-6 bg-white border border-gray-100 shadow-sm rounded-3xl">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-xl ${data.is_active ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                            <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest leading-none">Estado</p>
+                    </div>
+                    <Switch checked={data.is_active} onChange={e => setData("is_active", e.target.checked)} />
+                </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 6: VIGENCIA DE LA OFERTA */}
+          <div className="p-8 bg-amber-50/50 border border-amber-100 rounded-[2.5rem] space-y-6">
+            <h3 className="enterprise-label !text-amber-700 flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5" /> Disponibilidad en Catálogo
             </h3>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <label className="block">
-              <span className="text-xs font-semibold text-amber-900">
-                Disponible desde:
-              </span>
-              <input
-                type="date"
-                value={data.start_date}
-                onChange={(e) => setData("start_date", e.target.value)}
-                className="block w-full mt-1 text-sm rounded-md shadow-sm border-amber-200 focus:ring-amber-500 focus:border-amber-500"
-              />
-              <p className="mt-1 text-[10px] text-amber-700">
-                Si se deja vacío, el plan estará disponible de inmediato.
-              </p>
-            </label>
-
-            <label className="block">
-              <span className="text-xs font-semibold text-amber-900">
-                Disponible hasta (Vencimiento de oferta):
-              </span>
-              <input
-                type="date"
-                value={data.end_date}
-                onChange={(e) => setData("end_date", e.target.value)}
-                className="block w-full mt-1 text-sm rounded-md shadow-sm border-amber-200 focus:ring-amber-500 focus:border-amber-500"
-              />
-              <p className="mt-1 text-[10px] text-amber-700">
-                Después de esta fecha, el plan desaparecerá del catálogo de
-                ventas.
-              </p>
-            </label>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                <div className="space-y-1">
+                    <label className="enterprise-label !text-amber-800 !text-[8px] ml-1">Apertura</label>
+                    <input type="date" value={data.start_date} onChange={e => setData("start_date", e.target.value)} className="w-full px-4 py-3 font-mono text-xs font-bold bg-white rounded-2xl border-amber-100 focus:ring-amber-500" />
+                </div>
+                <div className="space-y-1">
+                    <label className="enterprise-label !text-amber-800 !text-[8px] ml-1">Cierre / Caducidad</label>
+                    <input type="date" value={data.end_date} onChange={e => setData("end_date", e.target.value)} className="w-full px-4 py-3 font-mono text-xs font-bold bg-white rounded-2xl border-amber-100 focus:ring-amber-500" />
+                </div>
+            </div>
           </div>
         </div>
 
-        {/* FOOTER: ACCIONES */}
-        <div className="flex justify-end pt-6 mt-4 border-t">
-          <button
-            type="submit"
-            disabled={processing}
-            className="flex items-center px-10 py-3 text-base font-bold text-white transition-all bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 active:scale-95 disabled:bg-gray-400"
-          >
-            {processing ? (
-              "Guardando..."
-            ) : (
-              <>
-                <Save className="w-5 h-5 mr-2" />
-                {isEdit ? "ACTUALIZAR PLAN" : "CONFIRMAR Y CREAR PLAN"}
-              </>
-            )}
-          </button>
+        {/* FOOTER FIJO PREMIUM */}
+        <div className="p-8 bg-gray-50/80 backdrop-blur border-t border-gray-100 flex justify-end gap-4 shrink-0 rounded-b-[2rem]">
+            <SecondaryButton onClick={() => { reset(); setIsModalOpen(false); }} className="!px-10 !py-4">Descartar</SecondaryButton>
+            <PrimaryButton disabled={processing} type="submit" className="!px-14 !py-4 shadow-xl shadow-brand-primary/20">
+                {processing ? 'Sincronizando...' : (isEdit ? 'Actualizar Plan' : 'Confirmar & Crear Plan')}
+            </PrimaryButton>
         </div>
       </form>
     </div>

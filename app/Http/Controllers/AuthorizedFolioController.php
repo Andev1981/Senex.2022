@@ -22,6 +22,7 @@ class AuthorizedFolioController extends Controller
 
     public function store(Request $request, Company $company)
     {
+        $this->authorize('update', $company);
         $request->validate([
             'archivo_caf' => 'required|file|mimes:xml,txt', // El CAF es un XML
         ]);

@@ -1,9 +1,11 @@
+import React, { useState } from "react";
 import PatientData from "./GeneralPartials/PatientData";
-import MedicalInformation from "./GeneralPartials/MedicalInformation";
 import Vital from "./GeneralPartials/Vital";
 import EmergencyContact from "./GeneralPartials/EmergencyContact";
-import NextSessions from "./GeneralPartials/NextSessions";
 import PatientAddress from "./GeneralPartials/PatientAddress";
+import ModalCreateEditPatient from "../ModalCreateEditPatient";
+import Modal from "@/Components/Modal";
+import { UserCog, ShieldCheck, Database } from "lucide-react";
 
 export default function IndexGeneral({
   patient,
@@ -14,29 +16,52 @@ export default function IndexGeneral({
   vital,
   contact,
 }) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="space-y-6 lg:col-span-2">
-        <PatientData
-          patient={patient}
-          communes={communes}
-          regions={regions}
-          provinces={provinces}
-        />
-        <PatientAddress
-          patient={patient}
-          communes={communes}
-          regions={regions}
-          provinces={provinces}
-          address={address}
-        />
-        <EmergencyContact patient={patient} contact={contact} />
+    <div className="space-y-8 duration-500 animate-in fade-in">
+      {/* BOTÓN DE EDICIÓN MAESTRA */}
+      <div className="flex justify-end px-2">
+        <button 
+            onClick={() => setIsEditModalOpen(true)}
+            className="flex items-center gap-3 px-6 py-3 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95 group"
+        >
+            <UserCog className="w-4 h-4 text-brand-secondary group-hover:rotate-12 transition-transform" />
+            Actualizar Perfil Maestro
+        </button>
       </div>
-      <div className="space-y-6">
-        <Vital patient={patient} vital={vital} />
-        {/* <MedicalInformation patient={patient} /> */}
-        {/* <NextSessions patient={patient} /> */}
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2">
+          <PatientData
+            patient={patient}
+            communes={communes}
+            regions={regions}
+            provinces={provinces}
+          />
+          <PatientAddress
+            patient={patient}
+            communes={communes}
+            regions={regions}
+            provinces={provinces}
+            address={address}
+          />
+          <EmergencyContact patient={patient} contact={contact} />
+        </div>
+        <div className="space-y-8">
+          <Vital patient={patient} vital={vital} />
+        </div>
       </div>
+
+      <Modal open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} maxWidth="5xl">
+        <ModalCreateEditPatient
+            patient={patient}
+            setOpenModalPatient={setIsEditModalOpen}
+            communes={communes}
+            regions={regions}
+            provinces={provinces}
+        />
+      </Modal>
     </div>
   );
 }

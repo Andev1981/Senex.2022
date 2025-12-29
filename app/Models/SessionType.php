@@ -20,12 +20,14 @@ class SessionType extends Model
         'default_doctor_commission_clp',
         'requires_diagnosis',
         'requires_referral',
+        'is_exempt',
         'is_active'
     ];
 
     protected $casts = [
         'requires_diagnosis' => 'boolean',
         'requires_referral' => 'boolean',
+        'is_exempt' => 'boolean',
         'is_active' => 'boolean',
     ];
 

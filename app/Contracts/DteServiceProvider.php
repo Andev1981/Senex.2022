@@ -12,5 +12,5 @@ interface DteServiceProvider
    * @return array{folio:int|null, track_id:int|null, status:string, raw:mixed}
    */
   public function issue(array $payloadArray, array $config, Folios $objetoFolios): array;
-  public function status(string $trackId, array $config): string;
+  public function status(string|int $trackId, array $config): array;
 }

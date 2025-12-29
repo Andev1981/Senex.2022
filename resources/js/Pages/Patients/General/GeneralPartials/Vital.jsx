@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Activity, Edit, TypeIcon } from "lucide-react";
+import { Activity, Edit, TypeIcon, CheckCircle2 } from "lucide-react";
 import ResourceFormModal from "@/Components/ResourceFormModal";
 
 export default function Vital({ patient, vital }) {
@@ -80,78 +80,113 @@ export default function Vital({ patient, vital }) {
   );
 
   return (
-    <div className="p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="flex items-center justify-between gap-2 mb-4 text-xl font-bold text-gray-900">
-        <div className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-teal-600" />
-          Datos Vitales
+    <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-[2rem] relative overflow-hidden h-full">
+      <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
+
+      <h2 className="relative z-10 flex items-center justify-between gap-2 mb-8 text-lg font-black tracking-tight text-gray-900 uppercase">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-brand-secondary/10 rounded-xl text-brand-primary">
+            <Activity className="w-5 h-5" />
+          </div>
+          Biometría & Vitales
         </div>
 
-        <div className="hover:cursor-pointer">
-          <Edit
-            className="w-5 h-5 text-gray-300 transition-colors hover:text-gray-400"
-            onClick={() => setOpenVitalModal(true)}
-          />
-        </div>
+        <button
+          onClick={() => setOpenVitalModal(true)}
+          className="p-2.5 text-gray-300 hover:text-brand-primary hover:bg-brand-secondary/10 rounded-xl transition-all active:scale-90"
+        >
+          <Edit className="w-5 h-5" />
+        </button>
       </h2>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <div className="p-3 rounded-lg bg-teal-50">
-          <p className="mb-1 text-sm text-gray-600">Altura</p>
-          <p className="text-base font-bold text-teal-600">
-            {vital?.height_cm} cm
+
+      <div className="relative z-10 grid grid-cols-3 gap-4 mb-6">
+        <div className="p-4 text-center transition-all border border-gray-100 rounded-2xl bg-gray-50/50 group hover:bg-white hover:shadow-md">
+          <p className="enterprise-label !text-[8px] opacity-60">Altura</p>
+          <p className="font-mono text-sm font-black tracking-tighter text-brand-primary">
+            {vital?.height_cm || "--"}{" "}
+            <span className="text-[10px] opacity-40">CM</span>
           </p>
         </div>
-        <div className="p-3 rounded-lg bg-teal-50">
-          <p className="mb-1 text-sm text-gray-600">Peso</p>
-          <p className="text-base font-bold text-teal-600">
-            {vital?.weight_kg} kg
+        <div className="p-4 text-center transition-all border border-gray-100 rounded-2xl bg-gray-50/50 group hover:bg-white hover:shadow-md">
+          <p className="enterprise-label !text-[8px] opacity-60">Peso</p>
+          <p className="font-mono text-sm font-black tracking-tighter text-brand-primary">
+            {vital?.weight_kg || "--"}{" "}
+            <span className="text-[10px] opacity-40">KG</span>
           </p>
         </div>
-        <div className="p-3 rounded-lg bg-teal-50">
-          <p className="mb-1 text-sm text-gray-600">IMC</p>
-          <p className="text-base font-bold text-teal-600">{vital?.bmi}</p>
+        <div className="p-4 text-center text-white transition-all shadow-lg rounded-2xl bg-brand-primary shadow-brand-primary/20 group hover:scale-105">
+          <p className="text-[8px] font-black uppercase tracking-widest opacity-60">
+            IMC
+          </p>
+          <p className="font-mono text-sm font-black tracking-tighter">
+            {vital?.bmi || "--"}
+          </p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 py-3 md:grid-cols-2">
-        <div className="p-2 rounded-lg bg-blue-50">
-          <p className="mb-1 text-sm text-gray-600">Presión Diastólica</p>
-          <p className="text-xl font-bold text-blue-600">
-            {vital?.bp_diastolic}
-          </p>
-        </div>
-        <div className="p-3 rounded-lg bg-blue-50">
-          <p className="mb-1 text-sm text-gray-600">Presión Sistólica</p>
-          <p className="text-xl font-bold text-blue-600">
-            {vital?.bp_systolic}
-          </p>
-        </div>
-        <div className="p-3 rounded-lg bg-red-50">
-          <p className="mb-1 text-sm text-gray-600">Tipo de sangre</p>
-          <p className="text-xl font-bold text-blue-600">{vital?.blood_type}</p>
+
+      <div className="relative z-10 space-y-3">
+        <div className="p-5 rounded-[1.5rem] bg-blue-50/50 border border-blue-100 flex items-center justify-between">
+          <div>
+            <p className="enterprise-label !text-[8px] text-blue-600 !mb-0">
+              Presión Arterial
+            </p>
+            <p className="font-mono text-xl font-black tracking-tighter text-blue-700">
+              {vital?.bp_systolic || "--"} / {vital?.bp_diastolic || "--"}
+            </p>
+          </div>
+          <div className="p-2 text-blue-500 bg-white shadow-sm rounded-xl">
+            <Activity className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="p-3 rounded-lg bg-green-50">
-          <p className="mb-1 text-sm text-gray-600">Respiración</p>
-          <p className="font-semibold text-gray-900">{vital?.resp_rate}</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
+            <div>
+              <p className="enterprise-label !text-[8px] !mb-0">Latidos</p>
+              <p className="font-mono font-black text-gray-900">
+                {vital?.heart_rate || "--"}
+              </p>
+            </div>
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+          </div>
+          <div className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
+            <div>
+              <p className="enterprise-label !text-[8px] !mb-0">Temp.</p>
+              <p className="font-mono font-black text-gray-900">
+                {vital?.temperature_c || "--"}°
+              </p>
+            </div>
+            <div className="font-black text-orange-400">C°</div>
+          </div>
         </div>
-        <div className="p-3 rounded-lg bg-blue-50">
-          <p className="mb-1 text-sm text-gray-600">Latidos</p>
-          <p className="font-semibold text-gray-900">{vital?.heart_rate}</p>
+
+        <div className="flex items-center justify-between p-4 border border-green-100 rounded-2xl bg-green-50/50">
+          <div className="flex items-center gap-4">
+            <div className="p-2 text-green-600 bg-white rounded-lg shadow-sm">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="enterprise-label !text-[8px] text-green-700 !mb-0">
+                Saturación (SpO2)
+              </p>
+              <p className="font-mono font-black text-green-800">
+                {vital?.spo2 || "--"}%
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="p-3 rounded-lg bg-blue-50">
-          <p className="mb-1 text-sm text-gray-600">
-            Spo2{" "}
-            {/*  <span className="italic text-gray-500 font-xs">
-              (Saturación perifierica de oxigeno)
-            </span> */}
-          </p>
-          <p className="font-semibold text-gray-900">{vital?.spo2}</p>
-        </div>
-        <div className="p-3 rounded-lg bg-blue-50">
-          <p className="mb-1 text-sm text-gray-600">Temperatura</p>
-          <p className="font-semibold text-gray-900">{vital?.temperature_c}°</p>
-        </div>
-      </div>
+
+                <div className="p-4 rounded-2xl bg-brand-secondary text-white flex items-center justify-between shadow-lg shadow-brand-secondary/20">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2 bg-white/20 rounded-lg text-white">
+                            <div className="w-4 h-4 rounded-full border-2 border-white/60 flex items-center justify-center font-black text-[8px]">Rh</div>
+                        </div>
+                        <div>
+                            <p className="text-[8px] font-black uppercase tracking-widest text-white/80 mb-0">Grupo Sanguíneo</p>
+                            <p className="font-black text-white text-base tracking-widest">{vital?.blood_type || 'PENDIENTE'}</p>
+                        </div>
+                    </div>
+                </div>      </div>
 
       {/* Modal Contacto */}
       <ResourceFormModal

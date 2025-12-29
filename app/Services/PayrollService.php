@@ -14,7 +14,7 @@ class PayrollService
 
       $sessions = TreatmentSession::query()
         ->where('doctor_id', $doctorId)
-        ->whereBetween('attended_at', [Carbon::parse($fromDate)->startOfDay(), Carbon::parse($toDate)->endOfDay()])
+        ->whereBetween('date', [Carbon::parse($fromDate)->startOfDay(), Carbon::parse($toDate)->endOfDay()])
         ->where('status', TreatmentSession::STATUS_COMPLETED)
         ->get();
 

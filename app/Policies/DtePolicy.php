@@ -4,16 +4,18 @@ namespace App\Policies;
 
 use App\Models\Dte;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class DtePolicy
 {
+    use HandlesAuthorization;
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        //
+        return $user->hasAnyRole(['superadmin', 'admin', 'user']);
     }
 
     /**
@@ -21,7 +23,7 @@ class DtePolicy
      */
     public function view(User $user, Dte $dte): bool
     {
-        //
+        return $user->isSuperAdmin() || $user->company_id === $dte->company_id;
     }
 
     /**
@@ -29,7 +31,7 @@ class DtePolicy
      */
     public function create(User $user): bool
     {
-        //
+        return $user->hasAnyRole(['superadmin', 'admin', 'user']);
     }
 
     /**
@@ -37,7 +39,7 @@ class DtePolicy
      */
     public function update(User $user, Dte $dte): bool
     {
-        //
+        return $user->isSuperAdmin() || $user->company_id === $dte->company_id;
     }
 
     /**
@@ -45,22 +47,6 @@ class DtePolicy
      */
     public function delete(User $user, Dte $dte): bool
     {
-        //
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Dte $dte): bool
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Dte $dte): bool
-    {
-        //
+        return $user->isSuperAdmin() || ($user->hasRole('admin') && $user->company_id === $dte->company_id);
     }
 }
