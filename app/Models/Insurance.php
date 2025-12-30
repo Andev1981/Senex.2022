@@ -16,8 +16,8 @@ class Insurance extends Model
         'name',
         'rut',
         'institution_type',
-        'contact_email',
-        'contact_phone',
+        'email',
+        'phone',
         'is_active',
     ];
 

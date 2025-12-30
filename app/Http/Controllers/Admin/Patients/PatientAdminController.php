@@ -158,17 +158,8 @@ class PatientAdminController extends Controller
             'primaryContact',
             'allergies',
             'condition',
-            'debts',
-            'attachments.treatment', // Cargar archivos clínicos renombrado
-            'invoices.currentDte', // Cargar DTEs
-            // Cargamos treatments CON diagnostic
-            'treatments' => function ($query) use ($companyId, $activeBranchId) {
-                $query->where('company_id', $companyId)     // Seguridad: solo de esta empresa
-                    ->where('branch_id', $activeBranchId) // Seguridad: solo de esta sucursal
-                    ->whereIn('status', ['active', 'in_progress', 'evaluation']) // Incluimos evaluación
-                    ->with(['diagnostic', 'doctor', 'sessionType']) // Cargamos relaciones necesarias
-                    ->latest();
-            }
+            'attachments.treatment.diagnostic',
+            'invoices.currentDte',
         ]);
 
 
@@ -222,9 +213,11 @@ class PatientAdminController extends Controller
 
         try {
 
-            $exists = Patient::where('rut', $request->rut)->exists();
+            $exists = Patient::where('rut', $request->rut)
+                ->where('company_id', $companyId)
+                ->exists();
 
-            // 3. Si no existe, creamos
+            // 3. Si no existe, creamos o actualizamos (Idempotencia)
             $patient = Patient::updateOrCreate(
                 ['rut' => $request->rut, 'company_id' => $companyId],
                 [
@@ -233,17 +226,28 @@ class PatientAdminController extends Controller
                     'email' => $request->email,
                     'birth_date' => $request->birth_date,
                     'gender' => $request->gender,
-                    'ocupation' => $request->occupation,
+                    'occupation' => $request->occupation,
                     'marital_status' => $request->marital_status,
-                    'status' => $request->status,
+                    'status' => $request->status ?? 'active',
                     'phone' => $request->phone,
-                    'opt_out_reminders' => $request->opt_out_reminders,
-                    'prefers_whatsapp' => $request->prefers_whatsapp,
-                    'prefers_mail' => $request->prefers_mail,
-                    'prefers_sms' => $request->prefers_sms,
-                    'require_tutor' => $request->require_tutor,
+                    'opt_out_reminders' => $request->opt_out_reminders ?? false,
+                    'prefers_whatsapp' => $request->prefers_whatsapp ?? true,
+                    'prefers_mail' => $request->prefers_mail ?? true,
+                    'prefers_sms' => $request->prefers_sms ?? false,
+                    'require_tutor' => $request->require_tutor ?? false,
                 ]
             );
+
+            // 4. Dirección Inicial (Si se provee)
+            if ($request->filled('street') || $request->filled('commune_id')) {
+                $patient->address()->create([
+                    'street'     => $request->street,
+                    'number'     => $request->number,
+                    'details'    => $request->details,
+                    'commune_id' => $request->commune_id,
+                    'is_primary' => true
+                ]);
+            }
 
             if ($request->require_tutor) {
                 $contact = PatientContact::updateOrCreate(
@@ -361,10 +365,11 @@ class PatientAdminController extends Controller
         $this->authorize('view', $patient); // Usamos view para verificar acceso al paciente
 
         $file = $request->file('file');
-        $path = $file->store('attachments/' . $patient->id, 'public');
+        $companyId = session('current_company_id');
+        $path = $file->store("tenants/{$companyId}/patients/{$patient->id}/clinical", 'private');
 
         $attachment = \App\Models\Attachment::create([
-            'company_id' => session('current_company_id'),
+            'company_id' => $companyId,
             'patient_id' => $patient->id,
             'treatment_id' => $request->treatment_id,
             'title' => $request->title,
@@ -423,6 +428,22 @@ class PatientAdminController extends Controller
             // Actualizar paciente
             // -------------------------------
             $patient->update($validated);
+
+            // -------------------------------
+            // Actualizar Dirección (Polimórfica)
+            // -------------------------------
+            if ($request->filled('street') || $request->filled('commune_id')) {
+                $patient->address()->updateOrCreate(
+                    ['addressable_id' => $patient->id, 'addressable_type' => 'Patient'],
+                    [
+                        'street'     => $request->street,
+                        'number'     => $request->number,
+                        'details'    => $request->details,
+                        'commune_id' => $request->commune_id,
+                        'is_primary' => true
+                    ]
+                );
+            }
 
             DB::commit();
 

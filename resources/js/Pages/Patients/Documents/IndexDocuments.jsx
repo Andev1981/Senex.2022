@@ -47,7 +47,7 @@ export default function IndexDocuments({ patient, treatments = [] }) {
         folio: inv.dte_folio,
         amount: inv.amount_total_clp,
         status: inv.dte_status,
-        pdf_url: route('invoices.pdf', inv.id)
+        pdf_url: route('invoices.pdf.stream', inv.id)
       }));
   }, [patient.invoices]);
 

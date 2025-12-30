@@ -122,15 +122,13 @@ class Patient extends Authenticatable
 
     public function plans(): HasMany
     {
-        return $this->hasMany(PatientContact::class);
+        return $this->hasMany(PatientPlan::class);
     }
 
     public function activePlans(): HasMany
     {
         return $this->hasMany(PatientPlan::class)
-            ->active()
-            ->notExpired()
-            ->withSessionsRemaining();
+            ->where('is_active', true);
     }
 
     public function doctorAssignments(): HasMany
@@ -281,29 +279,18 @@ class Patient extends Authenticatable
     {
         return Attribute::make(
             get: function () {
+                $latest = $this->latestVital;
 
-                // 1. Verificación inicial de datos (peso y altura)
-                if (!$this->weight || !$this->height) {
+                if (!$latest || !$latest->weight || !$latest->height) {
                     return null;
                 }
 
-                // 2. Normalización de la altura (si está en cm, convertir a metros)
-                // Usamos el operador de coalescencia de null (??) para seguridad, aunque ya se verificó.
-                $heightRaw = $this->height ?? 0;
+                $heightRaw = $latest->height;
+                $heightInMeters = $heightRaw > 3 ? $heightRaw / 100 : $heightRaw;
 
-                $heightInMeters = $heightRaw > 3
-                    ? $heightRaw / 100
-                    : $heightRaw;
+                if ($heightInMeters <= 0) return null;
 
-                // 3. Verificación de seguridad (evitar división por cero)
-                if ($heightInMeters <= 0) {
-                    return null;
-                }
-
-                // 4. Cálculo del IMC: peso / (altura * altura)
-                $bmi = $this->weight / ($heightInMeters ** 2);
-
-                // 5. Retorno: Redondear a 1 decimal
+                $bmi = $latest->weight / ($heightInMeters ** 2);
                 return round($bmi, 1);
             },
         );

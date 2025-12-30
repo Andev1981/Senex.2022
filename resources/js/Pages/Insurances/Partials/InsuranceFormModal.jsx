@@ -27,6 +27,7 @@ function InsuranceFormModal({ insurance, onClose }) {
     id: insurance?.id,
     name: insurance?.name || "",
     rut: insurance?.rut || "",
+    institution_type: insurance?.institution_type || "clinic",
     phone: insurance?.phone || "",
     email: insurance?.email || "",
     address: insurance?.address || "",
@@ -91,6 +92,21 @@ function InsuranceFormModal({ insurance, onClose }) {
               Comercial
             </h3>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
+              <div className="space-y-1 md:col-span-12">
+                <label className="ml-1 enterprise-label opacity-60">
+                  Tipo de Institución
+                </label>
+                <select
+                  value={data.institution_type}
+                  onChange={(e) => setData("institution_type", e.target.value)}
+                  className="w-full px-5 py-4 text-sm font-bold border-gray-100 rounded-2xl bg-white shadow-inner focus:ring-brand-primary focus:border-brand-primary"
+                >
+                  <option value="health_insurer">Isapre / Fonasa</option>
+                  <option value="insurance_company">Compañía de Seguros</option>
+                  <option value="clinic">Clínica / Prestador</option>
+                </select>
+                <InputError message={errors.institution_type} />
+              </div>
               <div className="space-y-1 md:col-span-8">
                 <label className="ml-1 enterprise-label opacity-60">
                   Razón Social / Institución

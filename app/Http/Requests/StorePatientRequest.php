@@ -14,6 +14,21 @@ class StorePatientRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        if ($this->has('rut')) {
+            $this->merge([
+                'rut' => \App\Rules\ValidRut::clean($this->rut),
+            ]);
+        }
+
+        if ($this->has('guardian_rut')) {
+            $this->merge([
+                'guardian_rut' => \App\Rules\ValidRut::clean($this->guardian_rut),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         // 🎯 Buscamos si el paciente existe para ignorarlo en la validación de Unique
@@ -28,9 +43,10 @@ class StorePatientRequest extends FormRequest
                 'required',
                 'string',
                 'max:20',
+                new \App\Rules\ValidRut,
                 Rule::unique('patients', 'rut')
                     ->where('company_id', session('current_company_id'))
-                    ->ignore($patientId) // Si es null, no ignora nada. Si tiene ID, permite guardar el mismo RUT.
+                    ->ignore($patientId)
             ],
             'email'     => [
                 'required_if:require_tutor,false',

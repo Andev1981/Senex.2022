@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm, router } from "@inertiajs/react";
 import axios from "axios";
 import InputLabel from "@/Components/InputLabel";
@@ -24,7 +24,9 @@ import {
   Activity,
   CheckCircle2,
   XCircle,
-  ClipboardList
+  ClipboardList,
+  MapPin,
+  Navigation
 } from "lucide-react";
 import { handleServerErrors } from "@/utils/FormHelpers";
 import Swal from "sweetalert2";
@@ -33,15 +35,14 @@ import usePatientStore from "@/Stores/usePatientStore";
 export default function ModalCreateEditPatient({
   patient,
   setOpenModalPatient,
-  communes,
-  regions,
-  provinces,
-  address = [],
+  communes = [],
+  regions = [],
+  provinces = [],
 }) {
   const [isExistingInSystem, setIsExistingInSystem] = useState(false);
   const addPatient = usePatientStore((state) => state.addPatient);
 
-  const { data, setData, errors, setError, clearErrors, reset, processing } =
+  const { data, setData, errors, setError, clearErrors, reset, post, patch, processing } =
     useForm({
       id: patient?.id || "",
       branch_id: "",
@@ -68,7 +69,24 @@ export default function ModalCreateEditPatient({
       guardian_phone: patient?.contact?.phone || "",
       guardian_email: patient?.contact?.email || "",
       guardian_rut: patient?.contact?.rut || "",
+      // Campos de dirección
+      is_home_care: !!patient?.address,
+      street: patient?.address?.street || "",
+      number: patient?.address?.number || "",
+      details: patient?.address?.details || "",
+      region_id: patient?.address?.commune?.province?.region_id || "",
+      province_id: patient?.address?.commune?.province_id || "",
+      commune_id: patient?.address?.commune_id || "",
     });
+
+  // Filtrado dinámico de provincias y comunas
+  const filteredProvinces = useMemo(() => 
+    provinces.filter(p => p.region_id == data.region_id), 
+  [data.region_id, provinces]);
+
+  const filteredCommunes = useMemo(() => 
+    communes.filter(c => c.province_id == data.province_id), 
+  [data.province_id, communes]);
 
   const handleRutBlur = async (e) => {
     const cleanRut = e.target.value.replace(/\./g, "");
@@ -88,38 +106,36 @@ export default function ModalCreateEditPatient({
     } catch (e) { console.error(e); }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    clearErrors();
-    try {
-      const url = data.id ? route("patients.update", data.id) : route("patients.store");
-      const method = data.id ? "patch" : "post";
-      const response = await axios[method](url, data);
-      const newPatient = response.data.patient;
+    const url = data.id ? route("patients.update", data.id) : route("patients.store");
+    const method = data.id ? patch : post;
 
-      setOpenModalPatient(false);
-      reset();
+    method(url, {
+      onSuccess: (page) => {
+        const newPatient = page.props.patient || patient;
+        setOpenModalPatient(false);
+        reset();
 
-      Swal.fire({
-        title: "¡Registro Exitoso!",
-        text: `Paciente ${newPatient?.name} guardado correctamente.`,
-        icon: "success",
-        showCancelButton: true,
-        confirmButtonText: "🚀 Agendar Atención",
-        cancelButtonText: "Cerrar",
-        confirmButtonColor: "#3292b3",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          router.visit(route("attendances.index", { patient_id: newPatient?.id }));
-        } else {
-          addPatient(newPatient);
-        }
-      });
-    } catch (error) {
-      if (!handleServerErrors(error, setError)) {
-        Swal.fire("Error", "No se pudo procesar el registro.", "error");
+        Swal.fire({
+          title: "¡Registro Exitoso!",
+          text: `Paciente gestionado correctamente.`,
+          icon: "success",
+          showCancelButton: true,
+          confirmButtonText: "🚀 Agendar Atención",
+          cancelButtonText: "Cerrar",
+          confirmButtonColor: "#3292b3",
+        }).then((result) => {
+          if (result.isConfirmed && newPatient?.id) {
+            router.visit(route("attendances.index", { patient_id: newPatient.id }));
+          }
+        });
+      },
+      onError: (err) => {
+        console.error(err);
+        Swal.fire("Atención", "Revise los campos marcados en rojo.", "warning");
       }
-    }
+    });
   };
 
   const relationshipOptions = [
@@ -131,7 +147,7 @@ export default function ModalCreateEditPatient({
   return (
     <div className="bg-white flex flex-col h-full animate-in fade-in duration-500">
       <form onSubmit={handleSubmit} className="flex flex-col h-full">
-        {/* HEADER HERO (Ahora integrado en el cuerpo porque el Modal padre no tendrá título) */}
+        {/* HEADER HERO */}
         <div className="p-8 bg-gray-50/50 border-b border-gray-100 rounded-t-[2.5rem] flex items-center justify-between gap-6 shrink-0 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
             <div className="flex items-center gap-4 relative z-10">
@@ -161,11 +177,18 @@ export default function ModalCreateEditPatient({
                 <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 !mb-0">
                     <Database className="w-4 h-4" /> Datos de Identidad
                 </h3>
-                <label className="flex items-center gap-3 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-white transition-all shadow-sm group">
-                    <Baby className={`w-4 h-4 transition-colors ${data.require_tutor ? 'text-brand-primary' : 'text-gray-300 group-hover:text-brand-primary'}`} />
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${data.require_tutor ? 'text-brand-primary' : 'text-brand-gray'}`}>Menor / Requiere Tutor</span>
-                    <Switch checked={data.require_tutor} onChange={e => setData("require_tutor", e.target.checked)} />
-                </label>
+                <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-3 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-white transition-all shadow-sm group">
+                        <Navigation className={`w-4 h-4 transition-colors ${data.is_home_care ? 'text-blue-600' : 'text-gray-300'}`} />
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${data.is_home_care ? 'text-blue-600' : 'text-brand-gray'}`}>A Domicilio</span>
+                        <Switch checked={data.is_home_care} onChange={e => setData("is_home_care", e.target.checked)} />
+                    </label>
+                    <label className="flex items-center gap-3 px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl cursor-pointer hover:bg-white transition-all shadow-sm group">
+                        <Baby className={`w-4 h-4 transition-colors ${data.require_tutor ? 'text-brand-primary' : 'text-gray-300 group-hover:text-brand-primary'}`} />
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${data.require_tutor ? 'text-brand-primary' : 'text-brand-gray'}`}>Requiere Tutor</span>
+                        <Switch checked={data.require_tutor} onChange={e => setData("require_tutor", e.target.checked)} />
+                    </label>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -210,7 +233,49 @@ export default function ModalCreateEditPatient({
             </div>
         </div>
 
-        {/* BLOQUE 2: CONTACTO & OCUPACIÓN (Solo si no es menor) */}
+        {/* BLOQUE UBICACIÓN */}
+        {data.is_home_care && (
+            <div className="p-8 bg-blue-50/30 border border-blue-100 rounded-[2.5rem] space-y-8 animate-in slide-in-from-top-4 duration-500">
+                <h3 className="enterprise-label !text-blue-700 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" /> Localización para Atención Domiciliaria
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-1">
+                        <label className="enterprise-label ml-1 opacity-60">Región</label>
+                        <select value={data.region_id} onChange={e => setData(d => ({ ...d, region_id: e.target.value, province_id: "", commune_id: "" }))} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm bg-white focus:ring-blue-500 shadow-sm">
+                            <option value="">-- Seleccionar --</option>
+                            {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="enterprise-label ml-1 opacity-60">Provincia</label>
+                        <select value={data.province_id} onChange={e => setData(d => ({ ...d, province_id: e.target.value, commune_id: "" }))} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm bg-white focus:ring-blue-500 shadow-sm" disabled={!data.region_id}>
+                            <option value="">-- Seleccionar --</option>
+                            {filteredProvinces.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="enterprise-label ml-1 opacity-60">Comuna</label>
+                        <select value={data.commune_id} onChange={e => setData("commune_id", e.target.value)} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm bg-white focus:ring-blue-500 shadow-sm" disabled={!data.province_id}>
+                            <option value="">-- Seleccionar --</option>
+                            {filteredCommunes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <InputError message={errors.commune_id} />
+                    </div>
+                    <div className="md:col-span-2 space-y-1">
+                        <label className="enterprise-label ml-1 opacity-60">Calle / Avenida</label>
+                        <TextInput value={data.street} onChange={e => setData("street", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" placeholder="Ej: Av. Libertador Bernardo O'Higgins" />
+                        <InputError message={errors.street} />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="enterprise-label ml-1 opacity-60">Número / Depto</label>
+                        <TextInput value={data.number} onChange={e => setData("number", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" placeholder="Ej: 1234, Depto 501" />
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* BLOQUE 2: CONTACTO & OCUPACIÓN */}
         {!data.require_tutor && (
             <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>

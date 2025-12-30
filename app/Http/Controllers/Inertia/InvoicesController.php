@@ -63,9 +63,10 @@ class InvoicesController extends Controller
 
   public function downloadPdf(Invoice $invoice)
   {
-    $this->authorize('download', $invoice);
-    abort_unless($invoice->pdf_path, 404);
-    return Storage::download($invoice->pdf_path);
+    $this->authorize('view', $invoice); // Usamos view por ahora para asegurar acceso
+    abort_unless($invoice->pdf_path && Storage::disk('private')->exists($invoice->pdf_path), 404);
+    
+    return Storage::disk('private')->download($invoice->pdf_path);
   }
 
   public function sendEmail(Invoice $invoice)

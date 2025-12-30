@@ -27,6 +27,7 @@ class Doctor extends Model
         'speciality',
         'birth_date',
         'gender',
+        'signature_path',
     ];
 
     protected $casts = [
@@ -203,6 +204,13 @@ class Doctor extends Model
         );
     }
 
+    public function signatureUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->signature_path ? route('doctors.signature.stream', $this->id) : null,
+        );
+    }
+
     public function getBranchAttribute()
     {
         $activeBranchId = session('active_branch_id');
@@ -234,6 +242,7 @@ class Doctor extends Model
         'revenue_month',/* Ganancias del mes */
         'pending_sessions_count', /* Pendientes */
         'full_name',/* Nombre completo */
+        'signature_url',
         'branch'
     ];
 }

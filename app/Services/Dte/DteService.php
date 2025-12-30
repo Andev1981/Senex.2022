@@ -197,10 +197,10 @@ class DteService
 
         // Retorna un array con las credenciales necesarias
         return [
-            'rut_empresa' => $config->rut_empresa, // Nombre de columna corregido
+            'rut_empresa' => $config->rut_empresa, 
             'ambiente' => $config->ambiente,
-            'path' => storage_path('app/' . $config->certificado_path), // Ruta completa del PFX
-            'password' => decrypt($config->certificado_password), // Importante: desencriptar
+            'path' => Storage::disk('private')->path($config->certificado_path), 
+            'password' => decrypt($config->certificado_password), 
         ];
     }
 

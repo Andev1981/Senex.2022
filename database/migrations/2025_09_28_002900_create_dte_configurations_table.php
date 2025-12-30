@@ -28,6 +28,8 @@ return new class extends Migration
             // Ambiente de operación
             $table->enum('ambiente', ['homologacion', 'produccion'])->default('homologacion');
 
+            $table->boolean('simulation_mode')->default(true)->comment('Si es true, no envía datos al SII y permite operar sin certificado real.');
+
             // Datos de Caducidad (para gestión de alertas)
             $table->timestamp('fecha_caducidad')->nullable()->comment('Fecha de caducidad del certificado PFX.');
             

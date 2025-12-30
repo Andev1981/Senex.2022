@@ -16,10 +16,15 @@ class AllSeeder extends Seeder
         
         $this->command->info('Truncating all tables...');
         $tables = DB::select('SHOW TABLES');
-        $dbName = 'Tables_in_' . env('DB_DATABASE');
 
         foreach ($tables as $table) {
-            DB::table($table->$dbName)->truncate();
+            $tableArray = (array) $table;
+            $tableName = reset($tableArray);
+            
+            // Evitar truncar la tabla de migraciones
+            if ($tableName !== config('database.migrations')) {
+                DB::table($tableName)->truncate();
+            }
         }
         
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

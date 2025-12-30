@@ -26,6 +26,7 @@ return new class extends Migration {
             $table->string('speciality')->nullable();
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female', 'other', 'unknown'])->nullable();
+            $table->string('signature_path')->nullable()->comment('Ruta a la imagen de la firma digital en el disco privado.');
             
             $table->timestamps();
 

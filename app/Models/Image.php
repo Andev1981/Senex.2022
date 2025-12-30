@@ -14,6 +14,7 @@ class Image extends Model
         'url',
         'path',
         'extension',
+        'type',
         'imageable_id',
         'imageable_type',
     ];

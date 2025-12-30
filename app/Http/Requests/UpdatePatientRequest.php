@@ -13,15 +13,20 @@ class UpdatePatientRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        if ($this->has('rut')) {
+            $this->merge([
+                'rut' => \App\Rules\ValidRut::clean($this->rut),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
-        // 🎯 Obtenemos el RUT del request para buscar si ya existe un ID
-        $patient = Patient::where('rut', $this->rut)
-                ->where('company_id', session('current_company_id'))
-                ->first();
+        $patient = $this->route('patient');
 
         return [
-
             // Paciente
             'name'              => ['required', 'string', 'max:255'],
             'last_name'         => ['required', 'string', 'max:255'],
@@ -29,14 +34,20 @@ class UpdatePatientRequest extends FormRequest
                 'required',
                 'string',
                 'max:20',
-                $patient ? '' : Rule::unique('patients')->where('company_id', session('current_company_id')),
+                new \App\Rules\ValidRut,
+                Rule::unique('patients', 'rut')
+                    ->where('company_id', session('current_company_id'))
+                    ->ignore($patient->id),
             ],
             'email'             => [
-                'required',
+                'nullable',
                 'string',
                 'email',
                 'max:255',
-                $patient ? '' : Rule::unique('patients')->where('company_id', session('current_company_id'))], // Ignora si es edición],
+                Rule::unique('patients', 'email')
+                    ->where('company_id', session('current_company_id'))
+                    ->ignore($patient->id)
+            ],
             'phone'             => ['nullable', 'string', 'max:30'],
 
             'birth_date'        => ['required', 'date', 'before:today'],

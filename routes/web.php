@@ -405,6 +405,11 @@ Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'de
 
 
 
+  // File Proxy (Secure Access)
+  Route::get('/attachments/{attachment}/stream', [\App\Http\Controllers\FileProxyController::class, 'streamAttachment'])->name('attachments.stream');
+  Route::get('/invoices/{invoice}/pdf/stream', [\App\Http\Controllers\FileProxyController::class, 'streamInvoicePdf'])->name('invoices.pdf.stream');
+  Route::get('/doctors/{doctor}/signature', [\App\Http\Controllers\FileProxyController::class, 'streamDoctorSignature'])->name('doctors.signature.stream');
+
   // DTE / Documentos
   Route::get('/invoices', [InvoicesController::class, 'index'])->name('invoices.index');
   Route::get('/invoices/{invoice}', [InvoicesController::class, 'show'])->name('invoices.show');

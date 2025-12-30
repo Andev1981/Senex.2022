@@ -37,7 +37,7 @@ class Attachment extends Model
 
     public function getUrlAttribute(): ?string
     {
-        return $this->storage_path ? Storage::url($this->storage_path) : null;
+        return $this->id ? route('attachments.stream', $this->id) : null;
     }
 
     public function patient(): BelongsTo

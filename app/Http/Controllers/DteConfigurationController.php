@@ -50,8 +50,8 @@ class DteConfigurationController extends Controller
                     ? date('Y-m-d H:i:s', $certData['validTo_time_t'])
                     : null;
 
-                // 3. Guardar archivo en carpeta PRIVADA (No public)
-                $path = $file->store('certificados', 'local');
+                // 3. Guardar archivo en carpeta PRIVADA y SEGURA
+                $path = $file->store('tenants/' . $company->id . '/dte/certificates', 'private');
 
                 // 4. Actualizar campos
                 $config->certificado_path = $path;
@@ -61,12 +61,31 @@ class DteConfigurationController extends Controller
 
             $company->dteConfiguration()->save($config);
 
-            // Lógica de Logo (Polimórfico) opcional en el mismo form
+            // Lógica de Logo (Polimórfico)
             if ($request->hasFile('logo')) {
-                $path = $request->file('logo')->store('logos', 'public');
+                // 1. Obtener logo anterior para borrar el archivo físico
+                $oldLogo = $company->logo;
+                if ($oldLogo && Storage::disk('public')->exists($oldLogo->path)) {
+                    Storage::disk('public')->delete($oldLogo->path);
+                }
+
+                // 2. Guardar nuevo logo
+                $file = $request->file('logo');
+                $extension = $file->getClientOriginalExtension();
+                $path = $file->storeAs(
+                    "branding/tenants/{$company->id}", 
+                    "logo_{$company->id}_" . time() . ".{$extension}", 
+                    'public'
+                );
+
+                // 3. Actualizar registro polimórfico
                 $company->logo()->updateOrCreate(
                     ['type' => 'logo'],
-                    ['path' => $path, 'url' => Storage::url($path)]
+                    [
+                        'path' => $path, 
+                        'url' => Storage::disk('public')->url($path),
+                        'extension' => $extension
+                    ]
                 );
             }
 

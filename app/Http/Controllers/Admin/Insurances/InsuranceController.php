@@ -58,6 +58,7 @@ class InsuranceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'rut' => 'required|string|max:255|unique:insurances,rut',
+            'institution_type' => 'required|in:health_insurer,insurance_company,clinic',
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
@@ -80,6 +81,7 @@ class InsuranceController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'rut' => 'required|string|max:255|unique:insurances,rut,' . $insurance->id,
+            'institution_type' => 'required|in:health_insurer,insurance_company,clinic',
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
