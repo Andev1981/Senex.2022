@@ -106,9 +106,14 @@ class PatientAdminController extends Controller
 
 
 
-        return Inertia::render('Patients/IndexPatients', compact('patients', 'communes', 'provinces', 'regions'));
+        return Inertia::render('Patients/IndexPatients', [
+            'patients' => $patients,
+            'communes' => $communes,
+            'provinces' => $provinces,
+            'regions' => $regions,
+            'user' => auth()->user()->load('roles'),
+        ]);
     }
-
     /**
      * INDEX - GET /patients/{patient}/treatments
      * Retorna vista Inertia para mostrar lista de tratamientos

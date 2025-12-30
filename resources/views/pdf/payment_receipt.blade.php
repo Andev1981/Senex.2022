@@ -4,144 +4,268 @@
     <meta charset="UTF-8">
     <title>Comprobante de Pago #{{ substr($payment->uuid, 0, 8) }}</title>
     <style>
+        /* Variables de Color (simulando Tailwind) */
+        :root {
+            --brand-primary: #3292b3;
+            --brand-primary-light: #e0f2f7; /* bg-brand-primary/10 */
+            --gray-900: #111827;
+            --gray-800: #1f2937;
+            --gray-700: #374151;
+            --gray-600: #4b5563;
+            --gray-500: #6b7280;
+            --gray-400: #9ca3af;
+            --gray-300: #d1d5db;
+            --gray-200: #e5e7eb;
+            --gray-100: #f3f4f6;
+            --gray-50: #f9fafb;
+            --green-600: #16a34a;
+            --green-50: #f0fdf4;
+            --orange-600: #ea580c;
+            --orange-50: #fff7ed;
+            --red-600: #dc2626;
+            --red-50: #fef2f2;
+        }
+
         body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 12px;
-            color: #333;
+            font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+            font-size: 10px; /* Base más pequeña */
+            color: var(--gray-700);
             margin: 0;
             padding: 0;
+            /* background-color: var(--gray-50); */ /* Eliminado */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
         .container {
-            padding: 30px;
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 1rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* shadow-lg */
+            padding: 40px; /* Más padding */
+            border: 1px solid var(--gray-100);
         }
-        .header {
-            border-bottom: 2px solid #3292b3;
+
+        /* Header */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start; /* Alineación superior */
+            padding-bottom: 25px; /* Más espacio */
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--gray-100); /* Borde más grueso */
+        }
+        .header-left .title {
+            font-size: 28px; /* Más grande */
+            font-weight: 800; /* Extra bold */
+            color: var(--brand-primary);
+            text-transform: uppercase;
+            letter-spacing: -0.04em; /* Más tracking-tight */
+            line-height: 1.1;
+        }
+        .header-left .subtitle {
+            font-size: 11px; /* Ligeramente más grande */
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.15em; /* Más tracking-widest */
+            font-weight: 700;
+            margin-top: 5px;
+        }
+        .header-right {
+            text-align: right;
+        }
+        .header-right .company-name {
+            font-size: 16px; /* Más grande */
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1.3;
+        }
+        .header-right .company-rut {
+            font-size: 11px;
+            color: var(--gray-600);
+            font-weight: 500;
+            margin-top: 3px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--gray-800);
+            margin-bottom: 20px; /* Más espacio */
+            border-bottom: 1px solid var(--gray-200); /* Borde sólido, más claro */
             padding-bottom: 10px;
-            margin-bottom: 20px;
+            letter-spacing: 0.05em;
         }
-        .header table {
-            width: 100%;
-        }
-        .header .title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #3292b3;
-            text-transform: uppercase;
-        }
-        .header .subtitle {
-            font-size: 10px;
-            color: #858793;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .info-section {
-            margin-bottom: 30px;
-        }
-        .info-section table {
-            width: 100%;
-        }
-        .info-label {
-            font-size: 10px;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: #858793;
-            margin-bottom: 5px;
-        }
-        .info-value {
-            font-weight: bold;
-            font-size: 12px;
-            color: #111;
-        }
+
+        /* Details Table (Ahora para ambas secciones de tabla) */
         .details-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            background-color: var(--gray-50);
+            border-radius: 1rem; /* rounded-xl */
+            overflow: hidden;
+            border: 1px solid var(--gray-100);
+        }
+        .details-table th, .details-table td {
+            padding: 15px 20px; /* Más padding */
+            text-align: left; /* Asegurar alineación izquierda por defecto para headers */
         }
         .details-table th {
-            background-color: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 10px;
-            text-align: left;
+            background-color: var(--brand-primary-light);
             font-size: 10px;
-            font-weight: 900;
+            font-weight: 800;
             text-transform: uppercase;
-            color: #858793;
+            color: var(--brand-primary);
+            letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--gray-200);
         }
         .details-table td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid var(--gray-200); /* Borde más visible */
+            font-size: 11px;
+            color: var(--gray-700);
         }
-        .summary-section {
-            width: 300px;
+        .details-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        /* Estilos para los contenidos dentro de las celdas de las details-table */
+        .details-table .service-name {
+            font-weight: 700;
+            color: var(--gray-900);
+            font-size: 12px;
+            line-height: 1.3;
+        }
+        .details-table .service-code {
+            font-size: 9px;
+            color: var(--gray-500);
+            margin-top: 2px;
+        }
+
+        /* Summary */
+        .summary-wrapper {
+            background-color: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 1rem; /* rounded-xl */
+            padding: 25px; /* Más padding */
+            width: 350px; /* Un poco más ancho */
             margin-left: auto;
-            background-color: #f9fafb;
-            padding: 20px;
-            border-radius: 15px;
+            box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.06); /* shadow-inner más pronunciado */
+            /* Se añade un div clear-fix al final del HTML de summary-wrapper */
         }
-        .summary-row {
-            margin-bottom: 8px;
-            clear: both;
+        .summary-item {
+            margin-bottom: 12px;
+            font-size: 13px; /* Más grande */
+            clear: both; /* Asegurar que cada item empiece en nueva línea */
         }
-        .summary-label {
+        .summary-item:last-of-type {
+            margin-bottom: 0;
+        }
+        .summary-item .summary-label {
             float: left;
-            color: #6b7280;
+            color: var(--gray-700);
+            font-weight: 500;
         }
-        .summary-value {
+        .summary-item .summary-value {
             float: right;
-            font-weight: bold;
+            font-weight: 700;
+            color: var(--gray-900);
         }
-        .total-row {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #d1d5db;
-            font-weight: 900;
-            color: #3292b3;
-            font-size: 16px;
+        .summary-total-item {
+            border-top: 2px solid var(--brand-primary-light); /* Borde más grueso y de color */
+            padding-top: 20px; /* Más padding */
+            margin-top: 20px;
+            font-size: 18px; /* Mucho más grande */
+            font-weight: 800;
+            color: var(--brand-primary);
+            clear: both; /* Asegurar que empiece en nueva línea */
         }
-        .footer {
-            margin-top: 50px;
+        .summary-total-item .summary-label {
+            float: left;
+             color: var(--brand-primary); /* Asegurar color principal */
+        }
+        .summary-total-item .summary-value {
+            float: right;
+             color: var(--brand-primary); /* Asegurar color principal */
+        }
+
+
+        /* Footer */
+        .footer-section {
+            margin-top: 50px; /* Más espacio */
             text-align: center;
-            font-size: 10px;
-            color: #9ca3af;
+            font-size: 9px;
+            color: var(--gray-500);
+            padding-top: 25px;
+            border-top: 1px solid var(--gray-100); /* Borde sólido más claro */
+            font-weight: 500;
         }
-        .brand-primary { color: #3292b3; }
-        .brand-secondary { color: #79d0ec; }
-        .text-right { text-align: right; }
+        .footer-section p {
+            margin: 3px 0;
+        }
+        .app-name {
+            font-weight: bold;
+            color: var(--gray-700);
+        }
+
+        /* Utilidades */
+        .text-right { text-align: right !important; }
+        .text-left { text-align: left; }
+        .font-bold { font-weight: bold; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .text-primary { color: var(--brand-primary); }
+        .text-green { color: var(--green-600); }
+        .text-orange { color: var(--orange-600); }
+        .text-red { color: var(--red-600); }
+        .text-capitalize { text-transform: capitalize; }
+        .text-sm { font-size: 11px; }
+        .text-xs { font-size: 10px; }
+
+
+        /* Flexbox fallbacks para PDF */
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .items-flex-start { align-items: flex-start; }
+        .w-full { width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <table>
-                <tr>
-                    <td>
-                        <div class="title">Comprobante de Pago</div>
-                        <div class="subtitle">Transacción #{{ strtoupper(substr($payment->uuid, 0, 8)) }}</div>
-                    </td>
-                    <td class="text-right">
-                        <div class="info-value">{{ $payment->company->business_name }}</div>
-                        <div class="subtitle">{{ $payment->company->rut }}</div>
-                    </td>
-                </tr>
-            </table>
+        <div class="header-section">
+            <div class="header-left">
+                <div class="title">Comprobante de Pago</div>
+                <div class="subtitle">Transacción #{{ strtoupper(substr($payment->uuid, 0, 8)) }}</div>
+            </div>
+            <div class="header-right">
+                <div class="company-name">{{ $payment->company->business_name }}</div>
+                <div class="company-rut">RUT: {{ $payment->company->rut }}</div>
+            </div>
         </div>
 
-        <div class="info-section">
-            <table>
+        <div class="section-title">Información del Pago</div>
+        <table class="details-table"> <!-- Usar clase details-table para su estructura y estilos -->
+            <thead>
                 <tr>
-                    <td width="33%">
-                        <div class="info-label">Paciente</div>
-                        <div class="info-value">{{ $payment->patient->full_name }}</div>
-                        <div class="subtitle">RUT: {{ $payment->patient->rut }}</div>
+                    <th style="width: 33%;">Paciente</th>
+                    <th style="width: 33%;">Fecha y Hora</th>
+                    <th style="width: 34%;">Método de Pago</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="width: 33%;">
+                        <div class="service-name">{{ $payment->patient->full_name }}</div>
+                        <div class="service-code">RUT: {{ $payment->patient->rut }}</div>
                     </td>
-                    <td width="33%">
-                        <div class="info-label">Fecha y Hora</div>
-                        <div class="info-value">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : $payment->created_at->format('d/m/Y H:i') }}</div>
-                        <div class="subtitle">Sucursal: {{ $payment->branch->name ?? 'Casa Central' }}</div>
+                    <td style="width: 33%;">
+                        <div class="service-name">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : $payment->created_at->format('d/m/Y H:i') }}</div>
+                        <div class="service-code">Sucursal: {{ $payment->branch->name ?? 'Casa Central' }}</div>
                     </td>
-                    <td width="33%">
-                        <div class="info-label">Método de Pago</div>
-                        <div class="info-value" style="text-transform: capitalize;">
+                    <td style="width: 34%;">
+                        <div class="service-name text-capitalize">
                             @php
                                 $methods = [
                                     'cash' => 'Efectivo',
@@ -154,14 +278,14 @@
                             @endphp
                         </div>
                         @if($payment->transaction_reference)
-                            <div class="subtitle">Ref: {{ $payment->transaction_reference }}</div>
+                            <div class="service-code">Ref: {{ $payment->transaction_reference }}</div>
                         @endif
                     </td>
                 </tr>
-            </table>
-        </div>
+            </tbody>
+        </table>
 
-        <div class="info-label" style="margin-bottom: 10px;">Detalle de Prestaciones</div>
+        <div class="section-title">Detalle de Prestaciones</div>
         <table class="details-table">
             <thead>
                 <tr>
@@ -173,10 +297,10 @@
                 @foreach($payment->paymentAllocation as $alloc)
                 <tr>
                     <td>
-                        <div style="font-weight: bold; font-size: 11px;">{{ $alloc->treatmentSession->sessionType->name ?? 'Atención Médica' }}</div>
-                        <div class="subtitle" style="font-size: 8px;">SESIÓN ID: {{ $alloc->treatment_session_id }} | COD: {{ $alloc->treatmentSession->sessionType->code ?? 'N/A' }}</div>
+                        <div class="service-name">{{ $alloc->treatmentSession->sessionType->name ?? 'Atención Médica' }}</div>
+                        <div class="service-code">SESIÓN ID: {{ $alloc->treatment_session_id }} | COD: {{ $alloc->treatmentSession->sessionType->code ?? 'N/A' }}</div>
                     </td>
-                    <td class="text-right font-bold" style="font-weight: bold;">
+                    <td class="text-right font-bold">
                         ${{ number_format($alloc->amount_clp, 0, ',', '.') }}
                     </td>
                 </tr>
@@ -184,36 +308,36 @@
             </tbody>
         </table>
 
-        <div class="summary-section">
-            <div class="summary-row">
+        <div class="summary-wrapper">
+            <div class="summary-item">
                 <span class="summary-label">Total Bruto</span>
                 <span class="summary-value">${{ number_format($payment->amount_gross_clp, 0, ',', '.') }}</span>
             </div>
             
             @foreach($payment->receivables as $rec)
-            <div class="summary-row" style="color: #059669;">
+            <div class="summary-item text-green">
                 <span class="summary-label">Cobertura {{ $rec->insurance->name }}</span>
                 <span class="summary-value">-${{ number_format($rec->amount_clp, 0, ',', '.') }}</span>
             </div>
             @endforeach
 
             @if($payment->discount_clp > 0)
-            <div class="summary-row" style="color: #d97706;">
+            <div class="summary-item text-orange">
                 <span class="summary-label">Descuento Aplicado</span>
                 <span class="summary-value">-${{ number_format($payment->discount_clp, 0, ',', '.') }}</span>
             </div>
             @endif
 
-            <div class="summary-row total-row">
-                <span class="summary-label" style="color: #3292b3;">COPAGO PAGADO</span>
-                <span class="summary-value">${{ number_format($payment->amount_clp, 0, ',', '.') }}</span>
+            <div class="summary-total-item">
+                <span class="summary-label text-primary">COPAGO PAGADO</span>
+                <span class="summary-value text-primary">${{ number_format($payment->amount_clp, 0, ',', '.') }}</span>
             </div>
             <div style="clear: both;"></div>
         </div>
 
-        <div class="footer">
-            <p>Este documento es un comprobante interno de recepción de pago.</p>
-            <p>Emitido por {{ config('app.name') }} el {{ date('d/m/Y H:i:s') }}</p>
+        <div class="footer-section">
+            <p>Este documento es un comprobante interno de recepción de pago. No tiene validez tributaria.</p>
+            <p>Generado por <span class="app-name">{{ config('app.name') }}</span> el {{ date('d/m/Y H:i:s') }}</p>
         </div>
     </div>
 </body>

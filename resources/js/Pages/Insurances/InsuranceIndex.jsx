@@ -99,7 +99,6 @@ const InsuranceIndex = ({ insurances, sessionTypes, user }) => {
         <TableInsurances
           insurances={insurances}
           handleOpenModalEdit={openFormModal}
-          handleOpenModalDelete={() => {}}
           openPlanListModal={openPlanListModal}
           user={user}
         />

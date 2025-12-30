@@ -37,11 +37,13 @@ class HandleInertiaRequests extends Middleware
             'all_companies' => $authData['all_companies'],
             'available_branches' => $authData['available_branches'],
 
-            // Mensajes Flash
-            /* 'flash' => [
-                'message' => fn() => $request->session()->get('message'),
-                'type' => fn() => $request->session()->get('type', 'info'),
-            ], */
+            // Mensajes Flash (Genérico)
+            'flash' => array_filter([
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'message' => $request->session()->get('message'),
+                'type' => $request->session()->get('type'),
+            ]),
         ];
     }
 

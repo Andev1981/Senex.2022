@@ -1,5 +1,4 @@
 import { XCircle } from "lucide-react";
-import Chip from "@/Components/ui/Chip";
 import { fmtCLP, fmtDate } from "@/utils/utils";
 import { estadoClass, estadoTexto } from "@/helpers/status";
 
@@ -55,10 +54,9 @@ export default function ResumeModal({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Estado:</span>
-              <Chip
-                color={estadoClass(sessionData?.status)}
-                text={estadoTexto(sessionData?.status)}
-              />
+              <span className={`px-2 py-1 text-xs font-bold rounded-full ${estadoClass(sessionData?.status)} text-white`}>
+                {estadoTexto(sessionData?.status)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Sucursal:</span>

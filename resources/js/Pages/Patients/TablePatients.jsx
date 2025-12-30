@@ -39,7 +39,7 @@ import { useForm, router } from "@inertiajs/react";
 import { patientStatuses, debtStatuses } from "@/helpers/status";
 import usePatientStore from "@/Stores/usePatientStore";
 
-export default function TablePatients({ handleOpenModalDelete, communes }) {
+export default function TablePatients({ handleOpenModalDelete, communes, user }) {
   const patients = usePatientStore((state) => state.patients);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -117,137 +117,146 @@ export default function TablePatients({ handleOpenModalDelete, communes }) {
   }, [filterEstado, filterEstadoPago, filterComuna, edadMin, edadMax]);
 
   const columns = useMemo(
-    () => [
-      {
-        id: "paciente",
-        header: "Identidad del Paciente",
-        accessorFn: (row) => row.full_name,
-        cell: ({ row }) => (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center font-black text-brand-primary rounded-[1.2rem] w-11 h-11 bg-brand-secondary/10 border-2 border-brand-secondary/20 shadow-sm shadow-brand-primary/5 shrink-0 uppercase text-xs">
-              {row.original.name[0]}
-              {row.original.last_name[0]}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate leading-none mb-1.5">
-                {row.original.full_name}
-              </p>
-              <div className="flex items-center gap-2 font-mono text-[10px] font-bold text-brand-gray opacity-60">
-                {row.original.rut}
-                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                <span>ID {row.original.id}</span>
+    () => {
+      const baseColumns = [
+        {
+          id: "paciente",
+          header: "Identidad del Paciente",
+          accessorFn: (row) => row.full_name,
+          cell: ({ row }) => (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center justify-center font-black text-brand-primary rounded-[1.2rem] w-11 h-11 bg-brand-secondary/10 border-2 border-brand-secondary/20 shadow-sm shadow-brand-primary/5 shrink-0 uppercase text-xs">
+                {row.original.name[0]}
+                {row.original.last_name[0]}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate leading-none mb-1.5">
+                  {row.original.full_name}
+                </p>
+                <div className="flex items-center gap-2 font-mono text-[10px] font-bold text-brand-gray opacity-60">
+                  {row.original.rut}
+                  <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                  <span>ID {row.original.id}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ),
-      },
-      {
-        id: "status",
-        header: "Estado Clínico",
-        accessorKey: "status",
-        cell: ({ getValue }) => {
-          const v = String(getValue() ?? "active");
-          const cfg = patientStatuses[v] || {
-            label: v,
-            className: "bg-gray-100 text-gray-500",
-          };
-          return (
-            <div className="text-center">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${cfg.className}`}
-              >
-                {cfg.label}
-              </span>
-            </div>
-          );
+          ),
         },
-      },
-      {
-        id: "payment_status",
-        header: "Finanzas",
-        accessorKey: "payment_status",
-        cell: ({ getValue }) => {
-          const v = String(getValue() ?? "ok");
-          const cfg = debtStatuses[v] || {
-            label: v,
-            className: "bg-gray-100 text-gray-500",
-          };
-          return (
-            <div className="text-center">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${cfg.className}`}
-              >
-                {cfg.label}
-              </span>
-            </div>
-          );
-        },
-      },
-      {
-        id: "contacto",
-        header: "Localización & Contacto",
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1 min-w-[160px]">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600 truncate">
-              <MapPin className="w-3 h-3 text-brand-primary opacity-40" />{" "}
-              {row.original.comuna_name || "Sin Comuna"}
-            </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600">
-              <Phone className="w-3 h-3 text-brand-primary opacity-40" />{" "}
-              {row.original.phone || "---"}
-            </div>
-          </div>
-        ),
-      },
-      {
-        header: "Cronología",
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-[9px] font-black text-brand-gray uppercase tracking-widest">
-              <Stethoscope className="w-3 h-3 opacity-40" />{" "}
-              {row.original.last_doctor_name
-                ? `Dr. ${row.original.last_doctor_name.split(" ")[0]}`
-                : "Sin Atenciones"}
-            </div>
-            {row.original.birth_date && (
-              <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 font-mono">
-                <Cake className="w-3 h-3 opacity-30" /> {row.original.age} Años
+        {
+          id: "status",
+          header: "Estado Clínico",
+          accessorKey: "status",
+          cell: ({ getValue }) => {
+            const v = String(getValue() ?? "active");
+            const cfg = patientStatuses[v] || {
+              label: v,
+              className: "bg-gray-100 text-gray-500",
+            };
+            return (
+              <div className="text-center">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${cfg.className}`}
+                >
+                  {cfg.label}
+                </span>
               </div>
-            )}
-          </div>
-        ),
-      },
-      {
-        id: "actions",
-        header: "Gestión",
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1.5">
-            <button
-              onClick={() =>
-                router.get(route("patients.show", row.original.id))
-              }
-              className="flex items-center gap-2 p-2 px-4 transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
-              title="Abrir Ficha Clínica"
-            >
-              <span className="text-[9px] font-black uppercase tracking-widest">
-                Ficha
-              </span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px h-6 mx-1 bg-gray-100"></div>
-            <button
-              onClick={() => handleOpenModalDelete(row.original)}
-              className="p-2 text-gray-300 transition-all hover:text-red-500 hover:bg-red-50 rounded-xl active:scale-90"
-              title="Eliminar Registro"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        ),
-        enableSorting: false,
-      },
-    ],
-    [handleOpenModalDelete]
+            );
+          },
+        },
+        {
+          id: "payment_status",
+          header: "Finanzas",
+          accessorKey: "payment_status",
+          cell: ({ getValue }) => {
+            const v = String(getValue() ?? "ok");
+            const cfg = debtStatuses[v] || {
+              label: v,
+              className: "bg-gray-100 text-gray-500",
+            };
+            return (
+              <div className="text-center">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${cfg.className}`}
+                >
+                  {cfg.label}
+                </span>
+              </div>
+            );
+          },
+        },
+        {
+          id: "contacto",
+          header: "Localización & Contacto",
+          cell: ({ row }) => (
+            <div className="flex flex-col gap-1 min-w-[160px]">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600 truncate">
+                <MapPin className="w-3 h-3 text-brand-primary opacity-40" />{" "}
+                {row.original.comuna_name || "Sin Comuna"}
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600">
+                <Phone className="w-3 h-3 text-brand-primary opacity-40" />{" "}
+                {row.original.phone || "---"}
+              </div>
+            </div>
+          ),
+        },
+        {
+          header: "Cronología",
+          cell: ({ row }) => (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-[9px] font-black text-brand-gray uppercase tracking-widest">
+                <Stethoscope className="w-3 h-3 opacity-40" />{" "}
+                {row.original.last_doctor_name
+                  ? `Dr. ${row.original.last_doctor_name.split(" ")[0]}`
+                  : "Sin Atenciones"}
+              </div>
+              {row.original.birth_date && (
+                <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 font-mono">
+                  <Cake className="w-3 h-3 opacity-30" /> {row.original.age} Años
+                </div>
+              )}
+            </div>
+          ),
+        },
+        {
+          id: "actions",
+          header: "Gestión",
+          cell: ({ row }) => (
+            <div className="flex items-center justify-end gap-1.5">
+              <button
+                onClick={() =>
+                  router.get(route("patients.show", row.original.id))
+                }
+                className="flex items-center gap-2 p-2 px-4 transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
+                title="Abrir Ficha Clínica"
+              >
+                <span className="text-[9px] font-black uppercase tracking-widest">
+                  Ficha
+                </span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+              <div className="w-px h-6 mx-1 bg-gray-100"></div>
+              <button
+                onClick={() => handleOpenModalDelete(row.original)}
+                className="p-2 text-gray-300 transition-all hover:text-red-500 hover:bg-red-50 rounded-xl active:scale-90"
+                title="Eliminar Registro"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ),
+          enableSorting: false,
+        },
+      ];
+      if (user && user.roles.some(role => role.name === 'superadmin')) {
+        baseColumns.splice(1, 0, {
+          accessorKey: "company_id",
+          header: "Company ID",
+        });
+      }
+      return baseColumns;
+    },
+    [handleOpenModalDelete, user]
   );
 
   const table = useReactTable({

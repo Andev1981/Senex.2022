@@ -38,15 +38,9 @@ export default function PatientCard({
             Paciente
           </label>
           <SearchSelect
-            items={patients}
+            options={patients.map(p => ({ value: p.id, label: `${p.full_name || `${p.name} ${p.last_name}`} ${p.rut ? `(${p.rut})` : ''}` }))}
             value={selectedPatientId}
             onChange={onPatientChange}
-            config={{
-              valueKey: "id",
-              displayKey: "full_name",
-              secondaryKeys: ["rut", "email"],
-              searchKeys: ["name", "last_name", "rut"],
-            }}
             placeholder="Buscar por nombre o RUT..."
             error={errors.patient_id}
             className="!rounded-2xl border-gray-100"

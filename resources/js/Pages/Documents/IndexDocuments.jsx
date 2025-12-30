@@ -181,6 +181,12 @@ export default function IndexDocuments({
     ]);
   };
 
+  const updateItem = (index, field, value) => {
+    const newItems = [...data.items];
+    newItems[index][field] = value;
+    setData("items", newItems);
+  };
+
   const handleTypeChange = (newType) => {
     if (newType === data.dte_type) return;
     const performChange = () => {
@@ -735,33 +741,35 @@ export default function IndexDocuments({
                           </div>
                           <div className="p-8 space-y-6">
                             <SearchSelect
-                              items={patients}
-                              placeholder="Buscar en base de datos..."
-                              onChange={(val, p) =>
-                                p &&
-                                setData((d) => ({
-                                  ...d,
-                                  patient_id: p.id,
-                                  client: {
-                                    rut: p.rut,
-                                    razonSocial: p.full_name,
-                                    giro: "Particular",
-                                    direccion: p.address
-                                      ? `${p.address.street} ${
-                                          p.address.number || ""
-                                        }`
-                                      : "",
-                                    comuna: p.address?.commune_name || "",
-                                    ciudad:
-                                      p.address?.region_name || "Santiago",
-                                  },
-                                }))
-                              }
-                              config={{
-                                displayKey: "full_name",
-                                secondaryKeys: ["rut"],
-                                searchKeys: ["full_name", "rut"],
+                              label="Buscar Paciente"
+                              options={patients.map(p => ({ value: p.id, label: `${p.full_name || `${p.name} ${p.last_name}`} ${p.rut ? `(${p.rut})` : ''}` }))}
+                              value={data.patient_id || ''}
+                              onChange={(val) => {
+                                const patient = patients.find(p => p.id === val);
+                                if (patient) {
+                                  setData((d) => ({
+                                    ...d,
+                                    patient_id: patient.id,
+                                    client: {
+                                      rut: patient.rut,
+                                      razonSocial: patient.full_name,
+                                      giro: "Particular",
+                                      direccion: patient.address
+                                        ? `${patient.address.street} ${patient.address.number || ""}`
+                                        : "",
+                                      comuna: patient.address?.commune_name || "",
+                                      ciudad: patient.address?.region_name || "Santiago",
+                                    },
+                                  }));
+                                } else {
+                                  setData((d) => ({
+                                      ...d,
+                                      patient_id: null,
+                                      client: { ...d.client, rut: "", razonSocial: "", giro: "", direccion: "", comuna: "", ciudad: "" },
+                                  }));
+                                }
                               }}
+                              placeholder="Buscar en base de datos..."
                             />
                             <div className="grid grid-cols-2 gap-6">
                               <div className="space-y-1">
@@ -917,14 +925,15 @@ export default function IndexDocuments({
                           <div className="flex-1 max-w-sm">
                             {!esNotaCredito && (
                               <SearchSelect
-                                items={sellables}
-                                placeholder="Añadir Producto o Servicio..."
-                                onChange={(val, item) => item && addItem(item)}
-                                config={{
-                                  displayKey: "name",
-                                  secondaryKeys: ["price"],
-                                  searchKeys: ["name"],
+                                label="Añadir Producto o Servicio..."
+                                options={sellables.map(s => ({ value: s.id, label: `${s.name} ($${s.price.toLocaleString('es-CL')})` }))}
+                                onChange={(val) => {
+                                  const sellable = sellables.find(s => s.id === val);
+                                  if (sellable) {
+                                    addItem(sellable);
+                                  }
                                 }}
+                                placeholder="Buscar Producto o Servicio..."
                               />
                             )}
                           </div>

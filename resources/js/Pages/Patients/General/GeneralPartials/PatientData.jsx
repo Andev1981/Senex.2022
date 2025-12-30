@@ -15,39 +15,39 @@ export default function PatientData({ patient }) {
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 relative z-10">
         <div className="space-y-1">
-          <p className="enterprise-label opacity-60 ml-1">Correo Electrónico</p>
-          <p className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+          <span className="enterprise-label opacity-60 ml-1">Correo Electrónico</span>
+          <div className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
             <Mail className="w-4 h-4 text-brand-primary" />
             {patient.email || 'No registrado'}
-          </p>
+          </div>
         </div>
         <div className="space-y-1">
-          <p className="enterprise-label opacity-60 ml-1">Contacto Telefónico</p>
-          <p className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+          <span className="enterprise-label opacity-60 ml-1">Contacto Telefónico</span>
+          <div className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
             <Phone className="w-4 h-4 text-brand-primary" />
             {patient.phone || 'No registrado'}
-          </p>
+          </div>
         </div>
         <div className="space-y-1">
-          <p className="enterprise-label opacity-60 ml-1">Fecha de Nacimiento</p>
-          <p className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+          <span className="enterprise-label opacity-60 ml-1">Fecha de Nacimiento</span>
+          <div className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
             <Calendar className="w-4 h-4 text-brand-primary" />
             {patient.birth_date ? new Date(patient.birth_date).toLocaleDateString("es-CL", { day: '2-digit', month: 'long', year: 'numeric' }) : 'No registrada'}
-          </p>
+          </div>
         </div>
         <div className="space-y-1">
-          <p className="enterprise-label opacity-60 ml-1">Vínculo Civil</p>
-          <p className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+          <span className="enterprise-label opacity-60 ml-1">Vínculo Civil</span>
+          <div className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
             <div className="w-4 h-4 rounded-full bg-brand-secondary/30"></div>
             {t("maritalStatus", patient.marital_status) || 'No especificado'}
-          </p>
+          </div>
         </div>
         <div className="space-y-1 md:col-span-2">
-          <p className="enterprise-label opacity-60 ml-1">Ocupación / Profesión</p>
-          <p className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+          <span className="enterprise-label opacity-60 ml-1">Ocupación / Profesión</span>
+          <div className="flex items-center gap-3 font-bold text-gray-700 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
             <div className="w-4 h-4 rounded-full bg-brand-primary/20"></div>
             {patient.occupation || 'No especificada'}
-          </p>
+          </div>
         </div>
       </div>
     </div>

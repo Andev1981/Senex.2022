@@ -27,6 +27,7 @@ export default function SideModal({
   icon: Icon,
   footer,
   width = "md",
+  hideDefaultHeader = false, // Nueva prop, por defecto false
 }) {
   const widthClass = {
     sm: "max-w-sm",
@@ -73,8 +74,8 @@ export default function SideModal({
                   className={`pointer-events-auto w-screen ${widthClass}`}
                 >
                   <div className="flex flex-col h-full bg-white shadow-2xl relative overflow-hidden">
-                    {/* 1. HEADER HERO PREMIUM */}
-                    {title ? (
+                    {/* 1. HEADER HERO PREMIUM (RENDERIZADO CONDICIONALMENTE) */}
+                    {!hideDefaultHeader && (title ? (
                         <div className="flex items-center justify-between px-10 py-8 border-b border-gray-100 bg-gray-50/50 shrink-0 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
                             
@@ -111,7 +112,7 @@ export default function SideModal({
                         >
                             <X className="w-5 h-5" />
                         </button>
-                    )}
+                    ))}
 
                     {/* 2. CONTENIDO SCROLLABLE */}
                     <div className={`flex-1 overflow-y-auto custom-scrollbar ${title ? 'p-10' : 'p-0'}`}>

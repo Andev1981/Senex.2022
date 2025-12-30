@@ -263,33 +263,20 @@ export default function SessionFormModal({
               ) : (
                 <SearchSelect
                   label="Paciente *"
-                  items={patients}
+                  options={patients.map(p => ({ value: p.id, label: `${p.full_name || `${p.name} ${p.last_name}`} ${p.rut ? `(${p.rut})` : ''}` }))}
                   value={data.patient_id}
                   onChange={(val) => setData("patient_id", val)}
                   disabled={!isFieldEditable("patient_id")}
-                  config={{
-                    valueKey: "id",
-                    displayKey: "full_name",
-                    secondaryKeys: ["rut"],
-                    searchKeys: ["full_name", "rut"],
-                    renderItem: (item) => <p>{item.full_name}</p>,
-                  }}
                 />
               )}
 
               {/* Kinesiólogo */}
               <SearchSelect
                 label="Kinesiólogo/a *"
-                items={formattedDoctors}
+                options={formattedDoctors.map(d => ({ value: d.id, label: d.full_name }))}
                 value={data.doctor_id}
                 onChange={(val) => setData("doctor_id", val)}
                 disabled={!isFieldEditable("doctor_id")}
-                config={{
-                  valueKey: "id",
-                  displayKey: "full_name",
-                  searchKeys: ["full_name"],
-                  renderItem: (item) => <p>{item.full_name}</p>,
-                }}
               />
 
               {/* --- SELECCIÓN DE TRATAMIENTO / DIAGNÓSTICO --- */}
@@ -407,7 +394,7 @@ export default function SessionFormModal({
               <div className="grid grid-cols-2 gap-4">
                 <SearchSelect
                   label="Tipo Sesión"
-                  items={session_types}
+                  options={session_types.map(st => ({ value: st.id, label: st.name }))}
                   value={data.session_type_id}
                   onChange={(val) => {
                     const type = session_types.find((t) => t.id === val);
@@ -418,11 +405,6 @@ export default function SessionFormModal({
                         ? Number(type.base_price_clp)
                         : 0,
                     }));
-                  }}
-                  config={{
-                    valueKey: "id",
-                    displayKey: "name",
-                    renderItem: (i) => <span>{i.name}</span>,
                   }}
                 />
                 <div>

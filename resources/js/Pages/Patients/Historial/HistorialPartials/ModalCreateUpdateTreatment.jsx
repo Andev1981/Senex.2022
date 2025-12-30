@@ -200,16 +200,10 @@ export default function ModalCreateUpdateTreatment({
             <div className="space-y-6">
               {/* Kinesiólogo */}
               <SearchSelect
-                items={doctors}
+                label="Especialista Responsable *"
+                options={doctors.map(d => ({ value: d.id, label: `${d.full_name || `${d.name} ${d.last_name}`} (${d.email})` }))}
                 value={data?.doctor_id}
                 onChange={(value) => setData("doctor_id", value)}
-                config={{
-                  valueKey: "id",
-                  displayKey: "full_name",
-                  secondaryKeys: ["email"],
-                  searchKeys: ["name", "last_name"],
-                }}
-                label="Especialista Responsable *"
                 placeholder="Buscar en el staff..."
                 error={errors?.doctor_id}
                 disabled={isLocked}
@@ -306,16 +300,10 @@ export default function ModalCreateUpdateTreatment({
             </h3>
             <div className="space-y-6">
               <SearchSelect
-                items={diagnostics}
+                label="Patología Detectada *"
+                options={diagnostics.map(d => ({ value: d.code, label: `${d.code} - ${d.description}` }))}
                 value={data?.diagnostic_code}
                 onChange={(value) => setData("diagnostic_code", value)}
-                config={{
-                  valueKey: "code",
-                  displayKey: "description",
-                  secondaryKeys: ["code"],
-                  searchKeys: ["code", "description"],
-                }}
-                label="Patología Detectada *"
                 placeholder="Buscar en el catálogo oficial..."
                 error={errors?.diagnostic_code}
                 disabled={isLocked}

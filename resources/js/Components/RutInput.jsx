@@ -1,6 +1,6 @@
 // components/RutInput.jsx
 import React, { useState, useEffect } from "react";
-import { AlertCircle, CheckCircle2, Building2, Search } from "lucide-react";
+import { AlertCircle, CheckCircle2, Building2, Search, Hash } from "lucide-react"; // Agregado Hash icon
 
 const RutInput = ({
   name = "rut",
@@ -17,7 +17,7 @@ const RutInput = ({
   tipoDocumento = null,
   onEmpresaEncontrada = null,
   empresasExistentes = [],
-  onBlur = null, // 🎯 1. Recibir la prop onBlur
+  onBlur = null, 
 }) => {
   const [display, setDisplay] = useState("");
 
@@ -48,7 +48,7 @@ const RutInput = ({
     if (clean.length === 0) return "";
     if (clean.length === 1) return clean;
 
-    // Separar: últimos caracteres son DV, el resto es el número
+    // Separar: últimos caracteres son DV, el resto es el número     
     const dv = clean.slice(-1);
     const numero = clean.slice(0, -1);
 
@@ -88,7 +88,7 @@ const RutInput = ({
     if (!/^[0-9K]$/.test(dv)) return false;
 
     // Validar longitud (1 a 9 dígitos)
-    if (numero.length < 1 || numero.length > 9) return false;
+    if (numero.length < 1 || numero.length > 9) return false;        
 
     // Calcular y comparar DV
     return calculateVerifierDigit(numero) === dv;
@@ -124,7 +124,7 @@ const RutInput = ({
     );
   };
 
-  const [empresaEncontrada, setEmpresaEncontrada] = useState(null);
+  const [empresaEncontrada, setEmpresaEncontrada] = useState(null);  
   const [isConsulting, setIsConsulting] = useState(false);
 
   const consultarEmpresa = async (rut) => {
@@ -186,7 +186,7 @@ const RutInput = ({
 
     if (!validateRut(canonical)) return "RUT inválido";
 
-    if (esRutEmpresarial() && !validateRutEmpresarial(canonical))
+    if (esRutEmpresarial() && !validateRutEmpresarial(canonical))    
       return "RUT debe ser empresarial (7-8 dígitos)";
 
     if (esRutEmpresarial() && empresaEncontrada)
@@ -202,30 +202,39 @@ const RutInput = ({
     validationMessage && !/inválido|debe ser/.test(validationMessage);
 
   return (
-    <div className={"relative z-0 " + className}>
+    <div className={"relative " + className}> {/* Elimino z-0 y dejo solo className para el contenedor principal */}
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative flex-1 group"> {/* Añadido group para focus-within en el icono */}
+          {/* Icono Hash */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gray opacity-40 group-focus-within:text-brand-primary transition-colors">
+            <Hash className="w-4 h-4" />
+          </div>
+
           <input
             id={name}
             name={name}
             type="text"
             value={display}
             onChange={handleChange}
-            onBlur={onBlur} // 🎯 2. ASIGNAR EL EVENTO AQUÍ
+            onBlur={onBlur}
             placeholder={placeholder}
             disabled={disabled}
             required={required}
             className={
-              "w-full rounded-md pl-10 border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200 " +
-              inputClassName
+              // Estilos enterprise para el input
+              "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-50 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
+              inputClassName // Mantiene los estilos adicionales pasados por prop
             }
             maxLength={12}
           />
-          <div className="absolute inset-y-0 flex items-center pr-3 left-2">
+          {/* Íconos de validación (CheckCircle2, AlertCircle) */}
+          {/* Muevo los íconos de validación a la derecha */}
+          <div className="absolute inset-y-0 right-0 flex items-center pr-4">
             {isValid ? (
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <CheckCircle2 className="w-4 h-4 text-green-600" />    
             ) : (
-              <AlertCircle className="w-4 h-4 text-gray-500" />
+              // Solo muestro el AlertCircle si hay un valor y la validación falla
+              display.length > 0 && !isValid && <AlertCircle className="w-4 h-4 text-red-500" />
             )}
           </div>
         </div>
@@ -237,9 +246,9 @@ const RutInput = ({
             disabled={
               !validateRutEmpresarial(cleanRut(display)) || isConsulting
             }
-            className={`px-3 py-2 text-sm rounded-md transition-colors ${
+            className={`flex-none px-3 py-2 text-sm rounded-2xl transition-all ${ // rounded-2xl aquí para el botón
               validateRutEmpresarial(cleanRut(display)) && !isConsulting
-                ? "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-brand-primary text-white hover:brightness-110 active:scale-95" // Colores enterprise para el botón
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
             title="Consultar empresa"
@@ -256,12 +265,12 @@ const RutInput = ({
       {showValidation && validationMessage && (
         <div
           className={
-            "mt-1 text-xs " +
+            "mt-1 ml-1 text-xs font-medium " + // Añadido font-medium y ml-1
             (validationMessage.startsWith("✓")
               ? "text-green-600"
               : /inválido|debe ser/.test(validationMessage)
               ? "text-red-600"
-              : "text-blue-600")
+              : "text-brand-primary") // Usar text-brand-primary para mensajes válidos
           }
         >
           {validationMessage}
@@ -269,9 +278,9 @@ const RutInput = ({
       )}
 
       {esRutEmpresarial() && (
-        <div className="flex items-center mt-1 text-xs text-blue-600">
+        <div className="flex items-center mt-1 ml-1 text-xs text-brand-gray opacity-60"> {/* Texto más discreto */}
           <Building2 className="w-3 h-3 mr-1" />
-          RUT empresarial requerido
+          RUT empresarial requerido para DTE
         </div>
       )}
     </div>

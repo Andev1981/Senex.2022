@@ -136,16 +136,16 @@ class DoctorAdminController extends Controller
         $communes  = Commune::all(['id', 'name', 'province_id']);
         $regions   = Region::all(['id', 'name']);
 
-        return Inertia::render('Doctors/Index', compact(
-            'doctors',
-            'sessionTypes', // Enviamos el catálogo base para los headers o modales
-            'patients',
-            'communes',
-            'provinces',
-            'regions'
-        ));
+        return Inertia::render('Doctors/Index', [
+            'doctors' => $doctors,
+            'sessionTypes' => $sessionTypes,
+            'patients' => $patients,
+            'communes' => $communes,
+            'provinces' => $provinces,
+            'regions' => $regions,
+            'user' => auth()->user()->load('roles'),
+        ]);
     }
-
     public function store(StoreDoctorRequest $request)
     {
 

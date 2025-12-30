@@ -1,6 +1,6 @@
 // components/ChilePhoneInput.jsx
 import React, { useState, useEffect } from "react";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Phone } from "lucide-react"; // Agregado Phone icon
 
 const ChilePhoneInput = ({
   name = "phone",
@@ -34,7 +34,7 @@ const ChilePhoneInput = ({
     const d = digits(raw);
     if (!d) return "";
     if (d.startsWith("56")) return `+${d.slice(0, 11)}`;
-    if ((d.startsWith("9") || d.startsWith("2")) && d.length === 9)
+    if ((d.startsWith("9") || d.startsWith("2")) && d.length === 9)  
       return `+56${d}`;
     return `+${d}`; // fallback
   };
@@ -59,7 +59,7 @@ const ChilePhoneInput = ({
     const a = base.slice(0, 1); // 9 o 2
     const b = base.slice(1, 5); // XXXX
     const c = base.slice(5, 9); // XXXX
-    return `${a}${b ? " " + b : ""}${c ? " " + c : ""}`.trim();
+    return `${a}${b ? " " + b : ""}${c ? " " + c : ""}`.trim();      
   };
 
   // sincroniza la vista con el value del padre
@@ -78,7 +78,12 @@ const ChilePhoneInput = ({
   };
 
   return (
-    <div className={"relative z-0 " + className}>
+    <div className={"relative " + className}> {/* Elimino z-0 y dejo solo className para el contenedor principal */}
+      {/* Icono de teléfono */}
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gray opacity-40">
+        <Phone className="w-4 h-4" />
+      </div>
+
       <input
         id={name}
         name={name}
@@ -89,15 +94,18 @@ const ChilePhoneInput = ({
         disabled={disabled}
         required={required}
         className={
-          "w-full rounded-md pl-10 border-[0.5px] border-gray-300 shadow-sm focus:border-blue-400 focus:ring-blue-200 " +
-          inputClassName
+          // Estilos enterprise para el input
+          "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-50 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
+          inputClassName // Mantiene los estilos adicionales pasados por prop
         }
       />
-      <div className="absolute inset-y-0 flex items-center pr-3 left-2">
+      
+      {/* Íconos de validación */}
+      <div className="absolute inset-y-0 right-0 flex items-center pr-4">
         {isValid(display) ? (
-          <CheckCircle2 className="w-4 h-4 text-green-600" />
+          <CheckCircle2 className="w-4 h-4 text-green-600" />        
         ) : (
-          <AlertCircle className="w-4 h-4 text-gray-500" />
+          display.length > 0 && <AlertCircle className="w-4 h-4 text-red-500" />
         )}
       </div>
 

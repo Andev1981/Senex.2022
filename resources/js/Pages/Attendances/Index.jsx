@@ -180,10 +180,10 @@ export default function Index({
           open={showCreateSessionModal}
           onClose={() => setShowCreateSessionModal(false)}
           width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
+          hideDefaultHeader={true}
         >
           <CreateUpdateModal
-            showCreateSessionModal={showCreateSessionModal}
-            setShowCreateSessionModal={setShowCreateSessionModal}
+            setShowModal={() => setShowCreateSessionModal(false)}
             patients={patients}
             doctors={doctors}
             session_types={session_types}

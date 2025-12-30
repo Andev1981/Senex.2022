@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePage } from "@inertiajs/react";
 import Nav from "./Partials/Nav";
 import Side from "./Partials/Side";
+import { toast } from "sonner";
+import Swal from "sweetalert2"; // Importar SweetAlert2
 
 export default function AuthenticatedLayout({ header, children }) {
   const user = usePage().props.auth.user;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const userIsSuperAdmin = usePage().props.auth.roles.includes("superadmin");
+
+  const { flash } = usePage().props;
+
+  useEffect(() => {
+    if (flash && flash.message) {
+      if (flash.type === 'success') {
+        toast.success(flash.message);
+      } else if (flash.type === 'error') {
+        toast.error(flash.message);
+      } else if (flash.type === 'warning') {
+        toast.warning(flash.message);
+      } else if (flash.type === 'info') {
+        toast.info(flash.message);
+      } else {
+        toast(flash.message); // Default toast
+      }
+    }
+  }, [flash]);
 
   return (
     <div className="flex w-full overflow-hidden min-h-dvh bg-gray-50/50">

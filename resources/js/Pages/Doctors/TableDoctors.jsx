@@ -35,6 +35,7 @@ export default function TableDoctors({
   setIsModalOpenDetail,
   getStatusBadge,
   getMobileBadge,
+  user,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
@@ -80,138 +81,148 @@ export default function TableDoctors({
   }, [doctors]);
 
   const columns = useMemo(
-    () => [
-      {
-        id: "profesional",
-        header: "Especialista",
-        accessorFn: (row) => row.full_name,
-        cell: ({ row }) => {
-          const { phone, email, full_name, last_name, name } = row.original;
-          return (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center font-black text-brand-primary rounded-[1.2rem] w-11 h-11 bg-brand-secondary/10 border-2 border-brand-secondary/20 shadow-sm shadow-brand-primary/5 shrink-0 uppercase text-xs">
-                {name[0]}
-                {last_name[0]}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate leading-none mb-1.5">
-                  {full_name}
-                </p>
-                <div className="flex items-center gap-3 text-[10px] font-bold text-brand-gray opacity-60 uppercase tracking-widest">
-                  <span className="flex items-center gap-1.5">
-                    <Mail className="w-3 h-3" /> {email}
-                  </span>
+    () => {
+      const baseColumns = [
+        {
+          id: "profesional",
+          header: "Especialista",
+          accessorFn: (row) => row.full_name,
+          cell: ({ row }) => {
+            const { phone, email, full_name, last_name, name } = row.original;
+            return (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center font-black text-brand-primary rounded-[1.2rem] w-11 h-11 bg-brand-secondary/10 border-2 border-brand-secondary/20 shadow-sm shadow-brand-primary/5 shrink-0 uppercase text-xs">
+                  {name[0]}
+                  {last_name[0]}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate leading-none mb-1.5">
+                    {full_name}
+                  </p>
+                  <div className="flex items-center gap-3 text-[10px] font-bold text-brand-gray opacity-60 uppercase tracking-widest">
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="w-3 h-3" /> {email}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
+            );
+          },
         },
-      },
-      {
-        accessorKey: "rut",
-        header: "RUT / Fiscal",
-        cell: ({ getValue }) => (
-          <span className="font-mono text-[11px] font-black text-gray-600">
-            {getValue()}
-          </span>
-        ),
-      },
-      {
-        id: "speciality",
-        accessorKey: "speciality",
-        header: "Especialidad",
-        cell: ({ getValue }) => (
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gray-50 rounded-lg">
-              <Stethoscope className="w-3.5 h-3.5 text-brand-primary" />
-            </div>
-            <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">
-              {getValue() || "General"}
+        {
+          accessorKey: "rut",
+          header: "RUT / Fiscal",
+          cell: ({ getValue }) => (
+            <span className="font-mono text-[11px] font-black text-gray-600">
+              {getValue()}
             </span>
-          </div>
-        ),
-      },
-      {
-        id: "branch_status",
-        header: "Estatus",
-        cell: ({ row }) => getStatusBadge(row.original.branch_status),
-      },
-      {
-        id: "mobile_app_access",
-        header: "Conectividad",
-        cell: ({ row }) => getMobileBadge(row.original.mobile_app_access),
-      },
-      {
-        accessorKey: "sessions_month",
-        header: "Atenciones (Mes)",
-        cell: ({ row, getValue }) => (
-          <div className="flex flex-col items-center gap-1">
-            <div
-              className="text-center font-black text-gray-900 font-mono text-xs bg-gray-50 py-1.5 rounded-xl border border-gray-100 min-w-[40px]"
-              title="Sesiones Completadas"
-            >
-              {getValue() || 0}
-            </div>
-            {row.original.pending_sessions_count > 0 && (
-              <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-100 shadow-sm">
-                {row.original.pending_sessions_count} Pend.
+          ),
+        },
+        {
+          id: "speciality",
+          accessorKey: "speciality",
+          header: "Especialidad",
+          cell: ({ getValue }) => (
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-gray-50 rounded-lg">
+                <Stethoscope className="w-3.5 h-3.5 text-brand-primary" />
+              </div>
+              <span className="text-[10px] font-black text-gray-700 uppercase tracking-tight">
+                {getValue() || "General"}
               </span>
-            )}
-          </div>
-        ),
-      },
-      {
-        id: "revenue_month",
-        accessorKey: "revenue_month",
-        header: "Ingresos (Mes)",
-        cell: ({ getValue }) => (
-          <div className="font-mono text-sm font-black tracking-tighter text-right text-brand-primary">
-            {fmtCLP(getValue() || 0)}
-          </div>
-        ),
-      },
-      {
-        id: "actions",
-        header: "Gestión",
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1.5">
-            <button
-              className="p-2 transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
-              onClick={() => (
-                setSelectedDoctor(row.original), setIsModalOpenDetail(true)
+            </div>
+          ),
+        },
+        {
+          id: "branch_status",
+          header: "Estatus",
+          cell: ({ row }) => getStatusBadge(row.original.branch_status),
+        },
+        {
+          id: "mobile_app_access",
+          header: "Conectividad",
+          cell: ({ row }) => getMobileBadge(row.original.mobile_app_access),
+        },
+        {
+          accessorKey: "sessions_month",
+          header: "Atenciones (Mes)",
+          cell: ({ row, getValue }) => (
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className="text-center font-black text-gray-900 font-mono text-xs bg-gray-50 py-1.5 rounded-xl border border-gray-100 min-w-[40px]"
+                title="Sesiones Completadas"
+              >
+                {getValue() || 0}
+              </div>
+              {row.original.pending_sessions_count > 0 && (
+                <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-100 shadow-sm">
+                  {row.original.pending_sessions_count} Pend.
+                </span>
               )}
-              title="Perfil & Dirección"
-            >
-              <Eye className="w-4 h-4" />
-            </button>
-            <button
-              className="p-2 text-indigo-600 transition-all border border-indigo-100 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white active:scale-90"
-              onClick={() => (
-                setSelectedDoctor(row.original), setIsModalOpenCommissions(true)
-              )}
-              title="Configuración de Pagos"
-            >
-              <ClipboardList className="w-4 h-4" />
-            </button>
-            <button
-              className="p-2 text-purple-600 transition-all border border-purple-100 bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
-              onClick={() => (
-                setSelectedDoctor(row.original), setIsModalOpenPatients(true)
-              )}
-              title="Cartera de Pacientes"
-            >
-              <Users className="w-4 h-4" />
-            </button>
-          </div>
-        ),
-        enableSorting: false,
-      },
-    ],
+            </div>
+          ),
+        },
+        {
+          id: "revenue_month",
+          accessorKey: "revenue_month",
+          header: "Ingresos (Mes)",
+          cell: ({ getValue }) => (
+            <div className="font-mono text-sm font-black tracking-tighter text-right text-brand-primary">
+              {fmtCLP(getValue() || 0)}
+            </div>
+          ),
+        },
+        {
+          id: "actions",
+          header: "Gestión",
+          cell: ({ row }) => (
+            <div className="flex items-center justify-end gap-1.5">
+              <button
+                className="p-2 transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
+                onClick={() => (
+                  setSelectedDoctor(row.original), setIsModalOpenDetail(true)
+                )}
+                title="Perfil & Dirección"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+              <button
+                className="p-2 text-indigo-600 transition-all border border-indigo-100 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white active:scale-90"
+                onClick={() => (
+                  setSelectedDoctor(row.original), setIsModalOpenCommissions(true)
+                )}
+                title="Configuración de Pagos"
+              >
+                <ClipboardList className="w-4 h-4" />
+              </button>
+              <button
+                className="p-2 text-purple-600 transition-all border border-purple-100 bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
+                onClick={() => (
+                  setSelectedDoctor(row.original), setIsModalOpenPatients(true)
+                )}
+                title="Cartera de Pacientes"
+              >
+                <Users className="w-4 h-4" />
+              </button>
+            </div>
+          ),
+          enableSorting: false,
+        },
+      ];
+      if (user && user.roles.some(role => role.name === 'superadmin')) {
+        baseColumns.splice(1, 0, {
+          accessorKey: "company_id",
+          header: "Company ID",
+        });
+      }
+      return baseColumns;
+    },
     [
       doctors,
       setIsModalOpenCommissions,
       setIsModalOpenPatients,
       setIsModalOpenDetail,
+      user,
     ]
   );
 

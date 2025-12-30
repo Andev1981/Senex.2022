@@ -94,7 +94,7 @@ export default function Index({ revenueData, distributionData, stats }) {
                             </div>
                             <TrendingUp className="w-5 h-5 text-brand-primary opacity-30" />
                         </div>
-                        <div className="h-[300px] w-full">
+                        <div className="h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={revenueData}>
                                     <defs>
@@ -133,7 +133,7 @@ export default function Index({ revenueData, distributionData, stats }) {
                             <h3 className="enterprise-label !text-gray-900">Mix de Servicios</h3>
                             <p className="text-[9px] font-bold text-gray-400 uppercase">Distribución por tipo de prestación</p>
                         </div>
-                        <div className="h-[250px] w-full">
+                        <div className="h-[250px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie

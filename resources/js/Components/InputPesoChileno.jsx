@@ -1,10 +1,12 @@
+import { DollarSign } from "lucide-react";
+
 const InputPesoChileno = ({
   name,
   onChange,
   className = "",
-  label = "",
-  error = "",
   price = 0,
+  placeholder = "$0",
+  disabled = false,
 }) => {
   const formatNumber = (value) => {
     // Si ya viene formateado, no lo toques
@@ -41,18 +43,22 @@ const InputPesoChileno = ({
 
   return (
     <div className="relative">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gray opacity-40">
+        <DollarSign className="w-4 h-4" />
+      </div>
       <input
         type="text"
+        name={name}
         value={formatNumber(price)}
         onChange={handleChange}
         onFocus={handleFocus}
-        placeholder="$0"
+        placeholder={placeholder}
+        disabled={disabled}
         className={
-          "rounded-md border-primary/20 border-[0.5] shadow-sm focus:border-primary-light focus:ring-primary-light/20 " +
+          "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-50 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
           className
         }
       />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
   );
 };

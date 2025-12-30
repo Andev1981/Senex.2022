@@ -19,5 +19,6 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+        <div id="portal-root"></div>
     </body>
 </html>

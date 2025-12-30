@@ -22,22 +22,30 @@ class TreatmentSessionSeeder extends Seeder
         $doctors = Doctor::where('company_id', $company->id)->get();
         $sessionTypes = SessionType::where('company_id', $company->id)->get();
 
+        $treatmentStatuses = ['evaluation', 'in_progress', 'completed', 'paused', 'cancelled'];
+        $sessionStatuses = ['scheduled', 'completed', 'no_show', 'cancelled']; // Usar los estados definidos en TreatmentSession
+
         foreach ($patients as $patient) {
             if ($doctors->isEmpty() || $sessionTypes->isEmpty()) {
                 continue;
             }
 
+            // Crear un Tratamiento con estado aleatorio
+            $treatmentStatus = $faker->randomElement($treatmentStatuses);
             $treatment = Treatment::create([
                 'company_id' => $company->id,
                 'branch_id' => $branches->random(),
                 'patient_id' => $patient->id,
                 'doctor_id' => $doctors->random()->id,
                 'session_type_id' => $sessionTypes->random()->id,
-                'status' => 'in_progress',
-                'start_date' => now(),
+                'status' => $treatmentStatus, // Estado aleatorio
+                'start_date' => now()->subDays(rand(30, 180)),
+                'end_date' => in_array($treatmentStatus, ['completed', 'cancelled']) ? now()->subDays(rand(1, 29)) : null,
             ]);
 
-            for ($i = 0; $i < 5; $i++) {
+            // Crear entre 3 y 10 sesiones por tratamiento
+            for ($i = 0; $i < rand(3, 10); $i++) {
+                $sessionStatus = $faker->randomElement($sessionStatuses); // Estado de sesión aleatorio
                 TreatmentSession::create([
                     'company_id' => $company->id,
                     'branch_id' => $branches->random(),
@@ -46,7 +54,7 @@ class TreatmentSessionSeeder extends Seeder
                     'patient_id' => $patient->id,
                     'session_type_id' => $sessionTypes->random()->id,
                     'date' => now()->subDays(rand(1, 30)),
-                    'status' => 'completed',
+                    'status' => $sessionStatus, // Estado de sesión aleatorio
                     'patient_amount_clp' => $sessionTypes->random()->base_price_clp,
                     'doctor_amount_clp' => $sessionTypes->random()->default_doctor_commission_clp,
                 ]);

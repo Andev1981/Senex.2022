@@ -75,61 +75,38 @@ function ModalPatientInsurance({
       <div className="grid grid-cols-2 gap-4 px-4 pt-2">
         {/* Selección de Paciente */}
         <div className="bg-green-50 p-4 rounded-xl shadow-md">
-          <SearchSelect
-            items={patients}
+          <label className="ml-1 enterprise-label">Paciente *</label>
+          <select
             value={data?.patient_id}
-            onChange={(value) => setData("patient_id", value)}
-            config={{
-              valueKey: "id",
-              displayKey: "full_name",
-              secondaryKeys: ["rut"],
-              searchKeys: ["full_name", "rut"],
-              renderItem: (item) => (
-                <div>
-                  <p className="font-medium text-gray-900">{item.full_name}</p>
-                  <p className="text-xs text-gray-500">RUT: {item.rut}</p>
-                  {item.active_treatments?.length > 0 && (
-                    <p className="text-xs font-semibold text-blue-600">
-                      ✓ Tiene tratamiento activo
-                    </p>
-                  )}
-                </div>
-              ),
-            }}
-            label="Paciente *"
-            placeholder="Buscar paciente por nombre o RUT..."
-            /* disabled={!isFieldEditable("patient_id")} */
-            error={errors.patient_id}
-          />
+            onChange={(e) => setData("patient_id", e.target.value)}
+            className="w-full px-5 py-4 text-sm font-black uppercase tracking-widest border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary shadow-sm"
+          >
+            <option value="">-- Seleccionar Paciente --</option>
+            {patients.map((p) => (
+              <option key={p.id} value={p.id}>{p.full_name || `${p.name} ${p.last_name}`}</option>
+            ))}
+          </select>
         </div>
         {/* Selección de Paciente */}
         <div className="bg-blue-50 p-4 rounded-xl shadow-md">
-          <SearchSelect
-            items={plans}
+          <label className="ml-1 enterprise-label">Planes *</label>
+          <select
             value={data?.plan_id}
-            onChange={(value) => (
-              setData("plan_id", value),
-              setPlan(plans.find((pl) => pl.id == value)),
-              setData("insurance_id", plans.find((pl) => pl.id == value).id)
-            )}
-            config={{
-              valueKey: "id",
-              displayKey: "name",
-              secondaryKeys: ["rut"],
-              renderItem: (item) => (
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {item.name} | {item.insurance.name}
-                  </p>
-                  <p className="text-xs text-gray-500">CIE (10): {item.code}</p>
-                </div>
-              ),
+            onChange={(e) => {
+              const val = e.target.value;
+              const selectedPlan = plans.find((pl) => String(pl.id) === val);
+              setData("plan_id", val);
+              setPlan(selectedPlan || null);
+              setData("insurance_id", selectedPlan?.insurance_id || "");
             }}
-            label="Planes *"
-            placeholder="Buscar plan por nombre o CIE..."
+            className="w-full px-5 py-4 text-sm font-black uppercase tracking-widest border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary shadow-sm"
             disabled={!data?.patient_id}
-            error={errors.plan_id}
-          />
+          >
+            <option value="">-- Seleccionar Plan --</option>
+            {plans.map((pl) => (
+              <option key={pl.id} value={pl.id}>{`${pl.name} | ${pl.insurance.name}`}</option>
+            ))}
+          </select>
         </div>
         <div className="col-span-2 mt-4">
           <PlanDetailsSummary

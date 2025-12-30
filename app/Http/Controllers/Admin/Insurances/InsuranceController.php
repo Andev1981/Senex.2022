@@ -65,10 +65,14 @@ class InsuranceController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        Insurance::create($validated);
-
-        return back()
-            ->with('success', 'Insurance Company created successfully.');
+        try {
+            Insurance::create($validated);
+            session()->flash('message', '✅ Aseguradora creada exitosamente.');
+            session()->flash('type', 'success');
+        } catch (\Exception $e) {
+            session()->flash('message', '❌ Error al crear aseguradora: ' . $e->getMessage());
+            session()->flash('type', 'error');
+        }
     }
 
     public function update(Request $request, Insurance $insurance)
@@ -83,17 +87,27 @@ class InsuranceController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $insurance->update($validated);
-
-        return back()
-            ->with('success', 'Insurance Company updated successfully.');
+        try {
+            $insurance->update($validated);
+            session()->flash('message', '✅ Aseguradora actualizada exitosamente.');
+            session()->flash('type', 'success');
+        } catch (\Exception $e) {
+            session()->flash('message', '❌ Error al actualizar aseguradora: ' . $e->getMessage());
+            session()->flash('type', 'error');
+        }
     }
 
-    public function destroy(Insurance $insuranceCompany)
+    public function destroy(Insurance $insurance)
     {
-        $insuranceCompany->delete();
+        try {
+            $insurance->delete();
+            session()->flash('message', '✅ Aseguradora eliminada exitosamente.');
+            session()->flash('type', 'success');
+        } catch (\Exception $e) {
+            session()->flash('message', '❌ Error al eliminar aseguradora: ' . $e->getMessage());
+            session()->flash('type', 'error');
+        }
 
-        return back()
-            ->with('success', 'Insurance Company deleted successfully.');
+        return back();
     }
 }
