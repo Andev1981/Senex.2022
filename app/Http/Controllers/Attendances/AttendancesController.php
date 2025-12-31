@@ -25,7 +25,11 @@ class AttendancesController extends Controller
      */
     public function index(Request $request)
     {
-        Log::info('activeBranchId: ' . session('active_branch_id'));
+        $companyId = session('company_id');
+        $activeBranchId = session('active_branch_id');
+
+        Log::info('companyId: ' . $companyId);
+        Log::info('activeBranchId: ' . $activeBranchId);
 
 
         try {
