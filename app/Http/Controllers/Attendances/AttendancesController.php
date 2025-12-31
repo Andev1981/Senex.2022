@@ -25,6 +25,8 @@ class AttendancesController extends Controller
      */
     public function index(Request $request)
     {
+        Log::info('activeBranchId: ' . session('active_branch_id'));
+
 
         try {
             // Obtener el primer día del mes actual (Ej: 2025-12-01)
@@ -90,10 +92,11 @@ class AttendancesController extends Controller
 
             // Filtro por búsqueda
             if (!empty($query)) {
-                $sessionsQuery->whereHas('treatment.patient', function ($q) use ($query) {
-                    $q->where('patient.full_name', 'like', "%{$query}%");
-                })->orWhereHas('treatment.doctor', function ($q) use ($query) {
-                    $q->where('doctor.full_name', 'like', "%{$query}%");
+                $sessionsQuery->whereHas('patient', function ($q) use ($query) {
+                    $q->where(DB::raw("CONCAT(name, ' ', last_name)"), 'like', "%{$query}%")
+                        ->orWhere('rut', 'like', "%{$query}%");
+                })->orWhereHas('doctor', function ($q) use ($query) {
+                    $q->where(DB::raw("CONCAT(name, ' ', last_name)"), 'like', "%{$query}%");
                 });
             }
 
@@ -192,9 +195,16 @@ class AttendancesController extends Controller
             ];
 
 
+            $activeBranchId = session('active_branch_id');
+
             $patients = Patient::select('id', 'name', 'last_name', 'rut')
+                ->when($activeBranchId, function ($query) use ($activeBranchId) {
+                    $query->whereHas('branches', function ($q) use ($activeBranchId) {
+                        $q->where('branches.id', $activeBranchId);
+                    });
+                })
                 ->with(['activePlans' => function ($query) {
-                    $query->active()  // ← Usar scope
+                    $query->active()
                         ->notExpired()
                         ->withSessionsRemaining()
                         ->select('id', 'patient_id', 'plan_id', 'sessions_included', 'sessions_used', 'expiry_date')
@@ -212,21 +222,26 @@ class AttendancesController extends Controller
                         'plan_description' => $plan->plan->description,
                         'sessions_included' => $plan->sessions_included,
                         'sessions_used' => $plan->sessions_used,
-                        'sessions_remaining' => $plan->sessions_remaining,  // ← Accessor correcto
+                        'sessions_remaining' => $plan->sessions_remaining,
                         'expiry_date' => $plan->expiry_date?->format('Y-m-d'),
-                        'is_expired' => $plan->is_expired,  // ← Accessor
-                        'is_exhausted' => $plan->is_exhausted,  // ← Accessor
+                        'is_expired' => $plan->is_expired,
+                        'is_exhausted' => $plan->is_exhausted,
                     ]),
                 ])->sortBy('full_name')->values();
 
             $doctors = Doctor::select('id', 'name', 'last_name', 'rut')
-                ->orderBy('name')  // ← Cambiar a columna real
+                ->when($activeBranchId, function ($query) use ($activeBranchId) {
+                    $query->whereHas('branches', function ($q) use ($activeBranchId) {
+                        $q->where('branches.id', $activeBranchId);
+                    });
+                })
+                ->orderBy('name')
                 ->get()
-                ->map(function ($patient) {
+                ->map(function ($doctor) {
                     return [
-                        'id' => $patient->id,
-                        'full_name' => $patient->full_name,  // ← Aquí funciona el accessor
-                        'rut' => $patient->rut,
+                        'id' => $doctor->id,
+                        'full_name' => $doctor->full_name,
+                        'rut' => $doctor->rut,
                     ];
                 });
 
@@ -270,6 +285,9 @@ class AttendancesController extends Controller
                     'estado' => 'all',
                     'query' => '',
                 ],
+                'patients' => [],
+                'doctors' => [],
+                'session_types' => [],
                 'error' => 'Error al cargar las atenciones'
             ]);
         }
