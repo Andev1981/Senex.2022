@@ -104,6 +104,15 @@ class AttendancesController extends Controller
                 });
             }
 
+            // Filtro por sucursal (branch_id)
+            if ($activeBranchId) {
+                $sessionsQuery->whereHas('doctor', function ($q) use ($activeBranchId) {
+                    $q->whereHas('branches', function ($q) use ($activeBranchId) {
+                        $q->where('branches.id', $activeBranchId);
+                    });
+                });
+            }
+
             $sessions = $sessionsQuery->orderBy('time', 'asc')->get();
 
             // Log de resultados
