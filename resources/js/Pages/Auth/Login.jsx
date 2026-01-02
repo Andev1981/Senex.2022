@@ -5,7 +5,7 @@ import InputLabel from "@/Components/InputLabel";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
 import GuestLayout from "@/Layouts/GuestLayout";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import React, { useState } from "react";
 import {
   Mail,
@@ -21,6 +21,8 @@ import {
 
 export default function Login({ status, canResetPassword }) {
   // ... (Estados, useForm, y features se mantienen)
+
+  const { appVersion } = usePage().props;
 
   const { data, setData, post, processing, errors, reset } = useForm({
     email: "",
@@ -61,13 +63,11 @@ export default function Login({ status, canResetPassword }) {
         {/* Contenedor del Formulario Centrado */}
         <div className="relative z-10 w-full max-w-md p-4 sm:p-0">
           {/* Header / Logo / Mensaje de Bienvenida */}
-          <div className="mb-10 text-center text-white">
-            <div className="inline-flex items-center justify-center w-20 h-20 mb-6 transition-transform duration-500 transform bg-white shadow-2xl rounded-3xl rotate-12 hover:rotate-0">
+          <div className="mb-5 text-center text-white">
+            <div className="inline-flex items-center justify-center p-2 mb-6 transition-transform duration-500 transform shadow-2xl w-60 bg-gray-600/50 rounded-3xl hover:rotate-0">
               <Stethoscope className="w-10 h-10 text-brand-primary" />
+              <ApplicationLogo />
             </div>
-            <h1 className="mb-2 text-4xl font-black leading-none tracking-tighter uppercase">
-              Senex Portal
-            </h1>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80">
               Plataforma de Gestión Kinésica
             </p>
@@ -185,7 +185,7 @@ export default function Login({ status, canResetPassword }) {
             </div>
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4" />
-              <span>v2.5 Enterprise</span>
+              <span>Sysmed v{appVersion}</span>
             </div>
           </div>
         </div>

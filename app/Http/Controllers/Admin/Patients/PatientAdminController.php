@@ -38,6 +38,8 @@ class PatientAdminController extends Controller
         $patients = Patient::query()->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'patients.id'))
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
             ->leftJoin('communes as c', 'addr.commune_id', '=', 'c.id')
+            ->leftJoin('provinces as p', 'c.province_id', '=', 'p.id')
+            ->leftJoin('regions as r', 'p.region_id', '=', 'r.id')
             ->when($activeBranchId, function ($query) use ($activeBranchId) {
                 // 🎯 Ahora simplemente preguntamos: 
                 // "¿Está este paciente vinculado a esta sucursal en la tabla pivot?"
@@ -53,15 +55,24 @@ class PatientAdminController extends Controller
                 'patients.birth_date',
                 'patients.rut',
                 'patients.phone',
+                'patients.gender',
                 'patients.status',
+                'patients.occupation',
+                'patients.marital_status',
+                'patients.status_reason',
+                'patients.opt_out_reminders',
+                'patients.prefers_whatsapp',
+                'patients.prefers_mail',
+                'patients.prefers_sms',
+                'patients.require_tutor',
                 DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) as full_name"),
 
                 DB::raw('addr.id as address_id'),
                 DB::raw('addr.street as street'),
                 DB::raw('addr.number as number'),
                 DB::raw('addr.details as details'),
-                DB::raw('addr.region_id as region_id'),
-                DB::raw('addr.province_id as province_id'),
+                DB::raw('r.id as region_id'),
+                DB::raw('p.id as province_id'),
                 DB::raw('addr.commune_id as commune_id'),
                 DB::raw("CONCAT_WS(' ', addr.street, addr.number) as full_address"),
                 DB::raw('c.name as comuna_name'),
@@ -92,6 +103,8 @@ class PatientAdminController extends Controller
                         ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
                 },
             ])
+            ->with('primaryContact')
+            ->orderBy('patients.updated_at', 'desc')
             ->get()
             ->map(function ($p) {
                 $p->payment_status = $p->has_overdue ? 'overdue' : ($p->has_due ? 'due' : 'ok');
@@ -151,9 +164,7 @@ class PatientAdminController extends Controller
 
         // 3. Carga de datos del paciente
         $patient->load([
-            'address.region',
-            'address.province',
-            'address.commune',
+            'address.commune.province.region',
             'latestVital',
             'primaryContact',
             'allergies',
@@ -300,14 +311,16 @@ class PatientAdminController extends Controller
                 }
             ]);
 
-            return response()->json([
+            return redirect()->back()->with([
                 'message' => 'Paciente guardado correctamente',
-                'patient' => $patient // Enviamos el ID para que React sepa a dónde redirigir
-            ], 201);
+                'patient' => $patient 
+            ]);
         } catch (\Throwable $e) {
 
             DB::rollBack();
             report($e);
+            
+            return redirect()->back()->withErrors(['error' => 'Ocurrió un error al guardar el paciente.']);
         }
     }
 

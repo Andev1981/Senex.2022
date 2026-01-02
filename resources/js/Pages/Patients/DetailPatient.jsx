@@ -28,10 +28,13 @@ function useSyncedTab(defaultTab = "dashboard") {
   return [activeTab, setActiveTab];
 }
 
+import ModalCreateEditPatient from "./ModalCreateEditPatient";
+
 export default function DetailPatient(props) {
   const [activeTab, setActiveTab] = useSyncedTab("dashboard");
-  const { patient, doctors, session_types } = props;
+  const { patient, doctors, session_types, communes, regions, provinces } = props;
   const [showSessionModal, setShowSessionModal] = useState(false);
+  const [showEditPatientModal, setShowEditPatientModal] = useState(false);
 
   return (
     <AuthenticatedLayout>
@@ -44,6 +47,7 @@ export default function DetailPatient(props) {
             patient={patient}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
+            handleEditPatient={() => setShowEditPatientModal(true)}
             />
         </div>
 
@@ -119,6 +123,20 @@ export default function DetailPatient(props) {
           preselectedPatient={patient}
           doctors={doctors}
           session_types={session_types}
+        />
+      </SideModal>
+
+      <SideModal
+        open={showEditPatientModal}
+        onClose={() => setShowEditPatientModal(false)}
+        width="5xl"
+      >
+        <ModalCreateEditPatient
+          patient={patient}
+          setOpenModalPatient={setShowEditPatientModal}
+          communes={communes}
+          regions={regions}
+          provinces={provinces}
         />
       </SideModal>
     </AuthenticatedLayout>

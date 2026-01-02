@@ -6,6 +6,9 @@ use App\Models\Branch;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -44,6 +47,44 @@ class HandleInertiaRequests extends Middleware
                 'message' => $request->session()->get('message'),
                 'type' => $request->session()->get('type'),
             ]),
+
+            //Datos generales de la app
+            'appVersion' => config('app.version'),
+            'appName' => config('app.name'),
+            'env' => config('app.env'),
+            'projectPath' => str_replace('\\', '/', base_path()),
+            'currentRouteName' => Route::currentRouteName(),
+            'dev_users' => config('app.env') === 'local' 
+                ? (function() use ($request) {
+                    $users = \App\Models\User::with('roles')->orderBy('id')->take(50)->get();
+                    $currentUser = $request->user();
+                    
+                    if ($currentUser && !$users->contains('id', $currentUser->id)) {
+                        // Recargar roles por seguridad y añadir a la colección
+                        $currentUser->load('roles');
+                        $users->push($currentUser);
+                    }
+                    
+                    return $users->sortBy('id')->map(function($u) {
+                        return [
+                            'id' => $u->id,
+                            'name' => $u->name,
+                            'email' => $u->email,
+                            'roles' => $u->getRoleNames(),
+                        ];
+                    })->values();
+                })()
+                : [],
+            'gitInfo' => config('app.env') === 'local' ? Cache::remember('git_info', 300, function () {
+                try {
+                    $branch = trim(exec('git rev-parse --abbrev-ref HEAD'));
+                    $hash = trim(exec('git log -1 --format=%h'));
+                    return "git: $branch @ $hash";
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            }) : null,
+            'pendingJobsCount' => config('app.env') === 'local' ? DB::table('jobs')->count() : 0,
         ];
     }
 

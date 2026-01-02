@@ -87,13 +87,27 @@ class StorePatientRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'rut.unique'   => 'Este RUT ya se encuentra registrado en la empresa.',
-            'email.unique' => 'Este correo electrónico ya está registrado.',
-            'email.required_if' => 'El correo es obligatorio cuando el paciente no tiene tutor.',
-            'guardian_name.required_if'  => 'Debe ingresar el nombre del tutor.',
-            'guardian_phone.required_if' => 'El teléfono del tutor es obligatorio para enviar notificaciones.',
-            'guardian_email.required_if' => 'El correo del tutor es obligatorio.',
-            'guardian_rut.required_if'   => 'El RUT del tutor es obligatorio.',
+            'name.required'             => 'El nombre del paciente es obligatorio.',
+            'last_name.required'        => 'El apellido del paciente es obligatorio.',
+            'rut.required'              => 'El RUT del paciente es obligatorio.',
+            'rut.unique'                => 'Este RUT ya se encuentra registrado en el sistema.',
+            'birth_date.required'       => 'La fecha de nacimiento es obligatoria.',
+            'birth_date.before'         => 'La fecha de nacimiento debe ser anterior al día de hoy.',
+            
+            'email.unique'              => 'Este correo electrónico ya está registrado.',
+            'email.required_if'         => 'El correo electrónico es obligatorio si el paciente es independiente (no tiene tutor).',
+            'email.email'               => 'El formato del correo electrónico no es válido.',
+            
+            'phone.max'                 => 'El teléfono no puede tener más de 30 caracteres.',
+            
+            'require_tutor.boolean'     => 'El campo requiere tutor debe ser verdadero o falso.',
+            
+            // Mensajes Tutor
+            'guardian_name.required_if'         => 'Debe ingresar el nombre completo del Tutor o Apoderado.',
+            'guardian_relationship.required_if' => 'Debe indicar el parentesco o relación con el paciente.',
+            'guardian_phone.required_if'        => 'El teléfono del tutor es obligatorio para coordinar notificaciones y cobros.',
+            'guardian_email.required_if'        => 'El correo del tutor es obligatorio para el envío de documentos.',
+            'guardian_rut.required_if'          => 'El RUT del tutor es obligatorio para la facturación.',
         ];
     }
 }

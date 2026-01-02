@@ -126,7 +126,7 @@ class InvoiceService
         $isProduct = isset($item['type']) && $item['type'] === 'product';
 
         // Definimos el MorphMap (debe coincidir con AppServiceProvider)
-        $sellableType = $isProduct ? 'Products' : 'SessionTypes';
+        $sellableType = $isProduct ? 'Product' : 'SessionType';
 
         // Si es sesión, usamos el session_type_id; si es producto, el id del producto
         $sellableId = $isProduct ? ($item['id'] ?? null) : ($item['session_type_id'] ?? null);

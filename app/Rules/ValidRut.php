@@ -31,12 +31,20 @@ class ValidRut implements ValidationRule
         $numero = $parts[0];
         $dv = strtoupper($parts[1]);
 
-        if (!ctype_digit($numero)) return false;
+        return $dv === self::calculateDV($numero);
+    }
+
+    /**
+     * Calcula el dígito verificador de un número.
+     */
+    public static function calculateDV($numero): string
+    {
+        $numero = preg_replace('/[^0-9]/', '', (string)$numero);
+        if (!$numero) return "";
 
         $sum = 0;
         $factor = 2;
         
-        // Bucle reescrito para evitar errores de constante
         for ($k = strlen($numero) - 1; $k >= 0; $k--) {
             $digit = (int) $numero[$k];
             $sum += $digit * $factor;
@@ -44,11 +52,19 @@ class ValidRut implements ValidationRule
         }
 
         $expectedDv = 11 - ($sum % 11);
-        if ($expectedDv == 11) $expectedDv = '0';
-        elseif ($expectedDv == 10) $expectedDv = 'K';
-        else $expectedDv = (string)$expectedDv;
+        if ($expectedDv == 11) return '0';
+        if ($expectedDv == 10) return 'K';
+        
+        return (string)$expectedDv;
+    }
 
-        return $dv === $expectedDv;
+    /**
+     * Genera un RUT válido aleatorio.
+     */
+    public static function generate(): string
+    {
+        $numero = rand(5000000, 25000000);
+        return $numero . '-' . self::calculateDV($numero);
     }
 
     /**

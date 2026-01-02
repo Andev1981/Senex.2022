@@ -2,11 +2,7 @@ import { XCircle } from "lucide-react";
 import { fmtCLP, fmtDate } from "@/utils/utils";
 import { estadoClass, estadoTexto } from "@/helpers/status";
 
-export default function ResumeModal({
-  sessionData,
-  setShowResumenModal,
-  openDTEModal,
-}) {
+export default function ResumeModal({ sessionData, setShowResumenModal }) {
   return (
     <div className="p-6 bg-white rounded-xl">
       <div className="space-y-4">
@@ -54,7 +50,11 @@ export default function ResumeModal({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Estado:</span>
-              <span className={`px-2 py-1 text-xs font-bold rounded-full ${estadoClass(sessionData?.status)} text-white`}>
+              <span
+                className={`px-2 py-1 text-xs font-bold rounded-full ${estadoClass(
+                  sessionData?.status
+                )} text-white`}
+              >
                 {estadoTexto(sessionData?.status)}
               </span>
             </div>
@@ -108,19 +108,7 @@ export default function ResumeModal({
         </div>
 
         {/* Botones de Acción */}
-        <div className="flex gap-2">
-          {["completed", "scheduled"].includes(sessionData?.status) && (
-            <button
-              onClick={() => {
-                setShowResumenModal(false);
-                openDTEModal(sessionData);
-              }}
-              className="flex-1 px-4 py-2 font-semibold text-purple-700 border-2 border-purple-200 rounded-lg hover:bg-purple-50"
-            >
-              Emitir DTE
-            </button>
-          )}
-
+        <div className="flex">
           <button
             onClick={() => {
               setShowResumenModal(false);

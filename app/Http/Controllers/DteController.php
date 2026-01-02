@@ -226,10 +226,19 @@ class DteController extends Controller
                     'total_monto_clp' => $invoice->amount_total_clp,
                     'estado_sii' => 'ENVIADO',
                     'track_id' => time(),
-                    'xml_data' => '<xml>Dummy</xml>'
+                    'xml_data' => '<xml>Dummy</xml>',
+                    'origin_type' => 'Invoice', // Asegurar relación polimórfica
+                    'origin_id' => $invoice->id
                 ]);
                 $invoice->update(['dte_status' => 'sent', 'dte_folio' => $folioSimulado]);
+                
+                // Marcar sesiones como facturadas en simulación
+                $this->dteService->markAssociatedSessionsAsDte($invoice);
+            } elseif ($request->boolean('issue')) {
+                // Emisión Real Inmediata
+                $this->dteService->issueInvoiceDte($invoice);
             }
+
             DB::commit();
             return redirect()->route('documents')->with('success', 'Documento creado.');
         } catch (\Exception $e) {
@@ -310,6 +319,14 @@ class DteController extends Controller
         ]);
 
         foreach ($data['items'] as $item) {
+            // VALIDACIÓN DE SEGURIDAD: Verificar si la sesión ya fue facturada
+            if (isset($item['sellable_type']) && $item['sellable_type'] === 'TreatmentSession' && !empty($item['sellable_id'])) {
+                $session = \App\Models\TreatmentSession::find($item['sellable_id']);
+                if ($session && $session->dte_generated) {
+                    throw new \Exception("La sesión #{$session->id} ({$item['description']}) ya tiene un DTE generado.");
+                }
+            }
+
             $lineTotal = ($item['quantity'] ?? 0) * ($item['unitPrice'] ?? 0);
             $disc = (float)($item['discount_clp'] ?? 0);
             $final = $lineTotal - ($lineTotal * ($disc / 100));

@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Attendance;
 
 /* Inertia */
 use App\Http\Controllers\Inertia\{
@@ -45,54 +48,6 @@ use App\Http\Controllers\KineMobile\PatientController;
 use App\Http\Controllers\KineMobile\ProfileController;
 use App\Http\Controllers\KineMobile\SessionController;
 use App\Http\Controllers\PatientSearchController;
-
-//Reoptimized class loader:
-Route::get('/optimize', function () {
-  $exitCode = Artisan::call('optimize');
-  return '<h1>Reoptimized class loader</h1>';
-});
-
-//Route cache:
-Route::get('/route-cache', function () {
-  $exitCode = Artisan::call('route:cache');
-  return '<h1>Routes cached</h1>';
-});
-
-//Clear Route cache:
-Route::get('/route-clear', function () {
-  $exitCode = Artisan::call('route:clear');
-  return '<h1>Route cache cleared</h1>';
-});
-
-//Clear View cache:
-Route::get('/view-clear', function () {
-  $exitCode = Artisan::call('view:clear');
-  return '<h1>View cache cleared</h1>';
-});
-
-//Clear Config cache:
-Route::get('/config-cache', function () {
-  $exitCode = Artisan::call('config:cache');
-  return '<h1>Clear Config cleared</h1>';
-});
-
-//Clear Config cache:
-Route::get('/system-up', function () {
-  $exitCode = Artisan::call('up');
-  return '<h1>Clear Config cleared</h1>';
-});
-
-//Clear Config cache:
-Route::get('/system-down', function () {
-  $exitCode = Artisan::call('down');
-  return '<h1>Clear Config cleared</h1>';
-});
-
-
-Route::get('storage-link', function () {
-  Artisan::call('storage:link');
-  return '<h1>Storage link creado</h1>';
-})->middleware('auth');
 
 
 require __DIR__ . '/auth.php';
@@ -155,8 +110,8 @@ Route::group(['middleware' => ['auth']], function () {
     ->name('treatment_sessions.create_from_appointment');
 
   /* kines */
-  Route::get('doctors', [DoctorAdminController::class, 'index'])->name('doctors');
-  Route::get('doctors/{id}', [DoctorAdminController::class, 'edit'])->name('doctors.edit');
+  /*  Route::get('doctors', [DoctorAdminController::class, 'index'])->name('doctors');
+  Route::get('doctors/{id}', [DoctorAdminController::class, 'edit'])->name('doctors.edit'); */
 
   // =============================================================================
   // RUTAS NUEVAS
@@ -227,7 +182,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/', [\App\Http\Controllers\Admin\Subscription\SubscriptionController::class, 'index'])->name('index');
     Route::post('/', [\App\Http\Controllers\Admin\Subscription\SubscriptionController::class, 'store'])->name('store');
   });
-  
+
   Route::get('/patients/search', [PatientSearchController::class, 'search']);
 
 
@@ -459,14 +414,79 @@ Route::match(['GET', 'POST'], '/payments/webpay/return', [WebpayController::clas
 
 
 // Ruta de prueba Webpay (solo desarrollo)
-if (app()->environment('local', 'development')) {
+/* if (app()->environment('local', 'development')) {
   Route::middleware(['auth', 'verified'])
     ->get('/test/webpay', [App\Http\Controllers\Test\WebpayTestController::class, 'index'])
     ->name('test.webpay');
 
   Route::get('/test/pos', [WebpayController::class, 'paymentPos'])
     ->name('test.pos');
-}
+} */
+
+Route::middleware(['auth'])->prefix('dev')->group(function () {
+  if (App::isLocal()) {
+    Route::post('optimize', function () {
+      Artisan::call('optimize:clear');
+      return response()->json(['message' => 'Optimización (Limpieza) completada']);
+    });
+
+    Route::post('route-clear', function () {
+      Artisan::call('route:clear');
+      return response()->json(['message' => 'Caché de rutas limpiada']);
+    });
+
+    Route::post('view-clear', function () {
+      Artisan::call('view:clear');
+      return response()->json(['message' => 'Caché de vistas limpiada']);
+    });
+
+    Route::post('config-cache', function () {
+      Artisan::call('config:clear');
+      return response()->json(['message' => 'Caché de configuración eliminada']);
+    });
+
+    Route::post('storage-link', function () {
+      Artisan::call('storage:link');
+      return response()->json(['message' => 'Link de almacenamiento creado']);
+    });
+
+    Route::post('/login-as/{id}', function ($id) {
+      Auth::loginUsingId($id);
+      
+      // Limpiar contexto de sesión para que HandleInertiaRequests recargue los datos del nuevo usuario
+      session()->forget(['current_company_id', 'active_branch_id']);
+      
+      return back()->with('success', 'Login como ID: ' . $id);
+    });
+
+    Route::post('/migrate-fresh', function () {
+      Artisan::call('migrate:fresh --seed');
+      return back()->with('success', 'DB Reiniciada y Sembrada');
+    });
+
+    Route::post('/run-jobs', function () {
+      Artisan::call('queue:work --stop-when-empty');
+      return back()->with('success', 'Jobs procesados exitosamente');
+    });
+
+    Route::post('/dispatch-test-job', function () {
+        dispatch(function () {
+            logger('Test job executed');
+        });
+        return back()->with('success', 'Test Job despachado a la cola');
+    });
+
+    Route::post('/seed/attendance/completed', function () {
+        Attendance::factory()->realizada()->create();
+        return back()->with('success', 'Cita completada creada');
+    });
+
+    Route::post('/seed/attendance/scheduled', function () {
+        Attendance::factory()->pendiente()->create();
+        return back()->with('success', 'Cita pendiente creada');
+    });
+  }
+});
 
 
 // Página principal del portal

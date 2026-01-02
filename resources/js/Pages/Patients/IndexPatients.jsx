@@ -24,12 +24,21 @@ export default function IndexPatients({
   const addButtonRef = useRef(null);
 
   const [openPatientModal, setOpenPatientModal] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   const patients = usePatientStore((state) => state.patients);
 
   const setPatients = usePatientStore((state) => state.setPatients);
 
+  const handleEditPatient = (patient) => {
+    setSelectedPatient(patient);
+    setOpenPatientModal(true);
+  };
 
+  const handleCloseModal = () => {
+    setOpenPatientModal(false);
+    setTimeout(() => setSelectedPatient(null), 300); // Wait for animation
+  };
 
   useEffect(() => {
 
@@ -87,7 +96,10 @@ export default function IndexPatients({
 
                 ref={addButtonRef}
 
-                onClick={() => setOpenPatientModal(true)}
+                onClick={() => {
+                  setSelectedPatient(null);
+                  setOpenPatientModal(true);
+                }}
 
                 className="flex items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
 
@@ -213,7 +225,12 @@ export default function IndexPatients({
 
 
 
-        <TablePatients patients={patients} communes={communes} user={user} />
+        <TablePatients 
+          patients={patients} 
+          communes={communes} 
+          user={user} 
+          handleEditPatient={handleEditPatient}
+        />
 
       </div>
 
@@ -223,7 +240,7 @@ export default function IndexPatients({
 
         open={openPatientModal}
 
-        onClose={() => setOpenPatientModal(false)}
+        onClose={handleCloseModal}
 
         width="5xl"
 
@@ -231,7 +248,7 @@ export default function IndexPatients({
 
         <ModalCreateEditPatient
 
-          patient={null}
+          patient={selectedPatient}
 
           setOpenModalPatient={setOpenPatientModal}
 

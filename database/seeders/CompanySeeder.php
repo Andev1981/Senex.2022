@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\User;
+use App\Rules\ValidRut;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Faker\Factory as Faker;
@@ -42,7 +43,7 @@ class CompanySeeder extends Seeder
                 'user_id' => $doctorUser->id,
                 'name' => $doctorUser->name,
                 'last_name' => '',
-                'rut' => $faker->unique()->numerify('########-#'),
+                'rut' => ValidRut::generate(),
                 'email' => $doctorUser->email,
             ]);
 
@@ -56,7 +57,7 @@ class CompanySeeder extends Seeder
                 'company_id' => $company->id,
                 'name' => $faker->firstName,
                 'last_name' => $faker->lastName,
-                'rut' => $faker->unique()->numerify('########-#'),
+                'rut' => ValidRut::generate(),
                 'email' => $faker->unique()->safeEmail,
             ]);
             $patient->branches()->sync($branches->random());

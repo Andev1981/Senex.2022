@@ -221,9 +221,11 @@ const RutInput = ({
             disabled={disabled}
             required={required}
             className={
-              // Estilos enterprise para el input
-              "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-50 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
-              inputClassName // Mantiene los estilos adicionales pasados por prop
+              `w-full pl-12 pr-10 py-4 rounded-2xl border-2 font-mono font-black text-sm shadow-inner transition-all outline-none 
+              ${!display ? 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary' : 
+                isValid ? 'border-green-500/50 bg-green-50/10 focus:border-green-500 focus:ring-4 focus:ring-green-500/5' : 
+                'border-red-500/50 bg-red-50/10 focus:border-red-500 focus:ring-4 focus:ring-red-500/5'} 
+              ${inputClassName}`
             }
             maxLength={12}
           />
@@ -258,33 +260,16 @@ const RutInput = ({
             ) : (
               <Search className="w-4 h-4" />
             )}
-          </button>
-        )}
-      </div>
-
-      {showValidation && validationMessage && (
-        <div
-          className={
-            "mt-1 ml-1 text-xs font-medium " + // Añadido font-medium y ml-1
-            (validationMessage.startsWith("✓")
-              ? "text-green-600"
-              : /inválido|debe ser/.test(validationMessage)
-              ? "text-red-600"
-              : "text-brand-primary") // Usar text-brand-primary para mensajes válidos
-          }
-        >
-          {validationMessage}
-        </div>
-      )}
-
-      {esRutEmpresarial() && (
-        <div className="flex items-center mt-1 ml-1 text-xs text-brand-gray opacity-60"> {/* Texto más discreto */}
-          <Building2 className="w-3 h-3 mr-1" />
-          RUT empresarial requerido para DTE
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default RutInput;
+                            </button>
+                          )}
+                        </div>
+                  
+                        {esRutEmpresarial() && (
+                          <div className="flex items-center mt-1 ml-1 text-xs text-brand-gray opacity-60">
+                            <Building2 className="w-3 h-3 mr-1" />
+                            RUT empresarial requerido para DTE
+                          </div>
+                        )}
+                      </div>
+                    );
+                  };export default RutInput;

@@ -6,7 +6,10 @@ use App\Contracts\DteServiceProvider; // Tu Interfaz
 use App\Models\Invoice; // El documento de origen
 use App\Models\Dte;     // El modelo para el registro de seguimiento SII
 use App\Models\Company; // Para cargar la configuración DTE
+use App\Models\TreatmentSession;
 use App\Services\Dte\DteFoliosService; // Tu servicio para folios
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class DteService
@@ -68,7 +71,35 @@ class DteService
         
         $invoice->update(['dte_status' => Invoice::SII_STATUS_SENT]);
 
+        // 7. Marcar sesiones asociadas como facturadas
+        $this->markAssociatedSessionsAsDte($invoice);
+
         return $trackId;
+    }
+
+    /**
+     * Marca las sesiones de tratamiento vinculadas a la factura como facturadas (dte = true).
+     */
+    public function markAssociatedSessionsAsDte(Invoice $invoice): void
+    {
+        // Buscar IDs a través de sellable (polimórfico) o columna directa
+        $sessionIds = $invoice->items()
+            ->where(function($query) {
+                $query->where('sellable_type', 'TreatmentSession')
+                      ->orWhereNotNull('treatment_session_id');
+            })
+            ->get()
+            ->map(function($item) {
+                return $item->treatment_session_id ?: $item->sellable_id;
+            })
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        if (!empty($sessionIds)) {
+            TreatmentSession::whereIn('id', $sessionIds)->update(['dte_generated' => true]);
+            Log::info("Sesiones marcadas como facturadas (DTE)", ['ids' => $sessionIds, 'invoice_id' => $invoice->id]);
+        }
     }
 
     /**

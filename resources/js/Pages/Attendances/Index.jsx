@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { Head, router } from "@inertiajs/react";
-import moment from "moment";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/Components/SideModal";
 import Modal from "@/Components/Modal";
-import AttendancesHeader from "./Partials/AttendancesHeader";
-import AttendacesTable from "./AttendacesTable";
-import Kpis from "./Partials/Kpis";
-import CancelModal from "./Modals/CancelModal";
-import StartModal from "./Modals/StartModal";
-import CompletedModal from "./Modals/CompletedModal";
-import AbsentModal from "./Modals/AbsentModal";
-import DteModal from "./Modals/DteModal";
-import ResumeModal from "./Modals/ResumeModal";
-import CreateUpdateModal from "./Modals/CreateUpdateModal";
+import AttendancesHeader from "@/Pages/Attendances/Partials/AttendancesHeader";
+import AttendacesTable from "@/Pages/Attendances/AttendacesTable";
+import Kpis from "@/Pages/Attendances/Partials/Kpis";
+import CancelModal from "@/Pages/Attendances/Modals/CancelModal";
+import StartModal from "@/Pages/Attendances/Modals/StartModal";
+import CompletedModal from "@/Pages/Attendances/Modals/CompletedModal";
+import AbsentModal from "@/Pages/Attendances/Modals/AbsentModal";
+import DteModal from "@/Pages/Attendances/Modals/DteModal";
+import ResumeModal from "@/Pages/Attendances/Modals/ResumeModal";
+import CreateUpdateModal from "@/Pages/Attendances/Modals/CreateUpdateModal";
 
 export default function Index({
   atenciones = [],
@@ -31,45 +30,6 @@ export default function Index({
   const [showCreateSessionModal, setShowCreateSessionModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
   const [sessionData, setSessionData] = useState({});
-  /*   const [sessionData, setSessionData] = useState({
-    session_id: "",
-    treatment_id: "",
-    patient_id: "",
-    doctor_id: "",
-    session_type_id: "",
-    patient_full_name: "",
-    patient_rut: "",
-    patient_phone: "",
-    doctor_full_name: "",
-    name_session_type: "",
-    session_type_base_price: 0,
-    date: "",
-    formated_date: "",
-    time: "",
-    duration: 45,
-    status: "scheduled",
-    patient_amount_clp: 0,
-    total_payment: 0,
-    plan_session_value: 0,
-    copay_clp: 0,
-    consumes_plan: undefined,
-    patient_plan_id: "",
-    patient_plan: "",
-    pain_before: 0,
-    pain_after: 0,
-    rom_flexion: "",
-    rom_abduction: "",
-    rom_rotation: "",
-    techniques: [],
-    exercises: [],
-    notes: "",
-    homework: "",
-    next_goals: "",
-    month_session_number: "",
-    session_absent_notes: "",
-    session_cancellation_notes: "",
-    session_start_notes: "",
-  }); */
 
   // Acciones sobre sesiones
   const openStartModal = (session) => {
@@ -210,7 +170,7 @@ export default function Index({
         <Modal
           open={showResumenModal}
           onClose={() => setShowResumenModal(false)}
-          title={"Modal de Emitir DTE"}
+          title={"Resumen Detallado de Sesión"}
           maxWidth="lg" // sm, md, lg, xl, 2xl, 3xl, full
         >
           <ResumeModal

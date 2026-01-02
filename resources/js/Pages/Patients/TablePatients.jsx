@@ -38,8 +38,9 @@ import { route } from "ziggy-js";
 import { useForm, router } from "@inertiajs/react";
 import { patientStatuses, debtStatuses } from "@/helpers/status";
 import usePatientStore from "@/Stores/usePatientStore";
+import { Pencil } from "lucide-react";
 
-export default function TablePatients({ handleOpenModalDelete, communes, user }) {
+export default function TablePatients({ handleOpenModalDelete, communes, user, handleEditPatient }) {
   const patients = usePatientStore((state) => state.patients);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -236,6 +237,13 @@ export default function TablePatients({ handleOpenModalDelete, communes, user })
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
               <div className="w-px h-6 mx-1 bg-gray-100"></div>
+              <button
+                onClick={() => handleEditPatient(row.original)}
+                className="p-2 text-gray-400 transition-all hover:text-brand-primary hover:bg-brand-secondary/10 rounded-xl active:scale-90"
+                title="Editar Información"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => handleOpenModalDelete(row.original)}
                 className="p-2 text-gray-300 transition-all hover:text-red-500 hover:bg-red-50 rounded-xl active:scale-90"

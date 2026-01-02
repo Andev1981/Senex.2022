@@ -32,6 +32,7 @@ import {
   Receipt,
   ClipboardList,
   Activity,
+  CheckSquare,
 } from "lucide-react";
 import { router } from "@inertiajs/react";
 import { fmtCLP, fmtDate, fmtTime } from "@/utils/utils";
@@ -63,6 +64,7 @@ export default function AttendacesTable({
   const [sorting, setSorting] = useState([]);
   const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
+  const [rowSelection, setRowSelection] = useState({});
 
   const applyFilters = () => {
     router.get(
@@ -72,8 +74,55 @@ export default function AttendacesTable({
     );
   };
 
+  const handleBulkDTE = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    const selectedSessions = selectedRows.map((row) => row.original);
+    
+    if (selectedSessions.length === 0) return;
+
+    // VALIDACIÓN: Todos deben ser del mismo paciente
+    const patientIds = new Set(selectedSessions.map(s => s.patient_id));
+    if (patientIds.size > 1) {
+      alert("Para emitir un DTE masivo, todas las sesiones deben pertenecer al mismo paciente.");
+      return;
+    }
+
+    // Si solo hay una, usamos el modal individual
+    if (selectedSessions.length === 1) {
+      openDTEModal(selectedSessions[0]);
+      return;
+    }
+
+    // Abrir modal con múltiples sesiones
+    openDTEModal(selectedSessions);
+  };
+
   const columns = useMemo(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <div className="px-1">
+            <input
+              type="checkbox"
+              className="w-4 h-4 border-gray-300 rounded text-brand-primary focus:ring-brand-primary"
+              checked={table.getIsAllPageRowsSelected()}
+              onChange={table.getToggleAllPageRowsSelectedHandler()}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="px-1">
+            <input
+              type="checkbox"
+              className="w-4 h-4 border-gray-300 rounded text-brand-primary focus:ring-brand-primary disabled:opacity-30"
+              checked={row.getIsSelected()}
+              disabled={!row.getCanSelect() || row.original.status !== 'completed' || !!row.original.dte_generated}
+              onChange={row.getToggleSelectedHandler()}
+            />
+          </div>
+        ),
+      },
       {
         id: "paciente",
         header: "Identidad & Servicio",
@@ -179,13 +228,29 @@ export default function AttendacesTable({
             <div className="flex items-center justify-end gap-1.5">
               {/* Acciones de Flujo */}
               {a.status === "scheduled" && (
-                <button
-                  onClick={() => openStartModal(a)}
-                  className="p-2 text-blue-600 transition-all border border-blue-100 shadow-sm bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white active:scale-90"
-                  title="Iniciar"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                </button>
+                <>
+                  <button
+                    onClick={() => openStartModal(a)}
+                    className="p-2 text-blue-600 transition-all border border-blue-100 shadow-sm bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white active:scale-90"
+                    title="Iniciar"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                  </button>
+                  <button
+                    onClick={() => openAbsentModal(a)}
+                    className="p-2 text-orange-600 transition-all border border-orange-100 shadow-sm bg-orange-50 rounded-xl hover:bg-orange-600 hover:text-white active:scale-90"
+                    title="Marcar Ausente"
+                  >
+                    <UserX className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => openCancelModal(a)}
+                    className="p-2 text-red-600 transition-all border border-red-100 shadow-sm bg-red-50 rounded-xl hover:bg-red-600 hover:text-white active:scale-90"
+                    title="Cancelar"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </>
               )}
               {a.status === "in_progress" && (
                 <button
@@ -198,16 +263,30 @@ export default function AttendacesTable({
               )}
 
               {/* Auditoría / DTE */}
-              {(a.status === "completed" ||
-                a.status === "scheduled" ||
-                a.status === "in_progress") && (
-                <button
-                  onClick={() => openDTEModal(a)}
-                  className="p-2 text-purple-600 transition-all border border-purple-100 shadow-sm bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
-                  title="DTE"
-                >
-                  <Receipt className="w-4 h-4" />
-                </button>
+              {a.status === "completed" && (
+                <>
+                  {!a.dte_generated ? (
+                    <button
+                      onClick={() => openDTEModal(a)}
+                      className="p-2 text-purple-600 transition-all border border-purple-100 shadow-sm bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
+                      title="Emitir DTE"
+                    >
+                      <Receipt className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    a.dte && (
+                    <a
+                      href={route("dte.lookup", a.dte.folio)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-teal-600 transition-all border border-teal-100 shadow-sm bg-teal-50 rounded-xl hover:bg-teal-600 hover:text-white active:scale-90"
+                      title={`Ver DTE #${a.dte.folio}`}
+                    >
+                      <Receipt className="w-4 h-4" />
+                    </a>
+                    )
+                  )}
+                </>
               )}
 
               {/* Menú Maestro */}
@@ -241,8 +320,9 @@ export default function AttendacesTable({
   const table = useReactTable({
     data: atenciones,
     columns,
-    state: { sorting, pagination: { pageSize, pageIndex } },
+    state: { sorting, pagination: { pageSize, pageIndex }, rowSelection },
     onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
@@ -256,15 +336,31 @@ export default function AttendacesTable({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  const selectedCount = Object.keys(rowSelection).length;
+
   return (
     <div className="grid grid-cols-1 gap-8 duration-700 lg:grid-cols-12 animate-in fade-in">
       {/* Tabla Maestro */}
       <div className="bg-white border border-gray-100 shadow-xl lg:col-span-9 rounded-[2rem] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-50 bg-gray-50/30">
-          <h2 className="flex items-center gap-3 text-sm font-black tracking-tight text-gray-900 uppercase">
-            <ClipboardList className="w-5 h-5 text-brand-primary" /> Nómina de
-            Atenciones
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="flex items-center gap-3 text-sm font-black tracking-tight text-gray-900 uppercase">
+              <ClipboardList className="w-5 h-5 text-brand-primary" /> Nómina de
+              Atenciones
+            </h2>
+            {selectedCount > 0 && (
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-brand-primary text-white rounded-full text-[9px] font-black uppercase tracking-widest animate-in zoom-in">
+                <CheckSquare className="w-3.5 h-3.5" />
+                {selectedCount} Seleccionadas
+                <button
+                  onClick={handleBulkDTE}
+                  className="ml-2 px-3 py-1 bg-white text-brand-primary rounded-lg hover:bg-brand-secondary transition-colors"
+                >
+                  Emitir DTE Masivo
+                </button>
+              </div>
+            )}
+          </div>
           <span className="text-[9px] font-black text-brand-gray uppercase tracking-[0.2em] bg-white px-4 py-1.5 rounded-xl shadow-sm border border-gray-100">
             {atenciones.length} Sesiones Detectadas
           </span>

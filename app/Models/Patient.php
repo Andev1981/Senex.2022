@@ -128,7 +128,7 @@ class Patient extends Authenticatable
     public function activePlans(): HasMany
     {
         return $this->hasMany(PatientPlan::class)
-            ->where('is_active', true);
+            ->where('status', 'active');
     }
 
     public function doctorAssignments(): HasMany

@@ -72,6 +72,24 @@ class UpdatePatientRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'name.required'             => 'El nombre del paciente es obligatorio.',
+            'last_name.required'        => 'El apellido del paciente es obligatorio.',
+            'rut.required'              => 'El RUT del paciente es obligatorio.',
+            'rut.unique'                => 'Este RUT ya está asociado a otro paciente en el sistema.',
+            'birth_date.required'       => 'La fecha de nacimiento es obligatoria.',
+            'birth_date.before'         => 'La fecha de nacimiento debe ser válida (anterior a hoy).',
+            
+            'email.unique'              => 'Este correo electrónico ya está en uso por otro paciente.',
+            'email.email'               => 'El formato del correo electrónico no es válido.',
+            
+            'commune_id.exists'         => 'La comuna seleccionada no es válida.',
+            'region_id.exists'          => 'La región seleccionada no es válida.',
+        ];
+    }
+
     public function attributes(): array
     {
         return [

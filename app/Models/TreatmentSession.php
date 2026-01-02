@@ -50,7 +50,8 @@ class TreatmentSession extends Model
         'patient_amount_clp',
         'doctor_amount_clp',
         'clinic_amount_clp',
-        'is_exento'
+        'is_exento',
+        'dte_generated'
     ];
 
     // Casts para que Laravel maneje el JSON como Array automáticamente
@@ -60,6 +61,7 @@ class TreatmentSession extends Model
         'cost_breakdown' => 'array',
         'consumes_plan' => 'boolean',
         'is_exento' => 'boolean',
+        'dte_generated' => 'boolean',
         'date' => 'datetime'
     ];
 
@@ -109,6 +111,11 @@ class TreatmentSession extends Model
     public function paymentAllocation(): HasOne
     {
         return $this->hasOne(PaymentAllocation::class);
+    }
+
+    public function dte(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(Dte::class, 'origin');
     }
 
     /**

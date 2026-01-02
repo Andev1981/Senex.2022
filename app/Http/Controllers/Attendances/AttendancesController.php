@@ -25,11 +25,13 @@ class AttendancesController extends Controller
      */
     public function index(Request $request)
     {
-        $companyId = session('company_id');
+        $companyId = session('current_company_id');
         $activeBranchId = session('active_branch_id');
 
-        Log::info('companyId: ' . $companyId);
-        Log::info('activeBranchId: ' . $activeBranchId);
+        /* Log::info('companyId: ' . $companyId);
+        Log::info('activeBranchId: ' . $activeBranchId); */
+
+
 
 
         try {
@@ -48,15 +50,15 @@ class AttendancesController extends Controller
             $query = $request->input('query', '');
 
             // Logs de debugging
-            Log::info('=== ATTENDANCE INDEX - DEBUG ===');
+            /* Log::info('=== ATTENDANCE INDEX - DEBUG ===');
             Log::info('Fecha Inicio: ' . $fechaInicio);
             Log::info('Fecha Fin: ' . $fechaFin);
             Log::info('Estado: ' . $estado);
-            Log::info('Query: ' . $query);
+            Log::info('Query: ' . $query); */
 
             // Asegurar que fecha_inicio no sea mayor que fecha_fin
             if ($fechaInicio > $fechaFin) {
-                Log::info('Swap de fechas detectado');
+                /* Log::info('Swap de fechas detectado'); */
                 $temp = $fechaInicio;
                 $fechaInicio = $fechaFin;
                 $fechaFin = $temp;
@@ -70,6 +72,7 @@ class AttendancesController extends Controller
                 'doctor',
                 'sessionType',
                 'paymentAllocation',
+                'dte',
             ])
                 ->whereBetween('date', [$fechaInicio, $fechaFin])
                 ->orderBy('date', 'desc')
@@ -156,6 +159,7 @@ class AttendancesController extends Controller
 
                     // Estado
                     'status' => $session->status,
+                    'dte_generated' => $session->dte_generated,
 
                     // Precios
                     'patient_amount_clp' => $session->patient_amount_clp,
@@ -190,8 +194,16 @@ class AttendancesController extends Controller
                     'total_payment' => $session->paymentAllocations ? $session->paymentAllocations->sum('amount_clp') : 0,
                     'copay_clp' => $session->payment ? $session->payment->sum('copay_clp') : 0,
                     'duration' => $session->duration,
+                    'dte' => $session->dte ? [
+                        'id' => $session->dte->id,
+                        'folio' => $session->dte->folio,
+                        'type' => $session->dte->type,
+                        'status' => $session->dte->estado_sii,
+                    ] : null,
                 ];
             });
+
+
 
             $kpis = [
                 'total' => $sessions->count(),
@@ -208,39 +220,54 @@ class AttendancesController extends Controller
             ];
 
 
-            $activeBranchId = session('active_branch_id');
 
             $patients = Patient::select('id', 'name', 'last_name', 'rut')
-                ->when($activeBranchId, function ($query) use ($activeBranchId) {
-                    $query->whereHas('branches', function ($q) use ($activeBranchId) {
-                        $q->where('branches.id', $activeBranchId);
-                    });
-                })
+                // Filtro por sucursal optimizado
+                ->when($activeBranchId, fn($q) => $q->whereRelation('branches', 'branches.id', $activeBranchId))
+
+                // Carga de planes con las columnas NECESARIAS para que funcionen las relaciones
                 ->with(['activePlans' => function ($query) {
                     $query->active()
                         ->notExpired()
                         ->withSessionsRemaining()
+                        // CRUCIAL: 'plan_id' y 'patient_id' son obligatorios para que Laravel arme la relación
                         ->select('id', 'patient_id', 'plan_id', 'sessions_included', 'sessions_used', 'expiry_date')
                         ->with('plan:id,name,code,description');
                 }])
-                ->get()->map(fn($p) => [
+                ->get()
+                // Mapeo seguro (Null Safe)
+                ->map(fn($p) => [
                     'id' => $p->id,
-                    'full_name' => $p->full_name,
+                    'full_name' => $p->full_name, // Asumiendo que tienes un Accessor getFullNameAttribute
+                    'name' => $p->name,
+                    'last_name' => $p->last_name,
                     'rut' => $p->rut,
                     'active_plans' => $p->activePlans->map(fn($plan) => [
-                        'id' => $plan->id,
+                        'patient_plans.id' => $plan->id,
                         'plan_id' => $plan->plan_id,
-                        'plan_name' => $plan->plan->name,
-                        'plan_code' => $plan->plan->code,
-                        'plan_description' => $plan->plan->description,
+
+                        // --- AQUÍ ESTABA EL PROBLEMA ---
+                        // Si $plan->plan es null, esto evita el error 500:
+                        'plan_name' => $plan->plan?->name ?? 'Plan Desconocido',
+                        'plan_code' => $plan->plan?->code ?? 'N/A',
+                        'plan_description' => $plan->plan?->description ?? '',
+                        // -------------------------------
+
                         'sessions_included' => $plan->sessions_included,
                         'sessions_used' => $plan->sessions_used,
-                        'sessions_remaining' => $plan->sessions_remaining,
+
+                        // Asegúrate de que este accessor exista en PatientPlan
+                        /*  'sessions_remaining' => $plan->sessions_included - $plan->session_used, */
+
                         'expiry_date' => $plan->expiry_date?->format('Y-m-d'),
-                        'is_expired' => $plan->is_expired,
-                        'is_exhausted' => $plan->is_exhausted,
-                    ]),
-                ])->sortBy('full_name')->values();
+                        'is_expired' => $plan->is_expired ?? false,
+                        'is_exhausted' => $plan->is_exhausted ?? false,
+                    ])->values(), // Limpia índices numéricos para JSON
+                ])
+                ->sortBy('full_name', SORT_NATURAL | SORT_FLAG_CASE) // Ordenamiento natural mejorado
+                ->values(); // Re-indexa el array principal para React
+
+
 
             $doctors = Doctor::select('id', 'name', 'last_name', 'rut')
                 ->when($activeBranchId, function ($query) use ($activeBranchId) {
@@ -261,7 +288,6 @@ class AttendancesController extends Controller
             $session_types = SessionType::select('id', 'name', 'code', 'category', 'base_price_clp', 'plan_discount_clp')
                 ->orderBy('name')
                 ->get();
-
 
 
             return Inertia::render('Attendances/Index', [

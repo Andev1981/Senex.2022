@@ -84,6 +84,7 @@ return new class extends Migration {
       $table->unsignedBigInteger('doctor_amount_clp')->default(0);
       $table->unsignedBigInteger('clinic_amount_clp')->default(0);
       $table->boolean('is_exento')->default(true);
+      $table->boolean('dte_generated')->default(false)->comment('Indica si ya fue o no generada una dte o factura o boleta para ese servicio');
 
       // -----------------------------------------------------
       // 5. METADATA Y TIMESTAMPS

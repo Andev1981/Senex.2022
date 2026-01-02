@@ -75,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'Product' => Product::class,
             'SessionType' => SessionType::class,
+            'TreatmentSession' => \App\Models\TreatmentSession::class,
             'Company' => Company::class,
             'Patient' => Patient::class,
             'Doctor' => Doctor::class,
