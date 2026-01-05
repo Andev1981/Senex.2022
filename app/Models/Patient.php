@@ -23,6 +23,7 @@ class Patient extends Authenticatable
 
     protected $fillable = [
         'company_id',
+        'user_id',
         'name',
         'last_name',
         'rut',
@@ -55,6 +56,11 @@ class Patient extends Authenticatable
     ];
 
     /* RELACIONES */
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     // Indica la relación M:N con Company
     public function companies(): BelongsToMany
     {

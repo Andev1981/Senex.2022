@@ -35,7 +35,7 @@ class LibreDteLocalProvider implements DteServiceProvider
     public function issue(array $payloadArray, array $config = [], Folios $objetoFolios): array
     {
         // --- MOCK PARA PRUEBAS (SOLO SI ES EL CERTIFICADO DUMMY) ---
-        if (str_contains($config['path'], 'dummy.pfx')) {
+        if (!empty($config['simulation_mode']) && $config['simulation_mode'] === true) {
             return [
                 (string)rand(1000000, 9999999), // TrackID Aleatorio
                 '<xml>Simulated signed DTE</xml>'

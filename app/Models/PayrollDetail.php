@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 
 class PayrollDetail extends Model
@@ -14,27 +15,72 @@ class PayrollDetail extends Model
   protected $fillable = [
     'company_id',
     'payroll_id',
+    'source_type',
+    'source_id',
     'treatment_session_id',
-    'session_type_name',
+    'patient_id',
+    'doctor_id',
+    'session_type_id',
+    'service_date',
+    'attended',
     'patient_amount_clp',
-    'doctor_amount_clp',
-    'commission_rate',
+    'commission_base_clp',
+    'commission_amount_clp',
+    'adjustment_amount_clp',
+    'subtotal_clp',
+    'rate_type',
+    'rate_amount_clp',
+    'rate_percentage',
+    'calc_context',
     'notes',
   ];
 
   protected $casts = [
     'patient_amount_clp' => 'decimal:2',
-    'doctor_amount_clp'  => 'decimal:2',
-    'commission_rate' => 'decimal:2', // si guardas % aplicado
+    'commission_base_clp' => 'decimal:2',
+    'commission_amount_clp'  => 'decimal:2',
+    'adjustment_amount_clp' => 'decimal:2', // si guardas % aplicado
+    'subtotal_clp'  => 'decimal:2',
+    'rate_amount_clp'  => 'decimal:2',
+    'rate_percentage'  => 'decimal:2',
+    'calc_context'  => 'array',
+    'notes'  => 'string',
   ];
 
-  public function payroll()
-  {
-    return $this->belongsTo(Payroll::class);
-  }
+  // 1. Relación con la Liquidación Padre
+    public function payroll(): BelongsTo
+    {
+        return $this->belongsTo(Payroll::class);
+    }
 
-  public function treatmentSession()
-  {
-    return $this->belongsTo(TreatmentSession::class);
-  }
+    // 2. Relación POLIMÓRFICA (La mágica)
+    // Esto permite que $detail->source devuelva una TreatmentSession, 
+    // un Bono, o cualquier cosa que hayas guardado en source_type/source_id
+    public function source(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    // 3. Relación Explícita (Opcional pero útil si quieres ser estricto)
+    // Como guardaste también el 'treatment_session_id', puedes tener esta directa
+    public function treatmentSession(): BelongsTo
+    {
+        return $this->belongsTo(TreatmentSession::class);
+    }
+
+    // 4. Relaciones de Negocio
+    public function doctor(): BelongsTo
+    {
+        return $this->belongsTo(Doctor::class); // O User::class si usas usuarios directos
+    }
+
+    public function patient(): BelongsTo
+    {
+        return $this->belongsTo(Patient::class);
+    }
+
+    public function sessionType(): BelongsTo
+    {
+        return $this->belongsTo(SessionType::class);
+    }
 }

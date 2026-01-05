@@ -40,6 +40,7 @@ class PayrollController extends Controller
 
     public function store(Request $request)
     {
+
         $validated = $request->validate([
             'doctor_id' => 'required|exists:doctors,id',
             'period_start' => 'required|date',
@@ -60,6 +61,30 @@ class PayrollController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    public function show(Payroll $payroll)
+    {
+        $payroll->load([
+            'doctor', 
+            'details.patient', 
+            'details.sessionType'
+        ]);
+        
+        return response()->json($payroll);
+    }
+
+    public function downloadPdf(Payroll $payroll)
+    {
+        $payroll->load([
+            'doctor', 
+            'details.patient', 
+            'details.sessionType'
+        ]);
+
+        $pdf = \PDF::loadView('pdf.payroll_liquidation', compact('payroll'));
+        
+        return $pdf->download("liquidacion_{$payroll->id}_{$payroll->doctor->last_name}.pdf");
     }
 
     public function approve(Payroll $payroll)

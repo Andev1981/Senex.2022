@@ -4,51 +4,123 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Attendance;
+use Illuminate\Support\Facades\DB;
 
-/* Inertia */
-use App\Http\Controllers\Inertia\{
-  InvoicesController,
-  TreatmentController,
-  VitalController,
+
+/* Acquisitions */
+use App\Http\Controllers\Admin\Acquisitions\{
+  AcquisitionController,
+  SupplierController,
+  PurchaseOrderController
 };
 
-use App\Http\Controllers\Attendances\AttendancesController;
-use App\Http\Controllers\Patient\AuthController as PatientAuthController;
+/* Addresses */
+use App\Http\Controllers\Admin\Addresses\{
+  AddressController
+};
 
-use App\Http\Controllers\{
-  HomeController,
-  AddressController,
-  AuthorizedFolioController,
+/* Admin */
+use App\Http\Controllers\Admin\Agreements\{
+  AgreementController,
+  AgreementRuleController
+};
+
+/* Attendances */
+use App\Http\Controllers\Admin\Attendances\{
+  AttendancesController
+};
+
+/* Calendars */
+use App\Http\Controllers\Admin\Calendars\{
+  AgendaSlotController,
+  CalendarAccountController,
+  CalendarEventController,
+  ScheduleController
+};
+
+/* KineMobile */
+use App\Http\Controllers\Admin\Clients\{
+  ClientAuthController,
+  ClientDashboardController
+};
+
+/* Companies */
+use App\Http\Controllers\Admin\Companies\{
   CompanyController,
-  DteConfigurationController,
+  CompanySwitchController
+};
+
+/* Doctors */
+use App\Http\Controllers\Admin\Doctors\{
+  DoctorAdminController
+};
+
+/* Dtes */
+use App\Http\Controllers\Admin\Dtes\{
+  AuthorizedFolioController,
+  DteCongratulationController,
   DteController,
   DteFolioController,
-  PatientContactController,
-  ProductController,
-  TreatmentSessionController,
+  DteConfigurationController
 };
-use App\Http\Controllers\Admin\Agreements\AgreementController;
-use App\Http\Controllers\Admin\Agreements\AgreementRuleController;
-use App\Http\Controllers\Admin\CompanySwitchController;
-use App\Http\Controllers\Admin\Doctors\DoctorAdminController;
-use App\Http\Controllers\Admin\Patients\PatientAdminController;
-use App\Http\Controllers\Admin\SessionTypes\SessionTypeController;
-use App\Http\Controllers\Admin\Treatments\TreatmentAdminController;
-use App\Http\Controllers\Admin\TreatmentSessions\TreatmentSessionAdminController;
-use App\Http\Controllers\Admin\Insurances\InsuranceController;
-use App\Http\Controllers\Admin\Plans\PlanController;
-use App\Http\Controllers\Patient\PatientDashboardController;
-use App\Http\Controllers\Payments\WebpayController;
-use App\Http\Controllers\Admin\Payments\PaymentsController;
-use App\Http\Controllers\Admin\Plans\FamilyPlanController;
-use App\Http\Controllers\Admin\SessionTypes\BranchSessionTypeController;
-use App\Http\Controllers\KineMobile\DashboardController;
-use App\Http\Controllers\KineMobile\PatientController;
-use App\Http\Controllers\KineMobile\ProfileController;
-use App\Http\Controllers\KineMobile\SessionController;
-use App\Http\Controllers\PatientSearchController;
 
+/* Finance */
+use App\Http\Controllers\Admin\Finance\{ReceivablesController};
+
+/* Insurances */
+use App\Http\Controllers\Admin\Insurances\{InsuranceController};
+
+/* Insurances */
+use App\Http\Controllers\Admin\Invoices\{InvoicesController};
+
+/* Patients */
+use App\Http\Controllers\Admin\Patients\{PatientAdminController, PatientContactController, PatientController, PatientDashboardController, PatientSearchController};
+
+
+/* Payments */
+use App\Http\Controllers\Admin\Payments\{PaymentReminderController, PaymentsController, WebpayController};
+
+/* Payroll */
+use App\Http\Controllers\Admin\Payroll\{PayrollController};
+
+/* Plans */
+use App\Http\Controllers\Admin\Plans\{FamilyPlanController, PlanController};
+
+/* Products */
+use App\Http\Controllers\Admin\Products\{ProductController};
+
+/* Reports */
+use App\Http\Controllers\Admin\Reports\{ReportsController};
+
+/* Roles */
+use App\Http\Controllers\Admin\Roles\{RoleController};
+
+/* SessionTypes */
+use App\Http\Controllers\Admin\SessionTypes\{BranchSessionTypeController, SessionTypeController};
+
+/* Subscription */
+use App\Http\Controllers\Admin\Subscription\{SubscriptionController};
+
+/* Treatments */
+use App\Http\Controllers\Admin\Treatments\{TreatmentAdminController};
+
+/* TreatmentSessions */
+use App\Http\Controllers\Admin\TreatmentSessions\TreatmentSessionController;
+
+
+/* KineMobile */
+use App\Http\Controllers\KineMobile\{DashboardMobileController, PatientMobileController, ProfileMobileController, SessionMobileController};
+
+/* Commons */
+use App\Http\Controllers\{
+  FileProxyController,
+  HomeController,
+  SesionController,
+  UserController,
+};
+
+
+/* Auth */
 
 require __DIR__ . '/auth.php';
 
@@ -75,7 +147,7 @@ Route::group(['middleware' => ['auth']], function () {
 
   Route::get('/', [HomeController::class, 'index'])->name('/');
 
-  Route::get('informes', [\App\Http\Controllers\Admin\Reports\ReportsController::class, 'index'])->name('informes');
+  Route::get('informes', [ReportsController::class, 'index'])->name('informes');
   Route::get('agenda', [PatientAdminController::class, 'agenda'])->name('agenda');
   Route::get('tratamientos', [PatientAdminController::class, 'tratamientos'])->name('tratamientos');
   Route::post('patients-documents', [PatientAdminController::class, 'document_post'])->name('patient.documents.store');
@@ -84,30 +156,19 @@ Route::group(['middleware' => ['auth']], function () {
   Route::patch('patients/{patient}/addresses', [AddressController::class, 'update'])->name('patients.addresses.update');
   Route::post('patients/{patient}/contacts', [PatientContactController::class, 'store'])->name('patients.contacts.store');
   Route::patch('patients/{patientContact}/contacts', [PatientContactController::class, 'update'])->name('patients.contacts.update');
-  Route::post('patients/vitals', [VitalController::class, 'store'])->name('patients.vitals.store');
-  Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update');
+  /* Route::post('patients/vitals', [VitalController::class, 'store'])->name('patients.vitals.store');
+  Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update'); */
 
 
   /* Crear Tratamiento */
-  Route::post('patients/treatments', [TreatmentController::class, 'store'])->name('patients.treatments.store');
-  Route::patch('patients/{treatment}/treatments', [TreatmentController::class, 'update'])->name('patients.treatments.update');
+  Route::post('patients/treatments', [TreatmentAdminController::class, 'store'])->name('patients.treatments.store');
+  Route::patch('patients/{treatment}/treatments', [TreatmentAdminController::class, 'update'])->name('patients.treatments.update');
 
 
 
   // CRUD básico de treatment sessions
   Route::resource('treatment-sessions', TreatmentSessionController::class)
     ->names('treatment.sessions');
-
-  // Rutas adicionales para funcionalidad avanzada
-  Route::post('/treatment-sessions/bulk-update', [TreatmentSessionController::class, 'bulkUpdate'])
-    ->name('treatment_sessions.bulk_update');
-
-  Route::get('/treatment-sessions/{session}/stats', [TreatmentSessionController::class, 'getSessionStatistics'])
-    ->name('treatment_sessions.stats');
-
-  // Crear sesión desde appointment
-  Route::get('/treatment-sessions/create-from-appointment/{appointment}', [TreatmentSessionController::class, 'createFromAppointment'])
-    ->name('treatment_sessions.create_from_appointment');
 
   /* kines */
   /*  Route::get('doctors', [DoctorAdminController::class, 'index'])->name('doctors');
@@ -135,7 +196,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::resource('treatments', TreatmentAdminController::class)->names('treatments');
 
 
-  Route::resource('sessions', TreatmentSessionAdminController::class)->names('sessions');
+  Route::resource('sessions', TreatmentSessionController::class)->names('sessions');
 
   /* RUTAS PARA CONFIGURAR EXCEPCIONES POR SUCURSAL EN TIPOS DE SESIÓN */
   // Ruta para OBTENER la configuración (para llenar el formulario)
@@ -156,9 +217,10 @@ Route::group(['middleware' => ['auth']], function () {
   Route::resource('agreement/rules', AgreementRuleController::class)->names('agreement.rules');
 
 
-  Route::resource('payrolls', \App\Http\Controllers\Admin\Payroll\PayrollController::class)->names('payrolls');
-  Route::post('payrolls/{payroll}/approve', [\App\Http\Controllers\Admin\Payroll\PayrollController::class, 'approve'])->name('payrolls.approve');
-  Route::post('payrolls/{payroll}/pay', [\App\Http\Controllers\Admin\Payroll\PayrollController::class, 'markPaid'])->name('payrolls.pay');
+  Route::resource('payrolls', PayrollController::class)->names('payrolls');
+  Route::get('payrolls/{payroll}/pdf', [PayrollController::class, 'downloadPdf'])->name('payrolls.pdf');
+  Route::post('payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
+  Route::post('payrolls/{payroll}/pay', [PayrollController::class, 'markPaid'])->name('payrolls.pay');
 
 
   Route::resource('plans', PlanController::class)->names('plans');
@@ -167,9 +229,9 @@ Route::group(['middleware' => ['auth']], function () {
 
   // New: Acquisitions Module Routes
   Route::prefix('acquisitions')->name('acquisitions.')->group(function () {
-    Route::resource('suppliers', \App\Http\Controllers\Admin\Acquisitions\SupplierController::class);
-    Route::resource('purchase-orders', \App\Http\Controllers\Admin\Acquisitions\PurchaseOrderController::class);
-    Route::post('purchase-orders/{order}/status', [\App\Http\Controllers\Admin\Acquisitions\PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status');
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::post('purchase-orders/{order}/status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase-orders.status');
   });
 
   // New: Finance Module Routes
@@ -223,18 +285,18 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   // Dashboard-kines (próxima fase)
-  Route::get('/doctor/dashboard', [DashboardController::class, 'index'])
+  Route::get('/doctor/dashboard', [DashboardMobileController::class, 'index'])
     ->name('kine.dashboard');
 
-  Route::get('/doctor/dashboard/patients', [PatientController::class, 'index'])
+  Route::get('/doctor/dashboard/patients', [PatientMobileController::class, 'index'])
     ->name('kine.my-patients');
 
-  Route::get('/doctor/dashboard/sessions', [SessionController::class, 'index'])
+  Route::get('/doctor/dashboard/sessions', [SessionMobileController::class, 'index'])
     ->name('kine.my-sessions');
-  Route::get('/doctor/dashboard/session/create', [SessionController::class, 'create'])
+  Route::get('/doctor/dashboard/session/create', [SessionMobileController::class, 'create'])
     ->name('kine.sessions.create');
 
-  Route::get('/doctor/dashboard/profile', [ProfileController::class, 'index'])
+  Route::get('/doctor/dashboard/profile', [ProfileMobileController::class, 'index'])
     ->name('kine.my-profile');
 
 
@@ -327,7 +389,7 @@ Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'de
     ->name('sessions.duplicate');
 
   // Recalcular KPIs del tratamiento
-  Route::post('/treatments/{treatment}/recalculate-kpis', [TreatmentController::class, 'recalculateKPIs'])
+  Route::post('/treatments/{treatment}/recalculate-kpis', [TreatmentAdminController::class, 'recalculateKPIs'])
     ->name('treatments.recalculate-kpis');
 
 
@@ -452,10 +514,10 @@ Route::middleware(['auth'])->prefix('dev')->group(function () {
 
     Route::post('/login-as/{id}', function ($id) {
       Auth::loginUsingId($id);
-      
+
       // Limpiar contexto de sesión para que HandleInertiaRequests recargue los datos del nuevo usuario
       session()->forget(['current_company_id', 'active_branch_id']);
-      
+
       return back()->with('success', 'Login como ID: ' . $id);
     });
 
@@ -464,26 +526,31 @@ Route::middleware(['auth'])->prefix('dev')->group(function () {
       return back()->with('success', 'DB Reiniciada y Sembrada');
     });
 
+    Route::post('/rebuild-app', function () {
+      Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\AllSeeder']);
+      return back()->with('success', 'Sistema reconstruido desde cero (AllSeeder).');
+    });
+
     Route::post('/run-jobs', function () {
       Artisan::call('queue:work --stop-when-empty');
       return back()->with('success', 'Jobs procesados exitosamente');
     });
 
     Route::post('/dispatch-test-job', function () {
-        dispatch(function () {
-            logger('Test job executed');
-        });
-        return back()->with('success', 'Test Job despachado a la cola');
+      dispatch(function () {
+        logger('Test job executed');
+      });
+      return back()->with('success', 'Test Job despachado a la cola');
     });
 
-    Route::post('/seed/attendance/completed', function () {
-        Attendance::factory()->realizada()->create();
-        return back()->with('success', 'Cita completada creada');
-    });
-
-    Route::post('/seed/attendance/scheduled', function () {
-        Attendance::factory()->pendiente()->create();
-        return back()->with('success', 'Cita pendiente creada');
+    Route::get('/debug-db', function () {
+      $db = DB::connection()->getDatabaseName();
+      $columns = \Illuminate\Support\Facades\Schema::getColumnListing('patients');
+      return response()->json([
+        'database' => $db,
+        'columns_in_patients_table' => $columns,
+        'has_user_id' => in_array('user_id', $columns)
+      ]);
     });
   }
 });
@@ -511,23 +578,23 @@ Route::prefix('patient')->name('patient.')->group(function () {
   Route::middleware('guest:patient')->group(function () {
 
     // Mostrar formulario de login
-    Route::get('/login', [PatientAuthController::class, 'showLogin'])
+    Route::get('/login', [ClientAuthController::class, 'showLogin'])
       ->name('login');
 
     // Solicitar código de acceso
-    Route::post('/request-code', [PatientAuthController::class, 'requestCode'])
+    Route::post('/request-code', [ClientAuthController::class, 'requestCode'])
       ->name('request-code');
 
     // Verificar código
-    Route::post('/verify-code', [PatientAuthController::class, 'verifyCode'])
+    Route::post('/verify-code', [ClientAuthController::class, 'verifyCode'])
       ->name('verify-code');
 
     // ✅ NUEVO: Mostrar formulario de verificación
-    Route::get('/verify-code', [PatientAuthController::class, 'showVerifyCode'])
+    Route::get('/verify-code', [ClientAuthController::class, 'showVerifyCode'])
       ->name('verify-code.show');
 
     // Reenviar código
-    Route::post('/resend-code', [PatientAuthController::class, 'resendCode'])
+    Route::post('/resend-code', [ClientAuthController::class, 'resendCode'])
       ->name('resend-code');
   });
 
@@ -535,18 +602,18 @@ Route::prefix('patient')->name('patient.')->group(function () {
   Route::middleware('auth:patient')->group(function () {
 
     // Cerrar sesión
-    Route::post('/logout', [PatientAuthController::class, 'logout'])
+    Route::post('/logout', [ClientAuthController::class, 'logout'])
       ->name('logout');
 
     // Dashboard (próxima fase)
-    Route::get('/dashboard', [PatientDashboardController::class, 'index'])
+    Route::get('/dashboard', [ClientDashboardController::class, 'index'])
       ->name('dashboard');
   });
 
 
 
   // Cerrar sesión
-  Route::post('/logout', [PatientAuthController::class, 'logout'])
+  Route::post('/logout', [ClientAuthController::class, 'logout'])
     ->name('logout');
 });
 

@@ -4,9 +4,24 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { NotebookText, Plus, Search } from "lucide-react";
 import PayrollTable from "./Components/PayrollTable";
 import PayrollFormModal from "./Modals/PayrollFormModal";
+import PayrollReviewSideModal from "./Modals/PayrollReviewSideModal";
 
 export default function Index({ payrolls, doctors }) {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    
+    // State for Review Modal
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [selectedReviewPayrollId, setSelectedReviewPayrollId] = useState(null);
+
+    const handleReview = (id) => {
+        setSelectedReviewPayrollId(id);
+        setReviewModalOpen(true);
+    };
+
+    const closeReviewModal = () => {
+        setReviewModalOpen(false);
+        setSelectedReviewPayrollId(null);
+    };
 
     return (
         <AuthenticatedLayout>
@@ -40,13 +55,23 @@ export default function Index({ payrolls, doctors }) {
                 </div>
 
                 {/* TABLA TANSTACK */}
-                <PayrollTable payrolls={payrolls} />
+                <PayrollTable 
+                    payrolls={payrolls} 
+                    onReview={handleReview}
+                />
 
                 {/* MODAL INTELIGENTE */}
                 <PayrollFormModal 
                     show={isFormModalOpen} 
                     onClose={() => setIsFormModalOpen(false)} 
                     doctors={doctors}
+                />
+
+                {/* MODAL DE REVISIÓN */}
+                <PayrollReviewSideModal
+                    show={reviewModalOpen}
+                    onClose={closeReviewModal}
+                    payrollId={selectedReviewPayrollId}
                 />
             </div>
         </AuthenticatedLayout>

@@ -23,8 +23,9 @@ class Payroll extends Model
     'period_end',
     'total_sessions',
     'total_patient_amount_clp',
-    'total_doctor_amount',
-    'total_clinic_amount',
+    'total_commission_amount_clp',
+    'total_adjustments_clp',
+    'total_payable_clp',
     'status',
     'paid_at',
     'notes',
@@ -34,8 +35,9 @@ class Payroll extends Model
     'period_start'         => 'date',
     'period_end'           => 'date',
     'total_patient_amount_clp' => 'decimal:2',
-    'total_doctor_amount'  => 'decimal:2',
-    'total_clinic_amount'  => 'decimal:2',
+    'total_commission_amount_clp'  => 'decimal:2',
+    'total_adjustments_clp'  => 'decimal:2',
+    'total_payable_clp'  => 'decimal:2',
     'paid_at'              => 'datetime',
   ];
 
@@ -67,8 +69,9 @@ class Payroll extends Model
   {
     $this->total_sessions       = (int) $this->details()->count();
     $this->total_patient_amount_clp = (float) $this->details()->sum('patient_amount_clp');
-    $this->total_doctor_amount  = (float) $this->details()->sum('doctor_amount_clp');
-    $this->total_clinic_amount  = (float) ($this->total_patient_amount_clp - $this->total_doctor_amount);
+    $this->total_commission_amount_clp  = (float) $this->details()->sum('commission_amount_clp');
+    $this->total_adjustments_clp  = (float) $this->details()->sum('adjustment_amount_clp');
+    $this->total_payable_clp  = (float) ($this->total_patient_amount_clp - $this->total_commission_amount_clp - $this->total_adjustments_clp);
     $this->save();
   }
 }

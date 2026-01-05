@@ -12,6 +12,7 @@ return new class extends Migration {
 
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade')->comment('Usuario asociado para acceso al portal (Portal Paciente).');
             $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
             $table->string('name');
             $table->string('last_name');

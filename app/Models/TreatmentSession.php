@@ -68,6 +68,13 @@ class TreatmentSession extends Model
     /**
      * Relaciones
      */
+
+    // Opción A: Si una sesión SOLO se paga una vez (lo normal)
+    public function payrollDetail(): MorphOne
+    {
+        return $this->morphOne(PayrollDetail::class, 'source');
+    }
+    
     public function treatment(): BelongsTo
     {
         return $this->belongsTo(Treatment::class);

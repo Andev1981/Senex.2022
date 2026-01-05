@@ -84,6 +84,17 @@ class HandleInertiaRequests extends Middleware
                     return null;
                 }
             }) : null,
+            'techInfo' => config('app.env') === 'local' ? [
+                'php' => phpversion(),
+                'laravel' => app()->version(),
+                'db' => DB::connection()->getDriverName() . ' ' . DB::connection()->getPdo()->getAttribute(\PDO::ATTR_SERVER_VERSION)
+            ] : null,
+            'queryDebug' => config('app.env') === 'local' ? [
+                'count' => count(DB::getQueryLog()),
+                'time'  => collect(DB::getQueryLog())->sum('time')
+            ] : null,
+            'memoryUsage' => config('app.env') === 'local' ? round(memory_get_peak_usage(true) / 1024 / 1024, 2) : null,
+            'totalTime' => config('app.env') === 'local' ? round((microtime(true) - LARAVEL_START) * 1000) : null,
             'pendingJobsCount' => config('app.env') === 'local' ? DB::table('jobs')->count() : 0,
         ];
     }

@@ -16,4 +16,11 @@ class InvoiceIssueRequest extends FormRequest
       'dte_type' => ['nullable', 'in:boleta,factura,nota_credito,nota_debito'],
     ];
   }
+
+  public function messages(): array
+  {
+    return [
+      'dte_type.in' => 'El tipo de documento seleccionado no es válido (boleta, factura, nota_credito, nota_debito).',
+    ];
+  }
 }

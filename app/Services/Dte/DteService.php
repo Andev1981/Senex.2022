@@ -35,8 +35,8 @@ class DteService
         // 1. Cargar Configuración
         $config = $this->cargarConfiguracion($invoice->company_id);
 
-        // 2. Determinar Tipo
-        $tipoDte = $invoice->dte_type ?: $this->calculator->calculateAndDetermineType($invoice);
+        // 2. Determinar Tipo y Calcular Montos (Centralizado)
+        $tipoDte = $this->calculator->calculateAndDetermineType($invoice);
 
         // ---------------------------------------------------------
         // 3. GESTIÓN DE FOLIOS (REINTENTO INTELIGENTE)
@@ -48,12 +48,18 @@ class DteService
         if ($folioAUsar && $invoice->dte_status !== Invoice::SII_STATUS_REJECTED) {
             $objetoFolios = $this->foliosService->recuperarCAF($invoice->company_id, $tipoDte);
         } else {
-            // Si no tiene folio o el SII rechazó el anterior, reservamos uno nuevo.
-            list($objetoFolios, $folioAUsar) = $this->foliosService->reservarFolio(
-                $invoice->company_id,
-                $config['rut_empresa'],
-                $tipoDte
-            );
+            // Verificar si estamos en MODO SIMULACIÓN
+            if (!empty($config['simulation_mode']) && $config['simulation_mode'] === true) {
+                 // Usar Folio Simulado sin tocar la DB
+                 list($objetoFolios, $folioAUsar) = $this->foliosService->getSimulatedFolio($tipoDte);
+            } else {
+                 // Si no tiene folio o el SII rechazó el anterior, reservamos uno nuevo.
+                 list($objetoFolios, $folioAUsar) = $this->foliosService->reservarFolio(
+                    $invoice->company_id,
+                    $config['rut_empresa'],
+                    $tipoDte
+                 );
+            }
             $invoice->dte_folio = $folioAUsar;
         }
 
@@ -231,7 +237,8 @@ class DteService
             'rut_empresa' => $config->rut_empresa, 
             'ambiente' => $config->ambiente,
             'path' => Storage::disk('private')->path($config->certificado_path), 
-            'password' => decrypt($config->certificado_password), 
+            'password' => decrypt($config->certificado_password),
+            'simulation_mode' => $config->simulation_mode,
         ];
     }
 
@@ -260,43 +267,4 @@ class DteService
         );
     }
 
-    public function calcularYDeterminarTipo(Invoice $invoice)
-    {
-        $neto = 0;
-        $iva = 0;
-        $exento = 0;
-        $tieneItemsAfectos = false;
-
-        foreach ($invoice->items as $item) {
-            if ($item->is_exento) {
-                $exento += $item->total_gross_clp; // Asumiendo que guardas el bruto
-            } else {
-                $tieneItemsAfectos = true;
-                // Desglosar IVA del bruto (en Chile precios B2C incluyen IVA)
-                $netoLinea = round($item->total_gross_clp / 1.19);
-                $ivaLinea = $item->total_gross_clp - $netoLinea;
-
-                $neto += $netoLinea;
-                $iva += $ivaLinea;
-            }
-        }
-
-        // --- DECISIÓN CRÍTICA DE TIPO DTE ---
-
-        // CASO 1: Si es FACTURA (B2B), siempre es 33 (Afecta) o 34 (Exenta).
-        // Si la venta es mixta y piden factura, se usa la 33 y se detallan los códigos de exención por línea.
-        if ($invoice->requires_factura) {
-            return $tieneItemsAfectos ? 33 : 34;
-        }
-
-        // CASO 2: BOLETAS (B2C)
-        // Si tiene AL MENOS UN ítem afecto, debe ser Boleta Electrónica (39).
-        // La Boleta 39 soporta montos exentos dentro de ella.
-        if ($tieneItemsAfectos) {
-            return 39;
-        }
-
-        // Si TODO es exento (solo prestaciones de salud), usamos Boleta Exenta (41).
-        return 41;
-    }
 }

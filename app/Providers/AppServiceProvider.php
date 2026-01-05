@@ -9,9 +9,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Models\PaymentAllocation;
+use App\Models\TreatmentSession;
 use App\Models\Product;
 use App\Models\SessionType;
 use App\Models\User;
+use App\Models\Invoice;
+use App\Models\Dte;
 use App\Observers\PaymentAllocationObserver;
 use App\Services\TwilioService;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -67,6 +70,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if (app()->isLocal()) {
+            \Illuminate\Support\Facades\DB::enableQueryLog();
+        }
+
         // Configuración para fechas en español
         Carbon::setLocale(config('app.locale'));
         /*      setlocale(LC_ALL, 'es_CL', 'es', 'ES'); */
@@ -75,13 +82,13 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'Product' => Product::class,
             'SessionType' => SessionType::class,
-            'TreatmentSession' => \App\Models\TreatmentSession::class,
+            'TreatmentSession' => TreatmentSession::class,
             'Company' => Company::class,
             'Patient' => Patient::class,
             'Doctor' => Doctor::class,
             'User' => User::class,
-            'Invoice' => \App\Models\Invoice::class,
-            'Dte' => \App\Models\Dte::class,
+            'Invoice' => Invoice::class,
+            'Dte' => Dte::class,
         ]);
     }
 }

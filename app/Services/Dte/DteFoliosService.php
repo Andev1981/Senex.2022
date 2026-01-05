@@ -129,4 +129,32 @@ class DteFoliosService
 
         return new Folios($registro->caf_xml);
     }
+
+    /**
+     * Genera un objeto Folios simulado y un número aleatorio.
+     */
+    public function getSimulatedFolio(int $tipo): array
+    {
+        // XML CAF Dummy minímo para que LibreDTE no falle al instanciar class Folios
+        $dummyCaf = <<<XML
+<?xml version="1.0"?>
+<AUTORIZACION>
+  <CAF version="1.0">
+    <DA>
+      <RE>1-9</RE>
+      <RS>EMPRESA SIMULADA</RS>
+      <TD>{$tipo}</TD>
+      <RNG><D>1</D><H>999999</H></RNG>
+      <FA>2050-12-31</FA>
+      <RSAPK><M>0</M><E>0</E></RSAPK>
+      <IDK>0</IDK>
+    </DA>
+    <FRMA algoritmo="SHA1withRSA">SIMULATED_SIGNATURE</FRMA>
+  </CAF>
+</AUTORIZACION>
+XML;
+        
+        // Retornar objeto Folios y número aleatorio
+        return [new Folios($dummyCaf), rand(500000, 999999)];
+    }
 }

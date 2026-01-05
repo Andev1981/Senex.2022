@@ -141,31 +141,36 @@ class Invoice extends Model
   // ===== Helpers de estado =====
   public function isPaid(): bool
   {
-    return $this->status === self::PAYMENT_STATUS_PAID;
+    return $this->payment_status === self::PAYMENT_STATUS_PAID;
   }
   public function markVoided(?string $number = null): void
   {
-    $this->status = self::PAYMENT_STATUS_VOIDED;
-    if ($number) $this->document_number = $number;
+    $this->payment_status = self::PAYMENT_STATUS_VOIDED;
+    if ($number) $this->dte_folio = $number;
     $this->save();
   }
   public function markAccepted(?string $trackId = null): void
   {
-    $this->sii_status = self::SII_STATUS_ACCEPTED;
-    if ($trackId) $this->sii_track_id = $trackId;
+    $this->dte_status = self::SII_STATUS_ACCEPTED;
+    // El track_id se guarda en la relación DTE, pero si queremos guardarlo aquí también
+    if ($trackId) {
+        $meta = $this->metadata ?? [];
+        $meta['sii_track_id'] = $trackId;
+        $this->metadata = $meta;
+    }
     $this->save();
   }
   public function markRejected(?string $reason = null): void
   {
-    $this->sii_status = self::SII_STATUS_REJECTED;
-    $meta = $this->meta ?? [];
+    $this->dte_status = self::SII_STATUS_REJECTED;
+    $meta = $this->metadata ?? [];
     if ($reason) $meta['reject_reason'] = $reason;
-    $this->meta = $meta;
+    $this->metadata = $meta;
     $this->save();
   }
   public function settleAsPaid(): void
   {
-    $this->status = self::PAYMENT_STATUS_PAID;
+    $this->payment_status = self::PAYMENT_STATUS_PAID;
     $this->save();
   }
 

@@ -21,6 +21,7 @@ class PatientFactory extends Factory
     {
         return [
             'user_id' => \App\Models\User::factory(),
+            'company_id' => \App\Models\Company::factory(),
             // Campos de identificación
             'rut' => ValidRut::generate(), 
             'name' => $this->faker->firstName(),

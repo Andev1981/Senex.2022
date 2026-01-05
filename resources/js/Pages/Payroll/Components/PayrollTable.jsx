@@ -24,7 +24,7 @@ import {
 import TablePagination from "@/Components/TablePagination";
 import { router } from "@inertiajs/react";
 
-export default function PayrollTable({ payrolls }) {
+export default function PayrollTable({ payrolls, onReview }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pageSize, setPageSize] = useState(10);
@@ -102,7 +102,7 @@ export default function PayrollTable({ payrolls }) {
         cell: ({ row }) => (
           <div className="flex items-center justify-end gap-1.5">
             <button 
-                onClick={() => {}}
+                onClick={() => onReview(row.original.id)}
                 className="p-2 text-brand-primary bg-brand-secondary/5 border border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white transition-all active:scale-90 flex items-center gap-2 px-4"
             >
                 <span className="text-[9px] font-black uppercase tracking-widest">Revisar</span>
