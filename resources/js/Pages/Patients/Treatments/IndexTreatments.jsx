@@ -147,7 +147,7 @@ export default function IndexTreatments({
         description={
           "Acá puede seleccionar otro tratamiento para ver sus detalles."
         }
-        width="2xl" // sm, md, lg, xl, 2xl, 3xl, full
+        width="3xl" // sm, md, lg, xl, 2xl, 3xl, full
       >
         <TreatmentModal
           treatments={treatments}
@@ -177,7 +177,7 @@ export default function IndexTreatments({
         open={openSessionModalShow}
         onClose={() => setOpenSessionModalShow(false)}
         title={"Eliminar Sesión"}
-        maxWidth="3xl" // sm, md, lg, xl, 2xl, 3xl, full
+        maxWidth="5xl" // sm, md, lg, xl, 2xl, 3xl, full
       >
         <SessionModalDelete
           session={selectedSession}

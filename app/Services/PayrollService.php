@@ -8,6 +8,45 @@ use Illuminate\Support\Facades\DB;
 
 class PayrollService
 {
+  /**
+   * Simula la liquidación para previsualización
+   */
+  public function calculateForPeriod(int $doctorId, string $fromDate, string $toDate): array
+  {
+      $sessions = TreatmentSession::query()
+        ->where('doctor_id', $doctorId)
+        ->whereBetween('date', [Carbon::parse($fromDate)->startOfDay(), Carbon::parse($toDate)->endOfDay()])
+        ->where('status', TreatmentSession::STATUS_COMPLETED)
+        ->get();
+
+      $totalSessions = $sessions->count();
+      $totalPatientAmount = 0;
+      $totalDoctorAmount = 0; // Lo que realmente gana el doctor
+      $totalClinicAmount = 0; // La retención
+
+      foreach ($sessions as $s) {
+          $pAmount = $s->patient_amount_clp ?? 0;
+          $dAmount = $s->doctor_amount_clp ?? 0;
+          
+          // La retención es la diferencia
+          $cAmount = $pAmount - $dAmount;
+
+          $totalPatientAmount += $pAmount;
+          $totalDoctorAmount += $dAmount;
+          $totalClinicAmount += $cAmount;
+      }
+
+      return [
+          'doctor_id' => $doctorId,
+          'period_start' => $fromDate,
+          'period_end' => $toDate,
+          'total_sessions' => $totalSessions,
+          'total_patient_amount_clp' => $totalPatientAmount,
+          'total_commission_amount_clp' => $totalClinicAmount, // Retención Clínica
+          'total_payable_clp' => $totalDoctorAmount, // Lo que se le paga al doctor
+      ];
+  }
+
   public function buildForPeriod(int $doctorId, string $fromDate, string $toDate): Payroll
   {
     return DB::transaction(function () use ($doctorId, $fromDate, $toDate) {
@@ -35,6 +74,11 @@ class PayrollService
       
       try{
         foreach ($sessions as $s) {
+          
+          $patientAmount = $s->patient_amount_clp ?? 0;
+          $doctorAmount  = $s->doctor_amount_clp ?? 0;
+          $clinicRetention = $patientAmount - $doctorAmount;
+
           PayrollDetail::query()->create([
                 // 1. Identificadores Básicos
                 'payroll_id'           => $payroll->id,
@@ -53,25 +97,24 @@ class PayrollService
 
                 // 4. Montos Financieros
                 // Lo que pagó el paciente
-                'patient_amount_clp'     => $s->patient_amount_clp ?? 0, 
+                'patient_amount_clp'     => $patientAmount, 
                 
-                // Base sobre la que se calcula la comisión (usualmente lo mismo que pagó el paciente)
-                'commission_base_clp'    => $s->patient_amount_clp ?? 0, 
+                // Base sobre la que se calcula la comisión
+                'commission_base_clp'    => $patientAmount, 
                 
-                // Lo que gana el doctor (Tu campo 'doctor_amount_clp' va aquí)
-                'commission_amount_clp'  => $s->doctor_amount_clp ?? 0, 
+                // Retención Clínica (CORREGIDO: Antes era doctor_amount)
+                'commission_amount_clp'  => $clinicRetention, 
                 
                 // Ajustes (Bonos/Descuentos extra, iniciamos en 0)
                 'adjustment_amount_clp' => 0, 
                 
-                // Total a pagar en esta línea (Comisión + Ajustes)
-                'subtotal_clp'           => $s->doctor_amount_clp ?? 0, 
+                // Total a pagar en esta línea (Lo que recibe el doctor)
+                'subtotal_clp'           => $doctorAmount, 
 
                 // 5. Datos de la Tasa/Tarifa aplicada
-                // Como ya traes el monto calculado, asumimos que fue un monto fijo o calculamos el % inverso
-                'rate_type'            => 'fixed_amount', // O 'percentage' según tu lógica
-                'rate_amount_clp'      => $s->doctor_amount_clp ?? 0,
-                'rate_percentage'      => 0, // Podrías calcularlo: ($s->doctor_amount / $s->patient_amount) * 100
+                'rate_type'            => 'fixed_amount', 
+                'rate_amount_clp'      => $doctorAmount,
+                'rate_percentage'      => ($patientAmount > 0) ? round(($doctorAmount / $patientAmount) * 100, 2) : 0,
 
                 // 6. Auditoría
                 'calc_context'         => json_encode(['origin' => 'auto_generated_from_session']),

@@ -86,8 +86,16 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
   );
   // Ejemplo de función de ayuda isRouteActive (usando Ziggy/Laravel)
   const isRouteActive = (routeId) => {
-    // Usa comodines (*) para activar cualquier ruta que comience con el ID
-    return route().current(routeId + "*");
+    // 1. Coincidencia directa con patrón simple
+    if (route().current(routeId + "*")) return true;
+
+    // 2. Si es una ruta resource (.index), verificar la raíz del recurso (ej: patients.index -> patients.*)
+    if (routeId.endsWith('.index')) {
+        const resourceRoot = routeId.replace('.index', '');
+        return route().current(resourceRoot + '*');
+    }
+
+    return false;
   };
 
   // 🎯 FUNCIÓN CLAVE: Determina si el ÍTEM CONTENEDOR debe estar ACTIVO
@@ -123,27 +131,49 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
   }, [url, menuItems]);
 
   return (
-    <div className="sticky top-0 z-40 flex flex-col bg-white border-r border-gray-100 shadow-2xl h-dvh shadow-gray-500/5">
+    <div className="sticky py-4 top-0 z-40 flex flex-col bg-white border-r border-gray-100 shadow-2xl h-dvh shadow-gray-500/5">
       {/* Header del sidebar */}
-      <div className="flex items-center justify-between h-20 px-6 border-b border-gray-50">
+      <div className="flex items-center justify-between h-16 px-5 border-b border-gray-50 shrink-0 gap-2">
         {sidebarOpen ? (
           <>
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex items-center justify-center w-10 h-10 shadow-lg bg-brand-primary rounded-xl shadow-brand-primary/20 shrink-0">
-                <HeartPulse className="w-6 h-6 text-white" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="font-black text-gray-900 uppercase text-[11px] tracking-tight truncate leading-none mb-1">
-                  {current_company?.business_name || "Senex Gestion"}
-                </h1>
-                <p className="text-[9px] font-black text-brand-gray uppercase tracking-widest leading-none">
-                  Enterprise
+            <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
+              {/* LOGO TRIGGER - Abre Modal de Contexto */}
+              <button 
+                onClick={() => setIsContextModalOpen(true)}
+                className="group relative shrink-0 transition-transform active:scale-95 focus:outline-none"
+                title="Cambiar Empresa / Contexto"
+              >
+                {current_company?.logo_url ? (
+                   <img 
+                      src={current_company.logo_url} 
+                      alt="Logo" 
+                      className="w-9 h-9 object-contain bg-white rounded-lg shadow-sm border border-gray-100 p-0.5 group-hover:border-brand-primary/50 transition-colors"
+                   />
+                ) : (
+                  <div className="flex items-center justify-center w-9 h-9 shadow-lg bg-brand-primary rounded-lg shadow-brand-primary/20 text-white group-hover:brightness-110 transition-all">
+                    <HeartPulse className="w-5 h-5" />
+                  </div>
+                )}
+                {/* Indicador visual de que es clickeable si hay múltiples empresas */}
+                {props.all_companies?.length > 1 && (
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                    </div>
+                )}
+              </button>
+              
+              {/* SWITCHER DE SUCURSAL */}
+              <div className="flex-1 min-w-0 flex flex-col">
+                <p className="text-[9px] font-black text-brand-primary uppercase tracking-widest truncate leading-none mb-1">
+                    {current_company?.business_name || "Senex Gestion"}
                 </p>
+                <BranchSwitcher />
               </div>
             </div>
+            
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-2 transition-all hover:bg-gray-50 rounded-xl text-brand-gray hover:text-brand-primary"
+              className="p-1.5 transition-all hover:bg-gray-50 rounded-lg text-brand-gray hover:text-brand-primary shrink-0"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -160,40 +190,6 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 
       {/* Navegación */}
       <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
-        <div className="mb-8">
-          {/* BOTÓN DE CONTEXTO (Enterprise Style) */}
-          <button
-            onClick={() => setIsContextModalOpen(true)}
-            className={`w-full group flex items-center transition-all duration-300 rounded-[1.5rem] p-1.5 border-2 ${
-              sidebarOpen
-                ? "bg-gray-50 border-gray-100 hover:border-brand-primary/30 hover:bg-white hover:shadow-lg hover:shadow-brand-primary/5"
-                : "bg-white border-transparent hover:border-brand-primary/20"
-            }`}
-          >
-            <div
-              className={`shrink-0 flex items-center justify-center bg-brand-primary text-white rounded-2xl shadow-lg shadow-brand-primary/20 transition-all duration-500 ${
-                sidebarOpen ? "w-12 h-12" : "w-12 h-12 mx-auto"
-              }`}
-            >
-              <Building2 className="w-6 h-6" />
-            </div>
-
-            {sidebarOpen && (
-              <div className="ml-4 overflow-hidden text-left">
-                <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest truncate">
-                  {current_company?.business_name || "Seleccionar..."}
-                </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <MapPin className="w-3 h-3 text-brand-gray" />
-                  <span className="text-[9px] font-bold text-brand-gray uppercase truncate tracking-tight">
-                    {current_branch?.name || "Sin Sucursal"}
-                  </span>
-                </div>
-              </div>
-            )}
-          </button>
-        </div>
-
         <div className="space-y-1.5">
           <p
             className={`enterprise-label px-3 mb-4 opacity-50 transition-opacity duration-300 ${

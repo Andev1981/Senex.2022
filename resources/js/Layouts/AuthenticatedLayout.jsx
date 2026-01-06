@@ -42,7 +42,7 @@ export default function AuthenticatedLayout({ header, children }) {
           className={`${
             sidebarOpen ? "w-72" : "w-24"
           } flex-none sticky top-0 ${env === 'local' ? 'h-[calc(100dvh-32px)]' : 'h-dvh'} overflow-y-auto transition-all duration-500 ease-in-out print:hidden`}
-          style={{ top: env === 'local' ? '2rem' : '0' }}
+          
         >
           <Side
             sidebarOpen={sidebarOpen}

@@ -162,6 +162,7 @@ class HandleInertiaRequests extends Middleware
             if ($contextCompanyId) {
                 // Usamos withoutGlobalScopes() por pura seguridad, aunque ya quitamos el trait
                 $currentCompany = Company::withoutGlobalScopes()
+                    ->with('logo')
                     ->select(['id', 'business_name', 'rut', 'giro', 'email', 'phone'])
                     ->find($contextCompanyId);
             }

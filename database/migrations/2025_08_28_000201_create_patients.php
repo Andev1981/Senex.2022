@@ -12,8 +12,9 @@ return new class extends Migration {
 
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->constrained()->comment('Llave foránea a la empresa dueña de este registro.');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade')->comment('Usuario asociado para acceso al portal (Portal Paciente).');
-            $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+            
             $table->string('name');
             $table->string('last_name');
             $table->string('rut', 20)->nullable();
@@ -22,11 +23,9 @@ return new class extends Migration {
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female', 'other', 'unknown'])->nullable();
 
-
             $table->string('occupation')->nullable();
             $table->string('marital_status')->nullable();
-
-
+            $table->boolean('require_tutor')->default(0);
 
             $table->enum('status', ['active', 'inactive', 'deceased', 'transferred', 'archived'])->default('active');
             $table->text('status_reason')->nullable();      // motivo del último cambio
@@ -36,17 +35,14 @@ return new class extends Migration {
             $table->boolean('prefers_whatsapp')->default(0);
             $table->boolean('prefers_sms')->default(0);
             $table->boolean('prefers_mail')->default(0);
-
-            $table->boolean('require_tutor')->default(0);
-
+            
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             // Índices
-            $table->unique('rut');                          // único (varios NULL permitidos)
             $table->index(['last_name', 'name']);          // búsqueda por nombre
-            $table->index('email');
-            $table->index('phone');
+            $table->unique('rut');                          // único (varios NULL permitidos)
         });
     }
 

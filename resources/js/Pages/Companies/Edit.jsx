@@ -32,16 +32,141 @@ import {
   Edit3,
   Layers,
   Settings2,
+  MapPin,
+  Plus,
+  Trash2,
+  Pencil
 } from "lucide-react";
 
 import Modal from "@/Components/Modal";
 import DteConfigurationForm from "./Components/DteConfigurationForm";
 import CafUploader from "./Components/CafUploader";
+import ChilePhoneInput from "@/Components/ChilePhoneInput";
+import { router } from "@inertiajs/react";
+import Swal from "sweetalert2";
 
-export default function Edit({ company, dteConfig, folios, logo }) {
+export default function Edit({ company, dteConfig, folios, logo, branches = [], regions = [] }) {
   // --- ESTADOS DE MODALES ---
   const [isCorpModalOpen, setIsCorpModalOpen] = useState(false);
   const [isDteModalOpen, setIsDteModalOpen] = useState(false);
+  const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
+  
+  const [editingBranch, setEditingBranch] = useState(null);
+
+  // --- FORMULARIO SUCURSALES ---
+  const {
+      data: branchData,
+      setData: setBranchData,
+      post: storeBranch,
+      put: updateBranch,
+      processing: branchProcessing,
+      reset: resetBranch,
+      errors: branchErrors,
+      clearErrors: clearBranchErrors,
+  } = useForm({
+      name: "",
+      codigo_sucursal_sii: "",
+      email: "",
+      phone: "",
+      street: "",
+      number: "",
+      region_id: "",
+      commune_id: "",
+      is_main: false,
+  });
+
+  const openNewBranchModal = () => {
+      setEditingBranch(null);
+      setBranchData({
+          name: "",
+          codigo_sucursal_sii: "",
+          email: "",
+          phone: "",
+          street: "",
+          number: "",
+          region_id: "",
+          commune_id: "",
+          is_main: false,
+      });
+      clearBranchErrors();
+      setIsBranchModalOpen(true);
+  };
+
+  const openEditBranchModal = (branch) => {
+      setEditingBranch(branch);
+      clearBranchErrors();
+      
+      // Extraer dirección principal si existe
+      const address = branch.addresses && branch.addresses.length > 0 
+        ? branch.addresses.find(a => a.is_primary) || branch.addresses[0] 
+        : null;
+
+      setBranchData({
+          name: branch.name,
+          codigo_sucursal_sii: branch.codigo_sucursal_sii,
+          email: branch.email || "",
+          phone: branch.phone || "",
+          street: address?.street || "",
+          number: address?.number || "",
+          region_id: address?.region_id || "",
+          commune_id: address?.commune_id || "",
+          is_main: Boolean(branch.is_main),
+      });
+      setIsBranchModalOpen(true);
+  };
+
+  const submitBranch = (e) => {
+      e.preventDefault();
+      
+      if (editingBranch) {
+          updateBranch(route('companies.branches.update', [company.id, editingBranch.id]), {
+              onSuccess: () => {
+                  setIsBranchModalOpen(false);
+                  resetBranch();
+                  setEditingBranch(null);
+              }
+          });
+      } else {
+          storeBranch(route('companies.branches.store', company.id), {
+              onSuccess: () => {
+                  setIsBranchModalOpen(false);
+                  resetBranch();
+              }
+          });
+      }
+  };
+
+  // Filtrar comunas según región seleccionada
+  const availableCommunes = useMemo(() => {
+      if (!branchData.region_id) return [];
+      const region = regions.find(r => r.id == branchData.region_id);
+      return region ? region.communes : [];
+  }, [branchData.region_id, regions]);
+
+  const deleteBranch = (branchId) => {
+      Swal.fire({
+          title: '¿Eliminar Sucursal?',
+          text: "Esta acción no se puede deshacer y podría afectar registros históricos asociados.",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              router.delete(route('companies.branches.destroy', [company.id, branchId]), {
+                  onSuccess: () => {
+                      Swal.fire(
+                          '¡Eliminada!',
+                          'La sucursal ha sido removida correctamente.',
+                          'success'
+                      );
+                  }
+              });
+          }
+      });
+  };
 
   // --- FORMULARIO DATOS CORPORATIVOS ---
   const {
@@ -361,6 +486,82 @@ export default function Edit({ company, dteConfig, folios, logo }) {
           </button>
         </div>
 
+        {/* SUCURSALES (NUEVO) */}
+        <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[3rem]">
+            <header className="flex items-center justify-between mb-10">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 text-blue-600 shadow-sm bg-blue-50 rounded-2xl">
+                        <MapPin className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="mb-1 text-xl font-black leading-none tracking-tight text-gray-900 uppercase">
+                            Red de Sucursales
+                        </h2>
+                        <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest opacity-60">
+                            Gestión de sedes y puntos de emisión
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onClick={openNewBranchModal}
+                    className="flex items-center gap-2 px-6 py-3 font-black text-[10px] text-white uppercase tracking-widest bg-gray-900 rounded-2xl shadow-lg hover:bg-black transition-all active:scale-95"
+                >
+                    <Plus className="w-4 h-4" /> Nueva Sucursal
+                </button>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {branches.map((branch) => (
+                    <div key={branch.id} className="p-6 border border-gray-100 bg-gray-50/30 rounded-[2rem] relative group hover:bg-white hover:shadow-lg transition-all duration-300">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="p-3 bg-white rounded-xl shadow-sm border border-gray-50 text-brand-primary">
+                                <Building className="w-5 h-5" />
+                            </div>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => openEditBranchModal(branch)}
+                                    className="p-2 text-gray-300 hover:text-brand-primary hover:bg-brand-primary/5 rounded-xl transition-all"
+                                    title="Editar Sucursal"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                                {branch.is_main ? (
+                                    <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-[9px] font-black uppercase tracking-widest rounded-lg border border-brand-primary/20 flex items-center">
+                                        Casa Matriz
+                                    </span>
+                                ) : (
+                                    <button 
+                                        onClick={() => deleteBranch(branch.id)}
+                                        className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                        title="Eliminar Sucursal"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight mb-1">{branch.name}</h3>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-4">Código SII: {branch.codigo_sucursal_sii}</p>
+                        
+                        <div className="space-y-2 border-t border-gray-100 pt-4">
+                            {branch.email && (
+                                <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
+                                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
+                                    {branch.email}
+                                </div>
+                            )}
+                            {branch.phone && (
+                                <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
+                                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
+                                    {branch.phone}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+
         {/* HISTORIAL CAF (REFINADO Y MÁS COMPACTO) */}
         <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[3rem]">
           <header className="flex items-center justify-between mb-10">
@@ -458,6 +659,149 @@ export default function Edit({ company, dteConfig, folios, logo }) {
             </div>
           </div>
         </div>
+
+        {/* MODAL: NUEVA/EDITAR SUCURSAL */}
+        <Modal
+            open={isBranchModalOpen}
+            onClose={() => setIsBranchModalOpen(false)}
+            title={editingBranch ? "Editar Sucursal" : "Registrar Nueva Sucursal"}
+            maxWidth="2xl"
+        >
+            <form onSubmit={submitBranch} className="p-8 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                        <label className="ml-1 enterprise-label">Nombre Sucursal / Fantasía</label>
+                        <input
+                            type="text"
+                            value={branchData.name}
+                            onChange={(e) => setBranchData("name", e.target.value)}
+                            className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                            placeholder="Ej: Sucursal Centro"
+                            required
+                        />
+                        {branchErrors.name && <p className="text-red-500 text-[10px] font-black uppercase mt-1 ml-1">{branchErrors.name}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="ml-1 enterprise-label">Código Sucursal SII</label>
+                        <input
+                            type="text"
+                            value={branchData.codigo_sucursal_sii}
+                            onChange={(e) => setBranchData("codigo_sucursal_sii", e.target.value)}
+                            className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                            placeholder="0 para Casa Matriz"
+                            required
+                        />
+                        {branchErrors.codigo_sucursal_sii && <p className="text-red-500 text-[10px] font-black uppercase mt-1 ml-1">{branchErrors.codigo_sucursal_sii}</p>}
+                    </div>
+                </div>
+
+                {editingBranch && !branchData.is_main && (
+                    <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-2xl flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            checked={branchData.is_main}
+                            onChange={(e) => setBranchData("is_main", e.target.checked)}
+                            className="w-5 h-5 text-brand-primary border-gray-300 rounded focus:ring-brand-primary cursor-pointer"
+                            id="is_main_check"
+                        />
+                        <label htmlFor="is_main_check" className="text-xs font-bold text-yellow-700 cursor-pointer select-none">
+                            Establecer como Casa Matriz Principal
+                        </label>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                        <label className="ml-1 enterprise-label">Email Contacto</label>
+                        <input
+                            type="email"
+                            value={branchData.email}
+                            onChange={(e) => setBranchData("email", e.target.value)}
+                            className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="ml-1 enterprise-label">Teléfono</label>
+                        <ChilePhoneInput
+                            value={branchData.phone}
+                            onChange={(val) => setBranchData("phone", val)}
+                            error={branchErrors.phone}
+                        />
+                    </div>
+                </div>
+                
+                <div className="pt-4 border-t border-gray-100">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-900 mb-4">Dirección Física</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-4">
+                        <div className="space-y-1">
+                            <label className="ml-1 enterprise-label">Región</label>
+                            <select
+                                value={branchData.region_id}
+                                onChange={(e) => setBranchData("region_id", e.target.value)}
+                                className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                            >
+                                <option value="">-- Seleccionar --</option>
+                                {regions.map(r => (
+                                    <option key={r.id} value={r.id}>{r.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="ml-1 enterprise-label">Comuna</label>
+                            <select
+                                value={branchData.commune_id}
+                                onChange={(e) => setBranchData("commune_id", e.target.value)}
+                                className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                                disabled={!branchData.region_id}
+                            >
+                                <option value="">-- Seleccionar --</option>
+                                {availableCommunes.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-[1fr_100px] gap-6">
+                        <div className="space-y-1">
+                            <label className="ml-1 enterprise-label">Calle / Avenida</label>
+                            <input
+                                type="text"
+                                value={branchData.street}
+                                onChange={(e) => setBranchData("street", e.target.value)}
+                                className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="ml-1 enterprise-label">Número</label>
+                            <input
+                                type="text"
+                                value={branchData.number}
+                                onChange={(e) => setBranchData("number", e.target.value)}
+                                className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
+                    <button
+                        type="button"
+                        onClick={() => setIsBranchModalOpen(false)}
+                        className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={branchProcessing}
+                        className="px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-brand-primary rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        {branchProcessing ? "Guardando..." : (editingBranch ? "Actualizar Sucursal" : "Crear Sucursal")}
+                    </button>
+                </div>
+            </form>
+        </Modal>
 
         {/* MODAL: DATOS CORPORATIVOS */}
         <Modal

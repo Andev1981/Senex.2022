@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Facades\Storage;
 
 class Company extends Model
 {
@@ -21,6 +22,23 @@ class Company extends Model
 
     ];
 
+    protected $appends = ['logo_url'];
+
+    public function getLogoUrlAttribute()
+    {
+        $logo = $this->logo;
+        if (!$logo) return null;
+        
+        // Si el path ya es una URL completa (ej: S3), retornarla
+        if (filter_var($logo->path, FILTER_VALIDATE_URL)) {
+            return $logo->path;
+        }
+
+        // Si no, generar la URL del storage
+        return Storage::url($logo->path);
+    }
+
+
 
     protected static function booted()
     {
@@ -30,6 +48,7 @@ class Company extends Model
                 'codigo_sucursal_sii' => '0', // O el código que uses para la casa matriz
                 'email' => $company->email,
                 'phone' => $company->phone,
+                'is_main' => true,
                 'active' => true,
             ]);
         });

@@ -63,6 +63,27 @@ class PayrollController extends Controller
         }
     }
 
+    public function preview(Request $request)
+    {
+        $validated = $request->validate([
+            'doctor_id' => 'required|exists:doctors,id',
+            'period_start' => 'required|date',
+            'period_end' => 'required|date|after_or_equal:period_start',
+        ]);
+
+        try {
+            $simulation = $this->payrollService->calculateForPeriod(
+                $validated['doctor_id'],
+                $validated['period_start'],
+                $validated['period_end']
+            );
+            
+            return response()->json($simulation);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function show(Payroll $payroll)
     {
         $payroll->load([
@@ -78,8 +99,10 @@ class PayrollController extends Controller
     {
         $payroll->load([
             'doctor', 
+            'company.logo',
             'details.patient', 
-            'details.sessionType'
+            'details.sessionType',
+            'details.treatmentSession'
         ]);
 
         $pdf = \PDF::loadView('pdf.payroll_liquidation', compact('payroll'));

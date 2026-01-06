@@ -2,61 +2,87 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToTenant;
 use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Treatment extends Model
 {
-    use HasFactory, SoftDeletes, Multitenantable, BelongsToTenant;
+    use HasFactory, SoftDeletes, Multitenantable;
 
     protected $fillable = [
         'company_id',
         'branch_id',
-        'session_type_id',
-        'default_session_type_id',
         'patient_id',
         'doctor_id',
+        'plan_id',
+        'session_type_id',
+
+        // Origen
+        'referral_doctor_name',
+        'referral_diagnosis',
+        'referral_date',
+
+        // Diagnóstico Kine
         'diagnostic_code',
+        'additional_diagnoses',
+        'body_part',
+        'laterality',
         'description',
+
+        // Estado y Config
+        'status',
+        'current_phase',
         'start_date',
         'end_date',
-        'status',
+        'next_appointment',
+        
+        // Línea Base (Inputs)
+        'initial_pain_level',
+        'initial_pain_map',
+        'objectives',
+
+        // Resultados (Outputs)
+        'outcome',
+        'discharge_reason',
+        'pain_reduction',
+        'mobility_improvement',
+        'strength_gain',
+
+        // Control
         'total_sessions',
         'completed_sessions',
         'frequency',
         'frequency_time',
         'is_indefinite',
-        'current_phase',
-        'objectives',
-        'outcome',
-        'next_appointment',
-        // KPIs
-        'pain_reduction',
-        'mobility_improvement',
-        'strength_gain',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'referral_date' => 'date',
         'next_appointment' => 'datetime',
-        'objectives' => 'array',
         'is_indefinite' => 'boolean',
-        'total_sessions' => 'integer',
-        'completed_sessions' => 'integer',
-        'pain_reduction' => 'integer',
-        'mobility_improvement' => 'integer',
-        'strength_gain' => 'integer',
+        
+        // JSONs Vitales
+        'additional_diagnoses' => 'array',
+        'initial_pain_map' => 'array',
+        'objectives' => 'array',
     ];
 
-    /**
-     * Relaciones
-     */
+    // --- Relaciones ---
+
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class);
+    }
+    
     public function diagnostic(): BelongsTo
     {
         return $this->belongsTo(Diagnostic::class, 'diagnostic_code', 'code');
@@ -65,11 +91,6 @@ class Treatment extends Model
     public function sessionType(): BelongsTo
     {
         return $this->belongsTo(SessionType::class);
-    }
-
-    public function patient(): BelongsTo
-    {
-        return $this->belongsTo(Patient::class);
     }
 
     public function doctor(): BelongsTo
@@ -189,5 +210,27 @@ class Treatment extends Model
             'mobility_improvement' => round($totalMobilityImprovement / $count, 1),
             'strength_gain' => round($totalStrengthGain / $count, 1),
         ];
+    }
+
+    public const BODY_PARTS = [
+        'head_neck' => 'Cabeza y Cuello',
+        'shoulder' => 'Hombro',
+        'arm_elbow' => 'Brazo y Codo',
+        'wrist_hand' => 'Muñeca y Mano',
+        'thoracic_spine' => 'Columna Torácica',
+        'lumbar_spine' => 'Columna Lumbar',
+        'hip' => 'Cadera / Pelvis',
+        'thigh' => 'Muslo',
+        'knee' => 'Rodilla',
+        'leg_ankle' => 'Pierna y Tobillo',
+        'foot' => 'Pie',
+        'abdomen' => 'Abdomen',
+        'neurological' => 'Neurológico (Global)',
+        'respiratory' => 'Respiratorio (Global)',
+    ];
+
+    // Un helper para obtener la lista en el frontend
+    public static function getBodyPartsList() {
+        return self::BODY_PARTS;
     }
 }

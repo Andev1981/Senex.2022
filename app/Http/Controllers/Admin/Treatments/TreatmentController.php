@@ -49,7 +49,7 @@ class TreatmentController extends Controller
             'address.region',
             'address.province',
             'address.commune',
-            'latestVital',
+            'latestVitalSign',
         ]);
 
         $address = $patient->address;
@@ -60,7 +60,7 @@ class TreatmentController extends Controller
 
         $conditions = $patient->condition;
 
-        $vital = $patient->latestVital;
+        $vital = $patient->latestVitalSign;
 
         $session_types = SessionType::all();
 

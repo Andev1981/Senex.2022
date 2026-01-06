@@ -58,7 +58,7 @@
 - `medical_records` (1:1 con paciente)
 - `clinical_notes` (N por sesión/consulta)
 - `medical_attachments`
-- `vitals`
+- `vital_signs`
 
 ### Auditoría
 

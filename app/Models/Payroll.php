@@ -46,6 +46,11 @@ class Payroll extends Model
     return $this->belongsTo(Doctor::class);
   }
 
+  public function company()
+  {
+    return $this->belongsTo(Company::class);
+  }
+
   public function details(): HasMany
   {
     return $this->hasMany(PayrollDetail::class);

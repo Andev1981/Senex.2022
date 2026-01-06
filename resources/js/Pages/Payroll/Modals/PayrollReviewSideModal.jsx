@@ -7,9 +7,12 @@ import {
     User, 
     DollarSign,
     Activity,
-    AlertCircle
+    AlertCircle,
+    CheckCircle
 } from "lucide-react";
 import axios from "axios";
+import { router } from "@inertiajs/react";
+import Swal from 'sweetalert2';
 
 export default function PayrollReviewSideModal({ show, onClose, payrollId }) {
     const [loading, setLoading] = useState(false);
@@ -41,8 +44,33 @@ export default function PayrollReviewSideModal({ show, onClose, payrollId }) {
 
     const handleDownloadPdf = () => {
         if (!payroll) return;
-        // Trigger download
         window.open(route('payrolls.pdf', payroll.id), '_blank');
+    };
+
+    const handleApprove = () => {
+        Swal.fire({
+            title: '¿Aprobar Liquidación?',
+            text: "Al aprobar, se confirmarán los montos y el documento pasará a estado pendiente de pago. No se podrán hacer cambios posteriores.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0ea5e9', // brand-primary
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, Aprobar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('payrolls.approve', payroll.id), {}, {
+                    onSuccess: () => {
+                        onClose();
+                        Swal.fire(
+                            '¡Aprobada!',
+                            'La liquidación ha sido validada exitosamente.',
+                            'success'
+                        );
+                    }
+                });
+            }
+        });
     };
 
     const formatCurrency = (amount) => {
@@ -74,14 +102,27 @@ export default function PayrollReviewSideModal({ show, onClose, payrollId }) {
                         >
                             Cerrar
                         </button>
+                        
                         {payroll && (
-                            <button
-                                onClick={handleDownloadPdf}
-                                className="px-6 py-3 text-xs font-bold text-white uppercase tracking-wider bg-brand-primary rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 flex items-center gap-2"
-                            >
-                                <Download className="w-4 h-4" />
-                                Descargar PDF
-                            </button>
+                            <>
+                                <button
+                                    onClick={handleDownloadPdf}
+                                    className="px-6 py-3 text-xs font-bold text-brand-primary border border-brand-primary/20 uppercase tracking-wider bg-brand-primary/5 rounded-xl hover:bg-brand-primary/10 flex items-center gap-2 transition-colors"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    PDF
+                                </button>
+
+                                {payroll.status === 'draft' && (
+                                    <button
+                                        onClick={handleApprove}
+                                        className="px-6 py-3 text-xs font-bold text-white uppercase tracking-wider bg-green-600 rounded-xl shadow-lg shadow-green-600/20 hover:brightness-110 flex items-center gap-2 transition-transform active:scale-95"
+                                    >
+                                        <CheckCircle className="w-4 h-4" />
+                                        Aprobar
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

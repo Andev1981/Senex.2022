@@ -6,9 +6,12 @@ import {
   Activity,
   FileText,
   ClipboardList,
-  AlertTriangle, // <--- Importamos el icono de alerta
+  AlertTriangle,
+  AlertCircle,
+  MapPin // Icono para el mapa
 } from "lucide-react";
 import SearchSelect from "@/Components/SearchSelect";
+import BodySelector from "@/Components/BodySelector"; // IMPORTADO
 import { useForm } from "@inertiajs/react";
 import { TREATMENT_CURRENT_PHASE_OPTIONS } from "@/constants/treatmentCurrentPhases";
 import { fmtDateISO } from "@/utils/utils";
@@ -22,7 +25,6 @@ export default function ModalCreateUpdateTreatment({
 }) {
   const isEditing = !!selectedTreatment?.id;
 
-  // 1. Detectar Tratamientos Activos (Para lógica de pausa)
   const activeTreatments =
     patient?.treatments?.filter((t) =>
       ["evaluation", "in_progress"].includes(t.status)
@@ -30,19 +32,27 @@ export default function ModalCreateUpdateTreatment({
 
   const hasActiveTreatments = activeTreatments.length > 0;
 
-  // 2. Inicializar el Formulario (useForm maneja Axios internamente)
   const { data, setData, errors, post, patch, reset, processing } = useForm({
     id: selectedTreatment?.id ?? null,
     session_type_id: 1,
     patient_id: patient?.id ?? null,
     doctor_id: selectedTreatment?.doctor_id ?? null,
     diagnostic_code: selectedTreatment?.diagnostic_code ?? null,
+    
+    referral_doctor_name: selectedTreatment?.referral_doctor_name ?? "",
+    referral_diagnosis: selectedTreatment?.referral_diagnosis ?? "",
+    referral_date: selectedTreatment?.referral_date ?? null,
+
+    body_part: selectedTreatment?.body_part ?? "",
+    laterality: selectedTreatment?.laterality ?? "",
+    initial_pain_level: selectedTreatment?.initial_pain_level ?? "",
+    initial_pain_map: selectedTreatment?.initial_pain_map || [], // MAPA INICIAL
+
     description: selectedTreatment?.description ?? "",
     start_date: selectedTreatment?.start_date ?? null,
     end_date: selectedTreatment?.end_date ?? null,
     status: selectedTreatment?.status ?? "evaluation",
 
-    // Inputs Numéricos (evitar nulls en inputs controlados)
     total_sessions: selectedTreatment?.total_sessions ?? "",
     completed_sessions: selectedTreatment?.completed_sessions ?? 0,
     frequency: selectedTreatment?.frequency ?? "",
@@ -54,13 +64,11 @@ export default function ModalCreateUpdateTreatment({
       ? (selectedTreatment?.objectives).join(", ")
       : selectedTreatment?.objectives ?? "",
 
-    // Resultados (evitar nulls)
     outcome: selectedTreatment?.outcome ?? "",
     pain_reduction: selectedTreatment?.pain_reduction ?? "",
     mobility_improvement: selectedTreatment?.mobility_improvement ?? "",
     strength_gain: selectedTreatment?.strength_gain ?? "",
 
-    // Nuevo campo para pausar anteriores
     should_pause_previous: false,
   });
 
@@ -72,19 +80,9 @@ export default function ModalCreateUpdateTreatment({
     { value: "cancelled", label: "Cancelado 🛑" },
   ];
 
-  const frequencyTimeOptions = [
-    { value: "day", label: "Días" },
-    { value: "week", label: "Semanas" },
-    { value: "month", label: "Meses" },
-  ];
-
   const fixedStates = ["completed", "cancelled", "paused"];
   const isLocked = isEditing && fixedStates.includes(data.status);
 
-  const baseInputClasses =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white";
-
-  // --- Manejo del Envío ---
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -92,13 +90,10 @@ export default function ModalCreateUpdateTreatment({
       preserveState: (page) => Object.keys(page.props.errors || {}).length > 0,
       preserveScroll: true,
       onSuccess: () => {
-        // Aquí puedes disparar una notificación Toast si tienes una librería
-        // Ej: toast.success('Tratamiento guardado correctamente');
         reset();
         setOpenTreatmentModal(false);
       },
       onError: () => {
-        // Enfocar el primer error
         const firstErrorName = Object.keys(errors || {})[0];
         if (firstErrorName) {
           const el = document.querySelector(`[name="${firstErrorName}"]`);
@@ -107,11 +102,9 @@ export default function ModalCreateUpdateTreatment({
       },
     };
 
-    // Inertia usa "post" y "patch" que son wrappers de Axios
     if (isEditing) {
       patch(route("treatments.update", selectedTreatment.id), opts);
     } else {
-      // Importante: Asegúrate que tu ruta acepte patient_id o que lo lea del body (data.patient_id)
       post(route("treatments.store", patient.id), opts);
     }
   };
@@ -119,9 +112,8 @@ export default function ModalCreateUpdateTreatment({
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-8 space-y-10 bg-white rounded-enterprise"
+      className="p-8 space-y-10 bg-white rounded-enterprise w-full max-w-[95vw] mx-auto" // Aumentado el ancho máximo
     >
-      {/* Encabezado Enterprise */}
       <header className="flex items-center justify-between pb-8 border-b border-gray-100">
         <div>
           <h1 className="mb-2 text-3xl font-black leading-none tracking-tight text-gray-900 uppercase">
@@ -142,63 +134,20 @@ export default function ModalCreateUpdateTreatment({
       {isLocked && (
         <div className="flex items-center gap-4 p-6 text-xs font-black tracking-widest uppercase border-2 text-amber-700 bg-amber-50 border-amber-100 rounded-3xl animate-pulse">
           <AlertCircle className="w-6 h-6 shrink-0" />
-          Protocolo finalizado: La estructura administrativa está bloqueada para
-          edición.
+          Protocolo finalizado: La estructura administrativa está bloqueada para edición.
         </div>
       )}
 
-      {/* --- SECCIÓN DE ADVERTENCIA (TRATAMIENTOS ACTIVOS) --- */}
-      {!isEditing && hasActiveTreatments && (
-        <div className="p-8 border-2 border-orange-100 bg-orange-50/30 rounded-[2rem] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 -mt-12 -mr-12 rounded-full bg-orange-200/20 blur-2xl"></div>
-          <div className="relative z-10 flex gap-6">
-            <div className="flex-shrink-0">
-              <div className="p-3 text-orange-500 bg-white shadow-sm rounded-2xl">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="mb-2 text-sm font-black tracking-tight text-orange-800 uppercase">
-                Continuidad de Atención
-              </h3>
-              <p className="mb-6 text-xs font-medium leading-relaxed text-orange-700/80">
-                Hemos detectado <b>{activeTreatments.length} plan(es)</b>{" "}
-                vigentes. ¿Este nuevo registro reemplaza la atención actual o es
-                una patología paralela?
-              </p>
-
-              <label className="flex items-center gap-4 p-4 transition-all border-2 border-orange-100 cursor-pointer bg-white/60 hover:bg-white rounded-2xl group">
-                <input
-                  type="checkbox"
-                  className="w-6 h-6 text-orange-600 border-orange-200 rounded-xl focus:ring-orange-500"
-                  checked={data.should_pause_previous}
-                  onChange={(e) =>
-                    setData("should_pause_previous", e.target.checked)
-                  }
-                />
-                <div>
-                  <span className="block text-xs font-black tracking-widest text-orange-900 uppercase">
-                    Pausar planes anteriores
-                  </span>
-                  <span className="block text-[10px] text-orange-600 font-bold uppercase opacity-60">
-                    Archivar casos previos para priorizar esta nueva evaluación
-                  </span>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- 1. Información General --- */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      {/* --- GRID DE 3 COLUMNAS --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* COLUMNA 1: GESTIÓN Y MÉDICO */}
         <div className="space-y-8">
           <div className="p-8 border border-gray-100 rounded-[2rem] bg-gray-50/30 space-y-6">
             <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
-              <Stethoscope className="w-4 h-4" /> Asignación Médica
+              <Stethoscope className="w-4 h-4" /> Gestión Administrativa
             </h3>
             <div className="space-y-6">
-              {/* Kinesiólogo */}
               <SearchSelect
                 label="Especialista Responsable *"
                 options={doctors.map(d => ({ value: d.id, label: `${d.full_name || `${d.name} ${d.last_name}`} (${d.email})` }))}
@@ -210,11 +159,8 @@ export default function ModalCreateUpdateTreatment({
                 className="!rounded-2xl"
               />
 
-              {/* Estado */}
               <div className="space-y-1">
-                <label className="ml-1 enterprise-label">
-                  Estado Operativo *
-                </label>
+                <label className="ml-1 enterprise-label">Estado Operativo *</label>
                 <select
                   value={data?.status}
                   onChange={(e) => setData("status", e.target.value)}
@@ -227,125 +173,200 @@ export default function ModalCreateUpdateTreatment({
                     </option>
                   ))}
                 </select>
-                {errors.status && (
-                  <p className="mt-1 text-[10px] font-black text-red-600 uppercase tracking-widest">
-                    {errors.status}
-                  </p>
-                )}
+              </div>
+
+              <div className="p-6 bg-white border border-gray-100 rounded-2xl">
+                <h4 className="enterprise-label mb-4">Planificación</h4>
+                <div className="space-y-4">
+                    <div className="space-y-1">
+                        <label className="ml-1 enterprise-label">Fecha de Inicio</label>
+                        <input
+                        type="date"
+                        value={fmtDateISO(data.start_date) ?? ""}
+                        onChange={(e) => setData("start_date", e.target.value)}
+                        className="w-full px-4 py-3 font-mono font-bold text-sm text-gray-700 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                        disabled={isLocked}
+                        />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="flex-1 space-y-1">
+                            <label className="ml-1 enterprise-label">Sesiones</label>
+                            <input
+                                type="number"
+                                value={data.total_sessions ?? ""}
+                                onChange={(e) => setData("total_sessions", e.target.value)}
+                                className="w-full px-4 py-3 font-mono font-bold text-sm text-gray-700 border-gray-200 rounded-xl focus:ring-brand-primary disabled:opacity-50"
+                                disabled={isLocked || data.is_indefinite}
+                                placeholder={data.is_indefinite ? "∞" : "10"}
+                            />
+                        </div>
+                        <label className="flex items-center gap-2 mt-6 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={data.is_indefinite}
+                                onChange={(e) => setData("is_indefinite", e.target.checked)}
+                                className="w-5 h-5 border-gray-300 rounded text-brand-primary focus:ring-brand-primary"
+                                disabled={isLocked}
+                            />
+                            <span className="text-[10px] font-bold text-gray-500 uppercase">Indefinido</span>
+                        </label>
+                    </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Programación */}
-          <div className="p-8 border border-gray-100 rounded-[2rem] bg-white shadow-inner space-y-6">
+          <div className="p-8 border border-gray-100 rounded-[2rem] bg-white space-y-6">
             <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
-              <Calendar className="w-4 h-4" /> Planificación
+              <ClipboardList className="w-4 h-4" /> Derivación
             </h3>
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <label className="ml-1 enterprise-label">
-                  Fecha de Inicio *
-                </label>
-                <input
-                  type="date"
-                  value={fmtDateISO(data.start_date) ?? ""}
-                  onChange={(e) => setData("start_date", e.target.value)}
-                  className="w-full px-5 py-4 font-mono font-black text-gray-700 transition-all rounded-2xl border-gray-50 bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
-                  disabled={isLocked}
-                />
-                {errors.start_date && (
-                  <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">
-                    {errors.start_date}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-end gap-4">
-                <div className="flex-1 space-y-1">
-                  <label className="ml-1 text-gray-400 enterprise-label">
-                    Total Sesiones
-                  </label>
-                  <input
-                    type="number"
-                    value={data.total_sessions ?? ""}
-                    onChange={(e) => setData("total_sessions", e.target.value)}
-                    className="w-full px-5 py-4 font-mono font-black text-gray-700 transition-all border-gray-100 rounded-2xl focus:ring-brand-primary disabled:bg-gray-100 disabled:opacity-40"
-                    disabled={isLocked || data.is_indefinite}
-                    placeholder={data.is_indefinite ? "∞" : "10"}
-                  />
+            <div className="space-y-4">
+                <div className="space-y-1">
+                    <label className="ml-1 enterprise-label">Médico</label>
+                    <input
+                      type="text"
+                      value={data.referral_doctor_name}
+                      onChange={(e) => setData("referral_doctor_name", e.target.value)}
+                      className="w-full px-4 py-3 text-sm font-medium text-gray-700 border-gray-100 bg-gray-50/50 rounded-xl focus:ring-brand-primary"
+                      disabled={isLocked}
+                    />
                 </div>
-                <label className="flex items-center gap-3 mb-4 cursor-pointer group shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={data.is_indefinite}
-                    onChange={(e) => setData("is_indefinite", e.target.checked)}
-                    className="w-6 h-6 border-gray-200 rounded-xl text-brand-primary focus:ring-brand-primary"
-                    disabled={isLocked}
-                  />
-                  <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest group-hover:text-brand-primary transition-colors">
-                    Indefinido
-                  </span>
-                </label>
-              </div>
+                <div className="space-y-1">
+                    <label className="ml-1 enterprise-label">Diagnóstico Ext.</label>
+                    <input
+                      type="text"
+                      value={data.referral_diagnosis}
+                      onChange={(e) => setData("referral_diagnosis", e.target.value)}
+                      className="w-full px-4 py-3 text-sm font-medium text-gray-700 border-gray-100 bg-gray-50/50 rounded-xl focus:ring-brand-primary"
+                      disabled={isLocked}
+                    />
+                </div>
             </div>
           </div>
         </div>
 
-        {/* Columna Derecha */}
+        {/* COLUMNA 2: DIAGNÓSTICO KINÉSICO (TEXTOS) */}
         <div className="space-y-8">
-          {/* Diagnóstico */}
-          <div className="p-8 border border-gray-100 rounded-[2rem] bg-white space-y-6">
+          <div className="p-8 border border-gray-100 rounded-[2rem] bg-white space-y-6 h-full">
             <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Diagnóstico SII/CIE-10
+              <FileText className="w-4 h-4" /> Diagnóstico Kinésico
             </h3>
+            
             <div className="space-y-6">
               <SearchSelect
-                label="Patología Detectada *"
+                label="Patología Detectada (CIE-10) *"
                 options={diagnostics.map(d => ({ value: d.code, label: `${d.code} - ${d.description}` }))}
                 value={data?.diagnostic_code}
                 onChange={(value) => setData("diagnostic_code", value)}
-                placeholder="Buscar en el catálogo oficial..."
+                placeholder="Buscar patología..."
                 error={errors?.diagnostic_code}
                 disabled={isLocked}
                 className="!rounded-2xl"
               />
 
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="ml-1 enterprise-label">Zona</label>
+                    <input
+                      type="text"
+                      value={data.body_part}
+                      onChange={(e) => setData("body_part", e.target.value)}
+                      placeholder="Ej: Rodilla"
+                      className="w-full px-4 py-3 text-sm font-bold text-gray-700 bg-white border-gray-200 rounded-xl focus:ring-brand-primary"
+                      disabled={isLocked}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="ml-1 enterprise-label">Lado</label>
+                    <select
+                      value={data.laterality}
+                      onChange={(e) => setData("laterality", e.target.value)}
+                      className="w-full px-4 py-3 text-sm font-bold text-gray-700 bg-white border-gray-200 rounded-xl focus:ring-brand-primary"
+                      disabled={isLocked}
+                    >
+                      <option value="">-</option>
+                      <option value="Izquierda">Izquierda</option>
+                      <option value="Derecha">Derecha</option>
+                      <option value="Bilateral">Bilateral</option>
+                      <option value="N/A">N/A</option>
+                    </select>
+                  </div>
+              </div>
+
               <div className="space-y-1">
-                <label className="ml-1 enterprise-label">
-                  Observaciones / Plan de Trabajo
-                </label>
+                <label className="ml-1 enterprise-label">Nivel Dolor (EVA)</label>
+                <div className="flex items-center gap-4">
+                    <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={data.initial_pain_level || 0}
+                    onChange={(e) => setData("initial_pain_level", e.target.value)}
+                    className="flex-1 accent-brand-primary cursor-pointer"
+                    disabled={isLocked}
+                    />
+                    <span className="font-black text-xl text-brand-primary w-8 text-center">{data.initial_pain_level || 0}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label">Plan de Trabajo / Notas</label>
                 <textarea
                   value={data?.description ?? ""}
                   onChange={(e) => setData("description", e.target.value)}
-                  rows="4"
-                  placeholder="Describa el plan de tratamiento detallado..."
-                  className="w-full px-5 py-4 text-sm font-medium text-gray-700 transition-all resize-none rounded-2xl border-gray-50 bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
+                  rows="6"
+                  placeholder="Detalle del plan..."
+                  className="w-full px-5 py-4 text-sm font-medium text-gray-700 transition-all resize-none rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
                   disabled={isLocked}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label text-orange-600">Objetivos</label>
+                <textarea
+                  value={data.objectives ?? ""}
+                  onChange={(e) => setData("objectives", e.target.value)}
+                  rows="4"
+                  className="w-full px-5 py-4 text-xs font-bold tracking-wide text-orange-800 uppercase transition-all bg-white border-gray-100 resize-none rounded-2xl focus:ring-orange-500 placeholder:text-orange-200"
+                  disabled={isLocked}
+                  placeholder="Metas terapéuticas..."
                 />
               </div>
             </div>
           </div>
-
-          {/* Metas */}
-          <div className="p-8 border border-gray-100 rounded-[2rem] bg-slate-50/50 space-y-6">
-            <h3 className="enterprise-label !text-orange-600 flex items-center gap-2">
-              <Target className="w-4 h-4" /> Objetivos Terapéuticos
-            </h3>
-            <textarea
-              value={data.objectives ?? ""}
-              onChange={(e) => setData("objectives", e.target.value)}
-              rows="4"
-              className="w-full px-5 py-4 text-xs font-bold tracking-wide text-orange-800 uppercase transition-all bg-white border-gray-100 resize-none rounded-2xl focus:ring-orange-500 placeholder:text-orange-200"
-              disabled={isLocked}
-              placeholder="EJ: REDUCIR DOLOR A 2/10, MEJORAR RANGO DE MOVIMIENTO..."
-            />
-          </div>
         </div>
+
+        {/* COLUMNA 3: MAPA CORPORAL (DEDICADA) */}
+        <div className="space-y-8">
+            <div className="p-8 border border-gray-100 rounded-[2rem] bg-gray-50/50 h-full flex flex-col">
+                <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 mb-6">
+                    <MapPin className="w-4 h-4" /> Mapa del Dolor
+                </h3>
+                <div className="flex-1 flex items-center justify-center bg-white rounded-[2rem] border border-gray-100 shadow-sm p-4 relative overflow-hidden">
+                    <div className="w-full h-full min-h-[400px]">
+                        <BodySelector
+                            initialData={data.initial_pain_map}
+                            onChange={(newMap) => setData("initial_pain_map", newMap)}
+                            mode={isLocked ? "read" : "edit"}
+                        />
+                    </div>
+                    {!isLocked && (
+                        <div className="absolute bottom-4 left-0 w-full text-center">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest bg-white/80 backdrop-blur px-4 py-1 rounded-full inline-block shadow-sm">
+                                Haga clic para marcar zonas
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+
       </div>
 
-      {/* --- 4. Resultados Finales --- */}
+      {/* --- RESULTADOS FINALES (FULL WIDTH) --- */}
       {isEditing && ["completed", "cancelled"].includes(data.status) && (
         <div className="p-10 border-2 border-brand-primary/20 rounded-[2.5rem] bg-brand-secondary/5 relative overflow-hidden">
+          {/* ... (Contenido de resultados igual que antes) ... */}
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-brand-primary/5 to-transparent"></div>
           <h3 className="relative z-10 flex items-center gap-3 mb-8 text-xl font-black tracking-tight uppercase text-brand-primary">
             <Activity className="w-6 h-6" /> Resultados de Evolución

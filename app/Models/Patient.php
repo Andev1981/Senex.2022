@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -30,9 +31,14 @@ class Patient extends Authenticatable
         'email',
         'phone',
         'birth_date',
+
+        //Social
         'gender',
         'occupation',
         'marital_status',
+        'require_tutor',
+
+        // Configuración / Preferencias
         'status',
         'status_reason',
         'status_changed_at',
@@ -40,7 +46,7 @@ class Patient extends Authenticatable
         'prefers_whatsapp',
         'prefers_sms',
         'prefers_mail',
-        'require_tutor',
+
         'notes',
     ];
 
@@ -48,15 +54,28 @@ class Patient extends Authenticatable
     protected $casts = [
         'birth_date' => 'date:Y-m-d',
         'status_changed_at' => 'datetime',
+        'require_tutor' => 'boolean',
         'opt_out_reminders' => 'boolean',
-        'prefers_whatsapp'  => 'boolean',
-        'prefers_mail'      => 'boolean',
-        'prefers_sms'       => 'boolean',
-        'require_tutor'     => 'boolean',
+        'prefers_whatsapp' => 'boolean',
+        'prefers_sms' => 'boolean',
+        'prefers_mail' => 'boolean',
     ];
 
-    /* RELACIONES */
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+
+    // --- Relaciones ---
+
+    public function medicalHistory()
+    {
+        return $this->hasOne(MedicalHistory::class);
+    }
+
+    // Acceso rápido a las sesiones a través de los tratamientos
+    public function sessions()
+    {
+        return $this->hasManyThrough(TreatmentSession::class, Treatment::class);
+    }
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -87,18 +106,14 @@ class Patient extends Authenticatable
             ->withTimestamps();
     }
 
-    public function sessions(): HasMany
-    {
-        return $this->hasMany(TreatmentSession::class);
-    }
 
-    public function vitals(): HasMany
+    public function vitalSigns(): HasMany
     {
-        return $this->hasMany(Vital::class);
+        return $this->hasMany(VitalSign::class);
     }
-    public function latestVital(): HasOne
+    public function latestVitalSign(): HasOne
     {
-        return $this->hasOne(Vital::class)->latestOfMany('created_at');
+        return $this->hasOne(VitalSign::class)->latestOfMany('created_at');
     }
 
     public function allergies(): HasMany
@@ -285,7 +300,7 @@ class Patient extends Authenticatable
     {
         return Attribute::make(
             get: function () {
-                $latest = $this->latestVital;
+                $latest = $this->latestVitalSign;
 
                 if (!$latest || !$latest->weight || !$latest->height) {
                     return null;

@@ -15,6 +15,8 @@ use App\Models\SessionType;
 use App\Models\User;
 use App\Models\Invoice;
 use App\Models\Dte;
+use App\Models\Address;
+use App\Models\Branch;
 use App\Observers\PaymentAllocationObserver;
 use App\Services\TwilioService;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -89,6 +91,9 @@ class AppServiceProvider extends ServiceProvider
             'User' => User::class,
             'Invoice' => Invoice::class,
             'Dte' => Dte::class,
+            'Address' => Address::class,
+            'Branch' => Branch::class,
+            'VitalSign' => VitalSign::class,
         ]);
     }
 }

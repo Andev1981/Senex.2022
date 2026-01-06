@@ -5,66 +5,82 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-  public function up(): void
-  {
+    public function up(): void
+    {
+        Schema::create('treatments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->comment('Empresa dueña');
+            $table->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
+            
+            // Actores
+            $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('doctor_id')->nullable()->constrained()->nullOnDelete(); // Kine responsable
+            
+            // Configuración
+            $table->foreignId('session_type_id')->constrained(); // Tipo por defecto
+            $table->foreignId('plan_id')->nullable()->constrained();
 
-    // -------------------------
-    // treatments (HIJA)
-    // -------------------------
-    Schema::create('treatments', function (Blueprint $table) {
-      $table->id();
-      $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
-      $table->foreignId('branch_id')
-        ->nullable()
-        ->constrained('branches')
-        ->nullOnDelete();
-      $table->foreignId('session_type_id')->constrained()->cascadeOnDelete();
-      $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
-      $table->foreignId('plan_id')
-        ->nullable()
-        ->constrained('plans')
-        ->after('patient_id');
-      $table->foreignId('doctor_id')->nullable()->constrained()->nullOnDelete(); // referente
-      // 🎯 1. CREAR LA COLUMNA ANTES DE USARLA EN LA FK 🎯
-      $table->string('diagnostic_code', 10) // Usamos 'diagnostic_code' para mayor claridad
-        ->nullable(); // Ajusta la posición si es necesario
+            // ------------------------------------------------
+            // 1. ORIGEN Y DERIVACIÓN (NUEVO)
+            // ------------------------------------------------
+            $table->string('referral_doctor_name')->nullable()->comment('Médico que deriva');
+            $table->string('referral_diagnosis')->nullable()->comment('Diagnóstico de la orden médica');
+            $table->date('referral_date')->nullable();
 
-      // 🎯 2. CREAR LA RESTRICCIÓN DE CLAVE FORÁNEA (CORRECTO)
-      $table->foreign('diagnostic_code') // Referenciamos la columna que acabamos de crear
-        ->references('code')
-        ->on('diagnostics')
-        ->nullOnDelete();
+            // ------------------------------------------------
+            // 2. DIAGNÓSTICO KINESIOLÓGICO
+            // ------------------------------------------------
+            // Tu lógica de FK a diagnostics
+            $table->string('diagnostic_code', 10)->nullable();
+            $table->foreign('diagnostic_code')->references('code')->on('diagnostics')->nullOnDelete();
 
-      $table->text('description')->nullable();
-      $table->date('start_date')->nullable();
-      $table->date('end_date')->nullable();
-      $table->enum('status', ['evaluation', 'in_progress', 'cancelled', 'paused', 'completed'])->default('Evaluation')->nullable()->index();
-      $table->unsignedTinyInteger('total_sessions')->nullable();
-      $table->unsignedTinyInteger('completed_sessions')->default(0)->nullable();
-      $table->unsignedTinyInteger('frequency')->default(0)->nullable();
-      /*  $table->string('frequency_time')->nullable(); */
-      $table->enum('frequency_time', ['day', 'week', 'month'])->nullable();
-      $table->boolean('is_indefinite')->default(false);
-      $table->enum('current_phase', ['evaluation', 'acute_symptomatic', 'functional_restoration', 'maintenance_prevention', 'discharge'])->default('evaluation')->nullable()->index();
-      $table->json('objectives')->nullable();
-      $table->text('outcome')->nullable();
-      $table->dateTime('next_appointment')->nullable();
-      $table->json('medical_history_snapshot')->nullable();
+            $table->json('additional_diagnoses')->nullable()->comment('Comorbilidades secundarias');
+            
+            // CLAVE KINE: ¿Qué duele y dónde?
+            $table->string('body_part')->nullable()->comment('knee, shoulder, spine, etc.');
+            $table->enum('laterality', ['left', 'right', 'bilateral', 'midline', 'n/a'])->nullable();
+            
+            $table->text('description')->nullable(); // Motivo de consulta detallado
 
-      // KPIs
-      $table->unsignedTinyInteger('pain_reduction')->default(0)->nullable();
-      $table->unsignedTinyInteger('mobility_improvement')->default(0)->nullable();
-      $table->unsignedTinyInteger('strength_gain')->default(0)->nullable();
+            // ------------------------------------------------
+            // 3. ESTADO Y EVOLUCIÓN
+            // ------------------------------------------------
+            $table->enum('status', ['evaluation', 'in_progress', 'cancelled', 'paused', 'completed'])->default('evaluation')->index();
+            $table->enum('current_phase', ['evaluation', 'acute', 'subacute', 'rehab', 'discharge'])->default('evaluation');
+            
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
 
-      $table->timestamps();
-      $table->softDeletes();
-      $table->index(['patient_id', 'status']);
-      $table->index('branch_id');
-    });
-  }
+            // Línea Base (Antes)
+            $table->unsignedTinyInteger('initial_pain_level')->nullable()->comment('EVA 0-10 Inicial');
+            $table->json('initial_pain_map')->nullable()->comment('Coordenadas X/Y dolor inicial');
+            $table->json('objectives')->nullable();
 
-  public function down(): void
-  {
-    Schema::dropIfExists('session_types');
-  }
+            // Resultados (Después)
+            $table->text('outcome')->nullable();
+            $table->enum('discharge_reason', ['success', 'abandonment', 'medical_referral', 'insurance_limit'])->nullable();
+            
+            // KPIs
+            $table->unsignedTinyInteger('pain_reduction')->default(0);
+            $table->unsignedTinyInteger('mobility_improvement')->default(0);
+            $table->unsignedTinyInteger('strength_gain')->default(0);
+
+            // Logística
+            $table->unsignedTinyInteger('total_sessions')->nullable();
+            $table->unsignedTinyInteger('completed_sessions')->default(0);
+            $table->unsignedTinyInteger('frequency')->default(0);
+            $table->enum('frequency_time', ['day', 'week', 'month'])->nullable();
+            $table->boolean('is_indefinite')->default(false);
+            
+            $table->dateTime('next_appointment')->nullable();
+            
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('treatments');
+    }
 };

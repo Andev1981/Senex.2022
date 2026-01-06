@@ -12,6 +12,7 @@ import {
   Info, // Icono de información
 } from "lucide-react";
 import SearchSelect from "@/Components/SearchSelect";
+import BodySelector from "@/Components/BodySelector"; // Importar componente
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "📅 Programada" },
@@ -81,6 +82,7 @@ export default function SessionFormModal({
       techniques: [],
       exercises: [],
     },
+    session_pain_map: sessionData?.session_pain_map || [], // Inicializar mapa de dolor
 
     // Finanzas
     patient_amount_clp: sessionData?.patient_amount_clp || 0,
@@ -431,194 +433,212 @@ export default function SessionFormModal({
 
           {/* --- 2. EVOLUCIÓN CLÍNICA (SOAP) --- */}
           {["attended", "scheduled"].includes(data.status) && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                <ClipboardList className="w-6 h-6 text-teal-600" />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Evolución Clínica (SOAP)
-                </h2>
+            <div className="space-y-8 duration-500 animate-in slide-in-from-bottom-4">
+              <div className="flex items-center gap-3 px-1 pb-4 border-b border-gray-100">
+                <div className="p-2.5 bg-green-50 rounded-xl text-green-600">
+                  <ClipboardList className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black tracking-tight text-gray-900 uppercase">
+                    Evolución Clínica (SOAP)
+                  </h2>
+                  <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest opacity-60">
+                    Documentación obligatoria
+                  </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* S: SUBJECTIVE */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-teal-700 dark:text-teal-400">
-                    <User className="w-5 h-5" /> Subjetivo (S)
-                  </h3>
-                  <div className="mb-4">
-                    <div className="flex justify-between mb-1">
-                      <label className="text-sm font-medium text-gray-700">
-                        Nivel de Dolor (EVA)
-                      </label>
-                      <span
-                        className={`font-bold text-lg ${
-                          data.pain_level > 7 ? "text-red-600" : "text-blue-600"
-                        }`}
-                      >
-                        {data.pain_level}/10
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={data.pain_level}
-                      onChange={(e) =>
-                        setData("pain_level", parseInt(e.target.value))
-                      }
-                      className="w-full accent-teal-600"
-                    />
-                  </div>
-                  <textarea
-                    value={data.subjective}
-                    onChange={(e) => setData("subjective", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="3"
-                    placeholder="Paciente refiere..."
-                  />
-                </div>
-
-                {/* O: OBJECTIVE */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-blue-700 dark:text-blue-400">
-                    <Activity className="w-5 h-5" /> Objetivo (O)
-                  </h3>
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg dark:bg-blue-900/20">
-                    <p className="text-xs font-bold text-blue-800 uppercase mb-2">
-                      ROM (Grados)
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["flexion", "abduction"].map((romType) => (
-                        <div key={romType}>
-                          <label className="text-xs text-gray-600 capitalize">
-                            {romType}
+              {/* GRID DE DATOS (2 COLUMNAS) */}
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                
+                {/* COLUMNA IZQUIERDA: S + O */}
+                <div className="space-y-8">
+                    {/* S: SUBJECTIVE */}
+                    <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
+                      <h3 className="enterprise-label !text-brand-primary flex items-center gap-3 mb-6">
+                        <User className="w-4 h-4" /> Subjetivo (S)
+                      </h3>
+                      <div className="p-6 mb-8 border shadow-inner bg-gray-50/50 rounded-3xl border-gray-50">
+                        <div className="flex items-end justify-between px-1 mb-4">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            Dolor (EVA)
                           </label>
-                          <div className="flex gap-1">
-                            <input
-                              type="number"
-                              placeholder="Pre"
-                              className="w-1/2 px-2 py-1 text-xs border rounded"
-                              value={
-                                data.evaluation_data.rom?.[romType]?.before ||
-                                ""
-                              }
-                              onChange={(e) =>
-                                handleRomChange(
-                                  romType,
-                                  "before",
-                                  e.target.value
-                                )
-                              }
-                            />
-                            <input
-                              type="number"
-                              placeholder="Post"
-                              className="w-1/2 px-2 py-1 text-xs border rounded"
-                              value={
-                                data.evaluation_data.rom?.[romType]?.after || ""
-                              }
-                              onChange={(e) =>
-                                handleRomChange(
-                                  romType,
-                                  "after",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </div>
+                          <span
+                            className={`text-2xl font-mono font-black ${
+                              data.pain_level > 7
+                                ? "text-red-600"
+                                : "text-brand-primary"
+                            }`}
+                          >
+                            {data.pain_level}{" "}
+                            <span className="text-[10px] opacity-30 tracking-widest">
+                              / 10
+                            </span>
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                  <textarea
-                    value={data.objective}
-                    onChange={(e) => setData("objective", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="2"
-                    placeholder="Se observa..."
-                  />
-                </div>
-
-                {/* A: ASSESSMENT */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-purple-700 dark:text-purple-400">
-                    <ClipboardList className="w-5 h-5" /> Análisis (A)
-                  </h3>
-                  <textarea
-                    value={data.assessment}
-                    onChange={(e) => setData("assessment", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="3"
-                    placeholder="Evolución positiva..."
-                  />
-                </div>
-
-                {/* P: PLAN */}
-                <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                  <h3 className="flex items-center gap-2 mb-3 text-lg font-semibold text-green-700 dark:text-green-400">
-                    <Target className="w-5 h-5" /> Plan (P)
-                  </h3>
-                  <div className="mb-3">
-                    <div className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={techniqueInput}
-                        onChange={(e) => setTechniqueInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleActivityChange(
-                              "techniques",
-                              techniqueInput,
-                              "add"
-                            );
-                            setTechniqueInput("");
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={data.pain_level}
+                          onChange={(e) =>
+                            setData("pain_level", parseInt(e.target.value))
                           }
-                        }}
-                        className="flex-1 text-xs border-gray-300 rounded"
-                        placeholder="Técnica/Ejercicio..."
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                        />
+                      </div>
+                      <textarea
+                        value={data.subjective}
+                        onChange={(e) => setData("subjective", e.target.value)}
+                        className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]"
+                        placeholder="Refiere el paciente..."
                       />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleActivityChange(
-                            "techniques",
-                            techniqueInput,
-                            "add"
-                          );
-                          setTechniqueInput("");
-                        }}
-                        className="bg-green-600 text-white px-2 rounded"
-                      >
-                        +
-                      </button>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {data.activities_data.techniques?.map((t, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full flex items-center gap-1"
-                        >
-                          {t}{" "}
+
+                    {/* O: OBJECTIVE */}
+                    <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
+                      <h3 className="enterprise-label !text-blue-600 flex items-center gap-3 mb-6">
+                        <Activity className="w-4 h-4" /> Objetivo (O)
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4 mb-8">
+                        {["flexion", "abduction"].map((romType) => (
+                          <div
+                            key={romType}
+                            className="p-5 bg-blue-50/30 rounded-[1.5rem] border border-blue-50 shadow-inner"
+                          >
+                            <label className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] block mb-4 text-center">
+                              ROM: {romType}
+                            </label>
+                            <div className="flex items-center justify-center gap-3">
+                              <input
+                                type="number"
+                                className="w-16 text-center font-mono font-black text-sm border-none bg-white rounded-xl py-2.5 shadow-sm focus:ring-blue-500"
+                                value={
+                                  data.evaluation_data.rom?.[romType]?.before || ""
+                                }
+                                onChange={(e) =>
+                                  handleRomChange(romType, "before", e.target.value)
+                                }
+                              />
+                              <ChevronRight className="w-4 h-4 text-blue-200" />
+                              <input
+                                type="number"
+                                className="w-16 text-center font-mono font-black text-sm border-none bg-white rounded-xl py-2.5 shadow-sm focus:ring-blue-500"
+                                value={
+                                  data.evaluation_data.rom?.[romType]?.after || ""
+                                }
+                                onChange={(e) =>
+                                  handleRomChange(romType, "after", e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <textarea
+                        value={data.objective}
+                        onChange={(e) => setData("objective", e.target.value)}
+                        className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]"
+                        placeholder="Hallazgos físicos..."
+                      />
+                    </div>
+                </div>
+
+                {/* COLUMNA DERECHA: A + P */}
+                <div className="space-y-8">
+                    {/* A: ASSESSMENT */}
+                    <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
+                      <h3 className="enterprise-label !text-purple-600 flex items-center gap-3 mb-6">
+                        <ClipboardList className="w-4 h-4" /> Análisis (A)
+                      </h3>
+                      <textarea
+                        value={data.assessment}
+                        onChange={(e) => setData("assessment", e.target.value)}
+                        className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]"
+                        placeholder="Evolución y juicio clínico..."
+                      />
+                    </div>
+
+                    {/* P: PLAN */}
+                    <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
+                      <h3 className="enterprise-label !text-green-600 flex items-center gap-3 mb-6">
+                        <Target className="w-4 h-4" /> Plan (P)
+                      </h3>
+                      <div className="mb-6">
+                        <div className="flex gap-2 mb-3">
+                          <input
+                            type="text"
+                            value={techniqueInput}
+                            onChange={(e) => setTechniqueInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleActivityChange("techniques", techniqueInput, "add");
+                                setTechniqueInput("");
+                              }
+                            }}
+                            className="flex-1 text-xs font-bold border-gray-100 bg-gray-50 rounded-xl py-3 px-4 focus:bg-white focus:ring-brand-primary"
+                            placeholder="Agregar Técnica / Ejercicio..."
+                          />
                           <button
                             type="button"
-                            onClick={() =>
-                              handleActivityChange("techniques", t, "remove")
-                            }
+                            onClick={() => {
+                              handleActivityChange("techniques", techniqueInput, "add");
+                              setTechniqueInput("");
+                            }}
+                            className="bg-brand-primary text-white px-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all"
                           >
-                            ×
+                            +
                           </button>
-                        </span>
-                      ))}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {data.activities_data.techniques?.map((t, i) => (
+                            <span
+                              key={i}
+                              className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest bg-brand-secondary/10 text-brand-primary rounded-lg flex items-center gap-2 border border-brand-secondary/20"
+                            >
+                              {t}
+                              <button
+                                type="button"
+                                onClick={() => handleActivityChange("techniques", t, "remove")}
+                                className="hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <textarea
+                        value={data.plan}
+                        onChange={(e) => setData("plan", e.target.value)}
+                        className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]"
+                        placeholder="Próximos pasos..."
+                      />
                     </div>
-                  </div>
-                  <textarea
-                    value={data.plan}
-                    onChange={(e) => setData("plan", e.target.value)}
-                    className="w-full text-sm border-gray-300 rounded-lg"
-                    rows="2"
-                    placeholder="Próxima sesión..."
-                  />
+                </div>
+              </div>
+
+              {/* MAPA CORPORAL (FULL WIDTH) */}
+              <div className="pt-8">
+                <div className="p-8 border border-gray-100 rounded-[2.5rem] bg-gray-50/50 flex flex-col shadow-inner">
+                    <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 mb-8">
+                        <MapPin className="w-5 h-5" /> Mapa del Dolor Interactivo
+                    </h3>
+                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl p-8 relative overflow-hidden min-h-[600px] flex items-center justify-center">
+                        <div className="w-full max-w-4xl h-full">
+                            <BodySelector
+                                initialData={data.session_pain_map}
+                                onChange={(newMap) => setData("session_pain_map", newMap)}
+                                mode={isEditing || !isDuplicate ? "edit" : "read"}
+                            />
+                        </div>
+                        <div className="absolute bottom-8 left-0 w-full text-center">
+                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] bg-white/90 backdrop-blur-md px-6 py-2 rounded-full inline-block shadow-lg border border-gray-50">
+                                Haga clic en la silueta para marcar puntos de dolor
+                            </p>
+                        </div>
+                    </div>
                 </div>
               </div>
             </div>

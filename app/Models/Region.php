@@ -16,4 +16,9 @@ class Region extends Model
     {
         return $this->hasMany(Province::class);
     }
+
+    public function communes()
+    {
+        return $this->hasManyThrough(Commune::class, Province::class);
+    }
 }

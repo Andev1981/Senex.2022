@@ -165,7 +165,7 @@ class PatientAdminController extends Controller
         // 3. Carga de datos del paciente
         $patient->load([
             'address.commune.province.region',
-            'latestVital',
+            'latestVitalSign',
             'primaryContact',
             'allergies',
             'condition',
@@ -196,7 +196,7 @@ class PatientAdminController extends Controller
             'sessions'    => $sessions,
             'payments'    => $payments,
             'address'     => $patient->address,
-            'vital'       => $patient->latestVital,
+            'vital'       => $patient->latestVitalSign,
             'contact'     => $patient->primaryContact,
             'allergies'   => $patient->allergies,
             'conditions'  => $patient->condition,
@@ -302,7 +302,7 @@ class PatientAdminController extends Controller
                 'address.region',
                 'address.province',
                 'address.commune',
-                'latestVital',
+                'latestVitalSign',
                 'primaryContact',
                 'allergies',
                 'condition',

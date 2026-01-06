@@ -65,51 +65,95 @@ use App\Http\Controllers\Admin\Dtes\{
 };
 
 /* Finance */
-use App\Http\Controllers\Admin\Finance\{ReceivablesController};
+use App\Http\Controllers\Admin\Finance\{
+  ReceivablesController
+};
+
+/* MedicalHistorials */
+use App\Http\Controllers\Admin\MedicalHistorials\{
+  MedicalHistoryController
+};
 
 /* Insurances */
-use App\Http\Controllers\Admin\Insurances\{InsuranceController};
+use App\Http\Controllers\Admin\Insurances\{
+  InsuranceController
+};
 
 /* Insurances */
-use App\Http\Controllers\Admin\Invoices\{InvoicesController};
+use App\Http\Controllers\Admin\Invoices\{
+  InvoicesController
+};
 
 /* Patients */
-use App\Http\Controllers\Admin\Patients\{PatientAdminController, PatientContactController, PatientController, PatientDashboardController, PatientSearchController};
-
+use App\Http\Controllers\Admin\Patients\{
+  PatientAdminController, 
+  PatientContactController, 
+  PatientController, 
+  PatientSearchController,
+  VitalSignController
+};
 
 /* Payments */
-use App\Http\Controllers\Admin\Payments\{PaymentReminderController, PaymentsController, WebpayController};
+use App\Http\Controllers\Admin\Payments\{
+  PaymentReminderController, 
+  PaymentsController, 
+  WebpayController
+};
 
 /* Payroll */
-use App\Http\Controllers\Admin\Payroll\{PayrollController};
+use App\Http\Controllers\Admin\Payroll\{
+  PayrollController
+};
 
 /* Plans */
-use App\Http\Controllers\Admin\Plans\{FamilyPlanController, PlanController};
+use App\Http\Controllers\Admin\Plans\{
+  FamilyPlanController, 
+  PlanController
+};
 
 /* Products */
-use App\Http\Controllers\Admin\Products\{ProductController};
+use App\Http\Controllers\Admin\Products\{
+  ProductController
+};
 
 /* Reports */
-use App\Http\Controllers\Admin\Reports\{ReportsController};
+use App\Http\Controllers\Admin\Reports\{
+  ReportsController
+};
 
 /* Roles */
-use App\Http\Controllers\Admin\Roles\{RoleController};
+use App\Http\Controllers\Admin\Roles\{
+  RoleController
+};
 
 /* SessionTypes */
-use App\Http\Controllers\Admin\SessionTypes\{BranchSessionTypeController, SessionTypeController};
+use App\Http\Controllers\Admin\SessionTypes\{
+  BranchSessionTypeController, 
+  SessionTypeController
+};
 
 /* Subscription */
-use App\Http\Controllers\Admin\Subscription\{SubscriptionController};
+use App\Http\Controllers\Admin\Subscription\{
+  SubscriptionController
+};
 
 /* Treatments */
-use App\Http\Controllers\Admin\Treatments\{TreatmentAdminController};
+use App\Http\Controllers\Admin\Treatments\{
+  TreatmentAdminController
+};
 
 /* TreatmentSessions */
-use App\Http\Controllers\Admin\TreatmentSessions\TreatmentSessionController;
-
+use App\Http\Controllers\Admin\TreatmentSessions\{
+  TreatmentSessionController
+};
 
 /* KineMobile */
-use App\Http\Controllers\KineMobile\{DashboardMobileController, PatientMobileController, ProfileMobileController, SessionMobileController};
+use App\Http\Controllers\KineMobile\{
+  DashboardMobileController, 
+  PatientMobileController, 
+  ProfileMobileController, 
+  SessionMobileController
+};
 
 /* Commons */
 use App\Http\Controllers\{
@@ -119,9 +163,7 @@ use App\Http\Controllers\{
   UserController,
 };
 
-
 /* Auth */
-
 require __DIR__ . '/auth.php';
 
 Route::post('/heartbeat', function () {
@@ -156,8 +198,8 @@ Route::group(['middleware' => ['auth']], function () {
   Route::patch('patients/{patient}/addresses', [AddressController::class, 'update'])->name('patients.addresses.update');
   Route::post('patients/{patient}/contacts', [PatientContactController::class, 'store'])->name('patients.contacts.store');
   Route::patch('patients/{patientContact}/contacts', [PatientContactController::class, 'update'])->name('patients.contacts.update');
-  /* Route::post('patients/vitals', [VitalController::class, 'store'])->name('patients.vitals.store');
-  Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update'); */
+  Route::post('patients/vitals', [VitalController::class, 'store'])->name('patients.vitals.store');
+  Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update');
 
 
   /* Crear Tratamiento */
@@ -217,6 +259,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::resource('agreement/rules', AgreementRuleController::class)->names('agreement.rules');
 
 
+  Route::post('payrolls/preview', [PayrollController::class, 'preview'])->name('payrolls.preview');
   Route::resource('payrolls', PayrollController::class)->names('payrolls');
   Route::get('payrolls/{payroll}/pdf', [PayrollController::class, 'downloadPdf'])->name('payrolls.pdf');
   Route::post('payrolls/{payroll}/approve', [PayrollController::class, 'approve'])->name('payrolls.approve');
@@ -268,6 +311,10 @@ Route::group(['middleware' => ['auth']], function () {
   Route::resource('companies', CompanyController::class);
 
   // CRUD Básico de Productos (Index, Create, Edit, Update)
+  Route::post('companies/{company}/branches', [CompanyController::class, 'storeBranch'])->name('companies.branches.store');
+  Route::put('companies/{company}/branches/{branch}', [CompanyController::class, 'updateBranch'])->name('companies.branches.update');
+  Route::delete('companies/{company}/branches/{branch}', [CompanyController::class, 'destroyBranch'])->name('companies.branches.destroy');
+
   Route::resource('products', ProductController::class);
 
   // Rutas para DTE y CAFs (Anidadas a una empresa específica)

@@ -18,32 +18,38 @@
 - **DB:** MySQL
 - **Deploy:** cPanel (Atención con cachés y rutas)
 
-## 📍 CONTEXTO RECIENTE
+## 📍 CONTEXTO RECIENTE (Logros 05/01/2026)
 
-- Se solucionó un bug crítico en `AttendancesController` donde los pacientes no cargaban o daban error.
-- **Causa:** Ambigüedad de IDs en los `select` (el ID del plan sobreescribía al del paciente).
-- **Solución:** Se blindaron las consultas usando `patients.*` y `patient_plans.*` explícitamente.
-- El backend ya envía correctamente los datos del paciente y sus planes. Ahora falta conectar las acciones de la UI.
-- Se corrigió error `ts(1149)` de casing inconsistente estandarizando importaciones con el alias `@/Pages`.
+### 🩺 Gestión Clínica & Protocolo SOAP
+- **BodySelector Interactivo:** Se creó un componente SVG (`BodySelector.jsx`) para marcar puntos de dolor en siluetas frontal/posterior.
+- **Refactorización de Formularios:** Se estandarizó el diseño de `CreateUpdateModal` (Atenciones), `SessionModal` (Sesiones) y `ModalCreateUpdateTreatment` (Protocolos).
+- **Nuevo Layout:** Se implementó una cuadrícula de 2 columnas para datos clínicos + 1 fila de ancho completo para el mapa corporal.
+- **Corrección de Coordenadas:** Se mejoró la precisión del click en el SVG usando `getBoundingClientRect` para evitar desfasajes.
 
-## 📝 TAREA ACTUAL
+### 💰 Módulo de Liquidaciones (Payroll)
+- **Flujo de Auditoría:** Se implementó el botón "Revisar" con un `SideModal` que muestra el detalle de atenciones.
+- **Generación de PDF:** Se creó una vista Blade optimizada para descarga de liquidaciones del profesional (sin datos internos de la clínica).
+- **Simulación Previa:** Se agregó un paso de previsualización antes de generar la liquidación para evitar registros vacíos o erróneos.
+- **Bug Fix:** Se corrigió el cálculo de la retención clínica (`Total - Honorario Doctor`) en el `PayrollService`.
 
-- [x] Corregir consulta de Pacientes y Planes activos (DONE).
-- [x] Verificar que el cálculo de `sessions_remaining` se visualice correctamente en el Frontend (React).
-- [x] Finalizar y mejorar acciones en AttendacesTable.jsx (Frontend).
-- [x] Implementar renderizado condicional en botones de acción de AttendacesTable.jsx.
-- [x] Corregir título inconsistente en ResumeModal dentro de Index.jsx.
-- [x] Verificar configuración de resolución de páginas en app.jsx para evitar errores de migración v1->v2.
-- [x] Aplicar lógica condicional en AttendacesTable.jsx para el botón DTE.
-- [x] Agregar campo `dte_generated` a `treatment_sessions` (Migración y Modelo).
-- [x] Implementar selección múltiple en `AttendacesTable.jsx` para facturación masiva.
-- [x] Conectar `DteModal` con backend para emisión individual y masiva.
-- [x] Automatizar marcado de `dte_generated` en `DteService` al emitir documentos.
+### 🏢 Gestión Multitenant & Sucursales
+- **Casa Matriz:** Se implementó el campo `is_main` en la tabla `branches` y la lógica para impedir su borrado.
+- **Selector Global:** Se integró el `BranchSwitcher` y el acceso al `ContextSelectorModal` directamente en el header del Sidebar (área del logo).
+- **Direcciones Polimórficas:** Se habilitó el CRUD de sucursales con soporte para direcciones completas (Región/Comuna) usando el `morphMap`.
+
+### ⚙️ Core & Rutas
+- **Consolidación:** Se fusionaron `TreatmentSessionAdminController` y `TreatmentSessionController`.
+- **Navegación:** Se corrigió `isRouteActive` para mantener activos los menús al navegar en rutas de recursos (`index`, `edit`, `create`).
+
+## 📝 TAREA ACTUAL (Próximos Pasos)
+
+- [ ] Implementar la visualización del `pain_map` histórico en la línea de tiempo del paciente.
+- [ ] Conectar la lógica de "Aprobar Liquidación" con el envío automático de notificación al profesional.
+- [ ] Refinar los permisos de edición en los campos SOAP una vez que la sesión está marcada como 'attended'.
+- [ ] Optimizar la carga inicial de Regiones/Comunas usando lazy loading o cache.
 
 ## 💡 NOTAS TÉCNICAS
 
-- Usar `map()` con `?->` y `??` para evitar crashes si faltan datos relacionales.
-- No usar `select()` dentro de `with()` si se van a usar Accessors calculados.
-- Regla UI: Botón Emitir DTE solo visible si status == Realizada.
-- CRÍTICO: Validar Case Sensitivity en rutas (Windows vs Linux).
-- Regla de Negocio DTE: Si ya existe DTE, ocultar botón Emitir y mostrar botón Ver/Descargar.
+- **BodySelector:** Almacena datos en JSON (`initial_pain_map` / `session_pain_map`).
+- **Sucursales:** Una empresa siempre debe tener una `is_main: true`. Al promover una, la anterior se degrada automáticamente.
+- **Layout:** El ancho máximo de los modales clínicos se ajustó a `95vw` para facilitar la interacción con el mapa corporal.

@@ -11,9 +11,12 @@ class Branch extends Model
 {
   use HasAddresses;
 
-  protected $fillable = ['company_id', 'codigo_sucursal_sii','name', 'rut', 'phone', 'email','active'];
+  protected $fillable = ['company_id', 'codigo_sucursal_sii','is_main','name', 'rut', 'phone', 'email', 'is_main', 'active'];
 
-  protected $casts = ['active' => 'boolean'];
+  protected $casts = [
+    'active' => 'boolean',
+    'is_main' => 'boolean',
+  ];
 
   public function rooms() : HasMany
   {

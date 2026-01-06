@@ -17,10 +17,12 @@ import {
   Search,
   UserCheck,
   Edit3,
+  MapPin, // Icono para el mapa
 } from "lucide-react";
 import SearchSelect from "@/Components/SearchSelect";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
+import BodySelector from "@/Components/BodySelector"; // Importar componente
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "📅 Programada" },
@@ -83,6 +85,7 @@ export default function SessionFormModal({
       techniques: [],
       exercises: [],
     },
+    session_pain_map: sessionData?.session_pain_map || [], // Mapa del dolor
     patient_amount_clp: sessionData?.patient_amount_clp || 0,
     patient_plan_id: sessionData?.patient_plan_id || "",
   });
@@ -428,9 +431,12 @@ export default function SessionFormModal({
                   </p>
                 </div>
               </div>
+
+              {/* GRID DE DATOS (2 COLUMNAS) */}
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                
                 {/* S: SUBJECTIVE */}
-                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all">
+                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
                   <h3 className="enterprise-label !text-brand-primary flex items-center gap-3 mb-6">
                     <User className="w-4 h-4" /> Subjetivo (S)
                   </h3>
@@ -466,12 +472,13 @@ export default function SessionFormModal({
                   <textarea
                     value={data.subjective}
                     onChange={(e) => setData("subjective", e.target.value)}
-                    className="w-full text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]"
+                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]"
                     placeholder="Refiere el paciente..."
                   />
                 </div>
+
                 {/* O: OBJECTIVE */}
-                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all">
+                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
                   <h3 className="enterprise-label !text-blue-600 flex items-center gap-3 mb-6">
                     <Activity className="w-4 h-4" /> Objetivo (O)
                   </h3>
@@ -513,9 +520,103 @@ export default function SessionFormModal({
                   <textarea
                     value={data.objective}
                     onChange={(e) => setData("objective", e.target.value)}
-                    className="w-full text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]"
+                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]"
                     placeholder="Hallazgos físicos..."
                   />
+                </div>
+
+                {/* A: ASSESSMENT */}
+                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
+                  <h3 className="enterprise-label !text-purple-600 flex items-center gap-3 mb-6">
+                    <ClipboardList className="w-4 h-4" /> Análisis (A)
+                  </h3>
+                  <textarea
+                    value={data.assessment}
+                    onChange={(e) => setData("assessment", e.target.value)}
+                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]"
+                    placeholder="Evolución y juicio clínico..."
+                  />
+                </div>
+
+                {/* P: PLAN */}
+                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
+                  <h3 className="enterprise-label !text-green-600 flex items-center gap-3 mb-6">
+                    <Target className="w-4 h-4" /> Plan (P)
+                  </h3>
+                  <div className="mb-6">
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={techniqueInput}
+                        onChange={(e) => setTechniqueInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleActivityChange("techniques", techniqueInput, "add");
+                            setTechniqueInput("");
+                          }
+                        }}
+                        className="flex-1 text-xs font-bold border-gray-100 bg-gray-50 rounded-xl py-3 px-4 focus:bg-white focus:ring-brand-primary"
+                        placeholder="Agregar Técnica / Ejercicio..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleActivityChange("techniques", techniqueInput, "add");
+                          setTechniqueInput("");
+                        }}
+                        className="bg-brand-primary text-white px-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {data.activities_data.techniques?.map((t, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest bg-brand-secondary/10 text-brand-primary rounded-lg flex items-center gap-2 border border-brand-secondary/20"
+                        >
+                          {t}
+                          <button
+                            type="button"
+                            onClick={() => handleActivityChange("techniques", t, "remove")}
+                            className="hover:text-red-500"
+                          >
+                            <XCircle className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <textarea
+                    value={data.plan}
+                    onChange={(e) => setData("plan", e.target.value)}
+                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]"
+                    placeholder="Próximos pasos..."
+                  />
+                </div>
+              </div>
+
+              {/* MAPA CORPORAL (FULL WIDTH) */}
+              <div className="pt-8">
+                <div className="p-8 border border-gray-100 rounded-[2.5rem] bg-gray-50/50 flex flex-col shadow-inner">
+                    <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 mb-8">
+                        <MapPin className="w-5 h-5" /> Mapa del Dolor Interactivo
+                    </h3>
+                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl p-8 relative overflow-hidden min-h-[600px] flex items-center justify-center">
+                        <div className="w-full max-w-4xl h-full">
+                            <BodySelector
+                                initialData={data.session_pain_map}
+                                onChange={(newMap) => setData("session_pain_map", newMap)}
+                                mode={isEditing || !isDuplicate ? "edit" : "read"}
+                            />
+                        </div>
+                        <div className="absolute bottom-8 left-0 w-full text-center">
+                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] bg-white/90 backdrop-blur-md px-6 py-2 rounded-full inline-block shadow-lg border border-gray-50">
+                                Haga clic en la silueta para marcar puntos de dolor
+                            </p>
+                        </div>
+                    </div>
                 </div>
               </div>
             </div>

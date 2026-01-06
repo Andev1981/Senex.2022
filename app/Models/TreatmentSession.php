@@ -2,92 +2,99 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToTenant;
 use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class TreatmentSession extends Model
 {
-    use HasFactory, SoftDeletes, Multitenantable, BelongsToTenant;
+    use HasFactory, SoftDeletes, Multitenantable;
 
-    public const STATUS_SCHEDULED = 'scheduled';
-    public const STATUS_COMPLETED = 'completed';
-    public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_MISSED = 'no_show';
-
-    protected $fillable = [
+ protected $fillable = [
+        // --- 1. Contexto y Vinculación ---
         'company_id',
         'branch_id',
         'treatment_id',
-        'appointment_id', // Puede ser null si es una sesión de emergencia sin cita previa
-        'doctor_id',      // Puede ser distinto al del tratamiento (un reemplazo)
         'patient_id',
+        'doctor_id',       // Apunta a la tabla 'users'
         'session_type_id',
+        'appointment_id',
 
-        // Control
+        // --- 2. Logística ---
         'date',
-        'status',         // scheduled, attended, missed, cancelled
-        'consumes_plan',  // boolean (importante para packs de 10 sesiones)
+        'time',
+        'status',          // scheduled, in_progress, completed...
+        'consumes_plan',   // boolean
+        'cancellation_note',
 
-        // La Evolución Clínica (Flexible)
-        'pain_level',     // Integer 1-10 (Vale la pena tenerlo en columna propia para gráficas rápidas)
-        'evaluation_data', // JSON: Aquí guardas todos los ROMs dinámicos {flexion: 45, extension: 10...}
-        'activities_data', // JSON: Aquí guardas técnicas y ejercicios {techniques: [...], exercises: [...]}
+        // --- 3. DATOS CLÍNICOS (SOAP) ---
+        // [S]ubjective
+        'subjective',
+        'pain_level',      // EVA 0-10
 
-        // Notas SOAP
-        'subjective',     // "Paciente refiere..."
-        'objective',      // "Se observa edema..."
-        'assessment',     // "Buena tolerancia al ejercicio..." (Tu actual 'notes')
-        'plan',           // "Próxima sesión aumentar carga..." (Tu actual 'homework'/'next_goals')
+        // [O]bjective
+        'objective',
+        'evaluation_data', // JSON: Mediciones (ROM, Fuerza) - Antes llamado biometric_data
+        'session_pain_map',// JSON: Coordenadas del dolor HOY
+        'activities_data', // JSON: Ejercicios realizados
+        'attachments',     // JSON: Fotos/Docs
 
-        // Finanzas (Snapshot)
-        'cost_breakdown', // JSON o columnas separadas. Si usas columnas separadas (como tienes ahora) es más fácil sumar con SQL.
+        // [A]ssessment
+        'assessment',
+
+        // [P]lan
+        'plan',
+
+        // --- 4. Finanzas ---
         'patient_amount_clp',
         'doctor_amount_clp',
         'clinic_amount_clp',
-        'is_exento',
-        'dte_generated'
-    ];
+        'cost_breakdown',   // JSON
+        'is_exento',        // boolean
+        'dte_generated',    // boolean
 
-    // Casts para que Laravel maneje el JSON como Array automáticamente
-    protected $casts = [
-        'evaluation_data' => 'array',
-        'activities_data' => 'array',
-        'cost_breakdown' => 'array',
-        'consumes_plan' => 'boolean',
-        'is_exento' => 'boolean',
-        'dte_generated' => 'boolean',
-        'date' => 'datetime'
+        // --- 5. Extras ---
+        'meta',             // JSON
     ];
 
     /**
-     * Relaciones
+     * Los atributos que deben convertirse a tipos nativos.
+     * Esto hace que los JSON de la BD se usen como Arrays en PHP.
      */
+    protected $casts = [
+        'date' => 'date',
+        'time' => 'datetime', // O 'immutable_time' si usas Laravel 11
+        'consumes_plan' => 'boolean',
+        'is_exento' => 'boolean',
+        'dte_generated' => 'boolean',
+        
+        // Arrays (JSONs)
+        'evaluation_data' => 'array',
+        'session_pain_map' => 'array',
+        'activities_data' => 'array',
+        'attachments' => 'array',
+        'cost_breakdown' => 'array',
+        'meta' => 'array',
+    ];
 
-    // Opción A: Si una sesión SOLO se paga una vez (lo normal)
-    public function payrollDetail(): MorphOne
+    // ==========================================
+    // RELACIONES
+    // ==========================================
+
+    public function company(): BelongsTo
     {
-        return $this->morphOne(PayrollDetail::class, 'source');
+        return $this->belongsTo(Company::class);
     }
-    
+
     public function treatment(): BelongsTo
     {
         return $this->belongsTo(Treatment::class);
-    }
-
-    public function appointment(): BelongsTo
-    {
-        return $this->belongsTo(Appointment::class);
-    }
-
-    public function doctor(): BelongsTo
-    {
-        return $this->belongsTo(Doctor::class);
     }
 
     public function patient(): BelongsTo
@@ -95,20 +102,51 @@ class TreatmentSession extends Model
         return $this->belongsTo(Patient::class);
     }
 
+    /**
+     * El profesional que atendió la sesión.
+     * Nota: La migración dice constrained('users'), por eso relacionamos con User.
+     */
+    public function doctor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'doctor_id');
+    }
+
     public function sessionType(): BelongsTo
     {
         return $this->belongsTo(SessionType::class);
     }
 
-    public function room(): BelongsTo
+    public function appointment(): BelongsTo
     {
-        return $this->belongsTo(Room::class);
+        return $this->belongsTo(Appointment::class);
     }
 
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
     }
+
+    /**
+     * Relación Polimórfica con Signos Vitales.
+     * Esto permite: $session->vitalSigns para ver la presión/pulso de ESTA sesión.
+     */
+    public function vitalSigns(): MorphMany
+    {
+        return $this->morphMany(VitalSign::class, 'source');
+    }
+
+    // Opción A: Si una sesión SOLO se paga una vez (lo normal)
+    public function payrollDetail(): MorphOne
+    {
+        return $this->morphOne(PayrollDetail::class, 'source');
+    }
+    
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
+
 
     public function debt(): HasOne
     {

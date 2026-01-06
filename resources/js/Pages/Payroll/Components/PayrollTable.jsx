@@ -67,13 +67,41 @@ export default function PayrollTable({ payrolls, onReview }) {
         }
     },
     {
-        accessorKey: "total_doctor_amount",
-        header: "Honorarios (CLP)",
+        accessorKey: "total_sessions",
+        header: "Sesiones",
         cell: ({ getValue }) => (
-            <div className="font-mono text-[11px] font-black text-brand-primary bg-brand-secondary/5 px-3 py-1.5 rounded-lg border border-brand-secondary/10 w-fit">
-                ${parseInt(getValue()).toLocaleString("es-CL")}
+            <div className="flex items-center justify-center w-full">
+                <span className="font-mono text-xs font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+                    {getValue() || 0}
+                </span>
             </div>
         )
+    },
+    {
+        accessorKey: "total_commission_amount_clp",
+        header: "Retención Clínica",
+        cell: ({ getValue }) => {
+            const value = getValue();
+            const amount = value ? parseInt(value) : 0;
+            return (
+                <div className="font-mono text-[11px] font-black text-red-500 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 w-fit">
+                    ${amount.toLocaleString("es-CL")}
+                </div>
+            );
+        }
+    },
+    {
+        accessorKey: "total_payable_clp",
+        header: "Honorarios (CLP)",
+        cell: ({ getValue }) => {
+            const value = getValue();
+            const amount = value ? parseInt(value) : 0;
+            return (
+                <div className="font-mono text-[11px] font-black text-brand-primary bg-brand-secondary/5 px-3 py-1.5 rounded-lg border border-brand-secondary/10 w-fit">
+                    ${amount.toLocaleString("es-CL")}
+                </div>
+            );
+        }
     },
     {
         accessorKey: "status",
