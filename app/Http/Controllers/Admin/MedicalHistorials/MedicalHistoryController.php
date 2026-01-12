@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\MedicalHistorials;
+namespace App\Http\Controllers\Admin\MedicalHistorials;
 
 use App\Http\Controllers\Controller;
 use App\Models\MedicalHistory;

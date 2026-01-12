@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Inertia;
+namespace App\Http\Controllers\Admin\Doctors;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
@@ -53,7 +53,7 @@ class KineController extends Controller
         // Pacientes asignados
         $patientsCount = $doctor->patients()->count();
 
-        return Inertia::render('KineMobile/Dashboard', [
+        return Inertia::render('kine-mobile/dashboard', [
             'doctor' => $doctor,
             'kpis' => $kpis,
             'agenda' => $agenda,

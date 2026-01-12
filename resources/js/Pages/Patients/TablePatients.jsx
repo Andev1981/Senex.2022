@@ -53,7 +53,7 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
 
   const { get } = useForm();
   const [sorting, setSorting] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
 
@@ -196,13 +196,13 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
               </div>
               <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600">
                 <Phone className="w-3 h-3 text-brand-primary opacity-40" />{" "}
-                {row.original.phone || "---"}
+                {row.original.phone || row.original.require_tutor ? row.original.primary_contact?.phone : "-" || "---"}
               </div>
             </div>
           ),
         },
         {
-          header: "Cronología",
+          header: "Última Atención",
           cell: ({ row }) => (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-[9px] font-black text-brand-gray uppercase tracking-widest">
@@ -274,7 +274,7 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
       sorting,
       globalFilter: searchTerm,
       columnFilters,
-      pagination: { pageSize, pageIndex },
+      pagination: { pagesize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
@@ -282,10 +282,10 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
+          ? updater({ pageIndex, pagesize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -538,9 +538,9 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
           <TablePagination
             table={table}
             total={patients.length}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            pageSizeOptions={[5, 10, 20, 50]}
+            pagesize={pagesize}
+            setpagesize={setpagesize}
+            pagesizeOptions={[5, 10, 20, 50]}
           />
         </div>
       </div>

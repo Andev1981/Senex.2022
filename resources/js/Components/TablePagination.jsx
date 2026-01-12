@@ -3,9 +3,9 @@ import React, { useEffect, useMemo, useState } from "react";
 const TablePagination = ({
   table,
   total, // total de registros del servidor (o del cliente si lo calculas afuera)
-  pageSize,
-  setPageSize,
-  pageSizeOptions = [5, 10, 15, 20, 30, 40, 50],
+  pagesize,
+  setpagesize,
+  pagesizeOptions = [5, 10, 15, 20, 30, 40, 50],
 }) => {
   const pageIndex = table.getState().pagination.pageIndex; // 0-based
   const pageCount = table.getPageCount(); // número de páginas
@@ -21,10 +21,10 @@ const TablePagination = ({
     if (total == null || total === 0) {
       return { startRow: 0, endRow: 0 };
     }
-    const start = pageIndex * pageSize + 1;
-    const end = Math.min(start + pageSize - 1, total);
+    const start = pageIndex * pagesize + 1;
+    const end = Math.min(start + pagesize - 1, total);
     return { startRow: start, endRow: end };
-  }, [pageIndex, pageSize, total]);
+  }, [pageIndex, pagesize, total]);
 
   // Construir lista de páginas con elipsis
   const pages = useMemo(() => {
@@ -67,16 +67,16 @@ const TablePagination = ({
           </p>
 
           <select
-            value={pageSize}
+            value={pagesize}
             onChange={(e) => {
               const newSize = Number(e.target.value);
-              setPageSize(newSize); // estado externo (prop)
-              table.setPageSize(newSize); // TanStack
+              setpagesize(newSize); // estado externo (prop)
+              table.setpagesize(newSize); // TanStack
               table.setPageIndex(0); // reset a primera página
             }}
             className="px-4 py-2 bg-white border border-gray-100 rounded-xl focus:ring-brand-primary focus:border-brand-primary text-[10px] font-black uppercase tracking-widest text-brand-gray cursor-pointer shadow-sm transition-all"
           >
-            {pageSizeOptions.map((size) => (
+            {pagesizeOptions.map((size) => (
               <option key={size} value={size}>
                 {size} por página
               </option>

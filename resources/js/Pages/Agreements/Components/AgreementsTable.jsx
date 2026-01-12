@@ -35,7 +35,7 @@ export default function AgreementsTable({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const data = useMemo(() => agreements || [], [agreements]);
@@ -148,13 +148,13 @@ export default function AgreementsTable({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter, pagination: { pageSize, pageIndex } },
+    state: { sorting, globalFilter, pagination: { pagesize, pageIndex } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: (updater) => {
-      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -247,9 +247,9 @@ export default function AgreementsTable({
           <TablePagination
             table={table}
             total={agreements.length}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            pageSizeOptions={[5, 10, 20]}
+            pagesize={pagesize}
+            setpagesize={setpagesize}
+            pagesizeOptions={[5, 10, 20]}
           />
         </div>
       </div>

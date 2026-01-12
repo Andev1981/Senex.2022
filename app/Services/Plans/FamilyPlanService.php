@@ -2,7 +2,7 @@
 
 // app/Services/FamilyPlanService.php
 
-namespace App\Services;
+namespace App\Services\Plans;
 
 use App\Models\Patient;
 use App\Models\Plan;

@@ -30,7 +30,7 @@ export default function TableSessionTypes({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   // Columnas
@@ -147,17 +147,17 @@ export default function TableSessionTypes({
     state: {
       sorting,
       globalFilter,
-      pagination: { pageIndex, pageSize },
+      pagination: { pageIndex, pagesize },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: (updater) => {
       const next =
         typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
+          ? updater({ pageIndex, pagesize })
           : updater;
       setPageIndex(next.pageIndex);
-      setPageSize(next.pageSize);
+      setpagesize(next.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -292,11 +292,11 @@ export default function TableSessionTypes({
         </div>
 
         <select
-          value={pageSize}
+          value={pagesize}
           onChange={(e) => {
             const size = Number(e.target.value);
-            setPageSize(size);
-            table.setPageSize(size);
+            setpagesize(size);
+            table.setpagesize(size);
             setPageIndex(0);
           }}
           className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

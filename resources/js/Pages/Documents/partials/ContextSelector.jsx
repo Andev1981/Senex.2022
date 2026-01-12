@@ -1,4 +1,4 @@
-// resources/js/Pages/ChileTaxDocuments/partials/ContextSelector.jsx
+// resources/js/pages/ChileTaxDocuments/partials/ContextSelector.jsx
 
 import React from "react";
 import { User } from "lucide-react";

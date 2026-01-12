@@ -39,7 +39,7 @@ export default function TableDoctors({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   const [columnFilters, setColumnFilters] = useState([]);
 
@@ -233,7 +233,7 @@ export default function TableDoctors({
       sorting,
       globalFilter: searchTerm,
       columnFilters,
-      pagination: { pageSize, pageIndex },
+      pagination: { pagesize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
@@ -241,10 +241,10 @@ export default function TableDoctors({
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
+          ? updater({ pageIndex, pagesize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -444,9 +444,9 @@ export default function TableDoctors({
           <TablePagination
             table={table}
             total={table.getFilteredRowModel().rows.length}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            pageSizeOptions={[5, 10, 20, 50]}
+            pagesize={pagesize}
+            setpagesize={setpagesize}
+            pagesizeOptions={[5, 10, 20, 50]}
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
 <div>
-    @if ($paginator->hasPages())
+    @if ($paginator->haspages())
         @php(isset($this->numberOfPaginatorsRendered[$paginator->getPageName()]) ? $this->numberOfPaginatorsRendered[$paginator->getPageName()]++ : $this->numberOfPaginatorsRendered[$paginator->getPageName()] = 1)
         
         <nav>
@@ -35,7 +35,7 @@
                 @endforeach
 
                 {{-- Next Page Link --}}
-                @if ($paginator->hasMorePages())
+                @if ($paginator->hasMorepages())
                     <li class="page-item">
                         <button type="button" dusk="nextPage{{ $paginator->getPageName() == 'page' ? '' : '.' . $paginator->getPageName() }}" class="page-link" wire:click="nextPage('{{ $paginator->getPageName() }}')" wire:loading.attr="disabled" rel="next" aria-label="@lang('pagination.next')">&rsaquo;</button>
                     </li>

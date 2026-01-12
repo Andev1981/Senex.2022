@@ -6,6 +6,8 @@ import Modal from "@/Components/Modal";
 import SideModal from "@/Components/SideModal";
 import SessionFormModal from "../Attendances/Modals/CreateUpdateModal";
 import { Plus, ArrowLeft } from "lucide-react";
+import PatientHistoryTable from '@/Components/PatientHistoryTable';
+import ModalCreateEditPatient from "./ModalCreateEditPatient";
 
 // Lazy components
 const IndexGeneral = lazy(() => import("./General/IndexGeneral"));
@@ -28,11 +30,11 @@ function useSyncedTab(defaultTab = "dashboard") {
   return [activeTab, setActiveTab];
 }
 
-import ModalCreateEditPatient from "./ModalCreateEditPatient";
+
 
 export default function DetailPatient(props) {
   const [activeTab, setActiveTab] = useSyncedTab("dashboard");
-  const { patient, doctors, session_types, communes, regions, provinces } = props;
+  const { patient, doctors, session_types, communes, regions, provinces, diagnostics  } = props;
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
 
@@ -104,7 +106,11 @@ export default function DetailPatient(props) {
                 {activeTab === "general" && <IndexGeneral {...props} />}
                 {activeTab === "history" && <IndexHistorial {...props} />}
                 {activeTab === "treatments" && (
-                    <IndexTreatments {...props} />
+                    <IndexTreatments 
+                        {...props} 
+                        treatments={patient.active_treatments || []}
+                        sessions={(patient.active_treatments || []).flatMap(t => t.sessions || [])}
+                    />
                 )}
                 {activeTab === "payments" && <IndexPayments {...props} />}
               </div>
@@ -116,13 +122,14 @@ export default function DetailPatient(props) {
       <SideModal
         open={showSessionModal}
         onClose={() => setShowSessionModal(false)}
-        width="5xl"
+        width="full"
       >
         <SessionFormModal
           setShowModal={setShowSessionModal}
           preselectedPatient={patient}
           doctors={doctors}
           session_types={session_types}
+          diagnostics={diagnostics}
         />
       </SideModal>
 

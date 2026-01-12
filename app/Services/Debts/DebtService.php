@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Debts;
 
 use App\Models\Debt;
 use App\Models\InvoiceItem;

@@ -8,7 +8,7 @@ import { useEffect } from "react";
  * Versión React del resultado público para payment links o pagos sin autenticación.
  * Similar a public-result.blade.php pero en JSX.
  *
- * Ubicación sugerida: resources/js/Pages/Payments/PublicWebpayResult.jsx
+ * Ubicación sugerida: resources/js/pages/Payments/PublicWebpayResult.jsx
  *
  * Props:
  * - success: boolean - Si el pago fue exitoso

@@ -19,7 +19,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
  * Este componente permite probar la integración de Webpay
  * ingresando diferentes montos y escenarios.
  *
- * Ubicación: resources/js/Pages/Payments/WebpayTest.jsx
+ * Ubicación: resources/js/pages/Payments/WebpayTest.jsx
  * Ruta: /test/webpay (solo para desarrollo)
  */
 export default function WebpayTest({

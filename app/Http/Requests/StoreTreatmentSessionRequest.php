@@ -94,7 +94,24 @@ class StoreTreatmentSessionRequest extends FormRequest
             'time' => 'required|date_format:H:i',
             'duration' => 'required|integer|min:15|max:180',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled,not_attend',
-            // Evaluación del dolor (solo para sesiones completadas)
+            
+            // --- NUEVOS CAMPOS SOAP ---
+            'subjective' => 'nullable|string',
+            'objective' => 'nullable|string',
+            'assessment' => 'nullable|string',
+            'plan' => 'nullable|string',
+            
+            'pain_level' => 'nullable|integer|min:0|max:10',
+            'session_pain_map' => 'nullable|array',
+            'evaluation_data' => 'nullable|array',
+            'activities_data' => 'nullable|array',
+            'attachments' => 'nullable|array',
+            
+            'consumes_plan' => 'nullable|boolean',
+            'cost_breakdown' => 'nullable|array',
+            'meta' => 'nullable|array',
+
+            // Evaluación del dolor (Legacy / Específicos)
             'pain_before' => 'nullable|integer|min:0|max:10',
             'pain_after' => 'nullable|integer|min:0|max:10',
             // ROM (Rango de Movimiento)

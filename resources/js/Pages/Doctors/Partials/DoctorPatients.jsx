@@ -92,7 +92,7 @@ export default function DoctorPatients({ doctor, patients = [] }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 px-4 py-2 bg-white border border-gray-100 shadow-sm rounded-xl">
+        <div className="flex items-center gap-3 px-4 py-2 mr-16 bg-white border border-gray-100 shadow-sm rounded-xl">
           <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">
             {patientsDraft.length} Vinculados
           </span>

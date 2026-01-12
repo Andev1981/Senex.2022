@@ -9,10 +9,10 @@ import {
   Stethoscope, // Icono visual
   ClipboardList,
   Target,
-  Info, // Icono de información
+  ChevronRight, // Icono de información
 } from "lucide-react";
 import SearchSelect from "@/Components/SearchSelect";
-import BodySelector from "@/Components/BodySelector"; // Importar componente
+import BodySelector from "@/Components/Body/BodySelector"; // Importar componente
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "📅 Programada" },
@@ -620,8 +620,8 @@ export default function SessionFormModal({
               </div>
 
               {/* MAPA CORPORAL (FULL WIDTH) */}
-              <div className="pt-8">
-                <div className="p-8 border border-gray-100 rounded-[2.5rem] bg-gray-50/50 flex flex-col shadow-inner">
+             {/*  <div className="pt-8">
+                <div className="border border-gray-100 rounded-[2.5rem] bg-gray-50/50 flex flex-col shadow-inner">
                     <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 mb-8">
                         <MapPin className="w-5 h-5" /> Mapa del Dolor Interactivo
                     </h3>
@@ -640,7 +640,7 @@ export default function SessionFormModal({
                         </div>
                     </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           )}
         </div>

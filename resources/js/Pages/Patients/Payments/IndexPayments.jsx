@@ -32,7 +32,7 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
   const [selectedPayment, setSelectedPayment] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const totalPaid = useMemo(
@@ -131,17 +131,17 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
     state: {
       sorting,
       globalFilter: searchTerm,
-      pagination: { pageSize, pageIndex },
+      pagination: { pagesize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
+          ? updater({ pageIndex, pagesize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -289,26 +289,11 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
         <TablePagination
           table={table}
           total={payments.length}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
-          pageSizeOptions={[5, 10, 20]}
+          pagesize={pagesize}
+          setpagesize={setpagesize}
+          pagesizeOptions={[5, 10, 20]}
         />
       </div>
-
-      <SideModal
-        open={openPaymentModal}
-        onClose={() => setOpenPaymentModal(false)}
-        width="4xl"
-      >
-        <PaymentForm
-          setOpenPaymentModal={setOpenPaymentModal}
-          payment={selectedPayment}
-          sessions={sessions}
-          treatment={sessions[0]?.treatment_id}
-          isEditing={false}
-          patient={patient}
-        />
-      </SideModal>
     </div>
   );
 }

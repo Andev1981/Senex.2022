@@ -96,7 +96,7 @@ class DashboardMobileController extends Controller
             })
             ->count();
 
-        return Inertia::render('KineMobile/Dashboard', [
+        return Inertia::render('kine-mobile/dashboard', [
             'doctor' => [
                 'id' => $doctor->id,
                 'name' => $doctor->name . ' ' . $doctor->last_name,

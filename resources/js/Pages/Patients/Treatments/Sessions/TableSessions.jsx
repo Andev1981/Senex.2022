@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,14 +13,14 @@ import {
   Copy,
   Calendar,
   Edit,
-  Eye,
   Trash2,
   Timer,
   Stethoscope,
+  DollarSign,
+  Search,
+  Filter
 } from "lucide-react";
 import TablePagination from "@/Components/TablePagination";
-import { useForm } from "@inertiajs/react";
-import { t } from "@/constants/translations";
 import { getSessionStatusConfig } from "@/constants/sessionStatuses";
 import { getPaymentStatusConfig } from "@/constants/paymentStatuses";
 import { SESSION_STATUS_OPTIONS } from "@/constants/sessionStatuses";
@@ -33,17 +33,15 @@ export default function TableSessions({
   handleOpenModalSessionShow,
   setIsDuplicate,
 }) {
-  // --- ESTADOS DEL BUSCADOR Y FILTROS ---
-
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
 
-  // Filtro global
+  // --- 1. FILTRADO GLOBAL ---
   const filteredData = useMemo(() => {
-    if (!globalFilter) return sessions || [];
+    if (!globalFilter) return sessions;
     const filter = globalFilter.toLowerCase();
     return sessions.filter((row) =>
       Object.values(row).some(
@@ -52,158 +50,141 @@ export default function TableSessions({
     );
   }, [globalFilter, sessions]);
 
-  // Definición de columnas
+  // --- 2. COLUMNAS ---
   const columns = useMemo(
     () => [
+      // COLUMNA: ESTADO
       {
-        id: "actions",
-        header: "",
-        cell: ({ row }) => (
-          <div className="flex gap-4">
-            {treatment.status === "in_progress" && (
-              <p
-                className="text-green-500 cursor-pointer"
-                onClick={() => (
-                  handleOpenModalSession(row.original, treatment),
-                  setIsDuplicate(false)
-                )}
-              >
-                <Edit className="w-5 h-5 text-green-500" />
-              </p>
-            )}
-
-            {treatment.status === "in_progress" &&
-              (row.original.status === "scheduled" ||
-                row.original.status === "in_progress") && (
-                <>
-                  <p
-                    className="text-gray-500 cursor-pointer"
-                    onClick={() => (
-                      handleOpenModalSession(row.original, treatment),
-                      setIsDuplicate(true)
-                    )}
-                  >
-                    <Copy className="w-5 h-5 text-gray-500" />
-                  </p>
-                  <p
-                    className="text-red-500 cursor-pointer"
-                    onClick={() => handleOpenModalSessionShow(row?.original)}
-                  >
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </p>
-                </>
-              )}
-          </div>
-        ),
-        enableSorting: false,
-      },
-      {
-        id: "status", // si usas accessorFn, deja este id
-        accessorKey: "status", // recomendado
+        accessorKey: "status",
         header: "ESTADO",
         cell: ({ getValue }) => {
-          const cfg = String(getValue() ?? "");
+          const status = getValue() || "";
+          const config = getSessionStatusConfig(status);
           return (
             <span
-              className={`px-2 py-0.5 text-xs rounded-xl border block flex-1 w-32 uppercase ${
-                getSessionStatusConfig(cfg).className
-              }`}
+              className={`px-2.5 py-1 flex flex-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${config.className}`}
             >
-              {getSessionStatusConfig(cfg).label}
+              {config.label}
             </span>
           );
         },
         filterFn: "includesString",
       },
+      
+      // COLUMNA: FECHA
       {
-        header: "# Mensual",
-        accessorFn: (row) => row?.month_session_number,
-        cell: ({ getValue }) => {
-          const number = getValue() ?? 0; // Si es null o undefined, usa 0
-          // Normalizamos el valor para la visualización
-          const displayValue = number === 0 ? "-*-" : "# " + number;
-          const displayClass =
-            number === 0 ? " bg-yellow-400" : " bg-green-500";
-
-          return (
-            <div className="flex items-center gap-3 overflow-hidden uppercase truncate whitespace-nowrap">
-              <div
-                className={`flex items-center justify-center  px-2 py-1 w-1/3 text-xs font-semibold text-white rounded-lg bg-gradient-to-br ${displayClass}`}
-              >
-                {displayValue}
-              </div>
-            </div>
-          );
-        },
-        filterFn: "includesString",
-      },
-      {
-        header: "$Pago",
-        accessorFn: (row) => row?.debt?.status,
-        cell: ({ getValue }) => {
-          const v = String(getValue() ?? "");
-          return (
-            <span
-              className={`px-2 py-0.5 text-xs rounded-xl border bg-blue-600 text-white uppercase ${
-                getPaymentStatusConfig(v).className
-              }`}
-              title={v}
-            >
-              {getPaymentStatusConfig(v).label}
-            </span>
-          );
-        },
-        filterFn: "includesString",
-      },
-      {
-        header: "FECHA DE SESIÓN",
-        accessorFn: (row) => row?.date,
+        accessorFn: (row) => row.date,
         id: "date",
-        cell: ({ getValue }) => {
-          return (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              {getValue()
-                ? new Date(getValue()).toLocaleDateString("es-CL")
-                : "-"}
-            </div>
-          );
-        },
-        filterFn: "includesString",
-      },
-      {
-        header: "HORA",
-        accessorFn: (row) => row?.time,
-        id: "time",
-        cell: ({ getValue }) => {
-          return (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Timer className="w-4 h-4 text-gray-400" />
-              {getValue()}
-            </div>
-          );
-        },
-        filterFn: "includesString",
-      },
-      {
-        header: "Kine",
-        accessorFn: (row) => row?.doctor.name + " " + row?.doctor.last_name,
+        header: "FECHA",
         cell: ({ getValue }) => (
-          <div
-            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            <Stethoscope className="w-4 h-4 text-gray-400" />
+          <div className="flex flex-1 truncate items-center gap-2 text-sm font-medium text-gray-700">
+            <Calendar className="w-3.5 h-3.5 text-gray-400" />
+            {getValue() ? new Date(getValue()).toLocaleDateString("es-CL") : "-"}
+          </div>
+        ),
+      },
+
+      // COLUMNA: HORA
+      {
+        accessorFn: (row) => row.time,
+        id: "time",
+        header: "HORA",
+        cell: ({ getValue }) => (
+          <div className="flex flex-1 truncate  items-center gap-2 text-sm text-gray-600 font-mono">
+            <Timer className="w-3.5 h-3.5 text-gray-400" />
+            {getValue()?.slice(0, 5) || "--:--"}
+          </div>
+        ),
+      },
+
+      // COLUMNA: SESIÓN #
+      {
+        header: "Nº SESIÓN",
+        accessorFn: (row) => row.month_session_number,
+        cell: ({ getValue }) => {
+          const num = getValue() || 0;
+          return (
+            <span className={`flex flex-1 truncate text-xs font-bold px-2 py-1 rounded ${num === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>
+               {num === 0 ? "Eval" : `#${num}`}
+            </span>
+          );
+        },
+      },
+
+      // COLUMNA: KINESIÓLOGO
+      {
+        header: "PROFESIONAL",
+        accessorFn: (row) => row.doctor ? `${row.doctor.name} ${row.doctor.last_name}` : "",
+        cell: ({ getValue }) => (
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase">
+            <div className="p-1 bg-gray-100 rounded-full"><Stethoscope className="w-3 h-3 text-gray-500" /></div>
             {getValue()}
           </div>
         ),
-        filterFn: "includesString",
+      },
+
+      // COLUMNA: PAGO (DEUDA)
+      {
+        header: "PAGO",
+        accessorFn: (row) => row.debt?.status,
+        cell: ({ getValue }) => {
+          const status = getValue() || "pending";
+          const config = getPaymentStatusConfig(status);
+          return (
+            <div className={`flex flex-1 truncate items-center gap-1.5 px-2 py-0.5 rounded border text-[9px] font-black uppercase w-fit ${config.className}`}>
+               <DollarSign className="w-3 h-3" />
+               {config.label}
+            </div>
+          );
+        },
+      },
+
+      // COLUMNA: ACCIONES
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => {
+            const isEditable = treatment.status === "in_progress" || treatment.status === "evaluation";
+            const isScheduled = ["scheduled", "in_progress"].includes(row.original.status);
+
+            return (
+                <div className="flex justify-end gap-2">
+                    {isEditable && (
+                        <button
+                            onClick={() => { handleOpenModalSession(row.original, treatment); setIsDuplicate(false); }}
+                            className="p-1.5 text-gray-400 hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+                            title="Editar"
+                        >
+                            <Edit className="w-4 h-4" />
+                        </button>
+                    )}
+                    
+                    {isEditable && isScheduled && (
+                        <>
+                            <button
+                                onClick={() => { handleOpenModalSession(row.original, treatment); setIsDuplicate(true); }}
+                                className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Duplicar"
+                            >
+                                <Copy className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => handleOpenModalSessionShow(row.original)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Eliminar"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </>
+                    )}
+                </div>
+            );
+        },
       },
     ],
-    [handleOpenModalDelete, sessions]
+    [handleOpenModalDelete, sessions, treatment.status]
   );
 
-  // Configuración de la tabla
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -211,156 +192,112 @@ export default function TableSessions({
       sorting,
       globalFilter,
       columnFilters,
-      pagination: { pageSize, pageIndex },
+      pagination: { pagesize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: (updater) => {
-      const newState =
-        typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
-          : updater;
-      setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+        const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
+        setPageIndex(newState.pageIndex);
+        setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: "includesString",
-    filterFns: {
-      betweenNumbers: (row, columnId, filterValue) => {
-        const [min, max] = filterValue || [];
-        const value = row.getValue(columnId);
-        if (min !== undefined && value < min) return false;
-        if (max !== undefined && value > max) return false;
-        return true;
-      },
-      betweenDates: (row, columnId, filterValue) => {
-        const [from, to] = filterValue || [];
-        const value = row.getValue(columnId);
-        if (!value) return false;
-        const date = new Date(value);
-        if (from && date < new Date(from)) return false;
-        if (to && date > new Date(to)) return false;
-        return true;
-      },
-    },
   });
 
-  // Necesitas este componente para gestionar el estado del filtro de la columna
-  function ColumnFilter({ column }) {
-    const columnFilterValue = column.getFilterValue();
-    const isSelect = column.id === "status"; // Define qué columna usa select (status)
-    const statusOptions = [
-      { value: "", label: "Todos" },
-      ...SESSION_STATUS_OPTIONS,
-    ]; // Asume que tienes esta constante disponible
-
-    if (isSelect) {
-      return (
-        <select
-          value={columnFilterValue ?? ""}
-          onChange={(e) => column.setFilterValue(e.target.value)}
-          className="w-full mt-1 px-1 py-0.5 text-xs border border-gray-300 rounded-lg focus:ring-blue-500"
-        >
-          {statusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      );
-    }
-
-    // Filtro de texto simple para las demás columnas
-    return (
-      <input
-        type="text"
-        value={columnFilterValue ?? ""}
-        onChange={(e) => column.setFilterValue(e.target.value)}
-        placeholder={`Buscar...`}
-        className="w-full mt-1 px-2 py-0.5 text-xs border border-gray-300 rounded-lg focus:ring-blue-500"
-      />
-    );
-  }
-
   return (
-    <div className="max-w-full">
-      {/* Filtro global */}
-      <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
-        {/* Tabla */}
-        <div className="overflow-hidden rounded-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100"
-                  >
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        // ... (resto de las clases th)
-                      >
-                        {/* Contenido principal del encabezado (Nombre y flechas de ordenación) */}
-                        <div
-                          onClick={header.column.getToggleSortingHandler()}
-                          className="flex items-center justify-between cursor-pointer select-none"
-                        >
-                          <div className="overflow-hidden font-semibold uppercase truncate whitespace-nowrap">
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                          </div>
-                          {/* Indicadores de Ordenación */}
-                          {/* ... (ChevronUp / ChevronDown) ... */}
-                        </div>
+    <div className="w-full px-4 hover:shadow-xl">
+        
+      {/* 1. BARRA DE HERRAMIENTAS (Buscador) */}
+      <div className="flex justify-between items-center mb-4 px-1">
+         <div className="relative w-full max-w-sm">
+            <Search className="absolute w-4 h-4 text-gray-400 top-2.5 left-3" />
+            <input
+                value={globalFilter ?? ""}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                placeholder="Buscar en sesiones..."
+                className="w-full py-2 pl-9 pr-3 text-xs font-medium border-gray-200 rounded-xl focus:ring-brand-primary focus:border-brand-primary transition-all shadow-sm bg-gray-50/50 focus:bg-white"
+            />
+         </div>
+         {/* Aquí podrías poner filtros adicionales si quisieras */}
+      </div>
 
-                        {/* --- ZONA DE FILTRO --- */}
-                        {header.column.getCanFilter() ? (
-                          <div>
-                            {/* Renderiza el componente de filtro para la columna */}
-                            <ColumnFilter column={header.column} />
+      {/* 2. TABLA */}
+      <div className="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50/50 border-b border-gray-100">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest select-none group"
+                    >
+                      <div className="flex flex-col gap-1">
+                          {/* Título y Ordenación */}
+                          <div 
+                            className="flex items-center gap-1 cursor-pointer hover:text-gray-600"
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {header.column.getIsSorted() === "asc" ? <ChevronUp className="w-3 h-3 text-brand-primary"/> : header.column.getIsSorted() === "desc" ? <ChevronDown className="w-3 h-3 text-brand-primary"/> : null}
                           </div>
-                        ) : null}
-                        {/* -------------------- */}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="transition-colors hover:bg-blue-50/50"
-                  >
+
+                          {/* Filtro por Columna (Solo para Estado) */}
+                          {header.column.id === "status" && (
+                             <select
+                                value={header.column.getFilterValue() ?? ""}
+                                onChange={(e) => header.column.setFilterValue(e.target.value)}
+                                onClick={(e) => e.stopPropagation()} // Evitar ordenar al clicar select
+                                className="mt-1 w-full text-[9px] py-1 pl-1 pr-4 border-gray-200 rounded bg-white focus:ring-0 focus:border-brand-primary font-medium text-gray-500"
+                             >
+                                <option value="">Todos</option>
+                                {SESSION_STATUS_OPTIONS.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                             </select>
+                          )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-blue-50/30 transition-colors">
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-3 py-2">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                      <td key={cell.id} className="px-4 py-3 align-middle">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Paginación */}
-          <TablePagination
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length} className="p-8 text-center text-gray-400 text-xs italic">
+                    No se encontraron sesiones que coincidan con la búsqueda.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 3. PAGINACIÓN */}
+      <div className="mt-4 px-1">
+        <TablePagination
             table={table}
             total={sessions.length}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
-          />
-        </div>
+            pagesize={pagesize}
+            setpagesize={setpagesize}
+        />
       </div>
     </div>
   );

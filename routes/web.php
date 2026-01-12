@@ -198,8 +198,8 @@ Route::group(['middleware' => ['auth']], function () {
   Route::patch('patients/{patient}/addresses', [AddressController::class, 'update'])->name('patients.addresses.update');
   Route::post('patients/{patient}/contacts', [PatientContactController::class, 'store'])->name('patients.contacts.store');
   Route::patch('patients/{patientContact}/contacts', [PatientContactController::class, 'update'])->name('patients.contacts.update');
-  Route::post('patients/vitals', [VitalController::class, 'store'])->name('patients.vitals.store');
-  Route::patch('patients/{vital}/vitals', [VitalController::class, 'update'])->name('patients.vitals.update');
+  Route::post('patients/vitals', [VitalSignController::class, 'store'])->name('patients.vitals.store');
+  Route::patch('patients/{vital}/vitals', [VitalSignController::class, 'update'])->name('patients.vitals.update');
 
 
   /* Crear Tratamiento */
@@ -345,7 +345,6 @@ Route::group(['middleware' => ['auth']], function () {
 
   Route::get('/doctor/dashboard/profile', [ProfileMobileController::class, 'index'])
     ->name('kine.my-profile');
-
 
 
 

@@ -36,10 +36,10 @@ export default function List({
   onDuplicate
 }) {
   const [sorting, setSorting] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnFilters, setColumnFilters] = useState([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pagesize: 10 });
 
   const handleDownload = (invoice) => {
     if (invoice.dte_status !== 'accepted') {
@@ -318,9 +318,9 @@ export default function List({
             <TablePagination 
                 table={table} 
                 total={table.getFilteredRowModel().rows.length} 
-                pageSize={pageSize} 
-                setPageSize={setPageSize} 
-                pageSizeOptions={[5, 10, 20, 50]} 
+                pagesize={pagesize} 
+                setpagesize={setpagesize} 
+                pagesizeOptions={[5, 10, 20, 50]} 
             />
         </div>
       </div>

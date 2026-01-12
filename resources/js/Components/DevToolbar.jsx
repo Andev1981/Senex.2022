@@ -334,7 +334,7 @@ Permisos: ${auth?.permissions?.slice(0, 15).join(', ')}${auth?.permissions?.leng
                 <span className="opacity-30">|</span>
                 {projectPath ? (
                     <a 
-                        href={`vscode://file/${projectPath}/resources/js/Pages/${component}.jsx`}
+                        href={`vscode://file/${projectPath}/resources/js/pages/${component}.jsx`}
                         title="Abrir en VS Code"
                         className="text-gray-400 hover:text-white hover:underline cursor-pointer transition-colors"
                     >

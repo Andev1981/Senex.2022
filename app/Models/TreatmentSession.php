@@ -32,6 +32,7 @@ class TreatmentSession extends Model
         'status',          // scheduled, in_progress, completed...
         'consumes_plan',   // boolean
         'cancellation_note',
+        'month_session_number',
 
         // --- 3. DATOS CLÍNICOS (SOAP) ---
         // [S]ubjective

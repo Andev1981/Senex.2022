@@ -874,24 +874,24 @@
     "isDynamicEntry": true,
     "src": "resources/js/Components/DevToolbar.jsx"
   },
-  "resources/js/Pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx": {
+  "resources/js/pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx": {
     "file": "assets/PurchaseOrdersTable-8918ef2a.js",
     "imports": [
       "resources/js/app.jsx",
       "_index-8244d9a7.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx"
+    "src": "resources/js/pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx"
   },
-  "resources/js/Pages/Acquisitions/PurchaseOrders/Index.jsx": {
+  "resources/js/pages/Acquisitions/PurchaseOrders/Index.jsx": {
     "file": "assets/Index-90950e25.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx",
-      "resources/js/Pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx",
-      "resources/js/Pages/Acquisitions/Tabs.jsx",
+      "resources/js/pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx",
+      "resources/js/pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx",
+      "resources/js/pages/Acquisitions/Tabs.jsx",
       "_createLucideIcon-5ff7d2e2.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -926,9 +926,9 @@
       "_SecondaryButton-9b1f0cdd.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Acquisitions/PurchaseOrders/Index.jsx"
+    "src": "resources/js/pages/Acquisitions/PurchaseOrders/Index.jsx"
   },
-  "resources/js/Pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx": {
+  "resources/js/pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx": {
     "file": "assets/PurchaseOrderDetailModal-1265f924.js",
     "imports": [
       "resources/js/app.jsx",
@@ -936,26 +936,26 @@
       "_SecondaryButton-9b1f0cdd.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx"
+    "src": "resources/js/pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx"
   },
-  "resources/js/Pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx": {
+  "resources/js/pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx": {
     "file": "assets/SuppliersTable-9c3437b4.js",
     "imports": [
       "resources/js/app.jsx",
       "_index-8244d9a7.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx"
+    "src": "resources/js/pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx"
   },
-  "resources/js/Pages/Acquisitions/Suppliers/Index.jsx": {
+  "resources/js/pages/Acquisitions/Suppliers/Index.jsx": {
     "file": "assets/Index-7d93b9fa.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx",
-      "resources/js/Pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx",
-      "resources/js/Pages/Acquisitions/Tabs.jsx",
+      "resources/js/pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx",
+      "resources/js/pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx",
+      "resources/js/pages/Acquisitions/Tabs.jsx",
       "_createLucideIcon-5ff7d2e2.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -990,9 +990,9 @@
       "_SecondaryButton-9b1f0cdd.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Acquisitions/Suppliers/Index.jsx"
+    "src": "resources/js/pages/Acquisitions/Suppliers/Index.jsx"
   },
-  "resources/js/Pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx": {
+  "resources/js/pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx": {
     "file": "assets/SupplierFormModal-6f39b805.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1000,32 +1000,32 @@
       "_SecondaryButton-9b1f0cdd.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx"
+    "src": "resources/js/pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx"
   },
-  "resources/js/Pages/Acquisitions/Tabs.jsx": {
+  "resources/js/pages/Acquisitions/Tabs.jsx": {
     "file": "assets/Tabs-7c766e5c.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Acquisitions/Tabs.jsx"
+    "src": "resources/js/pages/Acquisitions/Tabs.jsx"
   },
-  "resources/js/Pages/Admin/Doctors/Index.jsx": {
+  "resources/js/pages/Admin/Doctors/Index.jsx": {
     "file": "assets/Index-bdcdc9a6.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Admin/Doctors/Index.jsx"
+    "src": "resources/js/pages/Admin/Doctors/Index.jsx"
   },
-  "resources/js/Pages/Admin/SessionTypes/IndexSessionTypes.jsx": {
+  "resources/js/pages/Admin/SessionTypes/IndexSessionTypes.jsx": {
     "file": "assets/IndexSessionTypes-94833316.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_Modal-e15b9afd.js",
-      "resources/js/Pages/Admin/SessionTypes/TableSessionTypes.jsx",
-      "resources/js/Pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx",
+      "resources/js/pages/Admin/SessionTypes/TableSessionTypes.jsx",
+      "resources/js/pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx",
       "_index-88056f3d.js",
       "_parse-c3570fb2.js",
       "_search-1e1035e3.js",
@@ -1066,9 +1066,9 @@
       "_SecondaryButton-9b1f0cdd.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Admin/SessionTypes/IndexSessionTypes.jsx"
+    "src": "resources/js/pages/Admin/SessionTypes/IndexSessionTypes.jsx"
   },
-  "resources/js/Pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx": {
+  "resources/js/pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx": {
     "file": "assets/ModalCreateEditSessionType-a1a0ff76.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1082,9 +1082,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx"
+    "src": "resources/js/pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx"
   },
-  "resources/js/Pages/Admin/SessionTypes/TableSessionTypes.jsx": {
+  "resources/js/pages/Admin/SessionTypes/TableSessionTypes.jsx": {
     "file": "assets/TableSessionTypes-2b08ccc0.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1099,9 +1099,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Admin/SessionTypes/TableSessionTypes.jsx"
+    "src": "resources/js/pages/Admin/SessionTypes/TableSessionTypes.jsx"
   },
-  "resources/js/Pages/Agendas/AgendaCalendar.jsx": {
+  "resources/js/pages/Agendas/AgendaCalendar.jsx": {
     "file": "assets/AgendaCalendar-b3326399.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1147,9 +1147,9 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agendas/AgendaCalendar.jsx"
+    "src": "resources/js/pages/Agendas/AgendaCalendar.jsx"
   },
-  "resources/js/Pages/Agreements/Components/AgreementRulesTable.jsx": {
+  "resources/js/pages/Agreements/Components/AgreementRulesTable.jsx": {
     "file": "assets/AgreementRulesTable-3e582d29.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1165,9 +1165,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agreements/Components/AgreementRulesTable.jsx"
+    "src": "resources/js/pages/Agreements/Components/AgreementRulesTable.jsx"
   },
-  "resources/js/Pages/Agreements/Components/AgreementsTable.jsx": {
+  "resources/js/pages/Agreements/Components/AgreementsTable.jsx": {
     "file": "assets/AgreementsTable-70755cd3.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1187,17 +1187,17 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agreements/Components/AgreementsTable.jsx"
+    "src": "resources/js/pages/Agreements/Components/AgreementsTable.jsx"
   },
-  "resources/js/Pages/Agreements/Index.jsx": {
+  "resources/js/pages/Agreements/Index.jsx": {
     "file": "assets/Index-cff6d8f4.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
-      "resources/js/Pages/Agreements/Modals/AgreementRuleFormModal.jsx",
-      "resources/js/Pages/Agreements/Modals/AgreementRulesListModal.jsx",
-      "resources/js/Pages/Agreements/Modals/AgreementFormModal.jsx",
-      "resources/js/Pages/Agreements/Components/AgreementsTable.jsx",
+      "resources/js/pages/Agreements/Modals/AgreementRuleFormModal.jsx",
+      "resources/js/pages/Agreements/Modals/AgreementRulesListModal.jsx",
+      "resources/js/pages/Agreements/Modals/AgreementFormModal.jsx",
+      "resources/js/pages/Agreements/Components/AgreementsTable.jsx",
       "_handshake-9ceb9c3c.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -1234,7 +1234,7 @@
       "_shield-check-7a14d9f2.js",
       "_database-2ef104d1.js",
       "_calendar-c7a3cf9f.js",
-      "resources/js/Pages/Agreements/Components/AgreementRulesTable.jsx",
+      "resources/js/pages/Agreements/Components/AgreementRulesTable.jsx",
       "_index-8244d9a7.js",
       "_TablePagination-f36c33e3.js",
       "_pencil-c73c4f81.js",
@@ -1252,9 +1252,9 @@
       "_arrow-right-d57994f2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agreements/Index.jsx"
+    "src": "resources/js/pages/Agreements/Index.jsx"
   },
-  "resources/js/Pages/Agreements/Modals/AgreementFamilyAssignModal.jsx": {
+  "resources/js/pages/Agreements/Modals/AgreementFamilyAssignModal.jsx": {
     "file": "assets/AgreementFamilyAssignModal-66b2feec.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1274,9 +1274,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agreements/Modals/AgreementFamilyAssignModal.jsx"
+    "src": "resources/js/pages/Agreements/Modals/AgreementFamilyAssignModal.jsx"
   },
-  "resources/js/Pages/Agreements/Modals/AgreementFormModal.jsx": {
+  "resources/js/pages/Agreements/Modals/AgreementFormModal.jsx": {
     "file": "assets/AgreementFormModal-abc0eb77.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1298,9 +1298,9 @@
       "_x-5e806e3f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agreements/Modals/AgreementFormModal.jsx"
+    "src": "resources/js/pages/Agreements/Modals/AgreementFormModal.jsx"
   },
-  "resources/js/Pages/Agreements/Modals/AgreementRuleFormModal.jsx": {
+  "resources/js/pages/Agreements/Modals/AgreementRuleFormModal.jsx": {
     "file": "assets/AgreementRuleFormModal-29272a8a.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1318,14 +1318,14 @@
       "_with-selector-e87dab3f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agreements/Modals/AgreementRuleFormModal.jsx"
+    "src": "resources/js/pages/Agreements/Modals/AgreementRuleFormModal.jsx"
   },
-  "resources/js/Pages/Agreements/Modals/AgreementRulesListModal.jsx": {
+  "resources/js/pages/Agreements/Modals/AgreementRulesListModal.jsx": {
     "file": "assets/AgreementRulesListModal-b608f125.js",
     "imports": [
       "resources/js/app.jsx",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Agreements/Components/AgreementRulesTable.jsx",
+      "resources/js/pages/Agreements/Components/AgreementRulesTable.jsx",
       "_SecondaryButton-9b1f0cdd.js",
       "_list-checks-a93c9d16.js",
       "_chevron-right-961803aa.js",
@@ -1345,9 +1345,9 @@
       "_activity-926d31ea.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Agreements/Modals/AgreementRulesListModal.jsx"
+    "src": "resources/js/pages/Agreements/Modals/AgreementRulesListModal.jsx"
   },
-  "resources/js/Pages/Attendances/AttendacesTable.jsx": {
+  "resources/js/pages/Attendances/AttendacesTable.jsx": {
     "file": "assets/AttendacesTable-5638af7e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1375,25 +1375,25 @@
       "_circle-check-e98c8744.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/AttendacesTable.jsx"
+    "src": "resources/js/pages/Attendances/AttendacesTable.jsx"
   },
-  "resources/js/Pages/Attendances/Index.jsx": {
+  "resources/js/pages/Attendances/Index.jsx": {
     "file": "assets/Index-b3a84c7b.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_SideModal-f7e6775f.js",
       "_Modal-e15b9afd.js",
-      "resources/js/Pages/Attendances/Partials/AttendancesHeader.jsx",
-      "resources/js/Pages/Attendances/AttendacesTable.jsx",
-      "resources/js/Pages/Attendances/Partials/Kpis.jsx",
-      "resources/js/Pages/Attendances/Modals/CancelModal.jsx",
-      "resources/js/Pages/Attendances/Modals/StartModal.jsx",
-      "resources/js/Pages/Attendances/Modals/CompletedModal.jsx",
-      "resources/js/Pages/Attendances/Modals/AbsentModal.jsx",
-      "resources/js/Pages/Attendances/Modals/DteModal.jsx",
-      "resources/js/Pages/Attendances/Modals/ResumeModal.jsx",
-      "resources/js/Pages/Attendances/Modals/CreateUpdateModal.jsx",
+      "resources/js/pages/Attendances/Partials/AttendancesHeader.jsx",
+      "resources/js/pages/Attendances/AttendacesTable.jsx",
+      "resources/js/pages/Attendances/Partials/Kpis.jsx",
+      "resources/js/pages/Attendances/Modals/CancelModal.jsx",
+      "resources/js/pages/Attendances/Modals/StartModal.jsx",
+      "resources/js/pages/Attendances/Modals/CompletedModal.jsx",
+      "resources/js/pages/Attendances/Modals/AbsentModal.jsx",
+      "resources/js/pages/Attendances/Modals/DteModal.jsx",
+      "resources/js/pages/Attendances/Modals/ResumeModal.jsx",
+      "resources/js/pages/Attendances/Modals/CreateUpdateModal.jsx",
       "_index-88056f3d.js",
       "_parse-c3570fb2.js",
       "_search-1e1035e3.js",
@@ -1452,17 +1452,17 @@
       "_user-check-c0e6def7.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Index.jsx"
+    "src": "resources/js/pages/Attendances/Index.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/AbsentModal.jsx": {
+  "resources/js/pages/Attendances/Modals/AbsentModal.jsx": {
     "file": "assets/AbsentModal-ef9b2fc7.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/AbsentModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/AbsentModal.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/AttendanceActionModal.jsx": {
+  "resources/js/pages/Attendances/Modals/AttendanceActionModal.jsx": {
     "file": "assets/AttendanceActionModal-a911be6e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1476,17 +1476,17 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/AttendanceActionModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/AttendanceActionModal.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/CancelModal.jsx": {
+  "resources/js/pages/Attendances/Modals/CancelModal.jsx": {
     "file": "assets/CancelModal-a11bbc44.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/CancelModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/CancelModal.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/CompletedModal.jsx": {
+  "resources/js/pages/Attendances/Modals/CompletedModal.jsx": {
     "file": "assets/CompletedModal-089a1e3f.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1504,9 +1504,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/CompletedModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/CompletedModal.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/CreateUpdateModal.jsx": {
+  "resources/js/pages/Attendances/Modals/CreateUpdateModal.jsx": {
     "file": "assets/CreateUpdateModal-faa792e4.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1533,9 +1533,9 @@
       "_chevron-down-be25bbc3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/CreateUpdateModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/CreateUpdateModal.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/DteModal.jsx": {
+  "resources/js/pages/Attendances/Modals/DteModal.jsx": {
     "file": "assets/DteModal-1d507004.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1546,9 +1546,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/DteModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/DteModal.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/ResumeModal.jsx": {
+  "resources/js/pages/Attendances/Modals/ResumeModal.jsx": {
     "file": "assets/ResumeModal-0d862ff0.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1556,17 +1556,17 @@
       "_status-a03f248e.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/ResumeModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/ResumeModal.jsx"
   },
-  "resources/js/Pages/Attendances/Modals/StartModal.jsx": {
+  "resources/js/pages/Attendances/Modals/StartModal.jsx": {
     "file": "assets/StartModal-4135bcca.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Modals/StartModal.jsx"
+    "src": "resources/js/pages/Attendances/Modals/StartModal.jsx"
   },
-  "resources/js/Pages/Attendances/Partials/AttendancesHeader.jsx": {
+  "resources/js/pages/Attendances/Partials/AttendancesHeader.jsx": {
     "file": "assets/AttendancesHeader-90f62e5f.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1575,9 +1575,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Partials/AttendancesHeader.jsx"
+    "src": "resources/js/pages/Attendances/Partials/AttendancesHeader.jsx"
   },
-  "resources/js/Pages/Attendances/Partials/Kpis.jsx": {
+  "resources/js/pages/Attendances/Partials/Kpis.jsx": {
     "file": "assets/Kpis-edbed8e6.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1589,9 +1589,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Attendances/Partials/Kpis.jsx"
+    "src": "resources/js/pages/Attendances/Partials/Kpis.jsx"
   },
-  "resources/js/Pages/Auth/ConfirmPassword.jsx": {
+  "resources/js/pages/Auth/ConfirmPassword.jsx": {
     "file": "assets/ConfirmPassword-49e94a48.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1602,9 +1602,9 @@
       "_GuestLayout-7f4b14da.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/ConfirmPassword.jsx"
+    "src": "resources/js/pages/Auth/ConfirmPassword.jsx"
   },
-  "resources/js/Pages/Auth/ForgotPassword.jsx": {
+  "resources/js/pages/Auth/ForgotPassword.jsx": {
     "file": "assets/ForgotPassword-aa490b01.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1614,9 +1614,9 @@
       "_GuestLayout-7f4b14da.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/ForgotPassword.jsx"
+    "src": "resources/js/pages/Auth/ForgotPassword.jsx"
   },
-  "resources/js/Pages/Auth/Login.jsx": {
+  "resources/js/pages/Auth/Login.jsx": {
     "assets": [
       "assets/logo-921f119d.png"
     ],
@@ -1638,9 +1638,9 @@
       "_zap-70a0b910.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/Login.jsx"
+    "src": "resources/js/pages/Auth/Login.jsx"
   },
-  "resources/js/Pages/Auth/Patient/Login.jsx": {
+  "resources/js/pages/Auth/Patient/Login.jsx": {
     "file": "assets/Login-84ae1346.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1656,9 +1656,9 @@
       "_building-2-dbc4fcde.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/Patient/Login.jsx"
+    "src": "resources/js/pages/Auth/Patient/Login.jsx"
   },
-  "resources/js/Pages/Auth/Patient/VerifyCode.jsx": {
+  "resources/js/pages/Auth/Patient/VerifyCode.jsx": {
     "file": "assets/VerifyCode-7c9d589a.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1670,9 +1670,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/Patient/VerifyCode.jsx"
+    "src": "resources/js/pages/Auth/Patient/VerifyCode.jsx"
   },
-  "resources/js/Pages/Auth/Register.jsx": {
+  "resources/js/pages/Auth/Register.jsx": {
     "file": "assets/Register-e1217a43.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1683,9 +1683,9 @@
       "_GuestLayout-7f4b14da.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/Register.jsx"
+    "src": "resources/js/pages/Auth/Register.jsx"
   },
-  "resources/js/Pages/Auth/ResetPassword.jsx": {
+  "resources/js/pages/Auth/ResetPassword.jsx": {
     "file": "assets/ResetPassword-89b403f1.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1696,9 +1696,9 @@
       "_GuestLayout-7f4b14da.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/ResetPassword.jsx"
+    "src": "resources/js/pages/Auth/ResetPassword.jsx"
   },
-  "resources/js/Pages/Auth/VerifyEmail.jsx": {
+  "resources/js/pages/Auth/VerifyEmail.jsx": {
     "file": "assets/VerifyEmail-d87ca052.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1706,9 +1706,9 @@
       "_GuestLayout-7f4b14da.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Auth/VerifyEmail.jsx"
+    "src": "resources/js/pages/Auth/VerifyEmail.jsx"
   },
-  "resources/js/Pages/BillingCheckout/Components/PatientCard.jsx": {
+  "resources/js/pages/BillingCheckout/Components/PatientCard.jsx": {
     "file": "assets/PatientCard-121da358.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1722,17 +1722,17 @@
       "_chevron-down-be25bbc3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/BillingCheckout/Components/PatientCard.jsx"
+    "src": "resources/js/pages/BillingCheckout/Components/PatientCard.jsx"
   },
-  "resources/js/Pages/BillingCheckout/Components/PaymentSummary.jsx": {
+  "resources/js/pages/BillingCheckout/Components/PaymentSummary.jsx": {
     "file": "assets/PaymentSummary-25276232.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/BillingCheckout/Components/PaymentSummary.jsx"
+    "src": "resources/js/pages/BillingCheckout/Components/PaymentSummary.jsx"
   },
-  "resources/js/Pages/BillingCheckout/Components/ServiceItem.jsx": {
+  "resources/js/pages/BillingCheckout/Components/ServiceItem.jsx": {
     "file": "assets/ServiceItem-7a089fa2.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1742,13 +1742,13 @@
       "_trash-2-222a766b.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/BillingCheckout/Components/ServiceItem.jsx"
+    "src": "resources/js/pages/BillingCheckout/Components/ServiceItem.jsx"
   },
-  "resources/js/Pages/BillingCheckout/Components/ServicesCard.jsx": {
+  "resources/js/pages/BillingCheckout/Components/ServicesCard.jsx": {
     "file": "assets/ServicesCard-574fc578.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/BillingCheckout/Components/ServiceItem.jsx",
+      "resources/js/pages/BillingCheckout/Components/ServiceItem.jsx",
       "_calculator-3a1c17a6.js",
       "_circle-check-e98c8744.js",
       "_plus-0fe18335.js",
@@ -1757,18 +1757,18 @@
       "_trash-2-222a766b.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/BillingCheckout/Components/ServicesCard.jsx"
+    "src": "resources/js/pages/BillingCheckout/Components/ServicesCard.jsx"
   },
-  "resources/js/Pages/BillingCheckout/Index.jsx": {
+  "resources/js/pages/BillingCheckout/Index.jsx": {
     "file": "assets/Index-66a65a3c.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_sweetalert2.esm.all-f89f7467.js",
-      "resources/js/Pages/BillingCheckout/Components/PatientCard.jsx",
-      "resources/js/Pages/BillingCheckout/Components/PaymentSummary.jsx",
-      "resources/js/Pages/BillingCheckout/Components/ServicesCard.jsx",
-      "resources/js/Pages/BillingCheckout/PaymentBlockingModal.jsx",
+      "resources/js/pages/BillingCheckout/Components/PatientCard.jsx",
+      "resources/js/pages/BillingCheckout/Components/PaymentSummary.jsx",
+      "resources/js/pages/BillingCheckout/Components/ServicesCard.jsx",
+      "resources/js/pages/BillingCheckout/PaymentBlockingModal.jsx",
       "_index-88056f3d.js",
       "_parse-c3570fb2.js",
       "_search-1e1035e3.js",
@@ -1800,16 +1800,16 @@
       "_user-plus-e26c1891.js",
       "_trash-2-222a766b.js",
       "_plus-0fe18335.js",
-      "resources/js/Pages/BillingCheckout/Components/ServiceItem.jsx",
+      "resources/js/pages/BillingCheckout/Components/ServiceItem.jsx",
       "_calculator-3a1c17a6.js",
       "_loader-circle-7abdea5c.js",
       "_circle-x-9383d2cb.js",
       "_triangle-alert-c3d8c10c.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/BillingCheckout/Index.jsx"
+    "src": "resources/js/pages/BillingCheckout/Index.jsx"
   },
-  "resources/js/Pages/BillingCheckout/PaymentBlockingModal.jsx": {
+  "resources/js/pages/BillingCheckout/PaymentBlockingModal.jsx": {
     "file": "assets/PaymentBlockingModal-03eca95c.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1819,9 +1819,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/BillingCheckout/PaymentBlockingModal.jsx"
+    "src": "resources/js/pages/BillingCheckout/PaymentBlockingModal.jsx"
   },
-  "resources/js/Pages/BillingCheckout/Success.jsx": {
+  "resources/js/pages/BillingCheckout/Success.jsx": {
     "file": "assets/Success-05af7af9.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1862,9 +1862,9 @@
       "_file-text-d903da99.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/BillingCheckout/Success.jsx"
+    "src": "resources/js/pages/BillingCheckout/Success.jsx"
   },
-  "resources/js/Pages/Boletas/Crear.jsx": {
+  "resources/js/pages/Boletas/Crear.jsx": {
     "file": "assets/Crear-2a56a33c.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1899,9 +1899,9 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Boletas/Crear.jsx"
+    "src": "resources/js/pages/Boletas/Crear.jsx"
   },
-  "resources/js/Pages/Companies/Components/CafUploader.jsx": {
+  "resources/js/pages/Companies/Components/CafUploader.jsx": {
     "file": "assets/CafUploader-209e6bd8.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1909,9 +1909,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Companies/Components/CafUploader.jsx"
+    "src": "resources/js/pages/Companies/Components/CafUploader.jsx"
   },
-  "resources/js/Pages/Companies/Components/DteConfigurationForm.jsx": {
+  "resources/js/pages/Companies/Components/DteConfigurationForm.jsx": {
     "file": "assets/DteConfigurationForm-5847e8cd.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1920,9 +1920,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Companies/Components/DteConfigurationForm.jsx"
+    "src": "resources/js/pages/Companies/Components/DteConfigurationForm.jsx"
   },
-  "resources/js/Pages/Companies/Create.jsx": {
+  "resources/js/pages/Companies/Create.jsx": {
     "file": "assets/Create-667ee04c.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1960,9 +1960,9 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Companies/Create.jsx"
+    "src": "resources/js/pages/Companies/Create.jsx"
   },
-  "resources/js/Pages/Companies/Edit.jsx": {
+  "resources/js/pages/Companies/Edit.jsx": {
     "file": "assets/Edit-94bd25bc.js",
     "imports": [
       "resources/js/app.jsx",
@@ -1970,8 +1970,8 @@
       "_TablePagination-f36c33e3.js",
       "_index-8244d9a7.js",
       "_Modal-e15b9afd.js",
-      "resources/js/Pages/Companies/Components/DteConfigurationForm.jsx",
-      "resources/js/Pages/Companies/Components/CafUploader.jsx",
+      "resources/js/pages/Companies/Components/DteConfigurationForm.jsx",
+      "resources/js/pages/Companies/Components/CafUploader.jsx",
       "_ChilePhoneInput-a7be81a6.js",
       "_sweetalert2.esm.all-f89f7467.js",
       "_file-text-d903da99.js",
@@ -2018,9 +2018,9 @@
       "_circle-alert-0073e902.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Companies/Edit.jsx"
+    "src": "resources/js/pages/Companies/Edit.jsx"
   },
-  "resources/js/Pages/Companies/Index.jsx": {
+  "resources/js/pages/Companies/Index.jsx": {
     "file": "assets/Index-e8fe69a5.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2062,9 +2062,9 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Companies/Index.jsx"
+    "src": "resources/js/pages/Companies/Index.jsx"
   },
-  "resources/js/Pages/Dashboard.jsx": {
+  "resources/js/pages/Dashboard.jsx": {
     "file": "assets/Dashboard-f7286ef5.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2109,9 +2109,9 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Dashboard.jsx"
+    "src": "resources/js/pages/Dashboard.jsx"
   },
-  "resources/js/Pages/Doctors/DoctorDetailModal.jsx": {
+  "resources/js/pages/Doctors/DoctorDetailModal.jsx": {
     "file": "assets/DoctorDetailModal-d61ff319.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2138,9 +2138,9 @@
       "_building-2-dbc4fcde.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/DoctorDetailModal.jsx"
+    "src": "resources/js/pages/Doctors/DoctorDetailModal.jsx"
   },
-  "resources/js/Pages/Doctors/DoctorModalForm.jsx": {
+  "resources/js/pages/Doctors/DoctorModalForm.jsx": {
     "file": "assets/DoctorModalForm-95c347f0.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2165,20 +2165,20 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/DoctorModalForm.jsx"
+    "src": "resources/js/pages/Doctors/DoctorModalForm.jsx"
   },
-  "resources/js/Pages/Doctors/Index.jsx": {
+  "resources/js/pages/Doctors/Index.jsx": {
     "file": "assets/Index-08026d5d.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Doctors/TableDoctors.jsx",
-      "resources/js/Pages/Doctors/DoctorDetailModal.jsx",
-      "resources/js/Pages/Doctors/Partials/DoctorCommissions.jsx",
-      "resources/js/Pages/Doctors/Partials/DoctorPatients.jsx",
-      "resources/js/Pages/Doctors/Partials/Kpis.jsx",
-      "resources/js/Pages/Doctors/Partials/HeaderDoctor.jsx",
+      "resources/js/pages/Doctors/TableDoctors.jsx",
+      "resources/js/pages/Doctors/DoctorDetailModal.jsx",
+      "resources/js/pages/Doctors/Partials/DoctorCommissions.jsx",
+      "resources/js/pages/Doctors/Partials/DoctorPatients.jsx",
+      "resources/js/pages/Doctors/Partials/Kpis.jsx",
+      "resources/js/pages/Doctors/Partials/HeaderDoctor.jsx",
       "_circle-x-9383d2cb.js",
       "_circle-alert-0073e902.js",
       "_smartphone-0ba07ccf.js",
@@ -2239,9 +2239,9 @@
       "_user-minus-5fe8f8c1.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/Index.jsx"
+    "src": "resources/js/pages/Doctors/Index.jsx"
   },
-  "resources/js/Pages/Doctors/Partials/DoctorCommissions.jsx": {
+  "resources/js/pages/Doctors/Partials/DoctorCommissions.jsx": {
     "file": "assets/DoctorCommissions-1340377e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2257,9 +2257,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/Partials/DoctorCommissions.jsx"
+    "src": "resources/js/pages/Doctors/Partials/DoctorCommissions.jsx"
   },
-  "resources/js/Pages/Doctors/Partials/DoctorPatients.jsx": {
+  "resources/js/pages/Doctors/Partials/DoctorPatients.jsx": {
     "file": "assets/DoctorPatients-5aae0748.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2272,9 +2272,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/Partials/DoctorPatients.jsx"
+    "src": "resources/js/pages/Doctors/Partials/DoctorPatients.jsx"
   },
-  "resources/js/Pages/Doctors/Partials/HeaderDoctor.jsx": {
+  "resources/js/pages/Doctors/Partials/HeaderDoctor.jsx": {
     "file": "assets/HeaderDoctor-3f041eda.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2283,9 +2283,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/Partials/HeaderDoctor.jsx"
+    "src": "resources/js/pages/Doctors/Partials/HeaderDoctor.jsx"
   },
-  "resources/js/Pages/Doctors/Partials/Kpis.jsx": {
+  "resources/js/pages/Doctors/Partials/Kpis.jsx": {
     "file": "assets/Kpis-862ce7d3.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2297,9 +2297,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/Partials/Kpis.jsx"
+    "src": "resources/js/pages/Doctors/Partials/Kpis.jsx"
   },
-  "resources/js/Pages/Doctors/TableDoctors.jsx": {
+  "resources/js/pages/Doctors/TableDoctors.jsx": {
     "file": "assets/TableDoctors-f5bd8b4b.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2320,9 +2320,9 @@
       "_clipboard-list-5ecdfc2a.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Doctors/TableDoctors.jsx"
+    "src": "resources/js/pages/Doctors/TableDoctors.jsx"
   },
-  "resources/js/Pages/Documents/IndexDocuments.jsx": {
+  "resources/js/pages/Documents/IndexDocuments.jsx": {
     "file": "assets/IndexDocuments-d8a3997e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2331,9 +2331,9 @@
       "_file-text-d903da99.js",
       "_file-check-ae490790.js",
       "_package-0a024904.js",
-      "resources/js/Pages/Documents/partials/List.jsx",
-      "resources/js/Pages/Documents/partials/CafUploadModal.jsx",
-      "resources/js/Pages/Documents/partials/DteConfigModal.jsx",
+      "resources/js/pages/Documents/partials/List.jsx",
+      "resources/js/pages/Documents/partials/CafUploadModal.jsx",
+      "resources/js/pages/Documents/partials/DteConfigModal.jsx",
       "_RutInput-6467b0fb.js",
       "_SearchSelect-211e48a4.js",
       "_Modal-e15b9afd.js",
@@ -2391,9 +2391,9 @@
       "_hash-e06e28c8.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Documents/IndexDocuments.jsx"
+    "src": "resources/js/pages/Documents/IndexDocuments.jsx"
   },
-  "resources/js/Pages/Documents/partials/CafUploadModal.jsx": {
+  "resources/js/pages/Documents/partials/CafUploadModal.jsx": {
     "file": "assets/CafUploadModal-9264aea3.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2409,9 +2409,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Documents/partials/CafUploadModal.jsx"
+    "src": "resources/js/pages/Documents/partials/CafUploadModal.jsx"
   },
-  "resources/js/Pages/Documents/partials/ContextSelector.jsx": {
+  "resources/js/pages/Documents/partials/ContextSelector.jsx": {
     "file": "assets/ContextSelector-8e3ec5d0.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2419,9 +2419,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Documents/partials/ContextSelector.jsx"
+    "src": "resources/js/pages/Documents/partials/ContextSelector.jsx"
   },
-  "resources/js/Pages/Documents/partials/DteConfigModal.jsx": {
+  "resources/js/pages/Documents/partials/DteConfigModal.jsx": {
     "file": "assets/DteConfigModal-bd030eb9.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2440,9 +2440,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Documents/partials/DteConfigModal.jsx"
+    "src": "resources/js/pages/Documents/partials/DteConfigModal.jsx"
   },
-  "resources/js/Pages/Documents/partials/HeaderDocuments.jsx": {
+  "resources/js/pages/Documents/partials/HeaderDocuments.jsx": {
     "file": "assets/HeaderDocuments-2c0af90c.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2455,14 +2455,14 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Documents/partials/HeaderDocuments.jsx"
+    "src": "resources/js/pages/Documents/partials/HeaderDocuments.jsx"
   },
-  "resources/js/Pages/Documents/partials/ItemsTable.jsx": {
+  "resources/js/pages/Documents/partials/ItemsTable.jsx": {
     "file": "assets/ItemsTable-4ed993c7.js",
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Documents/partials/ItemsTable.jsx"
+    "src": "resources/js/pages/Documents/partials/ItemsTable.jsx"
   },
-  "resources/js/Pages/Documents/partials/List.jsx": {
+  "resources/js/pages/Documents/partials/List.jsx": {
     "file": "assets/List-9daf5a3f.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2482,23 +2482,23 @@
       "_chevron-down-be25bbc3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Documents/partials/List.jsx"
+    "src": "resources/js/pages/Documents/partials/List.jsx"
   },
-  "resources/js/Pages/Finance/Receivables/Components/ReceivablesTable.jsx": {
+  "resources/js/pages/Finance/Receivables/Components/ReceivablesTable.jsx": {
     "file": "assets/ReceivablesTable-bece7328.js",
     "imports": [
       "resources/js/app.jsx",
       "_index-8244d9a7.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Finance/Receivables/Components/ReceivablesTable.jsx"
+    "src": "resources/js/pages/Finance/Receivables/Components/ReceivablesTable.jsx"
   },
-  "resources/js/Pages/Finance/Receivables/Index.jsx": {
+  "resources/js/pages/Finance/Receivables/Index.jsx": {
     "file": "assets/Index-b309106f.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
-      "resources/js/Pages/Finance/Receivables/Components/ReceivablesTable.jsx",
+      "resources/js/pages/Finance/Receivables/Components/ReceivablesTable.jsx",
       "_dollar-sign-7cfb09d1.js",
       "_index-88056f3d.js",
       "_parse-c3570fb2.js",
@@ -2530,17 +2530,17 @@
       "_index-8244d9a7.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Finance/Receivables/Index.jsx"
+    "src": "resources/js/pages/Finance/Receivables/Index.jsx"
   },
-  "resources/js/Pages/HealthInsurers/Index.jsx": {
+  "resources/js/pages/HealthInsurers/Index.jsx": {
     "file": "assets/Index-d3a5ddeb.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_Modal-e15b9afd.js",
-      "resources/js/Pages/HealthInsurers/TableHealthInsurers.jsx",
-      "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModal.jsx",
-      "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx",
+      "resources/js/pages/HealthInsurers/TableHealthInsurers.jsx",
+      "resources/js/pages/HealthInsurers/Partials/HealthInsurerModal.jsx",
+      "resources/js/pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx",
       "_SideModal-f7e6775f.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -2587,9 +2587,9 @@
       "_hash-e06e28c8.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/HealthInsurers/Index.jsx"
+    "src": "resources/js/pages/HealthInsurers/Index.jsx"
   },
-  "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModal.jsx": {
+  "resources/js/pages/HealthInsurers/Partials/HealthInsurerModal.jsx": {
     "file": "assets/HealthInsurerModal-ebd9daee.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2609,17 +2609,17 @@
       "_building-2-dbc4fcde.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModal.jsx"
+    "src": "resources/js/pages/HealthInsurers/Partials/HealthInsurerModal.jsx"
   },
-  "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx": {
+  "resources/js/pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx": {
     "file": "assets/HealthInsurerModalDelete-50659520.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx"
+    "src": "resources/js/pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx"
   },
-  "resources/js/Pages/HealthInsurers/TableHealthInsurers.jsx": {
+  "resources/js/pages/HealthInsurers/TableHealthInsurers.jsx": {
     "file": "assets/TableHealthInsurers-a81afdb9.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2634,9 +2634,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/HealthInsurers/TableHealthInsurers.jsx"
+    "src": "resources/js/pages/HealthInsurers/TableHealthInsurers.jsx"
   },
-  "resources/js/Pages/Informes/IndexInformes.jsx": {
+  "resources/js/pages/Informes/IndexInformes.jsx": {
     "file": "assets/IndexInformes-814af50a.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2671,19 +2671,19 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Informes/IndexInformes.jsx"
+    "src": "resources/js/pages/Informes/IndexInformes.jsx"
   },
-  "resources/js/Pages/Insurances/InsuranceIndex.jsx": {
+  "resources/js/pages/Insurances/InsuranceIndex.jsx": {
     "file": "assets/InsuranceIndex-cd70df1c.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_Modal-e15b9afd.js",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Insurances/Partials/TableInsurances.jsx",
-      "resources/js/Pages/Insurances/Partials/PlanEditForm.jsx",
-      "resources/js/Pages/Insurances/Partials/InsuranceFormModal.jsx",
-      "resources/js/Pages/Insurances/Partials/TablePlans.jsx",
+      "resources/js/pages/Insurances/Partials/TableInsurances.jsx",
+      "resources/js/pages/Insurances/Partials/PlanEditForm.jsx",
+      "resources/js/pages/Insurances/Partials/InsuranceFormModal.jsx",
+      "resources/js/pages/Insurances/Partials/TablePlans.jsx",
       "_brick-wall-shield-063eacaf.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -2738,9 +2738,9 @@
       "_RutInput-6467b0fb.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Insurances/InsuranceIndex.jsx"
+    "src": "resources/js/pages/Insurances/InsuranceIndex.jsx"
   },
-  "resources/js/Pages/Insurances/Partials/InsuranceFormModal.jsx": {
+  "resources/js/pages/Insurances/Partials/InsuranceFormModal.jsx": {
     "file": "assets/InsuranceFormModal-41bbab73.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2763,17 +2763,17 @@
       "_search-1e1035e3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Insurances/Partials/InsuranceFormModal.jsx"
+    "src": "resources/js/pages/Insurances/Partials/InsuranceFormModal.jsx"
   },
-  "resources/js/Pages/Insurances/Partials/ModalDeleteInsurance.jsx": {
+  "resources/js/pages/Insurances/Partials/ModalDeleteInsurance.jsx": {
     "file": "assets/ModalDeleteInsurance-fd7bc73c.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Insurances/Partials/ModalDeleteInsurance.jsx"
+    "src": "resources/js/pages/Insurances/Partials/ModalDeleteInsurance.jsx"
   },
-  "resources/js/Pages/Insurances/Partials/ModalPlans.jsx": {
+  "resources/js/pages/Insurances/Partials/ModalPlans.jsx": {
     "file": "assets/ModalPlans-4eeda168.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2789,9 +2789,9 @@
       "_building-2-dbc4fcde.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Insurances/Partials/ModalPlans.jsx"
+    "src": "resources/js/pages/Insurances/Partials/ModalPlans.jsx"
   },
-  "resources/js/Pages/Insurances/Partials/PlanEditForm.jsx": {
+  "resources/js/pages/Insurances/Partials/PlanEditForm.jsx": {
     "file": "assets/PlanEditForm-68c7ec02.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2813,9 +2813,9 @@
       "_calendar-c7a3cf9f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Insurances/Partials/PlanEditForm.jsx"
+    "src": "resources/js/pages/Insurances/Partials/PlanEditForm.jsx"
   },
-  "resources/js/Pages/Insurances/Partials/TableInsurances.jsx": {
+  "resources/js/pages/Insurances/Partials/TableInsurances.jsx": {
     "file": "assets/TableInsurances-721bc177.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2835,9 +2835,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Insurances/Partials/TableInsurances.jsx"
+    "src": "resources/js/pages/Insurances/Partials/TableInsurances.jsx"
   },
-  "resources/js/Pages/Insurances/Partials/TablePlans.jsx": {
+  "resources/js/pages/Insurances/Partials/TablePlans.jsx": {
     "file": "assets/TablePlans-dc782f4e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2856,9 +2856,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Insurances/Partials/TablePlans.jsx"
+    "src": "resources/js/pages/Insurances/Partials/TablePlans.jsx"
   },
-  "resources/js/Pages/Invoices/Index.jsx": {
+  "resources/js/pages/Invoices/Index.jsx": {
     "file": "assets/Index-4fb324a6.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2895,17 +2895,17 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Invoices/Index.jsx"
+    "src": "resources/js/pages/Invoices/Index.jsx"
   },
-  "resources/js/Pages/Invoices/Show.jsx": {
+  "resources/js/pages/Invoices/Show.jsx": {
     "file": "assets/Show-e9ca7a4d.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Invoices/Show.jsx"
+    "src": "resources/js/pages/Invoices/Show.jsx"
   },
-  "resources/js/Pages/KineMobile/AccessDenied.jsx": {
+  "resources/js/pages/KineMobile/AccessDenied.jsx": {
     "file": "assets/AccessDenied-8953b7f0.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2915,16 +2915,16 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/AccessDenied.jsx"
+    "src": "resources/js/pages/KineMobile/AccessDenied.jsx"
   },
-  "resources/js/Pages/KineMobile/Dashboard.jsx": {
+  "resources/js/pages/KineMobile/Dashboard.jsx": {
     "file": "assets/Dashboard-6bc9059d.js",
     "imports": [
       "resources/js/app.jsx",
       "_KineLayout-2e3b8e8a.js",
-      "resources/js/Pages/KineMobile/Partials/KPICard.jsx",
-      "resources/js/Pages/KineMobile/Partials/SessionCard.jsx",
-      "resources/js/Pages/KineMobile/Partials/QuickActions.jsx",
+      "resources/js/pages/KineMobile/Partials/KPICard.jsx",
+      "resources/js/pages/KineMobile/Partials/SessionCard.jsx",
+      "resources/js/pages/KineMobile/Partials/QuickActions.jsx",
       "_refresh-cw-b97345e9.js",
       "_calendar-c7a3cf9f.js",
       "_circle-check-e98c8744.js",
@@ -2941,14 +2941,14 @@
       "_circle-x-9383d2cb.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/Dashboard.jsx"
+    "src": "resources/js/pages/KineMobile/Dashboard.jsx"
   },
-  "resources/js/Pages/KineMobile/MyPatients.jsx": {
+  "resources/js/pages/KineMobile/MyPatients.jsx": {
     "file": "assets/MyPatients-2dc8083f.js",
     "imports": [
       "resources/js/app.jsx",
       "_KineLayout-2e3b8e8a.js",
-      "resources/js/Pages/KineMobile/Partials/PatientCard.jsx",
+      "resources/js/pages/KineMobile/Partials/PatientCard.jsx",
       "_search-1e1035e3.js",
       "_users-5e0d480c.js",
       "_house-927bedf1.js",
@@ -2962,9 +2962,9 @@
       "_activity-926d31ea.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/MyPatients.jsx"
+    "src": "resources/js/pages/KineMobile/MyPatients.jsx"
   },
-  "resources/js/Pages/KineMobile/MyProfile.jsx": {
+  "resources/js/pages/KineMobile/MyProfile.jsx": {
     "file": "assets/MyProfile-4f264373.js",
     "imports": [
       "resources/js/app.jsx",
@@ -2989,15 +2989,15 @@
       "_with-selector-e87dab3f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/MyProfile.jsx"
+    "src": "resources/js/pages/KineMobile/MyProfile.jsx"
   },
-  "resources/js/Pages/KineMobile/MySessions.jsx": {
+  "resources/js/pages/KineMobile/MySessions.jsx": {
     "file": "assets/MySessions-48a84260.js",
     "imports": [
       "resources/js/app.jsx",
       "_KineLayout-2e3b8e8a.js",
-      "resources/js/Pages/KineMobile/Partials/SessionCard.jsx",
-      "resources/js/Pages/KineMobile/Partials/StatsBadge.jsx",
+      "resources/js/pages/KineMobile/Partials/SessionCard.jsx",
+      "resources/js/pages/KineMobile/Partials/StatsBadge.jsx",
       "_funnel-12238e32.js",
       "_calendar-c7a3cf9f.js",
       "_circle-check-e98c8744.js",
@@ -3014,17 +3014,17 @@
       "_phone-178262d4.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/MySessions.jsx"
+    "src": "resources/js/pages/KineMobile/MySessions.jsx"
   },
-  "resources/js/Pages/KineMobile/Partials/KPICard.jsx": {
+  "resources/js/pages/KineMobile/Partials/KPICard.jsx": {
     "file": "assets/KPICard-53a43373.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/Partials/KPICard.jsx"
+    "src": "resources/js/pages/KineMobile/Partials/KPICard.jsx"
   },
-  "resources/js/Pages/KineMobile/Partials/PatientCard.jsx": {
+  "resources/js/pages/KineMobile/Partials/PatientCard.jsx": {
     "file": "assets/PatientCard-ec39950f.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3034,9 +3034,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/Partials/PatientCard.jsx"
+    "src": "resources/js/pages/KineMobile/Partials/PatientCard.jsx"
   },
-  "resources/js/Pages/KineMobile/Partials/QuickActions.jsx": {
+  "resources/js/pages/KineMobile/Partials/QuickActions.jsx": {
     "file": "assets/QuickActions-63009ea5.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3046,9 +3046,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/Partials/QuickActions.jsx"
+    "src": "resources/js/pages/KineMobile/Partials/QuickActions.jsx"
   },
-  "resources/js/Pages/KineMobile/Partials/SessionCard.jsx": {
+  "resources/js/pages/KineMobile/Partials/SessionCard.jsx": {
     "file": "assets/SessionCard-358f2750.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3062,17 +3062,17 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/Partials/SessionCard.jsx"
+    "src": "resources/js/pages/KineMobile/Partials/SessionCard.jsx"
   },
-  "resources/js/Pages/KineMobile/Partials/StatsBadge.jsx": {
+  "resources/js/pages/KineMobile/Partials/StatsBadge.jsx": {
     "file": "assets/StatsBadge-f2e39da1.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/Partials/StatsBadge.jsx"
+    "src": "resources/js/pages/KineMobile/Partials/StatsBadge.jsx"
   },
-  "resources/js/Pages/KineMobile/PatientDetail.jsx": {
+  "resources/js/pages/KineMobile/PatientDetail.jsx": {
     "file": "assets/PatientDetail-b72cbfd1.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3089,9 +3089,9 @@
       "_plus-0fe18335.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/PatientDetail.jsx"
+    "src": "resources/js/pages/KineMobile/PatientDetail.jsx"
   },
-  "resources/js/Pages/KineMobile/SessionDetail.jsx": {
+  "resources/js/pages/KineMobile/SessionDetail.jsx": {
     "file": "assets/SessionDetail-6c569bdc.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3114,9 +3114,9 @@
       "_plus-0fe18335.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/SessionDetail.jsx"
+    "src": "resources/js/pages/KineMobile/SessionDetail.jsx"
   },
-  "resources/js/Pages/KineMobile/SessionForm.jsx": {
+  "resources/js/pages/KineMobile/SessionForm.jsx": {
     "file": "assets/SessionForm-2ce5851b.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3144,16 +3144,16 @@
       "_plus-0fe18335.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/KineMobile/SessionForm.jsx"
+    "src": "resources/js/pages/KineMobile/SessionForm.jsx"
   },
-  "resources/js/Pages/PatientInsurances/Index.jsx": {
+  "resources/js/pages/PatientInsurances/Index.jsx": {
     "file": "assets/Index-98c330b5.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/PatientInsurances/TablePatientsInsurances.jsx",
-      "resources/js/Pages/PatientInsurances/ModalPatientInsurance.jsx",
+      "resources/js/pages/PatientInsurances/TablePatientsInsurances.jsx",
+      "resources/js/pages/PatientInsurances/ModalPatientInsurance.jsx",
       "_handshake-9ceb9c3c.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -3197,9 +3197,9 @@
       "_translations-70047154.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/PatientInsurances/Index.jsx"
+    "src": "resources/js/pages/PatientInsurances/Index.jsx"
   },
-  "resources/js/Pages/PatientInsurances/ModalPatientInsurance.jsx": {
+  "resources/js/pages/PatientInsurances/ModalPatientInsurance.jsx": {
     "file": "assets/ModalPatientInsurance-696db33e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3216,9 +3216,9 @@
       "_chevron-down-be25bbc3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/PatientInsurances/ModalPatientInsurance.jsx"
+    "src": "resources/js/pages/PatientInsurances/ModalPatientInsurance.jsx"
   },
-  "resources/js/Pages/PatientInsurances/TablePatientsInsurances.jsx": {
+  "resources/js/pages/PatientInsurances/TablePatientsInsurances.jsx": {
     "file": "assets/TablePatientsInsurances-111eb04b.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3234,9 +3234,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/PatientInsurances/TablePatientsInsurances.jsx"
+    "src": "resources/js/pages/PatientInsurances/TablePatientsInsurances.jsx"
   },
-  "resources/js/Pages/Patients/Dashboard/PatientDashboard.jsx": {
+  "resources/js/pages/Patients/Dashboard/PatientDashboard.jsx": {
     "file": "assets/PatientDashboard-30f073f9.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3249,24 +3249,24 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Dashboard/PatientDashboard.jsx"
+    "src": "resources/js/pages/Patients/Dashboard/PatientDashboard.jsx"
   },
-  "resources/js/Pages/Patients/DetailPatient.jsx": {
+  "resources/js/pages/Patients/DetailPatient.jsx": {
     "dynamicImports": [
-      "resources/js/Pages/Patients/General/IndexGeneral.jsx",
-      "resources/js/Pages/Patients/Historial/IndexHistorial.jsx",
-      "resources/js/Pages/Patients/Treatments/IndexTreatments.jsx",
-      "resources/js/Pages/Patients/Payments/IndexPayments.jsx",
-      "resources/js/Pages/Patients/Dashboard/PatientDashboard.jsx"
+      "resources/js/pages/Patients/General/IndexGeneral.jsx",
+      "resources/js/pages/Patients/Historial/IndexHistorial.jsx",
+      "resources/js/pages/Patients/Treatments/IndexTreatments.jsx",
+      "resources/js/pages/Patients/Payments/IndexPayments.jsx",
+      "resources/js/pages/Patients/Dashboard/PatientDashboard.jsx"
     ],
     "file": "assets/DetailPatient-52c8e88c.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
-      "resources/js/Pages/Patients/Partials/PatientSidebar.jsx",
+      "resources/js/pages/Patients/Partials/PatientSidebar.jsx",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Attendances/Modals/CreateUpdateModal.jsx",
-      "resources/js/Pages/Patients/ModalCreateEditPatient.jsx",
+      "resources/js/pages/Attendances/Modals/CreateUpdateModal.jsx",
+      "resources/js/pages/Patients/ModalCreateEditPatient.jsx",
       "_plus-0fe18335.js",
       "_arrow-left-e16b253b.js",
       "_index-88056f3d.js",
@@ -3327,9 +3327,9 @@
       "_smartphone-0ba07ccf.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/DetailPatient.jsx"
+    "src": "resources/js/pages/Patients/DetailPatient.jsx"
   },
-  "resources/js/Pages/Patients/Documents/IndexDocuments.jsx": {
+  "resources/js/pages/Patients/Documents/IndexDocuments.jsx": {
     "file": "assets/IndexDocuments-c730ee9b.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3352,9 +3352,9 @@
       "_x-5e806e3f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Documents/IndexDocuments.jsx"
+    "src": "resources/js/pages/Patients/Documents/IndexDocuments.jsx"
   },
-  "resources/js/Pages/Patients/General/GeneralPartials/EmergencyContact.jsx": {
+  "resources/js/pages/Patients/General/GeneralPartials/EmergencyContact.jsx": {
     "file": "assets/EmergencyContact-3271dd12.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3376,9 +3376,9 @@
       "_phone-178262d4.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/GeneralPartials/EmergencyContact.jsx"
+    "src": "resources/js/pages/Patients/General/GeneralPartials/EmergencyContact.jsx"
   },
-  "resources/js/Pages/Patients/General/GeneralPartials/MedicalInformation.jsx": {
+  "resources/js/pages/Patients/General/GeneralPartials/MedicalInformation.jsx": {
     "file": "assets/MedicalInformation-9eb6649f.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3386,9 +3386,9 @@
       "_square-pen-46ffa5ba.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/GeneralPartials/MedicalInformation.jsx"
+    "src": "resources/js/pages/Patients/General/GeneralPartials/MedicalInformation.jsx"
   },
-  "resources/js/Pages/Patients/General/GeneralPartials/NextSessions.jsx": {
+  "resources/js/pages/Patients/General/GeneralPartials/NextSessions.jsx": {
     "file": "assets/NextSessions-70172076.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3398,9 +3398,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/GeneralPartials/NextSessions.jsx"
+    "src": "resources/js/pages/Patients/General/GeneralPartials/NextSessions.jsx"
   },
-  "resources/js/Pages/Patients/General/GeneralPartials/PatientAddress.jsx": {
+  "resources/js/pages/Patients/General/GeneralPartials/PatientAddress.jsx": {
     "file": "assets/PatientAddress-f6bf76c4.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3422,9 +3422,9 @@
       "_phone-178262d4.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/GeneralPartials/PatientAddress.jsx"
+    "src": "resources/js/pages/Patients/General/GeneralPartials/PatientAddress.jsx"
   },
-  "resources/js/Pages/Patients/General/GeneralPartials/PatientData.jsx": {
+  "resources/js/pages/Patients/General/GeneralPartials/PatientData.jsx": {
     "file": "assets/PatientData-fc7c64a0.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3436,9 +3436,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/GeneralPartials/PatientData.jsx"
+    "src": "resources/js/pages/Patients/General/GeneralPartials/PatientData.jsx"
   },
-  "resources/js/Pages/Patients/General/GeneralPartials/PatientPrevition.jsx": {
+  "resources/js/pages/Patients/General/GeneralPartials/PatientPrevition.jsx": {
     "file": "assets/PatientPrevition-9154be8a.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3446,9 +3446,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/GeneralPartials/PatientPrevition.jsx"
+    "src": "resources/js/pages/Patients/General/GeneralPartials/PatientPrevition.jsx"
   },
-  "resources/js/Pages/Patients/General/GeneralPartials/Vital.jsx": {
+  "resources/js/pages/Patients/General/GeneralPartials/Vital.jsx": {
     "file": "assets/Vital-cf2517b3.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3470,17 +3470,17 @@
       "_phone-178262d4.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/GeneralPartials/Vital.jsx"
+    "src": "resources/js/pages/Patients/General/GeneralPartials/Vital.jsx"
   },
-  "resources/js/Pages/Patients/General/IndexGeneral.jsx": {
+  "resources/js/pages/Patients/General/IndexGeneral.jsx": {
     "file": "assets/IndexGeneral-e9791bce.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/PatientData.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/Vital.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/EmergencyContact.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/PatientAddress.jsx",
-      "resources/js/Pages/Patients/ModalCreateEditPatient.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/PatientData.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/Vital.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/EmergencyContact.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/PatientAddress.jsx",
+      "resources/js/pages/Patients/ModalCreateEditPatient.jsx",
       "_Modal-e15b9afd.js",
       "_user-cog-b3ed2423.js",
       "_translations-70047154.js",
@@ -3518,9 +3518,9 @@
       "_users-5e0d480c.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/General/IndexGeneral.jsx"
+    "src": "resources/js/pages/Patients/General/IndexGeneral.jsx"
   },
-  "resources/js/Pages/Patients/Historial/HistorialPartials/CardTreatment.jsx": {
+  "resources/js/pages/Patients/Historial/HistorialPartials/CardTreatment.jsx": {
     "file": "assets/CardTreatment-6e74b8ad.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3538,9 +3538,9 @@
       "_zap-70a0b910.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Historial/HistorialPartials/CardTreatment.jsx"
+    "src": "resources/js/pages/Patients/Historial/HistorialPartials/CardTreatment.jsx"
   },
-  "resources/js/Pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx": {
+  "resources/js/pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx": {
     "file": "assets/ModalCreateUpdateTreatment-c021e42d.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3560,15 +3560,15 @@
       "_chevron-down-be25bbc3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx"
+    "src": "resources/js/pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx"
   },
-  "resources/js/Pages/Patients/Historial/IndexHistorial.jsx": {
+  "resources/js/pages/Patients/Historial/IndexHistorial.jsx": {
     "file": "assets/IndexHistorial-088ba402.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/Patients/Historial/HistorialPartials/CardTreatment.jsx",
+      "resources/js/pages/Patients/Historial/HistorialPartials/CardTreatment.jsx",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx",
+      "resources/js/pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx",
       "_activity-926d31ea.js",
       "_plus-0fe18335.js",
       "_utils-84c05c9a.js",
@@ -3595,15 +3595,15 @@
       "_map-pin-2a701ac8.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Historial/IndexHistorial.jsx"
+    "src": "resources/js/pages/Patients/Historial/IndexHistorial.jsx"
   },
-  "resources/js/Pages/Patients/IndexPatients.jsx": {
+  "resources/js/pages/Patients/IndexPatients.jsx": {
     "file": "assets/IndexPatients-93857e78.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
-      "resources/js/Pages/Patients/TablePatients.jsx",
-      "resources/js/Pages/Patients/ModalCreateEditPatient.jsx",
+      "resources/js/pages/Patients/TablePatients.jsx",
+      "resources/js/pages/Patients/ModalCreateEditPatient.jsx",
       "_SideModal-f7e6775f.js",
       "_usePatientStore-ca48da51.js",
       "_users-5e0d480c.js",
@@ -3666,9 +3666,9 @@
       "_activity-926d31ea.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/IndexPatients.jsx"
+    "src": "resources/js/pages/Patients/IndexPatients.jsx"
   },
-  "resources/js/Pages/Patients/ModalCreateEditPatient.jsx": {
+  "resources/js/pages/Patients/ModalCreateEditPatient.jsx": {
     "file": "assets/ModalCreateEditPatient-326f3941.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3698,53 +3698,53 @@
       "_building-2-dbc4fcde.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/ModalCreateEditPatient.jsx"
+    "src": "resources/js/pages/Patients/ModalCreateEditPatient.jsx"
   },
-  "resources/js/Pages/Patients/ModalDeletePatient.jsx": {
+  "resources/js/pages/Patients/ModalDeletePatient.jsx": {
     "file": "assets/ModalDeletePatient-61ee8fbc.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/ModalDeletePatient.jsx"
+    "src": "resources/js/pages/Patients/ModalDeletePatient.jsx"
   },
-  "resources/js/Pages/Patients/PacienteHomeView.jsx": {
+  "resources/js/pages/Patients/PacienteHomeView.jsx": {
     "file": "assets/PacienteHomeView-d6431e82.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/PacienteHomeView.jsx"
+    "src": "resources/js/pages/Patients/PacienteHomeView.jsx"
   },
-  "resources/js/Pages/Patients/PanelAcciones.jsx": {
+  "resources/js/pages/Patients/PanelAcciones.jsx": {
     "file": "assets/PanelAcciones-1da2ad05.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/PanelAcciones.jsx"
+    "src": "resources/js/pages/Patients/PanelAcciones.jsx"
   },
-  "resources/js/Pages/Patients/PanelFinanciero.jsx": {
+  "resources/js/pages/Patients/PanelFinanciero.jsx": {
     "file": "assets/PanelFinanciero-95c7a5aa.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/PanelFinanciero.jsx"
+    "src": "resources/js/pages/Patients/PanelFinanciero.jsx"
   },
-  "resources/js/Pages/Patients/PanelSesionesRecientes.jsx": {
+  "resources/js/pages/Patients/PanelSesionesRecientes.jsx": {
     "file": "assets/PanelSesionesRecientes-3d69f87c.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/PanelSesionesRecientes.jsx"
+    "src": "resources/js/pages/Patients/PanelSesionesRecientes.jsx"
   },
-  "resources/js/Pages/Patients/Partials/PatientCard.jsx": {
+  "resources/js/pages/Patients/Partials/PatientCard.jsx": {
     "file": "assets/PatientCard-acdead4c.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/Patients/ModalCreateEditPatient.jsx",
+      "resources/js/pages/Patients/ModalCreateEditPatient.jsx",
       "_SideModal-f7e6775f.js",
       "_translations-70047154.js",
       "_user-83f3724e.js",
@@ -3779,9 +3779,9 @@
       "_with-selector-e87dab3f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Partials/PatientCard.jsx"
+    "src": "resources/js/pages/Patients/Partials/PatientCard.jsx"
   },
-  "resources/js/Pages/Patients/Partials/PatientSidebar.jsx": {
+  "resources/js/pages/Patients/Partials/PatientSidebar.jsx": {
     "file": "assets/PatientSidebar-9ef971d9.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3796,9 +3796,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Partials/PatientSidebar.jsx"
+    "src": "resources/js/pages/Patients/Partials/PatientSidebar.jsx"
   },
-  "resources/js/Pages/Patients/Partials/TableTreatments.jsx": {
+  "resources/js/pages/Patients/Partials/TableTreatments.jsx": {
     "file": "assets/TableTreatments-2899a16e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3817,16 +3817,16 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Partials/TableTreatments.jsx"
+    "src": "resources/js/pages/Patients/Partials/TableTreatments.jsx"
   },
-  "resources/js/Pages/Patients/Payments/IndexPayments.jsx": {
+  "resources/js/pages/Patients/Payments/IndexPayments.jsx": {
     "file": "assets/IndexPayments-caa37332.js",
     "imports": [
       "resources/js/app.jsx",
       "_utils-84c05c9a.js",
       "_SideModal-f7e6775f.js",
       "_TablePagination-f36c33e3.js",
-      "resources/js/Pages/Patients/Payments/PaymentForm.jsx",
+      "resources/js/pages/Patients/Payments/PaymentForm.jsx",
       "_status-a03f248e.js",
       "_index-8244d9a7.js",
       "_calendar-c7a3cf9f.js",
@@ -3851,9 +3851,9 @@
       "_credit-card-517ea59e.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Payments/IndexPayments.jsx"
+    "src": "resources/js/pages/Patients/Payments/IndexPayments.jsx"
   },
-  "resources/js/Pages/Patients/Payments/PaymentForm.jsx": {
+  "resources/js/pages/Patients/Payments/PaymentForm.jsx": {
     "file": "assets/PaymentForm-6dd152d6.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3869,9 +3869,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Payments/PaymentForm.jsx"
+    "src": "resources/js/pages/Patients/Payments/PaymentForm.jsx"
   },
-  "resources/js/Pages/Patients/TablePatients.jsx": {
+  "resources/js/pages/Patients/TablePatients.jsx": {
     "file": "assets/TablePatients-3edcd1bb.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3900,19 +3900,19 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/TablePatients.jsx"
+    "src": "resources/js/pages/Patients/TablePatients.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/IndexTreatments.jsx": {
+  "resources/js/pages/Patients/Treatments/IndexTreatments.jsx": {
     "file": "assets/IndexTreatments-d98effab.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx",
+      "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx",
       "_SideModal-f7e6775f.js",
       "_Modal-e15b9afd.js",
-      "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/IndexSessions.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/SessionModal.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/SessionModalDelete.jsx",
+      "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/IndexSessions.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/SessionModal.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/SessionModalDelete.jsx",
       "_target-e28610b7.js",
       "_clipboard-efc4bf07.js",
       "_plus-0fe18335.js",
@@ -3926,7 +3926,7 @@
       "_x-5e806e3f.js",
       "_dialog-27af9d5b.js",
       "_with-selector-e87dab3f.js",
-      "resources/js/Pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx",
+      "resources/js/pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx",
       "_index-8244d9a7.js",
       "_TablePagination-f36c33e3.js",
       "_status-a03f248e.js",
@@ -3934,7 +3934,7 @@
       "_calendar-c7a3cf9f.js",
       "_chevron-up-94bb9f62.js",
       "_chevron-down-be25bbc3.js",
-      "resources/js/Pages/Patients/Treatments/Sessions/TableSessions.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/TableSessions.jsx",
       "_copy-1df0e197.js",
       "_trash-2-222a766b.js",
       "_timer-f5a56410.js",
@@ -3948,13 +3948,13 @@
       "_clipboard-list-5ecdfc2a.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/IndexTreatments.jsx"
+    "src": "resources/js/pages/Patients/Treatments/IndexTreatments.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/Sessions/IndexSessions.jsx": {
+  "resources/js/pages/Patients/Treatments/Sessions/IndexSessions.jsx": {
     "file": "assets/IndexSessions-def40c5a.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/TableSessions.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/TableSessions.jsx",
       "_treatmentStatuses-17fcb877.js",
       "_clipboard-efc4bf07.js",
       "_plus-0fe18335.js",
@@ -3969,9 +3969,9 @@
       "_stethoscope-7f8be4db.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/Sessions/IndexSessions.jsx"
+    "src": "resources/js/pages/Patients/Treatments/Sessions/IndexSessions.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/Sessions/SessionCard.jsx": {
+  "resources/js/pages/Patients/Treatments/Sessions/SessionCard.jsx": {
     "file": "assets/SessionCard-6c2801a1.js",
     "imports": [
       "resources/js/app.jsx",
@@ -3980,9 +3980,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/Sessions/SessionCard.jsx"
+    "src": "resources/js/pages/Patients/Treatments/Sessions/SessionCard.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/Sessions/SessionModal.jsx": {
+  "resources/js/pages/Patients/Treatments/Sessions/SessionModal.jsx": {
     "file": "assets/SessionModal-8309e7f1.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4002,17 +4002,17 @@
       "_chevron-down-be25bbc3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/Sessions/SessionModal.jsx"
+    "src": "resources/js/pages/Patients/Treatments/Sessions/SessionModal.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/Sessions/SessionModalDelete.jsx": {
+  "resources/js/pages/Patients/Treatments/Sessions/SessionModalDelete.jsx": {
     "file": "assets/SessionModalDelete-862916d9.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/Sessions/SessionModalDelete.jsx"
+    "src": "resources/js/pages/Patients/Treatments/Sessions/SessionModalDelete.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/Sessions/TableSessions.jsx": {
+  "resources/js/pages/Patients/Treatments/Sessions/TableSessions.jsx": {
     "file": "assets/TableSessions-c96d4aec.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4027,9 +4027,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/Sessions/TableSessions.jsx"
+    "src": "resources/js/pages/Patients/Treatments/Sessions/TableSessions.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx": {
+  "resources/js/pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx": {
     "file": "assets/TableTreatments-d14a8f2d.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4043,9 +4043,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx"
+    "src": "resources/js/pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx": {
+  "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx": {
     "file": "assets/TreatmentCardMain-ac960ab2.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4059,13 +4059,13 @@
       "_circle-check-big-e470a476.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx"
+    "src": "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx"
   },
-  "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx": {
+  "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx": {
     "file": "assets/TreatmentModal-5df917d6.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx",
+      "resources/js/pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx",
       "_index-8244d9a7.js",
       "_TablePagination-f36c33e3.js",
       "_status-a03f248e.js",
@@ -4076,9 +4076,9 @@
       "_chevron-down-be25bbc3.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx"
+    "src": "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx"
   },
-  "resources/js/Pages/Payments/Publicwebpayresult.jsx": {
+  "resources/js/pages/Payments/Publicwebpayresult.jsx": {
     "file": "assets/Publicwebpayresult-c6ca95cf.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4087,17 +4087,17 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payments/Publicwebpayresult.jsx"
+    "src": "resources/js/pages/Payments/Publicwebpayresult.jsx"
   },
-  "resources/js/Pages/Payments/Result.jsx": {
+  "resources/js/pages/Payments/Result.jsx": {
     "file": "assets/Result-d9e8384f.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payments/Result.jsx"
+    "src": "resources/js/pages/Payments/Result.jsx"
   },
-  "resources/js/Pages/Payments/WebpayResult.jsx": {
+  "resources/js/pages/Payments/WebpayResult.jsx": {
     "file": "assets/WebpayResult-87dcec15.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4107,9 +4107,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payments/WebpayResult.jsx"
+    "src": "resources/js/pages/Payments/WebpayResult.jsx"
   },
-  "resources/js/Pages/Payments/WebpayTest.jsx": {
+  "resources/js/pages/Payments/WebpayTest.jsx": {
     "file": "assets/WebpayTest-4ea0e0a4.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4149,17 +4149,17 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payments/WebpayTest.jsx"
+    "src": "resources/js/pages/Payments/WebpayTest.jsx"
   },
-  "resources/js/Pages/PaymentsPatients/Admin/PaymentRemindersIndex.jsx": {
+  "resources/js/pages/PaymentsPatients/Admin/PaymentRemindersIndex.jsx": {
     "file": "assets/PaymentRemindersIndex-fc0fd4a6.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/PaymentsPatients/Admin/PaymentRemindersIndex.jsx"
+    "src": "resources/js/pages/PaymentsPatients/Admin/PaymentRemindersIndex.jsx"
   },
-  "resources/js/Pages/PaymentsPatients/PortalPago.jsx": {
+  "resources/js/pages/PaymentsPatients/PortalPago.jsx": {
     "file": "assets/PortalPago-875ce639.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4173,27 +4173,27 @@
       "_building-2-dbc4fcde.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/PaymentsPatients/PortalPago.jsx"
+    "src": "resources/js/pages/PaymentsPatients/PortalPago.jsx"
   },
-  "resources/js/Pages/PaymentsPatients/PortalPagoDeudas.jsx": {
+  "resources/js/pages/PaymentsPatients/PortalPagoDeudas.jsx": {
     "file": "assets/PortalPagoDeudas-c02b2a30.js",
     "imports": [
       "resources/js/app.jsx",
       "_utils-84c05c9a.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/PaymentsPatients/PortalPagoDeudas.jsx"
+    "src": "resources/js/pages/PaymentsPatients/PortalPagoDeudas.jsx"
   },
-  "resources/js/Pages/PaymentsPatients/PortalPagoResultado.jsx": {
+  "resources/js/pages/PaymentsPatients/PortalPagoResultado.jsx": {
     "file": "assets/PortalPagoResultado-08b7f829.js",
     "imports": [
       "resources/js/app.jsx",
       "_utils-84c05c9a.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/PaymentsPatients/PortalPagoResultado.jsx"
+    "src": "resources/js/pages/PaymentsPatients/PortalPagoResultado.jsx"
   },
-  "resources/js/Pages/Payroll/Components/PayrollTable.jsx": {
+  "resources/js/pages/Payroll/Components/PayrollTable.jsx": {
     "file": "assets/PayrollTable-515a70fa.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4213,16 +4213,16 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payroll/Components/PayrollTable.jsx"
+    "src": "resources/js/pages/Payroll/Components/PayrollTable.jsx"
   },
-  "resources/js/Pages/Payroll/Index.jsx": {
+  "resources/js/pages/Payroll/Index.jsx": {
     "file": "assets/Index-ca840a07.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
-      "resources/js/Pages/Payroll/Components/PayrollTable.jsx",
-      "resources/js/Pages/Payroll/Modals/PayrollFormModal.jsx",
-      "resources/js/Pages/Payroll/Modals/PayrollReviewSideModal.jsx",
+      "resources/js/pages/Payroll/Components/PayrollTable.jsx",
+      "resources/js/pages/Payroll/Modals/PayrollFormModal.jsx",
+      "resources/js/pages/Payroll/Modals/PayrollReviewSideModal.jsx",
       "_notebook-text-d82647f8.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -4270,9 +4270,9 @@
       "_activity-926d31ea.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payroll/Index.jsx"
+    "src": "resources/js/pages/Payroll/Index.jsx"
   },
-  "resources/js/Pages/Payroll/Modals/PayrollFormModal.jsx": {
+  "resources/js/pages/Payroll/Modals/PayrollFormModal.jsx": {
     "file": "assets/PayrollFormModal-db99a0e7.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4292,9 +4292,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payroll/Modals/PayrollFormModal.jsx"
+    "src": "resources/js/pages/Payroll/Modals/PayrollFormModal.jsx"
   },
-  "resources/js/Pages/Payroll/Modals/PayrollReviewSideModal.jsx": {
+  "resources/js/pages/Payroll/Modals/PayrollReviewSideModal.jsx": {
     "file": "assets/PayrollReviewSideModal-4d8f9570.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4313,18 +4313,18 @@
       "_with-selector-e87dab3f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Payroll/Modals/PayrollReviewSideModal.jsx"
+    "src": "resources/js/pages/Payroll/Modals/PayrollReviewSideModal.jsx"
   },
-  "resources/js/Pages/Plans/Index.jsx": {
+  "resources/js/pages/Plans/Index.jsx": {
     "file": "assets/Index-2542ea61.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_Modal-e15b9afd.js",
       "_SideModal-f7e6775f.js",
-      "resources/js/Pages/Plans/TablePlans.jsx",
-      "resources/js/Pages/Plans/Partials/PlanModal.jsx",
-      "resources/js/Pages/Plans/Partials/PlanModalDelete.jsx",
+      "resources/js/pages/Plans/TablePlans.jsx",
+      "resources/js/pages/Plans/Partials/PlanModal.jsx",
+      "resources/js/pages/Plans/Partials/PlanModalDelete.jsx",
       "_notebook-text-d82647f8.js",
       "_plus-0fe18335.js",
       "_index-88056f3d.js",
@@ -4366,9 +4366,9 @@
       "_InputPesoChileno-ac49fd33.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Plans/Index.jsx"
+    "src": "resources/js/pages/Plans/Index.jsx"
   },
-  "resources/js/Pages/Plans/Partials/PlanModal.jsx": {
+  "resources/js/pages/Plans/Partials/PlanModal.jsx": {
     "file": "assets/PlanModal-0e338ad0.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4382,17 +4382,17 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Plans/Partials/PlanModal.jsx"
+    "src": "resources/js/pages/Plans/Partials/PlanModal.jsx"
   },
-  "resources/js/Pages/Plans/Partials/PlanModalDelete.jsx": {
+  "resources/js/pages/Plans/Partials/PlanModalDelete.jsx": {
     "file": "assets/PlanModalDelete-4db753cb.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Plans/Partials/PlanModalDelete.jsx"
+    "src": "resources/js/pages/Plans/Partials/PlanModalDelete.jsx"
   },
-  "resources/js/Pages/Plans/TablePlans.jsx": {
+  "resources/js/pages/Plans/TablePlans.jsx": {
     "file": "assets/TablePlans-bca371aa.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4407,9 +4407,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Plans/TablePlans.jsx"
+    "src": "resources/js/pages/Plans/TablePlans.jsx"
   },
-  "resources/js/Pages/Posts/Index.jsx": {
+  "resources/js/pages/Posts/Index.jsx": {
     "file": "assets/Index-050f76d6.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4444,9 +4444,9 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Posts/Index.jsx"
+    "src": "resources/js/pages/Posts/Index.jsx"
   },
-  "resources/js/Pages/Products/Create.jsx": {
+  "resources/js/pages/Products/Create.jsx": {
     "file": "assets/Create-f995c1f2.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4483,9 +4483,9 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Products/Create.jsx"
+    "src": "resources/js/pages/Products/Create.jsx"
   },
-  "resources/js/Pages/Products/Index.jsx": {
+  "resources/js/pages/Products/Index.jsx": {
     "file": "assets/Index-cbc4f39d.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4539,9 +4539,9 @@
       "_shield-check-7a14d9f2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Products/Index.jsx"
+    "src": "resources/js/pages/Products/Index.jsx"
   },
-  "resources/js/Pages/Reports/Index.jsx": {
+  "resources/js/pages/Reports/Index.jsx": {
     "file": "assets/Index-475dc34b.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4583,17 +4583,17 @@
       "_sweetalert2.esm.all-f89f7467.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Reports/Index.jsx"
+    "src": "resources/js/pages/Reports/Index.jsx"
   },
-  "resources/js/Pages/Sesiones/Partials/SesionModalDelete.jsx": {
+  "resources/js/pages/Sesiones/Partials/SesionModalDelete.jsx": {
     "file": "assets/SesionModalDelete-167b8e21.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Sesiones/Partials/SesionModalDelete.jsx"
+    "src": "resources/js/pages/Sesiones/Partials/SesionModalDelete.jsx"
   },
-  "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx": {
+  "resources/js/pages/Sesiones/Partials/SesionesModal.jsx": {
     "file": "assets/SesionesModal-13221bef.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4609,18 +4609,18 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx"
+    "src": "resources/js/pages/Sesiones/Partials/SesionesModal.jsx"
   },
-  "resources/js/Pages/Sesiones/SesionesIndex.jsx": {
+  "resources/js/pages/Sesiones/SesionesIndex.jsx": {
     "file": "assets/SesionesIndex-2c975fcb.js",
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-bf24a873.js",
       "_Modal-e15b9afd.js",
-      "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx",
-      "resources/js/Pages/Sesiones/TableSesiones.jsx",
-      "resources/js/Pages/Sesiones/TablePacientesSesion.jsx",
-      "resources/js/Pages/Sesiones/Partials/SesionModalDelete.jsx",
+      "resources/js/pages/Sesiones/Partials/SesionesModal.jsx",
+      "resources/js/pages/Sesiones/TableSesiones.jsx",
+      "resources/js/pages/Sesiones/TablePacientesSesion.jsx",
+      "resources/js/pages/Sesiones/Partials/SesionModalDelete.jsx",
       "_index-88056f3d.js",
       "_parse-c3570fb2.js",
       "_search-1e1035e3.js",
@@ -4664,9 +4664,9 @@
       "_circle-x-9383d2cb.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Sesiones/SesionesIndex.jsx"
+    "src": "resources/js/pages/Sesiones/SesionesIndex.jsx"
   },
-  "resources/js/Pages/Sesiones/TablePacientesSesion.jsx": {
+  "resources/js/pages/Sesiones/TablePacientesSesion.jsx": {
     "file": "assets/TablePacientesSesion-c6e17c7e.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4677,9 +4677,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Sesiones/TablePacientesSesion.jsx"
+    "src": "resources/js/pages/Sesiones/TablePacientesSesion.jsx"
   },
-  "resources/js/Pages/Sesiones/TableSesiones.jsx": {
+  "resources/js/pages/Sesiones/TableSesiones.jsx": {
     "file": "assets/TableSesiones-eeb1a6e7.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4698,9 +4698,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Sesiones/TableSesiones.jsx"
+    "src": "resources/js/pages/Sesiones/TableSesiones.jsx"
   },
-  "resources/js/Pages/SessionTypes/Index.jsx": {
+  "resources/js/pages/SessionTypes/Index.jsx": {
     "file": "assets/Index-84fbdafc.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4708,7 +4708,7 @@
       "_SideModal-f7e6775f.js",
       "_TablePagination-f36c33e3.js",
       "_index-8244d9a7.js",
-      "resources/js/Pages/SessionTypes/SessionTypeModal.jsx",
+      "resources/js/pages/SessionTypes/SessionTypeModal.jsx",
       "_utils-84c05c9a.js",
       "_clock-ac46b283.js",
       "_square-pen-46ffa5ba.js",
@@ -4758,9 +4758,9 @@
       "_activity-926d31ea.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/SessionTypes/Index.jsx"
+    "src": "resources/js/pages/SessionTypes/Index.jsx"
   },
-  "resources/js/Pages/SessionTypes/SessionTypeModal.jsx": {
+  "resources/js/pages/SessionTypes/SessionTypeModal.jsx": {
     "file": "assets/SessionTypeModal-2023f8f3.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4783,9 +4783,9 @@
       "_createLucideIcon-5ff7d2e2.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/SessionTypes/SessionTypeModal.jsx"
+    "src": "resources/js/pages/SessionTypes/SessionTypeModal.jsx"
   },
-  "resources/js/Pages/Subscription/Index.jsx": {
+  "resources/js/pages/Subscription/Index.jsx": {
     "file": "assets/Index-ae067124.js",
     "imports": [
       "resources/js/app.jsx",
@@ -4823,49 +4823,49 @@
       "_x-5e806e3f.js"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/Subscription/Index.jsx"
+    "src": "resources/js/pages/Subscription/Index.jsx"
   },
-  "resources/js/Pages/TreatmentSessions/Index.jsx": {
+  "resources/js/pages/TreatmentSessions/Index.jsx": {
     "file": "assets/Index-206aa4f2.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/TreatmentSessions/Index.jsx"
+    "src": "resources/js/pages/TreatmentSessions/Index.jsx"
   },
-  "resources/js/Pages/TreatmentSessions/SesionesIndex.jsx": {
+  "resources/js/pages/TreatmentSessions/SesionesIndex.jsx": {
     "file": "assets/SesionesIndex-95b40f91.js",
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/Pages/TreatmentSessions/TableSesiones.jsx",
-      "resources/js/Pages/TreatmentSessions/SessionForm.jsx"
+      "resources/js/pages/TreatmentSessions/TableSesiones.jsx",
+      "resources/js/pages/TreatmentSessions/SessionForm.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/TreatmentSessions/SesionesIndex.jsx"
+    "src": "resources/js/pages/TreatmentSessions/SesionesIndex.jsx"
   },
-  "resources/js/Pages/TreatmentSessions/SessionForm.jsx": {
+  "resources/js/pages/TreatmentSessions/SessionForm.jsx": {
     "file": "assets/SessionForm-00fe4931.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/TreatmentSessions/SessionForm.jsx"
+    "src": "resources/js/pages/TreatmentSessions/SessionForm.jsx"
   },
-  "resources/js/Pages/TreatmentSessions/Show.jsx": {
+  "resources/js/pages/TreatmentSessions/Show.jsx": {
     "file": "assets/Show-5e30f766.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/TreatmentSessions/Show.jsx"
+    "src": "resources/js/pages/TreatmentSessions/Show.jsx"
   },
-  "resources/js/Pages/TreatmentSessions/TableSesiones.jsx": {
+  "resources/js/pages/TreatmentSessions/TableSesiones.jsx": {
     "file": "assets/TableSesiones-039de4a9.js",
     "imports": [
       "resources/js/app.jsx"
     ],
     "isDynamicEntry": true,
-    "src": "resources/js/Pages/TreatmentSessions/TableSesiones.jsx"
+    "src": "resources/js/pages/TreatmentSessions/TableSesiones.jsx"
   },
   "resources/js/app.css": {
     "file": "assets/app-6068744a.css",
@@ -4876,177 +4876,177 @@
       "assets/app-6068744a.css"
     ],
     "dynamicImports": [
-      "resources/js/Pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx",
-      "resources/js/Pages/Acquisitions/PurchaseOrders/Index.jsx",
-      "resources/js/Pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx",
-      "resources/js/Pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx",
-      "resources/js/Pages/Acquisitions/Suppliers/Index.jsx",
-      "resources/js/Pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx",
-      "resources/js/Pages/Acquisitions/Tabs.jsx",
-      "resources/js/Pages/Admin/Doctors/Index.jsx",
-      "resources/js/Pages/Admin/SessionTypes/IndexSessionTypes.jsx",
-      "resources/js/Pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx",
-      "resources/js/Pages/Admin/SessionTypes/TableSessionTypes.jsx",
-      "resources/js/Pages/Agendas/AgendaCalendar.jsx",
-      "resources/js/Pages/Agreements/Components/AgreementRulesTable.jsx",
-      "resources/js/Pages/Agreements/Components/AgreementsTable.jsx",
-      "resources/js/Pages/Agreements/Index.jsx",
-      "resources/js/Pages/Agreements/Modals/AgreementFamilyAssignModal.jsx",
-      "resources/js/Pages/Agreements/Modals/AgreementFormModal.jsx",
-      "resources/js/Pages/Agreements/Modals/AgreementRuleFormModal.jsx",
-      "resources/js/Pages/Agreements/Modals/AgreementRulesListModal.jsx",
-      "resources/js/Pages/Attendances/AttendacesTable.jsx",
-      "resources/js/Pages/Attendances/Index.jsx",
-      "resources/js/Pages/Attendances/Modals/AbsentModal.jsx",
-      "resources/js/Pages/Attendances/Modals/AttendanceActionModal.jsx",
-      "resources/js/Pages/Attendances/Modals/CancelModal.jsx",
-      "resources/js/Pages/Attendances/Modals/CompletedModal.jsx",
-      "resources/js/Pages/Attendances/Modals/CreateUpdateModal.jsx",
-      "resources/js/Pages/Attendances/Modals/DteModal.jsx",
-      "resources/js/Pages/Attendances/Modals/ResumeModal.jsx",
-      "resources/js/Pages/Attendances/Modals/StartModal.jsx",
-      "resources/js/Pages/Attendances/Partials/AttendancesHeader.jsx",
-      "resources/js/Pages/Attendances/Partials/Kpis.jsx",
-      "resources/js/Pages/Auth/ConfirmPassword.jsx",
-      "resources/js/Pages/Auth/ForgotPassword.jsx",
-      "resources/js/Pages/Auth/Login.jsx",
-      "resources/js/Pages/Auth/Patient/Login.jsx",
-      "resources/js/Pages/Auth/Patient/VerifyCode.jsx",
-      "resources/js/Pages/Auth/Register.jsx",
-      "resources/js/Pages/Auth/ResetPassword.jsx",
-      "resources/js/Pages/Auth/VerifyEmail.jsx",
-      "resources/js/Pages/BillingCheckout/Components/PatientCard.jsx",
-      "resources/js/Pages/BillingCheckout/Components/PaymentSummary.jsx",
-      "resources/js/Pages/BillingCheckout/Components/ServiceItem.jsx",
-      "resources/js/Pages/BillingCheckout/Components/ServicesCard.jsx",
-      "resources/js/Pages/BillingCheckout/Index.jsx",
-      "resources/js/Pages/BillingCheckout/PaymentBlockingModal.jsx",
-      "resources/js/Pages/BillingCheckout/Success.jsx",
-      "resources/js/Pages/Boletas/Crear.jsx",
-      "resources/js/Pages/Companies/Components/CafUploader.jsx",
-      "resources/js/Pages/Companies/Components/DteConfigurationForm.jsx",
-      "resources/js/Pages/Companies/Create.jsx",
-      "resources/js/Pages/Companies/Edit.jsx",
-      "resources/js/Pages/Companies/Index.jsx",
-      "resources/js/Pages/Dashboard.jsx",
-      "resources/js/Pages/Doctors/DoctorDetailModal.jsx",
-      "resources/js/Pages/Doctors/DoctorModalForm.jsx",
-      "resources/js/Pages/Doctors/Index.jsx",
-      "resources/js/Pages/Doctors/Partials/DoctorCommissions.jsx",
-      "resources/js/Pages/Doctors/Partials/DoctorPatients.jsx",
-      "resources/js/Pages/Doctors/Partials/HeaderDoctor.jsx",
-      "resources/js/Pages/Doctors/Partials/Kpis.jsx",
-      "resources/js/Pages/Doctors/TableDoctors.jsx",
-      "resources/js/Pages/Documents/IndexDocuments.jsx",
-      "resources/js/Pages/Documents/partials/CafUploadModal.jsx",
-      "resources/js/Pages/Documents/partials/ContextSelector.jsx",
-      "resources/js/Pages/Documents/partials/DteConfigModal.jsx",
-      "resources/js/Pages/Documents/partials/HeaderDocuments.jsx",
-      "resources/js/Pages/Documents/partials/ItemsTable.jsx",
-      "resources/js/Pages/Documents/partials/List.jsx",
-      "resources/js/Pages/Finance/Receivables/Components/ReceivablesTable.jsx",
-      "resources/js/Pages/Finance/Receivables/Index.jsx",
-      "resources/js/Pages/HealthInsurers/Index.jsx",
-      "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModal.jsx",
-      "resources/js/Pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx",
-      "resources/js/Pages/HealthInsurers/TableHealthInsurers.jsx",
-      "resources/js/Pages/Informes/IndexInformes.jsx",
-      "resources/js/Pages/Insurances/InsuranceIndex.jsx",
-      "resources/js/Pages/Insurances/Partials/InsuranceFormModal.jsx",
-      "resources/js/Pages/Insurances/Partials/ModalDeleteInsurance.jsx",
-      "resources/js/Pages/Insurances/Partials/ModalPlans.jsx",
-      "resources/js/Pages/Insurances/Partials/PlanEditForm.jsx",
-      "resources/js/Pages/Insurances/Partials/TableInsurances.jsx",
-      "resources/js/Pages/Insurances/Partials/TablePlans.jsx",
-      "resources/js/Pages/Invoices/Index.jsx",
-      "resources/js/Pages/Invoices/Show.jsx",
-      "resources/js/Pages/KineMobile/AccessDenied.jsx",
-      "resources/js/Pages/KineMobile/Dashboard.jsx",
-      "resources/js/Pages/KineMobile/MyPatients.jsx",
-      "resources/js/Pages/KineMobile/MyProfile.jsx",
-      "resources/js/Pages/KineMobile/MySessions.jsx",
-      "resources/js/Pages/KineMobile/Partials/KPICard.jsx",
-      "resources/js/Pages/KineMobile/Partials/PatientCard.jsx",
-      "resources/js/Pages/KineMobile/Partials/QuickActions.jsx",
-      "resources/js/Pages/KineMobile/Partials/SessionCard.jsx",
-      "resources/js/Pages/KineMobile/Partials/StatsBadge.jsx",
-      "resources/js/Pages/KineMobile/PatientDetail.jsx",
-      "resources/js/Pages/KineMobile/SessionDetail.jsx",
-      "resources/js/Pages/KineMobile/SessionForm.jsx",
-      "resources/js/Pages/PatientInsurances/Index.jsx",
-      "resources/js/Pages/PatientInsurances/ModalPatientInsurance.jsx",
-      "resources/js/Pages/PatientInsurances/TablePatientsInsurances.jsx",
-      "resources/js/Pages/Patients/Dashboard/PatientDashboard.jsx",
-      "resources/js/Pages/Patients/DetailPatient.jsx",
-      "resources/js/Pages/Patients/Documents/IndexDocuments.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/EmergencyContact.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/MedicalInformation.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/NextSessions.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/PatientAddress.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/PatientData.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/PatientPrevition.jsx",
-      "resources/js/Pages/Patients/General/GeneralPartials/Vital.jsx",
-      "resources/js/Pages/Patients/General/IndexGeneral.jsx",
-      "resources/js/Pages/Patients/Historial/HistorialPartials/CardTreatment.jsx",
-      "resources/js/Pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx",
-      "resources/js/Pages/Patients/Historial/IndexHistorial.jsx",
-      "resources/js/Pages/Patients/IndexPatients.jsx",
-      "resources/js/Pages/Patients/ModalCreateEditPatient.jsx",
-      "resources/js/Pages/Patients/ModalDeletePatient.jsx",
-      "resources/js/Pages/Patients/PacienteHomeView.jsx",
-      "resources/js/Pages/Patients/PanelAcciones.jsx",
-      "resources/js/Pages/Patients/PanelFinanciero.jsx",
-      "resources/js/Pages/Patients/PanelSesionesRecientes.jsx",
-      "resources/js/Pages/Patients/Partials/PatientCard.jsx",
-      "resources/js/Pages/Patients/Partials/PatientSidebar.jsx",
+      "resources/js/pages/Acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx",
+      "resources/js/pages/Acquisitions/PurchaseOrders/Index.jsx",
+      "resources/js/pages/Acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx",
+      "resources/js/pages/Acquisitions/Suppliers/Components/SuppliersTable.jsx",
+      "resources/js/pages/Acquisitions/Suppliers/Index.jsx",
+      "resources/js/pages/Acquisitions/Suppliers/Modals/SupplierFormModal.jsx",
+      "resources/js/pages/Acquisitions/Tabs.jsx",
+      "resources/js/pages/Admin/Doctors/Index.jsx",
+      "resources/js/pages/Admin/SessionTypes/IndexSessionTypes.jsx",
+      "resources/js/pages/Admin/SessionTypes/ModalCreateEditSessionType.jsx",
+      "resources/js/pages/Admin/SessionTypes/TableSessionTypes.jsx",
+      "resources/js/pages/Agendas/AgendaCalendar.jsx",
+      "resources/js/pages/Agreements/Components/AgreementRulesTable.jsx",
+      "resources/js/pages/Agreements/Components/AgreementsTable.jsx",
+      "resources/js/pages/Agreements/Index.jsx",
+      "resources/js/pages/Agreements/Modals/AgreementFamilyAssignModal.jsx",
+      "resources/js/pages/Agreements/Modals/AgreementFormModal.jsx",
+      "resources/js/pages/Agreements/Modals/AgreementRuleFormModal.jsx",
+      "resources/js/pages/Agreements/Modals/AgreementRulesListModal.jsx",
+      "resources/js/pages/Attendances/AttendacesTable.jsx",
+      "resources/js/pages/Attendances/Index.jsx",
+      "resources/js/pages/Attendances/Modals/AbsentModal.jsx",
+      "resources/js/pages/Attendances/Modals/AttendanceActionModal.jsx",
+      "resources/js/pages/Attendances/Modals/CancelModal.jsx",
+      "resources/js/pages/Attendances/Modals/CompletedModal.jsx",
+      "resources/js/pages/Attendances/Modals/CreateUpdateModal.jsx",
+      "resources/js/pages/Attendances/Modals/DteModal.jsx",
+      "resources/js/pages/Attendances/Modals/ResumeModal.jsx",
+      "resources/js/pages/Attendances/Modals/StartModal.jsx",
+      "resources/js/pages/Attendances/Partials/AttendancesHeader.jsx",
+      "resources/js/pages/Attendances/Partials/Kpis.jsx",
+      "resources/js/pages/Auth/ConfirmPassword.jsx",
+      "resources/js/pages/Auth/ForgotPassword.jsx",
+      "resources/js/pages/Auth/Login.jsx",
+      "resources/js/pages/Auth/Patient/Login.jsx",
+      "resources/js/pages/Auth/Patient/VerifyCode.jsx",
+      "resources/js/pages/Auth/Register.jsx",
+      "resources/js/pages/Auth/ResetPassword.jsx",
+      "resources/js/pages/Auth/VerifyEmail.jsx",
+      "resources/js/pages/BillingCheckout/Components/PatientCard.jsx",
+      "resources/js/pages/BillingCheckout/Components/PaymentSummary.jsx",
+      "resources/js/pages/BillingCheckout/Components/ServiceItem.jsx",
+      "resources/js/pages/BillingCheckout/Components/ServicesCard.jsx",
+      "resources/js/pages/BillingCheckout/Index.jsx",
+      "resources/js/pages/BillingCheckout/PaymentBlockingModal.jsx",
+      "resources/js/pages/BillingCheckout/Success.jsx",
+      "resources/js/pages/Boletas/Crear.jsx",
+      "resources/js/pages/Companies/Components/CafUploader.jsx",
+      "resources/js/pages/Companies/Components/DteConfigurationForm.jsx",
+      "resources/js/pages/Companies/Create.jsx",
+      "resources/js/pages/Companies/Edit.jsx",
+      "resources/js/pages/Companies/Index.jsx",
+      "resources/js/pages/Dashboard.jsx",
+      "resources/js/pages/Doctors/DoctorDetailModal.jsx",
+      "resources/js/pages/Doctors/DoctorModalForm.jsx",
+      "resources/js/pages/Doctors/Index.jsx",
+      "resources/js/pages/Doctors/Partials/DoctorCommissions.jsx",
+      "resources/js/pages/Doctors/Partials/DoctorPatients.jsx",
+      "resources/js/pages/Doctors/Partials/HeaderDoctor.jsx",
+      "resources/js/pages/Doctors/Partials/Kpis.jsx",
+      "resources/js/pages/Doctors/TableDoctors.jsx",
+      "resources/js/pages/Documents/IndexDocuments.jsx",
+      "resources/js/pages/Documents/partials/CafUploadModal.jsx",
+      "resources/js/pages/Documents/partials/ContextSelector.jsx",
+      "resources/js/pages/Documents/partials/DteConfigModal.jsx",
+      "resources/js/pages/Documents/partials/HeaderDocuments.jsx",
+      "resources/js/pages/Documents/partials/ItemsTable.jsx",
+      "resources/js/pages/Documents/partials/List.jsx",
+      "resources/js/pages/Finance/Receivables/Components/ReceivablesTable.jsx",
+      "resources/js/pages/Finance/Receivables/Index.jsx",
+      "resources/js/pages/HealthInsurers/Index.jsx",
+      "resources/js/pages/HealthInsurers/Partials/HealthInsurerModal.jsx",
+      "resources/js/pages/HealthInsurers/Partials/HealthInsurerModalDelete.jsx",
+      "resources/js/pages/HealthInsurers/TableHealthInsurers.jsx",
+      "resources/js/pages/Informes/IndexInformes.jsx",
+      "resources/js/pages/Insurances/InsuranceIndex.jsx",
+      "resources/js/pages/Insurances/Partials/InsuranceFormModal.jsx",
+      "resources/js/pages/Insurances/Partials/ModalDeleteInsurance.jsx",
+      "resources/js/pages/Insurances/Partials/ModalPlans.jsx",
+      "resources/js/pages/Insurances/Partials/PlanEditForm.jsx",
+      "resources/js/pages/Insurances/Partials/TableInsurances.jsx",
+      "resources/js/pages/Insurances/Partials/TablePlans.jsx",
+      "resources/js/pages/Invoices/Index.jsx",
+      "resources/js/pages/Invoices/Show.jsx",
+      "resources/js/pages/KineMobile/AccessDenied.jsx",
+      "resources/js/pages/KineMobile/Dashboard.jsx",
+      "resources/js/pages/KineMobile/MyPatients.jsx",
+      "resources/js/pages/KineMobile/MyProfile.jsx",
+      "resources/js/pages/KineMobile/MySessions.jsx",
+      "resources/js/pages/KineMobile/Partials/KPICard.jsx",
+      "resources/js/pages/KineMobile/Partials/PatientCard.jsx",
+      "resources/js/pages/KineMobile/Partials/QuickActions.jsx",
+      "resources/js/pages/KineMobile/Partials/SessionCard.jsx",
+      "resources/js/pages/KineMobile/Partials/StatsBadge.jsx",
+      "resources/js/pages/KineMobile/PatientDetail.jsx",
+      "resources/js/pages/KineMobile/SessionDetail.jsx",
+      "resources/js/pages/KineMobile/SessionForm.jsx",
+      "resources/js/pages/PatientInsurances/Index.jsx",
+      "resources/js/pages/PatientInsurances/ModalPatientInsurance.jsx",
+      "resources/js/pages/PatientInsurances/TablePatientsInsurances.jsx",
+      "resources/js/pages/Patients/Dashboard/PatientDashboard.jsx",
+      "resources/js/pages/Patients/DetailPatient.jsx",
+      "resources/js/pages/Patients/Documents/IndexDocuments.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/EmergencyContact.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/MedicalInformation.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/NextSessions.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/PatientAddress.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/PatientData.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/PatientPrevition.jsx",
+      "resources/js/pages/Patients/General/GeneralPartials/Vital.jsx",
+      "resources/js/pages/Patients/General/IndexGeneral.jsx",
+      "resources/js/pages/Patients/Historial/HistorialPartials/CardTreatment.jsx",
+      "resources/js/pages/Patients/Historial/HistorialPartials/ModalCreateUpdateTreatment.jsx",
+      "resources/js/pages/Patients/Historial/IndexHistorial.jsx",
+      "resources/js/pages/Patients/IndexPatients.jsx",
+      "resources/js/pages/Patients/ModalCreateEditPatient.jsx",
+      "resources/js/pages/Patients/ModalDeletePatient.jsx",
+      "resources/js/pages/Patients/PacienteHomeView.jsx",
+      "resources/js/pages/Patients/PanelAcciones.jsx",
+      "resources/js/pages/Patients/PanelFinanciero.jsx",
+      "resources/js/pages/Patients/PanelSesionesRecientes.jsx",
+      "resources/js/pages/Patients/Partials/PatientCard.jsx",
+      "resources/js/pages/Patients/Partials/PatientSidebar.jsx",
       "_TableAttendancesPatient-6bd96e83.js",
-      "resources/js/Pages/Patients/Partials/TableTreatments.jsx",
-      "resources/js/Pages/Patients/Payments/IndexPayments.jsx",
-      "resources/js/Pages/Patients/Payments/PaymentForm.jsx",
-      "resources/js/Pages/Patients/TablePatients.jsx",
-      "resources/js/Pages/Patients/Treatments/IndexTreatments.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/IndexSessions.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/SessionCard.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/SessionModal.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/SessionModalDelete.jsx",
-      "resources/js/Pages/Patients/Treatments/Sessions/TableSessions.jsx",
-      "resources/js/Pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx",
-      "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx",
-      "resources/js/Pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx",
-      "resources/js/Pages/Payments/Publicwebpayresult.jsx",
-      "resources/js/Pages/Payments/Result.jsx",
-      "resources/js/Pages/Payments/WebpayResult.jsx",
-      "resources/js/Pages/Payments/WebpayTest.jsx",
-      "resources/js/Pages/PaymentsPatients/Admin/PaymentRemindersIndex.jsx",
-      "resources/js/Pages/PaymentsPatients/PortalPago.jsx",
-      "resources/js/Pages/PaymentsPatients/PortalPagoDeudas.jsx",
-      "resources/js/Pages/PaymentsPatients/PortalPagoResultado.jsx",
-      "resources/js/Pages/Payroll/Components/PayrollTable.jsx",
-      "resources/js/Pages/Payroll/Index.jsx",
-      "resources/js/Pages/Payroll/Modals/PayrollFormModal.jsx",
-      "resources/js/Pages/Payroll/Modals/PayrollReviewSideModal.jsx",
-      "resources/js/Pages/Plans/Index.jsx",
-      "resources/js/Pages/Plans/Partials/PlanModal.jsx",
-      "resources/js/Pages/Plans/Partials/PlanModalDelete.jsx",
-      "resources/js/Pages/Plans/TablePlans.jsx",
-      "resources/js/Pages/Posts/Index.jsx",
-      "resources/js/Pages/Products/Create.jsx",
-      "resources/js/Pages/Products/Index.jsx",
+      "resources/js/pages/Patients/Partials/TableTreatments.jsx",
+      "resources/js/pages/Patients/Payments/IndexPayments.jsx",
+      "resources/js/pages/Patients/Payments/PaymentForm.jsx",
+      "resources/js/pages/Patients/TablePatients.jsx",
+      "resources/js/pages/Patients/Treatments/IndexTreatments.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/IndexSessions.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/SessionCard.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/SessionModal.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/SessionModalDelete.jsx",
+      "resources/js/pages/Patients/Treatments/Sessions/TableSessions.jsx",
+      "resources/js/pages/Patients/Treatments/TreatmentPartials/TableTreatments.jsx",
+      "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentCardMain.jsx",
+      "resources/js/pages/Patients/Treatments/TreatmentPartials/TreatmentModal.jsx",
+      "resources/js/pages/Payments/Publicwebpayresult.jsx",
+      "resources/js/pages/Payments/Result.jsx",
+      "resources/js/pages/Payments/WebpayResult.jsx",
+      "resources/js/pages/Payments/WebpayTest.jsx",
+      "resources/js/pages/PaymentsPatients/Admin/PaymentRemindersIndex.jsx",
+      "resources/js/pages/PaymentsPatients/PortalPago.jsx",
+      "resources/js/pages/PaymentsPatients/PortalPagoDeudas.jsx",
+      "resources/js/pages/PaymentsPatients/PortalPagoResultado.jsx",
+      "resources/js/pages/Payroll/Components/PayrollTable.jsx",
+      "resources/js/pages/Payroll/Index.jsx",
+      "resources/js/pages/Payroll/Modals/PayrollFormModal.jsx",
+      "resources/js/pages/Payroll/Modals/PayrollReviewSideModal.jsx",
+      "resources/js/pages/Plans/Index.jsx",
+      "resources/js/pages/Plans/Partials/PlanModal.jsx",
+      "resources/js/pages/Plans/Partials/PlanModalDelete.jsx",
+      "resources/js/pages/Plans/TablePlans.jsx",
+      "resources/js/pages/Posts/Index.jsx",
+      "resources/js/pages/Products/Create.jsx",
+      "resources/js/pages/Products/Index.jsx",
       "_ProductModal-03bf6d39.js",
-      "resources/js/Pages/Reports/Index.jsx",
-      "resources/js/Pages/Sesiones/Partials/SesionModalDelete.jsx",
-      "resources/js/Pages/Sesiones/Partials/SesionesModal.jsx",
-      "resources/js/Pages/Sesiones/SesionesIndex.jsx",
-      "resources/js/Pages/Sesiones/TablePacientesSesion.jsx",
-      "resources/js/Pages/Sesiones/TableSesiones.jsx",
-      "resources/js/Pages/SessionTypes/Index.jsx",
-      "resources/js/Pages/SessionTypes/SessionTypeModal.jsx",
-      "resources/js/Pages/Subscription/Index.jsx",
-      "resources/js/Pages/TreatmentSessions/Index.jsx",
-      "resources/js/Pages/TreatmentSessions/SesionesIndex.jsx",
-      "resources/js/Pages/TreatmentSessions/SessionForm.jsx",
-      "resources/js/Pages/TreatmentSessions/Show.jsx",
-      "resources/js/Pages/TreatmentSessions/TableSesiones.jsx"
+      "resources/js/pages/Reports/Index.jsx",
+      "resources/js/pages/Sesiones/Partials/SesionModalDelete.jsx",
+      "resources/js/pages/Sesiones/Partials/SesionesModal.jsx",
+      "resources/js/pages/Sesiones/SesionesIndex.jsx",
+      "resources/js/pages/Sesiones/TablePacientesSesion.jsx",
+      "resources/js/pages/Sesiones/TableSesiones.jsx",
+      "resources/js/pages/SessionTypes/Index.jsx",
+      "resources/js/pages/SessionTypes/SessionTypeModal.jsx",
+      "resources/js/pages/Subscription/Index.jsx",
+      "resources/js/pages/TreatmentSessions/Index.jsx",
+      "resources/js/pages/TreatmentSessions/SesionesIndex.jsx",
+      "resources/js/pages/TreatmentSessions/SessionForm.jsx",
+      "resources/js/pages/TreatmentSessions/Show.jsx",
+      "resources/js/pages/TreatmentSessions/TableSesiones.jsx"
     ],
     "file": "assets/app-0e19fa44.js",
     "isEntry": true,

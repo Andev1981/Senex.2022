@@ -81,7 +81,7 @@ class AllSeeder extends Seeder
         $this->call(AgreementSeeder::class, false, ['parameters' => ['company' => $company]]);
         $this->call(TreatmentSessionSeeder::class, false, ['parameters' => ['company' => $company, 'branches' => $branchIds]]);
         
-        $this->seedMassiveData($company, $branchIds);
+        /* $this->seedMassiveData($company, $branchIds); */
     }
 
     private function seedMassiveData(Company $company, $branchIds)
@@ -118,7 +118,7 @@ class AllSeeder extends Seeder
             return;
         }
 
-        TreatmentSession::factory()->count(300)->make([
+        TreatmentSession::factory()->count(100)->make([
             'company_id' => $company->id,
         ])->each(function ($session) use ($branchIds, $doctors, $patients, $company, $sessionTypeIds) {
             

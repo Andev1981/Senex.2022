@@ -18,7 +18,7 @@ export default function TablePlans({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
 
@@ -169,7 +169,7 @@ export default function TablePlans({
       sorting,
       globalFilter,
       columnFilters,
-      pagination: { pageSize, pageIndex },
+      pagination: { pagesize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -177,10 +177,10 @@ export default function TablePlans({
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
+          ? updater({ pageIndex, pagesize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -328,9 +328,9 @@ export default function TablePlans({
       <TablePagination
         table={table}
         total={plans.length}
-        pageSize={pageSize}
-        setPageSize={setPageSize}
-        pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
+        pagesize={pagesize}
+        setpagesize={setpagesize}
+        pagesizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
       />
     </div>
   );

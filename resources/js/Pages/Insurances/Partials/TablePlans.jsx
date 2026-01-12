@@ -35,7 +35,7 @@ export default function TablePlans({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const data = useMemo(() => plans || [], [plans]);
@@ -123,13 +123,13 @@ export default function TablePlans({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter, pagination: { pageSize, pageIndex } },
+    state: { sorting, globalFilter, pagination: { pagesize, pageIndex } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: (updater) => {
-      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -213,7 +213,7 @@ export default function TablePlans({
                 </table>
             </div>
             <div className="bg-gray-50/30 border-t border-gray-100">
-                <TablePagination table={table} total={plans.length} pageSize={pageSize} setPageSize={setPageSize} pageSizeOptions={[5, 10, 20]} />
+                <TablePagination table={table} total={plans.length} pagesize={pagesize} setpagesize={setpagesize} pagesizeOptions={[5, 10, 20]} />
             </div>
         </div>
       </div>

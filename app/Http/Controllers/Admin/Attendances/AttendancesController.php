@@ -11,6 +11,7 @@ use App\Models\PatientPlan;
 use App\Models\SessionType;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
+use App\Models\Diagnostic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -28,12 +29,6 @@ class AttendancesController extends Controller
         $companyId = session('current_company_id');
         $activeBranchId = session('active_branch_id');
 
-        /* Log::info('companyId: ' . $companyId);
-        Log::info('activeBranchId: ' . $activeBranchId); */
-
-
-
-
         try {
             // Obtener el primer día del mes actual (Ej: 2025-12-01)
             $inicioMes = now()->startOfMonth()->format('Y-m-d');
@@ -49,13 +44,6 @@ class AttendancesController extends Controller
             $estado = $request->input('estado', 'all');
             $query = $request->input('query', '');
 
-            // Logs de debugging
-            /* Log::info('=== ATTENDANCE INDEX - DEBUG ===');
-            Log::info('Fecha Inicio: ' . $fechaInicio);
-            Log::info('Fecha Fin: ' . $fechaFin);
-            Log::info('Estado: ' . $estado);
-            Log::info('Query: ' . $query); */
-
             // Asegurar que fecha_inicio no sea mayor que fecha_fin
             if ($fechaInicio > $fechaFin) {
                 /* Log::info('Swap de fechas detectado'); */
@@ -63,8 +51,7 @@ class AttendancesController extends Controller
                 $fechaInicio = $fechaFin;
                 $fechaFin = $temp;
             }
-
-
+            
 
             // Query base con relaciones
             $sessionsQuery = TreatmentSession::with([
@@ -89,7 +76,7 @@ class AttendancesController extends Controller
                     'status',
                     'patient_amount_clp',
                     'doctor_amount_clp',
-                    'duration'
+                    'duration',
                 ]);
 
             // Filtro por estado
@@ -100,10 +87,10 @@ class AttendancesController extends Controller
             // Filtro por búsqueda
             if (!empty($query)) {
                 $sessionsQuery->whereHas('patient', function ($q) use ($query) {
-                    $q->where(DB::raw("CONCAT(name, ' ', last_name)"), 'like', "%{$query}%")
+                    $q->where(DB::raw("LOWER(CONCAT(name, ' ', last_name))"), 'like', '%' . strtolower($query) . '%')
                         ->orWhere('rut', 'like', "%{$query}%");
                 })->orWhereHas('doctor', function ($q) use ($query) {
-                    $q->where(DB::raw("CONCAT(name, ' ', last_name)"), 'like', "%{$query}%");
+                    $q->where(DB::raw("LOWER(CONCAT(name, ' ', last_name))"), 'like', '%' . strtolower($query) . '%');
                 });
             }
 
@@ -134,22 +121,23 @@ class AttendancesController extends Controller
 
             // Transformar datos para el frontend
             $atenciones = $sessions->map(function ($session) {
+
                 return [
                     'session_id' => $session->id,
 
                     // Información básica
                     'treatment_id' => $session->treatment_id,
-                    'patient_id' => $session->patient->id,
+                    'patient_id' => $session->patient_id, // Use ID directly from session for safety
                     'doctor_id' => $session->doctor_id,
                     'session_type_id' => $session->session_type_id,
 
-                    // Nombres para mostrar
-                    'patient_full_name' => $session->patient->full_name,
-                    'patient_rut' => $session->patient->rut,
-                    'patient_phone' => $session->patient->phone,
-                    'doctor_full_name' => $session->doctor->full_name,
-                    'name_session_type' => $session->sessionType->name,
-                    'session_type_base_price' => $session->sessionType->base_price,
+                    // Nombres para mostrar (Null Safe)
+                    'patient_full_name' => $session->patient?->full_name ?? 'Paciente no encontrado',
+                    'patient_rut' => $session->patient?->rut ?? 'S/R',
+                    'patient_phone' => $session->patient?->phone ?? '',
+                    'doctor_full_name' => $session->doctor ? ($session->doctor->name . ' ' . $session->doctor->last_name) : 'Doctor no asignado',
+                    'name_session_type' => $session->sessionType?->name ?? 'Tipo desconocido',
+                    'session_type_base_price' => $session->sessionType?->base_price ?? 0,
 
                     // Fecha y hora
                     'date' => $session->date,
@@ -288,7 +276,7 @@ class AttendancesController extends Controller
             $session_types = SessionType::select('id', 'name', 'code', 'category', 'base_price_clp', 'plan_discount_clp')
                 ->orderBy('name')
                 ->get();
-
+$diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get(['code', 'description']);
 
             return Inertia::render('Attendances/Index', [
                 'atenciones' => $atenciones,
@@ -302,6 +290,7 @@ class AttendancesController extends Controller
                 'patients' => $patients,      // ← Agregar
                 'doctors' => $doctors,        // ← Agregar
                 'session_types' => $session_types, // ← Agregar
+                'diagnostics' => $diagnostics
             ]);
         } catch (\Exception $e) {
             Log::error('Error al cargar atenciones: ' . $e->getMessage(), [

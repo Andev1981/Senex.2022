@@ -24,7 +24,7 @@ import {
 export default function Index({ companies }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const columns = useMemo(
@@ -102,14 +102,14 @@ export default function Index({ companies }) {
     state: {
       sorting,
       globalFilter: searchTerm,
-      pagination: { pageSize, pageIndex },
+      pagination: { pagesize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
     onPaginationChange: (updater) => {
-      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -227,9 +227,9 @@ export default function Index({ companies }) {
             <TablePagination
                 table={table}
                 total={companies.length}
-                pageSize={pageSize}
-                setPageSize={setPageSize}
-                pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]}
+                pagesize={pagesize}
+                setpagesize={setpagesize}
+                pagesizeOptions={[5, 10, 15, 20, 30, 40, 50]}
             />
           </div>
         </div>

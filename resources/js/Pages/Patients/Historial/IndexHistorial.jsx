@@ -120,7 +120,7 @@ export default function IndexHistorial({
       <SideModal
         open={openTreatmentModal}
         onClose={() => setOpenTreatmentModal(false)}
-        width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
+        width="full" // sm, md, lg, xl, 2xl, 3xl, full
       >
         <ModalCreateUpdateTreatment
           diagnostics={diagnostics}

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Inertia;
+namespace App\Http\Controllers\Admin\Treatments;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTreatmentRequest;

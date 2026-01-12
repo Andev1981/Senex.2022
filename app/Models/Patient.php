@@ -219,9 +219,9 @@ class Patient extends Authenticatable
             ->orderBy('created_at');      // si no hay primarios, el primero creado
     }
 
-    public function latestAttendance(): HasOne
+    public function latestTreatmentSession(): HasOne
     {
-        return $this->hasOne(Attendance::class)->latestOfMany('attended_at'); // o created_at
+        return $this->hasOne(TreatmentSession::class)->latestOfMany('date')->where('status','completed'); // o created_at
     }
 
 

@@ -29,7 +29,7 @@ class PatientController extends Controller
             return redirect()->route('patient.dashboard');
         }
 
-        return Inertia::render('Patient/Auth/Login');
+        return Inertia::render('patient/auth/Login');
     }
 
     /**

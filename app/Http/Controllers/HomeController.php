@@ -50,7 +50,7 @@ class HomeController extends Controller
             'payment_distribution' => $paymentDistribution,
         ];
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('dashboard', [
             'dte_stats' => $stats
         ]);
     }

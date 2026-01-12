@@ -1,157 +1,170 @@
 import React from "react";
 import { getStatusConfig } from "@/constants/treatmentStatuses";
 import {
-  CheckCircle,
-  Target,
+  TrendingDown, // Cambio a Down para dolor (es bueno que baje)
   TrendingUp,
-  Award,
   Activity,
-  File,
+  Award,
+  Calendar,
+  Clock,
+  Target,
   Repeat,
+  User,
+  ChevronRight
 } from "lucide-react";
 
 export default function TreatmentCardMain({ treatment, handleTreatmentModal }) {
+  
+  // Cálculo de porcentaje seguro
+  const progressPercent = treatment.total_sessions > 0 
+    ? Math.min((treatment.completed_sessions / treatment.total_sessions) * 100, 100) 
+    : 0;
+
   return (
-    <div key={treatment.id} className="p-4 bg-white shadow-lg rounded-xl">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <span
-              className={`px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full ${
-                getStatusConfig(treatment.status).className
-              }`}
-            >
-              {getStatusConfig(treatment.status).label}
-            </span>
+    <div className="bg-white rounded-[1.5rem] border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden group">
+      
+      {/* --- HEADER: Título y Estado --- */}
+      <div className="p-6 border-b border-gray-50">
+        <div className="flex justify-between items-start gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${getStatusConfig(treatment.status).className.replace('bg-', 'bg-opacity-10 border-')}`}>
+                {getStatusConfig(treatment.status).label}
+              </span>
+              {treatment.length > 1 && (
+                 <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                    <Repeat className="w-3 h-3" /> Histórico
+                 </span>
+              )}
+            </div>
+            <h3 className="text-xl font-black text-gray-800 leading-tight mb-1">
+              {treatment.diagnosis}
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+              <User className="w-4 h-4 text-brand-primary" />
+              {treatment?.doctor?.name} {treatment?.doctor?.last_name}
+            </div>
           </div>
-          <p className="mb-1 text-gray-600">{treatment.diagnosis}</p>
-          <p className="text-sm text-gray-500">
-            {treatment?.doctor?.name + " " + treatment?.doctor?.last_name}
-          </p>
-        </div>
-        {treatment.length > 1 && (
+
           <button
-            className="flex gap-2 px-2 py-1 text-teal-600 border-2 shadow-sm hover:shadow-lg rounded-xl hover:scale-105 hover:text-teal-700"
             onClick={() => handleTreatmentModal(treatment)}
+            className="p-2 text-gray-400 hover:text-brand-primary hover:bg-gray-50 rounded-xl transition-all"
+            title="Ver/Editar Detalles"
           >
-            Cambiar <Repeat className="w-5 h-5" />
+            <ChevronRight className="w-6 h-6" />
           </button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-1">
-        <div className="p-4 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
-          <p className="mb-1 text-sm opacity-90">Sesiones</p>
-          <p className="text-3xl font-bold">
-            {treatment.completed_sessions}/
-            {treatment.is_indefinite ? (
-              <span style={{ fontSize: "1.2em", verticalAlign: "top" }}>∞</span>
-            ) : (
-              treatment.total_sessions
-            )}
-          </p>
-          <div className="h-2 mt-2 rounded-full bg-white/20">
-            <div
-              className="h-2 transition-all bg-white rounded-full"
-              style={{
-                width: `${
-                  (treatment.completed_sessions / treatment.total_sessions) *
-                  100
-                }%`,
-              }}
-            ></div>
-          </div>
-        </div>
-
-        <div className="p-4 text-white bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4" />
-            <p className="text-sm opacity-90">Reducción Dolor</p>
-          </div>
-          <p className="text-3xl font-bold">
-            {/* {treatment.progress.pain_reduction}% */}
-            {treatment?.pain_reduction}%
-          </p>
-        </div>
-
-        <div className="p-4 text-white bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
-          <div className="flex items-center gap-2 mb-1">
-            <Activity className="w-4 h-4" />
-            <p className="text-sm opacity-90">Movilidad</p>
-          </div>
-          <p className="text-3xl font-bold">
-            {treatment?.mobility_improvement}%
-          </p>
-        </div>
-
-        <div className="p-4 text-white bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl">
-          <div className="flex items-center gap-2 mb-1">
-            <Award className="w-4 h-4" />
-            <p className="text-sm opacity-90">Fuerza</p>
-          </div>
-          <p className="text-3xl font-bold">{treatment.strength_gain}%</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 p-2 mb-6 lg:grid-cols-1">
-        <div>
-          <h3 className="flex items-center gap-2 mb-3 font-bold text-gray-900">
-            <File className="w-5 h-5 text-teal-600" />
-            Información General
-          </h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Inicio:</span>
-              <span className="font-semibold">
-                {new Date(treatment.start_date).toLocaleDateString("es-CL")}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Frecuencia:</span>
-              <span className="font-semibold">
-                {treatment?.frequency
-                  ? `${treatment.frequency} veces / ${treatment?.frequency_time} `
-                  : "-"}
-              </span>
-            </div>
-            {/* <div className="flex justify-between">
-              <span className="text-gray-600">Fase Actual:</span>
-              <span className="font-semibold text-teal-600">
-                {treatment.current_phase}
-              </span>
-            </div> */}
-            {treatment.next_appointment && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Próxima Sesión:</span>
-                <span className="font-semibold text-blue-600">
-                  {new Date(treatment.next_appointment).toLocaleDateString(
-                    "es-CL"
-                  )}
+      {/* --- BODY: Progreso Principal --- */}
+      <div className="px-6 py-6">
+        <div className="flex justify-between items-end mb-2">
+          <div>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Avance del Plan</p>
+            <p className="text-3xl font-black text-gray-900">
+                {treatment.completed_sessions}
+                <span className="text-lg text-gray-400 font-bold ml-1">
+                    / {treatment.is_indefinite ? '∞' : treatment.total_sessions}
                 </span>
-              </div>
-            )}
+            </p>
+          </div>
+          <div className="text-right">
+             <span className="text-xs font-bold text-brand-primary bg-brand-primary/10 px-2 py-1 rounded">
+                {treatment.is_indefinite ? 'Continuo' : `${Math.round(progressPercent)}% Completado`}
+             </span>
           </div>
         </div>
+        
+        {/* Barra de Progreso */}
+        <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div 
+                className="h-full bg-brand-primary rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
+                style={{ width: `${treatment.is_indefinite ? 100 : progressPercent}%` }}
+            >
+                {/* Efecto de brillo en la barra */}
+                <div className="absolute top-0 left-0 bottom-0 right-0 bg-white/20 w-full animate-pulse"></div>
+            </div>
+        </div>
+      </div>
+
+      {/* --- KPIs: Métricas Clínicas (Grid limpio) --- */}
+      <div className="grid grid-cols-3 border-t border-b border-gray-100 divide-x divide-gray-100 bg-gray-50/50">
+        
+        <div className="p-4 flex flex-col items-center justify-center text-center group/kpi">
+            <div className="mb-2 p-2 bg-blue-50 text-blue-600 rounded-xl group-hover/kpi:scale-110 transition-transform">
+                <TrendingDown className="w-5 h-5" />
+            </div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase">Dolor</p>
+            <p className="text-lg font-black text-gray-800">-{treatment?.pain_reduction || 0}%</p>
+        </div>
+
+        <div className="p-4 flex flex-col items-center justify-center text-center group/kpi">
+            <div className="mb-2 p-2 bg-purple-50 text-purple-600 rounded-xl group-hover/kpi:scale-110 transition-transform">
+                <Activity className="w-5 h-5" />
+            </div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase">Movilidad</p>
+            <p className="text-lg font-black text-gray-800">+{treatment?.mobility_improvement || 0}%</p>
+        </div>
+
+        <div className="p-4 flex flex-col items-center justify-center text-center group/kpi">
+            <div className="mb-2 p-2 bg-orange-50 text-orange-600 rounded-xl group-hover/kpi:scale-110 transition-transform">
+                <Award className="w-5 h-5" />
+            </div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase">Fuerza</p>
+            <p className="text-lg font-black text-gray-800">+{treatment?.strength_gain || 0}%</p>
+        </div>
+
+      </div>
+
+      {/* --- FOOTER: Detalles y Objetivos --- */}
+      <div className="p-6 grid grid-cols-1 gap-8 text-sm">
+        
+        {/* Columna Izquierda: Datos Duros */}
+        <div className="space-y-4">
+            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                <Clock className="w-3 h-3" /> Configuración
+            </h4>
+            <div className="space-y-3">
+                <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                    <span className="text-gray-500 font-medium">Inicio</span>
+                    <span className="font-bold text-gray-700">{new Date(treatment.start_date).toLocaleDateString("es-CL")}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                    <span className="text-gray-500 font-medium">Frecuencia</span>
+                    <span className="font-bold text-gray-700 capitalize">
+                        {treatment.frequency} x {treatment.frequency_time === 'week' ? 'Semana' : 'Mes'}
+                    </span>
+                </div>
+                {treatment.next_appointment && (
+                    <div className="flex justify-between items-center pt-1">
+                        <span className="text-gray-500 font-medium">Próxima Cita</span>
+                        <span className="font-bold text-brand-primary bg-brand-primary/5 px-2 py-0.5 rounded text-xs">
+                            {new Date(treatment.next_appointment).toLocaleDateString("es-CL")}
+                        </span>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* Columna Derecha: Objetivos */}
         <div>
-          <h3 className="flex items-center gap-2 mb-3 font-bold text-gray-900">
-            <Target className="w-5 h-5 text-teal-600" />
-            Objetivos
-          </h3>
-          <div className="space-y-2">
-            {treatment?.objectives?.length === 0 && (
-              <div className="flex items-start gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-700">Sin objetivos definidos</span>
-              </div>
-            )}
-            {treatment?.objectives?.map((obj, idx) => (
-              <div key={idx} className="flex items-start gap-2 text-sm">
-                <CheckCircle className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-700">{obj}</span>
-              </div>
-            ))}
-          </div>
+            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                <Target className="w-3 h-3" /> Objetivos Clínicos
+            </h4>
+            <div className="space-y-2 max-h-[120px] overflow-y-auto custom-scrollbar pr-2">
+                {(!treatment.objectives || treatment.objectives.length === 0) ? (
+                    <p className="text-gray-400 italic text-xs">No hay objetivos registrados.</p>
+                ) : (
+                    treatment.objectives.map((obj, i) => (
+                        <div key={i} className="flex gap-3 items-start group/obj">
+                            <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-secondary group-hover/obj:bg-brand-primary transition-colors flex-shrink-0"></div>
+                            <p className="text-gray-600 leading-relaxed text-xs">{obj}</p>
+                        </div>
+                    ))
+                )}
+            </div>
         </div>
+
       </div>
     </div>
   );

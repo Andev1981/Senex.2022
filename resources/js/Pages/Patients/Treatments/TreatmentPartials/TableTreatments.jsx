@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,343 +10,228 @@ import {
 import {
   ChevronDown,
   ChevronUp,
-  Copy,
-  Calendar,
+  Search,
   Edit,
-  Eye,
+  Stethoscope,
+  FileText,
+  Calendar
 } from "lucide-react";
 import TablePagination from "@/Components/TablePagination";
-import { useForm } from "@inertiajs/react";
-import { patientStatuses } from "@/helpers/status";
+import { patientStatuses, PATIENT_STATUS_OPTIONS } from "@/helpers/status"; // Ajusta imports si usas treatmentStatuses
 
 export default function TableTreatments({
   treatments = [],
   handleTreatmentModal,
   setOpenTreatmentModal,
 }) {
-  // --- ESTADOS DEL BUSCADOR Y FILTROS ---
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // valores controlados del panel
-  const [filterEstado, setFilterEstado] = useState(""); // "Activo", "Inactivo" o "" (Todos)
-  const [filterEstadoPago, setFilterEstadoPago] = useState(""); // "Al día", "Con deuda" o "" (Todos)
-  const [filterComuna, setFilterComuna] = useState(""); // nombre exacto o "" (Todas)
-  const [edadMin, setEdadMin] = useState("");
-  const [edadMax, setEdadMax] = useState("");
-
-  const { get } = useForm();
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-  const [columnFilters, setColumnFilters] = useState([]);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
-  // ¿Hay filtros activos?
-  const hasActiveFilters = !!(
-    filterEstado ||
-    filterEstadoPago ||
-    filterComuna ||
-    edadMin ||
-    edadMax
-  );
-
-  // Limpia todos los filtros del panel (y los de TanStack)
-  const clearFilters = () => {
-    setFilterEstado("");
-    setFilterEstadoPago("");
-    setFilterComuna("");
-    setEdadMin("");
-    setEdadMax("");
-    // Limpia column filters en TanStack
-    table.setColumnFilters((prev) =>
-      prev.filter(
-        (f) =>
-          !["status", "payment_status", "comuna_name", "age"].includes(f.id)
-      )
-    );
-  };
-
-  // --- SYNC PANEL -> COLUMN FILTERS TANSTACK ---
-  // Mapea los labels visibles a los valores guardados en tus filas.
-  // Ajusta según tus códigos reales (ejemplo: "Activo" -> "active").
-  const mapEstado = (label) => {
-    if (!label) return undefined;
-    if (label.toLowerCase() === "activo") return "active";
-    if (label.toLowerCase() === "inactivo") return "inactive";
-    return label; // fallback
-  };
-
-  const mapEstadoPago = (label) => {
-    if (!label) return undefined;
-    const l = label.toLowerCase();
-    if (l.includes("día")) return "ok";
-    if (l.includes("deuda")) return "due"; // o "overdue" si usas ese
-    return label; // fallback
-  };
-
-  useEffect(() => {
-    const next = [];
-
-    // status (igualdad)
-    if (filterEstado) {
-      next.push({ id: "status", value: mapEstado(filterEstado) });
-    }
-
-    // payment_status (igualdad)
-    if (filterEstadoPago) {
-      next.push({
-        id: "payment_status",
-        value: mapEstadoPago(filterEstadoPago),
-      });
-    }
-
-    // comuna exacta
-    if (filterComuna) {
-      next.push({ id: "comuna_name", value: filterComuna });
-    }
-
-    // edad min/max (numérico)
-    if (edadMin || edadMax) {
-      const min = edadMin ? Number(edadMin) : undefined;
-      const max = edadMax ? Number(edadMax) : undefined;
-      next.push({ id: "age", value: [min, max] });
-    }
-
-    // Mantén también los otros filtros que ya existan (como el de birth_month si lo usas)
-    setColumnFilters((prev) => {
-      const keep = prev.filter(
-        (f) =>
-          !["status", "payment_status", "comuna_name", "age"].includes(f.id)
-      );
-      return [...keep, ...next];
-    });
-  }, [treatments, handleTreatmentModal]);
-
-  // --- DEBOUNCE DEL GLOBAL SEARCH ---
-  useEffect(() => {
-    const id = setTimeout(() => {
-      setGlobalFilter(searchTerm);
-    }, 250);
-    return () => clearTimeout(id);
-  }, [searchTerm]);
-
-  // Filtro global
+  // --- 1. FILTRADO GLOBAL ---
   const filteredData = useMemo(() => {
-    if (!globalFilter) return treatments || [];
+    if (!globalFilter) return treatments;
     const filter = globalFilter.toLowerCase();
-    return treatments.filter((row) =>
-      Object.values(row).some(
-        (val) => val && val.toString().toLowerCase().includes(filter)
-      )
-    );
+    return treatments.filter((row) => {
+        // Buscar en Diagnóstico, Doctor, Estado
+        const diag = row.diagnostic?.description || row.referral_diagnosis || "";
+        const doc = row.doctor ? `${row.doctor.name} ${row.doctor.last_name}` : "";
+        const status = row.status || "";
+        return (
+            diag.toLowerCase().includes(filter) ||
+            doc.toLowerCase().includes(filter) ||
+            status.toLowerCase().includes(filter)
+        );
+    });
   }, [globalFilter, treatments]);
 
-  // Definición de columnas
+  // --- 2. COLUMNAS ---
   const columns = useMemo(
     () => [
+      // ESTADO
+      {
+        accessorKey: "status",
+        header: "ESTADO",
+        cell: ({ getValue }) => {
+          const val = getValue() || "active";
+          // Mapeo simple de colores si patientStatuses no tiene todos los de tratamientos
+          const styles = {
+             active: "bg-green-100 text-green-700 border-green-200",
+             evaluation: "bg-blue-100 text-blue-700 border-blue-200",
+             in_progress: "bg-teal-100 text-teal-700 border-teal-200",
+             completed: "bg-gray-100 text-gray-600 border-gray-200",
+             cancelled: "bg-red-50 text-red-600 border-red-100"
+          };
+          const label = patientStatuses[val]?.label || val; // Fallback al valor crudo si no hay label
+          
+          return (
+            <span className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${styles[val] || styles.active}`}>
+              {label}
+            </span>
+          );
+        },
+      },
+
+      // # MENSUAL / ID
+      {
+        header: "ID", // O "# MENSUAL" si usas esa lógica
+        accessorFn: (row) => row.id, // O row.month_session_number si aplica
+        cell: ({ getValue }) => (
+            <span className="text-xs font-mono font-bold text-gray-400">#{getValue()}</span>
+        ),
+      },
+
+      // DIAGNÓSTICO
+      {
+        header: "DIAGNÓSTICO",
+        accessorFn: (row) => row.diagnostic?.description || row.referral_diagnosis || "Sin diagnóstico",
+        cell: ({ getValue }) => (
+            <div className="flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-xs font-bold text-gray-700 uppercase truncate max-w-[200px]" title={getValue()}>
+                    {getValue()}
+                </span>
+            </div>
+        ),
+      },
+
+      // FECHA
+      {
+        header: "FECHA INICIO",
+        accessorFn: (row) => row.start_date || row.created_at,
+        cell: ({ getValue }) => (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                {getValue() ? new Date(getValue()).toLocaleDateString("es-CL") : "-"}
+            </div>
+        ),
+      },
+
+      // KINESIÓLOGO
+      {
+        header: "PROFESIONAL",
+        accessorFn: (row) => row.doctor ? `${row.doctor.name} ${row.doctor.last_name}` : "",
+        cell: ({ getValue }) => (
+            <div className="flex items-center gap-2 text-xs font-bold text-gray-600 uppercase">
+                <Stethoscope className="w-3.5 h-3.5 text-gray-400" />
+                {getValue() || "Sin asignar"}
+            </div>
+        ),
+      },
+
+      // ACCIONES
       {
         id: "actions",
         header: "",
         cell: ({ row }) => (
-          <div className="flex gap-2">
-            <p
-              className="text-gray-500 cursor-pointer"
-              onClick={() => (
-                handleTreatmentModal(row.original), setOpenTreatmentModal(false)
-              )}
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => { handleTreatmentModal(row.original); if(setOpenTreatmentModal) setOpenTreatmentModal(false); }}
+              className="p-1.5 text-gray-400 hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors"
+              title="Editar Tratamiento"
             >
-              <Edit className="w-4 h-4 text-gray-500" />
-            </p>
-          </div>
-        ),
-        enableSorting: false,
-      },
-      {
-        id: "status", // si usas accessorFn, deja este id
-        accessorKey: "status", // recomendado
-        header: "ESTADO",
-        cell: ({ getValue }) => {
-          const v = String(getValue() ?? "");
-          const cfg = patientStatuses[v] ?? {
-            label: v,
-            className: "bg-blue-600 text-white",
-          };
-          return (
-            <span
-              className={`px-2 py-0.5 text-xs rounded-xl border text-white ${cfg.className}`}
-            >
-              {cfg.label}
-            </span>
-          );
-        },
-        // filtro: acepta múltiples estados (array de strings)
-        filterFn: (row, id, filterValue) => {
-          if (!filterValue) return true; // sin filtro
-          return String(row.getValue(id) ?? "") === String(filterValue);
-        },
-      },
-      {
-        header: "# Mensual",
-        accessorFn: (row) => row?.month_session_number,
-        cell: ({ getValue }) => (
-          <div
-            className="flex items-center gap-3 overflow-hidden uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            <div className="flex items-center justify-center w-6 h-6 text-xs font-semibold text-white rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-              #{getValue()}
-            </div>
-          </div>
-        ),
-      },
-
-      {
-        header: "FECHA DE SESIÓN",
-        accessorFn: (row) => row?.date,
-        id: "date",
-        cell: ({ getValue }) => {
-          return (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              {getValue()
-                ? new Date(getValue()).toLocaleDateString("es-CL")
-                : "-"}
-            </div>
-          );
-        },
-      },
-      {
-        header: "Kine",
-        accessorFn: (row) => row?.doctor.name + " " + row?.doctor.last_name,
-        cell: ({ getValue }) => (
-          <div
-            className="flex items-center gap-2 overflow-hidden text-sm text-gray-700 uppercase truncate whitespace-nowrap"
-            title={getValue()}
-          >
-            {getValue()}
+              <Edit className="w-4 h-4" />
+            </button>
           </div>
         ),
       },
     ],
-    [treatments, handleTreatmentModal]
+    [handleTreatmentModal, setOpenTreatmentModal]
   );
 
-  // Configuración de la tabla
   const table = useReactTable({
     data: filteredData,
     columns,
     state: {
       sorting,
       globalFilter,
-      columnFilters,
-      pagination: { pageSize, pageIndex },
+      pagination: { pagesize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
     onPaginationChange: (updater) => {
-      const newState =
-        typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
-          : updater;
-      setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+        const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
+        setPageIndex(newState.pageIndex);
+        setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: "includesString",
-    filterFns: {
-      betweenNumbers: (row, columnId, filterValue) => {
-        const [min, max] = filterValue || [];
-        const value = row.getValue(columnId);
-        if (min !== undefined && value < min) return false;
-        if (max !== undefined && value > max) return false;
-        return true;
-      },
-      betweenDates: (row, columnId, filterValue) => {
-        const [from, to] = filterValue || [];
-        const value = row.getValue(columnId);
-        if (!value) return false;
-        const date = new Date(value);
-        if (from && date < new Date(from)) return false;
-        if (to && date > new Date(to)) return false;
-        return true;
-      },
-    },
   });
 
   return (
-    <div className="max-w-full">
-      {/* Filtro global */}
-      <div className="p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
-        {/* Tabla */}
-        <div className="overflow-hidden rounded-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr
-                    key={headerGroup.id}
-                    className="border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100"
-                  >
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
+    <div className="w-full p-4">
+      
+      {/* 1. BARRA DE HERRAMIENTAS */}
+      <div className="flex justify-between items-center mb-4 px-1">
+         <div className="relative w-full max-w-sm">
+            <Search className="absolute w-4 h-4 text-gray-400 top-2.5 left-3" />
+            <input
+                value={globalFilter ?? ""}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                placeholder="Buscar tratamiento..."
+                className="w-full py-2 pl-9 pr-3 text-xs font-medium border-gray-200 rounded-xl focus:ring-brand-primary focus:border-brand-primary transition-all shadow-sm bg-gray-50/50 focus:bg-white"
+            />
+         </div>
+      </div>
+
+      {/* 2. TABLA */}
+      <div className="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50/50 border-b border-gray-100">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest select-none group"
+                    >
+                      <div 
+                        className="flex items-center gap-1 cursor-pointer hover:text-gray-600"
                         onClick={header.column.getToggleSortingHandler()}
-                        className="px-2 py-1 text-sm font-semibold tracking-wider text-left text-gray-700 uppercase transition border border-gray-200 cursor-pointer select-none hover:bg-gray-200"
-                        scope="col"
                       >
-                        <div className="flex">
-                          <div className="overflow-hidden uppercase truncate whitespace-nowrap">
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                          </div>
-                          <span>
-                            {header.column.getIsSorted() === "asc" ? (
-                              <ChevronUp className="inline w-4 h-4 ml-1" />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <ChevronDown className="inline w-4 h-4 ml-1" />
-                            ) : null}
-                          </span>
-                        </div>
-                        {/* Filtros por columna */}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="transition-colors hover:bg-blue-50/50"
-                  >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getIsSorted() === "asc" ? <ChevronUp className="w-3 h-3 text-brand-primary"/> : header.column.getIsSorted() === "desc" ? <ChevronDown className="w-3 h-3 text-brand-primary"/> : null}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-blue-50/30 transition-colors">
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-3 py-2">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                      <td key={cell.id} className="px-4 py-3 align-middle">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Paginación */}
-          <TablePagination
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length} className="p-8 text-center text-gray-400 text-xs italic">
+                    No se encontraron tratamientos.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 3. PAGINACIÓN */}
+      <div className="mt-4 px-1">
+        <TablePagination
             table={table}
             total={treatments.length}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            pageSizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
-          />
-        </div>
+            pagesize={pagesize}
+            setpagesize={setpagesize}
+        />
       </div>
     </div>
   );

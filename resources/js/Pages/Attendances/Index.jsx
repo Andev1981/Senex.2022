@@ -3,16 +3,16 @@ import { Head, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/Components/SideModal";
 import Modal from "@/Components/Modal";
-import AttendancesHeader from "@/Pages/Attendances/Partials/AttendancesHeader";
-import AttendacesTable from "@/Pages/Attendances/AttendacesTable";
-import Kpis from "@/Pages/Attendances/Partials/Kpis";
-import CancelModal from "@/Pages/Attendances/Modals/CancelModal";
-import StartModal from "@/Pages/Attendances/Modals/StartModal";
-import CompletedModal from "@/Pages/Attendances/Modals/CompletedModal";
-import AbsentModal from "@/Pages/Attendances/Modals/AbsentModal";
-import DteModal from "@/Pages/Attendances/Modals/DteModal";
-import ResumeModal from "@/Pages/Attendances/Modals/ResumeModal";
-import CreateUpdateModal from "@/Pages/Attendances/Modals/CreateUpdateModal";
+import AttendancesHeader from "@/pages/Attendances/Partials/AttendancesHeader";
+import AttendacesTable from "@/pages/Attendances/AttendacesTable";
+import Kpis from "@/pages/Attendances/Partials/Kpis";
+import CancelModal from "@/pages/Attendances/Modals/CancelModal";
+import StartModal from "@/pages/Attendances/Modals/StartModal";
+import CompletedModal from "@/pages/Attendances/Modals/CompletedModal";
+import AbsentModal from "@/pages/Attendances/Modals/AbsentModal";
+import DteModal from "@/pages/Attendances/Modals/DteModal";
+import ResumeModal from "@/pages/Attendances/Modals/ResumeModal";
+import CreateUpdateModal from "@/pages/Attendances/Modals/CreateUpdateModal";
 
 export default function Index({
   atenciones = [],
@@ -21,6 +21,7 @@ export default function Index({
   patients = [], // ← Agregar
   doctors = [], // ← Agregar
   session_types = [], // ← Agregar
+  diagnostics
 }) {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showStartModal, setShowStartModal] = useState(false);
@@ -135,11 +136,11 @@ export default function Index({
           />
         </SideModal>
 
-        {/* Modal de Marcar Completado */}
+        {/* Modal de Crear Sesión */}
         <SideModal
           open={showCreateSessionModal}
           onClose={() => setShowCreateSessionModal(false)}
-          width="5xl" // sm, md, lg, xl, 2xl, 3xl, full
+          width="full" // sm, md, lg, xl, 2xl, 3xl, full
           hideDefaultHeader={true}
         >
           <CreateUpdateModal
@@ -149,6 +150,7 @@ export default function Index({
             session_types={session_types}
             sessionData={sessionData}
             setSessionData={setSessionData}
+            diagnostics={diagnostics}
           />
         </SideModal>
 

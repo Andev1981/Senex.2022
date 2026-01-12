@@ -73,6 +73,7 @@ export default function DoctorCommissions({ doctor, sessionTypes }) {
                 <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">Acuerdos de Pago: {localDoctor.full_name}</p>
             </div>
         </div>
+        <div className=" pr-20">
         {!isEditing ? (
             <PrimaryButton onClick={() => setIsEditing(true)} className="!text-[9px] !py-3">Editar Tarifas</PrimaryButton>
         ) : (
@@ -83,13 +84,14 @@ export default function DoctorCommissions({ doctor, sessionTypes }) {
                 </PrimaryButton>
             </div>
         )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
         <div className="bg-white border border-gray-100 shadow-xl rounded-[2rem] overflow-hidden">
             <table className="w-full border-collapse">
                 <thead className="bg-gray-50/50 border-b border-gray-100">
-                    <tr className="enterprise-label text-[9px]">
+                    <tr className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-gray">
                         <th className="px-8 py-5 text-left">Prestación / Servicio</th>
                         <th className="px-8 py-5 text-right">Comisión Base</th>
                         <th className="px-8 py-5 text-right w-48">Tarifa Profesional</th>

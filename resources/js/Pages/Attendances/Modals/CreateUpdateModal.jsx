@@ -2,27 +2,26 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useForm } from "@inertiajs/react";
 import moment from "moment";
 import {
-  Calendar,
   Activity,
   User,
-  CheckCircle2,
-  Stethoscope,
+  UserCheck,
   ClipboardList,
   Target,
-  Info,
-  ChevronRight,
   Plus,
-  XCircle,
-  Database,
-  Search,
-  UserCheck,
+  X,
   Edit3,
-  MapPin, // Icono para el mapa
+  Ruler,
+  Dumbbell, 
+  Clock,
+  Calendar,
+  Timer,
+  MapPin,
+  FileText // Nuevo icono para la orden
 } from "lucide-react";
 import SearchSelect from "@/Components/SearchSelect";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import BodySelector from "@/Components/BodySelector"; // Importar componente
+import PainMapCard from "@/Components/Body/PainMapCard";
+import GenericModal from "@/Components/Body/GenericModal";
+import HandSelector from "@/Components/Body/HandSelector";
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "📅 Programada" },
@@ -32,17 +31,23 @@ const STATUS_OPTIONS = [
 ];
 
 export default function SessionFormModal({
-  setShowModal, // Función para cerrar
+  setShowModal,
   sessionData = null,
   patients = [],
   doctors = [],
   session_types = [],
   preselectedPatient = null,
+  diagnostics = [], // Recibimos el catálogo CIE-10
   isDuplicate = false,
 }) {
-  // 🎯 Determinar si es Edición o Creación Real
-  const isEditing =
-    !!(sessionData?.session_id || sessionData?.id) && !isDuplicate;
+  // --- ESTADOS LOCALES ---
+  const [isHandModalOpen, setIsHandModalOpen] = useState(false);
+  const [activeHandSide, setActiveHandSide] = useState('left');
+  const [techniqueInput, setTechniqueInput] = useState("");
+  const [newRomName, setNewRomName] = useState(""); 
+  const [currentDiagnosisName, setCurrentDiagnosisName] = useState(null);
+
+  const isEditing = !!(sessionData?.session_id || sessionData?.id) && !isDuplicate;
   const currentStatus = sessionData?.status || "scheduled";
 
   const formattedDoctors = useMemo(() => {
@@ -52,62 +57,95 @@ export default function SessionFormModal({
     }));
   }, [doctors]);
 
-  const { data, setData, post, patch, processing, errors, reset } = useForm({
+  // --- CONFIGURACIÓN DEL FORMULARIO ---
+  const { data, setData, post, patch, processing, reset } = useForm({
     id: sessionData?.session_id || sessionData?.id || "",
-    treatment_id:
-      sessionData?.treatment_id ||
-      preselectedPatient?.active_treatments?.[0]?.id ||
-      "",
+    treatment_id: sessionData?.treatment_id || "", 
     patient_id: sessionData?.patient_id || preselectedPatient?.id || "",
     doctor_id: sessionData?.doctor_id || "",
     session_type_id: sessionData?.session_type_id || "",
-    date: sessionData?.date
-      ? moment.utc(sessionData.date).format("YYYY-MM-DD")
-      : moment().format("YYYY-MM-DD"),
+    
+    // CAMPOS DE SESIÓN
+    date: sessionData?.date ? moment.utc(sessionData.date).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD"),
     time: sessionData?.time || "",
     duration: sessionData?.duration || 45,
     status: sessionData?.status || "scheduled",
     consumes_plan: !!sessionData?.consumes_plan,
+    
+    // CAMPOS PUENTE (Para crear Tratamiento Nuevo)
+    diagnostic_code: "",
+    referral_doctor_name: "", 
+    referral_diagnosis: "",   
+    total_sessions: 10,
+    // Mapear datos de dolor de la sesión a los iniciales del tratamiento
+    initial_pain_level: sessionData?.pain_level || 0,
+    initial_pain_map: sessionData?.session_pain_map || [],
+
+    // SOAP
     pain_level: sessionData?.pain_level || 0,
     subjective: sessionData?.subjective || "",
     objective: sessionData?.objective || "",
     assessment: sessionData?.assessment || "",
     plan: sessionData?.plan || "",
-    evaluation_data: sessionData?.evaluation_data || {
-      rom: {
-        flexion: { before: 0, after: 0 },
-        extension: { before: 0, after: 0 },
-        abduction: { before: 0, after: 0 },
-        rotation: { before: 0, after: 0 },
-      },
-    },
+    
+    evaluation_data: sessionData?.evaluation_data || { rom: {} },
+    
     activities_data: sessionData?.activities_data || {
       techniques: [],
       exercises: [],
     },
-    session_pain_map: sessionData?.session_pain_map || [], // Mapa del dolor
+    session_pain_map: sessionData?.session_pain_map || [], 
+    
     patient_amount_clp: sessionData?.patient_amount_clp || 0,
     patient_plan_id: sessionData?.patient_plan_id || "",
   });
 
-  const [currentDiagnosisName, setCurrentDiagnosisName] = useState(null);
-  const [techniqueInput, setTechniqueInput] = useState("");
+  // --- LÓGICA BOTÓN ---
+  const submitLabel = useMemo(() => {
+      if (processing) return "Procesando...";
+      if (isEditing) return "Guardar Cambios";
+      switch (data.status) {
+          case 'scheduled': return "Agendar Sesión";
+          case 'attended': return "Finalizar Evolución";
+          case 'missed': return "Registrar Inasistencia";
+          case 'cancelled': return "Registrar Cancelación";
+          default: return "Guardar";
+      }
+  }, [data.status, isEditing, processing]);
 
-  const handleRomChange = (type, moment, value) => {
+  // --- MANEJADORES ---
+  const handleAddRomMetric = () => {
+    if (!newRomName.trim()) return;
+    const currentRom = data.evaluation_data.rom || {};
+    if (currentRom[newRomName]) return; 
+
+    setData("evaluation_data", {
+        ...data.evaluation_data,
+        rom: { ...currentRom, [newRomName]: { before: 0, after: 0 } }
+    });
+    setNewRomName(""); 
+  };
+
+  const handleDeleteRomMetric = (romName) => {
+    const currentRom = { ...data.evaluation_data.rom };
+    delete currentRom[romName];
+    setData("evaluation_data", { ...data.evaluation_data, rom: currentRom });
+  };
+
+  const handleRomChange = (romName, moment, value) => {
     const currentRom = data.evaluation_data.rom || {};
     setData("evaluation_data", {
       ...data.evaluation_data,
       rom: {
         ...currentRom,
-        [type]: { ...currentRom[type], [moment]: parseInt(value) || 0 },
+        [romName]: { ...currentRom[romName], [moment]: parseInt(value) || 0 },
       },
     });
   };
 
   const handleActivityChange = (category, item, action) => {
     const currentList = data.activities_data[category] || [];
-    const newList =
-      action === "add"
+    const newList = action === "add"
         ? [...new Set([...currentList, item])]
         : currentList.filter((i) => i !== item);
     setData("activities_data", {
@@ -116,538 +154,451 @@ export default function SessionFormModal({
     });
   };
 
+  const handleBodyPartClick = (partId) => {
+    if (partId === 'hand_left' || partId === 'wrist_left' || partId === 'hand_L') {
+        setActiveHandSide('left');
+        setIsHandModalOpen(true);
+    } else if (partId === 'hand_right' || partId === 'wrist_right' || partId === 'hand_R') {
+        setActiveHandSide('right');
+        setIsHandModalOpen(true);
+    }
+  };
+
+  const handleFingerSelection = (fingerId) => {
+    const newPoint = { part: fingerId, x: 0, y: 0, notes: 'Detalle Dedo' };
+    setData("session_pain_map", [...data.session_pain_map, newPoint]);
+    setIsHandModalOpen(false);
+  };
+
   const isFieldEditable = (fieldType) => {
     if (!isEditing) return true;
-    if (currentStatus === "cancelled" || currentStatus === "missed")
-      return false;
-    if (currentStatus === "attended") return fieldType === "clinical";
+    if (currentStatus === "cancelled" || currentStatus === "missed") return false;
+    if (currentStatus === "attended") return fieldType === "clinical"; 
     return true;
   };
 
   useEffect(() => {
-    const selectedPatient =
-      patients.find((p) => p.id === parseInt(data.patient_id)) ||
-      preselectedPatient;
+    const selectedPatient = patients.find((p) => p.id === parseInt(data.patient_id)) || preselectedPatient;
     if (!selectedPatient) {
       setCurrentDiagnosisName(null);
       return;
     }
-    const treatmentsList =
-      selectedPatient.active_treatments || selectedPatient.treatments || [];
-    const activeTreatment =
-      treatmentsList.length > 0 ? treatmentsList[0] : null;
+    const treatmentsList = selectedPatient.active_treatments || selectedPatient.treatments || [];
+    const activeTreatment = treatmentsList.length > 0 ? treatmentsList[0] : null;
 
     if (activeTreatment) {
-      if (
-        !isEditing &&
-        String(data.treatment_id) !== String(activeTreatment.id)
-      ) {
-        setData((prev) => ({ ...prev, treatment_id: activeTreatment.id }));
-      }
-      const diagnosticObj =
-        activeTreatment.diagnostic || activeTreatment.diagnosis;
-      setCurrentDiagnosisName(
-        diagnosticObj
-          ? `${diagnosticObj.code || ""} ${
-              diagnosticObj.description || ""
-            }`.trim()
-          : "Sin diagnóstico registrado"
-      );
-    } else {
-      setCurrentDiagnosisName(null);
-    }
+      // Si hay tratamientos, no preseleccionamos nada para obligar al usuario a elegir (o el primero si prefieres)
+      // Aquí solo actualizamos el label informativo si se requiere
+    } 
   }, [data.patient_id, patients, preselectedPatient]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!data.patient_id) return alert("Selecciona un paciente");
     const opts = {
-      onSuccess: () => {
-        reset();
-        setShowModal();
-      },
+      onSuccess: () => { reset(); setShowModal(false); }, 
       preserveScroll: true,
     };
-    isEditing
-      ? patch(route("sessions.update", data.id), opts)
-      : post(route("sessions.store"), opts);
+    isEditing ? patch(route("sessions.update", data.id), opts) : post(route("sessions.store"), opts);
   };
 
-  const activePlans = (() => {
-    const pId = data.patient_id;
-    if (!pId) return [];
-    const patientObj = patients.find((p) => p.id === pId) || preselectedPatient;
-    return patientObj?.active_plans || [];
-  })();
-
   const selectedPatientFinal = useMemo(() => {
-    return (
-      preselectedPatient ||
-      patients.find((p) => p.id === parseInt(data.patient_id))
-    );
+    return preselectedPatient || patients.find((p) => p.id === parseInt(data.patient_id));
   }, [preselectedPatient, data.patient_id, patients]);
 
+  const activePlans = useMemo(() => {
+    if (!selectedPatientFinal) return [];
+    return selectedPatientFinal.active_plans || [];
+  }, [selectedPatientFinal]);
+
+  // Obtener el tratamiento activo seleccionado para mostrar su info
+  const selectedTreatmentInfo = useMemo(() => {
+      if (!data.treatment_id || !selectedPatientFinal) return null;
+      const treatments = selectedPatientFinal.active_treatments || selectedPatientFinal.treatments || [];
+      return treatments.find(t => t.id === parseInt(data.treatment_id));
+  }, [data.treatment_id, selectedPatientFinal]);
+
+
   return (
+    <>
     <div className="relative flex flex-col h-full bg-white">
       <form onSubmit={handleSubmit} className="flex flex-col h-full">
-        {/* HEADER HERO DISTINTIVO */}
-        <div
-          className={`flex flex-col justify-between gap-6 p-10 border-b border-gray-100 md:flex-row md:items-center shrink-0 transition-colors duration-500 ${
-            isEditing ? "bg-indigo-50/50" : "bg-gray-50/50"
-          }`}
-        >
+        
+        {/* --- HEADER --- */}
+        <div className={`flex flex-col justify-between gap-6 p-6 border-b border-gray-100 md:flex-row md:items-center shrink-0 transition-colors duration-500 ${isEditing ? "bg-indigo-50/50" : "bg-gray-50/50"}`}>
           <div className="flex items-center gap-4">
-            <div
-              className={`flex items-center justify-center text-white transform shadow-xl w-14 h-14 rounded-2xl rotate-3 transition-colors ${
-                isEditing
-                  ? "bg-indigo-600 shadow-indigo-200"
-                  : "bg-brand-primary shadow-brand-primary/20"
-              }`}
-            >
-              {isEditing ? (
-                <Edit3 className="w-7 h-7" />
-              ) : (
-                <Plus className="w-7 h-7" />
-              )}
+            <div className={`flex items-center justify-center text-white transform shadow-xl w-14 h-14 rounded-2xl rotate-3 transition-colors ${isEditing ? "bg-indigo-600 shadow-indigo-200" : "bg-brand-primary shadow-brand-primary/20"}`}>
+              {isEditing ? <Edit3 className="w-7 h-7" /> : <Plus className="w-7 h-7" />}
             </div>
             <div>
               <h1 className="mb-1 text-2xl font-black leading-none tracking-tight text-gray-900 uppercase">
-                {isEditing ? "Actualizar Atención" : "Nueva Atención Clínica"}
+                {isEditing ? "Editar Sesión" : "Nueva Sesión"}
               </h1>
               <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
-                {isEditing
-                  ? `Modificando Registro #${data.id}`
-                  : "Apertura de Protocolo SOAP"}
+                {isEditing ? `ID: #${data.id}` : "Ingreso de Atención"}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col w-full gap-1 md:w-64">
-            <label className="ml-1 enterprise-label opacity-60">
-              Estado de Sesión
-            </label>
+            <label className="ml-1 enterprise-label opacity-60">Estado Actual</label>
             <select
               value={data.status}
               onChange={(e) => setData("status", e.target.value)}
-              className="w-full text-[10px] font-black uppercase tracking-widest border-gray-100 rounded-xl bg-white focus:ring-brand-primary transition-all py-3 shadow-sm"
+              className="w-full text-[10px] font-black uppercase tracking-widest border-gray-100 rounded-xl bg-white focus:ring-brand-primary transition-all py-3 shadow-sm cursor-pointer"
             >
               {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           </div>
         </div>
 
-        <div className="flex-1 p-10 space-y-12 overflow-y-auto custom-scrollbar">
-          {/* PACIENTE */}
-          <div className="space-y-6">
-            <h2 className="enterprise-label !text-brand-primary flex items-center gap-3 ml-1">
-              <UserCheck className="w-4 h-4" /> Sujeto de Atención
-            </h2>
-            {selectedPatientFinal ? (
-              <div className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full opacity-50 bg-brand-primary/5 blur-3xl"></div>
-                <div className="relative z-10 flex items-center gap-6">
-                  <div className="flex items-center justify-center w-16 h-16 transition-transform shadow-inner bg-brand-secondary/10 text-brand-primary rounded-2xl group-hover:rotate-3">
-                    <User className="w-8 h-8" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-black text-brand-gray uppercase tracking-[0.2em] mb-1 opacity-60">
-                      Identidad Confirmada
-                    </p>
-                    <p className="mb-2 text-xl font-black leading-none tracking-tight text-gray-900 uppercase">
-                      {selectedPatientFinal.full_name ||
-                        `${selectedPatientFinal.name} ${selectedPatientFinal.last_name}`}
-                    </p>
-                    <span className="font-mono text-[10px] font-bold text-brand-gray opacity-60 uppercase tracking-widest">
-                      {selectedPatientFinal.rut}
-                    </span>
-                  </div>
-                </div>
-                {!preselectedPatient && !isEditing && (
-                  <button
-                    type="button"
-                    onClick={() => setData("patient_id", "")}
-                    className="relative z-10 p-3 text-gray-300 transition-all hover:text-red-500 rounded-xl active:scale-90"
-                  >
-                    <XCircle className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            ) : (
-              <SearchSelect
-                label="Buscar Paciente *"
-                options={patients.map((p) => ({
-                  value: p.id,
-                  label: `${p.full_name || `${p.name} ${p.last_name}`} ${
-                    p.rut ? `(${p.rut})` : ""
-                  }`,
-                }))}
-                value={data.patient_id}
-                onChange={(val) => setData("patient_id", val)}
-                className="!rounded-[1.5rem] !py-6 !px-8 shadow-xl shadow-gray-500/5"
-                placeholder="Buscar Paciente..."
-              />
-            )}
-          </div>
+        {/* --- CUERPO --- */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          {/* SESIÓN */}
-          <div className="space-y-8">
-            <h2 className="enterprise-label !text-brand-primary flex items-center gap-3 ml-1">
-              <Calendar className="w-4 h-4" /> Parámetros de la Cita
-            </h2>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              <SearchSelect
-                label="Profesional Tratante *"
-                options={formattedDoctors.map((d) => ({
-                  value: d.id,
-                  label: d.full_name,
-                }))}
-                value={data.doctor_id}
-                onChange={(val) => setData("doctor_id", val)}
-                disabled={!isFieldEditable("doctor_id")}
-                className="!rounded-2xl"
-                placeholder="Profesional Tratante *"
-              />
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Fecha
-                  </label>
-                  <input
-                    type="date"
-                    value={data.date}
-                    onChange={(e) => setData("date", e.target.value)}
-                    disabled={!isFieldEditable("date")}
-                    className="w-full px-5 py-4 font-mono text-sm font-black text-gray-700 border-gray-100 shadow-sm rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Hora
-                  </label>
-                  <input
-                    type="time"
-                    value={data.time}
-                    onChange={(e) => setData("time", e.target.value)}
-                    disabled={!isFieldEditable("time")}
-                    className="w-full px-5 py-4 font-mono text-sm font-black text-gray-700 border-gray-100 shadow-sm rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
-                  />
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <div
-                  className={`p-6 rounded-[1.5rem] border-2 flex items-start gap-5 transition-all ${
-                    currentDiagnosisName
-                      ? "bg-green-50/30 border-green-100"
-                      : "bg-gray-50 border-gray-100 opacity-60"
-                  }`}
-                >
-                  <div
-                    className={`p-3 rounded-xl shadow-sm ${
-                      currentDiagnosisName
-                        ? "bg-white text-green-600"
-                        : "bg-white text-gray-300"
-                    }`}
-                  >
-                    <Stethoscope className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="enterprise-label !text-gray-400 !mb-1">
-                      Protocolo Activo
-                    </p>
-                    <p
-                      className={`text-sm font-black uppercase tracking-tight ${
-                        currentDiagnosisName ? "text-gray-900" : "text-gray-400"
-                      }`}
-                    >
-                      {currentDiagnosisName || "Sin tratamiento activo"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Servicio
-                  </label>
-                  <SearchSelect
-                    options={session_types.map((st) => ({
-                      value: st.id,
-                      label: st.name,
-                    }))}
-                    value={data.session_type_id}
-                    onChange={(val) => {
-                      const type = session_types.find((t) => t.id === val);
-                      setData((prev) => ({
-                        ...prev,
-                        session_type_id: val,
-                        patient_amount_clp: type
-                          ? Number(type.base_price_clp)
-                          : 0,
-                      }));
-                    }}
-                    className="!rounded-2xl"
-                    placeholder="Seleccionar Servicio..."
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Modalidad de Cobro
-                  </label>
-                  <select
-                    value={data.consumes_plan ? "yes" : "no"}
-                    onChange={(e) =>
-                      setData("consumes_plan", e.target.value === "yes")
-                    }
-                    className="w-full px-5 py-4 text-[10px] font-black uppercase tracking-widest text-gray-700 border-gray-100 rounded-2xl bg-gray-50/50 focus:bg-white focus:ring-brand-primary"
-                  >
-                    <option value="no">Recaudación Directa</option>
-                    <option value="yes" disabled={activePlans.length === 0}>
-                      Usar Plan Activo (
-                      {activePlans.length > 0 ? "Disponible" : "Sin Cupos"})
-                    </option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SOAP */}
-          {["attended", "scheduled"].includes(data.status) && (
-            <div className="space-y-8 duration-500 animate-in slide-in-from-bottom-4">
-              <div className="flex items-center gap-3 px-1 pb-4 border-b border-gray-100">
-                <div className="p-2.5 bg-green-50 rounded-xl text-green-600">
-                  <ClipboardList className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black tracking-tight text-gray-900 uppercase">
-                    Evolución Clínica (SOAP)
-                  </h2>
-                  <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest opacity-60">
-                    Documentación obligatoria
-                  </p>
-                </div>
-              </div>
-
-              {/* GRID DE DATOS (2 COLUMNAS) */}
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                
-                {/* S: SUBJECTIVE */}
-                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
-                  <h3 className="enterprise-label !text-brand-primary flex items-center gap-3 mb-6">
-                    <User className="w-4 h-4" /> Subjetivo (S)
-                  </h3>
-                  <div className="p-6 mb-8 border shadow-inner bg-gray-50/50 rounded-3xl border-gray-50">
-                    <div className="flex items-end justify-between px-1 mb-4">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                        Dolor (EVA)
-                      </label>
-                      <span
-                        className={`text-2xl font-mono font-black ${
-                          data.pain_level > 7
-                            ? "text-red-600"
-                            : "text-brand-primary"
-                        }`}
-                      >
-                        {data.pain_level}{" "}
-                        <span className="text-[10px] opacity-30 tracking-widest">
-                          / 10
-                        </span>
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={data.pain_level}
-                      onChange={(e) =>
-                        setData("pain_level", parseInt(e.target.value))
-                      }
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
-                    />
-                  </div>
-                  <textarea
-                    value={data.subjective}
-                    onChange={(e) => setData("subjective", e.target.value)}
-                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]"
-                    placeholder="Refiere el paciente..."
-                  />
-                </div>
-
-                {/* O: OBJECTIVE */}
-                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
-                  <h3 className="enterprise-label !text-blue-600 flex items-center gap-3 mb-6">
-                    <Activity className="w-4 h-4" /> Objetivo (O)
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 mb-8">
-                    {["flexion", "abduction"].map((romType) => (
-                      <div
-                        key={romType}
-                        className="p-5 bg-blue-50/30 rounded-[1.5rem] border border-blue-50 shadow-inner"
-                      >
-                        <label className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] block mb-4 text-center">
-                          ROM: {romType}
-                        </label>
-                        <div className="flex items-center justify-center gap-3">
-                          <input
-                            type="number"
-                            className="w-16 text-center font-mono font-black text-sm border-none bg-white rounded-xl py-2.5 shadow-sm focus:ring-blue-500"
-                            value={
-                              data.evaluation_data.rom?.[romType]?.before || ""
-                            }
-                            onChange={(e) =>
-                              handleRomChange(romType, "before", e.target.value)
-                            }
-                          />
-                          <ChevronRight className="w-4 h-4 text-blue-200" />
-                          <input
-                            type="number"
-                            className="w-16 text-center font-mono font-black text-sm border-none bg-white rounded-xl py-2.5 shadow-sm focus:ring-blue-500"
-                            value={
-                              data.evaluation_data.rom?.[romType]?.after || ""
-                            }
-                            onChange={(e) =>
-                              handleRomChange(romType, "after", e.target.value)
-                            }
-                          />
+                {/* === COLUMNA IZQUIERDA (7/12) === */}
+                <div className="lg:col-span-7 space-y-8">
+                    
+                    {/* 1. DATOS ADMINISTRATIVOS */}
+                    <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all space-y-6">
+                        <div className="flex items-center gap-3 mb-2">
+                            <UserCheck className="w-5 h-5 text-brand-primary"/>
+                            <h3 className="enterprise-label !text-brand-primary">Datos Administrativos</h3>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                  <textarea
-                    value={data.objective}
-                    onChange={(e) => setData("objective", e.target.value)}
-                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]"
-                    placeholder="Hallazgos físicos..."
-                  />
-                </div>
 
-                {/* A: ASSESSMENT */}
-                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
-                  <h3 className="enterprise-label !text-purple-600 flex items-center gap-3 mb-6">
-                    <ClipboardList className="w-4 h-4" /> Análisis (A)
-                  </h3>
-                  <textarea
-                    value={data.assessment}
-                    onChange={(e) => setData("assessment", e.target.value)}
-                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[120px]"
-                    placeholder="Evolución y juicio clínico..."
-                  />
-                </div>
-
-                {/* P: PLAN */}
-                <div className="p-8 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all flex flex-col">
-                  <h3 className="enterprise-label !text-green-600 flex items-center gap-3 mb-6">
-                    <Target className="w-4 h-4" /> Plan (P)
-                  </h3>
-                  <div className="mb-6">
-                    <div className="flex gap-2 mb-3">
-                      <input
-                        type="text"
-                        value={techniqueInput}
-                        onChange={(e) => setTechniqueInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleActivityChange("techniques", techniqueInput, "add");
-                            setTechniqueInput("");
-                          }
-                        }}
-                        className="flex-1 text-xs font-bold border-gray-100 bg-gray-50 rounded-xl py-3 px-4 focus:bg-white focus:ring-brand-primary"
-                        placeholder="Agregar Técnica / Ejercicio..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleActivityChange("techniques", techniqueInput, "add");
-                          setTechniqueInput("");
-                        }}
-                        className="bg-brand-primary text-white px-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {data.activities_data.techniques?.map((t, i) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest bg-brand-secondary/10 text-brand-primary rounded-lg flex items-center gap-2 border border-brand-secondary/20"
-                        >
-                          {t}
-                          <button
-                            type="button"
-                            onClick={() => handleActivityChange("techniques", t, "remove")}
-                            className="hover:text-red-500"
-                          >
-                            <XCircle className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <textarea
-                    value={data.plan}
-                    onChange={(e) => setData("plan", e.target.value)}
-                    className="w-full flex-1 text-sm font-medium border-gray-100 bg-gray-50/30 rounded-2xl py-4 px-5 focus:bg-white focus:ring-brand-primary transition-all shadow-inner min-h-[100px]"
-                    placeholder="Próximos pasos..."
-                  />
-                </div>
-              </div>
-
-              {/* MAPA CORPORAL (FULL WIDTH) */}
-              <div className="pt-8">
-                <div className="p-8 border border-gray-100 rounded-[2.5rem] bg-gray-50/50 flex flex-col shadow-inner">
-                    <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 mb-8">
-                        <MapPin className="w-5 h-5" /> Mapa del Dolor Interactivo
-                    </h3>
-                    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl p-8 relative overflow-hidden min-h-[600px] flex items-center justify-center">
-                        <div className="w-full max-w-4xl h-full">
-                            <BodySelector
-                                initialData={data.session_pain_map}
-                                onChange={(newMap) => setData("session_pain_map", newMap)}
-                                mode={isEditing || !isDuplicate ? "edit" : "read"}
+                        {/* A) SELECCIÓN DE PACIENTE */}
+                        {!selectedPatientFinal ? (
+                            <SearchSelect
+                                label="Paciente *"
+                                options={patients.map((p) => ({ value: p.id, label: `${p.full_name || `${p.name} ${p.last_name}`} (${p.rut})` }))}
+                                value={data.patient_id}
+                                onChange={(val) => {
+                                    setData(prev => ({ ...prev, patient_id: val, treatment_id: "" })); // Reset tratamiento
+                                }}
+                                placeholder="Buscar Paciente..."
+                                className="!rounded-2xl"
                             />
-                        </div>
-                        <div className="absolute bottom-8 left-0 w-full text-center">
-                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] bg-white/90 backdrop-blur-md px-6 py-2 rounded-full inline-block shadow-lg border border-gray-50">
-                                Haga clic en la silueta para marcar puntos de dolor
-                            </p>
+                        ) : (
+                            <div className="flex items-center justify-between p-6 bg-gray-50/50 rounded-2xl border border-gray-100 shadow-inner">
+                                <div>
+                                    <p className="text-sm font-black text-gray-800 uppercase tracking-wide">{selectedPatientFinal.full_name || `${selectedPatientFinal.name} ${selectedPatientFinal.last_name}`}</p>
+                                    <p className="text-[11px] font-black uppercase tracking-wide mt-1 text-gray-400">{selectedPatientFinal.rut}</p>
+                                </div>
+                                {!preselectedPatient && !isEditing && (
+                                    <button type="button" onClick={() => setData("patient_id", "")} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* B) CONTEXTO CLÍNICO (SELECTOR DE TRATAMIENTO + DATOS) */}
+                        {selectedPatientFinal && (
+                            <div className="space-y-4 pt-4 border-t border-gray-50 animate-in fade-in slide-in-from-top-2">
+                                
+                                <div className="space-y-1">
+                                    <label className="ml-1 enterprise-label text-purple-600 flex items-center gap-1">
+                                        <Activity className="w-3 h-3"/> Contexto / Tratamiento
+                                    </label>
+                                    <select
+                                        value={data.treatment_id}
+                                        onChange={(e) => setData("treatment_id", e.target.value)}
+                                        className="w-full px-4 py-3 font-mono text-xs font-bold text-gray-700 border-purple-100 bg-purple-50/10 rounded-xl focus:ring-purple-200 cursor-pointer"
+                                        disabled={!isFieldEditable("clinical")} 
+                                    >
+                                        <option value="">✨ Nuevo Tratamiento / Evaluación Inicial</option>
+                                        {(selectedPatientFinal.active_treatments || selectedPatientFinal.treatments || []).map((t) => (
+                                            <option key={t.id} value={t.id}>
+                                                {t.diagnostic?.code ? `[${t.diagnostic.code}] ` : ''} 
+                                                {t.diagnostic?.description || t.referral_diagnosis || "Tratamiento sin nombre"} 
+                                                {' '} — (Sesión {t.completed_sessions}/{t.is_indefinite ? '∞' : t.total_sessions})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* CASO 1: NUEVO TRATAMIENTO (INPUTS HABILITADOS) */}
+                                {!data.treatment_id && (
+                                    <div className="p-5 bg-purple-50 rounded-2xl border border-purple-100 animate-in zoom-in duration-200 relative overflow-hidden">
+                                        <div className="relative z-10">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div className="p-1.5 bg-white text-purple-600 rounded-lg shadow-sm"><ClipboardList className="w-4 h-4" /></div>
+                                                <h4 className="text-xs font-black text-purple-800 uppercase tracking-wide">Apertura de Expediente</h4>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <SearchSelect
+                                                    label="Diagnóstico Kinésico (CIE-10) *"
+                                                    placeholder="Buscar patología (Ej: M54.5 Lumbago)..."
+                                                    options={diagnostics.map(d => ({ value: d.code, label: `${d.code} - ${d.description}` }))}
+                                                    value={data.diagnostic_code}
+                                                    onChange={(val) => setData("diagnostic_code", val)}
+                                                    className="!bg-white"
+                                                />
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    <div className="col-span-2 space-y-1">
+                                                        <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Médico Derivante</label>
+                                                        <input type="text" placeholder="Ej: Dr. Juan Pérez" value={data.referral_doctor_name} onChange={(e) => setData("referral_doctor_name", e.target.value)} className="w-full px-3 py-2.5 text-xs font-bold border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all"/>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Nº Sesiones</label>
+                                                        <input type="number" placeholder="10" value={data.total_sessions} onChange={(e) => setData("total_sessions", e.target.value)} className="w-full px-3 py-2.5 text-xs font-bold border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all text-center"/>
+                                                    </div>
+                                                    <div className="col-span-3 space-y-1">
+                                                        <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Diagnóstico Médico (Texto Orden)</label>
+                                                        <input type="text" placeholder="Lo que dice el papel..." value={data.referral_diagnosis} onChange={(e) => setData("referral_diagnosis", e.target.value)} className="w-full px-3 py-2.5 text-xs font-medium border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* CASO 2: TRATAMIENTO EXISTENTE (INFO DE SOLO LECTURA) */}
+                                {selectedTreatmentInfo && (
+                                    <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 animate-in zoom-in duration-200">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-1.5 bg-white text-blue-600 rounded-lg shadow-sm"><FileText className="w-4 h-4" /></div>
+                                            <h4 className="text-xs font-black text-blue-800 uppercase tracking-wide">Información de la Orden</h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4 text-xs">
+                                            <div>
+                                                <p className="text-[9px] font-bold text-blue-400 uppercase">Médico Derivante</p>
+                                                <p className="font-bold text-gray-700">{selectedTreatmentInfo.referral_doctor_name || "No registrado"}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] font-bold text-blue-400 uppercase">Progreso</p>
+                                                <p className="font-bold text-gray-700">
+                                                    Sesión {selectedTreatmentInfo.completed_sessions} de {selectedTreatmentInfo.is_indefinite ? '∞' : selectedTreatmentInfo.total_sessions}
+                                                </p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <p className="text-[9px] font-bold text-blue-400 uppercase">Diagnóstico Médico</p>
+                                                <p className="font-medium text-gray-600 italic bg-white px-2 py-1 rounded border border-blue-50 mt-1">
+                                                    "{selectedTreatmentInfo.referral_diagnosis || "Sin detalle"}"
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* C) DATOS DE AGENDA (Kine, Servicio, Fecha...) */}
+                        <div className="grid grid-cols-1 gap-4 pt-4 border-t border-gray-50">
+                            <div className="md:col-span-2">
+                                <SearchSelect
+                                    label="Kinesiólogo *"
+                                    options={formattedDoctors.map((d) => ({ value: d.id, label: d.full_name }))}
+                                    value={data.doctor_id}
+                                    onChange={(val) => setData("doctor_id", val)}
+                                    disabled={!isFieldEditable("doctor_id")}
+                                    className="!rounded-2xl"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="ml-1 enterprise-label opacity-60 text-[10px]">Tipo de Servicio</label>
+                                    <SearchSelect
+                                        options={session_types.map((st) => ({ value: st.id, label: st.name }))}
+                                        value={data.session_type_id}
+                                        onChange={(val) => {
+                                            const type = session_types.find((t) => t.id === val);
+                                            setData((prev) => ({
+                                                ...prev,
+                                                session_type_id: val,
+                                                patient_amount_clp: type ? Number(type.base_price_clp) : 0,
+                                            }));
+                                        }}
+                                        disabled={!isFieldEditable("clinical")}
+                                        placeholder="Seleccionar..."
+                                        className="!rounded-xl"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="ml-1 enterprise-label opacity-60 text-[10px]">Modalidad de Cobro</label>
+                                    <select
+                                        value={data.consumes_plan ? "yes" : "no"}
+                                        onChange={(e) => setData("consumes_plan", e.target.value === "yes")}
+                                        className="w-full px-4 py-3 font-mono text-xs font-bold text-gray-700 border-gray-100 shadow-sm rounded-xl bg-white focus:ring-brand-primary transition-all"
+                                        disabled={!isFieldEditable("clinical")}
+                                    >
+                                        <option value="no">💵 Pago Directo</option>
+                                        <option value="yes" disabled={activePlans.length === 0}>
+                                            🎫 Usar Plan ({activePlans.length > 0 ? "Disponible" : "Sin Saldo"})
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
+                                <div className="space-y-1">
+                                    <label className="ml-1 enterprise-label opacity-60 text-[10px]">Fecha</label>
+                                    <input 
+                                        type="date" 
+                                        value={data.date} 
+                                        onChange={(e) => setData("date", e.target.value)} 
+                                        disabled={!isFieldEditable("date")} 
+                                        className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="ml-1 enterprise-label opacity-60 text-[10px]">Hora</label>
+                                    <input 
+                                        type="time" 
+                                        value={data.time} 
+                                        onChange={(e) => setData("time", e.target.value)} 
+                                        disabled={!isFieldEditable("time")} 
+                                        className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white"
+                                    />
+                                </div>
+                                
+                                <div className="space-y-1">
+                                    <label className="ml-1 enterprise-label opacity-60 text-[10px] flex items-center gap-1">
+                                        <Clock className="w-3 h-3 text-brand-primary"/> Duración (Min)
+                                    </label>
+                                    <input 
+                                        type="number" 
+                                        value={data.duration} 
+                                        onChange={(e) => setData("duration", e.target.value)} 
+                                        disabled={!isFieldEditable("time")} 
+                                        className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white text-center"
+                                        placeholder="45"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {/* 2. SOAP (Permanece igual) */}
+                    {["attended", "scheduled"].includes(data.status) && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* ... (Resto del SOAP igual) ... */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-blue-200 transition-all flex flex-col">
+                                    <h3 className="enterprise-label !text-blue-600 flex gap-2 mb-4"><User className="w-4 h-4"/> [S] Subjetivo</h3>
+                                    <textarea 
+                                        value={data.subjective} 
+                                        onChange={(e) => setData("subjective", e.target.value)} 
+                                        rows={4}
+                                        className="w-full flex-1 text-sm font-medium border-blue-100 bg-blue-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-blue-500 transition-all shadow-inner resize-none"
+                                        placeholder="Relato del paciente..."
+                                    />
+                                </div>
+                                <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-purple-200 transition-all flex flex-col">
+                                    <h3 className="enterprise-label !text-purple-600 flex gap-2 mb-4"><Activity className="w-4 h-4"/> [O] Examen Físico</h3>
+                                    <textarea 
+                                        value={data.objective} 
+                                        onChange={(e) => setData("objective", e.target.value)} 
+                                        rows={4}
+                                        className="w-full flex-1 text-sm font-medium border-purple-100 bg-purple-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-purple-500 transition-all shadow-inner resize-none"
+                                        placeholder="Palpación, observación..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all">
+                                <h3 className="enterprise-label !text-slate-500 flex gap-2 mb-6"><Ruler className="w-4 h-4"/> Biometría & Rangos (ROM)</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
+                                    {data.evaluation_data.rom && Object.keys(data.evaluation_data.rom).length > 0 ? (
+                                        Object.keys(data.evaluation_data.rom).map((romName) => (
+                                            <div key={romName} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center relative group hover:bg-white hover:shadow-lg hover:border-gray-200 transition-all">
+                                                <button type="button" onClick={() => handleDeleteRomMetric(romName)} className="absolute -top-2 -right-2 bg-white text-gray-300 hover:text-red-500 p-1 rounded-full shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-all"><X className="w-3 h-3" /></button>
+                                                <p className="text-[10px] font-black uppercase text-gray-600 mb-3 truncate px-2 tracking-wide">{romName}</p>
+                                                <div className="flex justify-center items-center gap-3">
+                                                    <div className="flex flex-col gap-1"><span className="text-[8px] font-black text-gray-400 uppercase">INI</span><input type="number" className="w-14 h-10 text-center text-sm font-black border-none bg-white rounded-xl shadow-sm focus:ring-2 focus:ring-brand-primary/20" placeholder="0°" value={data.evaluation_data.rom[romName]?.before || ""} onChange={(e) => handleRomChange(romName, "before", e.target.value)}/></div>
+                                                    <span className="text-gray-300 text-lg">›</span>
+                                                    <div className="flex flex-col gap-1"><span className="text-[8px] font-black text-brand-primary uppercase">FIN</span><input type="number" className="w-14 h-10 text-center text-sm font-black border border-brand-primary/20 bg-brand-primary/5 text-brand-primary rounded-xl shadow-sm focus:ring-2 focus:ring-brand-primary/20" placeholder="0°" value={data.evaluation_data.rom[romName]?.after || ""} onChange={(e) => handleRomChange(romName, "after", e.target.value)}/></div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (<div className="col-span-full text-center py-8 text-xs text-gray-400 font-medium italic bg-gray-50/30 rounded-2xl border border-dashed border-gray-200">No hay mediciones registradas aún</div>)}
+                                </div>
+                                <div className="flex gap-4 pt-6 border-t border-gray-50">
+                                    <input type="text" value={newRomName} onChange={(e) => setNewRomName(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddRomMetric(); } }} className="w-full px-5 py-3 text-xs font-bold border-gray-100 bg-gray-50 rounded-2xl focus:bg-white focus:ring-brand-primary transition-all shadow-inner" placeholder="Nueva medición (ej: Flexión Hombro, Rot. Ext)..." />
+                                    <button type="button" onClick={handleAddRomMetric} className="bg-slate-800 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-slate-700 transition-all shadow-lg shadow-slate-200 hover:shadow-xl active:scale-95">+ Agregar</button>
+                                </div>
+                            </div>
+
+                            <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all space-y-8">
+                                <div>
+                                    <h3 className="enterprise-label !text-orange-600 flex gap-2 mb-4"><ClipboardList className="w-4 h-4"/> [A] Análisis / Evaluación</h3>
+                                    <textarea value={data.assessment} onChange={(e) => setData("assessment", e.target.value)} rows={3} className="w-full text-sm font-medium border-orange-100 bg-orange-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-orange-200 transition-all shadow-inner resize-none" placeholder="Interpretación profesional de la evolución..." />
+                                </div>
+                                <div className="pt-8 border-t border-gray-50">
+                                    <h3 className="enterprise-label !text-green-600 flex gap-2 mb-6"><Target className="w-4 h-4"/> [P] Plan de Tratamiento</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="bg-gray-50 p-6 rounded-[1.5rem] border border-gray-100">
+                                            <label className="enterprise-label text-gray-500 mb-4 block flex items-center gap-2"><Dumbbell className="w-3 h-3"/> Procedimientos / Técnicas</label>
+                                            <div className="flex gap-2 mb-4">
+                                                <input type="text" value={techniqueInput} onChange={(e) => setTechniqueInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleActivityChange("techniques", techniqueInput, "add"); setTechniqueInput(""); }}} className="w-full px-4 py-3 text-xs font-bold border-gray-200 bg-white rounded-xl focus:ring-brand-primary transition-all shadow-sm" placeholder="Ej: Masaje, TENS..." />
+                                                <button type="button" onClick={() => { handleActivityChange("techniques", techniqueInput, "add"); setTechniqueInput(""); }} className="bg-green-100 text-green-700 px-4 rounded-xl hover:bg-green-200 hover:shadow-md transition-all"><Plus className="w-5 h-5"/></button>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {data.activities_data.techniques?.map((t, i) => (<span key={i} className="bg-white text-gray-700 text-[10px] px-3 py-1.5 rounded-lg border border-gray-200 flex items-center gap-2 font-bold shadow-sm uppercase tracking-wide">{t} <button type="button" onClick={() => handleActivityChange("techniques", t, "remove")}><X className="w-3 h-3 hover:text-red-500 cursor-pointer"/></button></span>))}
+                                                {(!data.activities_data.techniques || data.activities_data.techniques.length === 0) && <span className="text-[10px] text-gray-400 italic font-medium">Sin procedimientos registrados</span>}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <label className="enterprise-label text-gray-500 mb-4 block">Indicaciones / Tareas Hogar</label>
+                                            <textarea value={data.plan} onChange={(e) => setData("plan", e.target.value)} rows={5} className="w-full flex-1 text-sm font-medium border-green-100 bg-green-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-green-500 transition-all shadow-inner resize-none" placeholder="Ej: Realizar 3 series de 10 repeticiones..." />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-              </div>
+
+                {/* === COLUMNA DERECHA (5/12) === */}
+                <div className="lg:col-span-5 space-y-6">
+                    <div className="sticky top-0">
+                        <PainMapCard
+                            points={data.session_pain_map}
+                            painLevel={data.pain_level}
+                            bodyPart={sessionData?.body_part || ""} 
+                            laterality={sessionData?.laterality || ""} 
+                            isLocked={!isFieldEditable("clinical")} 
+                            title="Evolución Actual"
+                            onPointsChange={(val) => {
+                                setData(prev => ({ 
+                                    ...prev, 
+                                    session_pain_map: val,
+                                    // Si estamos creando un tratamiento nuevo, sincronizar el mapa inicial
+                                    initial_pain_map: !prev.treatment_id ? val : prev.initial_pain_map
+                                }));
+                            }}
+                            onPainLevelChange={(val) => {
+                                setData(prev => ({ 
+                                    ...prev, 
+                                    pain_level: val,
+                                    // Si estamos creando un tratamiento nuevo, sincronizar el nivel inicial
+                                    initial_pain_level: !prev.treatment_id ? val : prev.initial_pain_level
+                                }));
+                            }}
+                            onBodyPartChange={(val) => {}} 
+                            onLateralityChange={(val) => {}} 
+                            onBodyPartClick={handleBodyPartClick}
+                        />
+                    </div>
+                </div>
+
             </div>
-          )}
         </div>
 
-        {/* FOOTER PREMIUM */}
-        <div className="sticky bottom-0 z-30 flex justify-end gap-4 p-10 border-t border-gray-100 bg-white/90 backdrop-blur-md shrink-0">
-          <SecondaryButton
-            onClick={() => setShowModal(false)}
-            className="!px-10 !py-4"
-          >
-            Descartar Cambios
-          </SecondaryButton>
-          <PrimaryButton
-            type="submit"
-            disabled={processing}
-            className={`!px-14 !py-4 shadow-xl ${
-              isEditing
-                ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200"
-                : "shadow-brand-primary/20"
-            }`}
-          >
-            {processing
-              ? "Sincronizando..."
-              : isEditing
-              ? "Actualizar Registro"
-              : "Confirmar Atención"}
-          </PrimaryButton>
+        {/* --- FOOTER UNIFICADO --- */}
+        <div className="flex justify-end gap-4 p-4 border-t border-gray-100 bg-white z-20 shrink-0">
+            <button type="button" onClick={() => setShowModal(false)} className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all" disabled={processing}>Cancelar</button>
+            <button type="submit" className="px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-brand-primary rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 disabled:opacity-50 transition-all active:scale-95 transform" disabled={processing}>{submitLabel}</button>
         </div>
+
       </form>
     </div>
+
+    <GenericModal isOpen={isHandModalOpen} onClose={() => setIsHandModalOpen(false)}>
+        <HandSelector side={activeHandSide} onChange={handleFingerSelection} onClose={() => setIsHandModalOpen(false)} />
+    </GenericModal>
+    </>
   );
 }

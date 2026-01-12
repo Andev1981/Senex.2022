@@ -25,6 +25,9 @@ return new class extends Migration {
             $table->time('time')->nullable();
             $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show', 'attended'])->default('scheduled')->index();
             $table->boolean('consumes_plan')->default(true);
+            $table->unsignedTinyInteger('month_session_number')->default(0)->comment('Número de sesión del mes');
+            $table->unsignedTinyInteger('duration')->default(45)->comment('Tiempo de duracion de,la sesión');
+
 
             // -----------------------------------------------------
             // ESTRUCTURA SOAP (CLÍNICA)

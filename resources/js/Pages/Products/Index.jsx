@@ -35,7 +35,7 @@ import Swal from "sweetalert2";
 export default function Index({ products }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   
   // ESTADOS PARA MODAL
@@ -168,13 +168,13 @@ export default function Index({ products }) {
   const table = useReactTable({
     data: products.data || products,
     columns,
-    state: { sorting, globalFilter: searchTerm, pagination: { pageSize, pageIndex } },
+    state: { sorting, globalFilter: searchTerm, pagination: { pagesize, pageIndex } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
     onPaginationChange: (updater) => {
-      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -310,9 +310,9 @@ export default function Index({ products }) {
             <TablePagination
                 table={table}
                 total={products.total || (products.data || products).length}
-                pageSize={pageSize}
-                setPageSize={setPageSize}
-                pageSizeOptions={[10, 20, 50]}
+                pagesize={pagesize}
+                setpagesize={setpagesize}
+                pagesizeOptions={[10, 20, 50]}
             />
           </div>
         </div>

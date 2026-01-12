@@ -62,7 +62,7 @@ export default function AttendacesTable({
   );
 
   const [sorting, setSorting] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   const [rowSelection, setRowSelection] = useState({});
 
@@ -320,16 +320,16 @@ export default function AttendacesTable({
   const table = useReactTable({
     data: atenciones,
     columns,
-    state: { sorting, pagination: { pageSize, pageIndex }, rowSelection },
+    state: { sorting, pagination: { pagesize, pageIndex }, rowSelection },
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pageSize })
+          ? updater({ pageIndex, pagesize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setPageSize(newState.pageSize);
+      setpagesize(newState.pagesize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -522,9 +522,9 @@ export default function AttendacesTable({
           <TablePagination
             table={table}
             total={atenciones.length}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            pageSizeOptions={[10, 20, 50]}
+            pagesize={pagesize}
+            setpagesize={setpagesize}
+            pagesizeOptions={[10, 20, 50]}
           />
         </div>
       </div>

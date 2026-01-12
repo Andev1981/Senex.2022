@@ -117,12 +117,26 @@ class TreatmentService
                 'doctor_id'       => $data['doctor_id'],
                 'start_date'      => $data['date'] ?? now(),
                 'status'          => 'evaluation',
-                'total_sessions'  => 1,
+                'total_sessions'  => 1, // Por defecto 1 si es auto-creado, o tomar de data si viene
                 'completed_sessions' => 0,
-                'is_indefinite'   => false,
+                'is_indefinite'   => $data['is_indefinite'] ?? false,
                 'current_phase'   => 'evaluation',
                 'description'     => $description,
+                
+                // Diagnóstico y Detalles
                 'diagnostic_code' => $data['diagnostic_code'] ?? null,
+                'additional_diagnoses' => $data['additional_diagnoses'] ?? null,
+                'body_part'       => $data['body_part'] ?? null,
+                'laterality'      => $data['laterality'] ?? null,
+
+                // Origen / Derivación (Si viene en el modal)
+                'referral_doctor_name' => $data['referral_doctor_name'] ?? null,
+                'referral_diagnosis'   => $data['referral_diagnosis'] ?? null,
+                'referral_date'        => $data['referral_date'] ?? null,
+
+                // Línea Base (Si se captura en la primera sesión)
+                'initial_pain_level' => $data['initial_pain_level'] ?? null,
+                'initial_pain_map'   => $data['initial_pain_map'] ?? null,
             ]);
         });
     }

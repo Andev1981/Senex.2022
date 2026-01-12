@@ -16,7 +16,7 @@ export default function TablePacientesSesion({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pageSize, setPageSize] = useState(10);
+  const [pagesize, setpagesize] = useState(10);
 
   // Filtrado global simple (busca en todas las columnas)
   const filteredData = useMemo(() => {
@@ -176,10 +176,10 @@ export default function TablePacientesSesion({
         </div>
 
         <select
-          value={pageSize}
+          value={pagesize}
           onChange={(e) => {
-            setPageSize(Number(e.target.value));
-            table.setPageSize(Number(e.target.value));
+            setpagesize(Number(e.target.value));
+            table.setpagesize(Number(e.target.value));
           }}
           className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >

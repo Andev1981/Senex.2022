@@ -1,5 +1,5 @@
 <div>
-    @if ($paginator->hasPages())
+    @if ($paginator->haspages())
         <nav>
             <ul class="pagination">
                 {{-- Previous Page Link --}}
@@ -20,7 +20,7 @@
                 @endif
 
                 {{-- Next Page Link --}}
-                @if ($paginator->hasMorePages())
+                @if ($paginator->hasMorepages())
                     @if(method_exists($paginator,'getCursorName'))
                         <li class="page-item">
                             <button dusk="nextPage" type="button" class="page-link" wire:click="setPage('{{$paginator->nextCursor()->encode()}}','{{ $paginator->getCursorName() }}')" wire:loading.attr="disabled" rel="next">@lang('pagination.next')</button>

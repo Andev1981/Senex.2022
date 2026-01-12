@@ -34,8 +34,21 @@ class UpdateTreatmentRequest extends FormRequest
             'session_type_id' => 'sometimes|exists:session_types,id',
             'patient_id' => 'sometimes|exists:patients,id',
             'doctor_id' => 'sometimes|exists:doctors,id',
-            'diagnostic_code' => 'required|exists:diagnostics,code',
+            'diagnostic_code' => 'sometimes|exists:diagnostics,code',
+            'additional_diagnoses' => 'nullable|array',
+            'body_part' => 'nullable|string|max:100',
+            'laterality' => 'nullable|string|in:left,right,bilateral',
             'description' => 'nullable|string',
+
+            // Origen / Derivación
+            'referral_doctor_name' => 'nullable|string|max:255',
+            'referral_diagnosis' => 'nullable|string|max:255',
+            'referral_date' => 'nullable|date',
+
+            // Línea Base
+            'initial_pain_level' => 'nullable|integer|min:0|max:10',
+            'initial_pain_map' => 'nullable|array',
+
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'status' => 'nullable|in:evaluation,in_progress,cancelled,paused,completed',
