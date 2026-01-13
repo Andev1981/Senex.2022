@@ -55,7 +55,7 @@ class PlanController extends Controller
                 ];
             });
 
-            return Inertia::render('Plans/Index', [
+            return Inertia::render('plans/Index', [
             'plans' => $plans,
             'insurance' => $insurance
         ]);

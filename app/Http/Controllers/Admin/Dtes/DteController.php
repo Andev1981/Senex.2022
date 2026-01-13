@@ -128,7 +128,7 @@ class DteController extends Controller
 
         $currentCompany = Company::with('dteConfiguration')->find($currentCompanyId);
 
-        return Inertia::render('Documents/IndexDocuments', [
+        return Inertia::render('documents/IndexDocuments', [
             'company' => $currentCompany,
             'dte_config' => $currentCompany->dteConfiguration,
             'is_configured' => !!$currentCompany->dteConfiguration,

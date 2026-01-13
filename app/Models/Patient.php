@@ -273,13 +273,13 @@ class Patient extends Authenticatable
 
     /* Edad */
     public function age(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => trim(
-                $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
-            ),
-        );
-    }
+{
+    return Attribute::make(
+        get: fn() => $this->birth_date 
+            ? (int) $this->birth_date->diffInYears(Carbon::now()) // (int) quita los decimales
+            : null,
+    );
+}
 
     public function fullName(): Attribute
     {

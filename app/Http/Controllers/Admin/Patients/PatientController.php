@@ -116,7 +116,7 @@ class PatientController extends Controller
             ]);
         }
 
-        return Inertia::render('Patient/Auth/VerifyCode', [
+        return Inertia::render('patient/Auth/VerifyCode', [
             'rut' => $patient->rut,
             'email' => $this->maskEmail($patient->email),
             'patient_name' => $patient->name,

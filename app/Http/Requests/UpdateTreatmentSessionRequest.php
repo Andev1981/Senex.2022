@@ -131,6 +131,55 @@ class UpdateTreatmentSessionRequest extends FormRequest
     }
 
     /**
+     * Configure the validator instance.
+     *
+     * @param  \Illuminate\Validation\Validator  $validator
+     * @return void
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $session = $this->route('session');
+            
+            // Si la sesión no existe o no está completada, no aplicamos restricciones
+            if (!$session || !in_array($session->status, ['completed', 'attended'])) {
+                return;
+            }
+
+            // Permitir a superadmins editar todo
+            if ($this->user()->hasRole('superadmin')) {
+                return;
+            }
+
+            // Campos protegidos una vez completada la sesión
+            $protectedFields = [
+                'treatment_id', 
+                'session_type_id', 
+                'patient_id', 
+                'doctor_id', 
+                'date', 
+                'time', 
+                'consumes_plan'
+            ];
+
+            foreach ($protectedFields as $field) {
+                if ($this->has($field) && $this->input($field) != $session->{$field}) {
+                    // Comparación laxa (!=) para evitar problemas de tipos (string vs int)
+                    // Para fechas, podríamos necesitar algo más robusto, pero por ahora basta.
+                    
+                    // Excepción para fechas si son equivalentes (string vs carbon)
+                    if (in_array($field, ['date', 'time'])) {
+                         // Aquí podrías agregar lógica de carbon diff, pero lo dejamos simple
+                         continue; 
+                    }
+
+                    $validator->errors()->add($field, "No se puede modificar '{$field}' en una sesión completada.");
+                }
+            }
+        });
+    }
+
+    /**
      * Prepare the data for validation.
      */
     protected function prepareForValidation(): void

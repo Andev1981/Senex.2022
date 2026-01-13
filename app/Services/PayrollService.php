@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\{Payroll, PayrollDetail, TreatmentSession, Doctor};
+use App\Notifications\PayrollApprovedNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -143,6 +144,17 @@ class PayrollService
   public function approve(Payroll $p): Payroll
   {
     $p->markApproved();
+    
+    // Notificar al doctor
+    if ($p->doctor && $p->doctor->email) {
+        try {
+            $p->doctor->notify(new PayrollApprovedNotification($p));
+        } catch (\Exception $e) {
+            // Log error but continue
+            \Log::error("Error enviando notificación de liquidación {$p->id}: " . $e->getMessage());
+        }
+    }
+
     return $p->fresh();
   }
 

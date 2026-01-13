@@ -69,7 +69,7 @@ class SessionMobileController extends Controller
             'revenue' => $sessions->where('status', 'completed')->sum('earnings'),
         ];
 
-        return Inertia::render('KineMobile/MySessions', [
+        return Inertia::render('kineMobile/MySessions', [
             'sessions' => $sessions,
             'stats' => $stats,
             'filters' => [
@@ -98,7 +98,7 @@ class SessionMobileController extends Controller
             'sessionType:id,name,duration_minutes,base_price'
         ]);
 
-        return Inertia::render('KineMobile/SessionDetail', [
+        return Inertia::render('kineMobile/SessionDetail', [
             'session' => [
                 'id' => $session->id,
                 'month_session_number' => $session->month_session_number,
@@ -195,7 +195,7 @@ class SessionMobileController extends Controller
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('KineMobile/SessionForm', [
+        return Inertia::render('kineMobile/SessionForm', [
             'session' => null,
             'patients' => $patients,
             'treatments' => $treatments,
@@ -400,7 +400,7 @@ class SessionMobileController extends Controller
 
         dd($session);
 
-        return Inertia::render('KineMobile/SessionForm', [
+        return Inertia::render('kineMobile/SessionForm', [
             'session' => $session,
             'patients' => [],
             'treatments' => [],

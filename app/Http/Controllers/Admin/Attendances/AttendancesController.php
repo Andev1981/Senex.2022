@@ -214,14 +214,20 @@ class AttendancesController extends Controller
                 ->when($activeBranchId, fn($q) => $q->whereRelation('branches', 'branches.id', $activeBranchId))
 
                 // Carga de planes con las columnas NECESARIAS para que funcionen las relaciones
-                ->with(['activePlans' => function ($query) {
-                    $query->active()
-                        ->notExpired()
-                        ->withSessionsRemaining()
-                        // CRUCIAL: 'plan_id' y 'patient_id' son obligatorios para que Laravel arme la relación
-                        ->select('id', 'patient_id', 'plan_id', 'sessions_included', 'sessions_used', 'expiry_date')
-                        ->with('plan:id,name,code,description');
-                }])
+                ->with([
+                    'activePlans' => function ($query) {
+                        $query->active()
+                            ->notExpired()
+                            ->withSessionsRemaining()
+                            ->select('id', 'patient_id', 'plan_id', 'sessions_included', 'sessions_used', 'expiry_date')
+                            ->with('plan:id,name,code,description');
+                    },
+                    'treatments' => function ($query) {
+                        $query->whereIn('status', ['in_progress', 'evaluation'])
+                              ->select('id', 'patient_id', 'status', 'diagnostic_code', 'referral_diagnosis', 'referral_doctor_name', 'total_sessions', 'completed_sessions', 'is_indefinite')
+                              ->with('diagnostic:code,description'); // Cargar diagnóstico si existe relación
+                    }
+                ])
                 ->get()
                 // Mapeo seguro (Null Safe)
                 ->map(fn($p) => [
@@ -230,6 +236,19 @@ class AttendancesController extends Controller
                     'name' => $p->name,
                     'last_name' => $p->last_name,
                     'rut' => $p->rut,
+                    'active_treatments' => $p->treatments->map(fn($t) => [
+                        'id' => $t->id,
+                        'status' => $t->status,
+                        'diagnostic' => $t->diagnostic ? [
+                            'code' => $t->diagnostic->code,
+                            'description' => $t->diagnostic->description
+                        ] : null,
+                        'referral_diagnosis' => $t->referral_diagnosis,
+                        'referral_doctor_name' => $t->referral_doctor_name,
+                        'total_sessions' => $t->total_sessions,
+                        'completed_sessions' => $t->completed_sessions,
+                        'is_indefinite' => $t->is_indefinite,
+                    ]),
                     'active_plans' => $p->activePlans->map(fn($plan) => [
                         'patient_plans.id' => $plan->id,
                         'plan_id' => $plan->plan_id,
@@ -278,7 +297,7 @@ class AttendancesController extends Controller
                 ->get();
 $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get(['code', 'description']);
 
-            return Inertia::render('Attendances/Index', [
+            return Inertia::render('attendances/Index', [
                 'atenciones' => $atenciones,
                 'kpis' => $kpis,
                 'filtros' => [
@@ -297,7 +316,7 @@ $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return Inertia::render('Attendances/Index', [
+            return Inertia::render('attendances/Index', [
                 'atenciones' => [],
                 'kpis' => [
                     'total' => 0,

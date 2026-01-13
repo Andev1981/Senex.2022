@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import TablePagination from "@/Components/TablePagination";
 import { patientStatuses, PATIENT_STATUS_OPTIONS } from "@/helpers/status"; // Ajusta imports si usas treatmentStatuses
+import moment from "moment";
 
 export default function TableTreatments({
   treatments = [],
@@ -26,7 +27,7 @@ export default function TableTreatments({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   // --- 1. FILTRADO GLOBAL ---
@@ -100,12 +101,16 @@ export default function TableTreatments({
       {
         header: "FECHA INICIO",
         accessorFn: (row) => row.start_date || row.created_at,
-        cell: ({ getValue }) => (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                {getValue() ? new Date(getValue()).toLocaleDateString("es-CL") : "-"}
-            </div>
-        ),
+        cell: ({ getValue }) => {
+            const val = getValue();
+            const displayDate = val ? moment(val).format("DD/MM/YYYY") : "-";
+            return (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                    {displayDate}
+                </div>
+            );
+        },
       },
 
       // KINESIÓLOGO
@@ -146,14 +151,14 @@ export default function TableTreatments({
     state: {
       sorting,
       globalFilter,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: (updater) => {
-        const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
+        const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
         setPageIndex(newState.pageIndex);
-        setpagesize(newState.pagesize);
+        setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -229,8 +234,8 @@ export default function TableTreatments({
         <TablePagination
             table={table}
             total={treatments.length}
-            pagesize={pagesize}
-            setpagesize={setpagesize}
+            pagesize={pageSize}
+            setpagesize={setPageSize}
         />
       </div>
     </div>

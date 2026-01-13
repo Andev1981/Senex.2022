@@ -26,14 +26,14 @@ class CompanyController extends Controller
             ];
         });
 
-        return Inertia::render('Companies/Index', [
+        return Inertia::render('companies/Index', [
             'companies' => $companies
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Companies/Create');
+        return Inertia::render('companies/Create');
     }
 
     public function store(Request $request)
@@ -69,7 +69,7 @@ class CompanyController extends Controller
         // Cargamos regiones y comunas para el formulario de dirección
         $regions = Region::with('communes')->get();
 
-        return Inertia::render('Companies/Edit', [
+        return Inertia::render('companies/Edit', [
             'company' => $company,
             'dteConfig' => $company->dteConfiguration,
             'folios' => $company->authorizedFolios()->orderByDesc('created_at')->get(),

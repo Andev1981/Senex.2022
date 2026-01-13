@@ -32,7 +32,7 @@ class PayrollController extends Controller
                   ->where('branch_doctor.status', 'active');
         })->get(['id', 'name', 'last_name']);
 
-        return Inertia::render('Payroll/Index', [
+        return Inertia::render('payroll/Index', [
             'payrolls' => $payrolls,
             'doctors' => $doctors
         ]);

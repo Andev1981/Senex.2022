@@ -180,7 +180,7 @@ export default function AgreementsTable({
       </div>
 
       {/* TABLA ENTERPRISE */}
-      <div className="bg-white border border-gray-100 shadow-xl rounded-enterprise-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 shadow-xl rounded-xl-xl overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-50 bg-gray-50/30">
           <h2 className="flex items-center gap-3 text-sm font-black text-gray-900 uppercase tracking-tight">
             <Settings className="w-5 h-5 text-brand-primary" /> Maestro de Tarifarios

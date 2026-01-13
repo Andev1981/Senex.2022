@@ -333,7 +333,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
 
       <div className="min-h-screen p-6 space-y-10 md:p-10 bg-gray-50/50">
         {/* HEADER HERO COMPACTO */}
-        <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-enterprise">
+        <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
           <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full opacity-50 bg-brand-primary/5 blur-3xl"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-5">

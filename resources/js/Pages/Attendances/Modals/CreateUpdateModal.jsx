@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useForm } from "@inertiajs/react";
+import { useForm, router } from "@inertiajs/react";
 import moment from "moment";
 import {
   Activity,
@@ -22,6 +22,8 @@ import SearchSelect from "@/Components/SearchSelect";
 import PainMapCard from "@/Components/Body/PainMapCard";
 import GenericModal from "@/Components/Body/GenericModal";
 import HandSelector from "@/Components/Body/HandSelector";
+import InputError from "@/Components/InputError";
+import Swal from "sweetalert2";
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "📅 Programada" },
@@ -57,10 +59,21 @@ export default function SessionFormModal({
     }));
   }, [doctors]);
 
+  // Lógica para preseleccionar tratamiento activo si es una nueva sesión
+  const defaultTreatmentId = useMemo(() => {
+      if (sessionData?.treatment_id) return sessionData.treatment_id;
+      if (sessionData?.id) return ""; // Si es edición y no tiene tratamiento, es raro pero respetamos
+
+      // Buscar tratamiento activo en el paciente
+      const patientTreatments = preselectedPatient?.active_treatments || preselectedPatient?.treatments || [];
+      const active = patientTreatments.find(t => ['in_progress', 'evaluation'].includes(t.status));
+      return active ? active.id : "";
+  }, [sessionData, preselectedPatient]);
+
   // --- CONFIGURACIÓN DEL FORMULARIO ---
-  const { data, setData, post, patch, processing, reset } = useForm({
+  const { data, setData, post, patch, processing, reset, errors } = useForm({
     id: sessionData?.session_id || sessionData?.id || "",
-    treatment_id: sessionData?.treatment_id || "", 
+    treatment_id: defaultTreatmentId, 
     patient_id: sessionData?.patient_id || preselectedPatient?.id || "",
     doctor_id: sessionData?.doctor_id || "",
     session_type_id: sessionData?.session_type_id || "",
@@ -77,6 +90,9 @@ export default function SessionFormModal({
     referral_doctor_name: "", 
     referral_diagnosis: "",   
     total_sessions: 10,
+    body_part: sessionData?.body_part || "", // Nuevo campo
+    laterality: sessionData?.laterality || "", // Nuevo campo
+
     // Mapear datos de dolor de la sesión a los iniciales del tratamiento
     initial_pain_level: sessionData?.pain_level || 0,
     initial_pain_map: sessionData?.session_pain_map || [],
@@ -98,6 +114,7 @@ export default function SessionFormModal({
     
     patient_amount_clp: sessionData?.patient_amount_clp || 0,
     patient_plan_id: sessionData?.patient_plan_id || "",
+    confirm_defaults: false,
   });
 
   // --- LÓGICA BOTÓN ---
@@ -155,6 +172,7 @@ export default function SessionFormModal({
   };
 
   const handleBodyPartClick = (partId) => {
+    /* 
     if (partId === 'hand_left' || partId === 'wrist_left' || partId === 'hand_L') {
         setActiveHandSide('left');
         setIsHandModalOpen(true);
@@ -162,6 +180,7 @@ export default function SessionFormModal({
         setActiveHandSide('right');
         setIsHandModalOpen(true);
     }
+    */
   };
 
   const handleFingerSelection = (fingerId) => {
@@ -183,26 +202,22 @@ export default function SessionFormModal({
       setCurrentDiagnosisName(null);
       return;
     }
-    const treatmentsList = selectedPatient.active_treatments || selectedPatient.treatments || [];
-    const activeTreatment = treatmentsList.length > 0 ? treatmentsList[0] : null;
+    
+    // Auto-seleccionar tratamiento activo si estamos creando una nueva sesión y cambiamos de paciente
+    if (!sessionData?.id) {
+        const treatmentsList = selectedPatient.active_treatments || selectedPatient.treatments || [];
+        const activeTreatment = treatmentsList.find(t => ['in_progress', 'evaluation'].includes(t.status));
+        
+        if (activeTreatment) {
+            setData("treatment_id", activeTreatment.id);
+        } else {
+            setData("treatment_id", "");
+        }
+    }
 
-    if (activeTreatment) {
-      // Si hay tratamientos, no preseleccionamos nada para obligar al usuario a elegir (o el primero si prefieres)
-      // Aquí solo actualizamos el label informativo si se requiere
-    } 
   }, [data.patient_id, patients, preselectedPatient]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!data.patient_id) return alert("Selecciona un paciente");
-    const opts = {
-      onSuccess: () => { reset(); setShowModal(false); }, 
-      preserveScroll: true,
-    };
-    isEditing ? patch(route("sessions.update", data.id), opts) : post(route("sessions.store"), opts);
-  };
-
-  const selectedPatientFinal = useMemo(() => {
+   const selectedPatientFinal = useMemo(() => {
     return preselectedPatient || patients.find((p) => p.id === parseInt(data.patient_id));
   }, [preselectedPatient, data.patient_id, patients]);
 
@@ -211,12 +226,71 @@ export default function SessionFormModal({
     return selectedPatientFinal.active_plans || [];
   }, [selectedPatientFinal]);
 
-  // Obtener el tratamiento activo seleccionado para mostrar su info
+   // Obtener el tratamiento activo seleccionado para mostrar su info
   const selectedTreatmentInfo = useMemo(() => {
       if (!data.treatment_id || !selectedPatientFinal) return null;
       const treatments = selectedPatientFinal.active_treatments || selectedPatientFinal.treatments || [];
       return treatments.find(t => t.id === parseInt(data.treatment_id));
   }, [data.treatment_id, selectedPatientFinal]);
+
+
+  // Sincronizar datos cuando cambia el tratamiento seleccionado
+  useEffect(() => {
+      if (data.treatment_id && selectedTreatmentInfo) {
+          setData(prev => ({
+              ...prev,
+              diagnostic_code: selectedTreatmentInfo.diagnostic?.code || selectedTreatmentInfo.diagnostic_code || "",
+              referral_diagnosis: selectedTreatmentInfo.referral_diagnosis || "",
+              referral_doctor_name: selectedTreatmentInfo.referral_doctor_name || "",
+              // No sobreescribimos body_part/laterality si la sesión ya tiene datos propios
+              body_part: prev.body_part || selectedTreatmentInfo.body_part || "",
+              laterality: prev.laterality || selectedTreatmentInfo.laterality || ""
+          }));
+      }
+  }, [data.treatment_id, selectedTreatmentInfo]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!data.patient_id) return alert("Selecciona un paciente");
+    
+    const submitOptions = {
+      onSuccess: () => { 
+          reset(); 
+          setShowModal(false); 
+      }, 
+      onError: (errors) => {
+          if (errors.commission_alert) {
+              Swal.fire({
+                  title: '⚠️ Atención: Comisión',
+                  text: errors.commission_alert,
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#4f46e5', // brand-primary (indigo-600)
+                  cancelButtonColor: '#d1d5db',
+                  confirmButtonText: 'Sí, crear igualmente',
+                  cancelButtonText: 'Cancelar'
+              }).then((result) => {
+                  if (result.isConfirmed) {
+                      // Reenviar usando router.post directamente para asegurar que el payload se envía correctamente
+                      router.post(route("sessions.store"), {
+                          ...data,
+                          confirm_defaults: true
+                      }, submitOptions);
+                  }
+              });
+          }
+      },
+      preserveScroll: true,
+    };
+
+    isEditing 
+        ? patch(route("sessions.update", data.id), submitOptions) 
+        : post(route("sessions.store"), submitOptions);
+  };
+
+ 
+
+ 
 
 
   return (
@@ -263,7 +337,7 @@ export default function SessionFormModal({
                     
                     {/* 1. DATOS ADMINISTRATIVOS */}
                     <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all space-y-6">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-3">
                             <UserCheck className="w-5 h-5 text-brand-primary"/>
                             <h3 className="enterprise-label !text-brand-primary">Datos Administrativos</h3>
                         </div>
@@ -281,7 +355,7 @@ export default function SessionFormModal({
                                 className="!rounded-2xl"
                             />
                         ) : (
-                            <div className="flex items-center justify-between p-6 bg-gray-50/50 rounded-2xl border border-gray-100 shadow-inner">
+                            <div className="flex items-center justify-between py-2 px-6 bg-gray-50/50 rounded-2xl border border-gray-100 shadow-inner">
                                 <div>
                                     <p className="text-sm font-black text-gray-800 uppercase tracking-wide">{selectedPatientFinal.full_name || `${selectedPatientFinal.name} ${selectedPatientFinal.last_name}`}</p>
                                     <p className="text-[11px] font-black uppercase tracking-wide mt-1 text-gray-400">{selectedPatientFinal.rut}</p>
@@ -291,20 +365,21 @@ export default function SessionFormModal({
                                 )}
                             </div>
                         )}
+                        <InputError message={errors.patient_id} className="mt-1" />
 
                         {/* B) CONTEXTO CLÍNICO (SELECTOR DE TRATAMIENTO + DATOS) */}
                         {selectedPatientFinal && (
-                            <div className="space-y-4 pt-4 border-t border-gray-50 animate-in fade-in slide-in-from-top-2">
+                            <div className="space-y-2 pt-2 border-t border-gray-50 animate-in fade-in slide-in-from-top-2">
                                 
                                 <div className="space-y-1">
-                                    <label className="ml-1 enterprise-label text-purple-600 flex items-center gap-1">
+                                    <label className="ml-1 flex-1 enterprise-label flex items-center gap-1">
                                         <Activity className="w-3 h-3"/> Contexto / Tratamiento
                                     </label>
                                     <select
                                         value={data.treatment_id}
                                         onChange={(e) => setData("treatment_id", e.target.value)}
                                         className="w-full px-4 py-3 font-mono text-xs font-bold text-gray-700 border-purple-100 bg-purple-50/10 rounded-xl focus:ring-purple-200 cursor-pointer"
-                                        disabled={!isFieldEditable("clinical")} 
+                                        disabled={!isFieldEditable("context")} 
                                     >
                                         <option value="">✨ Nuevo Tratamiento / Evaluación Inicial</option>
                                         {(selectedPatientFinal.active_treatments || selectedPatientFinal.treatments || []).map((t) => (
@@ -315,6 +390,7 @@ export default function SessionFormModal({
                                             </option>
                                         ))}
                                     </select>
+                                    <InputError message={errors.treatment_id} className="mt-1" />
                                 </div>
 
                                 {/* CASO 1: NUEVO TRATAMIENTO (INPUTS HABILITADOS) */}
@@ -326,26 +402,32 @@ export default function SessionFormModal({
                                                 <h4 className="text-xs font-black text-purple-800 uppercase tracking-wide">Apertura de Expediente</h4>
                                             </div>
                                             <div className="space-y-4">
-                                                <SearchSelect
-                                                    label="Diagnóstico Kinésico (CIE-10) *"
-                                                    placeholder="Buscar patología (Ej: M54.5 Lumbago)..."
-                                                    options={diagnostics.map(d => ({ value: d.code, label: `${d.code} - ${d.description}` }))}
-                                                    value={data.diagnostic_code}
-                                                    onChange={(val) => setData("diagnostic_code", val)}
-                                                    className="!bg-white"
-                                                />
+                                                <div>
+                                                    <SearchSelect
+                                                        label="Diagnóstico Kinésico (CIE-10) *"
+                                                        placeholder="Buscar patología (Ej: M54.5 Lumbago)..."
+                                                        options={diagnostics.map(d => ({ value: d.code, label: `${d.code} - ${d.description}` }))}
+                                                        value={data.diagnostic_code}
+                                                        onChange={(val) => setData("diagnostic_code", val)}
+                                                        className="!bg-white"
+                                                    />
+                                                    <InputError message={errors.diagnostic_code} className="mt-1" />
+                                                </div>
                                                 <div className="grid grid-cols-3 gap-3">
                                                     <div className="col-span-2 space-y-1">
                                                         <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Médico Derivante</label>
                                                         <input type="text" placeholder="Ej: Dr. Juan Pérez" value={data.referral_doctor_name} onChange={(e) => setData("referral_doctor_name", e.target.value)} className="w-full px-3 py-2.5 text-xs font-bold border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all"/>
+                                                        <InputError message={errors.referral_doctor_name} className="mt-1" />
                                                     </div>
                                                     <div className="space-y-1">
                                                         <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Nº Sesiones</label>
                                                         <input type="number" placeholder="10" value={data.total_sessions} onChange={(e) => setData("total_sessions", e.target.value)} className="w-full px-3 py-2.5 text-xs font-bold border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all text-center"/>
+                                                        <InputError message={errors.total_sessions} className="mt-1" />
                                                     </div>
                                                     <div className="col-span-3 space-y-1">
                                                         <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Diagnóstico Médico (Texto Orden)</label>
                                                         <input type="text" placeholder="Lo que dice el papel..." value={data.referral_diagnosis} onChange={(e) => setData("referral_diagnosis", e.target.value)} className="w-full px-3 py-2.5 text-xs font-medium border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all"/>
+                                                        <InputError message={errors.referral_diagnosis} className="mt-1" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -384,8 +466,8 @@ export default function SessionFormModal({
                         )}
 
                         {/* C) DATOS DE AGENDA (Kine, Servicio, Fecha...) */}
-                        <div className="grid grid-cols-1 gap-4 pt-4 border-t border-gray-50">
-                            <div className="md:col-span-2">
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
+                            <div>
                                 <SearchSelect
                                     label="Kinesiólogo *"
                                     options={formattedDoctors.map((d) => ({ value: d.id, label: d.full_name }))}
@@ -394,10 +476,9 @@ export default function SessionFormModal({
                                     disabled={!isFieldEditable("doctor_id")}
                                     className="!rounded-2xl"
                                 />
+                                <InputError message={errors.doctor_id} className="mt-1" />
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1">
+                            <div className="space-y-1">
                                     <label className="ml-1 enterprise-label opacity-60 text-[10px]">Tipo de Servicio</label>
                                     <SearchSelect
                                         options={session_types.map((st) => ({ value: st.id, label: st.name }))}
@@ -410,11 +491,16 @@ export default function SessionFormModal({
                                                 patient_amount_clp: type ? Number(type.base_price_clp) : 0,
                                             }));
                                         }}
-                                        disabled={!isFieldEditable("clinical")}
+                                        disabled={!isFieldEditable("context")}
                                         placeholder="Seleccionar..."
                                         className="!rounded-xl"
                                     />
-                                </div>
+                                    <InputError message={errors.session_type_id} className="mt-1" />
+                            </div>
+                            
+
+                       
+                             
 
                                 <div className="space-y-1">
                                     <label className="ml-1 enterprise-label opacity-60 text-[10px]">Modalidad de Cobro</label>
@@ -422,7 +508,7 @@ export default function SessionFormModal({
                                         value={data.consumes_plan ? "yes" : "no"}
                                         onChange={(e) => setData("consumes_plan", e.target.value === "yes")}
                                         className="w-full px-4 py-3 font-mono text-xs font-bold text-gray-700 border-gray-100 shadow-sm rounded-xl bg-white focus:ring-brand-primary transition-all"
-                                        disabled={!isFieldEditable("clinical")}
+                                        disabled={!isFieldEditable("context")}
                                     >
                                         <option value="no">💵 Pago Directo</option>
                                         <option value="yes" disabled={activePlans.length === 0}>
@@ -430,7 +516,7 @@ export default function SessionFormModal({
                                         </option>
                                     </select>
                                 </div>
-                            </div>
+                          
 
                             <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
                                 <div className="space-y-1">
@@ -442,6 +528,7 @@ export default function SessionFormModal({
                                         disabled={!isFieldEditable("date")} 
                                         className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white"
                                     />
+                                    <InputError message={errors.date} className="mt-1" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="ml-1 enterprise-label opacity-60 text-[10px]">Hora</label>
@@ -452,11 +539,12 @@ export default function SessionFormModal({
                                         disabled={!isFieldEditable("time")} 
                                         className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white"
                                     />
+                                    <InputError message={errors.time} className="mt-1" />
                                 </div>
                                 
                                 <div className="space-y-1">
                                     <label className="ml-1 enterprise-label opacity-60 text-[10px] flex items-center gap-1">
-                                        <Clock className="w-3 h-3 text-brand-primary"/> Duración (Min)
+                                    Duración (Min)
                                     </label>
                                     <input 
                                         type="number" 
@@ -466,6 +554,7 @@ export default function SessionFormModal({
                                         className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white text-center"
                                         placeholder="45"
                                     />
+                                    <InputError message={errors.duration} className="mt-1" />
                                 </div>
                             </div>
                         </div>
@@ -536,7 +625,18 @@ export default function SessionFormModal({
                                                 <button type="button" onClick={() => { handleActivityChange("techniques", techniqueInput, "add"); setTechniqueInput(""); }} className="bg-green-100 text-green-700 px-4 rounded-xl hover:bg-green-200 hover:shadow-md transition-all"><Plus className="w-5 h-5"/></button>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                {data.activities_data.techniques?.map((t, i) => (<span key={i} className="bg-white text-gray-700 text-[10px] px-3 py-1.5 rounded-lg border border-gray-200 flex items-center gap-2 font-bold shadow-sm uppercase tracking-wide">{t} <button type="button" onClick={() => handleActivityChange("techniques", t, "remove")}><X className="w-3 h-3 hover:text-red-500 cursor-pointer"/></button></span>))}
+                                                {data.activities_data.techniques?.map((t, i) => (
+                                                    <span key={i} className="bg-green-50 text-green-700 text-[10px] px-3 py-1.5 rounded-xl border border-green-100 flex items-center gap-2 font-bold shadow-sm uppercase tracking-wide group hover:bg-green-100 transition-colors">
+                                                        {t} 
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => handleActivityChange("techniques", t, "remove")}
+                                                            className="p-0.5 rounded-full hover:bg-green-200 text-green-400 hover:text-green-800 transition-all"
+                                                        >
+                                                            <X className="w-3 h-3"/>
+                                                        </button>
+                                                    </span>
+                                                ))}
                                                 {(!data.activities_data.techniques || data.activities_data.techniques.length === 0) && <span className="text-[10px] text-gray-400 italic font-medium">Sin procedimientos registrados</span>}
                                             </div>
                                         </div>
@@ -557,8 +657,8 @@ export default function SessionFormModal({
                         <PainMapCard
                             points={data.session_pain_map}
                             painLevel={data.pain_level}
-                            bodyPart={sessionData?.body_part || ""} 
-                            laterality={sessionData?.laterality || ""} 
+                            bodyPart={data.body_part} 
+                            laterality={data.laterality} 
                             isLocked={!isFieldEditable("clinical")} 
                             title="Evolución Actual"
                             onPointsChange={(val) => {
@@ -577,8 +677,8 @@ export default function SessionFormModal({
                                     initial_pain_level: !prev.treatment_id ? val : prev.initial_pain_level
                                 }));
                             }}
-                            onBodyPartChange={(val) => {}} 
-                            onLateralityChange={(val) => {}} 
+                            onBodyPartChange={(val) => setData("body_part", val)} 
+                            onLateralityChange={(val) => setData("laterality", val)} 
                             onBodyPartClick={handleBodyPartClick}
                         />
                     </div>
@@ -589,8 +689,8 @@ export default function SessionFormModal({
 
         {/* --- FOOTER UNIFICADO --- */}
         <div className="flex justify-end gap-4 p-4 border-t border-gray-100 bg-white z-20 shrink-0">
-            <button type="button" onClick={() => setShowModal(false)} className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all" disabled={processing}>Cancelar</button>
-            <button type="submit" className="px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-brand-primary rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 disabled:opacity-50 transition-all active:scale-95 transform" disabled={processing}>{submitLabel}</button>
+            <button type="button" onClick={() => setShowModal(false)} className="cursor-pointer px-8 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all" disabled={processing}>Cancelar</button>
+            <button type="submit" className="px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-brand-primary rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 disabled:opacity-50 transition-all active:scale-95 transform cursor-pointer" disabled={processing}>{submitLabel}</button>
         </div>
 
       </form>

@@ -156,7 +156,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
                 )}
                 {/* Indicador visual de que es clickeable si hay múltiples empresas */}
                 {props.all_companies?.length > 1 && (
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
+                    <div className="absolute z-50 -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                     </div>
                 )}

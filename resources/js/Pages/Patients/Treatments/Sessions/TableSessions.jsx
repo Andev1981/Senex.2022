@@ -24,6 +24,7 @@ import TablePagination from "@/Components/TablePagination";
 import { getSessionStatusConfig } from "@/constants/sessionStatuses";
 import { getPaymentStatusConfig } from "@/constants/paymentStatuses";
 import { SESSION_STATUS_OPTIONS } from "@/constants/sessionStatuses";
+import moment from "moment";
 
 export default function TableSessions({
   sessions = [],
@@ -35,7 +36,7 @@ export default function TableSessions({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10); // Corregido: pageSize (camelCase)
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
 
@@ -49,6 +50,7 @@ export default function TableSessions({
       )
     );
   }, [globalFilter, sessions]);
+
 
   // --- 2. COLUMNAS ---
   const columns = useMemo(
@@ -89,12 +91,25 @@ export default function TableSessions({
         accessorFn: (row) => row.time,
         id: "time",
         header: "HORA",
-        cell: ({ getValue }) => (
-          <div className="flex flex-1 truncate  items-center gap-2 text-sm text-gray-600 font-mono">
-            <Timer className="w-3.5 h-3.5 text-gray-400" />
-            {getValue()?.slice(0, 5) || "--:--"}
-          </div>
-        ),
+        cell: ({ getValue }) => {
+            const val = getValue();
+            let displayTime = "--:--";
+            
+            if (val) {
+                // Intentar parsear como ISO o Time string
+                const m = moment(val, [moment.ISO_8601, "HH:mm:ss", "HH:mm"]);
+                if (m.isValid()) {
+                    displayTime = m.format("HH:mm");
+                }
+            }
+
+            return (
+              <div className="flex flex-1 truncate  items-center gap-2 text-sm text-gray-600 font-mono">
+                <Timer className="w-3.5 h-3.5 text-gray-400" />
+                {displayTime}
+              </div>
+            );
+        },
       },
 
       // COLUMNA: SESIÓN #
@@ -192,15 +207,16 @@ export default function TableSessions({
       sorting,
       globalFilter,
       columnFilters,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex }, // Corregido: pageSize
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: (updater) => {
-        const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
+        // TanStack devuelve { pageIndex, pageSize }
+        const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
         setPageIndex(newState.pageIndex);
-        setpagesize(newState.pagesize);
+        setPageSize(newState.pageSize); // Corregido: newState.pageSize
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -295,8 +311,8 @@ export default function TableSessions({
         <TablePagination
             table={table}
             total={sessions.length}
-            pagesize={pagesize}
-            setpagesize={setpagesize}
+            pagesize={pageSize} // Corregido: pageSize
+            setpagesize={setPageSize} // Corregido: setPageSize
         />
       </div>
     </div>

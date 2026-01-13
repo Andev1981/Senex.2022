@@ -153,7 +153,7 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
   return (
     <div className="space-y-8 duration-500 animate-in fade-in">
       {/* 1. Header Hero */}
-      <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-enterprise">
+      <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
         <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full bg-brand-primary/5 blur-3xl"></div>
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -216,7 +216,7 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
       </div>
 
       {/* 4. Tabla TanStack */}
-      <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-enterprise-xl">
+      <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl-xl">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead className="border-b border-gray-100 bg-gray-50/50">
@@ -300,7 +300,7 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
 
 function StatCard({ title, icon: Icon, value, colorClass }) {
   return (
-    <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise hover:scale-[1.02] transition-all duration-300 group">
+    <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl hover:scale-[1.02] transition-all duration-300 group">
       <div className="flex items-center justify-between mb-6">
         <div className={`p-3 rounded-xl text-white shadow-lg ${colorClass}`}>
           <Icon className="w-6 h-6" />

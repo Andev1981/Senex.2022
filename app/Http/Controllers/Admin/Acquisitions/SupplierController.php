@@ -10,7 +10,7 @@ class SupplierController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Acquisitions/Suppliers/Index');
+        return Inertia::render('acquisitions/Suppliers/Index');
     }
 
     public function store(Request $request) { /* ... */ }

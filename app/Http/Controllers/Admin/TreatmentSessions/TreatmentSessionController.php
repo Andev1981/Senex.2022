@@ -39,6 +39,9 @@ class TreatmentSessionController extends Controller
             // - Asigna month_session_number automáticamente
             // - Valida disponibilidad del doctor
             // - Crea logs
+            
+            // DEBUG: Ver qué datos llegan
+            Log::info('TreatmentSessionController::store validated data:', $request->validated());
 
             $this->sessionService->createSession($request->validated());
 
@@ -47,7 +50,20 @@ class TreatmentSessionController extends Controller
 
             session()->flash('message', 'Sesión creada exitosamente.');
             session()->flash('type', 'success');
+            
+            return back();
         } catch (\Exception $e) {
+            // MANEJO DE CONFIRMACIÓN DE COMISIÓN
+            if (str_starts_with($e->getMessage(), 'COMMISSION_CONFIRMATION_NEEDED')) {
+                $parts = explode(':', $e->getMessage());
+                $defaultAmount = count($parts) > 1 ? $parts[1] : 0;
+                
+                return back()->withErrors([
+                    'commission_alert' => "No existe comisión específica configurada. El valor por defecto del servicio es $" . number_format($defaultAmount, 0, ',', '.') . ". ¿Desea continuar?",
+                    'default_amount' => $defaultAmount // Dato extra por si se requiere
+                ]);
+            }
+
             // FALLO: Capturar la excepción del Service, loguear y redirigir con el mensaje de error
             Log::error("Error de lógica al agendar sesión: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 

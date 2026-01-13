@@ -31,7 +31,7 @@ export default function Index({ saasPlans, subscription }) {
         <AuthenticatedLayout>
             <Head title="Mi Suscripción" />
             <div className="min-h-screen p-6 bg-gray-50/50 space-y-8">
-                <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise">
+                <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center justify-center w-14 h-14 bg-brand-primary rounded-2xl">
                             <Gem className="w-7 h-7 text-white" />
@@ -47,7 +47,7 @@ export default function Index({ saasPlans, subscription }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {saasPlans.map((plan) => (
-                        <div key={plan.id} className={`p-8 bg-white border-2 rounded-enterprise-xl ${subscription?.saas_plan_id === plan.id ? 'border-brand-primary' : 'border-gray-100'}`}>
+                        <div key={plan.id} className={`p-8 bg-white border-2 rounded-xl-xl ${subscription?.saas_plan_id === plan.id ? 'border-brand-primary' : 'border-gray-100'}`}>
                             <h2 className="text-2xl font-black text-gray-900">{plan.name}</h2>
                             <p className="mt-2 text-4xl font-black text-gray-900">${plan.price_monthly.toLocaleString('es-CL')} <span className="text-base font-medium text-gray-500">/ mes</span></p>
                             <ul className="mt-6 space-y-4">

@@ -34,9 +34,10 @@ function useSyncedTab(defaultTab = "dashboard") {
 
 export default function DetailPatient(props) {
   const [activeTab, setActiveTab] = useSyncedTab("dashboard");
-  const { patient, doctors, session_types, communes, regions, provinces, diagnostics  } = props;
+  const { patient, doctors, session_types, communes, regions, provinces, diagnostics, history, treatments, sessions  } = props;
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+
 
   return (
     <AuthenticatedLayout>
@@ -71,13 +72,16 @@ export default function DetailPatient(props) {
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => setShowSessionModal(true)}
-                    className="px-6 py-3 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-brand-primary/20 transition-all active:scale-95 flex items-center gap-2"
+                    className="group flex items-center gap-2 px-6 py-3 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-brand-primary/20 transition-all active:scale-95 cursor-pointer"
                 >
-                    <Plus className="w-4 h-4" /> Registrar Atención
+                    <div className="bg-white/20 rounded-full p-0.5 group-hover:rotate-90 transition-transform">
+                        <Plus className="w-3 h-3" />
+                    </div>
+                    Registrar Atención
                 </button>
                 <Link
                     href={route("patients.index")}
-                    className="px-6 py-3 bg-white border border-gray-100 text-brand-gray rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-all shadow-sm flex items-center gap-2 w-fit"
+                    className="px-6 py-3 bg-white border border-gray-100 text-brand-gray rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-brand-primary transition-all shadow-sm flex items-center gap-2 w-fit cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" /> Directorio
                 </Link>
@@ -85,7 +89,7 @@ export default function DetailPatient(props) {
           </header>
 
           {/* Área de Contenido con Suspense (Estilo Carpeta Premium) */}
-          <div className="bg-white rounded-enterprise shadow-xl border border-gray-100 min-h-[600px] p-8 relative overflow-hidden">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-100 min-h-[600px] p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
             
             <Suspense
@@ -104,7 +108,7 @@ export default function DetailPatient(props) {
                     />
                 )}
                 {activeTab === "general" && <IndexGeneral {...props} />}
-                {activeTab === "history" && <IndexHistorial {...props} />}
+                {activeTab === "history" && <IndexHistorial {...props} treatments={patient.active_treatments || []} />}
                 {activeTab === "treatments" && (
                     <IndexTreatments 
                         {...props} 

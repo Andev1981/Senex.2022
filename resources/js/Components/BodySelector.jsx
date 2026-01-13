@@ -55,71 +55,75 @@ export default function BodySelector({ initialData = [], mode = 'edit', onChange
 
     // Mapeo de zonas visuales a las constantes de Laravel
     const ZONES = {
-        // --- VISTA FRONTAL ---
-        head_front: { id: 'head_neck', path: "M135,30 Q135,5 150,5 Q165,5 165,30 Q165,45 150,55 Q135,45 135,30 Z" }, 
-        neck_front: { id: 'head_neck', path: "M142,55 L158,55 L158,65 L142,65 Z" },
+        // --- VISTA FRONTAL (X: 0 - 200) ---
+        head_front: { id: 'head_neck', path: "M150,15 C138,15 130,25 130,40 C130,55 138,62 142,64 L158,64 C162,62 170,55 170,40 C170,25 162,15 150,15 Z" }, 
+        neck_front: { id: 'head_neck', path: "M142,64 L142,72 C142,75 158,75 158,72 L158,64 Z" },
         
-        shoulder_left_front: { id: 'shoulder', path: "M142,65 L120,75 L125,90 L142,80 Z" },
-        shoulder_right_front: { id: 'shoulder', path: "M158,65 L180,75 L175,90 L158,80 Z" },
+        shoulder_left_front: { id: 'shoulder', path: "M142,72 L120,78 L115,95 L130,95 L142,85 Z" },
+        shoulder_right_front: { id: 'shoulder', path: "M158,72 L180,78 L185,95 L170,95 L158,85 Z" },
         
-        chest: { id: 'thoracic_spine', path: "M142,80 L158,80 L158,110 L142,110 Z M125,90 L142,80 L142,110 L130,110 Z M175,90 L158,80 L158,110 L170,110 Z" }, // Simplificado
-        abdomen: { id: 'abdomen', path: "M130,110 L170,110 L165,140 L135,140 Z" },
+        chest: { id: 'thoracic_spine', path: "M142,85 L158,85 L158,120 L142,120 Z M130,95 L142,85 L142,120 L130,115 Z M170,95 L158,85 L158,120 L170,115 Z" }, 
+        abdomen: { id: 'abdomen', path: "M130,115 L142,120 L158,120 L170,115 L165,145 L135,145 Z" },
         
-        arm_left_front: { id: 'arm_elbow', path: "M120,75 L105,120 L115,125 L125,90 Z" }, // Brazo
-        arm_right_front: { id: 'arm_elbow', path: "M180,75 L195,120 L185,125 L175,90 Z" },
+        arm_left_front: { id: 'arm_elbow', path: "M120,78 L108,115 L118,118 L125,90 L130,95 Z" },
+        arm_right_front: { id: 'arm_elbow', path: "M180,78 L192,115 L182,118 L175,90 L170,95 Z" },
         
-        forearm_left_front: { id: 'arm_elbow', path: "M105,120 L95,155 L105,160 L115,125 Z" },
-        forearm_right_front: { id: 'arm_elbow', path: "M195,120 L205,155 L195,160 L185,125 Z" },
+        forearm_left_front: { id: 'arm_elbow', path: "M108,115 L100,150 L110,155 L118,118 Z" },
+        forearm_right_front: { id: 'arm_elbow', path: "M192,115 L200,150 L190,155 L182,118 Z" },
         
-        hand_left_front: { id: 'wrist_hand', path: "M95,155 L90,175 L100,175 L105,160 Z" },
-        hand_right_front: { id: 'wrist_hand', path: "M205,155 L210,175 L200,175 L195,160 Z" },
+        /* 
+        hand_left_front: { id: 'wrist_hand', path: "M100,150 L95,170 L105,170 L110,155 Z" },
+        hand_right_front: { id: 'wrist_hand', path: "M200,150 L205,170 L195,170 L190,155 Z" },
+        */
         
-        hip_front: { id: 'hip', path: "M135,140 L165,140 L170,160 L130,160 Z" },
+        hip_front: { id: 'hip', path: "M135,145 L165,145 L170,165 L130,165 Z" },
         
-        thigh_left_front: { id: 'thigh', path: "M130,160 L145,160 L142,210 L125,210 Z" },
-        thigh_right_front: { id: 'thigh', path: "M155,160 L170,160 L175,210 L158,210 Z" },
+        thigh_left_front: { id: 'thigh', path: "M130,165 L148,165 L145,215 L125,215 Z" },
+        thigh_right_front: { id: 'thigh', path: "M152,165 L170,165 L175,215 L155,215 Z" },
         
-        knee_left_front: { id: 'knee', path: "M125,210 L142,210 L140,230 L123,230 Z" },
-        knee_right_front: { id: 'knee', path: "M158,210 L175,210 L177,230 L160,230 Z" },
+        knee_left_front: { id: 'knee', path: "M125,215 L145,215 L143,235 L127,235 Z" },
+        knee_right_front: { id: 'knee', path: "M155,215 L175,215 L173,235 L157,235 Z" },
         
-        leg_left_front: { id: 'leg_ankle', path: "M123,230 L140,230 L138,280 L125,280 Z" },
-        leg_right_front: { id: 'leg_ankle', path: "M160,230 L177,230 L175,280 L162,280 Z" },
+        leg_left_front: { id: 'leg_ankle', path: "M127,235 L143,235 L140,285 L128,285 Z" },
+        leg_right_front: { id: 'leg_ankle', path: "M157,235 L173,235 L172,285 L160,285 Z" },
         
-        foot_left_front: { id: 'foot', path: "M125,280 L138,280 L135,295 L120,295 Z" },
-        foot_right_front: { id: 'foot', path: "M162,280 L175,280 L180,295 L165,295 Z" },
+        foot_left_front: { id: 'foot', path: "M128,285 L140,285 L145,300 L125,300 Z" },
+        foot_right_front: { id: 'foot', path: "M160,285 L172,285 L175,300 L155,300 Z" },
 
-        // --- VISTA TRASERA (Offset X + 150) ---
-        head_back: { id: 'head_neck', path: "M285,30 Q285,5 300,5 Q315,5 315,30 Q315,45 300,55 Q285,45 285,30 Z" },
-        neck_back: { id: 'head_neck', path: "M292,55 L308,55 L308,65 L292,65 Z" },
+        // --- VISTA TRASERA (Offset X + 150 -> Center at 300) ---
+        head_back: { id: 'head_neck', path: "M300,15 C288,15 280,25 280,40 C280,55 288,62 292,64 L308,64 C312,62 320,55 320,40 C320,25 312,15 300,15 Z" },
+        neck_back: { id: 'head_neck', path: "M292,64 L292,72 C292,75 308,75 308,72 L308,64 Z" },
         
-        shoulder_left_back: { id: 'shoulder', path: "M292,65 L270,75 L275,90 L292,80 Z" },
-        shoulder_right_back: { id: 'shoulder', path: "M308,65 L330,75 L325,90 L308,80 Z" },
+        shoulder_left_back: { id: 'shoulder', path: "M292,72 L270,78 L265,95 L280,95 L292,85 Z" },
+        shoulder_right_back: { id: 'shoulder', path: "M308,72 L330,78 L335,95 L320,95 L308,85 Z" },
         
-        thoracic_back: { id: 'thoracic_spine', path: "M292,80 L308,80 L308,110 L292,110 Z M275,90 L292,80 L292,110 L280,110 Z M325,90 L308,80 L308,110 L320,110 Z" },
-        lumbar_back: { id: 'lumbar_spine', path: "M280,110 L320,110 L315,140 L285,140 Z" },
+        thoracic_back: { id: 'thoracic_spine', path: "M292,85 L308,85 L308,120 L292,120 Z M280,95 L292,85 L292,120 L280,115 Z M320,95 L308,85 L308,120 L320,115 Z" },
+        lumbar_back: { id: 'lumbar_spine', path: "M280,115 L292,120 L308,120 L320,115 L315,145 L285,145 Z" },
         
-        arm_left_back: { id: 'arm_elbow', path: "M270,75 L255,120 L265,125 L275,90 Z" },
-        arm_right_back: { id: 'arm_elbow', path: "M330,75 L345,120 L335,125 L325,90 Z" },
+        arm_left_back: { id: 'arm_elbow', path: "M270,78 L258,115 L268,118 L275,90 L280,95 Z" },
+        arm_right_back: { id: 'arm_elbow', path: "M330,78 L342,115 L332,118 L325,90 L320,95 Z" },
         
-        forearm_left_back: { id: 'arm_elbow', path: "M255,120 L245,155 L255,160 L265,125 Z" },
-        forearm_right_back: { id: 'arm_elbow', path: "M345,120 L355,155 L345,160 L335,125 Z" },
+        forearm_left_back: { id: 'arm_elbow', path: "M258,115 L250,150 L260,155 L268,118 Z" },
+        forearm_right_back: { id: 'arm_elbow', path: "M342,115 L350,150 L340,155 L332,118 Z" },
         
-        hand_left_back: { id: 'wrist_hand', path: "M245,155 L240,175 L250,175 L255,160 Z" },
-        hand_right_back: { id: 'wrist_hand', path: "M355,155 L360,175 L350,175 L345,160 Z" },
+        /*
+        hand_left_back: { id: 'wrist_hand', path: "M250,150 L245,170 L255,170 L260,155 Z" },
+        hand_right_back: { id: 'wrist_hand', path: "M350,150 L355,170 L345,170 L340,155 Z" },
+        */
         
-        glutes_back: { id: 'hip', path: "M285,140 L315,140 L320,160 L280,160 Z" },
+        glutes_back: { id: 'hip', path: "M285,145 L315,145 L320,170 L280,170 Z" },
         
-        thigh_left_back: { id: 'thigh', path: "M280,160 L295,160 L292,210 L275,210 Z" },
-        thigh_right_back: { id: 'thigh', path: "M305,160 L320,160 L325,210 L308,210 Z" },
+        thigh_left_back: { id: 'thigh', path: "M280,170 L298,170 L295,215 L275,215 Z" },
+        thigh_right_back: { id: 'thigh', path: "M302,170 L320,170 L325,215 L305,215 Z" },
         
-        knee_left_back: { id: 'knee', path: "M275,210 L292,210 L290,230 L273,230 Z" }, // Popliteal
-        knee_right_back: { id: 'knee', path: "M308,210 L325,210 L327,230 L310,230 Z" },
+        knee_left_back: { id: 'knee', path: "M275,215 L295,215 L293,235 L277,235 Z" }, // Popliteal
+        knee_right_back: { id: 'knee', path: "M305,215 L325,215 L323,235 L307,235 Z" },
         
-        leg_left_back: { id: 'leg_ankle', path: "M273,230 L290,230 L288,280 L275,280 Z" },
-        leg_right_back: { id: 'leg_ankle', path: "M310,230 L327,230 L325,280 L312,280 Z" },
+        leg_left_back: { id: 'leg_ankle', path: "M277,235 L293,235 L290,285 L278,285 Z" },
+        leg_right_back: { id: 'leg_ankle', path: "M307,235 L323,235 L322,285 L310,285 Z" },
         
-        foot_left_back: { id: 'foot', path: "M275,280 L288,280 L285,295 L270,295 Z" },
-        foot_right_back: { id: 'foot', path: "M312,280 L325,280 L330,295 L315,295 Z" },
+        foot_left_back: { id: 'foot', path: "M278,285 L290,285 L285,300 L265,300 Z" },
+        foot_right_back: { id: 'foot', path: "M310,285 L322,285 L325,300 L305,300 Z" },
     };
 
     return (

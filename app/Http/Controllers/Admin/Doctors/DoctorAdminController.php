@@ -136,7 +136,7 @@ class DoctorAdminController extends Controller
         $communes  = Commune::all(['id', 'name', 'province_id']);
         $regions   = Region::all(['id', 'name']);
 
-        return Inertia::render('Doctors/Index', [
+        return Inertia::render('doctors/Index', [
             'doctors' => $doctors,
             'sessionTypes' => $sessionTypes,
             'patients' => $patients,

@@ -71,7 +71,7 @@ class ProfileMobileController extends Controller
             'total_kines' => count($allDoctors),
         ];
 
-        return Inertia::render('KineMobile/MyProfile', [
+        return Inertia::render('kineMobile/MyProfile', [
             'doctor' => [
                 'id' => $doctor->id,
                 'name' => $doctor->name,

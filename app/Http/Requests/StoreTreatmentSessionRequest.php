@@ -90,11 +90,21 @@ class StoreTreatmentSessionRequest extends FormRequest
             'session_type_id' => 'nullable|exists:session_types,id',
             'room_id' => 'nullable|exists:rooms,id',
             'base_price_clp' => 'nullable|integer|min:0',
+            'patient_plan_id' => 'nullable|exists:patient_plans,id',
+            'confirm_defaults' => 'nullable|boolean', // Nuevo flag para confirmar valores por defecto
             'date' => 'required|date',
             'time' => 'required|date_format:H:i',
             'duration' => 'required|integer|min:15|max:180',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled,not_attend',
             
+            // --- CAMPOS DE TRATAMIENTO (Para creación automática) ---
+            'diagnostic_code' => 'nullable|string',
+            'referral_doctor_name' => 'nullable|string',
+            'referral_diagnosis' => 'nullable|string',
+            'total_sessions' => 'nullable|integer',
+            'initial_pain_level' => 'nullable|integer',
+            'initial_pain_map' => 'nullable|array',
+
             // --- NUEVOS CAMPOS SOAP ---
             'subjective' => 'nullable|string',
             'objective' => 'nullable|string',

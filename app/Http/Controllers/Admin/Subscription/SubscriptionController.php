@@ -15,7 +15,7 @@ class SubscriptionController extends Controller
         $saasPlans = SaaSPlan::all();
         $subscription = Subscription::where('company_id', session('current_company_id'))->first();
 
-        return Inertia::render('Subscription/Index', [
+        return Inertia::render('subscription/Index', [
             'saasPlans' => $saasPlans,
             'subscription' => $subscription,
         ]);

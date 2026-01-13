@@ -22,6 +22,7 @@ use App\Notifications\PatientWelcomeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Cache; // Importar Facade Cache
 
 
 class PatientAdminController extends Controller
@@ -36,108 +37,110 @@ class PatientAdminController extends Controller
             ->where('a.addressable_type', 'Patient')
             ->groupBy('a.addressable_id');
 
-        // Asegúrate de tener definidos $addrPick y $activeBranchId antes de esto.
+        $patients = Patient::query()
+            // 1. JOINS DE DIRECCIÓN
+            ->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'patients.id'))
+            ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
+            ->leftJoin('communes as c', 'addr.commune_id', '=', 'c.id')
+            ->leftJoin('provinces as p', 'c.province_id', '=', 'p.id')
+            ->leftJoin('regions as r', 'p.region_id', '=', 'r.id')
 
-$patients = Patient::query()
-    // 1. JOINS DE DIRECCIÓN (Se mantienen igual)
-    ->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'patients.id'))
-    ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
-    ->leftJoin('communes as c', 'addr.commune_id', '=', 'c.id')
-    ->leftJoin('provinces as p', 'c.province_id', '=', 'p.id')
-    ->leftJoin('regions as r', 'p.region_id', '=', 'r.id')
+            // 2. FILTRO POR SUCURSAL
+            ->when($activeBranchId, function ($query) use ($activeBranchId) {
+                $query->whereHas('branches', function ($q) use ($activeBranchId) {
+                    $q->where('branches.id', $activeBranchId);
+                });
+            })
 
-    // 2. FILTRO POR SUCURSAL (Se mantiene igual)
-    ->when($activeBranchId, function ($query) use ($activeBranchId) {
-        $query->whereHas('branches', function ($q) use ($activeBranchId) {
-            $q->where('branches.id', $activeBranchId);
+            // 3. SELECTS BÁSICOS
+            ->select([
+                'patients.id',
+                'patients.name',
+                'patients.last_name',
+                'patients.email',
+                'patients.birth_date',
+                'patients.rut',
+                'patients.phone',
+                'patients.gender',
+                'patients.status',
+                'patients.occupation',
+                'patients.marital_status',
+                'patients.status_reason',
+                'patients.opt_out_reminders',
+                'patients.prefers_whatsapp',
+                'patients.prefers_mail',
+                'patients.prefers_sms',
+                'patients.require_tutor',
+                // Concatenaciones SQL
+                DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) as full_name"),
+                DB::raw('addr.id as address_id'),
+                DB::raw('addr.street as street'),
+                DB::raw('addr.number as number'),
+                DB::raw('addr.details as details'),
+                DB::raw('r.id as region_id'),
+                DB::raw('p.id as province_id'),
+                DB::raw('addr.commune_id as commune_id'),
+                DB::raw("CONCAT_WS(' ', addr.street, addr.number) as full_address"),
+                DB::raw('c.name as comuna_name'),
+            ])
+
+            // 4. ULTIMO DOCTOR
+            ->addSelect([
+                'last_doctor_name' => TreatmentSession::query()
+                    ->selectRaw("CONCAT_WS(' ', doctors.name, doctors.last_name)")
+                    ->join('doctors', 'doctors.id', '=', 'treatment_sessions.doctor_id')
+                    ->whereColumn('treatment_sessions.patient_id', 'patients.id')
+                    ->where('treatment_sessions.status', 'completed')
+                    ->orderByDesc('treatment_sessions.date')
+                    ->limit(1)
+            ])
+
+            // 5. DEUDA ACUMULADA
+            ->addSelect([
+                'due_amount' => function ($q) {
+                    $q->from('debts as d')
+                        ->join('treatment_sessions as ts', 'ts.id', '=', 'd.treatment_session_id')
+                        ->whereColumn('ts.patient_id', 'patients.id')
+                        ->whereIn('d.status', ['pending', 'partial', 'overdue'])
+                        ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
+                },
+            ])
+
+            // 6. RELACIONES Y ESTADOS
+            ->withExists([
+                'debts as has_due' => fn($q) =>
+                $q->whereIn('debts.status', [Debt::STATUS_PENDING, Debt::STATUS_PARTIAL, Debt::STATUS_OVERDUE])
+            ])
+            ->withExists([
+                'debts as has_overdue' => fn($q) =>
+                $q->where('debts.status', Debt::STATUS_OVERDUE)
+            ])
+            ->with('primaryContact')
+            ->orderBy('patients.updated_at', 'desc')
+            
+            // 7. EJECUCIÓN Y MAPEO FINAL
+            ->get()
+            ->map(function ($p) {
+                $p->payment_status = $p->has_overdue ? 'overdue' : ($p->has_due ? 'due' : 'ok');
+                return $p;
+            });
+
+        // Cachear datos geográficos por 24 horas (86400 segundos)
+        $provinces = Cache::remember('geo_provinces', 86400, function () {
+            return Province::all(['id', 'name', 'region_id']);
         });
-    })
 
-    // 3. SELECTS BÁSICOS (Limpiamos la subconsulta manual del doctor de aquí)
-    ->select([
-        'patients.id',
-        'patients.name',
-        'patients.last_name',
-        'patients.email',
-        'patients.birth_date',
-        'patients.rut',
-        'patients.phone',
-        'patients.gender',
-        'patients.status',
-        'patients.occupation',
-        'patients.marital_status',
-        'patients.status_reason',
-        'patients.opt_out_reminders',
-        'patients.prefers_whatsapp',
-        'patients.prefers_mail',
-        'patients.prefers_sms',
-        'patients.require_tutor',
-        // Concatenaciones SQL
-        DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) as full_name"),
-        DB::raw('addr.id as address_id'),
-        DB::raw('addr.street as street'),
-        DB::raw('addr.number as number'),
-        DB::raw('addr.details as details'),
-        DB::raw('r.id as region_id'),
-        DB::raw('p.id as province_id'),
-        DB::raw('addr.commune_id as commune_id'),
-        DB::raw("CONCAT_WS(' ', addr.street, addr.number) as full_address"),
-        DB::raw('c.name as comuna_name'),
-    ])
+        $communes = Cache::remember('geo_communes', 86400, function () {
+            return Commune::all(['id', 'name', 'province_id']);
+        });
 
-    // 4. AQUÍ INSERTAMOS AL DOCTOR (Nueva lógica limpia)
-    ->addSelect([
-        'last_doctor_name' => TreatmentSession::query()
-            // Usamos la tabla doctors para obtener el nombre
-            ->selectRaw("CONCAT_WS(' ', doctors.name, doctors.last_name)")
-            ->join('doctors', 'doctors.id', '=', 'treatment_sessions.doctor_id')
-            // Filtramos por el paciente actual
-            ->whereColumn('treatment_sessions.patient_id', 'patients.id')
-            // Filtramos que la sesión esté completada (según tu lógica)
-            ->where('treatment_sessions.status', 'completed')
-            // Ordenamos por fecha descendente para obtener la última
-            ->orderByDesc('treatment_sessions.date')
-            ->limit(1)
-    ])
+        $regions = Cache::remember('geo_regions', 86400, function () {
+            return Region::all(['id', 'name']);
+        });
 
-    // 5. DEUDA ACUMULADA (Se mantiene igual)
-    ->addSelect([
-        'due_amount' => function ($q) {
-            $q->from('debts as d')
-                ->join('treatment_sessions as ts', 'ts.id', '=', 'd.treatment_session_id')
-                ->whereColumn('ts.patient_id', 'patients.id')
-                ->whereIn('d.status', ['pending', 'partial', 'overdue'])
-                ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
-        },
-    ])
+       
 
-    // 6. RELACIONES Y ESTADOS (Se mantiene igual)
-    ->withExists([
-        'debts as has_due' => fn($q) =>
-        $q->whereIn('debts.status', [Debt::STATUS_PENDING, Debt::STATUS_PARTIAL, Debt::STATUS_OVERDUE])
-    ])
-    ->withExists([
-        'debts as has_overdue' => fn($q) =>
-        $q->where('debts.status', Debt::STATUS_OVERDUE)
-    ])
-    ->with('primaryContact')
-    ->orderBy('patients.updated_at', 'desc')
-    
-    // 7. EJECUCIÓN Y MAPEO FINAL
-    ->get()
-    ->map(function ($p) {
-        $p->payment_status = $p->has_overdue ? 'overdue' : ($p->has_due ? 'due' : 'ok');
-        return $p;
-    });
-
-
-        $provinces = Province::all(['id', 'name', 'region_id']);
-        $communes  = Commune::all(['id', 'name', 'province_id']);
-        $regions   = Region::all(['id', 'name']);
-
-
-
-        return Inertia::render('Patients/IndexPatients', [
+        return Inertia::render('patients/index-patients', [
             'patients' => $patients,
             'communes' => $communes,
             'provinces' => $provinces,
@@ -199,7 +202,10 @@ $patients = Patient::query()
             'subtitle' => $s->doctor ? "Dr. {$s->doctor->last_name}" : 'Sin profesional',
             'status'   => $s->status,
             'amount'   => $s->patient_amount_clp,
-            'meta'     => ['pain_level' => $s->pain_level]
+            'meta'     => [
+                'pain_level' => $s->pain_level,
+                'pain_map'   => $s->session_pain_map
+            ]
         ]);
 
         // B. Mapear Tratamientos (Hitos de inicio)
@@ -212,7 +218,9 @@ $patients = Patient::query()
             'subtitle' => $t->diagnostic->description ?? ($t->referral_diagnosis ?? 'Sin Diagnóstico'),
             'status'   => $t->status,
             'amount'   => null,
-            'meta'     => []
+            'meta'     => [
+                'pain_map' => $t->initial_pain_map
+            ]
         ]);
 
         // C. Mapear Pagos
@@ -235,6 +243,15 @@ $patients = Patient::query()
             ->sortByDesc(fn($item) => $item['date'] . $item['time']) // Ordenar por fecha y hora
             ->values(); // Re-indexar array para JSON
 
+        // DEBUG: Verificar si se están recuperando los datos
+        \Illuminate\Support\Facades\Log::info('PatientAdminController::show DEBUG', [
+            'patient_id' => $patient->id,
+            'company_id_session' => session('current_company_id'),
+            'treatments_count' => $treatments->count(),
+            'history_count' => $history->count(),
+            'first_treatment_id' => $treatments->first()?->id
+        ]);
+
         // ---------------------------------------------------------------
 
         // 5. ASIGNAR RELACIÓN MANUALMENTE
@@ -251,18 +268,30 @@ $patients = Patient::query()
         $session_types = SessionType::all(); // El trait filtra por company
         $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get(['code', 'description']);
 
-        return Inertia::render('Patients/DetailPatient', [
+        // Cachear datos geográficos (reutilizando las keys del index)
+        $regions = Cache::remember('geo_regions', 86400, fn() => Region::all(['id', 'name']));
+        $provinces = Cache::remember('geo_provinces', 86400, fn() => Province::all(['id', 'name', 'region_id']));
+        $communes = Cache::remember('geo_communes', 86400, fn() => Commune::all(['id', 'name', 'province_id']));
+
+        return Inertia::render('patients/DetailPatient', [
             'patient'         => $patient,
             // Enviamos el historial unificado en lugar de cosas sueltas para la tabla
             'history'         => $history, 
             // Aún enviamos active_treatments (dentro de patient) para el modal de crear sesión
+            'treatments'      => $treatments,
+            'sessions'        => $treatments->flatMap->sessions,
+            'payments'        => $payments,
+            'address'         => $patient->address,
+            'vital'           => $patient->latestVitalSign,
+            'contact'         => $patient->primaryContact,
+            'historySessions' => $historySessions,
             'doctors'         => $doctors,
             'session_types'   => $session_types,
             'diagnostics'     => $diagnostics,
             // Datos geográficos (cachear esto sería ideal en el futuro)
-            'regions'         => Region::all(['id', 'name']),
-            'provinces'       => Province::all(['id', 'name', 'region_id']),
-            'communes'        => Commune::all(['id', 'name', 'province_id']),
+            'regions'         => $regions,
+            'provinces'       => $provinces,
+            'communes'        => $communes,
         ]);
     }
 
@@ -326,7 +355,7 @@ $patients = Patient::query()
         // OJO: Asegúrate de importar Diagnostic arriba
         $diagnostics = Diagnostic::orderBy('description', 'asc')->where('is_active', true)->get(['code', 'description', 'version']);
 
-        return Inertia::render('Patients/DetailPatient', [
+        return Inertia::render('patients/DetailPatient', [
             'patient'     => $patient,
             'treatments'  => $treatments,
             'sessions'    => $sessions,

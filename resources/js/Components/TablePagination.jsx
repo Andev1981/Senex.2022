@@ -87,7 +87,7 @@ const TablePagination = ({
         {/* Controles derecha */}
         <div className="flex items-center gap-1.5">
           <button
-            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-xl-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => goToPage(1)}
             disabled={!table.getCanPreviousPage()}
             aria-label="Primera página"
@@ -95,7 +95,7 @@ const TablePagination = ({
             <span className="text-xs font-black">«</span>
           </button>
           <button
-            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-xl-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
             aria-label="Página anterior"
@@ -113,7 +113,7 @@ const TablePagination = ({
                 <button
                     key={p}
                     onClick={() => goToPage(p)}
-                    className={`min-w-[40px] h-10 rounded-enterprise-sm text-[10px] font-black transition-all active:scale-90 ${
+                    className={`min-w-[40px] h-10 rounded-xl-sm text-[10px] font-black transition-all active:scale-90 ${
                     currentPage === p
                         ? "bg-brand-primary text-white shadow-lg shadow-brand-primary/20"
                         : "bg-white border border-gray-100 text-brand-gray hover:bg-gray-50"
@@ -127,7 +127,7 @@ const TablePagination = ({
           </div>
 
           <button
-            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-xl-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
             aria-label="Página siguiente"
@@ -135,7 +135,7 @@ const TablePagination = ({
             <span className="text-xs font-black">›</span>
           </button>
           <button
-            className="p-3 transition-all bg-white border border-gray-100 rounded-enterprise-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
+            className="p-3 transition-all bg-white border border-gray-100 rounded-xl-sm hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed text-brand-gray active:scale-95 shadow-sm"
             onClick={() => goToPage(pageCount)}
             disabled={!table.getCanNextPage()}
             aria-label="Última página"

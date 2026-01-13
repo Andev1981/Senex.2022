@@ -29,7 +29,7 @@ class ClientAuthController extends Controller
             return redirect()->route('patient.dashboard');
         }
 
-        return Inertia::render('Auth/Patient/Login');
+        return Inertia::render('auth/Patient/Login');
     }
 
     /**
@@ -117,7 +117,7 @@ class ClientAuthController extends Controller
             ]);
         }
 
-        return Inertia::render('Auth/Patient/VerifyCode', [
+        return Inertia::render('auth/Patient/VerifyCode', [
             'rut' => $patient->rut,
             'email' => $this->maskEmail($patient->email),
             'patient_name' => $patient->name,
@@ -141,7 +141,7 @@ class ClientAuthController extends Controller
                 ->withErrors(['rut' => 'Sesión expirada. Por favor ingresa tu RUT nuevamente.']);
         }
 
-        return Inertia::render('Auth/Patient/VerifyCode', [
+        return Inertia::render('auth/Patient/VerifyCode', [
             'rut' => $verifyData['rut'],
             'email' => $verifyData['email'],
             'patient_name' => $verifyData['patient_name'],

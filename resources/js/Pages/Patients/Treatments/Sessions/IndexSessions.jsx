@@ -19,6 +19,7 @@ export default function IndexSessions({
 
   const canRegisterSession = isActiveStatus && hasCapacity;
 
+
   return (
     <div className="bg-white border border-gray-200 rounded-[1.5rem] shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
       
@@ -38,7 +39,7 @@ export default function IndexSessions({
         {canRegisterSession && (
           <button
             onClick={() => handleOpenModalSession([], treatment)}
-            className="group flex items-center gap-2 px-5 py-2.5 bg-brand-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all"
+            className="group flex items-center gap-2 px-5 py-2.5 bg-brand-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             <div className="bg-white/20 rounded-full p-0.5 group-hover:rotate-90 transition-transform">
                 <Plus className="w-3 h-3" />

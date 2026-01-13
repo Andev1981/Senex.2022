@@ -29,7 +29,7 @@ class InsuranceController extends Controller
 
 
 
-        return Inertia::render('BillingCheckout/Index', [
+        return Inertia::render('billingCheckout/Index', [
             'patients' => $patients,
             'sessionTypes' => $sessionTypes,
             'insurances' => $insurances,
@@ -47,7 +47,7 @@ class InsuranceController extends Controller
 
         $sessionTypes = SessionType::where('company_id', $currentCompanyId)->get(['id', 'name', 'base_price_clp']);
 
-        return Inertia::render('Insurances/InsuranceIndex', [
+        return Inertia::render('insurances/InsuranceIndex', [
             'insurances' => $insurances,
             'sessionTypes' => $sessionTypes,
             'user' => auth()->user()->load('roles'),

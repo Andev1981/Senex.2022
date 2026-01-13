@@ -70,7 +70,7 @@ class TreatmentController extends Controller
         $doctors   = Doctor::all();
 
 
-        return Inertia::render('Patients/DetailPatient', [
+        return Inertia::render('patients/DetailPatient', [
             'patient' => $patient,
             'treatments' => $treatments,
             'sessions' => $sessions,
@@ -103,7 +103,7 @@ class TreatmentController extends Controller
             }
         ]);
 
-        return Inertia::render('Patients/Treatments/Show', [
+        return Inertia::render('patients/Treatments/Show', [
             'treatment' => $treatment,
         ]);
     }

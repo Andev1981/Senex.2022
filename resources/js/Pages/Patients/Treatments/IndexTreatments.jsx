@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Clipboard, Plus, Target } from "lucide-react";
 import TreatmentCardMain from "./TreatmentPartials/TreatmentCardMain";
 import SideModal from "@/Components/SideModal";
 import Modal from "@/Components/Modal";
 import TreatmentModal from "./TreatmentPartials/TreatmentModal";
 import IndexSessions from "./Sessions/IndexSessions";
-import SessionModal from "./Sessions/SessionModal";
+import SessionFormModal from "@/pages/attendances/Modals/CreateUpdateModal"; // Modal Definitivo
 import SessionModalDelete from "./Sessions/SessionModalDelete";
 
 export default function IndexTreatments({
@@ -21,21 +21,31 @@ export default function IndexTreatments({
     !isLoading && Array.isArray(treatments) && treatments.length === 0;
 
   const [openTreatmentModal, setOpenTreatmentModal] = useState(false);
-  const [selectedTreatment, setSelectedTreatmentModal] = useState(() => {
-    // 1. Intenta tomar el primero InProgress
-    const inProgress = treatments.find((t) => t.status === "in_progress");
-    if (inProgress) return inProgress;
+  
+  // Lógica de selección inicial (extraída para reutilizar)
+  const getInitialTreatment = (list) => {
+      if (!list || list.length === 0) return null;
+      
+      const inProgress = list.find((t) => t.status === "in_progress");
+      if (inProgress) return inProgress;
 
-    // 2. Sino, el más reciente (por fecha de creación o start_date)
-    if (treatments.length) {
-      return [...treatments].sort(
+      return [...list].sort(
         (a, b) => new Date(b.start_date) - new Date(a.start_date)
       )[0];
-    }
+  };
 
-    // 3. Ninguno
-    return [];
-  });
+  const [selectedTreatment, setSelectedTreatmentModal] = useState(() => getInitialTreatment(treatments));
+
+  // Sincronizar selección cuando llegan nuevos tratamientos
+  useEffect(() => {
+      // Solo actualizar si no hay selección actual o si la lista cambió significativamente
+      // Para simplicidad, si el tratamiento seleccionado ya no existe en la lista o si la lista se cargó recién
+      if (!selectedTreatment || (Array.isArray(treatments) && !treatments.find(t => t.id === selectedTreatment.id))) {
+          setSelectedTreatmentModal(getInitialTreatment(treatments));
+      }
+      // Opcional: Si quieres que SIEMPRE salte al más nuevo al crear uno:
+      // setSelectedTreatmentModal(getInitialTreatment(treatments));
+  }, [treatments]);
 
   const [openSessionModalShow, setOpenSessionModalShow] = useState(false);
   const [openSessionModal, setOpenSessionModal] = useState(false);
@@ -158,17 +168,22 @@ export default function IndexTreatments({
       <SideModal
         open={openSessionModal}
         onClose={() => setOpenSessionModal(false)}
-        width="3xl" // sm, md, lg, xl, 2xl, 3xl, full
+        width="full" // Full width para el BodySelector
       >
-        <SessionModal
-          session={selectedSession}
-          setOpenSessionModal={setOpenSessionModal}
-          treatment={selectedTreatment}
+        <SessionFormModal
+          setShowModal={setOpenSessionModal}
+          // Si hay sesión seleccionada con ID, es edición. 
+          // Si no, es creación, y pasamos el treatment_id para que el select venga pre-marcado.
+          sessionData={
+            selectedSession?.id 
+                ? selectedSession 
+                : { treatment_id: selectedTreatment?.id }
+          }
+          preselectedPatient={patient}
           doctors={doctors}
           session_types={session_types}
-          preselectedPatient={patient}
+          diagnostics={diagnostics}
           isDuplicate={isDuplicate}
-          afterSubmitReloadOnly={["treatments"]}
         />
       </SideModal>
 

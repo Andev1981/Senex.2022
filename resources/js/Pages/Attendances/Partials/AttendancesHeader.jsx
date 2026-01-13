@@ -19,10 +19,12 @@ export default function AttendancesHeader({ openCreateUpdateSessionModal }) {
         <div className="flex gap-2">
           <button
             onClick={() => openCreateUpdateSessionModal({})}
-            className="flex items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
+            className="group flex items-center gap-2 px-6 py-3 bg-brand-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-brand-primary/20 transition-all active:scale-95 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            Nueva Atención
+            <div className="bg-white/20 rounded-full p-0.5 group-hover:rotate-90 transition-transform">
+                <Plus className="w-3 h-3" />
+            </div>
+            Nueva Sesión
           </button>
         </div>
       </div>

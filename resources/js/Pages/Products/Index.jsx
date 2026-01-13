@@ -190,7 +190,7 @@ export default function Index({ products }) {
       <div className="min-h-screen p-6 md:p-10 bg-gray-50/50 space-y-10">
         
         {/* HEADER HERO */}
-        <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise relative overflow-hidden">
+        <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-5">
@@ -215,19 +215,19 @@ export default function Index({ products }) {
 
         {/* KPIs COMPACTOS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise border-b-4 border-b-brand-primary hover:scale-[1.02] transition-all group">
+            <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl border-b-4 border-b-brand-primary hover:scale-[1.02] transition-all group">
                 <p className="enterprise-label !text-[8px] opacity-60 mb-2 flex items-center gap-2">
                     <Package className="w-3.5 h-3.5 text-brand-primary" /> Universo de Items
                 </p>
                 <p className="text-4xl font-black text-gray-900 tracking-tighter leading-none">{(products.data || products).length}</p>
             </div>
-            <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise border-b-4 border-b-orange-400 hover:scale-[1.02] transition-all group">
+            <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl border-b-4 border-b-orange-400 hover:scale-[1.02] transition-all group">
                 <p className="enterprise-label !text-[8px] text-orange-600 mb-2 flex items-center gap-2">
                     <AlertTriangle className="w-3.5 h-3.5" /> Stock Crítico
                 </p>
                 <p className="text-4xl font-black text-gray-900 tracking-tighter leading-none">{(products.data || products).filter(p => p.manage_stock && p.stock <= p.critical_stock).length}</p>
             </div>
-            <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise border-b-4 border-b-green-500 hover:scale-[1.02] transition-all group">
+            <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl border-b-4 border-b-green-500 hover:scale-[1.02] transition-all group">
                 <p className="enterprise-label !text-[8px] text-green-600 mb-2 flex items-center gap-2">
                     <DollarSign className="w-3.5 h-3.5" /> Valor del Inventario
                 </p>
@@ -252,7 +252,7 @@ export default function Index({ products }) {
         </div>
 
         {/* TABLA TANSTACK */}
-        <div className="bg-white border border-gray-100 shadow-xl rounded-enterprise-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 shadow-xl rounded-xl-xl overflow-hidden">
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full border-collapse">
               <thead>

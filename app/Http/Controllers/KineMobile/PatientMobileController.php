@@ -68,7 +68,7 @@ class PatientMobileController extends Controller
             ];
         });
 
-        return Inertia::render('KineMobile/MyPatients', [
+        return Inertia::render('kineMobile/MyPatients', [
             'patients' => $patients,
             'search' => $search,
             'totalPatients' => $patients->count(),
@@ -105,7 +105,7 @@ class PatientMobileController extends Controller
             }
         ]);
 
-        return Inertia::render('KineMobile/PatientDetail', [
+        return Inertia::render('kineMobile/PatientDetail', [
             'patient' => [
                 'id' => $patient->id,
                 'name' => $patient->name . ' ' . $patient->last_name,

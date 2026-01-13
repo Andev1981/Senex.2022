@@ -88,7 +88,7 @@ class PaymentsController extends Controller
             });
         })->get();
 
-        return Inertia::render('BillingCheckout/Index', [
+        return Inertia::render('billingCheckout/Index', [
             'patients' => $patients,
             'sessionTypes' => $sessionTypes,
             'agreements' => Agreement::with('rules')->get(),

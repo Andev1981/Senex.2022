@@ -40,8 +40,8 @@ import { patientStatuses, debtStatuses } from "@/helpers/status";
 import usePatientStore from "@/Stores/usePatientStore";
 import { Pencil } from "lucide-react";
 
-export default function TablePatients({ handleOpenModalDelete, communes, user, handleEditPatient }) {
-  const patients = usePatientStore((state) => state.patients);
+export default function TablePatients({ patients, handleOpenModalDelete, communes, user, handleEditPatient }) {
+  /* const patients = usePatientStore((state) => state.patients); */
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -50,10 +50,11 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
   const [filterComuna, setFilterComuna] = useState("");
   const [edadMin, setEdadMin] = useState("");
   const [edadMax, setEdadMax] = useState("");
+  const [globalFilter, setGlobalFilter] = useState("");
 
   const { get } = useForm();
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
 
@@ -63,6 +64,17 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
       ...new Set(patients.map((p) => p.comuna_name).filter(Boolean)),
     ].sort();
   }, [patients]);
+
+  // --- 1. FILTRADO GLOBAL ---
+    const filteredData = useMemo(() => {
+      if (!globalFilter) return patients;
+      const filter = globalFilter.toLowerCase();
+      return patients.filter((row) =>
+        Object.values(row).some(
+          (val) => val && val.toString().toLowerCase().includes(filter)
+        )
+      );
+    }, [globalFilter, patients]);
 
   const hasActiveFilters = !!(
     filterEstado ||
@@ -264,17 +276,17 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
       }
       return baseColumns;
     },
-    [handleOpenModalDelete, user]
+    [handleOpenModalDelete, user, patients]
   );
 
   const table = useReactTable({
-    data: patients,
+    data: filteredData,
     columns,
     state: {
       sorting,
       globalFilter: searchTerm,
       columnFilters,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
@@ -282,10 +294,10 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -442,7 +454,7 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
       </div>
 
       {/* TABLA ENTERPRISE */}
-      <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-enterprise-xl">
+      <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl-xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-50 bg-gray-50/30">
           <h2 className="flex items-center gap-3 text-sm font-black tracking-tight text-gray-900 uppercase">
             <Users className="w-5 h-5 text-brand-primary" /> Base de Datos de
@@ -538,9 +550,9 @@ export default function TablePatients({ handleOpenModalDelete, communes, user, h
           <TablePagination
             table={table}
             total={patients.length}
-            pagesize={pagesize}
-            setpagesize={setpagesize}
-            pagesizeOptions={[5, 10, 20, 50]}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            pageSizeOptions={[5, 10, 20, 50]}
           />
         </div>
       </div>

@@ -16,9 +16,9 @@ class PatientDashboardController extends Controller
     {
         // Si ya está autenticado, redirigir al dashboard
         if (Auth::guard('patient')->check()) {
-            return Inertia::render('Clients/Index');
+            return Inertia::render('clients/Index');
         }
 
-        return Inertia::render('Auth/Patient/Login');
+        return Inertia::render('auth/Patient/Login');
     }
 }

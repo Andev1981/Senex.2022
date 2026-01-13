@@ -54,7 +54,7 @@ class ReportsController extends Controller
                 ->count(),
         ];
 
-        return Inertia::render('Reports/Index', [
+        return Inertia::render('reports/Index', [
             'revenueData' => $revenueData,
             'distributionData' => $sessionTypeDistribution,
             'stats' => $stats

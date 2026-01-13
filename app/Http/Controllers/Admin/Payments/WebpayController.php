@@ -37,7 +37,7 @@ class WebpayController extends Controller
      */
     public function portalPagosIndex()
     {
-        return Inertia::render('PaymentsPatients/PortalPago');
+        return Inertia::render('paymentsPatients/PortalPago');
     }
 
     /**
@@ -83,7 +83,7 @@ class WebpayController extends Controller
         // Guardar RUT en sesión para el pago
         session(['portal_rut' => $request->rut]);
 
-        return Inertia::render('PaymentsPatients/PortalPagoDeudas', [
+        return Inertia::render('paymentsPatients/PortalPagoDeudas', [
             'patient' => [
                 'id' => $patient->id,
                 'name' => $patient->name,
@@ -135,7 +135,7 @@ class WebpayController extends Controller
 
 
         // 4. Renderizar DIRECTO la vista de deudas con los datos precargados
-        return Inertia::render('PaymentsPatients/PortalPagoDeudas', [
+        return Inertia::render('paymentsPatients/PortalPagoDeudas', [
             'patient' => [
                 'id' => $patient->id,
                 'name' => $patient->name,
@@ -355,7 +355,7 @@ class WebpayController extends Controller
                 'method' => $request->method(),
             ]);
 
-            return Inertia::render('Payments/WebpayResult', [
+            return Inertia::render('payments/WebpayResult', [
                 'success' => false,
                 'message' => 'El pago fue cancelado o expiró',
                 'type' => 'cancelled',
@@ -382,7 +382,7 @@ class WebpayController extends Controller
                 'authorization_code' => $payment->webpay_authorization_code,
             ]);
 
-            return Inertia::render('Payments/WebpayResult', [
+            return Inertia::render('payments/WebpayResult', [
                 'success' => $success,
                 'payment' => [
                     'id' => $payment->id,
@@ -407,7 +407,7 @@ class WebpayController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return Inertia::render('Payments/WebpayResult', [
+            return Inertia::render('payments/WebpayResult', [
                 'success' => false,
                 'message' => 'Ocurrió un error al procesar el pago',
                 'type' => 'error',
@@ -423,7 +423,7 @@ class WebpayController extends Controller
     public function publicReturn(Request $request)
     {
         if (!$request->filled('token_ws')) {
-            return Inertia::render('Payments/Publicwebpayresult', [
+            return Inertia::render('payments/Publicwebpayresult', [
                 'success' => false,
                 'message' => 'El pago fue cancelado o expiró',
             ]);
@@ -440,7 +440,7 @@ class WebpayController extends Controller
                 $this->updatePaymentLink(session('payment_link_id'), $payment);
             }
 
-            return Inertia::render('Payments/Publicwebpayresult',[
+            return Inertia::render('payments/Publicwebpayresult',[
                 'success' => $success,
                 'payment' => $payment,
                 'message' => $success 
@@ -454,7 +454,7 @@ class WebpayController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return Inertia::render('Payments/Publicwebpayresult', [
+            return Inertia::render('payments/Publicwebpayresult', [
                 'success' => false,
                 'message' => 'Ocurrió un error al procesar el pago',
             ]);

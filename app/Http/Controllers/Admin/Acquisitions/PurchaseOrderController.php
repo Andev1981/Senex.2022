@@ -10,7 +10,7 @@ class PurchaseOrderController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Acquisitions/PurchaseOrders/Index');
+        return Inertia::render('acquisitions/PurchaseOrders/Index');
     }
 
     public function store(Request $request) { /* ... */ }

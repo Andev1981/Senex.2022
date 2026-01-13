@@ -417,7 +417,7 @@ export default function IndexDocuments({
       <div className="min-h-screen p-6 md:p-10 bg-gray-50/50">
         <div className="max-w-[1600px] mx-auto space-y-10">
           {/* HEADER HERO ENTERPRISE */}
-          <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-enterprise">
+          <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
             <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full opacity-50 bg-brand-primary/5 blur-3xl"></div>
 
             <div className="relative z-10 flex flex-col justify-between gap-8 md:flex-row md:items-center">
@@ -459,7 +459,7 @@ export default function IndexDocuments({
               <div className="space-y-10">
                 {/* DASHBOARD STATS */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-12">
-                  <div className="flex items-center p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise lg:col-span-3 group hover:scale-[1.02] transition-all">
+                  <div className="flex items-center p-6 bg-white border border-gray-100 shadow-sm rounded-xl lg:col-span-3 group hover:scale-[1.02] transition-all">
                     <div className="flex-shrink-0 w-24 h-24">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -493,7 +493,7 @@ export default function IndexDocuments({
                     </div>
                   </div>
 
-                  <div className="flex flex-col justify-center p-6 bg-white border border-gray-100 shadow-sm rounded-enterprise lg:col-span-2 hover:scale-[1.02] transition-all">
+                  <div className="flex flex-col justify-center p-6 bg-white border border-gray-100 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
                     <p className="enterprise-label !text-[8px] opacity-60 mb-2 flex items-center gap-2">
                       <Calculator className="w-3 h-3 text-purple-400" /> Ticket
                       Promedio
@@ -503,7 +503,7 @@ export default function IndexDocuments({
                     </p>
                   </div>
 
-                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-orange-400 border-gray-100 shadow-sm rounded-enterprise lg:col-span-2 hover:scale-[1.02] transition-all">
+                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-orange-400 border-gray-100 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
                     <p className="enterprise-label !text-[8px] text-orange-600 mb-2 flex items-center gap-2">
                       <Wallet className="w-3 h-3" /> Por Cobrar
                     </p>
@@ -512,7 +512,7 @@ export default function IndexDocuments({
                     </p>
                   </div>
 
-                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-green-500 border-gray-100 shadow-sm rounded-enterprise lg:col-span-2 hover:scale-[1.02] transition-all">
+                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-green-500 border-gray-100 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
                     <p className="enterprise-label !text-[8px] text-green-600 mb-2 flex items-center gap-2">
                       <CheckCircle className="w-3 h-3" /> Aceptados
                     </p>
@@ -522,7 +522,7 @@ export default function IndexDocuments({
                   </div>
 
                   <div
-                    className={`p-6 bg-white border-b-4 border-gray-100 shadow-sm rounded-enterprise flex flex-col justify-center lg:col-span-3 transition-all hover:scale-[1.02] ${
+                    className={`p-6 bg-white border-b-4 border-gray-100 shadow-sm rounded-xl flex flex-col justify-center lg:col-span-3 transition-all hover:scale-[1.02] ${
                       dashboardStats.rechazados > 0
                         ? "border-red-500 bg-red-50/10"
                         : ""

@@ -264,7 +264,7 @@ export default function List({
         </div>
       </div>
 
-      <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-enterprise-xl">
+      <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl-xl">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full border-collapse">
             <thead className="bg-gray-50/50 border-b border-gray-100">

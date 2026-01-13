@@ -27,7 +27,7 @@ class ProductController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return Inertia::render('Products/Index', [
+        return Inertia::render('products/Index', [
             'products' => $products,
             'filters'  => $request->only(['search']),
         ]);
@@ -35,7 +35,7 @@ class ProductController extends Controller
 
     public function create()
     {
-        return Inertia::render('Products/Create');
+        return Inertia::render('products/Create');
     }
 
     public function store(StoreProductRequest $request)
@@ -58,7 +58,7 @@ class ProductController extends Controller
             abort(403);
         }
 
-        return Inertia::render('Products/Edit', [
+        return Inertia::render('products/Edit', [
             'product' => $product
         ]);
     }

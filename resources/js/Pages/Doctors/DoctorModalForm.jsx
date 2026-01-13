@@ -167,7 +167,7 @@ export default function DoctorModalForm({
           <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-6">
             
             {/* ESTRUCTURA DE COMISIONES */}
-            <div className={`rounded-enterprise border-2 transition-all duration-500 overflow-hidden ${openSection === 'commissions' ? 'border-brand-primary/20 shadow-xl' : 'border-gray-50'}`}>
+            <div className={`rounded-xl border-2 transition-all duration-500 overflow-hidden ${openSection === 'commissions' ? 'border-brand-primary/20 shadow-xl' : 'border-gray-50'}`}>
                 <button onClick={() => setOpenSection("commissions")} className={`w-full flex items-center justify-between p-6 transition-all ${openSection === 'commissions' ? 'bg-brand-primary/5' : 'bg-white hover:bg-gray-50'}`}>
                     <div className="flex items-center gap-4">
                         <div className={`p-2.5 rounded-xl ${openSection === 'commissions' ? 'bg-brand-primary text-white' : 'bg-gray-100 text-gray-400'}`}>
@@ -247,7 +247,7 @@ export default function DoctorModalForm({
             </div>
 
             {/* PACIENTES ASIGNADOS */}
-            <div className={`rounded-enterprise border-2 transition-all duration-500 overflow-hidden ${openSection === 'patients' ? 'border-brand-primary/20 shadow-xl' : 'border-gray-50'}`}>
+            <div className={`rounded-xl border-2 transition-all duration-500 overflow-hidden ${openSection === 'patients' ? 'border-brand-primary/20 shadow-xl' : 'border-gray-50'}`}>
                 <button onClick={() => setOpenSection("patients")} className={`w-full flex items-center justify-between p-6 transition-all ${openSection === 'patients' ? 'bg-brand-primary/5' : 'bg-white hover:bg-gray-50'}`}>
                     <div className="flex items-center gap-4">
                         <div className={`p-2.5 rounded-xl ${openSection === 'patients' ? 'bg-brand-primary text-white' : 'bg-gray-100 text-gray-400'}`}>

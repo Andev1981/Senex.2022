@@ -76,7 +76,7 @@ class KineController extends Controller
             ->withCount(['sessions as total_sessions'])
             ->get();
 
-        return Inertia::render('KineMobile/MyPatients', [
+        return Inertia::render('kineMobile/MyPatients', [
             'doctor' => $doctor,
             'patients' => $patients,
         ]);
@@ -114,7 +114,7 @@ class KineController extends Controller
             'revenue' => $sessions->sum('doctor_amount_clp'),
         ];
 
-        return Inertia::render('KineMobile/MySessions', [
+        return Inertia::render('kineMobile/MySessions', [
             'doctor' => $doctor,
             'sessions' => $sessions,
             'stats' => $stats,
@@ -149,7 +149,7 @@ class KineController extends Controller
             'commission_month' => $sessions->sum('doctor_amount_clp'),
         ];
 
-        return Inertia::render('KineMobile/MyProfile', [
+        return Inertia::render('kineMobile/MyProfile', [
             'doctor' => $doctor,
             'stats' => $stats,
         ]);

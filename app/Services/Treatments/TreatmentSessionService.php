@@ -18,6 +18,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\SessionScheduledNotification; // Importar Notificación
+
 
 class TreatmentSessionService
 {
@@ -54,49 +56,68 @@ class TreatmentSessionService
                 ->first();
 
 
-            if (!$doctorCommission) {
-                DB::rollBack();
-                // 🎯 LANZAR EXCEPCIÓN: Esto detiene la transacción y la ejecución.
-                throw new \Exception(
-                    "⚠️ No hay comisión configurada para {$doctor->full_name} en sesiones de tipo '{$sessionType->name}'. " .
-                        "Por favor, configure la comisión antes de agendar. o revise la fecha ingresada!"
-                );
+            $doctorCommission = DoctorCommissionRate::active()
+                ->forDoctor($data['doctor_id'])
+                ->forSessionType($data['session_type_id'])
+                ->validAt(Carbon::parse($data['date']))
+                ->first();
+
+            // Lógica de Fallback para Comisión
+            $commissionAmount = 0;
+            $commissionPercentage = 0;
+            $commissionType = 'none';
+            $doctorAmount = 0;
+
+            if ($doctorCommission) {
+                // CASO 1: HAY REGLA ESPECÍFICA
+                if ($doctorCommission->commission_type === 'percentage' && !$doctorCommission->commission_percentage) {
+                     Log::warning("Comisión porcentual sin valor para Dr. {$doctor->id}, Tipo {$sessionType->id}. Se usará 0.");
+                } elseif ($doctorCommission->commission_type === 'fixed_amount' && !$doctorCommission->commission_value) {
+                     Log::warning("Comisión fija sin valor para Dr. {$doctor->id}, Tipo {$sessionType->id}. Se usará 0.");
+                }
+
+                $doctorAmount = $doctorCommission['amount_clp']; 
+                $commissionType = $doctorCommission->commission_type;
+                $commissionPercentage = $doctorCommission->commission_percentage;
+                
+            } else {
+                // CASO 2: NO HAY REGLA -> VERIFICAR CONFIRMACIÓN
+                $defaultAmount = $sessionType->default_doctor_commission_clp ?? 0;
+
+                // Si NO viene confirmado explícitamente, lanzamos alerta para el Frontend
+                if (empty($data['confirm_defaults'])) {
+                    throw new \Exception("COMMISSION_CONFIRMATION_NEEDED:{$defaultAmount}");
+                }
+
+                Log::info("⚠️ Usando comisión por defecto (SessionType) tras confirmación para Dr. {$doctor->id}. Monto: {$defaultAmount}");
+                
+                $doctorAmount = $defaultAmount;
+                $commissionType = 'default_session_type';
             }
 
-            // Si la comisión existe pero no tiene valores
-            if ($doctorCommission->commission_type === 'percentage' && !$doctorCommission->commission_percentage) {
-                DB::rollBack();
-                // 🎯 LANZAR EXCEPCIÓN: Esto detiene la transacción y la ejecución.
-                throw new \Exception(
-                    "⚠️ La comisión de {$doctor->full_name} no tiene porcentaje asignado. " .
-                        "Configure el valor antes de continuar."
-                );
-            }
-
-            if ($doctorCommission->commission_type === 'fixed_amount' && !$doctorCommission->commission_value) {
-                DB::rollBack();
-                // 🎯 LANZAR EXCEPCIÓN: Esto detiene la transacción y la ejecución.
-                throw new \Exception(
-                    "⚠️ La comisión de {$doctor->full_name} no tiene monto fijo asignado. " .
-                        "Configure el valor antes de continuar."
-                );
-            }
-
+            // Asignación de montos finales
             if (!isset($data['patient_amount_clp'])) {
                 $data['patient_amount_clp'] = $sessionType['base_price_clp'];
             }
-            if (!isset($data['doctor_amount_clp'])) {
-                $data['doctor_amount_clp'] = $doctorCommission['amount_clp'];
+
+            // Si se encontró comisión específica, usamos su método de cálculo. 
+            // Si no, usamos el valor fijo por defecto.
+            if ($doctorCommission) {
+                $data['commission_amount_clp'] = $doctorCommission->calculateCommission($data['patient_amount_clp']);
+                $data['doctor_amount_clp'] = $data['commission_amount_clp']; // Usualmente coinciden
+            } else {
+                $data['commission_amount_clp'] = $doctorAmount; // El default del session type
+                $data['doctor_amount_clp'] = $doctorAmount;
             }
 
             if (!isset($data['clinic_amount_clp'])) {
-                $data['clinic_amount_clp'] = $sessionType['base_price_clp'] - $doctorCommission['amount_clp'];
+                $data['clinic_amount_clp'] = $data['patient_amount_clp'] - $data['doctor_amount_clp'];
             }
 
             // ============================================
             // 1.- Asignar paciente a doctor
             // ============================================
-            $this->assignPatientToDoctor($data['patient_id'], $data['doctor_id']);
+            $this->assignPatientToDoctor($data['patient_id'], $data['doctor_id'], $data['company_id'], $data['branch_id']);
 
             // ============================================
             // 2.- Buscar o crear tratamiento
@@ -116,11 +137,11 @@ class TreatmentSessionService
             }
 
             // ============================================
-            // 3.- Calcular y guardar snapshot de comisión
+            // 3.- Guardar snapshot de comisión
             // ============================================
-            $data['commission_amount_clp'] = $doctorCommission->calculateCommission($data['patient_amount_clp']);
-            $data['commission_percentage'] = $doctorCommission->commission_percentage;
-            $data['commission_type'] = $doctorCommission->commission_type;
+            // Ya calculamos commission_amount_clp arriba
+            $data['commission_percentage'] = $commissionPercentage;
+            $data['commission_type'] = $commissionType;
 
             // ============================================
             // 4. Verificar y validar plan (si aplica)
@@ -241,6 +262,8 @@ class TreatmentSessionService
                 }
             }
 
+
+
             // 3. Seguir tu flujo normal
             $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
 
@@ -250,6 +273,41 @@ class TreatmentSessionService
                 'month_session_number' => $session->month_session_number,
             ]);
 
+            // [NUEVO] Enviar notificación de agendamiento
+            try {
+                Log::info("Iniciando proceso de notificación para sesión {$session->id}");
+                
+                if ($patient) {
+                    // Determinar a quién notificar (Paciente o Tutor)
+                    $notifiable = $patient;
+                    
+                    if ($patient->require_tutor && $patient->primaryContact) {
+                        $notifiable = $patient->primaryContact;
+                        Log::info('Paciente requiere tutor. Notificando al contacto principal.', ['contact_id' => $notifiable->id]);
+                    } else {
+                        Log::info('Notificando directamente al paciente.', ['patient_id' => $patient->id]);
+                    }
+
+                    // Cargar relaciones necesarias para la notificación
+                    $session->load(['doctor', 'branch']);
+                    
+                    if (!$session->branch) {
+                        Log::warning("La sesión {$session->id} no tiene sucursal asignada (branch_id null o inválido).");
+                    }
+
+                    $notifiable->notify(new SessionScheduledNotification($session));
+                    Log::info('Notificación de agendamiento despachada', [
+                        'recipient_id' => $notifiable->id,
+                        'recipient_type' => class_basename($notifiable)
+                    ]);
+                } else {
+                    Log::error("No se encontró paciente para la sesión {$session->id}");
+                }
+            } catch (\Exception $e) {
+                Log::error('Error enviando notificación de agendamiento: ' . $e->getMessage());
+                // No bloqueamos el flujo principal
+            }
+
             return $session->fresh();
         });
     }
@@ -257,7 +315,7 @@ class TreatmentSessionService
     /**
      * Asigna un paciente a un doctor si no está asignado
      */
-    private function assignPatientToDoctor($patientId, $doctorId)
+    private function assignPatientToDoctor($patientId, $doctorId, $companyId, $branchId)
     {
         $exists = DB::table('doctor_patient_assignments')
             ->where('patient_id', $patientId)
@@ -266,6 +324,8 @@ class TreatmentSessionService
 
         if (!$exists) {
             DB::table('doctor_patient_assignments')->insert([
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
                 'patient_id' => $patientId,
                 'doctor_id' => $doctorId,
                 'created_at' => now(),

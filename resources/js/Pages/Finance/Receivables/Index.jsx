@@ -10,7 +10,7 @@ export default function Index({ totalDebt, patientReceivables, insurerReceivable
             <Head title="Cuentas por Cobrar" />
             <div className="min-h-screen p-6 bg-gray-50/50 space-y-8">
                 {/* HEADER HERO */}
-                <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-enterprise">
+                <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center justify-center w-14 h-14 bg-brand-primary rounded-2xl">
                             <DollarSign className="w-7 h-7 text-white" />
@@ -23,7 +23,7 @@ export default function Index({ totalDebt, patientReceivables, insurerReceivable
                 </div>
 
                 {/* PACIENTES */}
-                <div className="bg-white border border-gray-100 shadow-sm rounded-enterprise">
+                <div className="bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="p-6 border-b border-gray-100">
                         <h2 className="text-xl font-black text-gray-900">Copagos de Pacientes</h2>
                     </div>
@@ -31,7 +31,7 @@ export default function Index({ totalDebt, patientReceivables, insurerReceivable
                 </div>
 
                 {/* ASEGURADORAS */}
-                <div className="bg-white border border-gray-100 shadow-sm rounded-enterprise">
+                <div className="bg-white border border-gray-100 shadow-sm rounded-xl">
                     <div className="p-6 border-b border-gray-100">
                         <h2 className="text-xl font-black text-gray-900">Cobranza a Aseguradoras</h2>
                     </div>

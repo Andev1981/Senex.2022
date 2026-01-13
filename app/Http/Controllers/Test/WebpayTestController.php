@@ -84,7 +84,7 @@ class WebpayTestController extends Controller
             });
         // ⭐ FIN NUEVO
 
-        return Inertia::render('Payments/WebpayTest', [
+        return Inertia::render('payments/WebpayTest', [
             'patients' => $patients,
             'sessions' => $sessions,
             'debts' => $debts,

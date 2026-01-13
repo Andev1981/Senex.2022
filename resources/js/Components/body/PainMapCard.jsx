@@ -49,6 +49,7 @@ export default function PainMapCard({
                     onPartClick={onBodyPartClick} 
                     mode={isLocked ? "read" : "edit"}
                 />
+                {/* 
                 {!isLocked && (
                     <div className="absolute bottom-4 right-4">
                         <span className="text-[9px] text-brand-primary/80 font-bold uppercase tracking-widest bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-sm border border-brand-primary/10">
@@ -56,6 +57,7 @@ export default function PainMapCard({
                         </span>
                     </div>
                 )}
+                */}
             </div>
 
             <div className="space-y-6">

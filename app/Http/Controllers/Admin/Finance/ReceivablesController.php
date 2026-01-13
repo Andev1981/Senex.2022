@@ -21,7 +21,7 @@ class ReceivablesController extends Controller
         $patientReceivables = $allReceivables->where('type', 'copay')->load('payable');
         $insurerReceivables = $allReceivables->where('type', 'insurance_refund')->load('payable');
 
-        return Inertia::render('Finance/Receivables/Index', [
+        return Inertia::render('finance/Receivables/Index', [
             'totalDebt' => $totalDebt,
             'patientReceivables' => $patientReceivables,
             'insurerReceivables' => $insurerReceivables,

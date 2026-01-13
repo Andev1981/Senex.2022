@@ -48,7 +48,7 @@ class PaymentReminderController extends Controller
 
         $patients = $query->paginate(20)->withQueryString();
 
-        return Inertia::render('Admin/PaymentReminders/Index', [
+        return Inertia::render('admin/PaymentReminders/Index', [
             'patients' => $patients,
             'filters' => $request->only(['search']),
             'stats' => $this->getStats(),

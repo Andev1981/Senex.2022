@@ -42,7 +42,7 @@ class AgreementController extends Controller
         $plans = Plan::whereIn('insurance_id', $insurances->pluck('id'))
             ->get(['id', 'name', 'insurance_id', 'code']);
 
-        return Inertia::render('Agreements/Index', [
+        return Inertia::render('agreements/Index', [
             'agreements' => $agreements,
             'insurances' => $insurances,
             'sessionTypes' => $sessionTypes,
@@ -55,7 +55,7 @@ class AgreementController extends Controller
         // 1. Cargamos Aseguradoras (El trait hace el where company_id)
         $insurances = Insurance::get(['id', 'name']);
 
-        return Inertia::render('Agreements/Create', [
+        return Inertia::render('agreements/Create', [
             'insurances' => $insurances
         ]);
     }
@@ -124,7 +124,7 @@ class AgreementController extends Controller
         $plans = Plan::where('insurance_id', $agreement->insurance_id)
             ->get(['id', 'name', 'insurance_id', 'code']);
 
-        return Inertia::render('Agreements/Edit', [
+        return Inertia::render('agreements/Edit', [
             'agreement' => $agreement,
             'insurances' => $insurances,
             'sessionTypes' => $sessionTypes,
