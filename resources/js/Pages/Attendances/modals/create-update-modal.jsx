@@ -339,7 +339,7 @@ export default function SessionFormModal({
                     <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all space-y-6">
                         <div className="flex items-center gap-3">
                             <UserCheck className="w-5 h-5 text-brand-primary"/>
-                            <h3 className="enterprise-label !text-brand-primary">Datos Administrativos</h3>
+                            <h3 className="enterprise-label text-brand-primary!">Datos Administrativos</h3>
                         </div>
 
                         {/* A) SELECCIÓN DE PACIENTE */}
@@ -352,7 +352,7 @@ export default function SessionFormModal({
                                     setData(prev => ({ ...prev, patient_id: val, treatment_id: "" })); // Reset tratamiento
                                 }}
                                 placeholder="Buscar Paciente..."
-                                className="!rounded-2xl"
+                                className="rounded-2xl!"
                             />
                         ) : (
                             <div className="flex items-center justify-between py-2 px-6 bg-gray-50/50 rounded-2xl border border-gray-100 shadow-inner">
@@ -409,7 +409,7 @@ export default function SessionFormModal({
                                                         options={diagnostics.map(d => ({ value: d.code, label: `${d.code} - ${d.description}` }))}
                                                         value={data.diagnostic_code}
                                                         onChange={(val) => setData("diagnostic_code", val)}
-                                                        className="!bg-white"
+                                                        className="bg-white!"
                                                     />
                                                     <InputError message={errors.diagnostic_code} className="mt-1" />
                                                 </div>
@@ -474,7 +474,7 @@ export default function SessionFormModal({
                                     value={data.doctor_id}
                                     onChange={(val) => setData("doctor_id", val)}
                                     disabled={!isFieldEditable("doctor_id")}
-                                    className="!rounded-2xl"
+                                    className="rounded-2xl!"
                                 />
                                 <InputError message={errors.doctor_id} className="mt-1" />
                             </div>
@@ -493,7 +493,7 @@ export default function SessionFormModal({
                                         }}
                                         disabled={!isFieldEditable("context")}
                                         placeholder="Seleccionar..."
-                                        className="!rounded-xl"
+                                        className="rounded-xl!"
                                     />
                                     <InputError message={errors.session_type_id} className="mt-1" />
                             </div>
@@ -526,7 +526,7 @@ export default function SessionFormModal({
                                         value={data.date} 
                                         onChange={(e) => setData("date", e.target.value)} 
                                         disabled={!isFieldEditable("date")} 
-                                        className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white"
+                                        className="enterprise-input w-full font-mono text-xs py-3! rounded-xl bg-white"
                                     />
                                     <InputError message={errors.date} className="mt-1" />
                                 </div>
@@ -537,7 +537,7 @@ export default function SessionFormModal({
                                         value={data.time} 
                                         onChange={(e) => setData("time", e.target.value)} 
                                         disabled={!isFieldEditable("time")} 
-                                        className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white"
+                                        className="enterprise-input w-full font-mono text-xs py-3! rounded-xl! bg-white"
                                     />
                                     <InputError message={errors.time} className="mt-1" />
                                 </div>
@@ -551,7 +551,7 @@ export default function SessionFormModal({
                                         value={data.duration} 
                                         onChange={(e) => setData("duration", e.target.value)} 
                                         disabled={!isFieldEditable("time")} 
-                                        className="enterprise-input w-full font-mono text-xs !py-3 !rounded-xl bg-white text-center"
+                                        className="enterprise-input w-full font-mono text-xs py-3! rounded-xl! bg-white text-center"
                                         placeholder="45"
                                     />
                                     <InputError message={errors.duration} className="mt-1" />
@@ -566,7 +566,7 @@ export default function SessionFormModal({
                             {/* ... (Resto del SOAP igual) ... */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-blue-200 transition-all flex flex-col">
-                                    <h3 className="enterprise-label !text-blue-600 flex gap-2 mb-4"><User className="w-4 h-4"/> [S] Subjetivo</h3>
+                                    <h3 className="enterprise-label text-blue-600! flex gap-2 mb-4"><User className="w-4 h-4"/> [S] Subjetivo</h3>
                                     <textarea 
                                         value={data.subjective} 
                                         onChange={(e) => setData("subjective", e.target.value)} 
@@ -576,7 +576,7 @@ export default function SessionFormModal({
                                     />
                                 </div>
                                 <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-purple-200 transition-all flex flex-col">
-                                    <h3 className="enterprise-label !text-purple-600 flex gap-2 mb-4"><Activity className="w-4 h-4"/> [O] Examen Físico</h3>
+                                    <h3 className="enterprise-label text-purple-600! flex gap-2 mb-4"><Activity className="w-4 h-4"/> [O] Examen Físico</h3>
                                     <textarea 
                                         value={data.objective} 
                                         onChange={(e) => setData("objective", e.target.value)} 
@@ -588,7 +588,7 @@ export default function SessionFormModal({
                             </div>
 
                             <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all">
-                                <h3 className="enterprise-label !text-slate-500 flex gap-2 mb-6"><Ruler className="w-4 h-4"/> Biometría & Rangos (ROM)</h3>
+                                <h3 className="enterprise-label text-slate-500! flex gap-2 mb-6"><Ruler className="w-4 h-4"/> Biometría & Rangos (ROM)</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
                                     {data.evaluation_data.rom && Object.keys(data.evaluation_data.rom).length > 0 ? (
                                         Object.keys(data.evaluation_data.rom).map((romName) => (
@@ -612,14 +612,14 @@ export default function SessionFormModal({
 
                             <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all space-y-8">
                                 <div>
-                                    <h3 className="enterprise-label !text-orange-600 flex gap-2 mb-4"><ClipboardList className="w-4 h-4"/> [A] Análisis / Evaluación</h3>
+                                    <h3 className="enterprise-label text-orange-600! flex gap-2 mb-4"><ClipboardList className="w-4 h-4"/> [A] Análisis / Evaluación</h3>
                                     <textarea value={data.assessment} onChange={(e) => setData("assessment", e.target.value)} rows={3} className="w-full text-sm font-medium border-orange-100 bg-orange-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-orange-200 transition-all shadow-inner resize-none" placeholder="Interpretación profesional de la evolución..." />
                                 </div>
                                 <div className="pt-8 border-t border-gray-50">
-                                    <h3 className="enterprise-label !text-green-600 flex gap-2 mb-6"><Target className="w-4 h-4"/> [P] Plan de Tratamiento</h3>
+                                    <h3 className="enterprise-label text-green-600! flex gap-2 mb-6"><Target className="w-4 h-4"/> [P] Plan de Tratamiento</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="bg-gray-50 p-6 rounded-[1.5rem] border border-gray-100">
-                                            <label className="enterprise-label text-gray-500 mb-4 block flex items-center gap-2"><Dumbbell className="w-3 h-3"/> Procedimientos / Técnicas</label>
+                                            <label className="enterprise-label text-gray-500 mb-4 flex items-center gap-2"><Dumbbell className="w-3 h-3"/> Procedimientos / Técnicas</label>
                                             <div className="flex gap-2 mb-4">
                                                 <input type="text" value={techniqueInput} onChange={(e) => setTechniqueInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleActivityChange("techniques", techniqueInput, "add"); setTechniqueInput(""); }}} className="w-full px-4 py-3 text-xs font-bold border-gray-200 bg-white rounded-xl focus:ring-brand-primary transition-all shadow-sm" placeholder="Ej: Masaje, TENS..." />
                                                 <button type="button" onClick={() => { handleActivityChange("techniques", techniqueInput, "add"); setTechniqueInput(""); }} className="bg-green-100 text-green-700 px-4 rounded-xl hover:bg-green-200 hover:shadow-md transition-all"><Plus className="w-5 h-5"/></button>

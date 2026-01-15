@@ -62,7 +62,7 @@ export default function AttendacesTable({
   );
 
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   const [rowSelection, setRowSelection] = useState({});
 
@@ -117,7 +117,7 @@ export default function AttendacesTable({
               type="checkbox"
               className="w-4 h-4 border-gray-300 rounded text-brand-primary focus:ring-brand-primary disabled:opacity-30"
               checked={row.getIsSelected()}
-              disabled={!row.getCanSelect() || row.original.status !== 'completed' || !!row.original.dte_generated}
+              disabled={!row.getCanSelect() || row.original.status !== 'completed' || !!row.original.dte_generated || row.original.is_locked}
               onChange={row.getToggleSelectedHandler()}
             />
           </div>
@@ -181,7 +181,7 @@ export default function AttendacesTable({
       },
       {
         accessorKey: "status",
-        header: "Estatus Clínico",
+        header: "Estatus",
         cell: ({ getValue }) => (
           <div className="text-center">
             <span
@@ -196,7 +196,7 @@ export default function AttendacesTable({
       },
       {
         id: "pago",
-        header: "Balance (CLP)",
+        header: "Balance(CLP)",
         cell: ({ row }) => {
           const { payment_total, patient_amount_clp } = row.original;
           const saldo = Math.max(
@@ -268,19 +268,24 @@ export default function AttendacesTable({
                   {!a.dte_generated ? (
                     <button
                       onClick={() => openDTEModal(a)}
-                      className="p-2 text-purple-600 transition-all border border-purple-100 shadow-sm bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
-                      title="Emitir DTE"
+                      disabled={a.is_locked && a.billing_info?.dte_status === 'pending'}
+                      className={`p-2 transition-all border shadow-sm rounded-xl active:scale-90 ${
+                        a.is_locked && a.billing_info?.dte_status === 'pending'
+                          ? "text-gray-400 border-gray-100 bg-gray-50 cursor-not-allowed"
+                          : "text-purple-600 border-purple-100 bg-purple-50 hover:bg-purple-600 hover:text-white"
+                      }`}
+                      title={a.is_locked && a.billing_info?.dte_status === 'pending' ? "DTE en proceso..." : "Emitir DTE"}
                     >
                       <Receipt className="w-4 h-4" />
                     </button>
                   ) : (
-                    a.dte && (
+                    a.billing_info?.folio && (
                     <a
-                      href={route("dte.lookup", a.dte.folio)}
+                      href={route("dte.lookup", a.billing_info.folio)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 text-teal-600 transition-all border border-teal-100 shadow-sm bg-teal-50 rounded-xl hover:bg-teal-600 hover:text-white active:scale-90"
-                      title={`Ver DTE #${a.dte.folio}`}
+                      title={`Ver DTE #${a.billing_info.folio}`}
                     >
                       <Receipt className="w-4 h-4" />
                     </a>
@@ -320,16 +325,16 @@ export default function AttendacesTable({
   const table = useReactTable({
     data: atenciones,
     columns,
-    state: { sorting, pagination: { pagesize, pageIndex }, rowSelection },
+    state: { sorting, pagination: { pageSize, pageIndex }, rowSelection },
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -419,13 +424,13 @@ export default function AttendacesTable({
             <div className="flex gap-2 ml-auto">
               <PrimaryButton
                 onClick={applyFilters}
-                className="!py-3 !px-6 !text-[9px] shadow-lg shadow-brand-primary/20"
+                className="py-3! px-6! text-[9px]! shadow-lg shadow-brand-primary/20"
               >
                 Filtrar
               </PrimaryButton>
               <SecondaryButton
                 onClick={() => router.get(route("attendances.index"))}
-                className="!py-3 !px-6 !text-[9px]"
+                className="py-3! px-6! text-[9px]!"
               >
                 Reiniciar
               </SecondaryButton>
@@ -456,7 +461,7 @@ export default function AttendacesTable({
                           header.column.id === "acciones" ? "justify-end" : ""
                         }`}
                       >
-                        <span className="enterprise-label !mb-0 text-gray-900 group-hover:text-brand-primary transition-colors">
+                        <span className="enterprise-label mb-0! text-gray-900 group-hover:text-brand-primary transition-colors">
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
@@ -522,8 +527,8 @@ export default function AttendacesTable({
           <TablePagination
             table={table}
             total={atenciones.length}
-            pagesize={pagesize}
-            setpagesize={setpagesize}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
             pagesizeOptions={[10, 20, 50]}
           />
         </div>
@@ -533,7 +538,7 @@ export default function AttendacesTable({
       <div className="space-y-6 lg:col-span-3">
         <div className="p-8 bg-white border border-gray-100 shadow-xl rounded-[2.5rem] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
-          <h3 className="enterprise-label !text-brand-primary flex items-center gap-3 mb-8 relative z-10">
+          <h3 className="enterprise-label text-brand-primary! flex items-center gap-3 mb-8 relative z-10">
             <Activity className="w-5 h-5" /> Productividad
           </h3>
           <div className="relative z-10 space-y-4">

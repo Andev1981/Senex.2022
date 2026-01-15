@@ -204,7 +204,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
 
   // --- LÓGICA TANSTACK PARA CAF ---
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const cafColumns = useMemo(
@@ -295,15 +295,15 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
   const cafTable = useReactTable({
     data: folios,
     columns: cafColumns,
-    state: { sorting, pagination: { pagesize, pageIndex } },
+    state: { sorting, pagination: { pageSize, pageIndex } },
     onSortingChange: setSorting,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -652,8 +652,8 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
               <TablePagination
                 table={cafTable}
                 total={folios.length}
-                pagesize={pagesize}
-                setpagesize={setpagesize}
+                pageSize={pageSize}
+                setPageSize={setPageSize}
                 pagesizeOptions={[5, 10, 20]}
               />
             </div>

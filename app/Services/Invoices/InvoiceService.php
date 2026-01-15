@@ -24,6 +24,7 @@ class InvoiceService
    */
   public function processInvoice(Payment $payment, array $data): Invoice
   {
+    
     // 1. CREACIÓN LOCAL (Transacción DB)
     // Separamos la creación de la emisión. Primero aseguramos el registro en BD.
     $invoice = $this->createLocalInvoice($payment, $data);
@@ -92,7 +93,7 @@ class InvoiceService
         'user_id'    => auth()->id(), // Ojo con esto si es Job, auth() puede ser null
         'patient_id' => $payment->patient_id,
         'payment_id' => $payment->id,
-        'entity_type' => 'App\Models\Patient',
+        'entity_type' => 'Patient',
         'entity_id'  => $payment->patient_id,
 
         // Montos
@@ -135,7 +136,7 @@ class InvoiceService
         $invoiceItem = $invoice->items()->create([
           'company_id'      => $payment->company_id,
           'branch_id'       => $payment->branch_id,
-
+    
           // --- CAMPOS POLIMÓRFICOS (NUEVO) ---
           'sellable_type'   => $sellableType,
           'sellable_id'     => $sellableId,

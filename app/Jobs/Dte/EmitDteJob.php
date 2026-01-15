@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Dte;
 
+use App\Models\Dte;
 use App\Models\DteConfiguration;
 use App\Models\Invoice;
 use App\Services\Dte\DteFoliosService;
@@ -40,7 +41,7 @@ class EmitDteJob implements ShouldQueue
     
     // Crear registro en tabla dtes (Fuente de verdad del Track ID)
     if (!empty($resp['track_id'])) {
-        \App\Models\Dte::create([
+        Dte::create([
             'company_id' => $invoice->company_id,
             'branch_id' => $invoice->branch_id,
             'origin_type' => get_class($invoice),
@@ -50,8 +51,8 @@ class EmitDteJob implements ShouldQueue
             'rut_emisor' => $companySetting->rut_emisor ?? '',
             'rut_receptor' => $invoice->patient->rut ?? '',
             'total_monto_clp' => $invoice->amount_total_clp,
-            'track_id' => $resp['track_id'],
             'estado_sii' => $resp['status'] ?? 'ENVIADO',
+            'track_id' => $resp['track_id'],
             'xml_data' => $resp['xml'] ?? null, // Si el proveedor devuelve el XML
         ]);
     }

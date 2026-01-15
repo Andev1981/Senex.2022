@@ -52,7 +52,7 @@ export default function IndexDocuments({ patient, treatments = [] }) {
   }, [patient.invoices]);
 
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const dteColumns = useMemo(() => [
@@ -94,12 +94,12 @@ export default function IndexDocuments({ patient, treatments = [] }) {
   const table = useReactTable({
     data: dteInvoices,
     columns: dteColumns,
-    state: { sorting, pagination: { pagesize, pageIndex } },
+    state: { sorting, pagination: { pageSize, pageIndex } },
     onSortingChange: setSorting,
     onPaginationChange: (updater) => {
-        const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
+        const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
         setPageIndex(newState.pageIndex);
-        setpagesize(newState.pagesize);
+        setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -242,8 +242,8 @@ export default function IndexDocuments({ patient, treatments = [] }) {
             <TablePagination
               table={table}
               total={dteInvoices.length}
-              pagesize={pagesize}
-              setpagesize={setpagesize}
+              pageSize={pageSize}
+              setPageSize={setPageSize}
               pagesizeOptions={[5, 10]}
             />
           </div>

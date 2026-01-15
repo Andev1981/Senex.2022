@@ -36,19 +36,12 @@ return new class extends Migration
       $table->integer('amount_insurance_secondary_clp')->default(0)->comment('Aporte Seguro Complementario');
       $table->integer('amount_patient_clp')->default(0)->comment('Lo que efectivamente pagó el paciente');
 
-      // --- BLOQUE 4: DATOS TRIBUTARIOS (DTE CHILE) ---
-      $table->integer('dte_type')->index()->comment('33, 34, 39, 41, 61');
-      $table->bigInteger('dte_folio')->nullable()->index()->comment('Número entregado por el SII');
-      $table->date('issue_date')->index();
       $table->string('dte_status')->default('pending')->comment('pending, accepted, rejected');
-      /* $table->string('dte_track_id')->nullable()->comment('ID de seguimiento SII'); */
-      /*  $table->longText('dte_xml')->nullable(); */
-      $table->string('pdf_path')->nullable()->comment('Ruta al archivo de respaldo físico');
+      /* $table->string('pdf_path')->nullable()->comment('Ruta al archivo de respaldo físico'); */
 
       // --- BLOQUE 5: ESTADOS INTERNOS Y AUDITORÍA ---
       $table->string('payment_status')->default('unpaid')->comment('paid, unpaid, voided');
       
-      // Detalle de Pagos
       $table->string('transaction_number')->nullable()->comment('N° de operación/comprobante');
       $table->date('transaction_date')->nullable();
       $table->integer('global_discount_clp')->default(0)->comment('Descuento global aplicado al subtotal');

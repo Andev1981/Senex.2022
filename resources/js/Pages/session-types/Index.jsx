@@ -40,7 +40,7 @@ export default function Index({ sessionTypes }) {
   const [selectedType, setSelectedType] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const handleCreate = () => {
@@ -183,17 +183,17 @@ export default function Index({ sessionTypes }) {
     state: {
       sorting,
       globalFilter: searchTerm,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -222,7 +222,7 @@ export default function Index({ sessionTypes }) {
               <div>
                 <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1">Portafolio de Servicios</h1>
                 <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
-                  Configuración de Prestaciones • Senex Enterprise
+                  Configuración de Prestaciones • {/* Senex Enterprise */}
                 </p>
               </div>
             </div>
@@ -232,7 +232,7 @@ export default function Index({ sessionTypes }) {
                 className="flex items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
               >
                 <Plus className="w-4 h-4" />
-                Nueva Prestación
+                Nuevo Servicio
               </button>
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function Index({ sessionTypes }) {
         </div>
 
         {/* Search */}
-        <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-3xl">
+        <div className="p-4 bg-white border border-gray-100 shadow-sm rounded-2xl">
           <div className="relative group">
             <Search className="absolute w-4 h-4 text-brand-gray transform -translate-y-1/2 left-4 top-1/2 group-focus-within:text-brand-primary transition-colors" />
             <input
@@ -286,13 +286,13 @@ export default function Index({ sessionTypes }) {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscador inteligente de servicios..."
-              className="w-full py-4 pl-12 pr-4 transition-all border-gray-50 bg-gray-50/50 rounded-2xl focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/5 focus:bg-white text-sm font-bold outline-none"
+              className="w-full py-4 pl-12 pr-4 transition-all border-gray-200 bg-gray-50/50 rounded-2xl focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/5 focus:bg-white text-sm font-bold outline-none"
             />
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white border border-gray-100 shadow-xl rounded-[2.5rem] overflow-hidden">
+        <div className="bg-white border border-gray-100 shadow-xl rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -354,8 +354,8 @@ export default function Index({ sessionTypes }) {
           <TablePagination
             table={table}
             total={sessionTypes.length}
-            pagesize={pagesize}
-            setpagesize={setpagesize}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
             pagesizeOptions={[5, 10, 15, 20, 30, 40, 50]}
           />
         </div>

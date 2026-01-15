@@ -29,7 +29,20 @@ class StoreSessionTypeRequest extends FormRequest
 
         return [
             // --- 2. Identificación y Unicidad ---
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+            'required',
+            'string',
+            'max:120',
+                // Valida que sea único en la tabla session_types, columna name...
+                Rule::unique('session_types', 'name')
+                    // ...pero SOLO considerando las filas de MI empresa actual
+                    ->where(function ($query) {
+                        return $query->where('company_id', session('current_company_id')); 
+                        // O auth()->user()->company_id, según como manejes tu tenant
+                    })
+                    // Si es edición, ignoramos el ID actual
+                    ->ignore($this->route('session_type')) 
+            ],
             'code' => [
                 'required',
                 'string',

@@ -6,156 +6,119 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Doctor;
 use App\Models\Patient;
-use App\Models\TreatmentSession;
 use App\Models\User;
-use App\Models\Treatment;
 use App\Models\SessionType;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log; 
 
 class AllSeeder extends Seeder
 {
     public function run(): void
     {
-        // Hotfix: Asegurar que user_id existe en patients si la migración falló
-        if (Schema::hasTable('patients') && !Schema::hasColumn('patients', 'user_id')) {
-            Schema::table('patients', function (Blueprint $table) {
-                $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade')->after('id');
-            });
-        }
-
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        
-        $this->command->info('Truncating all tables...');
-        $tables = DB::select('SHOW TABLES');
-
-        foreach ($tables as $table) {
-            $tableArray = (array) $table;
-            $tableName = reset($tableArray);
-            
-            // Evitar truncar la tabla de migraciones
-            if ($tableName !== config('database.migrations')) {
-                DB::table($tableName)->truncate();
-            }
-        }
-        
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
-        $this->command->info('All tables truncated!');
-
+        // 1. CONFIGURACIÓN INICIAL
         $this->call(EmergencyAdminSeeder::class);
+        
         $this->command->info('Creating Roles...');
         Role::firstOrCreate(['name' => 'superadmin']);
         Role::firstOrCreate(['name' => 'admin']);
         Role::firstOrCreate(['name' => 'kine']);
         Role::firstOrCreate(['name' => 'patient']);
 
-        $this->call(RegionsTableSeeder::class);
-        $this->call(ProvincesTableSeeder::class);
-        $this->call(CommunesTableSeeder::class);
-        $this->call(DiagnosticSeeder::class);
-        $this->call(SaaSPlanSeeder::class);
+        $this->call([
+            RegionsTableSeeder::class,
+            ProvincesTableSeeder::class,
+            CommunesTableSeeder::class,
+            DiagnosticSeeder::class,
+            SaaSPlanSeeder::class,
+        ]);
 
-        $this->command->info('Creating Companies and Branches...');
+        $this->command->info('Creating Companies...');
         
         $company1 = Company::create(['rut' => '11111111-1', 'business_name' => 'Senex Centro', 'email' => 'senex@demo.com']);
         $company2 = Company::create(['rut' => '22222222-2', 'business_name' => 'Senex Sport', 'email' => 'sport@demo.com']);
 
-        $this->command->info('Seeding data for Senex Centro...');
+        $this->command->info('Seeding Senex Centro...');
         $this->seedTenantData($company1);
 
-        $this->command->info('Seeding data for Senex Sport...');
+        $this->command->info('Seeding Senex Sport...');
         $this->seedTenantData($company2);
     }
 
     private function seedTenantData(Company $company)
     {
-        $branchIds = $company->branches()->pluck('id');
+        Log::info("--- Sembrando Tenant: {$company->business_name} ---");
 
-        $this->call(CompanySeeder::class, false, ['parameters' => ['company' => $company, 'branches' => $branchIds]]);
-        $this->call(SessionTypeSeeder::class, false, ['parameters' => ['company' => $company]]);
-        $this->call(InsuranceSeeder::class, false, ['parameters' => ['company' => $company]]);
-        $this->call(AgreementSeeder::class, false, ['parameters' => ['company' => $company]]);
-        $this->call(TreatmentSessionSeeder::class, false, ['parameters' => ['company' => $company, 'branches' => $branchIds]]);
+        // A. SUCURSALES (Verificar o Crear)
+        Log::info("Company Branches: ". $company->branches()->pluck('id'));
+        $branchIds = $company->branches()->pluck('id');
+        if ($branchIds->isEmpty()) {
+             $branches = Branch::factory(2)->create(['company_id' => $company->id]);
+             $branchIds = $branches->pluck('id');
+             Log::info("Primer if en branch");
+        }
+
+        Log::info("Saliendo de crear Branch");
+
+        // B. USUARIOS BASE (Corrección: Envío directo)
+        $this->call(UserSeeder::class, false, ['company' => $company, 'branches' => $branchIds]);
+
+        // C. SESSION TYPES (Creación en Memoria)
+        Log::info("Creando Tipos de Sesión en memoria...");
+        $typesData = [
+            ['name' => 'Kinesiología General', 'code' => 'KINE-GEN', 'category' => 'kinesiology', 'duration_minutes' => 60, 'base_price_clp' => 25000, 'default_doctor_commission_clp' => 12000, 'is_active' => true, 'is_exempt' => true],
+            ['name' => 'Kinesiología Respiratoria', 'code' => 'KINE-RESP', 'category' => 'kinesiology', 'duration_minutes' => 45, 'base_price_clp' => 30000, 'default_doctor_commission_clp' => 15000, 'is_active' => true, 'is_exempt' => true],
+            ['name' => 'Rehabilitación Deportiva', 'code' => 'KINE-SPORT', 'category' => 'kinesiology', 'duration_minutes' => 60, 'base_price_clp' => 35000, 'default_doctor_commission_clp' => 17000, 'is_active' => true, 'is_exempt' => true],
+            ['name' => 'Evaluación Inicial', 'code' => 'KINE-EVAL', 'category' => 'evaluation', 'duration_minutes' => 45, 'base_price_clp' => 40000, 'default_doctor_commission_clp' => 20000, 'is_active' => true, 'is_exempt' => true],
+        ];
+         Log::info("Tipos de Sesión creados...");
+
+        $sessionTypes = collect();
+         Log::info("Tipos de Sesión collect...");
+        foreach ($typesData as $data) {
+            $data['company_id'] = $company->id;
+            $sessionTypes->push(SessionType::create($data));
+        }
+
+         Log::info("Saliendo de foreach...");
+
+        // D. OTROS SEEDERS (Corrección: Envío directo, sin 'parameters')
+        $this->call(InsuranceSeeder::class, false, ['company' => $company]);
         
-        /* $this->seedMassiveData($company, $branchIds); */
+        // ¡OJO AQUÍ! Tenías ['parameters' => ...] en AgreementSeeder, eso causaba error
+        $this->call(AgreementSeeder::class, false, ['company' => $company]); 
+        
+        // E. DATOS MASIVOS
+        $this->seedMassiveData($company, $branchIds, $sessionTypes);
     }
 
-    private function seedMassiveData(Company $company, $branchIds)
+    private function seedMassiveData(Company $company, $branchIds, $sessionTypes)
     {
-        $this->command->info("Generating massive data for {$company->business_name}...");
+        Log::warning("Generando data masiva para {$company->business_name}...");
 
-        // A) Create 5 Kinesiólogos
+        // 1. Doctores
         $doctors = Doctor::factory()->count(5)->create([
             'company_id' => $company->id,
             'user_id' => User::factory()->state(['company_id' => $company->id])
         ]);
-        
-        $doctors->each(function ($doctor) {
-            $doctor->user->assignRole('kine');
-        });
+        $doctors->each(fn($d) => $d->user->assignRole('kine'));
 
-        // B) Create 50 Patients
+        // 2. Pacientes
         $patients = Patient::factory()->count(50)->create([
             'company_id' => $company->id,
             'user_id' => User::factory()->state(['company_id' => $company->id])
         ]);
-        
-        $patients->each(function ($patient) {
-            $patient->user->assignRole('patient');
-        });
-
-        // C) Generate 300 Sessions (And their parent Treatments)
-        
-        // Obtenemos los tipos de sesión disponibles para esta empresa
-        $sessionTypeIds = SessionType::where('company_id', $company->id)->pluck('id');
-
-        if ($sessionTypeIds->isEmpty()) {
-            $this->command->warn("No SessionTypes found for company {$company->id}. Skipping sessions.");
-            return;
-        }
-
-        TreatmentSession::factory()->count(100)->make([
-            'company_id' => $company->id,
-        ])->each(function ($session) use ($branchIds, $doctors, $patients, $company, $sessionTypeIds) {
-            
-            // 1. Seleccionar datos aleatorios para mantener coherencia
-            $branchId = $branchIds->random();
-            $doctorId = $doctors->random()->id;
-            $patientId = $patients->random()->id;
-            $sessionTypeId = $sessionTypeIds->random();
-
-            // 2. CRÍTICO: Crear el Tratamiento Padre primero
-            // Esto soluciona el error 'Field treatment_id doesn't have a default value'
-            $treatment = Treatment::create([
-                'company_id' => $company->id,
-                'branch_id' => $branchId,
-                'patient_id' => $patientId,
-                'doctor_id' => $doctorId,
-                'session_type_id' => $sessionTypeId,
-                'status' => 'in_progress', // O aleatorio si prefieres
-                'start_date' => now(),
+        $patients->each(fn($p) => $p->user->assignRole('patient'));
+      
+        // 3. Llamada al Seeder Final
+        if ($sessionTypes->isNotEmpty()) {
+            $this->call(TreatmentSessionSeeder::class, false, [
+                'company' => $company, 
+                'branches' => $branchIds,
+                'doctors' => $doctors, 
+                'patients' => $patients, 
+                'sessionTypes' => $sessionTypes
             ]);
-
-            // 3. Asignar datos a la sesión
-            $session->branch_id = $branchId;
-            $session->doctor_id = $doctorId;
-            $session->patient_id = $patientId;
-            $session->session_type_id = $sessionTypeId;
-            $session->treatment_id = $treatment->id; // <--- Aquí vinculamos al padre
-
-            // 4. Lógica de fechas (60% pasado, 40% futuro)
-            $isPast = rand(1, 100) <= 60;
-            $session->date = $isPast 
-                ? now()->subDays(rand(1, 60)) 
-                : now()->addDays(rand(1, 30));
-            
-            $session->save();
-        });
-        
-        $this->command->info("Massive data generated: 5 Kines, 50 Patients, 300 Sessions created successfully.");
+        }
     }
 }

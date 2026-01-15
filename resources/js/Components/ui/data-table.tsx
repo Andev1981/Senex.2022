@@ -135,7 +135,7 @@ export function DataTable<TData, TValue>({
                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
                         <p className="text-sm text-gray-700">
-                            Mostrando <span className="font-medium">{table.getState().pagination.pageIndex * table.getState().pagination.pagesize + 1}</span> a <span className="font-medium">{Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pagesize, data.length)}</span> de <span className="font-medium">{data.length}</span> resultados
+                            Mostrando <span className="font-medium">{table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}</span> a <span className="font-medium">{Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, data.length)}</span> de <span className="font-medium">{data.length}</span> resultados
                         </p>
                     </div>
                     <div>

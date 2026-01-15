@@ -12,9 +12,9 @@ use Illuminate\Database\Seeder;
 
 class AgreementSeeder extends Seeder
 {
-    public function run(array $parameters = null)
+    public function run($company)
     {
-        $company = $parameters['company'];
+
         $insurances = Insurance::where('company_id', $company->id)->get();
         $sessionTypes = SessionType::where('company_id', $company->id)->get();
 

@@ -234,8 +234,8 @@ export default function TableTreatments({
         <TablePagination
             table={table}
             total={treatments.length}
-            pagesize={pageSize}
-            setpagesize={setPageSize}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
         />
       </div>
     </div>

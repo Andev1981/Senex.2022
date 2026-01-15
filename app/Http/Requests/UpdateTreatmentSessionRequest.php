@@ -46,7 +46,7 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'date' => 'sometimes|date',
             'time' => 'sometimes|date_format:H:i',
             'duration' => 'sometimes|integer|min:15|max:180',
-            'status' => 'sometimes|in:scheduled,in_progress,completed,cancelled,not_attend',
+            'status' => 'sometimes|in:scheduled,in_progress,completed,cancelled,not_show,confirmed',
 
             // --- NUEVOS CAMPOS SOAP ---
             'subjective' => 'nullable|string',

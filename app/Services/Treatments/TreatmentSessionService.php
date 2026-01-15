@@ -47,6 +47,10 @@ class TreatmentSessionService
                 $this->validateDoctorAvailability($data['doctor_id'], $data['date'], $data['time']);
             }
 
+            if (isset($data['patient_id']) && isset($data['date']) && isset($data['time'])) {
+                $this->validatePatientAvailability($data['patient_id'], $data['date'], $data['time']);
+            }
+
             $sessionType = SessionType::findOrFail($data['session_type_id']);
 
             $doctorCommission = DoctorCommissionRate::active()
@@ -352,6 +356,22 @@ class TreatmentSessionService
 
         if ($exists) {
             throw new \Exception('El doctor no está disponible en ese horario');
+        }
+    }
+
+    /**
+     * Validar disponibilidad del doctor en una fecha/hora
+     */
+    private function validatePatientAvailability(int $patientId, string $date, string $time): void
+    {
+        $exists = TreatmentSession::where('patient_id', $patientId)
+            ->where('date', $date)
+            ->where('time', $time)
+            ->whereNotIn('status', ['cancelled'])
+            ->exists();
+
+        if ($exists) {
+            throw new \Exception('El paciente ya posee una sesion agendada en ese horario');
         }
     }
 

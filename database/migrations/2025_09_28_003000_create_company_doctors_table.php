@@ -28,7 +28,7 @@ return new class extends Migration
 
             // Datos específicos del convenio
             $table->decimal('tarifa_acordada_clp', 10, 2)->nullable()->comment('Tarifa pactada con esta empresa.');
-            $table->unsignedDecimal('porcentaje_comision', 5, 2)->default(0.00)->comment('Porcentaje de comisión para la liquidación de esta empresa.');
+            $table->decimal('porcentaje_comision', 5, 2)->default(0.00)->comment('Porcentaje de comisión para la liquidación de esta empresa.');
             $table->enum('estado_convenio', ['activo', 'inactivo', 'pendiente'])->default('activo');
 
             // Restricción: Un doctor solo puede tener una relación con una empresa

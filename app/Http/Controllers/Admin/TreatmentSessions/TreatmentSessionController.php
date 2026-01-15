@@ -39,7 +39,7 @@ class TreatmentSessionController extends Controller
             // - Asigna month_session_number automáticamente
             // - Valida disponibilidad del doctor
             // - Crea logs
-            
+            /* dd($request->validated()); */
             // DEBUG: Ver qué datos llegan
             Log::info('TreatmentSessionController::store validated data:', $request->validated());
 

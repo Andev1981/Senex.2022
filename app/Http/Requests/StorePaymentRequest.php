@@ -49,7 +49,7 @@ class StorePaymentRequest extends FormRequest
                     'unit_patient_clp'             => (int) ($item['unit_patient_clp'] ?? 0),
                     'debt_id'         => $item['debt_id'] ?? null,
                     'treatment_id'    => $item['treatment_id'] ?? null,
-                    'session_id'      => $item['session_id'] ?? null,
+                    'treatment_session_id'      => $item['treatment_session_id'] ?? null,
                 ];
             })->toArray();
 
@@ -82,6 +82,7 @@ class StorePaymentRequest extends FormRequest
             'services_to_bill.*.unit_price_clp'      => ['required', 'numeric'],
             'services_to_bill.*.unit_patient_clp'    => ['required', 'numeric'],
             'services_to_bill.*.doctor_id'       => ['required_without:services_to_bill.*.debt_id', 'nullable', 'exists:doctors,id'],
+            'services_to_bill.*.treatment_session_id' => ['nullable', 'exists:treatment_sessions,id'],
 
             // --- Detalles del Pago Físico ---
             'payment_details' => ['required', 'array'],

@@ -12,17 +12,17 @@ export const HeaderDoctors = ({ setSelectedDoctor, setIsModalOpenDetail }) => {
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1">Cuerpo Médico</h1>
             <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
-              Gestión de Especialistas • Staff Clínico
+              Gestión de Profesionales • Staff Clínico
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => (setSelectedDoctor([]), setIsModalOpenDetail(true))}
-            className="flex items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
+            className="flex cursor-pointer items-center gap-3 px-8 py-4 font-black uppercase tracking-widest text-[10px] text-white transition-all bg-brand-primary rounded-2xl shadow-lg shadow-brand-primary/20 hover:brightness-110 active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            Alta de Especialista
+            Alta de Profesional
           </button>
         </div>
       </div>

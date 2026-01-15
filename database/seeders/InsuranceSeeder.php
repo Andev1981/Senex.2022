@@ -14,15 +14,11 @@ class InsuranceSeeder extends Seeder
 
 {
 
-    public function run(array $parameters = null)
+    public function run($company)
 
     {
 
         $faker = Faker::create('es_CL');
-
-        $company = $parameters['company'];
-
-
 
         $insurances = [
 

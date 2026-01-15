@@ -35,7 +35,7 @@ import Swal from "sweetalert2";
 export default function Index({ products }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   
   // ESTADOS PARA MODAL
@@ -168,13 +168,13 @@ export default function Index({ products }) {
   const table = useReactTable({
     data: products.data || products,
     columns,
-    state: { sorting, globalFilter: searchTerm, pagination: { pagesize, pageIndex } },
+    state: { sorting, globalFilter: searchTerm, pagination: { pageSize, pageIndex } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
     onPaginationChange: (updater) => {
-      const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
+      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -310,8 +310,8 @@ export default function Index({ products }) {
             <TablePagination
                 table={table}
                 total={products.total || (products.data || products).length}
-                pagesize={pagesize}
-                setpagesize={setpagesize}
+                pageSize={pageSize}
+                setPageSize={setPageSize}
                 pagesizeOptions={[10, 20, 50]}
             />
           </div>

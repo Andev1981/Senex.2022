@@ -1,6 +1,7 @@
 import React from "react";
 import { Calculator, CheckCircle2, Plus } from "lucide-react";
 import ServiceItem from "./ServiceItem"; // Importamos el componente de arriba
+import {fmtDate} from "@/utils/utils";
 
 export default function ServicesCard({
   servicesToBill,
@@ -57,7 +58,7 @@ export default function ServicesCard({
                       {debt.treatment_session?.session_type?.name || "Sesión"}
                     </span>
                     <span className="mt-1 font-mono text-[10px] font-bold opacity-60">
-                      {debt.treatment_session?.date}
+                      {fmtDate(debt.treatment_session?.date)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">

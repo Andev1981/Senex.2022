@@ -46,6 +46,7 @@ return new class extends Migration
 
             // --- ARCHIVOS Y RELACIONES ---
             $table->mediumText('xml_data')->nullable()->comment('Contenido XML del DTE firmado.');
+            $table->string('pdf_path')->nullable()->comment('Ruta al archivo de respaldo físico');
 
             $table->foreignId('related_dte_id')
                 ->nullable()

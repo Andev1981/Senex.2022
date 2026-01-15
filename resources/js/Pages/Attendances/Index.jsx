@@ -3,16 +3,16 @@ import { Head, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/Components/SideModal";
 import Modal from "@/Components/Modal";
-import AttendancesHeader from "@/pages/Attendances/Partials/AttendancesHeader";
-import AttendacesTable from "@/pages/Attendances/AttendacesTable";
-import Kpis from "@/pages/Attendances/Partials/Kpis";
-import CancelModal from "@/pages/Attendances/Modals/CancelModal";
-import StartModal from "@/pages/Attendances/Modals/StartModal";
-import CompletedModal from "@/pages/Attendances/Modals/CompletedModal";
-import AbsentModal from "@/pages/Attendances/Modals/AbsentModal";
-import DteModal from "@/pages/Attendances/Modals/DteModal";
-import ResumeModal from "@/pages/Attendances/Modals/ResumeModal";
-import CreateUpdateModal from "@/pages/Attendances/Modals/CreateUpdateModal";
+import AttendancesHeader from "@/pages/attendances/partials/attendances-header";
+import AttendacesTable from "@/pages/attendances/attendaces-table";
+import Kpis from "@/pages/attendances/partials/kpis";
+import CancelModal from "@/pages/attendances/modals/cancel-modal";
+import StartModal from "@/pages/attendances/modals/start-modal";
+import CompletedModal from "@/pages/attendances/modals/completed-modal";
+import AbsentModal from "@/pages/attendances/modals/absent-modal";
+import DteModal from "@/pages/attendances/modals/dte-modal";
+import ResumeModal from "@/pages/attendances/modals/resume-modal";
+import CreateUpdateModal from "@/pages/attendances/modals/create-update-modal";
 
 export default function Index({
   atenciones = [],

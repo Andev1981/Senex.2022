@@ -311,8 +311,8 @@ export default function TableSessions({
         <TablePagination
             table={table}
             total={sessions.length}
-            pagesize={pageSize} // Corregido: pageSize
-            setpagesize={setPageSize} // Corregido: setPageSize
+            pageSize={pageSize} // Corregido: pageSize
+            setPageSize={setPageSize} // Corregido: setPageSize
         />
       </div>
     </div>

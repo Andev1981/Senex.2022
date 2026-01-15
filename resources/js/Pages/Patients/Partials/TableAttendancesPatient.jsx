@@ -25,8 +25,8 @@ export default function TableAttendancesPatient({
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
-  // set pagesize to all rows by default to show everything
-  const [pagesize, setpagesize] = useState(
+  // set pageSize to all rows by default to show everything
+  const [pageSize, setPageSize] = useState(
     sessions?.length > 0 ? sessions?.length : 1
   );
 
@@ -184,7 +184,7 @@ export default function TableAttendancesPatient({
       sorting,
       globalFilter,
       columnFilters,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -192,10 +192,10 @@ export default function TableAttendancesPatient({
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -338,8 +338,8 @@ export default function TableAttendancesPatient({
       <TablePagination
         table={table}
         total={sessions.length}
-        pagesize={pagesize}
-        setpagesize={setpagesize}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
         pagesizeOptions={[5, 10, 15, 20, 30, 40, 50]}
       />
     </div>

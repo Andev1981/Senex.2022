@@ -124,17 +124,19 @@ export const statusOptions = [
 export const estadoClass = (estado) => {
   switch (estado) {
     case "completed":
-      return "bg-green-100 text-green-700";
+      return "bg-green-100 text-green-800";
     case "in_progress":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-100 text-blue-800";
     case "scheduled":
-      return "bg-amber-100 text-amber-700";
+      return "bg-amber-100 text-amber-800";
     case "cancelled":
-      return "bg-gray-200 text-gray-700";
-    case "absent":
-      return "bg-red-100 text-red-700";
+      return "bg-gray-100 text-gray-800";
+    case "not_show":
+      return "bg-red-100 text-red-800";
+    case "confirmed":
+      return "bg-yellow-100 text-yellow-800";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 text-gray-800";
   }
 };
 
@@ -148,12 +150,16 @@ export const estadoTexto = (estado) => {
       return "Programada";
     case "cancelled":
       return "Cancelada";
-    case "absent":
+    case "not_show":
       return "Ausente";
+    case "confirmed":
+      return "Confirmado";
     default:
       return estado;
   }
 };
+
+/* scheduled,in_progress,completed,cancelled,not_show,confirmed*/
 
 export const tipoClass = (tipo) => {
   switch (tipo) {

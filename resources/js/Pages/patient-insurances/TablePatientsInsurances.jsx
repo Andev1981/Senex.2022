@@ -27,7 +27,7 @@ export default function TablePatientsInsurances({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
   const { get, reset } = useForm();
@@ -150,7 +150,7 @@ export default function TablePatientsInsurances({
       sorting,
       globalFilter,
       columnFilters,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -158,10 +158,10 @@ export default function TablePatientsInsurances({
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -272,8 +272,8 @@ export default function TablePatientsInsurances({
       <TablePagination
         table={table}
         total={patientsInsurances?.length}
-        pagesize={pagesize}
-        setpagesize={setpagesize}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
         pagesizeOptions={[5, 10, 15, 20, 30, 40, 50]} // Opcional
       />
     </div>

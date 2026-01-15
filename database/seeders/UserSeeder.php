@@ -9,14 +9,15 @@ use App\Rules\ValidRut;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Faker\Factory as Faker;
+use Illuminate\Support\Facades\Log; 
 
-class CompanySeeder extends Seeder
+class UserSeeder extends Seeder
 {
-    public function run(array $parameters = null)
+    public function run($company, $branches)
     {
         $faker = Faker::create('es_CL');
-        $company = $parameters['company'];
-        $branches = $parameters['branches'];
+
+             Log::info("UserSeeder");
 
         // ======== USERS ========
         $adminUser = User::create([

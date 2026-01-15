@@ -18,8 +18,8 @@ return new class extends Migration {
                       ->constrained('branches')
                       ->nullOnDelete(); */
       // ===== 1. IDENTIFICACIÓN Y CATEGORÍA =====
-      $table->string('name', 120)->unique();
-      $table->string('code', 20)->nullable()->unique()->comment('Código arancelario de Isapre/Fonasa/Interno.');
+      $table->string('name', 120);
+      $table->string('code', 20)->nullable()->comment('Código arancelario de Isapre/Fonasa/Interno.');
       $table->enum('category', ['kinesiology', 'evaluation', 'procedure', 'massage', 'other'])->index();
 
       // ===== 2. PRECIOS Y DURACIÓN =====
@@ -44,6 +44,13 @@ return new class extends Migration {
       // ===== 4. ESTADO Y AUDITORÍA =====
       // 🎯 Corrección: Eliminamos la columna 'active' duplicada.
       $table->boolean('is_active')->default(true)->index();
+
+      // Esto permite que el nombre se repita, SIEMPRE Y CUANDO sea en distinta empresa
+      $table->unique(['company_id', 'name'], 'unique_name_per_company');
+
+      // Opcional: Lo mismo para el código si quieres que cada empresa maneje sus códigos
+      $table->unique(['company_id', 'code'], 'unique_code_per_company');
+
       $table->timestamps();
       $table->softDeletes();
     });

@@ -39,7 +39,7 @@ export default function TableDoctors({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   const [columnFilters, setColumnFilters] = useState([]);
 
@@ -85,7 +85,7 @@ export default function TableDoctors({
       const baseColumns = [
         {
           id: "profesional",
-          header: "Especialista",
+          header: "Profesionales",
           accessorFn: (row) => row.full_name,
           cell: ({ row }) => {
             const { phone, email, full_name, last_name, name } = row.original;
@@ -147,19 +147,18 @@ export default function TableDoctors({
           accessorKey: "sessions_month",
           header: "Atenciones (Mes)",
           cell: ({ row, getValue }) => (
-            <div className="flex flex-col items-center gap-1">
-              <div
-                className="text-center font-black text-gray-900 font-mono text-xs bg-gray-50 py-1.5 rounded-xl border border-gray-100 min-w-[40px]"
+            <span className="flex items-center gap-1">
+                 <span className="text-[8px] font-black text-green-600 uppercase tracking-widest bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-100 shadow-sm"
                 title="Sesiones Completadas"
               >
-                {getValue() || 0}
-              </div>
+                {getValue() || 0} Compl.
+              </span>
               {row.original.pending_sessions_count > 0 && (
                 <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-100 shadow-sm">
                   {row.original.pending_sessions_count} Pend.
                 </span>
               )}
-            </div>
+            </span>
           ),
         },
         {
@@ -178,7 +177,7 @@ export default function TableDoctors({
           cell: ({ row }) => (
             <div className="flex items-center justify-end gap-1.5">
               <button
-                className="p-2 transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
+                className="p-2 cursor-pointer transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
                 onClick={() => (
                   setSelectedDoctor(row.original), setIsModalOpenDetail(true)
                 )}
@@ -187,7 +186,7 @@ export default function TableDoctors({
                 <Eye className="w-4 h-4" />
               </button>
               <button
-                className="p-2 text-indigo-600 transition-all border border-indigo-100 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white active:scale-90"
+                className="p-2 cursor-pointer text-indigo-600 transition-all border border-indigo-100 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white active:scale-90"
                 onClick={() => (
                   setSelectedDoctor(row.original), setIsModalOpenCommissions(true)
                 )}
@@ -196,7 +195,7 @@ export default function TableDoctors({
                 <ClipboardList className="w-4 h-4" />
               </button>
               <button
-                className="p-2 text-purple-600 transition-all border border-purple-100 bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
+                className="p-2 cursor-pointer text-purple-600 transition-all border border-purple-100 bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
                 onClick={() => (
                   setSelectedDoctor(row.original), setIsModalOpenPatients(true)
                 )}
@@ -210,7 +209,7 @@ export default function TableDoctors({
         },
       ];
       if (user && user.roles.some(role => role.name === 'superadmin')) {
-        baseColumns.splice(1, 0, {
+        baseColumns.splice(0, 0, {
           accessorKey: "company_id",
           header: "Company ID",
         });
@@ -233,7 +232,7 @@ export default function TableDoctors({
       sorting,
       globalFilter: searchTerm,
       columnFilters,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
@@ -241,10 +240,10 @@ export default function TableDoctors({
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -347,7 +346,7 @@ export default function TableDoctors({
         <div className="flex items-center justify-between p-6 border-b border-gray-50 bg-gray-50/30">
           <h2 className="flex items-center gap-3 text-sm font-black tracking-tight text-gray-900 uppercase">
             <UserCog className="w-5 h-5 text-brand-primary" /> Nómina de
-            Especialistas
+            Profesionales
           </h2>
           <span className="text-[9px] font-black text-brand-gray uppercase tracking-[0.2em] bg-white px-4 py-1.5 rounded-xl shadow-sm border border-gray-100">
             {table.getFilteredRowModel().rows.length} Profesionales Activos
@@ -444,8 +443,8 @@ export default function TableDoctors({
           <TablePagination
             table={table}
             total={table.getFilteredRowModel().rows.length}
-            pagesize={pagesize}
-            setpagesize={setpagesize}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
             pagesizeOptions={[5, 10, 20, 50]}
           />
         </div>

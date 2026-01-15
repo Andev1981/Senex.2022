@@ -67,7 +67,9 @@ class PaymentService
                 if (!empty($item['debt_id'])) {
                     $this->handleDebtPayment($payment, $item);
                 } else {
-                    $this->handleNewSession($payment, $item, $data);
+                    if (!empty($item['treatment_session_id'])) {
+                        $this->handleNewSession($payment, $item, $data);
+                    }
                 }
             }
 
@@ -778,7 +780,7 @@ class PaymentService
 
             Log::info('Deuda creada para sesión', [
                 'debt_id' => $debt->id,
-                'session_id' => $session->id,
+                'treatment_session_id' => $session->id,
                 'amount_clp' => $amount_clp,
             ]);
 

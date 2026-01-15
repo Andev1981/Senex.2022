@@ -29,7 +29,7 @@ export default function TableSesiones({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [columnFilters, setColumnFilters] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
 
@@ -206,7 +206,7 @@ export default function TableSesiones({
       sorting,
       globalFilter,
       columnFilters,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -214,10 +214,10 @@ export default function TableSesiones({
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -450,10 +450,10 @@ export default function TableSesiones({
         </div>
 
         <select
-          value={pagesize}
+          value={pageSize}
           onChange={(e) => {
-            setpagesize(Number(e.target.value));
-            table.setpagesize(Number(e.target.value));
+            setPageSize(Number(e.target.value));
+            table.setPageSize(Number(e.target.value));
           }}
           className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >

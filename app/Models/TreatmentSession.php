@@ -98,9 +98,9 @@ class TreatmentSession extends Model
         return $this->belongsTo(Treatment::class);
     }
 
-    public function patient(): BelongsTo
+    public function invoiceItems(): HasMany
     {
-        return $this->belongsTo(Patient::class);
+        return $this->hasMany(InvoiceItem::class, 'treatment_session_id');
     }
 
     /**
@@ -110,6 +110,11 @@ class TreatmentSession extends Model
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class, 'doctor_id');
+    }
+
+    public function patient(): BelongsTo
+    {
+        return $this->belongsTo(Patient::class);
     }
 
     public function sessionType(): BelongsTo

@@ -41,7 +41,7 @@ use App\Http\Controllers\Admin\Calendars\{
 /* KineMobile */
 use App\Http\Controllers\Admin\Clients\{
   ClientAuthController,
-  ClientDashboardController
+  PatientDashboardController
 };
 
 /* Companies */
@@ -408,16 +408,6 @@ Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'de
 
 
 
-
-
-
-
-
-
-
-
-
-
   // =============================================================================
   // RUTAS ADICIONALES PARA OPERACIONES ESPECÍFICAS
   // =============================================================================
@@ -457,8 +447,8 @@ Route::delete('/session-types/{session_type}',[SessionTypeController::class, 'de
   Route::get('/attendances', [AttendancesController::class, 'index'])->name('attendances.index');
 
   // Acciones sobre sesiones
-  Route::post('/attendances/store', [AttendancesController::class, 'store'])->name('attendances.store');
-  Route::patch('/attendances/{id}/patch', [AttendancesController::class, 'update'])->name('attendances.update');
+  /* Route::post('/attendances/store', [AttendancesController::class, 'store'])->name('attendances.store');
+  Route::patch('/attendances/{id}/patch', [AttendancesController::class, 'update'])->name('attendances.update'); */
   Route::patch('/attendances/{id}/start', [AttendancesController::class, 'startSession'])->name('attendances.start');
   Route::patch('/attendances/{id}/complete', [AttendancesController::class, 'completeSession'])->name('attendances.complete');
   Route::patch('/attendances/{id}/cancel', [AttendancesController::class, 'cancelSession'])->name('attendances.cancel');
@@ -573,8 +563,32 @@ Route::middleware(['auth'])->prefix('dev')->group(function () {
     });
 
     Route::post('/rebuild-app', function () {
-      Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\AllSeeder']);
-      return back()->with('success', 'Sistema reconstruido desde cero (AllSeeder).');
+      // 1. Evitar que el navegador mate el proceso (5 minutos máximo)
+      set_time_limit(300); 
+      ini_set('memory_limit', '512M'); // Darle más memoria RAM por si acaso
+
+      try {
+          // 2. Usar migrate:fresh en lugar de db:seed
+          // Esto borra las tablas físicamente y las vuelve a crear.
+          // Es mucho más seguro que un truncate manual.
+          Artisan::call('migrate:fresh', [
+              '--seed' => true,
+              '--seeder' => 'Database\\Seeders\\AllSeeder', // Especificamos tu clase
+              '--force' => true // Necesario si estás en producción/staging
+          ]);
+          
+          // Opcional: Limpiar caché para que no queden datos viejos pegados
+          Artisan::call('cache:clear');
+          Artisan::call('config:clear');
+
+          \Log::warning('success');
+          return back()->with('success', '¡Base de datos nuclearizada y regenerada exitosamente!');
+
+      } catch (\Exception $e) {
+          \Log::error('error: '. $e->getMessage());
+          // Si falla, mostramos el error real en pantalla
+          return back()->with('error', 'Error crítico al reconstruir: ' . $e->getMessage());
+      }
     });
 
     Route::post('/run-jobs', function () {

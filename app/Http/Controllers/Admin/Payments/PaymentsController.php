@@ -88,7 +88,7 @@ class PaymentsController extends Controller
             });
         })->get();
 
-        return Inertia::render('billingCheckout/Index', [
+        return Inertia::render('billing-checkout/index', [
             'patients' => $patients,
             'sessionTypes' => $sessionTypes,
             'agreements' => Agreement::with('rules')->get(),
@@ -269,6 +269,8 @@ class PaymentsController extends Controller
         $data = $request->validated();
         $paymentMethod = $data['payment_details']['payment_method'];
 
+
+
         // --- FASE 1: PROCESAR Y ASEGURAR EL PAGO ---
         DB::beginTransaction();
         try {
@@ -298,7 +300,6 @@ class PaymentsController extends Controller
                 ]);
             }
 
-            // 3. COMMIT CRÍTICO: El dinero ya está seguro.
             DB::commit();
         } catch (\Exception $ePayment) {
             DB::rollBack();
@@ -430,7 +431,7 @@ class PaymentsController extends Controller
             ->first();
 
         // Retornamos a la vista de React mediante Inertia
-        return inertia('BillingCheckout/Success', [
+        return inertia('billing-checkout/Success', [
             'payment' => $payment,
             'invoice' => $invoice,
             // Pasamos una bandera si el DTE aún está en proceso de firma

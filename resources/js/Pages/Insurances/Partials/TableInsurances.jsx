@@ -65,7 +65,7 @@ export default function TableInsurances({
 
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const data = useMemo(() => insurances || [], [insurances]);
@@ -187,16 +187,16 @@ export default function TableInsurances({
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter, pagination: { pagesize, pageIndex } },
+    state: { sorting, globalFilter, pagination: { pageSize, pageIndex } },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -317,8 +317,8 @@ export default function TableInsurances({
             <TablePagination
               table={table}
               total={insurances.length}
-              pagesize={pagesize}
-              setpagesize={setpagesize}
+              pageSize={pageSize}
+              setPageSize={setPageSize}
               pagesizeOptions={[5, 10, 20]}
             />
           </div>

@@ -32,7 +32,7 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
   const [selectedPayment, setSelectedPayment] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const totalPaid = useMemo(
@@ -131,17 +131,17 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
     state: {
       sorting,
       globalFilter: searchTerm,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setSearchTerm,
     onPaginationChange: (updater) => {
       const newState =
         typeof updater === "function"
-          ? updater({ pageIndex, pagesize })
+          ? updater({ pageIndex, pageSize })
           : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -289,8 +289,8 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
         <TablePagination
           table={table}
           total={payments.length}
-          pagesize={pagesize}
-          setpagesize={setpagesize}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
           pagesizeOptions={[5, 10, 20]}
         />
       </div>

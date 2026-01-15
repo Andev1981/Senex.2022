@@ -15,10 +15,10 @@ class PatientDashboardController extends Controller
     public function index()
     {
         // Si ya está autenticado, redirigir al dashboard
-        if (Auth::guard('patient')->check()) {
+        /* if (Auth::guard('patient')->check()) {
             return Inertia::render('clients/Index');
         }
 
-        return Inertia::render('auth/Patient/Login');
+        return Inertia::render('auth/Patient/Login'); */
     }
 }

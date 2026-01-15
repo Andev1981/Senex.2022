@@ -119,7 +119,7 @@ export default function DteModal({
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
               Paciente
             </span>
-            <span className="font-black text-gray-900 uppercase truncate max-w-[200px]">
+            <span className="font-black text-gray-900 uppercase truncate max-w-50">
               {mainSession?.patient_full_name}
             </span>
           </div>

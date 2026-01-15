@@ -25,7 +25,7 @@ export default function Kpis({ kpis, filtros }) {
             {fechaInicio === fechaFin ? fmtShortDate(fechaInicio) : 'Período'}
           </span>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Volumen Total</p>
+        <p className="enterprise-label text-[8px]! opacity-60 mb-1">Volumen Total</p>
         <p className="text-3xl font-black text-gray-900 font-mono tracking-tighter">{kpis.total || 0}</p>
       </div>
 
@@ -37,7 +37,7 @@ export default function Kpis({ kpis, filtros }) {
           </div>
           <span className="text-[8px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-lg">Realizadas</span>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Sesiones Éxito</p>
+        <p className="enterprise-label text-[8px]! opacity-60 mb-1">Sesiones Éxito</p>
         <p className="text-3xl font-black text-green-700 font-mono tracking-tighter">{kpis.completadas || 0}</p>
       </div>
 
@@ -49,7 +49,7 @@ export default function Kpis({ kpis, filtros }) {
           </div>
           <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-2 py-1 rounded-lg">Agendadas</span>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Citas en Espera</p>
+        <p className="enterprise-label text-[8px]! opacity-60 mb-1">Citas en Espera</p>
         <p className="text-3xl font-black text-amber-700 font-mono tracking-tighter">{kpis.pendientes || 0}</p>
       </div>
 
@@ -61,7 +61,7 @@ export default function Kpis({ kpis, filtros }) {
           </div>
           <span className="text-[8px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-2 py-1 rounded-lg">Caja</span>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60 mb-1">Cobrado / Pendiente</p>
+        <p className="enterprise-label text-[8px]! opacity-60 mb-1">Cobrado / Pendiente</p>
         <div className="flex items-baseline gap-2">
             <p className="text-lg font-black text-gray-900 font-mono tracking-tighter">{fmtCLP(kpis.totalCobrado || 0)}</p>
             <span className="text-[10px] font-bold text-gray-300">/</span>

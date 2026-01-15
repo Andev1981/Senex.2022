@@ -116,8 +116,8 @@ export default function PosIndex({
       name:
         debt.treatment_session?.session_type?.name || "Prestación Histórica",
       debt_id: debt.id,
-      treatment_id: debt.treatment_id,
-      session_id: debt.treatment_session_id,
+      treatment_id: debt.treatment_session?.treatment_id,
+      treatment_session_id: debt.treatment_session_id,
       is_debt: true,
       date_label: debt.treatment_session?.date || "S/F",
       // Las deudas históricas suelen ser montos fijos ya calculados para el paciente
@@ -442,6 +442,8 @@ export default function PosIndex({
       ...data.services_to_bill, // Mantenemos los que ya están
       {
         session_type_id: "", // Vacío para que el select muestre "Seleccionar..."
+        treatment_id: null,
+        treatment_session_id: null,
         doctor_id: "", // Vacío
         quantity: 1, // Cantidad inicial 1
         unit_price_clp: 0, // Precio 0 hasta que elija el tipo
@@ -683,6 +685,7 @@ export default function PosIndex({
     }
   };
 
+  console.log("Data: ", data);
   return (
     <AuthenticatedLayout>
       <Head title="Caja - Nueva Venta" />

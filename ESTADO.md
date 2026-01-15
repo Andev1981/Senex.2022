@@ -41,7 +41,18 @@
 - **Consolidación:** Se fusionaron `TreatmentSessionAdminController` y `TreatmentSessionController`.
 - **Navegación:** Se corrigió `isRouteActive` para mantener activos los menús al navegar en rutas de recursos (`index`, `edit`, `create`).
 
-## 📍 LOGROS SESIÓN ACTUAL (12/01/2026)
+## 📍 LOGROS SESIÓN ACTUAL (14/01/2026)
+
+### 🛠 Refactorización & Core
+- **AttendancesController:** Se eliminó la lógica de persistencia (`store`/`update`) para centralizarla en `TreatmentSessionService`. Se refactorizó el `index` para calcular el **Estado Real de Facturación** (Invoice + DTE) a través de la nueva relación `invoiceItems`, permitiendo ver folios, estados SII y PDF activos.
+- **Validación de Agenda:** Nueva regla en `TreatmentSessionService` (`validatePatientAvailability`) que impide agendar al mismo paciente en horarios superpuestos.
+- **Rutas & Inertia:** Estandarización de nombres de vistas a kebab-case (`session-types/index`, `attendances/index`) y limpieza de rutas obsoletas en `web.php`.
+
+### 🎨 UI/UX & Componentes
+- **Tablas:** Corrección del estado `pageSize` en `TableSessionTypes` y `DataTable`, arreglando la paginación y el texto "Mostrando X a Y de Z".
+- **Visualización:** Ajuste en el listado de asistencias para bloquear checkboxes si la sesión ya tiene factura/DTE asociado (`is_locked`).
+
+## 📍 LOGROS PREVIOS (12/01/2026)
 
 ### 🛠 Actualización de Stack & Core
 - **Mantenimiento NPM:** Se actualizaron dependencias clave (`react-toastify` v11, `jspdf`, etc.) y se corrigieron rutas de importación de Layouts (`app-layout`) que impedían el build de Vite.
@@ -57,7 +68,7 @@
 - **Sidebar del Paciente:** Rediseño completo con cabecera de perfil estilizada, avatar con efectos de profundidad y menú de navegación moderno con indicadores de estado activo.
 - **HandSelector Pro:** Refinamiento anatómico del selector de mano. Se engrosaron los dedos, se corrigió la postura del pulgar y se agregaron las falanges (distal, media, proximal) para una precisión clínica superior.
 - **Unificación de Botones:** Se estandarizó el botón "Nueva Sesión" en los módulos de `Attendances` y `DetailPatient`, incluyendo animaciones de rotación de iconos y estados hover.
-- **Corrección de Tablas:** Se arregló la paginación en `TableSessions` y `TableTreatments` (conflicto `pageSize` vs `pagesize`) y se estandarizó el formato de hora usando `moment.js`.
+- **Corrección de Tablas:** Se arregló la paginación en `TableSessions` y `TableTreatments` (conflicto `pageSize` vs `pageSize`) y se estandarizó el formato de hora usando `moment.js`.
 
 ### 🔔 Notificaciones & Automatización
 - **Liquidaciones:** Envío automático de `PayrollApprovedNotification` por email al aprobar una liquidación, incluyendo enlace de descarga.
@@ -99,3 +110,82 @@ Datos Administrativos: Se integraron selectores de Tipo de Servicio y Modalidad 
 Subconsultas Optimizadas: Refactorización de la query principal en PatientController. Se reemplazó SQL Raw por addSelect(['last_doctor_name' => TreatmentSession::query()...]) para obtener el último profesional eficientemente.
 
 Query Cloning: Implementación de $baseQuery->clone() en reportes para reutilizar filtros de fecha en contadores de Pacientes/Doctores únicos sin re-ejecutar lógica PHP.
+
+
+______________________
+
+Actúa como un Arquitecto de Software Senior experto en Laravel y normativa tributaria chilena (SII).
+
+Tu objetivo es realizar una AUDITORÍA DE CÓDIGO (Solo lectura, no propongas cambios de código aún, solo reporta) sobre el flujo de Pagos y Facturación Electrónica (DTE).
+
+CONTEXTO DEL PROYECTO:
+Estamos construyendo un sistema de gestión clínica.
+1. Separamos la deuda comercial ('invoices') del documento tributario ('dtes') y del flujo de caja ('payments').
+2. Usamos 'payment_allocations' para vincular pagos a facturas.
+3. Debemos soportar pagos parciales, abonos y múltiples medios de pago.
+4. Existe un riesgo de concurrencia entre un Job automático ('EmitDteJob') y la emisión manual en caja.
+
+ARCHIVOS A ANALIZAR:
+Por favor, revisa la lógica y estructura de los siguientes archivos (o sus equivalentes en mi proyecto):
+- Migraciones y Modelos de: `Invoice`, `Payment`, `PaymentAllocation`, `Dte`.
+- Controladores relacionados al pago (`PaymentController` o similar).
+- Servicios o Jobs de facturación (`DteService`, `EmitDteJob`).
+
+PUNTOS CRÍTICOS A VERIFICAR:
+
+1. Integridad de Datos (Pagos):
+   - ¿La estructura actual de `payments` y `payment_allocations` permite realmente que un paciente pague una parte en efectivo y otra con tarjeta para una misma `invoice`?
+   - ¿Detectas redundancia de datos entre `payments` e `invoices` que pueda causar desincronización de montos?
+
+2. Normativa SII y Lógica Tributaria:
+   - Revisa si la tabla `dtes` tiene todos los campos necesarios para cumplir con el SII (Folio, Tipo, XML, PDF, Estado).
+   - Analiza si el sistema diferencia correctamente entre prestaciones Exentas (Salud) y Afectas (Insumos) al momento de preparar los datos para el DTE.
+   - ¿Existe riesgo de duplicidad de impuestos si la máquina POS emite boleta y el sistema también? (Busca lógica que prevenga esto).
+
+3. Concurrencia y Seguridad (Race Conditions):
+   - Busca si existe implementación de `Cache::lock` (bloqueos atómicos) en la lógica de emisión del DTE.
+   - ¿Qué pasa si el usuario presiona "Generar Boleta" mientras el `EmitDteJob` está corriendo en segundo plano? Identifica si el código actual previene la duplicación del folio.
+
+4. Estado de la Deuda:
+   - Verifica cómo se actualiza el `payment_status` en `invoices`. ¿Es automático al crear una `allocation`? ¿Hay riesgo de que quede como 'paid' sin cubrir el monto total?
+
+ENTREGABLE:
+Dame un reporte estructurado con:
+- ✅ Fortalezas de la arquitectura actual.
+- ⚠️ Riesgos potenciales detectados (Lógicos o de Negocio).
+- 🛑 Errores críticos (si los hay).
+- 💡 Sugerencias breves de mejora (sin escribir el código todavía).
+
+Actúa como un Arquitecto de Software Senior experto en Laravel, Bases de Datos Relacionales y Normativa Tributaria (SII Chile).
+
+Realiza una AUDITORÍA ESTÁTICA del código (sin modificar nada) enfocándote en la consistencia de datos entre el detalle clínico, la deuda y el pago.
+
+ARCHIVOS A ANALIZAR:
+1. Modelos y Migraciones: `Invoice` (Cabecera), `InvoiceItem` (Detalle), `Payment`, `PaymentAllocation`, `Dte`.
+2. Lógica de Negocio: `DteService`, `PaymentController`, `EmitDteJob`.
+3. Conceptos Clave: Revisa cualquier referencia a `Debt` si existe, o confirma si `Invoice` actúa como la entidad de deuda principal.
+
+OBJETIVOS DEL ANÁLISIS:
+
+1. Consistencia Tributaria (InvoiceItems vs DTE):
+   - Analiza la tabla `invoice_items`. El campo `is_exento` es la fuente de la verdad.
+   - Verifica: ¿La lógica que genera el DTE (en `DteService`) itera sobre los `invoice_items` para calcular los montos netos y exentos?
+   - Alerta: Si el DTE toma solo los totales de la tabla `invoices` sin validar contra los items, repórtalo como riesgo de integridad.
+
+2. Integridad de la Deuda (Invoices vs Allocations):
+   - Revisa la relación entre `Invoice` y `PaymentAllocation`.
+   - Verifica: ¿El sistema valida que la suma de `amount_clp` en `payment_allocations` no supere el `amount_patient_clp` (Deuda del Paciente) definido en la Invoice?
+   - Confirma si la lógica actual permite que un pago se asigne a múltiples `invoices` (o `debts`) correctamente.
+
+3. Flujo del Copago (Seguros vs Paciente):
+   - En `invoice_items` y `invoices`, tenemos precios diferenciados (`amount_insurance` vs `amount_patient`).
+   - Verifica: Asegúrate de que el modelo `Payment` y la lógica de cobro solo estén capturando el `amount_patient` (Copago) y no el total de la prestación, para evitar "inflar" la caja con dinero que aún no paga la Isapre.
+
+4. Detección de Race Conditions (Bloqueos):
+   - Busca explícitamente el uso de `Cache::lock` o transacciones de base de datos (`DB::transaction`) en el momento en que se crea el `PaymentAllocation` y se emite el DTE.
+
+ENTREGABLE:
+Genera un reporte técnico con:
+- 🟢 Semáforo Verde: Lógica sólida detectada.
+- 🔴 Semáforo Rojo: Inconsistencias graves (ej: DTE calculado sin mirar si los items son exentos).
+- 🟡 Semáforo Amarillo: Posibles fugas de lógica en asignación de pagos o redundancia de datos.

@@ -15,7 +15,7 @@ class SessionTypeController extends Controller
     public function index(Request $request)
     {
         $sessionTypes = SessionType::get();
-        return Inertia::render('sessionTypes/Index', [
+        return Inertia::render('session-types/index', [
             'sessionTypes' => $sessionTypes,
         ]);
     }

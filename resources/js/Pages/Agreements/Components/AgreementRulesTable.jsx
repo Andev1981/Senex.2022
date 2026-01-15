@@ -28,7 +28,7 @@ export default function AgreementRulesTable({
 }) {
   const [sorting, setSorting] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [pagesize, setpagesize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
 
   const data = useMemo(() => rules || [], [rules]);
@@ -120,14 +120,14 @@ export default function AgreementRulesTable({
     state: {
       sorting,
       globalFilter,
-      pagination: { pagesize, pageIndex },
+      pagination: { pageSize, pageIndex },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: (updater) => {
-      const newState = typeof updater === "function" ? updater({ pageIndex, pagesize }) : updater;
+      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
       setPageIndex(newState.pageIndex);
-      setpagesize(newState.pagesize);
+      setPageSize(newState.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -213,8 +213,8 @@ export default function AgreementRulesTable({
         <TablePagination
           table={table}
           total={data.length}
-          pagesize={pagesize}
-          setpagesize={setpagesize}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
           pagesizeOptions={[5, 10, 20]}
         />
       </div>

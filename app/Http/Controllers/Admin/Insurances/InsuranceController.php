@@ -29,7 +29,7 @@ class InsuranceController extends Controller
 
 
 
-        return Inertia::render('billingCheckout/Index', [
+        return Inertia::render('billing-checkout/Index', [
             'patients' => $patients,
             'sessionTypes' => $sessionTypes,
             'insurances' => $insurances,

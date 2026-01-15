@@ -95,7 +95,7 @@ class StoreTreatmentSessionRequest extends FormRequest
             'date' => 'required|date',
             'time' => 'required|date_format:H:i',
             'duration' => 'required|integer|min:15|max:180',
-            'status' => 'required|in:scheduled,in_progress,completed,cancelled,not_attend',
+            'status' => 'required|in:scheduled,in_progress,completed,cancelled,not_show,confirmed',
             
             // --- CAMPOS DE TRATAMIENTO (Para creación automática) ---
             'diagnostic_code' => 'nullable|string',

@@ -112,7 +112,7 @@ export default function AttendanceActionModal({
         <div className="space-y-3">
             <div className="flex items-center gap-2 ml-1">
                 <MessageSquare className={`w-4 h-4 ${config.color}`} />
-                <label className="enterprise-label !mb-0">Observaciones del Estatus</label>
+                <label className="enterprise-label mb-0!">Observaciones del Estatus</label>
             </div>
             
             {action === 'absent' ? (
@@ -152,12 +152,12 @@ export default function AttendanceActionModal({
 
       {/* FOOTER FIJO */}
       <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 shrink-0 rounded-b-[2rem]">
-        <SecondaryButton onClick={onClose} type="button" className="!px-10 !py-4">Cerrar</SecondaryButton>
+        <SecondaryButton onClick={onClose} type="button" className="px-10! py-4!">Cerrar</SecondaryButton>
         <PrimaryButton 
             disabled={processing || (action === 'cancel' && data.notes.length < 10)} 
             type="submit" 
             onClick={submit}
-            className={`!px-14 !py-4 shadow-xl ${action === 'cancel' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : action === 'absent' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-200' : 'shadow-brand-primary/20'}`}
+            className={`px-14! py-4! shadow-xl ${action === 'cancel' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : action === 'absent' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-200' : 'shadow-brand-primary/20'}`}
         >
             {processing ? 'Procesando...' : config.buttonText}
         </PrimaryButton>

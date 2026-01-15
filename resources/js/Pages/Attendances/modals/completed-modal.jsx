@@ -115,7 +115,7 @@ export default function CompletedModal({
 
         {/* EVALUACIÓN DEL DOLOR (DISEÑO PREMIUM) */}
         <div className="space-y-6">
-            <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 ml-1">
+            <h3 className="enterprise-label text-brand-primary! flex items-center gap-2 ml-1">
                 <Activity className="w-4 h-4" /> Evolución del Dolor (EVA)
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 bg-blue-50/30 border border-blue-100 rounded-[2.5rem] relative overflow-hidden">
@@ -147,7 +147,7 @@ export default function CompletedModal({
         {/* CLÍNICA: TÉCNICAS & EJERCICIOS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="p-8 bg-white border border-gray-100 rounded-[2.5rem] shadow-xl shadow-gray-500/5 space-y-6">
-                <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+                <h3 className="enterprise-label text-brand-primary! flex items-center gap-2">
                     <Stethoscope className="w-4 h-4" /> Técnicas Aplicadas
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -163,7 +163,7 @@ export default function CompletedModal({
             </div>
 
             <div className="p-8 bg-white border border-gray-100 rounded-[2.5rem] shadow-xl shadow-gray-500/5 space-y-6">
-                <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
+                <h3 className="enterprise-label text-brand-primary! flex items-center gap-2">
                     <Target className="w-4 h-4" /> Plan de Ejercicios
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -182,13 +182,13 @@ export default function CompletedModal({
         {/* NOTAS FINALES */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
-                <label className="enterprise-label !text-brand-primary flex items-center gap-2 ml-1">
+                <label className="enterprise-label text-brand-primary! flex items-center gap-2 ml-1">
                     <MessageSquare className="w-4 h-4" /> Evolución de la Sesión
                 </label>
                 <textarea value={sessionData.notes || ""} onChange={e => setSessionData({...sessionData, notes: e.target.value})} rows="4" className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" placeholder="Hallazgos clínicos relevantes..." />
             </div>
             <div className="space-y-3">
-                <label className="enterprise-label !text-brand-primary flex items-center gap-2 ml-1">
+                <label className="enterprise-label text-brand-primary! flex items-center gap-2 ml-1">
                     <Home className="w-4 h-4" /> Tareas & Indicaciones
                 </label>
                 <textarea value={sessionData.homework || ""} onChange={e => setSessionData({...sessionData, homework: e.target.value})} rows="4" className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" placeholder="Ejercicios para realizar en el hogar..." />
@@ -198,8 +198,8 @@ export default function CompletedModal({
 
       {/* FOOTER FIJO PREMIUM */}
       <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 shrink-0 rounded-b-[2rem]">
-        <SecondaryButton onClick={() => setShowCompletedModal(false)} className="!px-10 !py-4">Descartar</SecondaryButton>
-        <PrimaryButton onClick={markCompleted} className="!px-14 !py-4 shadow-xl shadow-brand-primary/20">
+        <SecondaryButton onClick={() => setShowCompletedModal(false)} className="px-10! py-4!">Descartar</SecondaryButton>
+        <PrimaryButton onClick={markCompleted} className="px-14! py-4! shadow-xl shadow-brand-primary/20">
             Confirmar Cierre de Sesión
         </PrimaryButton>
       </div>

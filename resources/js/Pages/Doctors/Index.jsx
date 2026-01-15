@@ -11,32 +11,19 @@ import { HeaderDoctors } from "./Partials/HeaderDoctor";
 import { Smartphone, ShieldBan, ShieldCheck, AlertCircle, XCircle, UserCog } from "lucide-react";
 
 export default function Index({
-
   doctors,
-
   sessionTypes,
-
   patients,
-
   communes,
-
   provinces,
-
   regions,
-
   user,
-
 }) {
 
   const [isModalOpenDetail, setIsModalOpenDetail] = useState(false);
-
   const [isModalOpenCommissions, setIsModalOpenCommissions] = useState(false);
-
   const [isModalOpenPatients, setIsModalOpenPatients] = useState(false);
-
   const [selectedDoctor, setSelectedDoctor] = useState(null);
-
-
 
   const getStatusBadge = (statusObj) => {
 
