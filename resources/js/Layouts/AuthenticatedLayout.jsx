@@ -5,7 +5,7 @@ import Side from "./Partials/Side";
 import { toast } from "sonner";
 import Swal from "sweetalert2"; // Importar SweetAlert2
 
-const DevToolbar = lazy(() => import("@/Components/DevToolbar"));
+const DevToolbar = lazy(() => import("@/components/DevToolbar"));
 
 export default function AuthenticatedLayout({ header, children }) {
   const user = usePage().props.auth.user;

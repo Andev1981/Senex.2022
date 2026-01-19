@@ -1,5 +1,5 @@
 import { useForm } from "@inertiajs/react";
-import Modal from "@/Components/Modal";
+import Modal from "@/components/Modal";
 import { useEffect } from "react";
 import { fmtDateISO } from "@/utils/utils";
 import {
@@ -12,10 +12,10 @@ import {
   AlertCircle,
   Link as LinkIcon,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import TextInput from "@/Components/TextInput";
-import Switch from "@/Components/Switch";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import TextInput from "@/components/TextInput";
+import Switch from "@/components/Switch";
 
 export default function AgreementFormModal({
   show,

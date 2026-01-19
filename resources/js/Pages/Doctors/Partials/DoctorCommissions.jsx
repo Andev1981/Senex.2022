@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 import { fmtCLP } from "@/utils/utils";
 import Swal from "sweetalert2";
-import InputPesoChileno from "@/Components/InputPesoChileno";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import InputPesoChileno from "@/components/InputPesoChileno";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
 
 export default function DoctorCommissions({ doctor, sessionTypes }) {
   const [localDoctor, setLocalDoctor] = useState(doctor);

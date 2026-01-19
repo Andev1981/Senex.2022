@@ -19,7 +19,7 @@ import {
     Percent,
     ArrowRight
 } from "lucide-react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 
 export default function AgreementRulesTable({
   rules,

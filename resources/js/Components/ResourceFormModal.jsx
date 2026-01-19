@@ -1,4 +1,4 @@
-import Modal from "@/Components/Modal";
+import Modal from "@/components/Modal";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useForm, router } from "@inertiajs/react";
 import { Search, X } from "lucide-react"; // para el Autocomplete

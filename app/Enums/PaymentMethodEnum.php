@@ -2,25 +2,25 @@
 
 namespace App\Enums;
 
+use App\Traits\EnumOptions;
+
 enum PaymentMethodEnum: string
 {
-    case CASH = 'cash'; // Efectivo
-    case POS = 'pos_integrado'; // Tarjeta de Crédito (Directa o Transbank genérico)
-    case TRANSFER = 'transfer'; // Transferencia Bancaria
+    use EnumOptions;
 
-        // Si manejas cheques, planes de clínica, etc.
-    case CLINIC_PLAN = 'clinic_plan'; // Planes de la clínica (paquetes prepagados)
+    case CASH = 'cash';
+    case TRANSFER = 'transfer';
+    case WEBPAY = 'webpay';
+    case POS_INTEGRADO = 'pos_integrado';
 
-    /**
-     * Devuelve la etiqueta amigable para el frontend.
-     */
-    public function label(): string
-    {
-        return match ($this) {
-            self::CASH => 'Efectivo (Pago presencial)',
-            self::POS => 'Pos (Pago presencial)',
-            self::TRANSFER => 'Transferencia Bancaria',
-            self::CLINIC_PLAN => 'Plan Clínica',
+    public function label(): string {
+        return match($this) {
+            self::CASH => 'Efectivo',
+            self::TRANSFER => 'Transferencia',
+            self::WEBPAY => 'Webpay (Online)',
+            self::POS_INTEGRADO => 'Tarjeta (POS)',
         };
     }
+
+    public function color(): string { return 'emerald'; }
 }

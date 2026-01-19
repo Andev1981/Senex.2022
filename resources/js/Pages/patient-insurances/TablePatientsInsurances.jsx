@@ -15,8 +15,8 @@ import {
   Search,
   ScanEye,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import TablePagination from "@/Components/TablePagination";
+import PrimaryButton from "@/components/PrimaryButton";
+import TablePagination from "@/components/TablePagination";
 import { useForm } from "@inertiajs/react";
 import { fmtDate } from "@/utils/utils";
 

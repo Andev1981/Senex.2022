@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 import {
   useReactTable,
   getCoreRowModel,
@@ -37,8 +37,8 @@ import {
 import { router } from "@inertiajs/react";
 import { fmtCLP, fmtDate, fmtTime } from "@/utils/utils";
 import { estadoClass, estadoTexto } from "@/helpers/status";
-import SecondaryButton from "@/Components/SecondaryButton";
-import PrimaryButton from "@/Components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function AttendacesTable({
   atenciones,

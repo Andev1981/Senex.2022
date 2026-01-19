@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Enums\FinanceStatusEnum;
+use App\Enums\DteStatusEnum;
+
 class Invoice extends Model
 {
 
@@ -34,11 +37,10 @@ class Invoice extends Model
 
   protected $fillable = [
     'company_id',
-    'branch_id',
-    'user_id',            // Quién emitió la boleta (Cajero)
-    'patient_id',
-    'payment_id',
-    'insurance_id',
+        'branch_id',
+        'user_id',
+        'patient_id',
+        'insurance_id',
     'entity_type',        // Polimórfico: Receptor (Patient o Company)
     'entity_id',
 
@@ -74,6 +76,8 @@ class Invoice extends Model
     'metadata' => 'array',
     'issue_date' => 'date',
     'transaction_date' => 'date',
+    'payment_status' => FinanceStatusEnum::class,
+    'dte_status' => DteStatusEnum::class,
   ];
 
   // ===== Relaciones =====
@@ -92,9 +96,9 @@ class Invoice extends Model
     return $this->belongsTo(Patient::class);
   }
 
-  public function payment(): BelongsTo
+  public function paymentAllocations(): HasMany
   {
-    return $this->belongsTo(Payment::class);
+    return $this->hasMany(PaymentAllocation::class);
   }
   public function items(): HasMany
   {

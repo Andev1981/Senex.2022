@@ -35,11 +35,17 @@ class SendInvoiceMail extends Mailable
 
         // 2. Generar y Adjuntar el Comprobante Interno (Diseño profesional)
         // Buscamos el pago asociado para tener el desglose completo
-        $payment = Payment::with([
-            'patient', 'company', 'branch', 
-            'paymentAllocation.treatmentSession.sessionType', 
-            'receivables.insurance'
-        ])->find($this->invoice->payment_id);
+        // Usamos la relación inversa desde Invoice -> PaymentAllocation -> Payment
+        $allocation = $this->invoice->paymentAllocations()->with('payment')->first();
+        $payment = $allocation ? $allocation->payment : null;
+
+        if ($payment) {
+            // Cargar relaciones necesarias para el PDF
+            $payment->load([
+                'patient', 'company', 'branch', 
+                'paymentAllocation.treatmentSession.sessionType', 
+                'receivables.insurance'
+            ]);
 
         if ($payment) {
             $pdf = Pdf::loadView('pdf.payment_receipt', compact('payment'));

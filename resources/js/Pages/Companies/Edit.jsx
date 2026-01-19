@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage, Link, useForm } from "@inertiajs/react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 import {
   useReactTable,
   getCoreRowModel,
@@ -38,10 +38,10 @@ import {
   Pencil
 } from "lucide-react";
 
-import Modal from "@/Components/Modal";
-import DteConfigurationForm from "./Components/DteConfigurationForm";
-import CafUploader from "./Components/CafUploader";
-import ChilePhoneInput from "@/Components/ChilePhoneInput";
+import Modal from "@/components/Modal";
+import DteConfigurationForm from "./components/DteConfigurationForm";
+import CafUploader from "./components/CafUploader";
+import ChilePhoneInput from "@/components/ChilePhoneInput";
 import { router } from "@inertiajs/react";
 import Swal from "sweetalert2";
 

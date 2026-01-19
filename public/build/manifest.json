@@ -1035,10 +1035,10 @@
       "resources/css/app.css"
     ],
     "dynamicImports": [
-      "resources/js/pages/acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx",
+      "resources/js/pages/acquisitions/PurchaseOrders/components/PurchaseOrdersTable.jsx",
       "resources/js/pages/acquisitions/PurchaseOrders/Index.jsx",
       "resources/js/pages/acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx",
-      "resources/js/pages/acquisitions/Suppliers/Components/SuppliersTable.jsx",
+      "resources/js/pages/acquisitions/Suppliers/components/SuppliersTable.jsx",
       "resources/js/pages/acquisitions/Suppliers/Index.jsx",
       "resources/js/pages/acquisitions/Suppliers/Modals/SupplierFormModal.jsx",
       "resources/js/pages/acquisitions/Tabs.jsx",
@@ -1047,8 +1047,8 @@
       "resources/js/pages/admin/SessionTypes/ModalCreateEditSessionType.jsx",
       "resources/js/pages/admin/SessionTypes/TableSessionTypes.jsx",
       "resources/js/pages/agendas/AgendaCalendar.jsx",
-      "resources/js/pages/agreements/Components/AgreementRulesTable.jsx",
-      "resources/js/pages/agreements/Components/AgreementsTable.jsx",
+      "resources/js/pages/agreements/components/AgreementRulesTable.jsx",
+      "resources/js/pages/agreements/components/AgreementsTable.jsx",
       "resources/js/pages/agreements/Index.jsx",
       "resources/js/pages/agreements/Modals/AgreementFamilyAssignModal.jsx",
       "resources/js/pages/agreements/Modals/AgreementFormModal.jsx",
@@ -1074,16 +1074,16 @@
       "resources/js/pages/auth/Register.jsx",
       "resources/js/pages/auth/ResetPassword.jsx",
       "resources/js/pages/auth/VerifyEmail.jsx",
-      "resources/js/pages/billing-checkout/Components/PatientCard.jsx",
-      "resources/js/pages/billing-checkout/Components/PaymentSummary.jsx",
-      "resources/js/pages/billing-checkout/Components/ServiceItem.jsx",
-      "resources/js/pages/billing-checkout/Components/ServicesCard.jsx",
+      "resources/js/pages/billing-checkout/components/PatientCard.jsx",
+      "resources/js/pages/billing-checkout/components/PaymentSummary.jsx",
+      "resources/js/pages/billing-checkout/components/ServiceItem.jsx",
+      "resources/js/pages/billing-checkout/components/ServicesCard.jsx",
       "resources/js/pages/billing-checkout/Index.jsx",
       "resources/js/pages/billing-checkout/PaymentBlockingModal.jsx",
       "resources/js/pages/billing-checkout/Success.jsx",
       "resources/js/pages/boletas/Crear.jsx",
-      "resources/js/pages/companies/Components/CafUploader.jsx",
-      "resources/js/pages/companies/Components/DteConfigurationForm.jsx",
+      "resources/js/pages/companies/components/CafUploader.jsx",
+      "resources/js/pages/companies/components/DteConfigurationForm.jsx",
       "resources/js/pages/companies/Create.jsx",
       "resources/js/pages/companies/Edit.jsx",
       "resources/js/pages/companies/Index.jsx",
@@ -1103,7 +1103,7 @@
       "resources/js/pages/documents/partials/HeaderDocuments.jsx",
       "resources/css/app.css",
       "resources/js/pages/documents/partials/List.jsx",
-      "resources/js/pages/finance/Receivables/Components/ReceivablesTable.jsx",
+      "resources/js/pages/finance/Receivables/components/ReceivablesTable.jsx",
       "resources/js/pages/finance/Receivables/Index.jsx",
       "resources/js/pages/health-insurers/Index.jsx",
       "resources/js/pages/health-insurers/Partials/HealthInsurerModal.jsx",
@@ -1136,7 +1136,7 @@
       "resources/js/pages/patient-insurances/ModalPatientInsurance.jsx",
       "resources/js/pages/patient-insurances/TablePatientsInsurances.jsx",
       "resources/js/pages/patients/Dashboard/PatientDashboard.jsx",
-      "resources/js/pages/patients/DetailPatient.jsx",
+      "resources/js/pages/patients/detail-patient.jsx",
       "resources/js/pages/patients/Documents/IndexDocuments.jsx",
       "resources/js/pages/patients/General/GeneralPartials/EmergencyContact.jsx",
       "resources/js/pages/patients/General/GeneralPartials/MedicalInformation.jsx",
@@ -1156,7 +1156,7 @@
       "resources/js/pages/patients/PanelFinanciero.jsx",
       "resources/js/pages/patients/PanelSesionesRecientes.jsx",
       "resources/js/pages/patients/Partials/PatientCard.jsx",
-      "resources/js/pages/patients/Partials/PatientSidebar.jsx",
+      "resources/js/pages/patients/Partials/patient-sidebar.jsx",
       "_TableAttendancesPatient-D5qpzNus.js",
       "resources/js/pages/patients/Partials/TableTreatments.jsx",
       "resources/js/pages/patients/Payments/IndexPayments.jsx",
@@ -1180,7 +1180,7 @@
       "resources/js/pages/payments/Result.jsx",
       "resources/js/pages/payments/WebpayResult.jsx",
       "resources/js/pages/payments/WebpayTest.jsx",
-      "resources/js/pages/payroll/Components/PayrollTable.jsx",
+      "resources/js/pages/payroll/components/PayrollTable.jsx",
       "resources/js/pages/payroll/Index.jsx",
       "resources/js/pages/payroll/Modals/PayrollFormModal.jsx",
       "resources/js/pages/payroll/Modals/PayrollReviewSideModal.jsx",
@@ -1227,10 +1227,10 @@
       "resources/css/app.css"
     ]
   },
-  "resources/js/pages/acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx": {
+  "resources/js/pages/acquisitions/PurchaseOrders/components/PurchaseOrdersTable.jsx": {
     "file": "assets/PurchaseOrdersTable-BvxfhxJ6.js",
     "name": "PurchaseOrdersTable",
-    "src": "resources/js/pages/acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx",
+    "src": "resources/js/pages/acquisitions/PurchaseOrders/components/PurchaseOrdersTable.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -1247,7 +1247,7 @@
       "resources/js/app.jsx",
       "_AuthenticatedLayout-BGp3ZMEp.js",
       "_SideModal-ClJvOEGw.js",
-      "resources/js/pages/acquisitions/PurchaseOrders/Components/PurchaseOrdersTable.jsx",
+      "resources/js/pages/acquisitions/PurchaseOrders/components/PurchaseOrdersTable.jsx",
       "resources/js/pages/acquisitions/PurchaseOrders/Modals/PurchaseOrderDetailModal.jsx",
       "resources/js/pages/acquisitions/Tabs.jsx",
       "_createLucideIcon-BjFU6bgF.js",
@@ -1296,10 +1296,10 @@
       "resources/css/app.css"
     ]
   },
-  "resources/js/pages/acquisitions/Suppliers/Components/SuppliersTable.jsx": {
+  "resources/js/pages/acquisitions/Suppliers/components/SuppliersTable.jsx": {
     "file": "assets/SuppliersTable-BEbxN9Yc.js",
     "name": "SuppliersTable",
-    "src": "resources/js/pages/acquisitions/Suppliers/Components/SuppliersTable.jsx",
+    "src": "resources/js/pages/acquisitions/Suppliers/components/SuppliersTable.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -1316,7 +1316,7 @@
       "resources/js/app.jsx",
       "_AuthenticatedLayout-BGp3ZMEp.js",
       "_SideModal-ClJvOEGw.js",
-      "resources/js/pages/acquisitions/Suppliers/Components/SuppliersTable.jsx",
+      "resources/js/pages/acquisitions/Suppliers/components/SuppliersTable.jsx",
       "resources/js/pages/acquisitions/Suppliers/Modals/SupplierFormModal.jsx",
       "resources/js/pages/acquisitions/Tabs.jsx",
       "_createLucideIcon-BjFU6bgF.js",
@@ -1522,10 +1522,10 @@
       "_sweetalert2.esm.all-BQxta0Da.js"
     ]
   },
-  "resources/js/pages/agreements/Components/AgreementRulesTable.jsx": {
+  "resources/js/pages/agreements/components/AgreementRulesTable.jsx": {
     "file": "assets/AgreementRulesTable-CPsel40F.js",
     "name": "AgreementRulesTable",
-    "src": "resources/js/pages/agreements/Components/AgreementRulesTable.jsx",
+    "src": "resources/js/pages/agreements/components/AgreementRulesTable.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -1542,10 +1542,10 @@
       "_createLucideIcon-BjFU6bgF.js"
     ]
   },
-  "resources/js/pages/agreements/Components/AgreementsTable.jsx": {
+  "resources/js/pages/agreements/components/AgreementsTable.jsx": {
     "file": "assets/AgreementsTable-C7kqjhs7.js",
     "name": "AgreementsTable",
-    "src": "resources/js/pages/agreements/Components/AgreementsTable.jsx",
+    "src": "resources/js/pages/agreements/components/AgreementsTable.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -1577,7 +1577,7 @@
       "resources/js/pages/agreements/Modals/AgreementRuleFormModal.jsx",
       "resources/js/pages/agreements/Modals/AgreementRulesListModal.jsx",
       "resources/js/pages/agreements/Modals/AgreementFormModal.jsx",
-      "resources/js/pages/agreements/Components/AgreementsTable.jsx",
+      "resources/js/pages/agreements/components/AgreementsTable.jsx",
       "_handshake-Bg94ybd9.js",
       "_plus-COKJx1ZR.js",
       "resources/css/app.css",
@@ -1614,7 +1614,7 @@
       "_shield-check-BKU8Jo_J.js",
       "_database-DZDPQvRp.js",
       "_calendar-O_hznviy.js",
-      "resources/js/pages/agreements/Components/AgreementRulesTable.jsx",
+      "resources/js/pages/agreements/components/AgreementRulesTable.jsx",
       "_index-CfZCQK8Z.js",
       "_TablePagination-Cwx22jFb.js",
       "_pencil-BJRpj23z.js",
@@ -1712,7 +1712,7 @@
     "imports": [
       "resources/js/app.jsx",
       "_SideModal-ClJvOEGw.js",
-      "resources/js/pages/agreements/Components/AgreementRulesTable.jsx",
+      "resources/js/pages/agreements/components/AgreementRulesTable.jsx",
       "_SecondaryButton-CcNqEf6c.js",
       "_list-checks-D_lPtjLr.js",
       "_chevron-right-DLvyvJkg.js",
@@ -2137,10 +2137,10 @@
       "resources/css/app.css"
     ]
   },
-  "resources/js/pages/billing-checkout/Components/PatientCard.jsx": {
+  "resources/js/pages/billing-checkout/components/PatientCard.jsx": {
     "file": "assets/PatientCard-Dh2AKSDy.js",
     "name": "PatientCard",
-    "src": "resources/js/pages/billing-checkout/Components/PatientCard.jsx",
+    "src": "resources/js/pages/billing-checkout/components/PatientCard.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -2155,20 +2155,20 @@
       "_chevron-down-CgMfNxSf.js"
     ]
   },
-  "resources/js/pages/billing-checkout/Components/PaymentSummary.jsx": {
+  "resources/js/pages/billing-checkout/components/PaymentSummary.jsx": {
     "file": "assets/PaymentSummary-CLmUAE6S.js",
     "name": "PaymentSummary",
-    "src": "resources/js/pages/billing-checkout/Components/PaymentSummary.jsx",
+    "src": "resources/js/pages/billing-checkout/components/PaymentSummary.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
       "resources/css/app.css"
     ]
   },
-  "resources/js/pages/billing-checkout/Components/ServiceItem.jsx": {
+  "resources/js/pages/billing-checkout/components/ServiceItem.jsx": {
     "file": "assets/ServiceItem-C-8hQgph.js",
     "name": "ServiceItem",
-    "src": "resources/js/pages/billing-checkout/Components/ServiceItem.jsx",
+    "src": "resources/js/pages/billing-checkout/components/ServiceItem.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -2179,14 +2179,14 @@
       "resources/css/app.css"
     ]
   },
-  "resources/js/pages/billing-checkout/Components/ServicesCard.jsx": {
+  "resources/js/pages/billing-checkout/components/ServicesCard.jsx": {
     "file": "assets/ServicesCard-CM0JLkp_.js",
     "name": "ServicesCard",
-    "src": "resources/js/pages/billing-checkout/Components/ServicesCard.jsx",
+    "src": "resources/js/pages/billing-checkout/components/ServicesCard.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
-      "resources/js/pages/billing-checkout/Components/ServiceItem.jsx",
+      "resources/js/pages/billing-checkout/components/ServiceItem.jsx",
       "_calculator-Drdiv2fJ.js",
       "_circle-check-CXnrw-6r.js",
       "_plus-COKJx1ZR.js",
@@ -2205,9 +2205,9 @@
       "resources/js/app.jsx",
       "_AuthenticatedLayout-BGp3ZMEp.js",
       "_sweetalert2.esm.all-BQxta0Da.js",
-      "resources/js/pages/billing-checkout/Components/PatientCard.jsx",
-      "resources/js/pages/billing-checkout/Components/PaymentSummary.jsx",
-      "resources/js/pages/billing-checkout/Components/ServicesCard.jsx",
+      "resources/js/pages/billing-checkout/components/PatientCard.jsx",
+      "resources/js/pages/billing-checkout/components/PaymentSummary.jsx",
+      "resources/js/pages/billing-checkout/components/ServicesCard.jsx",
       "resources/js/pages/billing-checkout/PaymentBlockingModal.jsx",
       "resources/css/app.css",
       "_index-3SaTkLKc.js",
@@ -2240,7 +2240,7 @@
       "_user-plus-BELyU6Pl.js",
       "_trash-2-D1P64kTm.js",
       "_plus-COKJx1ZR.js",
-      "resources/js/pages/billing-checkout/Components/ServiceItem.jsx",
+      "resources/js/pages/billing-checkout/components/ServiceItem.jsx",
       "_calculator-Drdiv2fJ.js",
       "_loader-circle-CLH_EfuY.js",
       "_circle-x-CWmNeCs7.js",
@@ -2343,10 +2343,10 @@
       "_sweetalert2.esm.all-BQxta0Da.js"
     ]
   },
-  "resources/js/pages/companies/Components/CafUploader.jsx": {
+  "resources/js/pages/companies/components/CafUploader.jsx": {
     "file": "assets/CafUploader-7IKxWQAi.js",
     "name": "CafUploader",
-    "src": "resources/js/pages/companies/Components/CafUploader.jsx",
+    "src": "resources/js/pages/companies/components/CafUploader.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -2355,10 +2355,10 @@
       "_createLucideIcon-BjFU6bgF.js"
     ]
   },
-  "resources/js/pages/companies/Components/DteConfigurationForm.jsx": {
+  "resources/js/pages/companies/components/DteConfigurationForm.jsx": {
     "file": "assets/DteConfigurationForm-OFGk7KbS.js",
     "name": "DteConfigurationForm",
-    "src": "resources/js/pages/companies/Components/DteConfigurationForm.jsx",
+    "src": "resources/js/pages/companies/components/DteConfigurationForm.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -2420,8 +2420,8 @@
       "_TablePagination-Cwx22jFb.js",
       "_index-CfZCQK8Z.js",
       "_Modal-hknhQV0K.js",
-      "resources/js/pages/companies/Components/DteConfigurationForm.jsx",
-      "resources/js/pages/companies/Components/CafUploader.jsx",
+      "resources/js/pages/companies/components/DteConfigurationForm.jsx",
+      "resources/js/pages/companies/components/CafUploader.jsx",
       "_ChilePhoneInput-U9gYvFie.js",
       "_sweetalert2.esm.all-BQxta0Da.js",
       "_file-text-BWAUM3LO.js",
@@ -2958,10 +2958,10 @@
       "resources/css/app.css"
     ]
   },
-  "resources/js/pages/finance/Receivables/Components/ReceivablesTable.jsx": {
+  "resources/js/pages/finance/Receivables/components/ReceivablesTable.jsx": {
     "file": "assets/ReceivablesTable-Cmi4_yhz.js",
     "name": "ReceivablesTable",
-    "src": "resources/js/pages/finance/Receivables/Components/ReceivablesTable.jsx",
+    "src": "resources/js/pages/finance/Receivables/components/ReceivablesTable.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -2977,7 +2977,7 @@
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-BGp3ZMEp.js",
-      "resources/js/pages/finance/Receivables/Components/ReceivablesTable.jsx",
+      "resources/js/pages/finance/Receivables/components/ReceivablesTable.jsx",
       "_dollar-sign-CYN2ehZc.js",
       "resources/css/app.css",
       "_index-3SaTkLKc.js",
@@ -3775,15 +3775,15 @@
       "_createLucideIcon-BjFU6bgF.js"
     ]
   },
-  "resources/js/pages/patients/DetailPatient.jsx": {
-    "file": "assets/DetailPatient-Bni1PvXI.js",
-    "name": "DetailPatient",
-    "src": "resources/js/pages/patients/DetailPatient.jsx",
+  "resources/js/pages/patients/detail-patient.jsx": {
+    "file": "assets/detail-patient-Bni1PvXI.js",
+    "name": "detail-patient",
+    "src": "resources/js/pages/patients/detail-patient.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-BGp3ZMEp.js",
-      "resources/js/pages/patients/Partials/PatientSidebar.jsx",
+      "resources/js/pages/patients/Partials/patient-sidebar.jsx",
       "_SideModal-ClJvOEGw.js",
       "resources/js/pages/attendances/Modals/CreateUpdateModal.jsx",
       "_moment-B-YVwB4U.js",
@@ -4274,10 +4274,10 @@
       "_with-selector-BwGyGycI.js"
     ]
   },
-  "resources/js/pages/patients/Partials/PatientSidebar.jsx": {
-    "file": "assets/PatientSidebar-C0H7Dy6S.js",
-    "name": "PatientSidebar",
-    "src": "resources/js/pages/patients/Partials/PatientSidebar.jsx",
+  "resources/js/pages/patients/Partials/patient-sidebar.jsx": {
+    "file": "assets/patient-sidebar-C0H7Dy6S.js",
+    "name": "patient-sidebar",
+    "src": "resources/js/pages/patients/Partials/patient-sidebar.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -4803,10 +4803,10 @@
       "_sweetalert2.esm.all-BQxta0Da.js"
     ]
   },
-  "resources/js/pages/payroll/Components/PayrollTable.jsx": {
+  "resources/js/pages/payroll/components/PayrollTable.jsx": {
     "file": "assets/PayrollTable-B7cChh-F.js",
     "name": "PayrollTable",
-    "src": "resources/js/pages/payroll/Components/PayrollTable.jsx",
+    "src": "resources/js/pages/payroll/components/PayrollTable.jsx",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.jsx",
@@ -4835,7 +4835,7 @@
     "imports": [
       "resources/js/app.jsx",
       "_AuthenticatedLayout-BGp3ZMEp.js",
-      "resources/js/pages/payroll/Components/PayrollTable.jsx",
+      "resources/js/pages/payroll/components/PayrollTable.jsx",
       "resources/js/pages/payroll/Modals/PayrollFormModal.jsx",
       "resources/js/pages/payroll/Modals/PayrollReviewSideModal.jsx",
       "_notebook-text-TrEzUJnR.js",

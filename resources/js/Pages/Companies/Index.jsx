@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link } from "@inertiajs/react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 import {
   useReactTable,
   getCoreRowModel,

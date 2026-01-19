@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
+use App\Enums\AppointmentStatusEnum;
+
 class TreatmentSession extends Model
 {
     use HasFactory, SoftDeletes, Multitenantable;
@@ -70,10 +72,11 @@ class TreatmentSession extends Model
      */
     protected $casts = [
         'date' => 'date',
-        'time' => 'datetime', // O 'immutable_time' si usas Laravel 11
+        'time' => 'datetime',
         'consumes_plan' => 'boolean',
         'is_exento' => 'boolean',
         'dte_generated' => 'boolean',
+        'status' => AppointmentStatusEnum::class, // 👈 Casting Mágico
         
         // Arrays (JSONs)
         'evaluation_data' => 'array',
@@ -153,11 +156,6 @@ class TreatmentSession extends Model
         return $this->belongsTo(Room::class);
     }
 
-
-    public function debt(): HasOne
-    {
-        return $this->hasOne(Debt::class);
-    }
 
     public function paymentAllocation(): HasOne
     {

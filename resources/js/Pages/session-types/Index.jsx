@@ -2,8 +2,8 @@ import { useState, useMemo } from "react";
 import { useForm } from "@inertiajs/react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import SideModal from "@/Components/SideModal";
-import TablePagination from "@/Components/TablePagination";
+import SideModal from "@/components/SideModal";
+import TablePagination from "@/components/TablePagination";
 import {
   useReactTable,
   getCoreRowModel,

@@ -14,10 +14,10 @@ import {
   Info,
 } from "lucide-react";
 import axios from "axios";
-import Modal from "@/Components/Modal";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import TextInput from "@/Components/TextInput";
+import Modal from "@/components/Modal";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import TextInput from "@/components/TextInput";
 
 export default function AgreementFamilyAssignModal({ plan, isOpen, onClose }) {
   const { data, setData, post, processing, errors, reset } = useForm({

@@ -30,14 +30,14 @@ return new class extends Migration {
       $t->integer('quantity')->default(1);
 
       // Precios Unitarios (Homologados)
-      $t->integer('unit_price_clp')->comment('Precio bruto unitario (100%)');
-      $t->integer('unit_patient_clp')->default(0)->comment('Copago por unidad');
-      $t->integer('unit_insurance_primary_clp')->default(0);
-      $t->integer('unit_insurance_secondary_clp')->default(0);
+      $t->bigInteger('unit_price_clp')->comment('Precio bruto unitario (100%)');
+      $t->bigInteger('unit_patient_clp')->default(0)->comment('Copago por unidad');
+      $t->bigInteger('unit_insurance_primary_clp')->default(0);
+      $t->bigInteger('unit_insurance_secondary_clp')->default(0);
 
       // Totales de Línea
-      $t->integer('total_gross_clp')->comment('unit_price_clp * quantity');
-      $t->integer('total_patient_clp')->comment('unit_patient_clp * quantity');
+      $t->bigInteger('total_gross_clp')->comment('unit_price_clp * quantity');
+      $t->bigInteger('total_patient_clp')->comment('unit_patient_clp * quantity');
 
       // Descuentos
       $t->decimal('discount_percentage', 5, 2)->default(0);

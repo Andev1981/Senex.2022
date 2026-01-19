@@ -1,5 +1,5 @@
 import React from "react";
-import SearchSelect from "@/Components/SearchSelect";
+import SearchSelect from "@/components/SearchSelect";
 import { UserPlus, Trash2, Plus } from "lucide-react";
 
 export default function PatientCard({

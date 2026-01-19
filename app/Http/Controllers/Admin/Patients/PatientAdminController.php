@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePatientRequest;
 use App\Http\Requests\UpdatePatientRequest;
 use App\Models\Commune;
-use App\Models\Debt;
+use App\Models\Invoice;
 use App\Models\Diagnostic;
 use App\Models\Doctor;
 use App\Models\Patient;
@@ -95,25 +95,26 @@ class PatientAdminController extends Controller
                     ->limit(1)
             ])
 
-            // 5. DEUDA ACUMULADA
+            // 5. DEUDA ACUMULADA (Estimada por facturas no pagadas completamente)
             ->addSelect([
                 'due_amount' => function ($q) {
-                    $q->from('debts as d')
-                        ->join('treatment_sessions as ts', 'ts.id', '=', 'd.treatment_session_id')
-                        ->whereColumn('ts.patient_id', 'patients.id')
-                        ->whereIn('d.status', ['pending', 'partial', 'overdue'])
-                        ->selectRaw("COALESCE(SUM(GREATEST(0, d.original_amount - d.paid_amount)), 0)");
+                    $q->from('invoices as i')
+                        ->whereColumn('i.patient_id', 'patients.id')
+                        ->whereIn('i.payment_status', ['unpaid', 'partial'])
+                        // Subquery para restar lo pagado es compleja, por ahora sumamos el total de documentos pendientes
+                        ->selectRaw("COALESCE(SUM(i.amount_total_clp), 0)");
                 },
             ])
 
             // 6. RELACIONES Y ESTADOS
             ->withExists([
-                'debts as has_due' => fn($q) =>
-                $q->whereIn('debts.status', [Debt::STATUS_PENDING, Debt::STATUS_PARTIAL, Debt::STATUS_OVERDUE])
+                'invoices as has_due' => fn($q) =>
+                $q->whereIn('payment_status', ['unpaid', 'partial'])
             ])
             ->withExists([
-                'debts as has_overdue' => fn($q) =>
-                $q->where('debts.status', Debt::STATUS_OVERDUE)
+                'invoices as has_overdue' => fn($q) =>
+                $q->whereIn('payment_status', ['unpaid', 'partial'])
+                  ->where('issue_date', '<', now()->subDays(30))
             ])
             ->with('primaryContact')
             ->orderBy('patients.updated_at', 'desc')
@@ -138,7 +139,7 @@ class PatientAdminController extends Controller
             return Region::all(['id', 'name']);
         });
 
-       
+       /* dd($patients); */
 
         return Inertia::render('patients/index-patients', [
             'patients' => $patients,
@@ -177,7 +178,6 @@ class PatientAdminController extends Controller
                 // Cargamos sesiones ordenadas para usarlas en el historial
                 'sessions' => fn($q) => $q->orderBy('date', 'desc')->orderBy('time', 'desc'),
                 'sessions.doctor',
-                'sessions.debt'
             ])
             ->latest()
             ->get();
@@ -273,7 +273,7 @@ class PatientAdminController extends Controller
         $provinces = Cache::remember('geo_provinces', 86400, fn() => Province::all(['id', 'name', 'region_id']));
         $communes = Cache::remember('geo_communes', 86400, fn() => Commune::all(['id', 'name', 'province_id']));
 
-        return Inertia::render('patients/DetailPatient', [
+        return Inertia::render('patients/detail-patient', [
             'patient'         => $patient,
             // Enviamos el historial unificado en lugar de cosas sueltas para la tabla
             'history'         => $history, 
@@ -355,7 +355,7 @@ class PatientAdminController extends Controller
         // OJO: Asegúrate de importar Diagnostic arriba
         $diagnostics = Diagnostic::orderBy('description', 'asc')->where('is_active', true)->get(['code', 'description', 'version']);
 
-        return Inertia::render('patients/DetailPatient', [
+        return Inertia::render('patients/detail-patient', [
             'patient'     => $patient,
             'treatments'  => $treatments,
             'sessions'    => $sessions,

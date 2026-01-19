@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, User, Check, AlertCircle, FileText, Users } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
-import TablePatients from "./TablePatients";
-import ModalCreateEditPatient from "./ModalCreateEditPatient";
-import SideModal from "@/Components/SideModal";
+import TablePatients from "./table-patients";
+import ModalCreateEditPatient from "./modal-create-edit-patient";
+import SideModal from "@/components/SideModal";
 import usePatientStore from "@/Stores/usePatientStore";
 
 export default function IndexPatients({
 
-  patients: initialPatients,
+  patients,
 
   communes,
 
@@ -22,13 +22,9 @@ export default function IndexPatients({
 }) {
 
   const addButtonRef = useRef(null);
-
   const [openPatientModal, setOpenPatientModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
-  const patients = usePatientStore((state) => state.patients);
-
-  const setPatients = usePatientStore((state) => state.setPatients);
 
   const handleEditPatient = (patient) => {
     setSelectedPatient(patient);
@@ -39,16 +35,6 @@ export default function IndexPatients({
     setOpenPatientModal(false);
     setTimeout(() => setSelectedPatient(null), 300); // Wait for animation
   };
-
-  useEffect(() => {
-
-    if (initialPatients) {
-
-      setPatients(initialPatients);
-
-    }
-
-  }, [initialPatients]);
 
   return (
 
@@ -127,7 +113,7 @@ export default function IndexPatients({
 
               </div>
 
-              <span className="enterprise-label !mb-0 opacity-40 text-[8px]">Universo</span>
+              <span className="enterprise-label mb-0! opacity-40 text-[8px]">Universo</span>
 
             </div>
 
@@ -153,7 +139,7 @@ export default function IndexPatients({
 
               </div>
 
-              <span className="enterprise-label !mb-0 text-green-600 opacity-60 text-[8px]">Operativos</span>
+              <span className="enterprise-label mb-0! text-green-600 opacity-60 text-[8px]">Operativos</span>
 
             </div>
 
@@ -179,7 +165,7 @@ export default function IndexPatients({
 
               </div>
 
-              <span className="enterprise-label !mb-0 text-brand-primary opacity-60 text-[8px]">Sanidad</span>
+              <span className="enterprise-label mb-0! text-brand-primary opacity-60 text-[8px]">Sanidad</span>
 
             </div>
 
@@ -205,7 +191,7 @@ export default function IndexPatients({
 
               </div>
 
-              <span className="enterprise-label !mb-0 text-orange-600 opacity-60 text-[8px]">Riesgo</span>
+              <span className="enterprise-label mb-0! text-orange-600 opacity-60 text-[8px]">Riesgo</span>
 
             </div>
 

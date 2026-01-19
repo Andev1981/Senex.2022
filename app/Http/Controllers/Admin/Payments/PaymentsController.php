@@ -8,7 +8,6 @@ use App\Http\Requests\PaymentNowRequest;
 use App\Http\Requests\StorePaymentRequest;
 use App\Jobs\Dte\EmitDteJob;
 use App\Models\Agreement;
-use App\Models\Debt;
 use App\Models\Doctor;
 use App\Models\Insurance;
 use App\Models\Invoice;
@@ -425,9 +424,12 @@ class PaymentsController extends Controller
             ->firstOrFail();
 
         // Buscamos la boleta/factura asociada a este pago
-        // Usamos el ID interno para mayor rapidez
-        $invoice = Invoice::where('payment_id', $payment->id)
+        // Usamos la tabla intermedia payment_allocations
+        $invoice = Invoice::whereHas('paymentAllocations', function ($q) use ($payment) {
+            $q->where('payment_id', $payment->id);
+        })
             ->with(['items'])
+            ->latest() // Por si un pago cubrió varias facturas (tomamos la última)
             ->first();
 
         // Retornamos a la vista de React mediante Inertia
@@ -515,10 +517,10 @@ class PaymentsController extends Controller
             $q->wherePivot('is_active', true);
         }])->findOrFail($id);
 
-        // 1. Buscamos deudas activas relacionadas con sesiones
-        $debts = Debt::where('patient_id', $id)
-            ->where('status', 'pending') // o 'partial'
-            ->with(['treatmentSession.sessionType'])
+        // 1. Buscamos deudas activas (Facturas impagas)
+        $debts = Invoice::where('patient_id', $id)
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->with(['items.sessionType']) // Cargar detalles para mostrar en POS
             ->get();
 
         // 2. Buscamos si tiene planes activos (sesiones compradas no usadas)
@@ -591,15 +593,8 @@ class PaymentsController extends Controller
     return back()->with('ok', 'Pago asignado a factura.'); */
     }
 
-    public function settleDebt(Request $req, PaymentService $svc, Debt $debt)
+    /* public function settleDebt(Request $req, PaymentService $svc, $debt)
     {
-        /* $this->authorize('update', $debt);
-    $paymentId = $req->input('payment_id');
-    $amount_clp    = $req->input('amount_clp');
-
-    $payment = \App\Models\Payment::findOrFail($paymentId);
-    $svc->settleDebtWithPayment($debt, $payment, $amount_clp ? (float)$amount_clp : null);
-
-    return back()->with('ok', 'Deuda actualizada.'); */
-    }
+        // ... método deprecado
+    } */
 }

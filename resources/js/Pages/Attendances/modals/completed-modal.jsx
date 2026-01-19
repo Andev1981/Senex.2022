@@ -20,8 +20,8 @@ import {
   MessageSquare,
   History
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
 
 export default function CompletedModal({
   sessionData,

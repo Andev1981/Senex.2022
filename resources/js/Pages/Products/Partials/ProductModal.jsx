@@ -12,11 +12,11 @@ import {
   Trash2,
   Boxes
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import TextInput from "@/Components/TextInput";
-import InputPesoChileno from "@/Components/InputPesoChileno";
-import Switch from "@/Components/Switch";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import TextInput from "@/components/TextInput";
+import InputPesoChileno from "@/components/InputPesoChileno";
+import Switch from "@/components/Switch";
 import Swal from "sweetalert2";
 
 export default function ProductModal({ isOpen, onClose, product = null }) {

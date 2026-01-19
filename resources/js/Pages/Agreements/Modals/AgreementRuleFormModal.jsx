@@ -12,11 +12,11 @@ import {
   Info,
   ChevronRight,
 } from "lucide-react";
-import SideModal from "@/Components/SideModal";
+import SideModal from "@/components/SideModal";
 import { useEffect, useState } from "react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import InputPesoChileno from "@/Components/InputPesoChileno";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import InputPesoChileno from "@/components/InputPesoChileno";
 
 export default function AgreementRuleFormModal({
   show,

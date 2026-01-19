@@ -14,7 +14,6 @@ class PaymentAllocation extends Model
     'company_id',
     'payment_id',
     'treatment_session_id',
-    'debt_id',
     'invoice_id',
     'amount_clp',
   ];
@@ -30,11 +29,6 @@ class PaymentAllocation extends Model
   public function payment() : BelongsTo
   {
     return $this->belongsTo(Payment::class);
-  }
-
-  public function debt() : BelongsTo
-  {
-    return $this->belongsTo(Debt::class);
   }
 
   public function invoice() : BelongsTo

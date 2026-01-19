@@ -1,4 +1,4 @@
-// resources/js/pages/KineMobile/Components/PatientCard.jsx
+// resources/js/pages/KineMobile/components/PatientCard.jsx
 import React from "react";
 import { User, Phone, Activity, TrendingUp, ChevronRight } from "lucide-react";
 

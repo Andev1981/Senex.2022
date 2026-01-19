@@ -23,8 +23,8 @@ import {
   Users,
   DollarSign
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import TablePagination from "@/Components/TablePagination";
+import PrimaryButton from "@/components/PrimaryButton";
+import TablePagination from "@/components/TablePagination";
 import { fmtCLP } from "@/utils/utils";
 
 export default function TablePlans({

@@ -11,14 +11,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
 
+use App\Enums\AppointmentStatusEnum;
+use App\Enums\FinanceStatusEnum;
+use App\Enums\DteStatusEnum;
+use App\Enums\GenderEnum;
+use App\Enums\MaritalStatusEnum;
+use App\Enums\SeverityEnum;
+use App\Enums\SessionCategoryEnum;
+use App\Enums\TreatmentStatusEnum;
+use App\Enums\TreatmentPhaseEnum;
+use App\Enums\PaymentMethodEnum;
+use App\Enums\CommissionTypeEnum;
+use App\Enums\CommonStatusEnum;
+
 class HandleInertiaRequests extends Middleware
 {
-    protected $rootView = 'app';
-
-    public function version(Request $request): ?string
-    {
-        return parent::version($request);
-    }
+    // ...
 
     public function share(Request $request): array
     {
@@ -27,6 +35,22 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => $authData['auth'],
+
+            // ENUMS COMPARTIDOS (Centralizados para todo el Frontend)
+            'enums' => [
+                'appointment_status' => AppointmentStatusEnum::options(),
+                'finance_status'     => FinanceStatusEnum::options(),
+                'dte_status'         => DteStatusEnum::options(),
+                'gender'             => GenderEnum::options(),
+                'marital_status'     => MaritalStatusEnum::options(),
+                'severity'           => SeverityEnum::options(),
+                'session_category'   => SessionCategoryEnum::options(),
+                'treatment_status'   => TreatmentStatusEnum::options(),
+                'treatment_phase'    => TreatmentPhaseEnum::options(),
+                'payment_method'     => PaymentMethodEnum::options(),
+                'commission_type'    => CommissionTypeEnum::options(),
+                'common_status'      => CommonStatusEnum::options(),
+            ],
 
             // Contexto de Compañía
             'current_company' => $authData['current_company'],

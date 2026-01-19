@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { ShoppingCart, Plus } from 'lucide-react';
-import SideModal from '@/Components/SideModal';
-import PurchaseOrdersTable from './Components/PurchaseOrdersTable';
+import SideModal from '@/components/SideModal';
+import PurchaseOrdersTable from './components/PurchaseOrdersTable';
 import PurchaseOrderDetailModal from './Modals/PurchaseOrderDetailModal';
 
 import Tabs from '../Tabs';

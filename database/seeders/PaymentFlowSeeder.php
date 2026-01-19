@@ -70,7 +70,6 @@ class PaymentFlowSeeder extends Seeder
                 'branch_id' => 1,
                 'user_id' => 1, // Usuario por defecto (Admin)
                 'patient_id' => $patient->id,
-                'payment_id' => $payment->id,
 
                 // 🎯 CAMPOS AGREGADOS:
                 'entity_type' => Patient::class,

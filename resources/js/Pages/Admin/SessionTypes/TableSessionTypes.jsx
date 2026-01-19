@@ -14,7 +14,7 @@ import {
   PencilLine,
   Trash2,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { router, usePage } from "@inertiajs/react";
 import { Building2, MapPin, ChevronRight, Search, CheckCircle2, Globe } from "lucide-react";
-import Modal from "@/Components/Modal";
+import Modal from "@/components/Modal";
 
 export default function ContextSelectorModal({ isOpen, onClose }) {
   const { props } = usePage();

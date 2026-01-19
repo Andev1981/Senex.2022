@@ -1,7 +1,7 @@
-import SideModal from "@/Components/SideModal";
-import AgreementRulesTable from "../Components/AgreementRulesTable";
+import SideModal from "@/components/SideModal";
+import AgreementRulesTable from "../components/AgreementRulesTable";
 import { ListChecks, Handshake, ChevronRight } from "lucide-react";
-import SecondaryButton from "@/Components/SecondaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
 
 export default function AgreementRulesListModal({
   show,

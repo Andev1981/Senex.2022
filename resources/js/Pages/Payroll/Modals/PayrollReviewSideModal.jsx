@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import SideModal from "@/Components/SideModal";
+import SideModal from "@/components/SideModal";
 import { 
     FileText, 
     Download, 

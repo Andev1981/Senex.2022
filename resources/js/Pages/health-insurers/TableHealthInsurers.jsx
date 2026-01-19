@@ -8,8 +8,8 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp, Pencil, Trash2, Search } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import TablePagination from "@/Components/TablePagination";
+import PrimaryButton from "@/components/PrimaryButton";
+import TablePagination from "@/components/TablePagination";
 
 export default function TableHealthInsurers({
   healthInsurers,

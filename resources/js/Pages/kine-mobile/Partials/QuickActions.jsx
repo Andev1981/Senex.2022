@@ -1,4 +1,4 @@
-// resources/js/pages/KineMobile/Components/QuickActions.jsx
+// resources/js/pages/KineMobile/components/QuickActions.jsx
 import React from "react";
 import { router } from "@inertiajs/react";
 import { Users, Calendar, User, Activity } from "lucide-react";

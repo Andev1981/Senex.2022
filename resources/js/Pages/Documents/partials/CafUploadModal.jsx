@@ -1,9 +1,9 @@
 import React from 'react';
 import { useForm } from "@inertiajs/react";
 import { UploadCloud, FileText, X, AlertCircle } from "lucide-react";
-import Modal from "@/Components/Modal";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import Modal from "@/components/Modal";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
 
 export default function CafUploadModal({ isOpen, onClose, company }) {
   const { data, setData, post, processing, errors, reset } = useForm({

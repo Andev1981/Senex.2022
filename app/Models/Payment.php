@@ -23,6 +23,7 @@ class Payment extends Model
         'company_id',
         'branch_id',
         'patient_id',
+        'liquidation_insurance_id',
         'amount_clp', // Copago final
         'amount_gross_clp', // Copago final
         'amount_insurance_primary_clp', // Copago final
@@ -70,6 +71,11 @@ class Payment extends Model
     public function patient(): BelongsTo
     {
         return $this->belongsTo(Patient::class);
+    }
+
+    public function liquidationInsurance(): BelongsTo
+    {
+        return $this->belongsTo(Insurance::class, 'liquidation_insurance_id');
     }
 
     public function paymentAllocation(): HasMany

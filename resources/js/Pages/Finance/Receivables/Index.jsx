@@ -2,7 +2,7 @@ import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { DollarSign } from 'lucide-react';
-import ReceivablesTable from './Components/ReceivablesTable';
+import ReceivablesTable from './components/ReceivablesTable';
 
 export default function Index({ totalDebt, patientReceivables, insurerReceivables }) {
     return (

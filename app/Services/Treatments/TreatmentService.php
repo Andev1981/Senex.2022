@@ -2,7 +2,6 @@
 
 namespace App\Services\Treatments;
 
-use App\Models\Debt;
 use App\Models\SessionType;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
@@ -581,19 +580,7 @@ class TreatmentService
             // 2. Actualizar tratamiento
             $treatment->update($newData);
 
-            // 3. Obtener citas a partir de la última fecha **no cancelada**
-            $lastKept = $this->lastNonCancelledSessionDate($treatment);
-
-            // 4. Borrar deudas **no pagadas** posteriores a esa fecha
-            Debt::where('treatment_id', $treatment->id)
-                ->where('paid_amount', 0)
-                ->where('due_date', '>', $lastKept)
-                ->delete();
-
-            // 5. Generar nuevas citas y deudas **después** de esa fecha
-            $this->createUpcomingDebtsFromDate($treatment, $lastKept);
-
-            // 6. Recalcular campos del tratamiento
+            // 3. Recalcular campos del tratamiento
             $this->updateTreatmentCalculatedFields($treatment->id);
 
             return $treatment->fresh();
@@ -608,34 +595,6 @@ class TreatmentService
             ->first();
 
         return $session?->date->format('Y-m-d') ?? $treatment->start_date;
-    }
-
-    private function createUpcomingDebtsFromDate(Treatment $treatment, string $fromDate): void
-    {
-        $futureSlots = $this->generateSessionDatesFrom($treatment, $fromDate);
-
-        foreach ($futureSlots as $slot) {
-            $sessionTypeId = $slot['session_type_id'] ?? $treatment->default_session_type_id;
-            $sessionType   = SessionType::find($sessionTypeId);
-            $amount_clp        = $sessionType?->price ?? 30000;
-
-            $patientPlan = app(PlanService::class)
-                ->hasActivePlanForSessionType($treatment->patient_id, $sessionTypeId);
-
-            if ($patientPlan && $patientPlan->sessionsRemaining() > 0) {
-                continue; // plan cubre
-            }
-
-            Debt::create([
-                'patient_id'           => $treatment->patient_id,
-                'treatment_id'         => $treatment->id,
-                'treatment_session_id' => null,
-                'original_amount'      => $amount_clp,
-                'paid_amount'          => 0,
-                'status'               => 'pending',
-                'due_date'             => Carbon::parse($slot['date'])->addDays(7),
-            ]);
-        }
     }
 
     /**

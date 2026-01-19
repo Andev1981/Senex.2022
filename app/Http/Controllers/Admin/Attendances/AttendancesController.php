@@ -12,6 +12,8 @@ use App\Models\SessionType;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
 use App\Models\Diagnostic;
+use App\Enums\FinanceStatusEnum;
+use App\Enums\DteStatusEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -60,7 +62,7 @@ class AttendancesController extends Controller
                 'doctor',
                 'sessionType',
                 'paymentAllocation',
-                'dte',
+                'invoiceItems.invoice', // 🔹 CRÍTICO: Cargar facturas para ver estado DTE
             ])
                 ->whereBetween('date', [$fechaInicio, $fechaFin])
                 ->orderBy('date', 'desc')
@@ -115,13 +117,13 @@ class AttendancesController extends Controller
             // Transformar datos para el frontend
             $atenciones = $sessions->map(function ($session) {
 
-            $activeItem = $session->invoiceItems->first(function ($item) {
-                return $item->invoice && 
-                    $item->invoice->payment_status !== 'voided' && // Que no esté anulada internamente
-                    $item->invoice->dte_status !== 'rejected';     // Que no esté rechazada por el SII
-            });
+                $activeItem = $session->invoiceItems->first(function ($item) {
+                    return $item->invoice && 
+                        $item->invoice->payment_status !== FinanceStatusEnum::VOIDED && // Que no esté anulada internamente
+                        $item->invoice->dte_status !== DteStatusEnum::REJECTED;     // Que no esté rechazada por el SII
+                });
 
-    $activeInvoice = $activeItem ? $activeItem->invoice : null;
+                $activeInvoice = $activeItem ? $activeItem->invoice : null;
                 return [
                     'session_id' => $session->id,
 
@@ -192,7 +194,7 @@ class AttendancesController extends Controller
                         'pdf_path'        => $activeInvoice->pdf_path,       // Para descargar
                     ] : null,
                     'is_locked'       => $activeInvoice ? true : false,      // ¿Bloquear checkbox?
-                    'dte_generated'   => $activeInvoice && $activeInvoice->dte_status === 'accepted',
+                    'dte_generated'   => $activeInvoice && $activeInvoice->dte_status === DteStatusEnum::ACCEPTED,
                 ];
             });
 

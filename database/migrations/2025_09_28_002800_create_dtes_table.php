@@ -36,7 +36,7 @@ return new class extends Migration
             $table->string('rut_emisor', 10)->comment('RUT de la empresa (sin DV ni guion).');
             $table->string('rut_receptor', 10)->comment('RUT del receptor (sin DV ni guion).');
 
-            $table->decimal('total_monto_clp', 12, 2)->comment('Monto total del documento.');
+            $table->bigInteger('amount_total_clp')->default(0)->comment('Monto total del documento.');
 
             // --- SEGUIMIENTO SII ---
             $table->enum('estado_sii', ['PENDIENTE', 'ENVIADO', 'ACEPTADO', 'RECHAZADO', 'ACEPTADO_CON_REPAROS', 'ERROR'])

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { Truck, Plus } from 'lucide-react';
-import SideModal from '@/Components/SideModal';
-import SuppliersTable from './Components/SuppliersTable';
+import SideModal from '@/components/SideModal';
+import SuppliersTable from './components/SuppliersTable';
 import SupplierFormModal from './Modals/SupplierFormModal';
 import Tabs from '../Tabs';
 

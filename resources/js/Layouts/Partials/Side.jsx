@@ -23,9 +23,9 @@ import {
   Package,
   Building2,
 } from "lucide-react";
-import CompanySwitcher from "@/Components/CompanySwitcher";
-import BranchSwitcher from "@/Components/BranchSwitcher";
-import ContextSelectorModal from "@/Components/ContextSelectorModal";
+import CompanySwitcher from "@/components/CompanySwitcher";
+import BranchSwitcher from "@/components/BranchSwitcher";
+import ContextSelectorModal from "@/components/ContextSelectorModal";
 
 function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
   const { props } = usePage();

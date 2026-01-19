@@ -3,7 +3,7 @@
 namespace App\Services\Treatments;
 
 use App\Models\Treatment;
-use App\Models\Debt;
+use App\Models\Invoice;
 use App\Models\Patient;
 use App\Jobs\SendPaymentReminderJob;
 use App\Models\Doctor;
@@ -220,9 +220,13 @@ class TreatmentSessionService
             // === NUEVO BLOQUE: deuda para tratamientos INDEFINIDOS o sin deuda pre-creada ===
             $treatment = Treatment::find($session->treatment_id);
 
+            // Verificar si ya existe factura para esta sesión
+            $invoiceExists = Invoice::whereHas('items', function($q) use ($session) {
+                $q->where('treatment_session_id', $session->id);
+            })->exists();
+
             // Si es indefinido o no hay deuda pre-creada, resolvemos ahora
-            if ($treatment->is_indefinite || !Debt::where('treatment_session_id', $session->id)
-                ->exists()) {
+            if ($treatment->is_indefinite || !$invoiceExists) {
 
                 $patientPlan = $this->planService->hasActivePlanForSessionType(
                     $session->patient_id,
@@ -232,8 +236,8 @@ class TreatmentSessionService
                 if ($patientPlan && $patientPlan->sessionsRemaining() > 0 && !$treatment->is_indefinite) {
                     $this->planService->consumeSessionsFromPlan($patientPlan, $session);
                 } else {
-                    // Crear deuda en el momento
-                    $this->paymentService->createDebtForSession($session);
+                    // Crear deuda (Factura Pendiente) en el momento
+                    $this->paymentService->createPendingInvoiceForSession($session);
 
                     // --- [LÓGICA DE NOTIFICACIÓN] ---
                     $totalDeuda = (int) $session->patient_amount_clp; // Usamos el monto de la sesión
@@ -255,15 +259,8 @@ class TreatmentSessionService
                     }
                 }
             } else {
-                // Tratamiento con total fijo: asociar deuda pre-creada
-                $debt = Debt::where('treatment_session_id',  $session->treatment_id)
-                    ->whereDate('due_date', '>=', $session->date)
-                    ->orderBy('due_date')
-                    ->first();
-
-                if ($debt) {
-                    $debt->update(['treatment_session_id' => $session->id]);
-                }
+                // Tratamiento con total fijo: asociar deuda pre-creada (LEGACY - Adaptar si se usa pre-facturación)
+                // Por ahora, asumimos que se generan al vuelo.
             }
 
 
@@ -385,12 +382,16 @@ class TreatmentSessionService
             $oldDate = $session->date;
             $newDate = $data['date'] ?? $oldDate;
             $status = $data['status'];
-            $debt = Debt::where('treatment_session_id', $session->id)->first();
+            
+            // Buscar factura asociada
+            $invoice = Invoice::whereHas('items', function($q) use ($session) {
+                $q->where('treatment_session_id', $session->id);
+            })->where('payment_status', 'unpaid')->first();
 
             if ($status === "cancelled" || $status === "not_attend") {
 
-                if ($debt) {
-                    $debt->delete();
+                if ($invoice) {
+                    $invoice->delete(); // Eliminamos la deuda pendiente
                 }
 
                 $data['month_session_number'] = 0;
@@ -400,8 +401,8 @@ class TreatmentSessionService
                 $session->update($data);
             }
 
-            if (!$debt) {
-                $this->paymentService->createDebtForSession($session);
+            if (!$invoice && in_array($status, ['scheduled', 'confirmed'])) {
+                $this->paymentService->createPendingInvoiceForSession($session);
             }
 
             $this->resequenceMonthSessions(
@@ -433,10 +434,14 @@ class TreatmentSessionService
             $oldDate = $session->date;
             $newDate = $data['date'] ?? $oldDate;
             $treatment = $session->treatment_id;
-            $debt = Debt::where('treatment_session_id', $session->id)->first();
+            
+            // Buscar factura asociada pendiente
+            $invoice = Invoice::whereHas('items', function($q) use ($session) {
+                $q->where('treatment_session_id', $session->id);
+            })->where('payment_status', 'unpaid')->first();
 
-            if ($debt) {
-                $debt->delete();
+            if ($invoice) {
+                $invoice->delete();
             }
 
             // Actualizar la sesión
@@ -521,10 +526,14 @@ class TreatmentSessionService
             // ⚡ ACTUALIZAR TRATAMIENTO
             $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
 
-            Debt::where('treatment_session_id', $session->id)
-                ->where('paid_amount', 0)
-                ->where('status', 'pending')
-                ->delete();
+            // Eliminar factura pendiente si existe (limpiar deuda)
+            $invoice = Invoice::whereHas('items', function($q) use ($session) {
+                $q->where('treatment_session_id', $session->id);
+            })->where('payment_status', 'unpaid')->first();
+
+            if ($invoice) {
+                $invoice->delete();
+            }
 
             Log::info('Sesión cancelada', [
                 'session_id' => $session->id,
@@ -730,8 +739,8 @@ class TreatmentSessionService
             }
         }
 
-        // Sin plan o plan agotado: crear deuda
-        $this->paymentService->createDebtForSession($session);
+        // Sin plan o plan agotado: crear deuda (Factura Pendiente)
+        $this->paymentService->createPendingInvoiceForSession($session);
     }
 
     /**

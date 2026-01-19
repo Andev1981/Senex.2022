@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Enums\TreatmentStatusEnum;
+use App\Enums\TreatmentPhaseEnum;
+
 class Treatment extends Model
 {
     use HasFactory, SoftDeletes, Multitenantable;
@@ -69,6 +72,8 @@ class Treatment extends Model
         'referral_date' => 'date',
         'next_appointment' => 'datetime',
         'is_indefinite' => 'boolean',
+        'status' => TreatmentStatusEnum::class,
+        'current_phase' => TreatmentPhaseEnum::class,
         
         // JSONs Vitales
         'additional_diagnoses' => 'array',

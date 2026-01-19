@@ -20,7 +20,7 @@ import {
   DollarSign,
   Calendar,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function TableSesiones({
   sesiones,

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import Modal from "@/Components/Modal";
+import Modal from "@/components/Modal";
 import SesionesModal from "./Partials/SesionesModal";
 import TableSesiones from "./TableSesiones";
 import TablePacientesSesion from "./TablePacientesSesion";

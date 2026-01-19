@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
-import BodySelector from "@/Components/Body/BodySelector";
+import BodySelector from "@/components/Body/BodySelector";
 
 export default function PainMapCard({
     // Datos (Props)

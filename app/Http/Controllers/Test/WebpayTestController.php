@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Test;
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use App\Models\TreatmentSession;
-use App\Models\Debt;
+use App\Models\Invoice;
 use App\Models\PatientPlan;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,18 +47,19 @@ class WebpayTestController extends Controller
                 ];
             });
 
-        $debts = Debt::where('status', 'active')
-            ->where('original_amount', '>', 0)
-            ->orderBy('due_date', 'asc')
+        $debts = Invoice::where('payment_status', 'unpaid')
+            ->where('amount_total_clp', '>', 0)
+            ->orderBy('issue_date', 'asc')
             ->limit(100)
+            ->with('items')
             ->get()
-            ->map(function ($debt) {
+            ->map(function ($invoice) {
                 return [
-                    'id' => $debt->id,
-                    'patient_id' => $debt->patient_id, // ✅ Ya lo tienes
-                    'concept' => $debt->concept,
-                    'due_date' => $debt->due_date,
-                    'original_amount' => $debt->original_amount,
+                    'id' => $invoice->id,
+                    'patient_id' => $invoice->patient_id, // ✅ Ya lo tienes
+                    'concept' => 'Factura #' . $invoice->id,
+                    'due_date' => $invoice->issue_date,
+                    'original_amount' => $invoice->amount_total_clp,
                 ];
             });
 

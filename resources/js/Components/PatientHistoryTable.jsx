@@ -12,8 +12,8 @@ import {
     Map
 } from 'lucide-react';
 import moment from 'moment'; // O tu util de fechas
-import Modal from '@/Components/Modal';
-import BodySelector from '@/Components/BodySelector';
+import Modal from '@/components/Modal';
+import BodySelector from '@/components/BodySelector';
 
 export default function PatientHistoryTable({ events = [] }) {
     const [filter, setFilter] = useState('all'); // all, clinical, administrative

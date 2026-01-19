@@ -1,5 +1,5 @@
 import { useForm } from "@inertiajs/react";
-import Modal from "@/Components/Modal";
+import Modal from "@/components/Modal";
 import { 
   Calendar, 
   User, 
@@ -10,8 +10,8 @@ import {
   Calculator,
   ArrowRight
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
 import { useEffect, useState } from "react";
 import axios from "axios";
 

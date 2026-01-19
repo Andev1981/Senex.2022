@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTreatmentRequest;
 use App\Http\Requests\UpdateTreatmentRequest;
 use App\Models\Commune;
-use App\Models\Debt;
 use App\Models\Doctor;
 use App\Models\Treatment;
 use App\Models\Patient;
@@ -37,7 +36,7 @@ class TreatmentController extends Controller
             ->get();
 
         $sessions = TreatmentSession::where('patient_id', $patient->id)
-            ->with(['doctor', 'treatment', 'debt'])
+            ->with(['doctor', 'treatment'])
             ->orderBy('date', 'desc')
             ->get();
 
@@ -70,7 +69,7 @@ class TreatmentController extends Controller
         $doctors   = Doctor::all();
 
 
-        return Inertia::render('patients/DetailPatient', [
+        return Inertia::render('patients/detail-patient', [
             'patient' => $patient,
             'treatments' => $treatments,
             'sessions' => $sessions,

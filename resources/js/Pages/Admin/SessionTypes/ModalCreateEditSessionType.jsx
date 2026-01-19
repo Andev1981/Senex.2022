@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { useForm } from "@inertiajs/react";
-import InputLabel from "@/Components/InputLabel";
-import InputError from "@/Components/InputError";
-import TextInput from "@/Components/TextInput";
-import InputPesoChileno from "@/Components/InputPesoChileno";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import InputLabel from "@/components/InputLabel";
+import InputError from "@/components/InputError";
+import TextInput from "@/components/TextInput";
+import InputPesoChileno from "@/components/InputPesoChileno";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
 
 function ModalCreateEditSessionType({ sessionType, onClose }) {
   // Form base

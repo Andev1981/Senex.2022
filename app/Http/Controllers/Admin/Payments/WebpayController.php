@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\Payments;
 
 use App\Http\Controllers\Controller;
-use App\Models\Debt;
+use App\Models\Invoice;
 use App\Models\Patient;
 use App\Services\Payments\PaymentService;
 use App\Services\Payments\WebpayPlusService;
@@ -57,22 +57,31 @@ class WebpayController extends Controller
             ]);
         }
 
-        // Obtener deudas activas
-        $deudas = Debt::where('patient_id', $patient->id)
-            ->where('status', 'active')
-            ->where('original_amount', '>', 0)
-            ->orderBy('due_date', 'asc')
+        // Obtener deudas activas (Facturas impagas)
+        $deudas = Invoice::where('patient_id', $patient->id)
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->where('amount_total_clp', '>', 0)
+            ->orderBy('issue_date', 'asc')
             ->limit(100)
+            ->with('items')
             ->get()
-            ->map(function ($debt) {
+            ->map(function ($invoice) {
+                // Calcular saldo pendiente
+                $paid = $invoice->paymentAllocations()->sum('amount_clp');
+                $balance = $invoice->amount_total_clp - $paid;
+
+                if ($balance <= 0) return null;
+
                 return [
-                    'id' => $debt->id,
-                    'type' => 'debt',
-                    'description' => $debt->concept,
-                    'date' => $debt->due_date?->format('d M Y'),
-                    'amount_clp' => (int) $debt->original_amount,
+                    'id' => $invoice->id,
+                    'type' => 'invoice',
+                    'description' => 'Documento #' . ($invoice->dte_folio ?? $invoice->id) . ' - ' . ($invoice->items->first()->description ?? 'Varios'),
+                    'date' => $invoice->issue_date?->format('d M Y'),
+                    'amount_clp' => (int) $balance, // Mostramos el saldo, no el total original
                 ];
-            });
+            })
+            ->filter() // Quitar nulos
+            ->values();
 
         Log::info('Portal Pago: Consulta de deudas', [
             'patient_id' => $patient->id,
@@ -114,21 +123,30 @@ class WebpayController extends Controller
         }
 
         // 2. Obtener deudas activas (Reutilizando la lógica de consultarDeudas)
-        $deudas = Debt::where('patient_id', $patient->id)
-            ->where('status', 'active')
-            ->where('original_amount', '>', 0)
-            ->orderBy('due_date', 'asc')
+        $deudas = Invoice::where('patient_id', $patient->id)
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->where('amount_total_clp', '>', 0)
+            ->orderBy('issue_date', 'asc')
             ->limit(100)
+            ->with('items')
             ->get()
-            ->map(function ($debt) {
+            ->map(function ($invoice) {
+                // Calcular saldo pendiente
+                $paid = $invoice->paymentAllocations()->sum('amount_clp');
+                $balance = $invoice->amount_total_clp - $paid;
+
+                if ($balance <= 0) return null;
+
                 return [
-                    'id' => $debt->id,
-                    'type' => 'debt',
-                    'description' => $debt->concept,
-                    'date' => $debt->due_date?->format('d M Y'),
-                    'amount_clp' => (int) $debt->original_amount,
+                    'id' => $invoice->id,
+                    'type' => 'invoice',
+                    'description' => 'Documento #' . ($invoice->dte_folio ?? $invoice->id) . ' - ' . ($invoice->items->first()->description ?? 'Varios'),
+                    'date' => $invoice->issue_date?->format('d M Y'),
+                    'amount_clp' => (int) $balance,
                 ];
-            });
+            })
+            ->filter()
+            ->values();
             
         // 3. Guardar RUT en sesión (igual que en consultarDeudas) para el siguiente paso de pago
         session(['portal_rut' => $patient->rut]);
@@ -250,15 +268,15 @@ class WebpayController extends Controller
     }
 
     /**
-     * Inicia un pago para deudas acumuladas
+     * Inicia un pago para facturas acumuladas
      * POST /payments/webpay/debts
      */
     public function initDebtsPayment(Request $request)
     {
         $validated = $request->validate([
             'patient_id' => ['required', 'integer', 'exists:patients,id'],
-            'debt_ids' => ['required', 'array', 'min:1'],
-            'debt_ids.*' => ['required', 'integer', 'exists:debts,id'],
+            'invoice_ids' => ['required', 'array', 'min:1'],
+            'invoice_ids.*' => ['required', 'integer', 'exists:invoices,id'],
             'amount_clp' => ['required', 'integer', 'min:50'],
             'is_partial' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:500'],
@@ -268,18 +286,18 @@ class WebpayController extends Controller
             $result = $this->paymentService->initiateWebpayTransaction([
                 'patient_id' => $validated['patient_id'],
                 'amount_clp' => $validated['amount_clp'],
-                'notes' => $validated['notes'] ?? 'Pago de deudas pendientes',
+                'notes' => $validated['notes'] ?? 'Pago de facturas pendientes',
             ]);
 
-            // Guardar debt_ids en sesión para asignar después del pago
+            // Guardar invoice_ids en sesión para asignar después del pago
             session([
-                'pending_payment_debts' => $validated['debt_ids'],
+                'pending_payment_invoices' => $validated['invoice_ids'],
                 'is_partial_payment' => $validated['is_partial'] ?? false,
             ]);
 
-            Log::info('Webpay debts payment initiated', [
+            Log::info('Webpay invoices payment initiated', [
                 'payment_id' => $result['payment_id'],
-                'debts_count' => count($validated['debt_ids']),
+                'invoices_count' => count($validated['invoice_ids']),
                 'amount_clp' => $validated['amount_clp'],
                 'token' => $result['token'],
             ]);
@@ -290,8 +308,8 @@ class WebpayController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error iniciando pago de deudas Webpay', [
-                'debt_ids' => $validated['debt_ids'],
+            Log::error('Error iniciando pago de facturas Webpay', [
+                'invoice_ids' => $validated['invoice_ids'],
                 'error' => $e->getMessage(),
             ]);
 
@@ -512,26 +530,26 @@ class WebpayController extends Controller
             session()->forget('pending_payment_sessions');
         }
 
-        // Asignar deudas si existen
-        if (session()->has('pending_payment_debts')) {
-            $debtIds = session('pending_payment_debts');
+        // Asignar facturas si existen
+        if (session()->has('pending_payment_invoices')) {
+            $invoiceIds = session('pending_payment_invoices');
             $isPartial = session('is_partial_payment', false);
             
             try {
-                $this->paymentService->allocateToDebts($payment, $debtIds, $isPartial);
-                Log::info('Debts allocated to payment', [
+                $this->paymentService->allocateToInvoices($payment, $invoiceIds, $isPartial);
+                Log::info('Invoices allocated to payment', [
                     'payment_id' => $payment->id,
-                    'debt_ids' => $debtIds,
+                    'invoice_ids' => $invoiceIds,
                     'is_partial' => $isPartial,
                 ]);
             } catch (\Exception $e) {
-                Log::error('Error allocating debts to payment', [
+                Log::error('Error allocating invoices to payment', [
                     'payment_id' => $payment->id,
-                    'debt_ids' => $debtIds,
+                    'invoice_ids' => $invoiceIds,
                     'error' => $e->getMessage(),
                 ]);
             }
-            session()->forget(['pending_payment_debts', 'is_partial_payment']);
+            session()->forget(['pending_payment_invoices', 'is_partial_payment']);
         }
 
         // Asignar plan si existe

@@ -1,4 +1,4 @@
-// resources/js/pages/KineMobile/Components/SessionCard.jsx
+// resources/js/pages/KineMobile/components/SessionCard.jsx
 import React from "react";
 import {
   Clock,

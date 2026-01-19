@@ -1,12 +1,12 @@
 import { useForm } from "@inertiajs/react";
-import InputLabel from "@/Components/InputLabel";
-import InputError from "@/Components/InputError";
-import TextInput from "@/Components/TextInput";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import ChilePhoneInput from "@/Components/ChilePhoneInput";
-import RutInput from "@/Components/RutInput";
-import Switch from "@/Components/Switch";
+import InputLabel from "@/components/InputLabel";
+import InputError from "@/components/InputError";
+import TextInput from "@/components/TextInput";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import ChilePhoneInput from "@/components/ChilePhoneInput";
+import RutInput from "@/components/RutInput";
+import Switch from "@/components/Switch";
 import {
   BrickWallShield,
   Database,

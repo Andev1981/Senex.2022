@@ -77,12 +77,12 @@ class StorePaymentRequest extends FormRequest
 
             // --- Servicios (El Carrito) ---
             'services_to_bill' => ['required', 'array', 'min:1'],
-            'services_to_bill.*.session_type_id' => ['required', 'exists:session_types,id'],
-            'services_to_bill.*.quantity'        => ['required', 'numeric', 'min:1'],
-            'services_to_bill.*.unit_price_clp'      => ['required', 'numeric'],
-            'services_to_bill.*.unit_patient_clp'    => ['required', 'numeric'],
-            'services_to_bill.*.doctor_id'       => ['required_without:services_to_bill.*.debt_id', 'nullable', 'exists:doctors,id'],
             'services_to_bill.*.treatment_session_id' => ['nullable', 'exists:treatment_sessions,id'],
+            'services_to_bill.*.invoice_id' => ['nullable', 'exists:invoices,id'],
+            'services_to_bill.*.name' => ['nullable', 'string'],
+            // Validamos que si no viene doctor_id, al menos venga un tratamiento o session_type
+            'services_to_bill.*.doctor_id'       => ['nullable', 'exists:doctors,id'],
+            'services_to_bill.*.session_type_id' => ['required_without:services_to_bill.*.invoice_id', 'nullable', 'exists:session_types,id'],
 
             // --- Detalles del Pago Físico ---
             'payment_details' => ['required', 'array'],

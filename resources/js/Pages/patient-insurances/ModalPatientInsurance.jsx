@@ -1,10 +1,10 @@
 import { useForm } from "@inertiajs/react";
-import InputLabel from "@/Components/InputLabel";
-import InputError from "@/Components/InputError";
-import TextInput from "@/Components/TextInput";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import SearchSelect from "@/Components/SearchSelect";
+import InputLabel from "@/components/InputLabel";
+import InputError from "@/components/InputError";
+import TextInput from "@/components/TextInput";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import SearchSelect from "@/components/SearchSelect";
 import { useEffect, useState } from "react";
 import { fmtDate, fmtDateISO, fmtCLP } from "@/utils/utils";
 import { t } from "@/constants/translations";

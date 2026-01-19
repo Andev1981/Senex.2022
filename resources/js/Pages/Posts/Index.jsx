@@ -1,6 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import Can from "@/Components/Can";
+import Can from "@/components/Can";
 import { usePermission } from "@/Hooks/usePermission";
 
 export default function Index({ posts }) {

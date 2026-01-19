@@ -24,7 +24,7 @@ import {
   ClipboardList,
   Users,
 } from "lucide-react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 import { fmtCLP } from "@/utils/utils";
 
 export default function TableDoctors({

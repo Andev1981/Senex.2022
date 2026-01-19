@@ -1,4 +1,4 @@
-// resources/js/pages/KineMobile/Components/StatsBadge.jsx
+// resources/js/pages/KineMobile/components/StatsBadge.jsx
 import React from "react";
 
 const colorClasses = {

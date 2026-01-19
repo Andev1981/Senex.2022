@@ -1,7 +1,7 @@
 import React from "react";
 import { Head, useForm } from "@inertiajs/react";
-import InputError from "@/Components/InputError";
-import RutInput from "@/Components/RutInput";
+import InputError from "@/components/InputError";
+import RutInput from "@/components/RutInput";
 
 export default function PortalPago() {
   const { data, setData, post, processing, errors } = useForm({

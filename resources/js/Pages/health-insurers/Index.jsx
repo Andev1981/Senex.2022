@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import Modal from "@/Components/Modal";
+import Modal from "@/components/Modal";
 import TableHealthInsurers from "./TableHealthInsurers";
 import HealthInsurerModal from "./Partials/HealthInsurerModal";
 import HealthInsurerModalDelete from "./Partials/HealthInsurerModalDelete";
-import SideModal from "@/Components/SideModal";
+import SideModal from "@/components/SideModal";
 import { Plus, Activity, HeartPulse } from "lucide-react";
 
 export default function Index({ healthInsurers }) {

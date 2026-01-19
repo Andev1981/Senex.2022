@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import Modal from "@/Components/Modal";
-import SideModal from "@/Components/SideModal";
+import Modal from "@/components/Modal";
+import SideModal from "@/components/SideModal";
 import TablePlans from "./TablePlans";
 import PlanModal from "./Partials/PlanModal";
 import PlanModalDelete from "./Partials/PlanModalDelete";

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Enums\SessionCategoryEnum;
+
 class SessionType extends Model
 {
     use Multitenantable;
@@ -29,6 +31,7 @@ class SessionType extends Model
         'requires_referral' => 'boolean',
         'is_exempt' => 'boolean',
         'is_active' => 'boolean',
+        'category' => SessionCategoryEnum::class,
     ];
 
     public function company()

@@ -27,9 +27,9 @@ import {
   Layers,
   ArrowRight,
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import TablePagination from "@/Components/TablePagination";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import TablePagination from "@/components/TablePagination";
 
 export default function TableInsurances({
   insurances,

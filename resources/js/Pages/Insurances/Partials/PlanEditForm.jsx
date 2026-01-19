@@ -17,11 +17,11 @@ import {
   Hash
 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import Switch from "@/Components/Switch";
-import TextInput from "@/Components/TextInput";
-import InputPesoChileno from "@/Components/InputPesoChileno";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import Switch from "@/components/Switch";
+import TextInput from "@/components/TextInput";
+import InputPesoChileno from "@/components/InputPesoChileno";
 
 export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
   const isEdit = !!plan;

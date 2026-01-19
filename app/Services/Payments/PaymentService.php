@@ -4,10 +4,10 @@ namespace App\Services\Payments;
 
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
-use App\Models\Debt;
 use App\Models\TreatmentSession;
 use App\Models\Agreement; // Nuevo
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Patient;
 use App\Models\PatientInsurance;
 use App\Models\SessionType; // Nuevo (Tu tabla de prestaciones)
@@ -57,6 +57,7 @@ class PaymentService
                 'payment_method' => $data['payment_details']['payment_method'],
                 'payment_date' => $data['payment_details']['payment_date'] ?? now(),
                 // Homologado: liquidation_payor_id es el seguro primario
+                'liquidation_insurance_id' => $data['coverage_details']['insurance_id'] ?? null,
                 'status' => 'pending',
                 'transaction_reference' => $data['coverage_details']['external_transaction_code'] ?? null,
                 'metadata' => $data, // Congelamos el carrito para el Invoice posterior
@@ -64,10 +65,10 @@ class PaymentService
 
             // 2. Procesar cada ítem del carrito
             foreach ($data['services_to_bill'] as $item) {
-                if (!empty($item['debt_id'])) {
-                    $this->handleDebtPayment($payment, $item);
+                if (!empty($item['invoice_id'])) {
+                    $this->handleInvoicePayment($payment, $item);
                 } else {
-                    if (!empty($item['treatment_session_id'])) {
+                    if (!empty($item['treatment_session_id']) || !empty($item['session_type_id'])) {
                         $this->handleNewSession($payment, $item, $data);
                     }
                 }
@@ -80,22 +81,26 @@ class PaymentService
         });
     }
 
-    private function handleDebtPayment(Payment $payment, array $item): void
+    private function handleInvoicePayment(Payment $payment, array $item): void
     {
-        $debt = Debt::findOrFail($item['debt_id']);
+        $invoice = Invoice::findOrFail($item['invoice_id']);
 
         PaymentAllocation::create([
             'payment_id' => $payment->id,
-            'debt_id' => $debt->id,
-            'treatment_session_id' => $debt->treatment_session_id,
-            // Usamos el monto unitario que paga el paciente
+            'invoice_id' => $invoice->id,
+            // Si el item viene de una sesión, lo vinculamos para trazabilidad
+            'treatment_session_id' => $item['treatment_session_id'] ?? null,
             'amount_clp' => $item['unit_patient_clp'],
         ]);
 
-        $debt->update([
-            'status' => 'paid',
-            'paid_amount' => $debt->original_amount
-        ]);
+        // Validar si la factura quedó pagada
+        // Recalculamos lo pagado para esta factura
+        $paid = PaymentAllocation::where('invoice_id', $invoice->id)->sum('amount_clp');
+        if ($paid >= $invoice->amount_total_clp) {
+            $invoice->update(['payment_status' => 'paid']);
+        } else {
+            $invoice->update(['payment_status' => 'partial']);
+        }
     }
 
     private function handleNewSession(Payment $payment, array $item, array $data): void
@@ -112,49 +117,97 @@ class PaymentService
             }
         }
 
-        // 💡 Lógica de Tratamiento Rápido
-        // Si el item no trae un treatment_id, lo creamos
+        // Determinar ID de Tratamiento (Si no viene, crear uno nuevo)
         $treatmentId = $item['treatment_id'] ?? null;
         if (!$treatmentId) {
             $treatment = $this->sessionService->createTreatmentFromSession($result);
             $treatmentId = $treatment->id;
         }
 
-        // Ejecutamos la lógica tantas veces como diga 'quantity'
-        for ($i = 0; $i < $item['quantity']; $i++) {
-            // Crear la sesión de tratamiento
-            $session = TreatmentSession::create([
-                'company_id' => $data['company_id'],
-                'branch_id' => $data['branch_id'],
-                'treatment_id' => $treatmentId,
-                'patient_id' => $data['patient_id'],
-                'doctor_id' => $item['doctor_id'] ?? null,
-                'session_type_id' => $item['session_type_id'],
-                'date' => $data['payment_details']['payment_date'] ?? now(),
-                'time' => now()->toTimeString(),
-                // La sesión registra lo que el paciente debe (copago)
+        // Lógica de "Pago de Sesión Existente" vs "Compra de Nuevas Sesiones"
+        $existingSessionId = $item['treatment_session_id'] ?? null;
+        
+        // CASO 1: Actualizar sesión existente (Solo si cantidad es 1)
+        if ($existingSessionId && $item['quantity'] == 1) {
+            $session = TreatmentSession::findOrFail($existingSessionId);
+            $session->update([
+                'status' => 'completed',
                 'patient_amount_clp' => $consumesPlan ? 0 : $item['unit_patient_clp'],
                 'consumes_plan' => $consumesPlan,
-                'status' => 'completed',
+                'doctor_id' => $item['doctor_id'] ?? $session->doctor_id,
+            ]);
+            
+            $this->createPaidInvoiceAndAllocate($payment, $session, $data, $consumesPlan);
+        } 
+        // CASO 2: Crear nuevas sesiones (Packs o ventas libres)
+        else {
+            for ($i = 0; $i < $item['quantity']; $i++) {
+                $session = TreatmentSession::create([
+                    'company_id' => $data['company_id'],
+                    'branch_id' => $data['branch_id'],
+                    'treatment_id' => $treatmentId,
+                    'patient_id' => $data['patient_id'],
+                    'doctor_id' => $item['doctor_id'] ?? null,
+                    'session_type_id' => $item['session_type_id'],
+                    'date' => $data['payment_details']['payment_date'] ?? now(),
+                    'time' => now()->toTimeString(),
+                    'patient_amount_clp' => $consumesPlan ? 0 : $item['unit_patient_clp'],
+                    'consumes_plan' => $consumesPlan,
+                    'status' => 'completed',
+                ]);
+
+                $this->createPaidInvoiceAndAllocate($payment, $session, $data, $consumesPlan);
+            }
+        }
+    }
+
+    // Helper privado para no repetir código dentro de handleNewSession
+    private function createPaidInvoiceAndAllocate(Payment $payment, TreatmentSession $session, array $data, bool $consumesPlan) {
+        if (!$consumesPlan) {
+            // Crear Factura (Boleta) por el monto del paciente
+            $invoice = Invoice::create([
+                'company_id' => $data['company_id'],
+                'branch_id' => $data['branch_id'],
+                'user_id' => $payment->user_id,
+                'patient_id' => $data['patient_id'],
+                'entity_type' => 'Patient',
+                'entity_id' => $data['patient_id'],
+                
+                // Montos
+                'amount_total_clp' => $session->patient_amount_clp,
+                'amount_patient_clp' => $session->patient_amount_clp,
+                'amount_gross_clp' => $session->patient_amount_clp, // Asumiendo 100% copago en este flujo ad-hoc
+                
+                'payment_status' => 'paid', // Nace pagada
+                'dte_status' => 'pending', // Pendiente de emisión
+                'issue_date' => now(),
+                'dte_type' => 39, // Boleta por defecto
             ]);
 
-            if (!$consumesPlan) {
-                $debt = Debt::create([
-                    'company_id' => $data['company_id'],
-                    'patient_id' => $data['patient_id'],
-                    'treatment_session_id' => $session->id,
-                    'original_amount' => $session->patient_amount_clp,
-                    'paid_amount' => $session->patient_amount_clp,
-                    'status' => 'paid',
-                ]);
+            // Crear Ítem de Factura
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'company_id' => $data['company_id'],
+                'branch_id' => $data['branch_id'],
+                'treatment_session_id' => $session->id,
+                'sellable_type' => 'SessionType',
+                'sellable_id' => $session->session_type_id,
+                'description' => $session->sessionType->name ?? 'Sesión Kinesiológica',
+                'quantity' => 1,
+                'unit_price_clp' => $session->patient_amount_clp,
+                'unit_patient_clp' => $session->patient_amount_clp,
+                'total_gross_clp' => $session->patient_amount_clp,
+                'total_patient_clp' => $session->patient_amount_clp,
+                'is_exento' => $session->sessionType->is_exempt ?? true,
+            ]);
 
-                PaymentAllocation::create([
-                    'payment_id' => $payment->id,
-                    'debt_id' => $debt->id,
-                    'treatment_session_id' => $session->id,
-                    'amount_clp' => $session->patient_amount_clp,
-                ]);
-            }
+            // Asignar el pago a esta factura
+            PaymentAllocation::create([
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'treatment_session_id' => $session->id,
+                'amount_clp' => $session->patient_amount_clp,
+            ]);
         }
     }
 
@@ -198,6 +251,7 @@ class PaymentService
     {
         return Payment::create([
             'patient_id' => $data['patient_id'],
+            'liquidation_insurance_id' => $data['liquidation_insurance_id'] ?? null,
             'payment_date' => $data['payment_date'] ?? null,
             'amount_clp' => $data['amount_clp'],
             'paid_at' => $data['paid_at'] ?? now(),
@@ -464,44 +518,51 @@ class PaymentService
     {
         $invoice = Invoice::findOrFail($invoiceId);
 
+        // 🎯 VALIDACIÓN DE SEGURIDAD: Evitar sobre-pagos
+        $alreadyAllocated = PaymentAllocation::where('invoice_id', $invoice->id)->sum('amount_clp');
+        $balance = $invoice->amount_total_clp - $alreadyAllocated;
+
+        $amountToAllocate = min($payment->amount_clp, $balance);
+
+        if ($amountToAllocate <= 0) {
+            Log::info("La Factura ID {$invoice->id} ya está totalmente pagada. Saltando asignación.");
+            return;
+        }
+
         // Crear asignación
         PaymentAllocation::create([
             'payment_id' => $payment->id,
             'invoice_id' => $invoice->id, // Asignamos directamente a la Invoice
             'treatment_session_id' => null,
-            'debt_id' => null,
-            'amount_clp' => $payment->amount_clp,
+            'amount_clp' => $amountToAllocate,
         ]);
 
-        // Opcionalmente, puedes actualizar el estado de la factura
-        // $invoice->update(['status' => 'paid']); 
+        // Actualizar estado de la factura
+        if (($alreadyAllocated + $amountToAllocate) >= $invoice->amount_total_clp) {
+            $invoice->update(['payment_status' => 'paid']); 
+        }
     }
 
     /**
-     * Asigna un pago a múltiples sesiones
+     * Asigna un pago a múltiples sesiones (buscando sus facturas)
      */
     public function allocateToSessions(Payment $payment, $sessionIds): void
     {
+        // Buscar facturas impagas asociadas a estas sesiones
+        $invoiceIds = Invoice::whereHas('items', function($q) use ($sessionIds) {
+             $q->whereIn('treatment_session_id', $sessionIds);
+        })->whereIn('payment_status', ['unpaid', 'partial'])
+          ->pluck('id')
+          ->toArray();
 
-        foreach ($sessionIds as $sessionId) {
-            $debt = $sessionId->debt;
-
-            // Crear asignación
-            PaymentAllocation::create([
-                'payment_id' => $payment->id,
-                'invoice_id' => null,
-                'debt_id' => $sessionId->debt->id,
-                'treatment_session_id' => $sessionId->id,
-                'amount_clp' => $sessionId->patient_amount_clp,
-            ]);
-
-            // Actualizar sesión como pagada
-            $debt->update(['status' => 'paid']);
+        if (!empty($invoiceIds)) {
+             $this->allocateToInvoices($payment, $invoiceIds);
         }
 
-        Log::info('Payment allocated to sessions', [
+        Log::info('Payment allocated to sessions (via invoices)', [
             'payment_id' => $payment->id,
             'session_ids' => $sessionIds,
+            'invoice_ids' => $invoiceIds
         ]);
     }
 
@@ -691,40 +752,47 @@ class PaymentService
 
 
     /**
-     * Asigna un pago a deudas pendientes
+     * Asigna un pago a facturas pendientes
      */
-    public function allocateToDebts(Payment $payment, array $debtIds, bool $isPartial = false): void
+    public function allocateToInvoices(Payment $payment, array $invoiceIds, bool $isPartial = false): void
     {
-        DB::transaction(function () use ($payment, $debtIds, $isPartial) {
+        DB::transaction(function () use ($payment, $invoiceIds, $isPartial) {
             $remainingAmount = $payment->amount_clp;
 
-            foreach ($debtIds as $debtId) {
+            foreach ($invoiceIds as $invoiceId) {
                 if ($remainingAmount <= 0) break;
 
-                $debt = Debt::findOrFail($debtId);
-                $amountToAllocate = min($remainingAmount, $debt->remaining_amount);
+                $invoice = Invoice::findOrFail($invoiceId);
+                
+                // Calcular saldo pendiente de la factura
+                $paidSoFar = $invoice->paymentAllocations()->sum('amount_clp');
+                $balance = $invoice->amount_total_clp - $paidSoFar;
+
+                if ($balance <= 0) continue;
+
+                $amountToAllocate = min($remainingAmount, $balance);
 
                 // Crear asignación
                 PaymentAllocation::create([
                     'payment_id' => $payment->id,
-                    'debt_id' => $debt->id,
+                    'invoice_id' => $invoice->id,
                     'amount_clp' => $amountToAllocate,
                 ]);
 
-                // Actualizar deuda
-                $debt->remaining_amount -= $amountToAllocate;
-                if ($debt->remaining_amount <= 0) {
-                    $debt->status = 'paid';
-                    $debt->paid_at = now();
+                // Actualizar factura
+                $newPaid = $paidSoFar + $amountToAllocate;
+                if ($newPaid >= $invoice->amount_total_clp) {
+                    $invoice->update(['payment_status' => 'paid']);
+                } else {
+                    $invoice->update(['payment_status' => 'partial']);
                 }
-                $debt->save();
 
                 $remainingAmount -= $amountToAllocate;
             }
 
-            Log::info('Payment allocated to debts', [
+            Log::info('Payment allocated to invoices', [
                 'payment_id' => $payment->id,
-                'debt_ids' => $debtIds,
+                'invoice_ids' => $invoiceIds,
                 'is_partial' => $isPartial,
             ]);
         });
@@ -761,30 +829,57 @@ class PaymentService
     }
 
     /**
-     * Generar deuda automáticamente al crear una sesión
+     * Generar Factura Pendiente automáticamente al crear una sesión
      */
-    public function createDebtForSession(TreatmentSession $session, ?int $customAmount = null): Debt
+    public function createPendingInvoiceForSession(TreatmentSession $session, ?int $customAmount = null): Invoice
     {
         return DB::transaction(function () use ($session, $customAmount) {
-            // Determinar monto de la deuda
+            // Determinar monto
             $amount_clp = $customAmount ?? $this->calculateSessionAmount($session);
 
-            $debt = Debt::create([
+            // Crear Factura Pendiente
+            $invoice = Invoice::create([
+                'company_id' => $session->company_id,
+                'branch_id' => $session->branch_id,
+                // 'user_id' => auth()->id(), // Ojo, puede ser null en jobs
                 'patient_id' => $session->patient_id,
-                'treatment_session_id' => $session->id,
-                'original_amount' => $amount_clp,
-                'paid_amount' => 0,
-                'status' => 'pending',
-                'due_date' => Carbon::parse($session->date)->addDays(7), // 7 días después de la sesión
+                'entity_type' => 'Patient',
+                'entity_id' => $session->patient_id,
+                
+                'amount_total_clp' => $amount_clp,
+                'amount_patient_clp' => $amount_clp,
+                'amount_gross_clp' => $amount_clp,
+                
+                'payment_status' => 'unpaid',
+                'dte_status' => 'pending',
+                'issue_date' => now(),
+                'dte_type' => 39,
             ]);
 
-            Log::info('Deuda creada para sesión', [
-                'debt_id' => $debt->id,
+            // Crear Ítem
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'company_id' => $session->company_id,
+                'branch_id' => $session->branch_id,
+                'treatment_session_id' => $session->id,
+                'sellable_type' => 'SessionType',
+                'sellable_id' => $session->session_type_id,
+                'description' => $session->sessionType->name ?? 'Sesión Kinesiológica',
+                'quantity' => 1,
+                'unit_price_clp' => $amount_clp,
+                'unit_patient_clp' => $amount_clp,
+                'total_gross_clp' => $amount_clp,
+                'total_patient_clp' => $amount_clp,
+                'is_exento' => $session->sessionType->is_exempt ?? true,
+            ]);
+
+            Log::info('Factura pendiente creada para sesión', [
+                'invoice_id' => $invoice->id,
                 'treatment_session_id' => $session->id,
                 'amount_clp' => $amount_clp,
             ]);
 
-            return $debt;
+            return $invoice;
         });
     }
 
@@ -797,6 +892,7 @@ class PaymentService
             // Crear el pago
             $payment = Payment::create([
                 'patient_id' => $data['patient_id'],
+                'liquidation_insurance_id' => $data['liquidation_insurance_id'] ?? null,
                 'treatment_id' => $data['treatment_id'] ?? null,
                 'treatment_session_id' => $data['treatment_session_id'] ?? null,
                 'date' => $data['date'] ?? now(),
@@ -816,9 +912,9 @@ class PaymentService
                 $this->autoAllocatePayment($payment);
             }
 
-            // Si se especificaron deudas específicas
-            if (isset($data['debt_ids']) && is_array($data['debt_ids'])) {
-                $this->allocatePaymentToDebts($payment, $data['debt_ids']);
+            // Si se especificaron facturas específicas
+            if (isset($data['invoice_ids']) && is_array($data['invoice_ids'])) {
+                $this->allocateToInvoices($payment, $data['invoice_ids']);
             }
 
             Log::info('Pago registrado', [
@@ -832,104 +928,64 @@ class PaymentService
     }
 
     /**
-     * Asignar pago automáticamente a deudas pendientes (FIFO)
+     * Asignar pago automáticamente a facturas pendientes (FIFO)
      */
     private function autoAllocatePayment(Payment $payment): void
     {
-        // Obtener deudas pendientes del paciente, ordenadas por antigüedad
-        $pendingDebts = Debt::where('patient_id', $payment->patient_id)
-            ->whereIn('status', ['pending', 'partial', 'overdue'])
-            ->orderBy('due_date')
+        // Obtener facturas pendientes del paciente, ordenadas por antigüedad
+        $pendingInvoices = Invoice::where('patient_id', $payment->patient_id)
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->orderBy('issue_date')
             ->get();
 
         $remainingAmount = $payment->amount_clp;
 
-        foreach ($pendingDebts as $debt) {
+        foreach ($pendingInvoices as $invoice) {
             if ($remainingAmount <= 0) break;
 
-            $debtBalance = $debt->original_amount - $debt->paid_amount;
+            // Calcular saldo pendiente
+            $paidSoFar = $invoice->paymentAllocations()->sum('amount_clp');
+            $balance = $invoice->amount_total_clp - $paidSoFar;
 
-            if ($debtBalance <= 0) continue;
+            if ($balance <= 0) continue;
 
-            // Cuánto asignar a esta deuda
-            $amountToAllocate = min($remainingAmount, $debtBalance);
+            // Cuánto asignar a esta factura
+            $amountToAllocate = min($remainingAmount, $balance);
 
             // Crear la asignación
             PaymentAllocation::create([
                 'payment_id' => $payment->id,
-                'debt_id' => $debt->id,
+                'invoice_id' => $invoice->id,
                 'amount_clp' => $amountToAllocate,
             ]);
 
-            // Actualizar deuda
-            $debt->paid_amount += $amountToAllocate;
-
-            if ($debt->paid_amount >= $debt->original_amount) {
-                $debt->status = 'paid';
-            } elseif ($debt->paid_amount > 0) {
-                $debt->status = 'partial';
+            // Actualizar factura
+            $newPaid = $paidSoFar + $amountToAllocate;
+            if ($newPaid >= $invoice->amount_total_clp) {
+                $invoice->update(['payment_status' => 'paid']);
+            } else {
+                $invoice->update(['payment_status' => 'partial']);
             }
-
-            $debt->save();
 
             $remainingAmount -= $amountToAllocate;
 
-            Log::info('Pago asignado a deuda', [
+            Log::info('Pago asignado a factura', [
                 'payment_id' => $payment->id,
-                'debt_id' => $debt->id,
+                'invoice_id' => $invoice->id,
                 'amount_clp' => $amountToAllocate,
             ]);
         }
 
         // Si sobró dinero, podría ser crédito a favor o error
         if ($remainingAmount > 0) {
-            Log::warning('Pago excede deudas pendientes', [
+            Log::warning('Pago excede facturas pendientes', [
                 'payment_id' => $payment->id,
                 'remaining_amount' => $remainingAmount,
             ]);
         }
     }
 
-    /**
-     * Asignar pago a deudas específicas
-     */
-    public function allocatePaymentToDebts(Payment $payment, array $debtIds): void
-    {
-        $debts = Debt::whereIn('id', $debtIds)
-            ->where('patient_id', $payment->patient_id)
-            ->get();
 
-        $remainingAmount = $payment->amount_clp;
-
-        // Verificar que ya no esté asignado
-        $alreadyAllocated = PaymentAllocation::where('payment_id', $payment->id)->sum('amount_clp');
-        $remainingAmount -= $alreadyAllocated;
-
-        foreach ($debts as $debt) {
-            if ($remainingAmount <= 0) break;
-
-            $debtBalance = $debt->original_amount - $debt->paid_amount;
-            $amountToAllocate = min($remainingAmount, $debtBalance);
-
-            PaymentAllocation::create([
-                'payment_id' => $payment->id,
-                'debt_id' => $debt->id,
-                'amount_clp' => $amountToAllocate,
-            ]);
-
-            $debt->paid_amount += $amountToAllocate;
-
-            if ($debt->paid_amount >= $debt->original_amount) {
-                $debt->status = 'paid';
-            } elseif ($debt->paid_amount > 0) {
-                $debt->status = 'partial';
-            }
-
-            $debt->save();
-
-            $remainingAmount -= $amountToAllocate;
-        }
-    }
 
     /**
      * Verificar si el paciente tiene un plan activo
@@ -1022,44 +1078,48 @@ class PaymentService
     }
 
     /**
-     * Marcar deudas vencidas como overdue
+     * Marcar deudas vencidas como overdue (Pendiente implementación en Invoices)
      */
-    public function markOverdueDebts(): int
+    /* public function markOverdueDebts(): int
     {
-        $count = Debt::whereIn('status', ['pending', 'partial'])
-            ->where('due_date', '<', now())
-            ->update(['status' => 'overdue']);
-
-        Log::info('Deudas marcadas como vencidas', ['count' => $count]);
-
-        return $count;
-    }
+        // ...
+    } */
 
     /**
      * Obtener resumen financiero del paciente
      */
     public function getPatientFinancialSummary(int $patientId): array
     {
-        $debts = Debt::where('patient_id', $patientId)->get();
+        // Calcular deuda basada en facturas pendientes
+        $invoices = Invoice::where('patient_id', $patientId)->get();
+        
         $payments = Payment::where('patient_id', $patientId)
             ->where('status', 'completed')
             ->get();
 
-        $totalDebt = $debts->sum('original_amount');
-        $totalPaid = $debts->sum('paid_amount');
-        $pendingBalance = $totalDebt - $totalPaid;
+        $totalInvoiced = $invoices->sum('amount_total_clp');
+        
+        // Calcular lo pagado revisando las asignaciones o el estado
+        // Opción A: Sumar payment_allocations
+        // Opción B: Sumar payments (pero un pago puede no estar asignado)
+        // Usaremos Allocations para ser precisos con la deuda
+        $totalPaid = PaymentAllocation::whereHas('invoice', function($q) use ($patientId) {
+            $q->where('patient_id', $patientId);
+        })->sum('amount_clp');
+
+        $pendingBalance = $totalInvoiced - $totalPaid;
 
         return [
-            'total_debt' => $totalDebt,
+            'total_debt' => $totalInvoiced,
             'total_paid' => $totalPaid,
             'pending_balance' => $pendingBalance,
-            'overdue_debts' => $debts->where('status', 'overdue')->count(),
+            // 'overdue_debts' => $debts->where('status', 'overdue')->count(), // Pendiente definir qué es overdue en invoice
             'payment_history' => $payments->map(function ($p) {
                 return [
-                    'date' => $p->date,
+                    'date' => $p->payment_date,
                     'amount_clp' => $p->amount_clp,
                     'method' => $p->payment_method,
-                    'invoice' => $p->invoice,
+                    'invoice' => $p->paymentAllocation->first()?->invoice->id ?? 'N/A', // Referencia
                 ];
             }),
         ];
@@ -1075,21 +1135,29 @@ class PaymentService
                 throw new \Exception('El pago ya fue reembolsado');
             }
 
-            // Revertir asignaciones a deudas
+            // Revertir asignaciones a facturas
             $allocations = PaymentAllocation::where('payment_id', $payment->id)->get();
 
             foreach ($allocations as $allocation) {
-                $debt = $allocation->debt;
-                $debt->paid_amount -= $allocation->amount_clp;
-
-                // Actualizar estado de la deuda
-                if ($debt->paid_amount <= 0) {
-                    $debt->status = 'pending';
-                } elseif ($debt->paid_amount < $debt->original_amount) {
-                    $debt->status = 'partial';
+                $invoice = $allocation->invoice;
+                
+                if ($invoice) {
+                    // Si se anula el pago, la factura vuelve a estar impaga (o parcial)
+                    // Como quitamos el monto pagado, asumimos que retrocede.
+                    // Simplificación: Si tenía 'paid', pasa a 'partial' o 'unpaid'.
+                    // Lo ideal es recalcular el saldo.
+                    $currentPaid = PaymentAllocation::where('invoice_id', $invoice->id)
+                        ->where('id', '!=', $allocation->id) // Excluir este
+                        ->sum('amount_clp');
+                    
+                    if ($currentPaid <= 0) {
+                        $invoice->payment_status = 'unpaid';
+                    } else {
+                        $invoice->payment_status = 'partial';
+                    }
+                    $invoice->save();
                 }
 
-                $debt->save();
                 $allocation->delete();
             }
 

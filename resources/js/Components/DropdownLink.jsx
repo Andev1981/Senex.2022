@@ -1,4 +1,4 @@
-// resources/js/Components/DropdownLink.jsx
+// resources/js/components/DropdownLink.jsx
 import React from "react";
 import { Link } from "@inertiajs/react";
 

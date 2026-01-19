@@ -23,7 +23,7 @@ import {
   Database,
   Layers
 } from "lucide-react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 
 export default function AgreementsTable({
   agreements,

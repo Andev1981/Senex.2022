@@ -18,7 +18,7 @@ return new class extends Migration {
             $t->foreignId('patient_id')->constrained()->cascadeOnDelete();
 
             // Reemplazamos liquidation_payor_id por insurance_id para ser consistentes con los otros modelos
-            $t->foreignId('insurance_id')->nullable()->constrained('insurances')->nullOnDelete()
+            $t->foreignId('liquidation_insurance_id')->nullable()->constrained('insurances')->nullOnDelete()
                 ->comment('Seguro primario involucrado en la transacción');
 
             // ===== MONTOS HOMOLOGADOS (Sincronizados con Frontend final_shares) =====

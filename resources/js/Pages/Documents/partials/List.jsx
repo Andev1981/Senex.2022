@@ -22,7 +22,7 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 import { fmtDate, clp } from "@/utils/utils";
 import { getDteStatusConfig } from "@/constants/dtesStatuses";
 import Swal from "sweetalert2";

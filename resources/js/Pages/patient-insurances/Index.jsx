@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import { HandshakeIcon, Plus } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import SideModal from "@/Components/SideModal";
+import SideModal from "@/components/SideModal";
 import TablePatientsInsurances from "./TablePatientsInsurances";
 import ModalPatientInsurance from "./ModalPatientInsurance";
 

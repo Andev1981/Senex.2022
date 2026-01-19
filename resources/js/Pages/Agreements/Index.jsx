@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Head, router } from "@inertiajs/react";
-import Modal from "@/Components/Modal";
+import Modal from "@/components/Modal";
 import { Plus, Handshake } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import AgreementRuleFormModal from "./Modals/AgreementRuleFormModal";
 import AgreementRulesListModal from "./Modals/AgreementRulesListModal";
 import AgreementFormModal from "./Modals/AgreementFormModal";
-import AgreementsTable from "./Components/AgreementsTable";
+import AgreementsTable from "./components/AgreementsTable";
 
 // Definimos nombres claros para tus modales
 const MODALS = {

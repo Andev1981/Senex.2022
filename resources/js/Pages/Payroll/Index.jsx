@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { NotebookText, Plus, Search } from "lucide-react";
-import PayrollTable from "./Components/PayrollTable";
+import PayrollTable from "./components/PayrollTable";
 import PayrollFormModal from "./Modals/PayrollFormModal";
 import PayrollReviewSideModal from "./Modals/PayrollReviewSideModal";
 

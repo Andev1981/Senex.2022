@@ -18,6 +18,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Notifications\Notifiable;
 
+use App\Enums\GenderEnum;
+use App\Enums\MaritalStatusEnum;
+
 class Patient extends Authenticatable
 {
     use HasFactory, HasAddresses, Notifiable, Multitenantable;
@@ -59,6 +62,8 @@ class Patient extends Authenticatable
         'prefers_whatsapp' => 'boolean',
         'prefers_sms' => 'boolean',
         'prefers_mail' => 'boolean',
+        'gender' => GenderEnum::class,
+        'marital_status' => MaritalStatusEnum::class,
     ];
 
 
@@ -195,17 +200,6 @@ class Patient extends Authenticatable
         return $this->hasMany(PacienteKine::class);
     }
 
-    public function debts(): HasManyThrough
-    {
-        return $this->hasManyThrough(
-            Debt::class,             // related
-            TreatmentSession::class, // through
-            'patient_id',            // FK en treatment_sessions que apunta a patients.id
-            'treatment_session_id',  // FK en debts que apunta a treatment_sessions.id
-            'id',                    // PK en patients
-            'id'                     // PK en treatment_sessions
-        );
-    }
 
     public function invoices(): HasMany
     {
@@ -231,12 +225,11 @@ class Patient extends Authenticatable
     /* ----------Estados y Cálculos------------- */
 
 
-    public function openDebts()
+    public function openInvoices()
     {
-        return $this->debts()->whereIn('debts.status', [
-            Debt::STATUS_PENDING,
-            Debt::STATUS_PARTIAL,
-            Debt::STATUS_OVERDUE
+        return $this->invoices()->whereIn('payment_status', [
+            'unpaid',
+            'partial'
         ]);
     }
 
@@ -250,24 +243,23 @@ class Patient extends Authenticatable
 
     public function getPaymentStatusAttribute(): string
     {
-        // Si la relación ya está cargada en memoria, la usamos para no tocar la BD
-        if ($this->relationLoaded('debts')) {
-            $activeDebts = $this->debts->whereIn('status', ['pending', 'partial', 'overdue']);
+        // Usamos invoices() para determinar el estado de pago
+        $hasPending = $this->invoices()
+            ->whereIn('payment_status', ['unpaid', 'partial'])
+            ->exists();
 
-            $overdue = $activeDebts->where('due_date', '<', now()->toDateString())->isNotEmpty();
-            if ($overdue) return 'overdue';
-
-            return $activeDebts->isNotEmpty() ? 'due' : 'ok';
+        if ($hasPending) {
+            // Lógica simple: Si tiene facturas impagas, está 'due'.
+            // Si quisiéramos 'overdue', tendríamos que chequear issue_date > 30 días.
+            $hasOverdue = $this->invoices()
+                ->whereIn('payment_status', ['unpaid', 'partial'])
+                ->where('issue_date', '<', now()->subDays(30))
+                ->exists();
+            
+            return $hasOverdue ? 'overdue' : 'due';
         }
 
-        // Si no está cargada, hacemos la consulta SQL específica (con el prefijo de tabla)
-        $query = $this->debts()->whereIn('debts.status', ['pending', 'partial', 'overdue']);
-
-        if ((clone $query)->whereDate('due_date', '<', now()->toDateString())->exists()) {
-            return 'overdue';
-        }
-
-        return $query->exists() ? 'due' : 'ok';
+        return 'ok';
     }
 
 

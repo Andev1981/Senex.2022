@@ -102,7 +102,7 @@ class DummyDteSeeder extends Seeder
                 'folio' => 900 + $idx,
                 'rut_emisor' => $rutLimpio,
                 'rut_receptor' => $patient->rut,
-                'total_monto_clp' => $invoice->amount_total_clp,
+                'amount_total_clp' => $invoice->amount_total_clp,
                 'estado_sii' => 'ENVIADO',
                 'track_id' => time() + $idx,
                 'xml_data' => '<xml>Dummy</xml>'

@@ -1,9 +1,9 @@
-import ApplicationLogo from "@/Components/ApplicationLogo";
-import Checkbox from "@/Components/Checkbox";
-import InputError from "@/Components/InputError";
-import InputLabel from "@/Components/InputLabel";
-import PrimaryButton from "@/Components/PrimaryButton";
-import TextInput from "@/Components/TextInput";
+import ApplicationLogo from "@/components/ApplicationLogo";
+import Checkbox from "@/components/Checkbox";
+import InputError from "@/components/InputError";
+import InputLabel from "@/components/InputLabel";
+import PrimaryButton from "@/components/PrimaryButton";
+import TextInput from "@/components/TextInput";
 import GuestLayout from "@/Layouts/GuestLayout";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import React, { useState } from "react";
@@ -74,7 +74,7 @@ export default function Login({ status, canResetPassword }) {
           </div>
 
           {/* TARJETA DEL FORMULARIO (Fondo Blanco) */}
-          <div className="p-10 bg-white border border-white shadow-2xl rounded-[3rem] relative overflow-hidden">
+          <div className="p-10 bg-white border border-white shadow-2xl rounded-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
 
             <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
@@ -147,7 +147,7 @@ export default function Login({ status, canResetPassword }) {
                     name="remember"
                     checked={data.remember}
                     onChange={(e) => setData("remember", e.target.checked)}
-                    className="w-5 h-5 border-gray-200 rounded-lg text-brand-primary focus:ring-brand-primary"
+                    className="cursor-pointer w-5 h-5 border-gray-200 rounded-lg text-brand-primary focus:ring-brand-primary"
                   />
                   <span className="ml-3 text-[10px] font-black text-brand-gray uppercase tracking-widest group-hover:text-brand-primary transition-colors">
                     Recordarme
@@ -156,10 +156,24 @@ export default function Login({ status, canResetPassword }) {
               </div>
 
               {/* Botón de Submit */}
-              <button
+              <PrimaryButton  
                 type="submit"
                 disabled={processing}
-                className="flex items-center justify-center w-full gap-3 py-5 font-black text-white uppercase tracking-[0.2em] text-[10px] transition-all shadow-xl bg-brand-primary hover:brightness-110 rounded-[1.5rem] shadow-brand-primary/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform"
+                className="w-full items-center justify-center py-4 rounded-xl"
+                >
+                {processing ? (
+                  <div className="w-5 h-5 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
+                ) : (
+                  <>
+                    Acceder al Sistema
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </PrimaryButton>
+              {/* <button
+                type="submit"
+                disabled={processing}
+                className="cursor-pointer flex items-center justify-center w-full gap-3 py-5 font-black text-white uppercase tracking-[0.2em] text-[10px] transition-all shadow-xl bg-brand-primary hover:brightness-110 rounded-[1.5rem] shadow-brand-primary/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform"
               >
                 {processing ? (
                   <div className="w-5 h-5 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
@@ -169,7 +183,7 @@ export default function Login({ status, canResetPassword }) {
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
-              </button>
+              </button> */}
             </form>
           </div>
 

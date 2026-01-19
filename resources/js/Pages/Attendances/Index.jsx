@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import SideModal from "@/Components/SideModal";
-import Modal from "@/Components/Modal";
+import SideModal from "@/components/SideModal";
+import Modal from "@/components/Modal";
 import AttendancesHeader from "@/pages/attendances/partials/attendances-header";
 import AttendacesTable from "@/pages/attendances/attendaces-table";
 import Kpis from "@/pages/attendances/partials/kpis";

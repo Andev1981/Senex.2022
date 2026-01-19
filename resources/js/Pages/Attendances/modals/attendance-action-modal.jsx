@@ -9,8 +9,8 @@ import {
   CheckCircle2,
   Clock
 } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
 
 /**
  * Modal Unificado para Acciones de Sesión (Iniciar, Cancelar, Ausente)

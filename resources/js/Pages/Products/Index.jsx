@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 import {
   useReactTable,
   getCoreRowModel,
@@ -28,7 +28,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { fmtCLP } from "@/utils/utils";
-import SideModal from "@/Components/SideModal";
+import SideModal from "@/components/SideModal";
 import ProductModal from "./Partials/ProductModal";
 import Swal from "sweetalert2";
 

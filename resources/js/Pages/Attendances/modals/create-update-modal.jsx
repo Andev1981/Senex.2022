@@ -18,11 +18,11 @@ import {
   MapPin,
   FileText // Nuevo icono para la orden
 } from "lucide-react";
-import SearchSelect from "@/Components/SearchSelect";
-import PainMapCard from "@/Components/Body/PainMapCard";
-import GenericModal from "@/Components/Body/GenericModal";
-import HandSelector from "@/Components/Body/HandSelector";
-import InputError from "@/Components/InputError";
+import SearchSelect from "@/components/SearchSelect";
+import PainMapCard from "@/components/Body/PainMapCard";
+import GenericModal from "@/components/Body/GenericModal";
+import HandSelector from "@/components/Body/HandSelector";
+import InputError from "@/components/InputError";
 import Swal from "sweetalert2";
 
 const STATUS_OPTIONS = [

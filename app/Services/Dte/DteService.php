@@ -257,7 +257,7 @@ class DteService
                 'branch_id' => $invoice->branch_id,
                 'rut_emisor' => $invoice->company->rut ?? '76000000-1',
                 'rut_receptor' => data_get($invoice->metadata, 'client.rut', '1-9'),
-                'total_monto_clp' => $invoice->amount_total_clp,
+                'amount_total_clp' => $invoice->amount_total_clp,
                 'xml_data' => $xmlFirmado,
                 'track_id' => $trackId,
                 'estado_sii' => 'ENVIADO',

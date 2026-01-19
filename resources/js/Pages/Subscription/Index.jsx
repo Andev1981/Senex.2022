@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { Gem, CheckCircle } from 'lucide-react';
-import Modal from '@/Components/Modal';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
+import Modal from '@/components/Modal';
+import PrimaryButton from '@/components/PrimaryButton';
+import SecondaryButton from '@/components/SecondaryButton';
 
 export default function Index({ saasPlans, subscription }) {
     const [isModalOpen, setIsModalOpen] = useState(false);

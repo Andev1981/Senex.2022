@@ -21,7 +21,7 @@ import {
   CheckCircle2,
   Clock
 } from "lucide-react";
-import TablePagination from "@/Components/TablePagination";
+import TablePagination from "@/components/TablePagination";
 import { router } from "@inertiajs/react";
 
 export default function PayrollTable({ payrolls, onReview }) {

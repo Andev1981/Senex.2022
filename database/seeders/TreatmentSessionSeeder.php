@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
-use App\Models\Debt;
 use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\Doctor;
@@ -105,21 +104,46 @@ class TreatmentSessionSeeder extends Seeder
                     if ($sessionStatus === 'cancelled') continue; 
 
                     // D. Lógica Financiera
-                    $debtStatus = ($sessionStatus === 'completed') ? 'paid' : 'pending';
-                    $paidAmount = ($debtStatus === 'paid') ? $session->patient_amount_clp : 0;
-
-                    // 1. Deuda
-                    $debt = Debt::create([
-                        'company_id'           => $company->id,
-                        'patient_id'           => $patient->id,
-                        'treatment_session_id' => $session->id,
-                        'original_amount'      => $session->patient_amount_clp,
-                        'paid_amount'          => $paidAmount,
-                        'status'               => $debtStatus,
+                    // Si la sesión fue realizada o está agendada, generamos una INVOICE (Deuda)
+                    $invoiceStatus = ($sessionStatus === 'completed') ? 'paid' : 'unpaid';
+                    
+                    // Crear Invoice (Actúa como Deuda)
+                    $invoice = Invoice::create([
+                        'company_id'       => $company->id,
+                        'branch_id'        => $branchId,
+                        'user_id'          => 1, // Admin default
+                        'patient_id'       => $patient->id,
+                        'entity_type'      => 'Patient',
+                        'entity_id'        => $patient->id,
+                        'amount_total_clp' => $session->patient_amount_clp,
+                        'amount_patient_clp' => $session->patient_amount_clp,
+                        'amount_gross_clp' => $session->patient_amount_clp, // Valor total
+                        
+                        'payment_status'   => $invoiceStatus,
+                        'dte_status'       => ($invoiceStatus === 'paid') ? 'accepted' : 'pending',
+                        'dte_type'         => 39,
+                        'issue_date'       => $sessionDate,
                     ]);
 
-                    // 2. Pago y Factura (Solo si pagado)
-                    if ($debtStatus === 'paid') {
+                    // Item de Invoice vinculado a la sesión
+                    InvoiceItem::create([
+                        'invoice_id'           => $invoice->id,
+                        'company_id'           => $company->id,
+                        'branch_id'            => $branchId,
+                        'treatment_session_id' => $session->id,
+                        'sellable_type'        => 'TreatmentSession',
+                        'sellable_id'          => $session->id,
+                        'description'          => $currentSessionType->name,
+                        'quantity'             => 1,
+                        'unit_price_clp'       => $session->patient_amount_clp,
+                        'unit_patient_clp'     => $session->patient_amount_clp,
+                        'total_gross_clp'      => $session->patient_amount_clp,
+                        'total_patient_clp'    => $session->patient_amount_clp,
+                        'is_exento'            => $currentSessionType->is_exempt ?? true,
+                    ]);
+
+                    // 2. Si está pagada, generamos el PAGO y la ASIGNACIÓN
+                    if ($invoiceStatus === 'paid') {
                         $payment = Payment::create([
                             'uuid'            => $faker->uuid,
                             'company_id'      => $company->id,
@@ -132,42 +156,11 @@ class TreatmentSessionSeeder extends Seeder
                             'status'          => 'completed',
                         ]);
 
-                        $invoice = Invoice::create([
-                            'company_id'       => $company->id,
-                            'branch_id'        => $branchId,
-                            'user_id'          => 1,
-                            'patient_id'       => $patient->id,
-                            'payment_id'       => $payment->id,
-                            'entity_type'      => 'SessionType',
-                            'entity_id'       => $currentSessionType->id,
-                            'payment_status'   => 'paid',
-                            'amount_total_clp' => $session->patient_amount_clp,
-                            'dte_status'       => 'accepted', 
-                            'dte_type'         => 39,
-                            'issue_date'       => $sessionDate,
-                        ]);
-
-                        InvoiceItem::create([
-                            'invoice_id'           => $invoice->id,
-                            'company_id'           => $company->id,
-                            'branch_id'            => $branchId,
-                            'treatment_session_id' => $session->id,
-                            'sellable_type'        => 'TreatmentSession',
-                            'sellable_id'          => $session->id,
-                            'description'          => 'Sesión Seeder',
-                            'quantity'             => 1,
-                            'unit_price_clp'       => $session->patient_amount_clp * 1,
-                            'unit_patient_clp'     => $session->patient_amount_clp * 1,
-                            'total_gross_clp'      => $session->patient_amount_clp,
-                            'total_patient_clp'    => $session->patient_amount_clp,
-                        ]);
-
                         PaymentAllocation::create([
                             'company_id'           => $company->id,
                             'branch_id'            => $branchId,
                             'payment_id'           => $payment->id,
-                            'debt_id'              => $debt->id,
-                            'payment_id'           => $payment->id,
+                            'invoice_id'           => $invoice->id, // Vinculamos a la factura
                             'treatment_session_id' => $session->id,
                             'amount_clp'           => $session->patient_amount_clp,
                         ]);

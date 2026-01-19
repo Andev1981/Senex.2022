@@ -1,7 +1,7 @@
 import React from "react";
 import { usePage } from "@inertiajs/react";
 import { FileText, Plus, ShieldCheck, Building2, Globe } from "lucide-react";
-import PrimaryButton from "@/Components/PrimaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function HeaderDocuments({ setActiveTab, tabs, activeTab }) {
   const { props } = usePage();

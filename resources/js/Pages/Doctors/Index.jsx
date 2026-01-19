@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import SideModal from "@/Components/SideModal";
+import SideModal from "@/components/SideModal";
 import TableDoctors from "./TableDoctors";
 import DoctorDetailModal from "./DoctorDetailModal";
 import DoctorCommissions from "./Partials/DoctorCommissions";

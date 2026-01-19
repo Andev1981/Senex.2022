@@ -5,10 +5,10 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 // --- IMPORTACIÓN DE COMPONENTES LOCALES ---
-import PatientCard from "./Components/PatientCard"; // <--- NUEVO
-import PaymentSummary from "./Components/PaymentSummary";
-import ServiceItem from "./Components/ServiceItem";
-import ServicesCard from "./Components/ServicesCard";
+import PatientCard from "./components/PatientCard"; // <--- NUEVO
+import PaymentSummary from "./components/PaymentSummary";
+import ServiceItem from "./components/ServiceItem";
+import ServicesCard from "./components/ServicesCard";
 import PaymentBlockingModal from "./PaymentBlockingModal";
 
 export default function PosIndex({

@@ -14,13 +14,13 @@ import {
   Database,
   DollarSign
 } from "lucide-react";
-import InputLabel from "@/Components/InputLabel";
-import InputError from "@/Components/InputError";
-import TextInput from "@/Components/TextInput";
-import InputPesoChileno from "@/Components/InputPesoChileno";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import Switch from "@/Components/Switch";
+import InputLabel from "@/components/InputLabel";
+import InputError from "@/components/InputError";
+import TextInput from "@/components/TextInput";
+import InputPesoChileno from "@/components/InputPesoChileno";
+import PrimaryButton from "@/components/PrimaryButton";
+import SecondaryButton from "@/components/SecondaryButton";
+import Switch from "@/components/Switch";
 import Swal from "sweetalert2";
 
 const CATEGORIES = [

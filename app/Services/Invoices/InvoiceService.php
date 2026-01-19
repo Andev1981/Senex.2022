@@ -6,7 +6,9 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\Dte\DteService;
 use App\Jobs\Dte\EmitDteJob; // Importamos el Job para el fallback
+use App\Jobs\Dte\CheckDteStatusJob;
 use App\Models\Product;
+use App\Models\SessionType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -36,6 +38,11 @@ class InvoiceService
 
       // Si llegamos acá, ¡Éxito inmediato!
       $invoice->refresh(); // Recargamos para tener el folio y status actualizados
+
+      // Despachar el chequeo de estado para que eventualmente pase a ACEPTADO
+      if ($trackId) {
+        CheckDteStatusJob::dispatch($invoice->id)->delay(now()->addMinutes(5));
+      }
 
     } catch (\Throwable $e) {
       // 3. FALLBACK: SI FALLA EL DTE (SII caído, Timeout, etc.)
@@ -92,7 +99,6 @@ class InvoiceService
         'branch_id'  => $payment->branch_id,
         'user_id'    => auth()->id(), // Ojo con esto si es Job, auth() puede ser null
         'patient_id' => $payment->patient_id,
-        'payment_id' => $payment->id,
         'entity_type' => 'Patient',
         'entity_id'  => $payment->patient_id,
 
@@ -133,6 +139,14 @@ class InvoiceService
         $sellableId = $isProduct ? ($item['id'] ?? null) : ($item['session_type_id'] ?? null);
 
         // C. Crear el registro
+        $isExento = true; // Default
+        if ($isProduct) {
+          $isExento = $item['is_exempt'] ?? false;
+        } else if ($sellableId) {
+          $sessionType = SessionType::find($sellableId);
+          $isExento = $sessionType ? $sessionType->is_exempt : true;
+        }
+
         $invoiceItem = $invoice->items()->create([
           'company_id'      => $payment->company_id,
           'branch_id'       => $payment->branch_id,
@@ -158,7 +172,7 @@ class InvoiceService
           'total_patient_clp' => $uPatient * $qty,
 
           // Si es producto, usa su flag 'is_exempt'. Si es sesión, por defecto es exento (true)
-          'is_exento'         => $isProduct ? ($item['is_exempt'] ?? false) : true,
+          'is_exento'         => $isExento,
         ]);
 
         // D. Descuento de Stock (Solo si es Producto)

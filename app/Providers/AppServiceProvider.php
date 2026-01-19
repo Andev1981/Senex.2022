@@ -17,7 +17,6 @@ use App\Models\Invoice;
 use App\Models\Dte;
 use App\Models\Address;
 use App\Models\Branch;
-use App\Observers\PaymentAllocationObserver;
 use App\Services\TwilioService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
@@ -79,7 +78,6 @@ class AppServiceProvider extends ServiceProvider
         // Configuración para fechas en español
         Carbon::setLocale(config('app.locale'));
         /*      setlocale(LC_ALL, 'es_CL', 'es', 'ES'); */
-        PaymentAllocation::observe(PaymentAllocationObserver::class);
 
         Relation::enforceMorphMap([
             'Product' => Product::class,

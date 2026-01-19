@@ -19,7 +19,7 @@ return new class extends Migration {
           ->constrained()
           ->comment('Sucursal donde se emitió el DTE.');
       $t->foreignId('payment_id')->constrained()->cascadeOnDelete();
-      $t->foreignId('debt_id')->nullable()->constrained()->cascadeOnDelete();
+      $t->foreignId('invoice_id')->nullable()->constrained()->cascadeOnDelete();
       $t->foreignId('treatment_session_id')->nullable()->constrained()->nullOnDelete();
 
       $t->unsignedBigInteger('amount_clp')->comment('Monto asignado de este pago');
@@ -27,11 +27,11 @@ return new class extends Migration {
       $t->timestamps();
 
       // Evitar duplicados
-      $t->unique(['payment_id', 'debt_id'], 'allocations_unique_payment_debt');
+      $t->unique(['payment_id', 'invoice_id'], 'allocations_unique_payment_invoice');
       
       // Índices para búsquedas
       $t->index(['payment_id']);
-      $t->index(['debt_id']);
+      $t->index(['invoice_id']);
     });
 
   }

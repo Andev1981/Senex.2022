@@ -1,6 +1,6 @@
 import React from 'react';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
+import PrimaryButton from '@/components/PrimaryButton';
+import SecondaryButton from '@/components/SecondaryButton';
 
 export default function PurchaseOrderDetailModal({ order, closeModal }) {
     const renderActionButtons = () => {
