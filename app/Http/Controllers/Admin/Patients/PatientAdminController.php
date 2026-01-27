@@ -17,6 +17,7 @@ use App\Models\Region;
 use App\Models\SessionType;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
+use App\Models\PatientPlan; // Importar el modelo PatientPlan
 use App\Notifications\PatientTutorWelcomeNotification;
 use App\Notifications\PatientWelcomeNotification;
 use Illuminate\Http\Request;
@@ -165,6 +166,8 @@ class PatientAdminController extends Controller
             'condition',
             'attachments.treatment.diagnostic',
             'invoices.currentDte',
+            'plans.plan', // Cargar los planes del paciente y sus planes maestros (relación 'plans' en el modelo Patient)
+            'plans.consumptions', // Cargar el consumo de sesiones de cada PatientPlan
         ]);
 
         // 2. TRATAMIENTOS (Contexto Clínico)

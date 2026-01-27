@@ -1,5 +1,6 @@
 import React from "react";
 import SearchSelect from "@/components/SearchSelect";
+import EnterpriseSelect from "@/components/EnterpriseSelect";
 import { UserPlus, Trash2, Plus } from "lucide-react";
 
 export default function PatientCard({
@@ -58,21 +59,16 @@ export default function PatientCard({
 
       {/* 2. SELECCIÓN DE PREVISIÓN */}
       <div className="pt-6 space-y-5 border-t border-gray-50">
-        <label className="enterprise-label ml-1">
-          Previsión / Seguro
-        </label>
-        <select
-          className="w-full text-sm font-bold text-gray-700 border-gray-100 rounded-2xl focus:ring-brand-primary focus:border-brand-primary bg-gray-50/50"
+        <EnterpriseSelect
+          label="Previsión / Seguro"
           value={coverageDetails.insurance_id}
-          onChange={(e) => onCoverageChange("insurance_id", e.target.value)}
-        >
-          <option value="">Particular (Sin Previsión)</option>
-          {insurances.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.name}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => onCoverageChange("insurance_id", val)}
+          options={[
+            { value: "", label: "Particular (Sin Previsión)" },
+            ...insurances.map((i) => ({ value: i.id, label: i.name })),
+          ]}
+          className="bg-gray-50/50"
+        />
 
         {/* 3. DETALLES DEL PLAN (Solo si hay seguro) */}
         {coverageDetails.insurance_id && (
@@ -96,20 +92,14 @@ export default function PatientCard({
             </div>
 
             {/* Selector de Plan Primario */}
-            <select
-              className="w-full text-sm font-bold text-gray-700 border-gray-100 rounded-2xl bg-white focus:ring-brand-primary"
+            <EnterpriseSelect
               value={coverageDetails.plan_id}
-              onChange={(e) => onCoverageChange("plan_id", e.target.value)}
-            >
-              <option value="">-- Seleccionar Plan --</option>
-              {plans
+              onChange={(val) => onCoverageChange("plan_id", val)}
+              options={plans
                 .filter((p) => p.insurance_id == coverageDetails.insurance_id)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-            </select>
+                .map((p) => ({ value: p.id, label: p.name }))}
+              placeholder="-- Seleccionar Plan --"
+            />
 
             {/* RUT del Afiliado */}
             <div>
@@ -164,40 +154,28 @@ export default function PatientCard({
 
               {hasSecondaryInsurance && (
                 <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
-                  <select
-                    className="w-full text-xs font-bold border-gray-100 rounded-xl bg-white focus:ring-brand-primary"
+                  <EnterpriseSelect
                     value={coverageDetails.secondary_insurance_id}
-                    onChange={(e) =>
-                      onCoverageChange("secondary_insurance_id", e.target.value)
+                    onChange={(val) =>
+                      onCoverageChange("secondary_insurance_id", val)
                     }
-                  >
-                    <option value="">Seleccionar Cía...</option>
-                    {insurances.map((i) => (
-                      <option key={i.id} value={i.id}>
-                        {i.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="w-full text-xs font-bold border-gray-100 rounded-xl bg-white focus:ring-brand-primary"
+                    options={insurances.map((i) => ({ value: i.id, label: i.name }))}
+                    placeholder="Seleccionar Cía..."
+                  />
+                  <EnterpriseSelect
                     value={coverageDetails.secondary_plan_id}
-                    onChange={(e) =>
-                      onCoverageChange("secondary_plan_id", e.target.value)
+                    onChange={(val) =>
+                      onCoverageChange("secondary_plan_id", val)
                     }
-                  >
-                    <option value="">Seleccionar Convenio...</option>
-                    {plans
+                    options={plans
                       .filter(
                         (p) =>
                           p.insurance_id ==
                           coverageDetails.secondary_insurance_id
                       )
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                  </select>
+                      .map((p) => ({ value: p.id, label: p.name }))}
+                    placeholder="Seleccionar Convenio..."
+                  />
                 </div>
               )}
             </div>

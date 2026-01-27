@@ -1,6 +1,7 @@
 import React from "react";
 import { Calculator, CheckCircle2, Plus } from "lucide-react";
 import ServiceItem from "./ServiceItem"; // Importamos el componente de arriba
+import PlanItem from "./PlanItem"; // <-- 1. Importar PlanItem
 import {fmtDate} from "@/utils/utils";
 
 export default function ServicesCard({
@@ -20,7 +21,7 @@ export default function ServicesCard({
         <span className="flex items-center justify-center w-8 h-8 mr-3 text-xs font-black text-brand-primary bg-brand-secondary/10 rounded-xl">
           2
         </span>
-        Prestaciones
+        Prestaciones y Productos
       </h2>
 
       {/* Sección Deudas (si existen) */}
@@ -85,17 +86,25 @@ export default function ServicesCard({
           </div>
         )}
 
-        {servicesToBill.map((s, index) => (
-          <ServiceItem
-            key={index} // Idealmente usar un ID único si lo tuvieras, index sirve por ahora
-            item={s}
-            index={index}
-            sessionTypes={sessionTypes}
-            doctors={doctors}
-            patientExtras={patientExtras}
-            onUpdate={onUpdateService}
-            onRemove={onRemoveService}
-          />
+        {servicesToBill.map((item, index) => (
+          item.is_plan ? (
+            <PlanItem
+              key={`plan-${item.plan_id}`}
+              item={item}
+              onRemove={() => onRemoveService(index)}
+            />
+          ) : (
+            <ServiceItem
+              key={`service-${index}`}
+              item={item}
+              index={index}
+              sessionTypes={sessionTypes}
+              doctors={doctors}
+              patientExtras={patientExtras}
+              onUpdate={onUpdateService}
+              onRemove={onRemoveService}
+            />
+          )
         ))}
 
         {/* Botón Agregar */}

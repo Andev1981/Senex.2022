@@ -41,7 +41,7 @@ use App\Http\Controllers\Admin\Calendars\{
 /* KineMobile */
 use App\Http\Controllers\Admin\Clients\{
   ClientAuthController,
-  PatientDashboardController
+  ClientDashboardController
 };
 
 /* Companies */
@@ -108,7 +108,8 @@ use App\Http\Controllers\Admin\Payroll\{
 /* Plans */
 use App\Http\Controllers\Admin\Plans\{
   FamilyPlanController, 
-  PlanController
+  PlanController,
+  PatientPlansController
 };
 
 /* Products */
@@ -157,6 +158,7 @@ use App\Http\Controllers\KineMobile\{
 
 /* Commons */
 use App\Http\Controllers\{
+  ExternalDataController,
   FileProxyController,
   HomeController,
   SesionController,
@@ -239,6 +241,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   Route::resource('sessions', TreatmentSessionController::class)->names('sessions');
+  Route::post('/sessions/{session}/notify', [TreatmentSessionController::class, 'notify'])->name('sessions.notify');
 
   /* RUTAS PARA CONFIGURAR EXCEPCIONES POR SUCURSAL EN TIPOS DE SESIÓN */
   // Ruta para OBTENER la configuración (para llenar el formulario)
@@ -267,6 +270,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
   Route::resource('plans', PlanController::class)->names('plans');
+  Route::resource('patient-plans', PatientPlansController::class)->names('patient-plans');
   Route::post('/plans/{plan}/assign-family', [FamilyPlanController::class, 'assign'])
     ->name('plans.assign.family');
 
@@ -289,6 +293,7 @@ Route::group(['middleware' => ['auth']], function () {
   });
 
   Route::get('/patients/search', [PatientSearchController::class, 'search']);
+  Route::get('/external-data/company/{rut}', [ExternalDataController::class, 'getCompanyByRut'])->name('external-data.company');
 
 
   Route::resource('patients', PatientAdminController::class)->names('patients');

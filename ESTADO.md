@@ -38,21 +38,28 @@ El sistema ha migrado de una "doble contabilidad" (Deudas + Facturas) a un model
     *   **Seguridad:** Uso de `lockForUpdate` para reserva atómica de folios SII.
     *   **Tributación:** Exención de IVA dinámica leyendo `SessionType->is_exempt`.
 
-### 🩺 Gestión Clínica & Protocolo SOAP
-- **BodySelector:** Componente SVG interactivo para mapas de dolor (frontal/posterior).
-- **Validación de Agenda:** Bloqueo de citas superpuestas para un mismo paciente.
-- **Flujo Unificado:** La creación de sesión genera automáticamente la `Invoice` pendiente.
+### 🏢 Gestión de Empresas (Nuevo)
+- **CompanyDataService:** Implementado con patrón "Cache on Demand".
+    - Busca localmente (`companies_directory`).
+    - Si es antiguo (>30 días) o no existe, consulta API externa.
+    - Cachea resultados para optimizar costos/latencia.
+- **Frontend:** Autocompletado de Razón Social/Giro en formularios mediante `ExternalDataController`.
+
+### ⚙️ Refactorización & Calidad
+- **Enums Estrictos:** Modelos `Treatment` y `TreatmentSession` migrados 100% a `TreatmentStatusEnum` y `AppointmentStatusEnum`. Eliminación de "magic strings" y corrección de scopes.
+- **Rutas:** Estandarización de rutas frontend a `/sessions` (eliminado `/sesiones` para evitar 404s).
+- **Correcciones:** `ClientDashboardController` y `PatientPlansController` movidos a los namespaces correctos (`Admin\Clients` y `Admin\Plans`).
 
 ## 💡 NOTAS TÉCNICAS
 
 - **Deuda del Paciente:** Se calcula sumando `Invoice` con estado `unpaid`/`partial` menos los pagos asignados en `payment_allocations`.
 - **Rutinas de Mantenimiento:**
-    - `php artisan queue:work` (Vital para DTE asíncrono).
+    - `php artisan queue:work` (Vital para DTE asíncrono y Notificaciones).
     - `php artisan cache:clear` (Si se tocan regiones/comunas).
 - **Inertia:** Rutas estandarizadas a kebab-case (ej: `attendances/index`).
 
 ## 📝 PRÓXIMOS PASOS (Roadmap)
 
-- [ ] Verificar la visualización de la dirección de sucursal en las notificaciones de mail.
-- [ ] Implementar la lógica de "Re-enviar Notificación" desde el detalle de la sesión.
-- [ ] Revisar el cierre automático de tratamientos tras alcanzar el `total_sessions`.
+- [x] Verificar la visualización de la dirección de sucursal en las notificaciones de mail (Implementado en `SessionScheduledNotification` y layouts de correo).
+- [x] Implementar la lógica de "Re-enviar Notificación" desde el detalle de la sesión (Botón "Notificar" añadido).
+- [x] Revisar el cierre automático de tratamientos tras alcanzar el `total_sessions` (Lógica corregida en `TreatmentService` usando Enums).

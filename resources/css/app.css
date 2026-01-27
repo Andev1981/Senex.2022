@@ -355,4 +355,22 @@ label,
   body {
     @apply bg-background text-foreground;
   }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  select,
+  textarea {
+    @apply px-5 py-4 rounded-2xl border-gray-100 bg-gray-100 font-bold text-sm shadow-inner transition-all duration-300 outline-none;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]):not([type="button"]):not([type="submit"]):not([type="reset"]):hover,
+  select:hover,
+  textarea:hover {
+    @apply bg-white border-gray-200;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]):not([type="button"]):not([type="submit"]):not([type="reset"]):focus,
+  select:focus,
+  textarea:focus {
+    @apply bg-white ring-4 ring-brand-primary/5 border-brand-primary;
+  }
 }

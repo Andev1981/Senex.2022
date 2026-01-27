@@ -95,7 +95,7 @@ const ChilePhoneInput = ({
         required={required}
         className={
           // Estilos enterprise para el input
-          "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-50 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
+          "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-100 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
           inputClassName // Mantiene los estilos adicionales pasados por prop
         }
       />

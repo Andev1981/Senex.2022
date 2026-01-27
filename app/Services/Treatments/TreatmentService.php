@@ -422,7 +422,7 @@ class TreatmentService
     private function determineStatus(Treatment $treatment, array $sessionStats, array $dates): ?string
     {
         // No cambiar si está suspendido o inactivo manualmente
-        if (in_array($treatment->status, ['cancelled', 'completed'])) {
+        if (in_array($treatment->status, [TreatmentStatusEnum::CANCELLED, TreatmentStatusEnum::COMPLETED])) {
             return null;
         }
         /* 'Evaluation','InProgress','Cancelled','Paused','Completed' */
@@ -433,7 +433,7 @@ class TreatmentService
             $treatment->total_sessions &&
             $sessionStats['completed'] >= $treatment->total_sessions
         ) {
-            return 'completed';
+            return TreatmentStatusEnum::COMPLETED->value;
         }
 
         // Si la última sesión fue hace más de 60 días y no hay próximas sesiones
@@ -441,13 +441,13 @@ class TreatmentService
             $daysSinceLastSession = Carbon::parse($dates['end_date'])->diffInDays(now());
 
             if ($daysSinceLastSession > 60) {
-                return 'paused';
+                return TreatmentStatusEnum::PAUSED->value;
             }
         }
 
         // Si tiene sesiones programadas o completadas recientes, está activo
         if ($sessionStats['completed'] > 0 || $sessionStats['scheduled'] > 0) {
-            return 'in_progress';
+            return TreatmentStatusEnum::IN_PROGRESS->value;
         }
 
         return null; // No cambiar

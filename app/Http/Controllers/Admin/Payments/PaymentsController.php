@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Payments;
 
 use App\Enums\PaymentMethodEnum;
+use App\Enums\DteStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PaymentNowRequest;
 use App\Http\Requests\StorePaymentRequest;
@@ -320,7 +321,7 @@ class PaymentsController extends Controller
 
         // Verificamos el estado para decirle a la UI si mostrar "Éxito" o "En Proceso"
         // Asumimos que si está en 'CREATED' o 'PENDING_RETRY', es que no se completó síncronamente.
-        $isDtePending = !in_array($invoice->dte_status, ['ENVIADO', 'ACEPTADO', 'PAID']); // Ajusta según tus constantes reales
+        $isDtePending = in_array($invoice->dte_status, [DteStatusEnum::PENDING, DteStatusEnum::GENERATED, DteStatusEnum::RETRY, DteStatusEnum::SENT]);
 
         $warningMessage = $isDtePending
             ? "El documento se está generando en segundo plano (SII lento). Llegará al correo en breve."
@@ -418,6 +419,7 @@ class PaymentsController extends Controller
             ->with([
                 'patient:id,name,last_name,rut,email', // Solo campos necesarios
                 'paymentAllocation.treatmentSession.sessionType', // Para ver qué sesiones se pagaron
+                'paymentAllocation.invoice.items.sellable.sessionTypes', // <--- ACTUALIZADO: Cargar contenido del plan
                 'receivables.insurance', // Para ver qué seguros quedaron con deuda pendiente
                 'branch' // Contexto de la sucursal
             ])
@@ -437,7 +439,7 @@ class PaymentsController extends Controller
             'payment' => $payment,
             'invoice' => $invoice,
             // Pasamos una bandera si el DTE aún está en proceso de firma
-            'is_dte_pending' => $invoice ? in_array($invoice->dte_status, [Invoice::SII_STATUS_PENDING, 'CREATED', 'PENDING_RETRY', Invoice::SII_STATUS_SENT]) : false
+            'is_dte_pending' => $invoice ? in_array($invoice->dte_status, [DteStatusEnum::PENDING, DteStatusEnum::GENERATED, DteStatusEnum::RETRY, DteStatusEnum::SENT]) : false
         ]);
     }
 
@@ -490,6 +492,7 @@ class PaymentsController extends Controller
                 'company',
                 'branch',
                 'paymentAllocation.treatmentSession.sessionType',
+                'paymentAllocation.invoice.items.sellable', // <--- AGREGADO
                 'receivables.insurance'
             ])
             ->firstOrFail();

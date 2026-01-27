@@ -8,6 +8,7 @@ import SecondaryButton from "@/components/SecondaryButton";
 import ChilePhoneInput from "@/components/ChilePhoneInput";
 import RutInput from "@/components/RutInput";
 import Switch from "@/components/Switch";
+import EnterpriseSelect from "@/components/EnterpriseSelect";
 import moment from "moment";
 import { especialidadesChile } from "@/constants/especialidades";
 import { 
@@ -158,19 +159,26 @@ export default function DoctorDetailModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
                 <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Especialidad Principal</label>
-                    <select value={data.speciality} onChange={e => setData("speciality", e.target.value)} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm focus:ring-brand-primary transition-all bg-white" required disabled={isExistingInSystem}>
-                        <option value="">-- Seleccionar --</option>
-                        {especialidadesChile?.map(esp => <option key={esp} value={esp}>{esp}</option>)}
-                    </select>
+                    <EnterpriseSelect
+                        label="Especialidad Principal"
+                        value={data.speciality}
+                        onChange={(val) => setData("speciality", val)}
+                        options={especialidadesChile?.map(esp => ({ value: esp, label: esp }))}
+                        disabled={isExistingInSystem}
+                        placeholder="-- Seleccionar --"
+                    />
                 </div>
                 <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Estado de Cuenta</label>
-                    <select value={data.status} onChange={e => setData("status", e.target.value)} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm focus:ring-brand-primary transition-all bg-white" required>
-                        <option value="active">Activo</option>
-                        <option value="suspended">Suspendido</option>
-                        <option value="cancelled">Cancelado</option>
-                    </select>
+                    <EnterpriseSelect
+                        label="Estado de Cuenta"
+                        value={data.status}
+                        onChange={(val) => setData("status", val)}
+                        options={[
+                            { value: 'active', label: 'Activo' },
+                            { value: 'suspended', label: 'Suspendido' },
+                            { value: 'cancelled', label: 'Cancelado' },
+                        ]}
+                    />
                 </div>
                 <div className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">
@@ -192,25 +200,34 @@ export default function DoctorDetailModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Región</label>
-                    <select value={data.region_id} onChange={e => { setData("region_id", e.target.value); setData("province_id", ""); setData("commune_id", ""); }} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm focus:ring-brand-primary transition-all bg-gray-50/50" disabled={isExistingInSystem}>
-                        <option value="">-- Seleccionar --</option>
-                        {regions?.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                    </select>
+                    <EnterpriseSelect
+                        label="Región"
+                        value={data.region_id}
+                        onChange={(val) => { setData("region_id", val); setData("province_id", ""); setData("commune_id", ""); }}
+                        options={regions?.map(r => ({ value: r.id, label: r.name }))}
+                        disabled={isExistingInSystem}
+                        placeholder="-- Seleccionar --"
+                    />
                 </div>
                 <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Provincia</label>
-                    <select value={data.province_id} onChange={e => { setData("province_id", e.target.value); setData("commune_id", ""); }} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm focus:ring-brand-primary transition-all bg-gray-50/50" disabled={!data.region_id || isExistingInSystem}>
-                        <option value="">-- Seleccionar --</option>
-                        {filteredProvinces?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
+                    <EnterpriseSelect
+                        label="Provincia"
+                        value={data.province_id}
+                        onChange={(val) => { setData("province_id", val); setData("commune_id", ""); }}
+                        options={filteredProvinces?.map(p => ({ value: p.id, label: p.name }))}
+                        disabled={!data.region_id || isExistingInSystem}
+                        placeholder="-- Seleccionar --"
+                    />
                 </div>
                 <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Comuna</label>
-                    <select value={data.commune_id} onChange={e => setData("commune_id", e.target.value)} className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-sm focus:ring-brand-primary transition-all bg-gray-50/50" disabled={!data.province_id || isExistingInSystem}>
-                        <option value="">-- Seleccionar --</option>
-                        {filteredCommunes?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <EnterpriseSelect
+                        label="Comuna"
+                        value={data.commune_id}
+                        onChange={(val) => setData("commune_id", val)}
+                        options={filteredCommunes?.map(c => ({ value: c.id, label: c.name }))}
+                        disabled={!data.province_id || isExistingInSystem}
+                        placeholder="-- Seleccionar --"
+                    />
                 </div>
                 <div className="md:col-span-2 space-y-1">
                     <label className="enterprise-label ml-1">Calle / Avenida</label>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { router } from "@inertiajs/react";
+import { Bell, Edit, Trash2, ArrowLeft } from "lucide-react";
 
 const Show = ({ session }) => {
   const [showEditForm, setShowEditForm] = useState(false);
@@ -9,7 +10,7 @@ const Show = ({ session }) => {
     if (confirm(`¿Cambiar estado a "${newStatus}"?`)) {
       setIsLoading(true);
       router.put(
-        `/sesiones/${session.id}`,
+        `/sessions/${session.id}`,
         {
           status: newStatus,
         },
@@ -24,6 +25,19 @@ const Show = ({ session }) => {
     }
   };
 
+  const handleResendNotification = () => {
+    if (confirm("¿Re-enviar notificación de agendamiento al paciente?")) {
+      setIsLoading(true);
+      router.post(`/sessions/${session.id}/notify`, {}, {
+        onSuccess: () => setIsLoading(false),
+        onError: () => {
+          setIsLoading(false);
+          alert("Error al enviar la notificación");
+        },
+      });
+    }
+  };
+
   const handleDelete = () => {
     if (
       confirm(
@@ -31,8 +45,8 @@ const Show = ({ session }) => {
       )
     ) {
       setIsLoading(true);
-      router.delete(`/sesiones/${session.id}`, {
-        onSuccess: () => router.visit("/sesiones"),
+      router.delete(`/sessions/${session.id}`, {
+        onSuccess: () => router.visit("/sessions"),
         onError: () => {
           setIsLoading(false);
           alert("Error al eliminar la sesión");
@@ -43,7 +57,7 @@ const Show = ({ session }) => {
 
   const handleUpdateSession = (updatedData) => {
     setIsLoading(true);
-    router.put(`/sesiones/${session.id}`, updatedData, {
+    router.put(`/sessions/${session.id}`, updatedData, {
       onSuccess: () => {
         setShowEditForm(false);
         setIsLoading(false);
@@ -60,7 +74,7 @@ const Show = ({ session }) => {
       <div className="p-6">
         <div className="mb-6">
           <button
-            onClick={() => router.visit("/sesiones")}
+            onClick={() => router.visit("/sessions")}
             className="flex items-center text-indigo-600 hover:text-indigo-800"
           >
             ← Volver a Sesiones
@@ -79,6 +93,15 @@ const Show = ({ session }) => {
                 </p>
               </div>
               <div className="flex space-x-2">
+                <button
+                  onClick={handleResendNotification}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-4 py-2 text-white bg-amber-500 rounded hover:bg-amber-600 disabled:opacity-50"
+                  title="Re-enviar WhatsApp/Email al paciente"
+                >
+                  <Bell className="w-4 h-4" />
+                  Notificar
+                </button>
                 <button
                   onClick={() => setShowEditForm(true)}
                   disabled={isLoading}

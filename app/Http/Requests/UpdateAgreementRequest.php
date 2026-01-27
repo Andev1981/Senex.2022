@@ -14,14 +14,7 @@ class UpdateAgreementRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        // 1. Inyectar company_id si falta
-        if (!$this->has('company_id') && $this->user() && $this->user()->company_id) {
-            $this->merge([
-                'company_id' => $this->user()->company_id,
-            ]);
-        }
-
-        // 2. Convertir is_active a booleano real antes de validar
+        // 1. Convertir is_active a booleano real antes de validar
         if ($this->has('is_active')) {
             $this->merge(['is_active' => filter_var($this->input('is_active'), FILTER_VALIDATE_BOOLEAN)]);
         }
@@ -33,7 +26,6 @@ class UpdateAgreementRequest extends FormRequest
         $agreementId = optional($agreement)->id;
 
         $rules = [
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
             'insurance_id' => ['required', 'integer', 'exists:insurances,id'],
             'name' => ['required', 'string', 'max:255'],
             'version' => ['nullable', 'string', 'max:50'],

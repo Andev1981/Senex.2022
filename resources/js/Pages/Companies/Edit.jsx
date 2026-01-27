@@ -38,6 +38,7 @@ import {
   Pencil
 } from "lucide-react";
 
+import axios from "axios";
 import Modal from "@/components/Modal";
 import DteConfigurationForm from "./components/DteConfigurationForm";
 import CafUploader from "./components/CafUploader";
@@ -186,6 +187,25 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
   });
 
   const [logoPreview, setLogoPreview] = useState(logo?.url || null);
+
+  const handleRutBlur = async () => {
+    if (!companyData.rut || companyData.rut.length < 8) return;
+
+    try {
+      const response = await axios.get(route("external-data.company", { rut: companyData.rut }));
+      if (response.data.success) {
+        const { razon_social, giro } = response.data.data;
+        
+        setCompanyData((prevData) => ({
+          ...prevData,
+          business_name: razon_social || prevData.business_name,
+          giro: giro || prevData.giro,
+        }));
+      }
+    } catch (error) {
+      console.warn("No se pudo obtener la información de la empresa automáticamente.");
+    }
+  };
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -818,6 +838,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                   type="text"
                   value={companyData.rut}
                   onChange={(e) => setCompanyData("rut", e.target.value)}
+                  onBlur={handleRutBlur}
                   className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
                 />
               </div>

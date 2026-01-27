@@ -222,7 +222,7 @@ const RutInput = ({
             required={required}
             className={
               `w-full pl-12 pr-10 py-4 rounded-2xl border-2 font-mono font-black text-sm shadow-inner transition-all outline-none 
-              ${!display ? 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary' : 
+              ${!display ? 'border-gray-100 bg-gray-100 focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary' : 
                 isValid ? 'border-green-500/50 bg-green-50/10 focus:border-green-500 focus:ring-4 focus:ring-green-500/5' : 
                 'border-red-500/50 bg-red-50/10 focus:border-red-500 focus:ring-4 focus:ring-red-500/5'} 
               ${inputClassName}`

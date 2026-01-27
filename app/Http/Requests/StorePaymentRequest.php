@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePaymentRequest extends FormRequest
 {
@@ -36,21 +37,27 @@ class StorePaymentRequest extends FormRequest
             $this->merge(['coverage_details' => null]);
         }
 
-        // 4. Normalizar ítems del carrito
+        // 4. Normalizar ítems del carrito de forma robusta
         if ($this->has('services_to_bill')) {
             $items = collect($this->input('services_to_bill'))->map(function ($item) {
-                return [
-                    'session_type_id' => $item['session_type_id'],
-                    'doctor_id'       => $item['doctor_id'] ?: null,
-                    'quantity'        => $item['quantity'] ?: 1,
-                    'unit_price_clp'      => (int) ($item['unit_price_clp'] ?: 0),
-                    'unit_insurance_primary_clp'   => (int) ($item['unit_insurance_primary_clp'] ?? 0),
-                    'unit_insurance_secondary_clp' => (int) ($item['unit_insurance_secondary_clp'] ?? 0),
-                    'unit_patient_clp'             => (int) ($item['unit_patient_clp'] ?? 0),
-                    'debt_id'         => $item['debt_id'] ?? null,
-                    'treatment_id'    => $item['treatment_id'] ?? null,
-                    'treatment_session_id'      => $item['treatment_session_id'] ?? null,
+                // Definir un array de valores por defecto
+                $defaults = [
+                    'session_type_id' => null,
+                    'doctor_id'       => null,
+                    'quantity'        => 1,
+                    'unit_price_clp'      => 0,
+                    'unit_insurance_primary_clp'   => 0,
+                    'unit_insurance_secondary_clp' => 0,
+                    'unit_patient_clp'             => 0,
+                    'debt_id'         => null,
+                    'treatment_id'    => null,
+                    'treatment_session_id'      => null,
+                    'is_plan'         => false,
+                    'plan_id'         => null,
                 ];
+                // Fusionar los valores por defecto con el item que viene del request.
+                // Los valores de $item sobrescribirán los de $defaults si existen.
+                return array_merge($defaults, $item);
             })->toArray();
 
             $this->merge(['services_to_bill' => $items]);
@@ -77,14 +84,23 @@ class StorePaymentRequest extends FormRequest
 
             // --- Servicios (El Carrito) ---
             'services_to_bill' => ['required', 'array', 'min:1'],
+            'services_to_bill.*.is_plan' => ['sometimes', 'boolean'],
+            'services_to_bill.*.plan_id' => ['required_if:services_to_bill.*.is_plan,true', 'nullable', 'exists:plans,id'],
             'services_to_bill.*.treatment_session_id' => ['nullable', 'exists:treatment_sessions,id'],
             'services_to_bill.*.invoice_id' => ['nullable', 'exists:invoices,id'],
             'services_to_bill.*.name' => ['nullable', 'string'],
-            // Validamos que si no viene doctor_id, al menos venga un tratamiento o session_type
-            'services_to_bill.*.doctor_id'       => ['nullable', 'exists:doctors,id'],
-            'services_to_bill.*.session_type_id' => ['required_without:services_to_bill.*.invoice_id', 'nullable', 'exists:session_types,id'],
-
-            // --- Detalles del Pago Físico ---
+            
+                        // Validación Condicional para doctor_id y session_type_id
+            
+                        'services_to_bill.*.doctor_id' => ['required_unless:services_to_bill.*.is_plan,true', 'nullable', 'exists:doctors,id'],
+            
+                        'services_to_bill.*.session_type_id' => ['required_unless:services_to_bill.*.is_plan,true', 'nullable', 'exists:session_types,id'],
+            
+                    
+            
+                        // --- Detalles del Pago Físico ---
+            
+            
             'payment_details' => ['required', 'array'],
             'payment_details.payment_method' => ['required', 'string'],
             'payment_details.amount_paid'    => ['required', 'numeric', 'min:0'],

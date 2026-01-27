@@ -46,7 +46,12 @@ export default function AgreementRuleFormModal({
     });
 
   useEffect(() => {
-    if (plans) setPlansList(plans.filter((p) => p.id !== rule?.plan_id) || []);
+    // Filtrar los planes por la aseguradora del convenio actual
+    if (agreement && plans) {
+      const filteredPlans = plans.filter(p => p.insurance_id === agreement.insurance_id);
+      setPlansList(filteredPlans);
+    }
+    
     if (show) {
       if (rule) {
         setData({
@@ -69,7 +74,7 @@ export default function AgreementRuleFormModal({
         setData("agreement_id", agreement?.id || "");
       }
     }
-  }, [agreement, show, rule]);
+  }, [agreement, show, rule, plans]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -82,7 +87,7 @@ export default function AgreementRuleFormModal({
     method(route(routeName, routeParams), {
       onSuccess: () => {
         reset();
-        onClose();
+        onClose(true); // Indicar éxito para recargar
       },
       preserveScroll: true,
     });
@@ -182,10 +187,10 @@ export default function AgreementRuleFormModal({
                 onChange={(e) => setData("plan_id", e.target.value)}
                 className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl focus:ring-brand-primary bg-gray-50/50"
               >
-                <option value="">-- Regla General (Aseguradora) --</option>
+                <option value="">-- Regla General (Aplica a toda la aseguradora) --</option>
                 {plansList.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {p.name} ({p.code || 'Sin código'})
                   </option>
                 ))}
               </select>

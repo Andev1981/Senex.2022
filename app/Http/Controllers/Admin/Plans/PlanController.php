@@ -23,41 +23,85 @@ class PlanController extends Controller
         $this->planService = $planService;
     }
 
-    public function index(Insurance $insurance){
+    public function index(Request $request, Insurance $insurance = null){
      
-        /* dd($insurance->id); */
-        $plans = Plan::with('insurance')
-            ->where('insurance_id', $insurance->id)
-            ->orderBy('name')
-            ->get()
-            ->map(function ($plan) {
+        // Si la petición espera JSON y se pide planes internos
+        if ($request->wantsJson() && ($request->has('is_internal') || $request->has('search'))) {
+            $plansQuery = Plan::with(['insurance', 'agreementRules.sessionType']) // Cargar a través de las reglas del convenio
+                ->where('is_active', true);
+        
+            if ($request->has('is_internal')) {
+                $plansQuery->where('type', 'internal');
+            }
+
+            if ($request->has('search')) {
+                $searchTerm = $request->input('search');
+                $plansQuery->where('name', 'LIKE', "%{$searchTerm}%");
+            }
+            
+            $plans = $plansQuery->get()->map(function ($plan) {
+                // Mapear las reglas para obtener los nombres de los tipos de sesión
+                $sessionTypesNames = $plan->agreementRules->map(function ($rule) {
+                    return $rule->sessionType?->name;
+                })->filter()->unique()->implode(', ');
+
                 return [
                     'id' => $plan->id,
                     'name' => $plan->name,
                     'code' => $plan->code,
-                    'insurance_id' => $plan->insurance_id,
-                    // 🎯 SOLUCIÓN: Incluir la relación 'insurance' en el array de retorno
-                    'insurance' => [ 
-                        'id' => $plan->insurance->id ?? null,
-                        'name' => $plan->insurance->name ?? 'Particular', 
-                        // Añade más campos de la aseguradora si los necesitas en el front
-                        'institution_type' => $plan->insurance->institution_type ?? null,
-                    ],
-                    'coverage_percentage' => $plan->coverage_percentage,
-                    'type' => $plan->type,
-                    'total_sessions' => $plan->total_sessions,
                     'price' => $plan->price,
+                    'total_sessions' => $plan->total_sessions,
                     'valid_months' => $plan->valid_months,
-                    'start_date' => $plan->start_date,
-                    'end_date' => $plan->end_date,
                     'description' => $plan->description,
-                    'is_active' => $plan->is_active,
+                    'insurance_name' => $plan->insurance?->name ?? 'Particular / Interno',
+                    'session_types' => $sessionTypesNames, // Usar la nueva variable
                 ];
             });
 
+            return response()->json(['plans' => $plans]);
+        }
+
+        // Lógica original para la vista Inertia
+        if ($insurance) {
+            $plans = Plan::with('insurance')
+                ->where('insurance_id', $insurance->id)
+                ->orderBy('name')
+                ->get()
+                ->map(function ($plan) {
+                    return [
+                        'id' => $plan->id,
+                        'name' => $plan->name,
+                        'code' => $plan->code,
+                        'insurance_id' => $plan->insurance_id,
+                        'insurance' => [ 
+                            'id' => $plan->insurance->id ?? null,
+                            'name' => $plan->insurance->name ?? 'Particular', 
+                            'institution_type' => $plan->insurance->institution_type ?? null,
+                        ],
+                        'coverage_percentage' => $plan->coverage_percentage,
+                        'type' => $plan->type,
+                        'total_sessions' => $plan->total_sessions,
+                        'price' => $plan->price,
+                        'valid_months' => $plan->valid_months,
+                        'start_date' => $plan->start_date,
+                        'end_date' => $plan->end_date,
+                        'description' => $plan->description,
+                        'is_active' => $plan->is_active,
+                    ];
+                });
+
             return Inertia::render('plans/Index', [
-            'plans' => $plans,
-            'insurance' => $insurance
+                'plans' => $plans,
+                'insurance' => $insurance
+            ]);
+        }
+        
+        // Fallback si no se provee ni JSON ni insurance, podría devolver todos los planes o una vista genérica.
+        // Por ahora, devolvemos una vista genérica de planes.
+        $allPlans = Plan::with('insurance')->orderBy('name')->get();
+        return Inertia::render('plans/Index', [
+            'plans' => $allPlans,
+            'insurance' => null
         ]);
     }
 

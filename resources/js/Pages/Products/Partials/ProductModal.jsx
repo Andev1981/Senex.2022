@@ -17,6 +17,7 @@ import SecondaryButton from "@/components/SecondaryButton";
 import TextInput from "@/components/TextInput";
 import InputPesoChileno from "@/components/InputPesoChileno";
 import Switch from "@/components/Switch";
+import Checkbox from "@/components/Checkbox";
 import Swal from "sweetalert2";
 
 export default function ProductModal({ isOpen, onClose, product = null }) {
@@ -171,7 +172,7 @@ export default function ProductModal({ isOpen, onClose, product = null }) {
                         <ShieldCheck className="w-4 h-4 text-brand-primary" />
                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-700">Producto Exento de IVA</span>
                     </div>
-                    <input type="checkbox" checked={data.is_exempt} onChange={e => setData("is_exempt", e.target.checked)} className="w-5 h-5 rounded-lg border-gray-200 text-brand-primary focus:ring-brand-primary" />
+                    <Checkbox checked={data.is_exempt} onChange={e => setData("is_exempt", e.target.checked)} />
                 </label>
             </div>
           </div>

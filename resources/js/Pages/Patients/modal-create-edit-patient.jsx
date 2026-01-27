@@ -9,6 +9,8 @@ import SecondaryButton from "@/components/SecondaryButton";
 import ChilePhoneInput from "@/components/ChilePhoneInput";
 import RutInput from "@/components/RutInput";
 import Switch from "@/components/Switch";
+import Checkbox from "@/components/Checkbox";
+import EnterpriseSelect from "@/components/EnterpriseSelect";
 import moment from "moment";
 import {
   Building2,
@@ -385,37 +387,34 @@ export default function ModalCreateEditPatient({
                 <InputError message={errors.birth_date} />
               </div>
               <div className="space-y-1">
-                <label className="ml-1 enterprise-label opacity-60">
-                  Género
-                </label>
-                <select
+                <EnterpriseSelect
+                  label="Género"
                   value={data.gender}
-                  onChange={(e) => setData("gender", e.target.value)}
-                  className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 shadow-inner rounded-2xl focus:ring-brand-primary bg-gray-50/50"
-                  required
-                >
-                  <option value="">-- Seleccionar --</option>
-                  <option value="female">Femenino</option>
-                  <option value="male">Masculino</option>
-                  <option value="other">Otro</option>
-                </select>
+                  onChange={(val) => setData("gender", val)}
+                  options={[
+                    { value: 'female', label: 'Femenino' },
+                    { value: 'male', label: 'Masculino' },
+                    { value: 'other', label: 'Otro' },
+                  ]}
+                  placeholder="-- Seleccionar --"
+                  className="bg-gray-50/50"
+                />
                 <InputError message={errors.gender} />
               </div>
               <div className="space-y-1">
-                <label className="ml-1 enterprise-label opacity-60">
-                  Estado Civil
-                </label>
-                <select
+                <EnterpriseSelect
+                  label="Estado Civil"
                   value={data.marital_status}
-                  onChange={(e) => setData("marital_status", e.target.value)}
-                  className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 shadow-inner rounded-2xl focus:ring-brand-primary bg-gray-50/50"
-                >
-                  <option value="">-- Seleccionar --</option>
-                  <option value="single">Soltero/a</option>
-                  <option value="married">Casado/a</option>
-                  <option value="divorced">Divorciado/a</option>
-                  <option value="widowed">Viudo/a</option>
-                </select>
+                  onChange={(val) => setData("marital_status", val)}
+                  options={[
+                    { value: 'single', label: 'Soltero/a' },
+                    { value: 'married', label: 'Casado/a' },
+                    { value: 'divorced', label: 'Divorciado/a' },
+                    { value: 'widowed', label: 'Viudo/a' },
+                  ]}
+                  placeholder="-- Seleccionar --"
+                  className="bg-gray-50/50"
+                />
                 <InputError message={errors.marital_status} />
               </div>
             </div>
@@ -430,72 +429,48 @@ export default function ModalCreateEditPatient({
               </h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Región
-                  </label>
-                  <select
+                  <EnterpriseSelect
+                    label="Región"
                     value={data.region_id}
-                    onChange={(e) =>
+                    onChange={(val) =>
                       setData((d) => ({
                         ...d,
-                        region_id: e.target.value,
+                        region_id: val,
                         province_id: "",
                         commune_id: "",
                       }))
                     }
-                    className="w-full px-5 py-4 text-sm font-bold bg-white border-gray-100 shadow-sm rounded-2xl focus:ring-blue-500"
-                  >
-                    <option value="">-- Seleccionar --</option>
-                    {regions.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                  </select>
+                    options={regions.map(r => ({ value: r.id, label: r.name }))}
+                    placeholder="-- Seleccionar --"
+                  />
                   <InputError message={errors.region_id} />
                 </div>
                 <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Provincia
-                  </label>
-                  <select
+                  <EnterpriseSelect
+                    label="Provincia"
                     value={data.province_id}
-                    onChange={(e) =>
+                    onChange={(val) =>
                       setData((d) => ({
                         ...d,
-                        province_id: e.target.value,
+                        province_id: val,
                         commune_id: "",
                       }))
                     }
-                    className="w-full px-5 py-4 text-sm font-bold bg-white border-gray-100 shadow-sm rounded-2xl focus:ring-blue-500"
+                    options={filteredProvinces.map(p => ({ value: p.id, label: p.name }))}
                     disabled={!data.region_id}
-                  >
-                    <option value="">-- Seleccionar --</option>
-                    {filteredProvinces.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="-- Seleccionar --"
+                  />
                   <InputError message={errors.province_id} />
                 </div>
                 <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Comuna
-                  </label>
-                  <select
+                  <EnterpriseSelect
+                    label="Comuna"
                     value={data.commune_id}
-                    onChange={(e) => setData("commune_id", e.target.value)}
-                    className="w-full px-5 py-4 text-sm font-bold bg-white border-gray-100 shadow-sm rounded-2xl focus:ring-blue-500"
+                    onChange={(val) => setData("commune_id", val)}
+                    options={filteredCommunes.map(c => ({ value: c.id, label: c.name }))}
                     disabled={!data.province_id}
-                  >
-                    <option value="">-- Seleccionar --</option>
-                    {filteredCommunes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="-- Seleccionar --"
+                  />
                   <InputError message={errors.commune_id} />
                 </div>
                 <div className="space-y-1 md:col-span-2">
@@ -627,23 +602,13 @@ export default function ModalCreateEditPatient({
                   <InputError message={errors.guardian_email} />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <label className="ml-1 enterprise-label opacity-60">
-                    Parentesco con el Paciente
-                  </label>
-                  <select
+                  <EnterpriseSelect
+                    label="Parentesco con el Paciente"
                     value={data.guardian_relationship}
-                    onChange={(e) =>
-                      setData("guardian_relationship", e.target.value)
-                    }
-                    className="w-full px-5 py-4 text-sm font-bold bg-white border-gray-100 rounded-2xl focus:ring-brand-primary"
-                  >
-                    <option value="">-- Seleccionar Vínculo --</option>
-                    {relationshipOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setData("guardian_relationship", val)}
+                    options={relationshipOptions}
+                    placeholder="-- Seleccionar Vínculo --"
+                  />
                   <InputError message={errors.guardian_relationship} />
                 </div>
               </div>
@@ -686,33 +651,21 @@ export default function ModalCreateEditPatient({
 
               {data.opt_out_reminders && (
                 <div className="flex items-center justify-around p-6 duration-300 border bg-brand-primary/5 border-brand-primary/10 rounded-3xl animate-in zoom-in-95">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={data.prefers_whatsapp}
-                      onChange={(e) =>
-                        setData("prefers_whatsapp", e.target.checked)
-                      }
-                      className="w-5 h-5 border-gray-200 rounded-lg text-brand-primary focus:ring-brand-primary"
-                    />
-                    <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest group-hover:text-brand-primary transition-colors">
-                      WhatsApp
-                    </span>
-                  </label>
+                  <Checkbox
+                    label="WhatsApp"
+                    checked={data.prefers_whatsapp}
+                    onChange={(e) =>
+                      setData("prefers_whatsapp", e.target.checked)
+                    }
+                  />
                   <div className="w-px h-6 bg-brand-primary/10"></div>
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={data.prefers_mail}
-                      onChange={(e) =>
-                        setData("prefers_mail", e.target.checked)
-                      }
-                      className="w-5 h-5 border-gray-200 rounded-lg text-brand-primary focus:ring-brand-primary"
-                    />
-                    <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest group-hover:text-brand-primary transition-colors">
-                      Email
-                    </span>
-                  </label>
+                  <Checkbox
+                    label="Email"
+                    checked={data.prefers_mail}
+                    onChange={(e) =>
+                      setData("prefers_mail", e.target.checked)
+                    }
+                  />
                 </div>
               )}
             </div>

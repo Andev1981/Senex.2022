@@ -1,4 +1,5 @@
 import React from "react";
+import EnterpriseSelect from "@/components/EnterpriseSelect";
 import { Trash2, Minus, Plus, Stethoscope } from "lucide-react";
 
 export default function ServiceItem({
@@ -58,43 +59,31 @@ export default function ServiceItem({
         ) : (
           <div className="space-y-3">
             <div>
-              <label className="enterprise-label ml-1">
-                Prestación
-              </label>
-              <select
-                className="w-full text-sm font-bold text-gray-700 border-gray-100 rounded-xl focus:ring-brand-primary focus:border-brand-primary bg-gray-50 focus:bg-white transition-all"
+              <EnterpriseSelect
+                label="Prestación"
                 value={item.session_type_id}
-                onChange={(e) =>
-                  onUpdate(index, "session_type_id", e.target.value)
-                }
-              >
-                <option value="">Seleccionar prestación...</option>
-                {sessionTypes.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => onUpdate(index, "session_type_id", val)}
+                options={sessionTypes.map((st) => ({ value: st.id, label: st.name }))}
+                placeholder="Seleccionar prestación..."
+                className="bg-gray-50"
+              />
             </div>
 
             {/* SELECTOR DE PLAN (Si aplica) */}
             {availablePlans.length > 0 && (
               <div className="animate-in fade-in zoom-in-95 duration-500">
-                <label className="text-[10px] uppercase font-black text-green-600 mb-1 block tracking-widest">
+                <label className="text-[10px] uppercase font-black text-green-600 mb-1 block tracking-widest ml-1">
                   Plan Disponible
                 </label>
-                <select
-                  className="w-full text-[11px] font-black text-green-700 border-green-200 rounded-xl bg-green-50 focus:ring-green-500 transition-all uppercase tracking-tight"
+                <EnterpriseSelect
                   value={item.use_plan_id || ""}
-                  onChange={(e) => onUpdate(index, "use_plan_id", e.target.value)}
-                >
-                  <option value="">-- No usar plan (Cobrar) --</option>
-                  {availablePlans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.plan_name} ({p.available} ses. disp.)
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => onUpdate(index, "use_plan_id", val)}
+                  options={[
+                    { value: "", label: "-- No usar plan (Cobrar) --" },
+                    ...availablePlans.map((p) => ({ value: p.id, label: `${p.plan_name} (${p.available} ses. disp.)` }))
+                  ]}
+                  className="!border-green-200 !bg-green-50"
+                />
               </div>
             )}
           </div>
@@ -105,23 +94,13 @@ export default function ServiceItem({
       <div className="mb-5">
         {!item.is_debt && (
           <>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Stethoscope className="h-4 w-4 text-brand-gray opacity-50" />
-              </div>
-              <select
-                className="w-full pl-10 text-xs font-bold border-gray-100 rounded-xl bg-white text-gray-600 focus:ring-brand-primary transition-all"
-                value={item.doctor_id}
-                onChange={(e) => onUpdate(index, "doctor_id", e.target.value)}
-              >
-                <option value="">Asignar Profesional...</option>
-                {doctors.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} {d.last_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <EnterpriseSelect
+              value={item.doctor_id}
+              onChange={(val) => onUpdate(index, "doctor_id", val)}
+              options={doctors.map((d) => ({ value: d.id, label: `${d.name} ${d.last_name}` }))}
+              placeholder="Asignar Profesional..."
+              icon={Stethoscope}
+            />
           </>
         )}
         {item.is_debt && (

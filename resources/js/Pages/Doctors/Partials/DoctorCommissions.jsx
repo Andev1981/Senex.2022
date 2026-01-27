@@ -75,11 +75,11 @@ export default function DoctorCommissions({ doctor, sessionTypes }) {
         </div>
         <div className=" pr-20">
         {!isEditing ? (
-            <PrimaryButton onClick={() => setIsEditing(true)} className="!text-[9px] !py-3">Editar Tarifas</PrimaryButton>
+            <PrimaryButton onClick={() => setIsEditing(true)} className="text-[9px]! py-3!">Editar Tarifas</PrimaryButton>
         ) : (
             <div className="flex gap-2">
-                <SecondaryButton onClick={() => { setIsEditing(false); setCommissionDraft({}); }} className="!text-[9px] !py-3">Cancelar</SecondaryButton>
-                <PrimaryButton onClick={saveRules} disabled={isSaving} className="!text-[9px] !py-3 shadow-lg shadow-brand-primary/20">
+                <SecondaryButton onClick={() => { setIsEditing(false); setCommissionDraft({}); }} className="text-[9px]! py-3!">Cancelar</SecondaryButton>
+                <PrimaryButton onClick={saveRules} disabled={isSaving} className="text-[9px]! py-3! shadow-lg shadow-brand-primary/20">
                     {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Guardar
                 </PrimaryButton>
             </div>
@@ -114,7 +114,7 @@ export default function DoctorCommissions({ doctor, sessionTypes }) {
                                         <InputPesoChileno
                                             price={rule.value}
                                             onChange={e => setDraft(item.session_type_id, e.target.value)}
-                                            className={`!py-2 !px-3 !rounded-xl !text-right font-black !text-xs ${rule.value ? 'bg-brand-primary/5 border-brand-primary/30 text-brand-primary' : 'bg-gray-50 border-gray-100'}`}
+                                            className={`py-2! px-3! rounded-xl! text-right! font-black text-xs! ${rule.value ? 'bg-brand-primary/5 border-brand-primary/30 text-brand-primary' : 'bg-gray-50 border-gray-100'}`}
                                         />
                                     ) : (
                                         <div className="flex flex-col items-end">

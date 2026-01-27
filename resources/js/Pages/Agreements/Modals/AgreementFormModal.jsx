@@ -58,7 +58,10 @@ export default function AgreementFormModal({
     const method = isEdit ? put : post;
 
     method(url, {
-      onSuccess: () => onClose(),
+      onSuccess: () => {
+        onClose(true); // Cerrar y quizás indicar éxito para recargar datos en el padre
+        reset(); // Limpiar el formulario
+      },
       preserveScroll: true,
     });
   };

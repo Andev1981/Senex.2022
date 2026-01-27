@@ -164,7 +164,7 @@ export default function AgreementsTable({
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-700 rounded-2xl">
       {/* BUSCADOR PREMIUM */}
       <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-3xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>

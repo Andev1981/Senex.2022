@@ -57,7 +57,7 @@ class InvoicesController extends Controller
   public function show(Invoice $invoice)
   {
     $this->authorize('view', $invoice);
-    $invoice->load(['patient', 'items', 'treatmentSession']);
+    $invoice->load(['patient', 'items.sellable', 'treatmentSession']);
     return inertia('Invoices/Show', ['invoice' => $invoice]);
   }
 

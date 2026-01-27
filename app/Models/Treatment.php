@@ -118,27 +118,27 @@ class Treatment extends Model
      */
     public function scopeEvaluation($query)
     {
-        return $query->where('status', 'Evaluation');
+        return $query->where('status', TreatmentStatusEnum::EVALUATION);
     }
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'InProgress');
+        return $query->where('status', TreatmentStatusEnum::IN_PROGRESS);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('status', 'Cancelled');
+        return $query->where('status', TreatmentStatusEnum::CANCELLED);
     }
 
     public function scopePaused($query)
     {
-        return $query->where('status', 'Paused');
+        return $query->where('status', TreatmentStatusEnum::PAUSED);
     }
 
     public function scopeCompleted($query)
     {
-        return $query->where('status', 'Completed');
+        return $query->where('status', TreatmentStatusEnum::COMPLETED);
     }
 
     public function scopeForPatient($query, $patientId)
@@ -167,12 +167,12 @@ class Treatment extends Model
      */
     public function isCompleted(): bool
     {
-        return $this->status === 'Completado';
+        return $this->status === TreatmentStatusEnum::COMPLETED;
     }
 
     public function isActive(): bool
     {
-        return $this->status === 'Activo';
+        return $this->status === TreatmentStatusEnum::IN_PROGRESS;
     }
 
     public function incrementCompletedSessions(): void
@@ -180,8 +180,8 @@ class Treatment extends Model
         $this->increment('completed_sessions');
 
         // Si completó todas las sesiones, marcar como completado
-        if ($this->completed_sessions >= $this->total_sessions) {
-            $this->update(['status' => 'Completado']);
+        if ($this->total_sessions && $this->completed_sessions >= $this->total_sessions) {
+            $this->update(['status' => TreatmentStatusEnum::COMPLETED]);
         }
     }
 

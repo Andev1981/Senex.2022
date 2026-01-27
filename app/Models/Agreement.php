@@ -5,11 +5,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Multitenantable;
+
+
 
 class Agreement extends Model
 {
+     use Multitenantable;
+
     protected $fillable = [
         'company_id',   // ID de la Clínica que posee este convenio (Multi-empresa)
+        'branch_id',
         'insurance_id', // ID de la Aseguradora con la que se tiene el contrato (Ej: Colmena)
         'name',         // Nombre del contrato (Ej: Tarifario 2025 Kinesico)
         'version',      // Versión del documento de tarifas

@@ -65,9 +65,9 @@ class Plan extends Model
 
     public function sessionTypes(): BelongsToMany
     {
-        // 💡 Usando el Pivot Model (PlanContent)
+        // 💡 Usando el Pivot Model (PlanSessionType)
         return $this->belongsToMany(SessionType::class, 'plan_session_type')
-            ->using(PlanContent::class)
+            ->using(PlanSessionType::class)
             ->withPivot('max_sessions'); // Puedes acceder a este campo directamente
     }
 }

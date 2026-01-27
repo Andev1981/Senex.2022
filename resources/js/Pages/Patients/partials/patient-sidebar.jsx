@@ -5,26 +5,28 @@ import {
     ClipboardList,
     Stethoscope,   
     CreditCard,
-    Edit2
+    Edit2,
+    Package // Importar el nuevo icono
 } from 'lucide-react';
 
 export default function PatientSidebar({ activeTab, setActiveTab, handleEditPatient, patient }) {
     
     const menuItems = [
-        { id: "dashboard", label: "Dashboard Clínico", icon: LayoutDashboard },
-        { id: "general", label: "Expediente General", icon: User },
-        { id: "history", label: "Ficha Clínica / SOAP", icon: ClipboardList },
-        { id: "treatments", label: "Planes Kinésicos", icon: Stethoscope },
-        { id: "payments", label: "Cuentas & Pagos", icon: CreditCard },
+        { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { id: "general", label: "General", icon: User },
+        { id: "history", label: "Ficha", icon: ClipboardList },
+        { id: "treatments", label: "Tratamientos", icon: Stethoscope },
+        { id: "plans", label: "Planes", icon: Package }, // Nuevo item para planes
+        { id: "payments", label: "Cuentas", icon: CreditCard },
     ];
 
     return (
         <aside className="h-full bg-white border-r border-gray-100 flex flex-col overflow-hidden">
             
             {/* --- PERFIL DEL PACIENTE (Header Premium) --- */}
-            <div className="relative p-8 pb-10">
+            <div className="relative p-4 pb-10">
                 {/* Fondo Decorativo */}
-                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-gray-50 to-white -z-10"></div>
+                <div className="absolute top-0 left-0 w-full h-32 bg-linear-to-b from-gray-50 to-white -z-10"></div>
                 
                 <div className="relative flex flex-col items-center">
                     {/* Avatar con Anillo de Estado */}
@@ -58,14 +60,14 @@ export default function PatientSidebar({ activeTab, setActiveTab, handleEditPati
             </div>
 
             {/* --- NAVEGACIÓN (Menú Moderno) --- */}
-            <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
+            <nav className="flex-1 px-2 space-y-1.5 overflow-y-auto custom-scrollbar">
                 {menuItems.map((item) => {
                     const isActive = activeTab === item.id;
                     return (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
-                            className={`w-full group flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 cursor-pointer relative ${
+                            className={`w-full group flex items-center gap-4 px-5 py-3 rounded-xl transition-all duration-300 cursor-pointer relative ${
                                 isActive 
                                 ? 'bg-brand-primary text-white shadow-xl shadow-brand-primary/20 translate-x-1' 
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-brand-primary hover:translate-x-1'
@@ -77,7 +79,7 @@ export default function PatientSidebar({ activeTab, setActiveTab, handleEditPati
                             )}
 
                             <item.icon className={`w-5 h-5 transition-all duration-500 ${
-                                isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:rotate-3'
+                                isActive ? 'scale-110' : 'group-hover:rotate-6'
                             }`} />
                             
                             <span className={`text-[11px] font-black uppercase tracking-wider transition-colors ${

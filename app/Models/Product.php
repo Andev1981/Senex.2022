@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Multitenantable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, Multitenantable;
 
     protected $fillable = [
         'company_id',
@@ -29,17 +30,6 @@ class Product extends Model
     {
         // Esto permite que el ítem sea un "TreatmentSession" O un "Product"
         return $this->morphTo();
-    }
-
-    // Scope para filtrar por empresa (Multitenancy básico)
-    protected static function booted()
-    {
-        static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check()) {
-                // Asumiendo que el usuario tiene company_id o se maneja por sesión
-                // $builder->where('company_id', auth()->user()->company_id);
-            }
-        });
     }
 
     // Calculamos el Neto (para DTE) al vuelo

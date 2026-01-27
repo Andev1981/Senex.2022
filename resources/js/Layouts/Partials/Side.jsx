@@ -165,9 +165,10 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
               {/* SWITCHER DE SUCURSAL */}
               <div className="flex-1 min-w-0 flex flex-col">
                 <p className="text-[9px] font-black text-brand-primary uppercase tracking-widest truncate leading-none mb-1">
-                    {current_company?.business_name || "Senex Gestion"}
+                    {current_company?.business_name || "Sysmed"}
                 </p>
                 <BranchSwitcher />
+                
               </div>
             </div>
             

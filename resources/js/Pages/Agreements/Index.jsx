@@ -27,8 +27,11 @@ export default function Index({ agreements, insurances, sessionTypes, plans, use
 
   // 2. Tus helpers
   const openModal = (type, data = null) => setModalState({ type, data });
-  const closeModal = () => {
+  const closeModal = (success = false) => { // Aceptar parámetro opcional 'success'
     setModalState((prev) => ({ ...prev, type: MODALS.NONE }));
+    if (success) {
+      router.reload({ only: ['agreements'] }); // Recargar solo la prop 'agreements'
+    }
   };
 
   // CASO 1: Formulario de Convenio (Solo necesita el convenio o null)

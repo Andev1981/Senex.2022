@@ -61,17 +61,17 @@ class AllSeeder extends Seeder
         Log::info("Saliendo de crear Branch");
 
         // B. USUARIOS BASE (Corrección: Envío directo)
-        $this->call(UserSeeder::class, false, ['company' => $company, 'branches' => $branchIds]);
+       /*  $this->call(UserSeeder::class, false, ['company' => $company, 'branches' => $branchIds]); */
 
         // C. SESSION TYPES (Creación en Memoria)
-        Log::info("Creando Tipos de Sesión en memoria...");
+        /* Log::info("Creando Tipos de Sesión en memoria...");
         $typesData = [
             ['name' => 'Kinesiología General', 'code' => 'KINE-GEN', 'category' => 'kinesiology', 'duration_minutes' => 60, 'base_price_clp' => 25000, 'default_doctor_commission_clp' => 12000, 'is_active' => true, 'is_exempt' => true],
             ['name' => 'Kinesiología Respiratoria', 'code' => 'KINE-RESP', 'category' => 'kinesiology', 'duration_minutes' => 45, 'base_price_clp' => 30000, 'default_doctor_commission_clp' => 15000, 'is_active' => true, 'is_exempt' => true],
             ['name' => 'Rehabilitación Deportiva', 'code' => 'KINE-SPORT', 'category' => 'kinesiology', 'duration_minutes' => 60, 'base_price_clp' => 35000, 'default_doctor_commission_clp' => 17000, 'is_active' => true, 'is_exempt' => true],
             ['name' => 'Evaluación Inicial', 'code' => 'KINE-EVAL', 'category' => 'evaluation', 'duration_minutes' => 45, 'base_price_clp' => 40000, 'default_doctor_commission_clp' => 20000, 'is_active' => true, 'is_exempt' => true],
         ];
-         Log::info("Tipos de Sesión creados...");
+         Log::info("Tipos de Sesión creados..."); 
 
         $sessionTypes = collect();
          Log::info("Tipos de Sesión collect...");
@@ -80,16 +80,16 @@ class AllSeeder extends Seeder
             $sessionTypes->push(SessionType::create($data));
         }
 
-         Log::info("Saliendo de foreach...");
+         Log::info("Saliendo de foreach...");*/
 
         // D. OTROS SEEDERS (Corrección: Envío directo, sin 'parameters')
-        $this->call(InsuranceSeeder::class, false, ['company' => $company]);
+        /* $this->call(InsuranceSeeder::class, false, ['company' => $company]); */
         
         // ¡OJO AQUÍ! Tenías ['parameters' => ...] en AgreementSeeder, eso causaba error
-        $this->call(AgreementSeeder::class, false, ['company' => $company]); 
+        /* $this->call(AgreementSeeder::class, false, ['company' => $company]);  */
         
         // E. DATOS MASIVOS
-        $this->seedMassiveData($company, $branchIds, $sessionTypes);
+        /* $this->seedMassiveData($company, $branchIds, $sessionTypes); */
     }
 
     private function seedMassiveData(Company $company, $branchIds, $sessionTypes)

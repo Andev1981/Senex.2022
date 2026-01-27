@@ -50,87 +50,46 @@ class AgreementController extends Controller
             'user' => auth()->user()->load('roles'),
         ]);
     }
-    public function create()
-    {
-        // 1. Cargamos Aseguradoras (El trait hace el where company_id)
-        $insurances = Insurance::get(['id', 'name']);
 
-        return Inertia::render('agreements/Create', [
-            'insurances' => $insurances
-        ]);
-    }
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreAgreementRequest $request)
-    {
-        // Los datos ya están validados, y company_id ya está inyectado.
-        $validated = $request->validated();
-
-        // Si el convenio se crea como activo, desactivamos cualquier otro convenio previo para esa aseguradora
-        if ($validated['is_active']) {
-            // Desactivar otros convenios activos de la misma aseguradora y compañía
-            Agreement::where('company_id', $validated['company_id'])
-                ->where('insurance_id', $validated['insurance_id'])
-                ->where('is_active', true)
-                ->update(['is_active' => false]);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $agreement = Agreement::create($validated);
-
-            if (!$agreement) {
+        public function store(StoreAgreementRequest $request)
+        {
+            $validated = $request->validated();
+    
+            // Si el convenio se crea como activo, desactivamos cualquier otro para la misma aseguradora y sucursal
+            if ($validated['is_active']) {
+                Agreement::where('insurance_id', $validated['insurance_id'])
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
+            }
+    
+            try {
+                DB::beginTransaction();
+    
+                $agreement = Agreement::create($validated);
+    
+                if (!$agreement) {
+                    DB::rollBack();
+                    session()->flash('message', "⚠️ No se ha podido crear el convenio tarifario.");
+                    session()->flash('type', 'error');
+                    return back();
+                }
+    
+                DB::commit();
+                session()->flash('message', "✅ Convenio '{$agreement->name}' creado exitosamente.");
+                session()->flash('type', 'success');
+    
+                return back();
+            } catch (\Throwable $th) {
                 DB::rollBack();
-                session()->flash('message', "⚠️ No se ha podido crear el convenio tarifario.");
+                Log::error("Error al almacenar Agreement: " . $th->getMessage(), ['trace' => $th->getTraceAsString()]);
+                session()->flash('message', "⚠️ Error del sistema al crear el convenio tarifario: " . $th->getMessage());
                 session()->flash('type', 'error');
                 return back();
             }
-
-            DB::commit();
-            session()->flash('message', "✅ Convenio '{$agreement->name}' creado exitosamente.");
-            session()->flash('type', 'success');
-
-            // 💡 Redirigir a la página de edición de reglas (AgreementRuleEditor)
-            return back();
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error("Error al almacenar Agreement: " . $th->getMessage(), ['trace' => $th->getTraceAsString()]);
-            session()->flash('message', "⚠️ Error del sistema al crear el convenio tarifario.");
-            session()->flash('type', 'error');
-            return back();
         }
-    }
-
-    public function show(Agreement $agreement)
-    {
-        //
-    }
-
-    public function edit(Agreement $agreement)
-    {
-        // Cargar relaciones necesarias
-        $agreement->load('insurance', 'rules', 'rules.plan', 'rules.sessionType');
-
-        // Cargamos SessionTypes (El trait hace el where company_id si aplica)
-        $sessionTypes = SessionType::get(['id', 'name', 'base_price_clp']);
-
-        // Cargamos Aseguradoras (El trait hace el where company_id)
-        $insurances = Insurance::get(['id', 'name']);
-
-        // 💡 CÓDIGO CRUCIAL: Cargamos todos los Planes asociados a esa Aseguradora
-        // (El trait hará el where company_id para Plan automáticamente)
-        $plans = Plan::where('insurance_id', $agreement->insurance_id)
-            ->get(['id', 'name', 'insurance_id', 'code']);
-
-        return Inertia::render('agreements/Edit', [
-            'agreement' => $agreement,
-            'insurances' => $insurances,
-            'sessionTypes' => $sessionTypes,
-            'plans' => $plans
-        ]);
-    }
 
 
     /**
@@ -138,32 +97,27 @@ class AgreementController extends Controller
      */
     public function update(UpdateAgreementRequest $request, Agreement $agreement)
     {
-        // Los datos ya están validados, y company_id ya está inyectado.
         $validated = $request->validated();
 
+        // Inyectar el branch_id de la sesión activa si no se proporciona
+        if (!isset($validated['branch_id'])) {
+            $validated['branch_id'] = session('active_branch_id');
+        }
 
         try {
             DB::beginTransaction();
 
-            $agreement = $agreement->update($validated);
-
-            if (!$agreement) {
-                DB::rollBack();
-                session()->flash('message', "⚠️ No se ha podido crear el convenio tarifario.");
-                session()->flash('type', 'error');
-                return back();
-            }
+            $agreement->update($validated);
 
             DB::commit();
-            session()->flash('message', "✅ Convenio '{$agreement["name"]}' creado exitosamente.");
+            session()->flash('message', "✅ Convenio '{$agreement->name}' actualizado exitosamente.");
             session()->flash('type', 'success');
 
-            // 💡 Redirigir a la página de edición de reglas (AgreementEditor)
-            return redirect()->route('agreements.edit', $agreement);
+            return back();
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error("Error al almacenar Agreement: " . $th->getMessage(), ['trace' => $th->getTraceAsString()]);
-            session()->flash('message', "⚠️ Error del sistema al crear el convenio tarifario.");
+            Log::error("Error al actualizar Agreement: " . $th->getMessage(), ['trace' => $th->getTraceAsString()]);
+            session()->flash('message', "⚠️ Error del sistema al actualizar el convenio tarifario.");
             session()->flash('type', 'error');
             return back();
         }

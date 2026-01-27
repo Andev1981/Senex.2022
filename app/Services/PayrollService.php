@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AppointmentStatusEnum;
 use App\Models\{Payroll, PayrollDetail, TreatmentSession, Doctor};
 use App\Notifications\PayrollApprovedNotification;
 use Carbon\Carbon;
@@ -17,7 +18,7 @@ class PayrollService
       $sessions = TreatmentSession::query()
         ->where('doctor_id', $doctorId)
         ->whereBetween('date', [Carbon::parse($fromDate)->startOfDay(), Carbon::parse($toDate)->endOfDay()])
-        ->where('status', TreatmentSession::STATUS_COMPLETED)
+        ->where('status', AppointmentStatusEnum::COMPLETED->value)
         ->get();
 
       $totalSessions = $sessions->count();
@@ -55,7 +56,7 @@ class PayrollService
       $sessions = TreatmentSession::query()
         ->where('doctor_id', $doctorId)
         ->whereBetween('date', [Carbon::parse($fromDate)->startOfDay(), Carbon::parse($toDate)->endOfDay()])
-        ->where('status', TreatmentSession::STATUS_COMPLETED)
+        ->where('status', AppointmentStatusEnum::COMPLETED->value)
         ->get();
         
 

@@ -12,8 +12,10 @@ use App\Models\Patient;
 use App\Models\PatientInsurance;
 use App\Models\SessionType; // Nuevo (Tu tabla de prestaciones)
 use App\Models\PatientPlan;
+use App\Models\Plan;
 use App\Models\Receivable;
 use App\Services\Dte\DteService;
+use App\Services\Invoices\InvoiceService;
 use App\Services\Treatments\TreatmentService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -28,27 +30,30 @@ class PaymentService
 
     public function __construct(
         private WebpayPlusService $webpay,
+        private InvoiceService $invoiceService,
         private ?DteService $dteService = null,
         private TreatmentService $sessionService
     ) {}
 
     /**
-     * Procesa un pago completo con múltiples opciones
+     * Procesa un pago completo con múltiples opciones desde el POS.
+     * Puede incluir sesiones, deudas o la compra de un plan.
      * 
      * @param array $data Datos del pago
      * @return Payment
      */
     public function processPayment(array $data): Payment
     {
+        Log::info('Contenido del carrito antes de procesar:', $data['services_to_bill']);
+
         return DB::transaction(function () use ($data) {
-            // 1. Crear el registro de Pago (El Copago que entra a caja)
+            // 1. Crear el registro de Pago
             $payment = Payment::create([
                 'uuid' => (string) Str::uuid(),
                 'user_id' => $data['user_id'],
                 'patient_id' => $data['patient_id'],
                 'company_id' => $data['company_id'],
                 'branch_id' => $data['branch_id'],
-                // Homologado: usamos amount_paid del frontend
                 'amount_clp' => $data['payment_details']['amount_paid'],
                 'amount_gross_clp' => $data['final_shares']['amount_gross_clp'] ?? 0,
                 'amount_insurance_primary_clp' => $data['final_shares']['amount_insurance_primary_clp'] ?? 0,
@@ -56,16 +61,17 @@ class PaymentService
                 'discount_clp' => $data['final_shares']['discount_clp'] ?? 0,
                 'payment_method' => $data['payment_details']['payment_method'],
                 'payment_date' => $data['payment_details']['payment_date'] ?? now(),
-                // Homologado: liquidation_payor_id es el seguro primario
                 'liquidation_insurance_id' => $data['coverage_details']['insurance_id'] ?? null,
-                'status' => 'pending',
+                'status' => 'pending', // Se actualizará a 'completed' si todo va bien
                 'transaction_reference' => $data['coverage_details']['external_transaction_code'] ?? null,
-                'metadata' => $data, // Congelamos el carrito para el Invoice posterior
+                'metadata' => $data,
             ]);
 
             // 2. Procesar cada ítem del carrito
             foreach ($data['services_to_bill'] as $item) {
-                if (!empty($item['invoice_id'])) {
+                if (!empty($item['is_plan']) && $item['is_plan']) {
+                    $this->handlePlanPurchaseInPos($payment, $item);
+                } elseif (!empty($item['invoice_id'])) {
                     $this->handleInvoicePayment($payment, $item);
                 } else {
                     if (!empty($item['treatment_session_id']) || !empty($item['session_type_id'])) {
@@ -74,11 +80,84 @@ class PaymentService
                 }
             }
 
-            // 3. Registrar Cuentas por Cobrar (Dos seguros)
+            // 3. Registrar Cuentas por Cobrar (si aplica)
             $this->registerInsurancesReceivables($payment, $data);
+            
+            // 4. Marcar el pago como completado al final de la transacción
+            $payment->update(['status' => 'completed']);
 
             return $payment;
         });
+    }
+
+    public function processPlanPurchase(int $patientId, int $planId, array $paymentDetails): Payment
+    {
+        return DB::transaction(function () use ($patientId, $planId, $paymentDetails) {
+            $plan = Plan::findOrFail($planId);
+            $patient = Patient::findOrFail($patientId);
+
+            // 1. Crear el registro de Pago
+            $payment = Payment::create([
+                'uuid' => (string) Str::uuid(),
+                'user_id' => auth()->id(),
+                'patient_id' => $patientId,
+                'company_id' => $plan->company_id,
+                'branch_id' => $paymentDetails['branch_id'],
+                'amount_clp' => $plan->price,
+                'amount_gross_clp' => $plan->price,
+                'payment_method' => $paymentDetails['payment_method'],
+                'payment_date' => $paymentDetails['payment_date'] ?? now(),
+                'status' => $paymentDetails['payment_method'] === 'payment_link' ? 'pending' : 'completed',
+                'transaction_reference' => $paymentDetails['transaction_reference'] ?? null,
+            ]);
+
+            // 2. Generar Invoice
+            $invoice = $this->invoiceService->issueInvoiceForPlanPurchase($payment, $plan, $plan->price);
+
+            // 3. Asignar pago a la factura
+            PaymentAllocation::create([
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'amount_clp' => $plan->price,
+            ]);
+
+            // 4. Si ya está pagado (no es link de pago), crear el PatientPlan
+            if ($payment->status === 'completed') {
+                $patientPlanService = app(\App\Services\Plans\PlanService::class);
+                $patientPlanService->purchasePlan($patientId, $planId, $payment->id);
+            }
+
+            return $payment;
+        });
+    }
+
+    private function handlePlanPurchaseInPos(Payment $payment, array $item)
+    {
+        $plan = Plan::findOrFail($item['plan_id']);
+        $patientAmount = $item['unit_patient_clp'] ?? $plan->price;
+
+        // 1. Generar la Invoice por la venta del Plan.
+        // Asume que el pago total del POS cubre esta y otras prestaciones.
+        $invoice = $this->invoiceService->issueInvoiceForPlanPurchase($payment, $plan, $patientAmount);
+
+        // 2. Asignar la porción correspondiente de este pago a la nueva factura del plan.
+        PaymentAllocation::create([
+            'payment_id' => $payment->id,
+            'invoice_id' => $invoice->id,
+            'amount_clp' => $patientAmount,
+        ]);
+
+        // 3. Crear la instancia de PatientPlan para el paciente.
+        $patientPlanService = app(\App\Services\Plans\PlanService::class);
+        $patientPlan = $patientPlanService->purchasePlan($payment->patient_id, $plan->id, $payment->id);
+
+        Log::info('Venta de plan desde POS procesada', [
+            'patient_id' => $payment->patient_id,
+            'plan_id' => $plan->id,
+            'payment_id' => $payment->id,
+            'invoice_id' => $invoice->id,
+            'patient_plan_id' => $patientPlan->id,
+        ]);
     }
 
     private function handleInvoicePayment(Payment $payment, array $item): void
@@ -88,9 +167,8 @@ class PaymentService
         PaymentAllocation::create([
             'payment_id' => $payment->id,
             'invoice_id' => $invoice->id,
-            // Si el item viene de una sesión, lo vinculamos para trazabilidad
             'treatment_session_id' => $item['treatment_session_id'] ?? null,
-            'amount_clp' => $item['unit_patient_clp'],
+            'amount_clp' => $item['unit_patient_clp'] ?? 0,
         ]);
 
         // Validar si la factura quedó pagada
@@ -132,7 +210,7 @@ class PaymentService
             $session = TreatmentSession::findOrFail($existingSessionId);
             $session->update([
                 'status' => 'completed',
-                'patient_amount_clp' => $consumesPlan ? 0 : $item['unit_patient_clp'],
+                'patient_amount_clp' => $consumesPlan ? 0 : ($item['unit_patient_clp'] ?? 0),
                 'consumes_plan' => $consumesPlan,
                 'doctor_id' => $item['doctor_id'] ?? $session->doctor_id,
             ]);
@@ -151,7 +229,7 @@ class PaymentService
                     'session_type_id' => $item['session_type_id'],
                     'date' => $data['payment_details']['payment_date'] ?? now(),
                     'time' => now()->toTimeString(),
-                    'patient_amount_clp' => $consumesPlan ? 0 : $item['unit_patient_clp'],
+                    'patient_amount_clp' => $consumesPlan ? 0 : ($item['unit_patient_clp'] ?? 0),
                     'consumes_plan' => $consumesPlan,
                     'status' => 'completed',
                 ]);
@@ -341,10 +419,12 @@ class PaymentService
             return $this->handleParticular($servicesToBill);
         }
 
-        // 2. BUSCAR EL TARIFARIO (Agreement) de NUESTRA CLÍNICA
+        // 2. BUSCAR EL TARIFARIO (Agreement) de NUESTRA CLÍNICA con estrategia de fallback
         $agreement = Agreement::where('company_id', $this->companyId)
             ->where('insurance_id', $activePlan->pivot->insurance_id)
             ->where('is_active', true)
+            // Prioriza el convenio específico de la sucursal, luego el global
+            ->orderByRaw('branch_id IS NULL ASC, branch_id = ? DESC', [$this->branchId])
             ->first();
 
         // 3. VALIDACIÓN CRÍTICA: Si el paciente tiene plan, pero la clínica no tiene el tarifario.

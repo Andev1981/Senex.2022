@@ -18,7 +18,7 @@ class SendInvoiceMail extends Mailable
 
     public function __construct(Invoice $invoice)
     {
-        $this->invoice = $invoice->load(['patient', 'company', 'branch', 'items']);
+        $this->invoice = $invoice->load(['patient', 'company', 'branch.primaryAddress.commune', 'items']);
     }
 
     public function build()
@@ -42,12 +42,11 @@ class SendInvoiceMail extends Mailable
         if ($payment) {
             // Cargar relaciones necesarias para el PDF
             $payment->load([
-                'patient', 'company', 'branch', 
+                'patient', 'company', 'branch.primaryAddress.commune', 
                 'paymentAllocation.treatmentSession.sessionType', 
                 'receivables.insurance'
             ]);
 
-        if ($payment) {
             $pdf = Pdf::loadView('pdf.payment_receipt', compact('payment'));
             $email->attachData($pdf->output(), 'Comprobante_Pago_' . strtoupper(substr($payment->uuid, 0, 8)) . '.pdf', [
                 'mime' => 'application/pdf',

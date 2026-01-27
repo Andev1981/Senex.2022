@@ -3,6 +3,7 @@
 namespace App\Jobs\Dte;
 
 use App\Models\Invoice;
+use App\Enums\DteStatusEnum;
 use App\Services\Dte\DteService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,7 +29,7 @@ class EmitDteJob implements ShouldQueue
     $invoice = Invoice::findOrFail($this->invoiceId);
 
     // Idempotencia: Si ya está enviado o aceptado, no hacemos nada.
-    if (in_array($invoice->dte_status, [Invoice::SII_STATUS_SENT, Invoice::SII_STATUS_ACCEPTED])) {
+    if (in_array($invoice->dte_status, [DteStatusEnum::SENT, DteStatusEnum::ACCEPTED])) {
         return;
     }
 
@@ -45,7 +46,7 @@ class EmitDteJob implements ShouldQueue
         // Si falla, el worker intentará de nuevo según $tries
         // Pero marcamos error temporal en la boleta para visibilidad
         $invoice->update([
-            'dte_status' => 'PENDING_RETRY', // Estado intermedio
+            'dte_status' => DteStatusEnum::RETRY, // Estado intermedio
             'dte_notes' => 'Fallo en Job: ' . $e->getMessage()
         ]);
         
@@ -60,7 +61,7 @@ class EmitDteJob implements ShouldQueue
       if ($invoice) {
           // 1. Actualizar estado en DB
           $invoice->update([
-              'dte_status' => 'FAILED',
+              'dte_status' => DteStatusEnum::ERROR,
               'metadata' => $exception->getMessage()
           ]);
 

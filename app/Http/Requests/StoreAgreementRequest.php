@@ -14,14 +14,7 @@ class StoreAgreementRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        // 1. Inyectar company_id del usuario si no viene en el request
-        if (!$this->has('company_id') && $this->user() && $this->user()->company_id) {
-            $this->merge([
-                'company_id' => $this->user()->company_id,
-            ]);
-        }
-
-        // 2. Convertir is_active a booleano real
+        // 1. Convertir is_active a booleano real
         if ($this->has('is_active')) {
             $this->merge(['is_active' => filter_var($this->input('is_active'), FILTER_VALIDATE_BOOLEAN)]);
         }
@@ -30,7 +23,6 @@ class StoreAgreementRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'company_id'   => ['required', 'integer', 'exists:companies,id'],
             'insurance_id' => ['required', 'integer', 'exists:insurances,id'],
             'name'         => ['required', 'string', 'max:255'],
             'version'      => ['nullable', 'string', 'max:50'],

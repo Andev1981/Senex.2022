@@ -8,24 +8,24 @@ const Index = ({ sessions, pagination, filters }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    router.get("/sesiones", {
+    router.get("/sessions", {
       search: searchTerm,
       status: statusFilter,
     });
   };
 
   const handleEdit = (session) => {
-    router.visit(`/sesiones/${session.id}`);
+    router.visit(`/sessions/${session.id}`);
   };
 
   const handleDelete = (session) => {
     if (confirm("¿Estás seguro de eliminar esta sesión?")) {
-      router.delete(`/sesiones/${session.id}`);
+      router.delete(`/sessions/${session.id}`);
     }
   };
 
   const handleStatusChange = (session, newStatus) => {
-    router.put(`/sesiones/${session.id}`, {
+    router.put(`/sessions/${session.id}`, {
       status: newStatus,
     });
   };
@@ -127,7 +127,7 @@ const Index = ({ sessions, pagination, filters }) => {
                       <div className="flex space-x-2">
                         <button
                           onClick={() =>
-                            router.visit(`/sesiones/${session.id}`)
+                            router.visit(`/sessions/${session.id}`)
                           }
                           className="text-sm text-indigo-600 hover:text-indigo-900"
                         >
@@ -187,7 +187,7 @@ const Index = ({ sessions, pagination, filters }) => {
           <CreateSessionForm
             onClose={() => setShowCreateForm(false)}
             onSubmit={(formData) => {
-              router.post("/sesiones", formData, {
+              router.post("/sessions", formData, {
                 onSuccess: () => {
                   setShowCreateForm(false);
                   router.reload();

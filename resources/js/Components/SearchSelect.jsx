@@ -9,7 +9,8 @@ const SearchSelect = ({
   label,
   error,
   className = "",
-  config = { valueKey: 'value', displayKey: 'label', secondaryKeys: [], searchKeys: ['label'] }
+  config = { valueKey: 'value', displayKey: 'label', secondaryKeys: [], searchKeys: ['label'] },
+  renderOption
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -75,7 +76,7 @@ const SearchSelect = ({
           onChange={(e) => setSearchTerm(e.target.value)}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full pl-12 pr-10 py-4 rounded-2xl border-gray-100 bg-gray-50 font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none"
+          className="w-full pl-12 pr-10 py-4 rounded-2xl border-gray-100 bg-gray-100 font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none"
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3">
           {value && (
@@ -93,16 +94,22 @@ const SearchSelect = ({
       {isOpen && (
         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
           {filteredOptions.length > 0 ? (
-            filteredOptions.map((option) => (
+            filteredOptions.map((option, idx) => (
               <li
-                key={option[valueKey]}
+                key={`${option[valueKey]}-${idx}`}
                 onClick={() => handleSelect(option[valueKey])}
-                className="px-4 py-3 cursor-pointer hover:bg-gray-50 flex flex-col transition-colors"
+                className={`cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 ${!renderOption ? "px-4 py-3 flex flex-col" : ""}`}
               >
-                <p className="font-black text-gray-900 text-sm">{option[displayKey]}</p>
-                {secondaryKeys.map(key => option[key] && (
-                  <p key={key} className="text-[10px] text-gray-500 font-medium">{option[key]}</p>
-                ))}
+                {renderOption ? (
+                  renderOption(option)
+                ) : (
+                  <>
+                    <p className="font-black text-gray-900 text-sm">{option[displayKey]}</p>
+                    {secondaryKeys.map(key => option[key] && (
+                      <p key={key} className="text-[10px] text-gray-500 font-medium">{option[key]}</p>
+                    ))}
+                  </>
+                )}
               </li>
             ))
           ) : (

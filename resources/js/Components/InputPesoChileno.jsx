@@ -5,7 +5,6 @@ const InputPesoChileno = ({
   onChange,
   className = "",
   price = 0,
-  placeholder = "$0",
   disabled = false,
 }) => {
   const formatNumber = (value) => {
@@ -52,10 +51,9 @@ const InputPesoChileno = ({
         value={formatNumber(price)}
         onChange={handleChange}
         onFocus={handleFocus}
-        placeholder={placeholder}
         disabled={disabled}
         className={
-          "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-50 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
+          "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-100 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
           className
         }
       />

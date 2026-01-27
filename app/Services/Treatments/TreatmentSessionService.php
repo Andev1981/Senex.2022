@@ -791,6 +791,32 @@ class TreatmentSessionService
     }
 
     /**
+     * Enviar notificación de agendamiento (o re-enviar)
+     */
+    public function notifyPatient(TreatmentSession $session): void
+    {
+        $patient = Patient::findOrFail($session->patient_id);
+        
+        // Determinar a quién notificar (Paciente o Tutor)
+        $notifiable = $patient;
+        
+        if ($patient->require_tutor && $patient->primaryContact) {
+            $notifiable = $patient->primaryContact;
+        }
+
+        // Cargar relaciones necesarias para la notificación
+        $session->load(['doctor', 'branch.primaryAddress.commune']);
+        
+        $notifiable->notify(new SessionScheduledNotification($session));
+
+        Log::info('Notificación de sesión enviada manualmente', [
+            'session_id' => $session->id,
+            'recipient_id' => $notifiable->id,
+            'recipient_type' => class_basename($notifiable)
+        ]);
+    }
+
+    /**
      * Calcular mejora promedio de dolor de una colección de sesiones
      */
     private function calculateAveragePainImprovement(Collection $sessions): ?float

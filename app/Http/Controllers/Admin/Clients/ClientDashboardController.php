@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-class PatientDashboardController extends Controller
+class ClientDashboardController extends Controller
 {
     /**
      * Mostrar formulario de login

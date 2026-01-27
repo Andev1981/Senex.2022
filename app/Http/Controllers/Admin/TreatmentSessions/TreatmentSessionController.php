@@ -256,4 +256,23 @@ class TreatmentSessionController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * NOTIFY - POST /sessions/{session}/notify
+     * Re-enviar notificación de agendamiento
+     */
+    public function notify(TreatmentSession $session)
+    {
+        try {
+            $this->sessionService->notifyPatient($session);
+
+            session()->flash('message', 'Notificación enviada exitosamente.');
+            session()->flash('type', 'success');
+        } catch (\Exception $e) {
+            session()->flash('message', 'Error al enviar la notificación: ' . $e->getMessage());
+            session()->flash('type', 'error');
+        }
+
+        return back();
+    }
 }

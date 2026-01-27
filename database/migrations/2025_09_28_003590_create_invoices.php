@@ -35,7 +35,7 @@ return new class extends Migration
       $table->bigInteger('amount_insurance_secondary_clp')->default(0)->comment('Aporte Seguro Complementario');
       $table->bigInteger('amount_patient_clp')->default(0)->comment('Lo que efectivamente pagó el paciente');
 
-      $table->enum('dte_status',['pending, accepted, rejected'])->default('pending')->comment('pending, accepted, rejected');
+      $table->enum('dte_status',['pending', 'accepted', 'rejected'])->default('pending')->comment('pending, accepted, rejected');
       $table->unsignedSmallInteger('dte_type')->nullable()->comment('33, 34, 39, 41, 61');
       $table->unsignedInteger('dte_folio')->nullable()->comment('Número correlativo legal');
       $table->date('issue_date')->nullable()->comment('Fecha de emisión legal');
@@ -43,8 +43,7 @@ return new class extends Migration
       $table->string('pdf_path')->nullable()->comment('Ruta al archivo de respaldo físico');
 
       // --- BLOQUE 5: ESTADOS INTERNOS Y AUDITORÍA ---
-      $table->enum('payment_status',['paid, unpaid, voided'])->default('unpaid')->comment('paid, unpaid, voided');
-      
+      $table->enum('payment_status',['paid', 'unpaid', 'voided'])->default('unpaid')->comment('paid, unpaid, voided');
       $table->string('transaction_number')->nullable()->comment('N° de operación/comprobante');
       $table->date('transaction_date')->nullable();
       $table->bigInteger('global_discount_clp')->default(0)->comment('Descuento global aplicado al subtotal');

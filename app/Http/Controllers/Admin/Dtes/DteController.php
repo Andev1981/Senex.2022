@@ -11,6 +11,7 @@ use App\Models\Doctor;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Patient;
+use App\Models\Plan;
 use App\Models\Product;
 use App\Models\SessionType;
 use App\Services\Dte\DteService;
@@ -43,6 +44,7 @@ class DteController extends Controller
             });
         })->with(['address.commune.province.region', 'insurances'])
             ->get()
+            ->unique('id') // Added to prevent duplicate keys in React
             ->map(function ($p) {
                 return [
                     'id' => $p->id,
@@ -80,7 +82,6 @@ class DteController extends Controller
             });
 
         $products = Product::where('is_active', true)
-            ->where('company_id', $currentCompanyId)
             ->get()
             ->map(function ($p) {
                 return [
@@ -90,11 +91,12 @@ class DteController extends Controller
                     'price' => $p->price,
                     'type' => 'Producto',
                     'is_exempt' => $p->is_exempt ?? false,
+                    'sellable_type' => 'Product',
+                    'sku' => $p->sku, // Added
                 ];
             });
 
         $services = SessionType::where('is_active', true)
-            ->where('company_id', $currentCompanyId)
             ->get()
             ->map(function ($s) {
                 return [
@@ -104,10 +106,36 @@ class DteController extends Controller
                     'price' => $s->base_price_clp,
                     'type' => 'Servicio',
                     'is_exempt' => (bool)$s->is_exempt,
+                    'sellable_type' => 'SessionType',
+                    'code' => $s->code, // Added
                 ];
             });
 
-        $sellables = $products->concat($services);
+        $plans = Plan::with('sessionTypes')->where('is_active', true)
+            ->get()
+            ->map(function ($p) {
+                // Generar resumen de sesiones: "Kine (10), Masaje (5)"
+                $sessionsSummary = $p->sessionTypes->map(function($st) {
+                    $count = $st->pivot->max_sessions ?? 'ILIMITADO';
+                    return "{$st->name} ({$count})";
+                })->implode(', ');
+
+                return [
+                    'id' => $p->id,
+                    'unique_id' => 'plan_' . $p->id,
+                    'name' => $p->name,
+                    'price' => $p->price,
+                    'type' => 'Plan',
+                    'is_exempt' => true, 
+                    'sellable_type' => 'Plan',
+                    'details' => $sessionsSummary, // Added
+                    'valid_months' => $p->valid_months, // Added
+                ];
+            });
+
+        $sellables = $products->concat($services)->concat($plans)->values();
+
+        /* dd($sellables,$products, $services,$plans); */
 
         $cafStats = AuthorizedFolio::where('company_id', $currentCompanyId)
             ->where('activo', true)

@@ -25,6 +25,9 @@ import CafUploadModal from "./partials/CafUploadModal";
 import DteConfigModal from "./partials/DteConfigModal";
 import RutInput from "@/components/RutInput";
 import SearchSelect from "@/components/SearchSelect";
+import EnterpriseSelect from "@/components/EnterpriseSelect";
+import Checkbox from "@/components/Checkbox";
+import Switch from "@/components/Switch";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
 import SecondaryButton from "@/components/SecondaryButton";
@@ -167,16 +170,33 @@ export default function IndexDocuments({
   };
 
   const addItem = (sellable = null) => {
+    let description = "";
+    if (sellable) {
+      // Lógica para construir descripción detallada
+      if (sellable.type === 'Producto') {
+        description = `${sellable.name}${sellable.sku ? ` (SKU: ${sellable.sku})` : ''}`;
+      } else if (sellable.type === 'Servicio') {
+        description = `${sellable.name}${sellable.code ? ` (Cod: ${sellable.code})` : ''}`;
+      } else if (sellable.type === 'Plan') {
+        const details = sellable.details ? ` [Incluye: ${sellable.details}]` : '';
+        const validity = sellable.valid_months ? ` - Vigencia ${sellable.valid_months} meses` : '';
+        description = `Plan ${sellable.name}${details}${validity}`;
+      } else {
+        description = sellable.name;
+      }
+    }
+
     setData("items", [
       ...data.items,
       {
-        description: sellable ? sellable.name : "",
+        description: description,
         quantity: 1,
         unitPrice: sellable ? sellable.price : 0,
         discount_clp: 0,
         comment: "",
         is_exempt: sellable ? !!sellable.is_exempt : false,
         sellable_id: sellable ? sellable.id : undefined,
+        sellable_type: sellable ? sellable.sellable_type : undefined,
       },
     ]);
   };
@@ -321,6 +341,7 @@ export default function IndexDocuments({
         comment: item.comment || "",
         is_exempt: !!item.is_exento,
         sellable_id: item.sellable_id,
+        sellable_type: item.sellable_type,
       })),
       global_discount: invoice.global_discount_clp || 0,
       payment_method: invoice.metadata?.payment_method || "Efectivo",
@@ -346,7 +367,7 @@ export default function IndexDocuments({
     setIsLoadingRut(true);
     try {
       const response = await axios.get(
-        route("dte.consultar_rut", data.client.rut)
+        route("external-data.company", data.client.rut)
       );
       const res = response.data;
       if (res.success) {
@@ -354,17 +375,17 @@ export default function IndexDocuments({
           ...d,
           client: {
             ...d.client,
-            razonSocial: res.razon_social,
-            giro: res.giro,
-            direccion: res.direccion || d.client.direccion,
-            comuna: res.comuna || d.client.comuna,
+            razonSocial: res.data.razon_social,
+            giro: res.data.giro,
+            direccion: res.data.direccion || d.client.direccion,
+            comuna: res.data.comuna || d.client.comuna,
           },
         }));
         Swal.fire({
           toast: true,
           position: "top-end",
           icon: "success",
-          title: "RUT validado",
+          title: "Datos de empresa cargados",
           showConfirmButton: false,
           timer: 3000,
         });
@@ -396,6 +417,7 @@ export default function IndexDocuments({
             comment: item.comment || "",
             is_exempt: item.is_exempt || false,
             sellable_id: item.sellable_id,
+            sellable_type: item.sellable_type,
           })),
           reason:
             d.reason || `Referencia a ${doc.type_name} del ${doc.issue_date}`,
@@ -415,7 +437,7 @@ export default function IndexDocuments({
     <AuthenticatedLayout>
       <Head title="Centro de Facturación SII" />
       <div className="min-h-screen p-6 md:p-10 bg-gray-50/50">
-        <div className="max-w-[1600px] mx-auto space-y-10">
+        <div className="max-w-400 mx-auto space-y-10">
           {/* HEADER HERO ENTERPRISE */}
           <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
             <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full opacity-50 bg-brand-primary/5 blur-3xl"></div>
@@ -460,7 +482,7 @@ export default function IndexDocuments({
                 {/* DASHBOARD STATS */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-12">
                   <div className="flex items-center p-6 bg-white border border-gray-100 shadow-sm rounded-xl lg:col-span-3 group hover:scale-[1.02] transition-all">
-                    <div className="flex-shrink-0 w-24 h-24">
+                    <div className="shrink-0 w-24 h-24">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -484,7 +506,7 @@ export default function IndexDocuments({
                       </ResponsiveContainer>
                     </div>
                     <div className="ml-4">
-                      <p className="enterprise-label !text-[8px] opacity-60 mb-1">
+                      <p className="enterprise-label text-[8px]! opacity-60 mb-1">
                         Ventas Mes
                       </p>
                       <p className="font-mono text-2xl font-black leading-none text-gray-900">
@@ -494,7 +516,7 @@ export default function IndexDocuments({
                   </div>
 
                   <div className="flex flex-col justify-center p-6 bg-white border border-gray-100 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
-                    <p className="enterprise-label !text-[8px] opacity-60 mb-2 flex items-center gap-2">
+                    <p className="enterprise-label text-[8px]! opacity-60 mb-2 flex items-center gap-2">
                       <Calculator className="w-3 h-3 text-purple-400" /> Ticket
                       Promedio
                     </p>
@@ -503,8 +525,8 @@ export default function IndexDocuments({
                     </p>
                   </div>
 
-                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-orange-400 border-gray-100 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
-                    <p className="enterprise-label !text-[8px] text-orange-600 mb-2 flex items-center gap-2">
+                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-orange-400 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
+                    <p className="enterprise-label text-[8px]! text-orange-600 mb-2 flex items-center gap-2">
                       <Wallet className="w-3 h-3" /> Por Cobrar
                     </p>
                     <p className="font-mono text-xl font-black text-gray-900">
@@ -512,8 +534,8 @@ export default function IndexDocuments({
                     </p>
                   </div>
 
-                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-green-500 border-gray-100 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
-                    <p className="enterprise-label !text-[8px] text-green-600 mb-2 flex items-center gap-2">
+                  <div className="flex flex-col justify-center p-6 bg-white border-b-4 border-green-500 shadow-sm rounded-xl lg:col-span-2 hover:scale-[1.02] transition-all">
+                    <p className="enterprise-label text-[8px]! text-green-600 mb-2 flex items-center gap-2">
                       <CheckCircle className="w-3 h-3" /> Aceptados
                     </p>
                     <p className="font-mono text-xl font-black text-gray-900">
@@ -529,7 +551,7 @@ export default function IndexDocuments({
                     }`}
                   >
                     <p
-                      className={`enterprise-label !text-[8px] mb-2 flex items-center gap-2 ${
+                      className={`enterprise-label text-[8px]! mb-2 flex items-center gap-2 ${
                         dashboardStats.rechazados > 0
                           ? "text-red-600"
                           : "opacity-60"
@@ -573,7 +595,7 @@ export default function IndexDocuments({
                         <div className="p-2 bg-brand-secondary/10 text-brand-primary rounded-xl">
                           <Layers className="w-5 h-5" />
                         </div>
-                        <p className="text-gray-900 enterprise-label !mb-0">
+                        <p className="text-gray-900 enterprise-label mb-0!">
                           Folios Autorizados
                         </p>
                       </div>
@@ -652,7 +674,7 @@ export default function IndexDocuments({
                             is_configured ? "text-green-400" : "text-orange-400"
                           }`}
                         />
-                        <p className="text-white/80 enterprise-label !mb-0">
+                        <p className="text-white/80 enterprise-label mb-0!">
                           Configuración SII
                         </p>
                       </div>
@@ -695,7 +717,7 @@ export default function IndexDocuments({
                     </div>
                     <SecondaryButton
                       onClick={() => setIsConfigModalOpen(true)}
-                      className="!border-orange-200 !text-orange-700"
+                      className="border-orange-200! text-orange-700!"
                     >
                       Configurar Ahora
                     </SecondaryButton>
@@ -735,7 +757,7 @@ export default function IndexDocuments({
                         <div className="bg-white border border-gray-100 shadow-xl rounded-[2.5rem] overflow-hidden">
                           <div className="flex items-center gap-3 p-6 border-b border-gray-100 bg-gray-50/50">
                             <Users className="w-4 h-4 text-brand-primary" />
-                            <h3 className="enterprise-label !mb-0">
+                            <h3 className="enterprise-label mb-0!">
                               Identificación del Receptor
                             </h3>
                           </div>
@@ -787,7 +809,7 @@ export default function IndexDocuments({
                                     }
                                     onBlur={handleRutBlur}
                                     disabled={esNotaCredito || isLoadingRut}
-                                    className="w-full !rounded-2xl !py-4 font-mono font-black"
+                                    className="w-full rounded-2xl! py-4! font-mono font-black"
                                   />
                                   {isLoadingRut && (
                                     <RefreshCw className="absolute w-4 h-4 right-4 top-4 text-brand-primary animate-spin" />
@@ -842,7 +864,7 @@ export default function IndexDocuments({
                         <div className="bg-white border border-gray-100 shadow-xl rounded-[2.5rem] overflow-hidden">
                           <div className="flex items-center gap-3 p-6 border-b border-gray-100 bg-gray-50/50">
                             <FileText className="w-4 h-4 text-brand-primary" />
-                            <h3 className="enterprise-label !mb-0">
+                            <h3 className="enterprise-label mb-0!">
                               Parámetros del Documento
                             </h3>
                           </div>
@@ -862,27 +884,23 @@ export default function IndexDocuments({
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="ml-1 enterprise-label opacity-60">
-                                  Medio de Pago
-                                </label>
-                                <select
+                                <EnterpriseSelect
+                                  label="Medio de Pago"
                                   value={data.payment_method}
-                                  onChange={(e) =>
-                                    setData("payment_method", e.target.value)
-                                  }
-                                  className="w-full px-5 py-4 text-sm font-bold border-gray-100 rounded-2xl"
-                                >
-                                  <option>Efectivo</option>
-                                  <option>Transferencia</option>
-                                  <option>Tarjeta de Débito</option>
-                                  <option>Tarjeta de Crédito</option>
-                                </select>
+                                  onChange={(val) => setData("payment_method", val)}
+                                  options={[
+                                    { value: 'Efectivo', label: 'Efectivo' },
+                                    { value: 'Transferencia', label: 'Transferencia' },
+                                    { value: 'Tarjeta de Débito', label: 'Tarjeta de Débito' },
+                                    { value: 'Tarjeta de Crédito', label: 'Tarjeta de Crédito' },
+                                  ]}
+                                />
                               </div>
                             </div>
                             {esNotaCredito && (
                               <div className="p-6 bg-orange-50 border border-orange-100 rounded-[1.5rem] space-y-4 animate-in slide-in-from-top-4">
                                 <div className="space-y-1">
-                                  <label className="enterprise-label !text-orange-700 ml-1">
+                                  <label className="enterprise-label text-orange-700! ml-1">
                                     Folio a Anular/Corregir
                                   </label>
                                   <input
@@ -896,22 +914,17 @@ export default function IndexDocuments({
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="enterprise-label !text-orange-700 ml-1">
-                                    Tipo de Corrección
-                                  </label>
-                                  <select
+                                  <EnterpriseSelect
+                                    label="Tipo de Corrección"
                                     value={data.ref_code}
-                                    onChange={(e) =>
-                                      setData("ref_code", e.target.value)
-                                    }
-                                    className="w-full px-4 py-3 text-xs font-bold text-orange-900 border-orange-200 rounded-xl"
-                                  >
-                                    <option value="1">
-                                      1: Anular Documento
-                                    </option>
-                                    <option value="2">2: Corregir Texto</option>
-                                    <option value="3">3: Corregir Monto</option>
-                                  </select>
+                                    onChange={(val) => setData("ref_code", val)}
+                                    options={[
+                                      { value: '1', label: '1: Anular Documento' },
+                                      { value: '2', label: '2: Corregir Texto' },
+                                      { value: '3', label: '3: Corregir Monto' },
+                                    ]}
+                                    className="border-orange-200!" // Custom style passing
+                                  />
                                 </div>
                               </div>
                             )}
@@ -925,15 +938,61 @@ export default function IndexDocuments({
                           <div className="flex-1 max-w-sm">
                             {!esNotaCredito && (
                               <SearchSelect
-                                label="Añadir Producto o Servicio..."
-                                options={sellables.map(s => ({ value: s.id, label: `${s.name} ($${s.price.toLocaleString('es-CL')})` }))}
+                                label="Añadir Producto, Servicio o Plan..."
+                                options={sellables.map(s => ({ 
+                                  value: s.unique_id, 
+                                  label: s.name, 
+                                  searchLabel: `${s.type} ${s.name} ${s.price}`,
+                                  type: s.type,
+                                  price: s.price,
+                                  details: s.details, // Para planes
+                                  sku: s.sku, // Para productos
+                                  code: s.code, // Para servicios
+                                  original: s
+                                }))}
+                                config={{ 
+                                  valueKey: 'value', 
+                                  displayKey: 'label', 
+                                  searchKeys: ['label', 'searchLabel'] 
+                                }}
                                 onChange={(val) => {
-                                  const sellable = sellables.find(s => s.id === val);
-                                  if (sellable) {
-                                    addItem(sellable);
+                                  const option = sellables.find(s => s.unique_id === val);
+                                  if (option) {
+                                    addItem(option);
                                   }
                                 }}
-                                placeholder="Buscar Producto o Servicio..."
+                                renderOption={(option) => {
+                                  let typeColor = "bg-gray-100 text-gray-600";
+                                  let Icon = Layers;
+                                  
+                                  if (option.type === 'Plan') { typeColor = "bg-blue-100 text-blue-700"; }
+                                  else if (option.type === 'Servicio') { typeColor = "bg-purple-100 text-purple-700"; }
+                                  else if (option.type === 'Producto') { typeColor = "bg-emerald-100 text-emerald-700"; }
+
+                                  return (
+                                    <div className="px-4 py-3 flex items-center justify-between gap-4">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${typeColor}`}>
+                                            {option.type}
+                                          </span>
+                                          {option.sku && <span className="text-[9px] font-mono text-gray-400">SKU: {option.sku}</span>}
+                                          {option.code && <span className="text-[9px] font-mono text-gray-400">COD: {option.code}</span>}
+                                        </div>
+                                        <p className="font-bold text-gray-900 text-xs truncate">{option.label}</p>
+                                        {option.details && (
+                                          <p className="text-[9px] text-gray-500 truncate mt-0.5">{option.details}</p>
+                                        )}
+                                      </div>
+                                      <div className="text-right whitespace-nowrap">
+                                        <span className="font-mono font-black text-sm text-brand-primary">
+                                          ${option.price.toLocaleString('es-CL')}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                }}
+                                placeholder="Buscar..."
                               />
                             )}
                           </div>
@@ -1031,8 +1090,7 @@ export default function IndexDocuments({
                                     />
                                   </td>
                                   <td className="px-4 py-4 text-center">
-                                    <input
-                                      type="checkbox"
+                                    <Checkbox
                                       checked={item.is_exempt}
                                       onChange={(e) =>
                                         updateItem(
@@ -1041,7 +1099,6 @@ export default function IndexDocuments({
                                           e.target.checked
                                         )
                                       }
-                                      className="border-gray-200 rounded text-brand-primary"
                                     />
                                   </td>
                                   <td className="px-8 py-4 font-mono text-sm font-black text-right text-brand-primary">
@@ -1084,7 +1141,7 @@ export default function IndexDocuments({
                           Resumen de Emisión
                         </div>
                         <div className="p-8 space-y-8">
-                          <div className="space-y-4 enterprise-label !text-gray-400 border-b border-gray-50 pb-6">
+                          <div className="space-y-4 enterprise-label text-gray-400! border-b border-gray-50 pb-6">
                             <div className="flex items-center justify-between">
                               <span>Subtotal Bruto</span>
                               <span className="font-mono font-black text-gray-900">
@@ -1106,7 +1163,7 @@ export default function IndexDocuments({
                               />
                             </div>
                           </div>
-                          <div className="space-y-4 enterprise-label !text-gray-400">
+                          <div className="space-y-4 enterprise-label text-gray-400!">
                             <div className="flex items-center justify-between">
                               <span>Monto Neto</span>
                               <span className="font-mono font-black text-gray-900">
@@ -1141,7 +1198,7 @@ export default function IndexDocuments({
                             className={`p-8 rounded-[2rem] flex flex-col items-center gap-2 ${docStyles.bg}`}
                           >
                             <span
-                              className={`enterprise-label !mb-0 opacity-60 ${docStyles.text}`}
+                              className={`enterprise-label mb-0! opacity-60 ${docStyles.text}`}
                             >
                               Total a Facturar
                             </span>
@@ -1158,7 +1215,7 @@ export default function IndexDocuments({
                               !data.client.rut ||
                               processing
                             }
-                            className={`w-full !py-6 !rounded-[1.5rem] !text-[11px] font-black uppercase tracking-widest shadow-2xl transition-all ${
+                            className={`w-full py-6! rounded-[1.5rem]! text-[11px]! font-black uppercase tracking-widest shadow-2xl transition-all ${
                               data.items.length === 0 ||
                               !data.client.rut ||
                               processing
@@ -1193,19 +1250,16 @@ export default function IndexDocuments({
                             className="w-full p-4 text-xs font-medium transition-all resize-none border-gray-50 bg-gray-50/50 rounded-2xl focus:bg-white focus:ring-brand-primary"
                           />
                         </div>
-                        <label className="flex items-center gap-4 p-4 transition-all border border-gray-100 cursor-pointer bg-gray-50/50 rounded-2xl hover:bg-white group">
-                          <input
-                            type="checkbox"
+                        <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <Switch
+                            label="Modo Simulación (Sin SII)"
                             checked={data.simulate}
                             onChange={(e) =>
                               setData("simulate", e.target.checked)
                             }
-                            className="w-6 h-6 border-gray-200 rounded-xl text-brand-primary focus:ring-brand-primary"
+                            className="w-full justify-between"
                           />
-                          <span className="enterprise-label !mb-0 opacity-60 group-hover:opacity-100">
-                            Modo Simulación (Sin SII)
-                          </span>
-                        </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1311,7 +1365,7 @@ export default function IndexDocuments({
                   </div>
 
                   <div className="space-y-4">
-                    <p className="enterprise-label !text-brand-primary">
+                    <p className="enterprise-label text-brand-primary!">
                       Detalle de Cobro
                     </p>
                     <div className="overflow-hidden border border-gray-100 shadow-sm rounded-3xl">
@@ -1365,13 +1419,13 @@ export default function IndexDocuments({
                         "_blank"
                       )
                     }
-                    className="!px-8 !py-4 flex items-center gap-2"
+                    className="px-8! py-4! flex items-center gap-2"
                   >
                     <Printer className="w-4 h-4" /> Imprimir
                   </SecondaryButton>
                   <PrimaryButton
                     onClick={() => setSelectedDocument(null)}
-                    className="!px-10 !py-4 shadow-xl shadow-brand-primary/20"
+                    className="px-10! py-4! shadow-xl shadow-brand-primary/20"
                   >
                     Cerrar Visor
                   </PrimaryButton>

@@ -147,7 +147,7 @@ export default function Login({ status, canResetPassword }) {
                     name="remember"
                     checked={data.remember}
                     onChange={(e) => setData("remember", e.target.checked)}
-                    className="cursor-pointer w-5 h-5 border-gray-200 rounded-lg text-brand-primary focus:ring-brand-primary"
+                    className="cursor-pointer w-5 h-5 border-gray-200 rounded-xl text-brand-primary focus:ring-brand-primary"
                   />
                   <span className="ml-3 text-[10px] font-black text-brand-gray uppercase tracking-widest group-hover:text-brand-primary transition-colors">
                     Recordarme
@@ -170,20 +170,6 @@ export default function Login({ status, canResetPassword }) {
                   </>
                 )}
               </PrimaryButton>
-              {/* <button
-                type="submit"
-                disabled={processing}
-                className="cursor-pointer flex items-center justify-center w-full gap-3 py-5 font-black text-white uppercase tracking-[0.2em] text-[10px] transition-all shadow-xl bg-brand-primary hover:brightness-110 rounded-[1.5rem] shadow-brand-primary/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform"
-              >
-                {processing ? (
-                  <div className="w-5 h-5 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
-                ) : (
-                  <>
-                    Acceder al Sistema
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button> */}
             </form>
           </div>
 

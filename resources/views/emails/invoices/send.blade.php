@@ -47,6 +47,18 @@
             </div>
 
             <div class="footer">
+                @if($invoice->branch)
+                    <p style="margin-bottom: 8px; color: #4a5568; font-weight: bold;">
+                        Sucursal: {{ $invoice->branch->name }}
+                        @if($invoice->branch->primaryAddress)
+                            <br>
+                            <span style="font-weight: normal; font-size: 11px;">
+                                {{ $invoice->branch->primaryAddress->street }} {{ $invoice->branch->primaryAddress->number }}, 
+                                {{ $invoice->branch->primaryAddress->commune->name ?? '' }}
+                            </span>
+                        @endif
+                    </p>
+                @endif
                 <p>Este es un mensaje automático generado por el sistema de gestión de <span class="brand">{{ config('app.name') }}</span>.</p>
                 <p style="margin-top: 8px;">&copy; {{ date('Y') }} Todos los derechos reservados.</p>
             </div>

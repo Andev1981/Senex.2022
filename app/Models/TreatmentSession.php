@@ -172,17 +172,17 @@ class TreatmentSession extends Model
      */
     public function scopeScheduled($query)
     {
-        return $query->where('status', self::STATUS_SCHEDULED);
+        return $query->where('status', AppointmentStatusEnum::SCHEDULED);
     }
 
     public function scopeCompleted($query)
     {
-        return $query->where('status', self::STATUS_COMPLETED);
+        return $query->where('status', AppointmentStatusEnum::COMPLETED);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('status', self::STATUS_CANCELLED);
+        return $query->where('status', AppointmentStatusEnum::CANCELLED);
     }
 
     public function scopeForPatient($query, $patientId)
@@ -248,27 +248,27 @@ class TreatmentSession extends Model
 
     public function isScheduled(): bool
     {
-        return $this->status === self::STATUS_SCHEDULED;
+        return $this->status === AppointmentStatusEnum::SCHEDULED;
     }
 
     public function isCompleted(): bool
     {
-        return $this->status === self::STATUS_COMPLETED;
+        return $this->status === AppointmentStatusEnum::COMPLETED;
     }
 
     public function isCancelled(): bool
     {
-        return $this->status === self::STATUS_CANCELLED;
+        return $this->status === AppointmentStatusEnum::CANCELLED;
     }
 
     public function didNotAttend(): bool
     {
-        return $this->status === self::STATUS_MISSED;
+        return $this->status === AppointmentStatusEnum::NO_SHOW;
     }
 
     public function markAsCompleted(): void
     {
-        $this->update(['status' => self::STATUS_COMPLETED]);
+        $this->update(['status' => AppointmentStatusEnum::COMPLETED]);
 
         // Incrementar sesiones completadas del tratamiento
         if ($this->treatment) {
@@ -278,12 +278,12 @@ class TreatmentSession extends Model
 
     public function markAsCancelled(): void
     {
-        $this->update(['status' => self::STATUS_CANCELLED]);
+        $this->update(['status' => AppointmentStatusEnum::CANCELLED]);
     }
 
     public function markAsNoShow(): void
     {
-        $this->update(['status' => self::STATUS_MISSED]);
+        $this->update(['status' => AppointmentStatusEnum::NO_SHOW]);
     }
 
     public function calculatePainProgress(): float

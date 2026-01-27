@@ -15,6 +15,7 @@ const IndexHistorial = lazy(() => import("./historial/index-historial"));
 const IndexTreatments = lazy(() => import("./treatments/index-treatments"));
 const IndexPayments = lazy(() => import("./payments/index-payments"));
 const PatientDashboard = lazy(() => import("./dashboard/patient-dashboard"));
+const IndexPlans = lazy(() => import("./plans/index")); // Importar el nuevo componente IndexPlans
 
 function useSyncedTab(defaultTab = "dashboard") {
   const initial =
@@ -44,7 +45,7 @@ export default function DetailPatient(props) {
 
       <div className="flex flex-col xl:flex-row min-h-screen bg-gray-50/50">
         {/* 1. COLUMNA IZQUIERDA (Sidebar Anidado) */}
-        <div className="xl:w-80 w-full flex-none">
+        <div className="xl:w-64 w-full flex-none">
             <PatientSidebar
             patient={patient}
             activeTab={activeTab}
@@ -54,16 +55,17 @@ export default function DetailPatient(props) {
         </div>
 
         {/* 2. COLUMNA DERECHA (Contenido Dinámico) */}
-        <main className="flex-1 p-6 md:p-10 transition-all">
+        <main className="flex-1 p-4 transition-all">
           {/* Título de la sección actual (Diseño Enterprise) */}
-          <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <header className="mb-4 p-8 rounded-2xl flex shadow-xl flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none mb-1 uppercase">
+                <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-1 uppercase">
                 {activeTab === "dashboard" && "Dashboard Clínico"}
                 {activeTab === "general" && "Expediente del Paciente"}
                 {activeTab === "history" && "Historial de Atenciones"}
                 {activeTab === "payments" && "Balance & Transacciones"}
                 {activeTab === "treatments" && "Planes de Tratamiento"}
+                {activeTab === "plans" && "Planes Contratados"} {/* Nuevo título para la pestaña de planes */}
                 </h1>
                 <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em] mt-2">Ficha Digital • ID {patient.id}</p>
             </div>
@@ -115,6 +117,7 @@ export default function DetailPatient(props) {
                         sessions={(patient.active_treatments || []).flatMap(t => t.sessions || [])}
                     />
                 )}
+                {activeTab === "plans" && <IndexPlans {...props} patient={patient} />} {/* Nuevo caso para la pestaña de planes */}
                 {activeTab === "payments" && <IndexPayments {...props} />}
               </div>
             </Suspense>

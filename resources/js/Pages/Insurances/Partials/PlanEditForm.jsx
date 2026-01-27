@@ -21,16 +21,19 @@ import PrimaryButton from "@/components/PrimaryButton";
 import SecondaryButton from "@/components/SecondaryButton";
 import Switch from "@/components/Switch";
 import TextInput from "@/components/TextInput";
+import EnterpriseSelect from "@/components/EnterpriseSelect";
 import InputPesoChileno from "@/components/InputPesoChileno";
 
-export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
+export default function PlanEditForm({ editingInsurance, plan, sessionTypes, onClose }) {
   const isEdit = !!plan;
   const [filteredSessionTypes, setFilteredSessionTypes] = useState(sessionTypes);
+
+  const isExternalInsurance = ["health_insurer", "insurance_company"].includes(editingInsurance?.institution_type);
 
   const { data, setData, post, put, processing, errors, clearErrors, reset } = useForm({
     name: plan?.name || "",
     code: plan?.code || "",
-    type: plan?.type || "external",
+    type: plan?.type || (isExternalInsurance ? "external" : "internal"),
     insurance_id: plan?.insurance_id || editingInsurance?.id,
     billing_type: plan?.billing_type || "prepaid",
     insurance_policy_type: plan?.insurance_policy_type || "complementary",
@@ -109,29 +112,35 @@ export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
             <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
                 <Briefcase className="w-3.5 h-3.5" /> Arquitectura del Plan
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-50/50 border border-gray-100 rounded-[2rem]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-gray-100 border border-gray-100 rounded-[2rem]">
                 <div className="space-y-1">
-                    <label className="ml-1 enterprise-label opacity-60">Origen del Plan</label>
-                    <select
+                    <EnterpriseSelect
+                        label="Origen del Plan"
                         value={data.type}
-                        onChange={(e) => setData("type", e.target.value)}
-                        className="w-full px-4 py-3 text-xs font-bold transition-all bg-white border-gray-100 shadow-sm rounded-xl focus:ring-brand-primary"
-                    >
-                        <option value="external">Externo (Isapre / Fonasa)</option>
-                        <option value="internal">Interno (Clínica / Pack)</option>
-                    </select>
+                        onChange={(val) => setData("type", val)}
+                        disabled={isExternalInsurance || isEdit}
+                        options={[
+                            { value: 'external', label: 'Externo (Isapre / Fonasa)' },
+                            { value: 'internal', label: 'Interno (Clínica / Pack)' },
+                        ]}
+                    />
+                    {isExternalInsurance && (
+                      <p className="text-[9px] text-brand-primary font-bold mt-1 ml-1 uppercase italic">
+                        * Restringido a Externo por tipo de institución
+                      </p>
+                    )}
                 </div>
                 <div className="space-y-1">
-                    <label className="ml-1 enterprise-label opacity-60">Modelo de Facturación</label>
-                    <select
+                    <EnterpriseSelect
+                        label="Modelo de Facturación"
                         value={data.billing_type}
-                        onChange={(e) => setData("billing_type", e.target.value)}
-                        className="w-full px-4 py-3 text-xs font-bold transition-all bg-white border-gray-100 shadow-sm rounded-xl focus:ring-brand-primary"
-                    >
-                        <option value="prepaid">Prepago (Pago anticipado)</option>
-                        <option value="membership">Membresía (Cuota mensual)</option>
-                        <option value="postpaid">Convenio Directo (Empresa)</option>
-                    </select>
+                        onChange={(val) => setData("billing_type", val)}
+                        options={[
+                            { value: 'prepaid', label: 'Prepago (Pago anticipado)' },
+                            { value: 'membership', label: 'Membresía (Cuota mensual)' },
+                            { value: 'postpaid', label: 'Convenio Directo (Empresa)' },
+                        ]}
+                    />
                 </div>
             </div>
           </div>
@@ -145,14 +154,15 @@ export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
                     </div>
                     <div>
                         <p className="mb-1 text-xs font-black leading-none tracking-tight text-gray-900 uppercase">Política de Seguro</p>
-                        <select
+                        <EnterpriseSelect
                             value={data.insurance_policy_type}
-                            onChange={(e) => setData("insurance_policy_type", e.target.value)}
-                            className="text-[10px] font-black text-brand-primary bg-transparent border-none p-0 focus:ring-0 uppercase cursor-pointer"
-                        >
-                            <option value="complementary">Complementario</option>
-                            <option value="standalone">Independiente</option>
-                        </select>
+                            onChange={(val) => setData("insurance_policy_type", val)}
+                            options={[
+                                { value: 'complementary', label: 'Complementario' },
+                                { value: 'standalone', label: 'Independiente' },
+                            ]}
+                            className="w-40"
+                        />
                     </div>
                 </div>
             </div>
@@ -216,14 +226,18 @@ export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
                     {data.content.map((item, index) => (
                         <div key={item.id} className="grid items-end grid-cols-1 gap-4 p-4 transition-all bg-white border border-gray-100 shadow-sm md:grid-cols-12 rounded-2xl group hover:border-brand-primary/30">
                             <div className="space-y-1 md:col-span-6">
-                                <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Servicio Autorizado</label>
-                                <select value={item.session_type_id} onChange={e => updateContentItem(index, "session_type_id", e.target.value)} className="w-full rounded-xl border-gray-50 bg-gray-50/50 py-2.5 px-4 text-xs font-bold text-gray-700">
-                                    <option value="">Seleccione...</option>
-                                    {filteredSessionTypes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                    {item.session_type_id && !filteredSessionTypes.find(s => s.id.toString() === item.session_type_id) && (
-                                        <option value={item.session_type_id}>{sessionTypes.find(s => s.id.toString() === item.session_type_id)?.name}</option>
-                                    )}
-                                </select>
+                                <EnterpriseSelect
+                                    label="Servicio Autorizado"
+                                    value={item.session_type_id}
+                                    onChange={(val) => updateContentItem(index, "session_type_id", val)}
+                                    options={[
+                                        ...filteredSessionTypes.map(s => ({ value: s.id.toString(), label: s.name })),
+                                        ...(item.session_type_id && !filteredSessionTypes.find(s => s.id.toString() === item.session_type_id) 
+                                            ? [{ value: item.session_type_id, label: sessionTypes.find(s => s.id.toString() === item.session_type_id)?.name }] 
+                                            : [])
+                                    ]}
+                                    placeholder="Seleccione..."
+                                />
                             </div>
                             <div className="space-y-1 md:col-span-2">
                                 <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest text-center block">Cant.</label>
@@ -302,7 +316,7 @@ export default function PlanEditForm({ editingInsurance, plan, sessionTypes }) {
 
         {/* FOOTER FIJO PREMIUM */}
         <div className="p-8 bg-gray-50/80 backdrop-blur border-t border-gray-100 flex justify-end gap-4 shrink-0 rounded-b-[2rem]">
-            <SecondaryButton onClick={() => { reset(); setIsModalOpen(false); }} className="!px-10 !py-4">Descartar</SecondaryButton>
+            <SecondaryButton onClick={() => { reset(); onClose(); }} className="!px-10 !py-4">Descartar</SecondaryButton>
             <PrimaryButton disabled={processing} type="submit" className="!px-14 !py-4 shadow-xl shadow-brand-primary/20">
                 {processing ? 'Sincronizando...' : (isEdit ? 'Actualizar Plan' : 'Confirmar & Crear Plan')}
             </PrimaryButton>

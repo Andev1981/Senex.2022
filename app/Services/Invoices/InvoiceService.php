@@ -4,11 +4,14 @@ namespace App\Services\Invoices;
 
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Enums\DteStatusEnum;
+use App\Enums\FinanceStatusEnum;
 use App\Services\Dte\DteService;
 use App\Jobs\Dte\EmitDteJob; // Importamos el Job para el fallback
 use App\Jobs\Dte\CheckDteStatusJob;
 use App\Models\Product;
 use App\Models\SessionType;
+use App\Models\Plan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -19,6 +22,33 @@ class InvoiceService
   public function __construct(
     protected DteService $dteService
   ) {}
+
+  public function issueInvoiceForPlanPurchase(Payment $payment, Plan $plan, int $patientAmount): Invoice
+  {
+      $invoiceData = [
+          'services_to_bill' => [
+              [
+                  'name' => $plan->name,
+                  'description' => $plan->description ?? 'Compra de plan de servicios',
+                  'quantity' => 1,
+                  'unit_price_clp' => $plan->price, // Precio bruto del plan
+                  'unit_patient_clp' => $patientAmount, // Lo que el paciente pagó por el plan
+                  'is_product' => false,
+                  'is_exempt' => true, // Asume que los planes de salud son exentos
+                  'sellable_type' => 'Plan', // Define el tipo polimórfico
+                  'sellable_id' => $plan->id,
+              ]
+          ],
+          'final_shares' => [
+              'amount_gross_clp' => $plan->price,
+              'amount_insurance_primary_clp' => 0,
+              'amount_insurance_secondary_clp' => 0,
+              'discount_clp' => 0,
+          ],
+      ];
+      // Reutiliza la lógica existente de createLocalInvoice para el encabezado y EmitDteJob
+      return $this->processInvoice($payment, $invoiceData);
+  }
 
   /**
    * Proceso Híbrido: Crea el registro y trata de emitir DTE.
@@ -55,7 +85,7 @@ class InvoiceService
 
       // Opcional: Marcar estado interno indicando problema
       $invoice->update([
-        'dte_status' => 'PENDING_RETRY',
+        'dte_status' => DteStatusEnum::RETRY,
         'dte_notes'  => 'Fallo intento síncrono: ' . substr($e->getMessage(), 0, 200)
       ]);
     }
@@ -116,8 +146,8 @@ class InvoiceService
 
         'issue_date'     => now(),
         'dte_type'       => ($totalNeto > 0) ? 39 : 41, // 39: Boleta Afecta, 41: Exenta
-        'dte_status'     => 'CREATED', // Estado inicial interno
-        'payment_status' => 'PAID',
+        'dte_status'     => DteStatusEnum::GENERATED, // Estado inicial interno
+        'payment_status' => FinanceStatusEnum::PAID,
       ]);
 
       // 3. Crear los ítems vinculados (invoice_items)
@@ -133,18 +163,25 @@ class InvoiceService
         $isProduct = isset($item['type']) && $item['type'] === 'product';
 
         // Definimos el MorphMap (debe coincidir con AppServiceProvider)
-        $sellableType = $isProduct ? 'Product' : 'SessionType';
+        // SI VIENE sellable_type explícito (como en planes), lo usamos.
+        $sellableType = $item['sellable_type'] ?? ($isProduct ? 'Product' : 'SessionType');
 
         // Si es sesión, usamos el session_type_id; si es producto, el id del producto
-        $sellableId = $isProduct ? ($item['id'] ?? null) : ($item['session_type_id'] ?? null);
+        $sellableId = $item['sellable_id'] ?? ($isProduct ? ($item['id'] ?? null) : ($item['session_type_id'] ?? null));
 
         // C. Crear el registro
         $isExento = true; // Default
         if ($isProduct) {
           $isExento = $item['is_exempt'] ?? false;
         } else if ($sellableId) {
-          $sessionType = SessionType::find($sellableId);
-          $isExento = $sessionType ? $sessionType->is_exempt : true;
+          // Si es Plan o SessionType, buscamos para ver si es exento
+          if ($sellableType === 'Plan') {
+            $plan = Plan::find($sellableId);
+            $isExento = true; // Planes suelen ser exentos en este sistema
+          } else {
+            $sessionType = SessionType::find($sellableId);
+            $isExento = $sessionType ? $sessionType->is_exempt : true;
+          }
         }
 
         $invoiceItem = $invoice->items()->create([

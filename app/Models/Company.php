@@ -44,8 +44,8 @@ class Company extends Model
     {
         static::created(function ($company) {
             $company->branches()->create([
-                'name' => 'Casa Matriz',
-                'codigo_sucursal_sii' => '0', // O el código que uses para la casa matriz
+                'name' => 'Sucursal Principal', // Nombre genérico, el estado 'Casa Matriz' lo da is_main
+                'codigo_sucursal_sii' => '0',
                 'email' => $company->email,
                 'phone' => $company->phone,
                 'is_main' => true,

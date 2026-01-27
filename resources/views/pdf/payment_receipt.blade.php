@@ -262,7 +262,13 @@
                     </td>
                     <td style="width: 33%;">
                         <div class="service-name">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : $payment->created_at->format('d/m/Y H:i') }}</div>
-                        <div class="service-code">Sucursal: {{ $payment->branch->name ?? 'Casa Central' }}</div>
+                        <div class="service-code">
+                            <strong>{{ $payment->branch->name ?? 'Casa Central' }}</strong><br>
+                            @if($payment->branch && $payment->branch->primaryAddress)
+                                {{ $payment->branch->primaryAddress->street }} {{ $payment->branch->primaryAddress->number }}, 
+                                {{ $payment->branch->primaryAddress->commune->name ?? '' }}
+                            @endif
+                        </div>
                     </td>
                     <td style="width: 34%;">
                         <div class="service-name text-capitalize">
@@ -295,10 +301,50 @@
             </thead>
             <tbody>
                 @foreach($payment->paymentAllocation as $alloc)
+                @php
+                    $serviceName = 'Atención Médica / Servicio';
+                    $serviceDetails = '';
+                    $description = null;
+                    $planSessions = [];
+
+                    if ($alloc->treatmentSession && $alloc->treatmentSession->sessionType) {
+                        $serviceName = $alloc->treatmentSession->sessionType->name;
+                        $serviceDetails = "SESIÓN ID: {$alloc->treatment_session_id} | COD: " . ($alloc->treatmentSession->sessionType->code ?? 'N/A');
+                    } elseif ($alloc->invoice && $alloc->invoice->items->count() > 0) {
+                        $planItem = $alloc->invoice->items->where('sellable_type', 'Plan')->first();
+                        if ($planItem && $planItem->sellable) {
+                            $plan = $planItem->sellable;
+                            $serviceName = "Plan: {$plan->name}";
+                            $serviceDetails = "VIGENCIA: {$plan->valid_months} MESES | TIPO: {$plan->type}";
+                            $description = $plan->description;
+                            $planSessions = $plan->sessionTypes;
+                        } else {
+                            $serviceName = $alloc->invoice->items->pluck('description')->implode(', ');
+                            $serviceDetails = "REF: " . ($alloc->invoice->type_name ?? 'Doc') . " #" . ($alloc->invoice->dte_folio ?? 'S/N');
+                        }
+                    }
+                @endphp
                 <tr>
                     <td>
-                        <div class="service-name">{{ $alloc->treatmentSession->sessionType->name ?? 'Atención Médica' }}</div>
-                        <div class="service-code">SESIÓN ID: {{ $alloc->treatment_session_id }} | COD: {{ $alloc->treatmentSession->sessionType->code ?? 'N/A' }}</div>
+                        <div class="service-name">{{ $serviceName }}</div>
+                        <div class="service-code">{{ $serviceDetails }}</div>
+                        
+                        @if(count($planSessions) > 0)
+                            <div style="margin-top: 10px; margin-bottom: 5px; font-weight: 800; font-size: 8px; color: var(--brand-primary); text-transform: uppercase;">Contenido del Plan:</div>
+                            @foreach($planSessions as $st)
+                                <div style="padding: 4px 8px; background: #f0f9ff; border: 1px solid #e0f2fe; border-radius: 6px; margin-bottom: 3px; font-size: 9px; clear: both;">
+                                    <span style="float: left; font-weight: 700; color: #1e40af;">{{ strtoupper($st->name) }}</span>
+                                    <span style="float: right; font-weight: 800; color: #1d4ed8;">{{ $st->pivot->max_sessions ?? '∞' }} SESIONES</span>
+                                    <div style="clear: both;"></div>
+                                </div>
+                            @endforeach
+                        @endif
+
+                        @if($description)
+                            <div style="margin-top: 5px; font-style: italic; color: #666; font-size: 9px;">
+                                "{{ $description }}"
+                            </div>
+                        @endif
                     </td>
                     <td class="text-right font-bold">
                         ${{ number_format($alloc->amount_clp, 0, ',', '.') }}

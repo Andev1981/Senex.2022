@@ -141,6 +141,7 @@ const InsuranceIndex = ({ insurances, sessionTypes, user }) => {
           editingInsurance={editingInsurance}
           plan={editingPlan}
           sessionTypes={sessionTypes}
+          onClose={closePlansFormModal}
         />
       </SideModal>
     </AuthenticatedLayout>

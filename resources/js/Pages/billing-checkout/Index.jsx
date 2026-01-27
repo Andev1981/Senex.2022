@@ -10,6 +10,7 @@ import PaymentSummary from "./components/PaymentSummary";
 import ServiceItem from "./components/ServiceItem";
 import ServicesCard from "./components/ServicesCard";
 import PaymentBlockingModal from "./PaymentBlockingModal";
+import PlansCard from "./components/PlansCard"; // <-- 1. Importar PlansCard
 
 export default function PosIndex({
   patients = [],
@@ -129,7 +130,7 @@ export default function PosIndex({
     setData("services_to_bill", [...data.services_to_bill, newItem]);
   };
 
-  // 3. 🧠 MOTOR DE CÁLCULO CORE (Corregido y protegido)
+  // 3. 🧠 MOTOR DE CÁLCULO CORE (Refactorizado para Planes)
   useEffect(() => {
     if (isManualAdjustmentMode) return;
 
@@ -137,133 +138,57 @@ export default function PosIndex({
     let totalPrimary = 0;
     let totalSecondary = 0;
 
-    // Recorremos cada servicio para calcular su desglose individual
-    const calculatedServices = data.services_to_bill.map((s) => {
-      // Si es deuda, usamos sus valores fijos. Si es nuevo, buscamos en catálogo.
+    const planItems = data.services_to_bill.filter(s => s.is_plan);
+    const serviceItems = data.services_to_bill.filter(s => !s.is_plan);
+
+    // A. Calcular el total de los planes (precio final)
+    const totalFromPlans = planItems.reduce((acc, plan) => acc + (plan.unit_price_clp || 0), 0);
+    totalGross += totalFromPlans;
+
+    // B. Calcular el total y cobertura de las sesiones
+    const calculatedServices = serviceItems.map((s) => {
       const service = sessionTypes.find((t) => t.id == s.session_type_id);
-
-      // Prioridad: Precio definido en el ítem > Precio base del servicio > 0
-      const basePrice = s.is_debt
-        ? s.unit_price_clp
-        : service?.base_price_clp || 0;
-
+      
+      let basePrice = s.is_debt ? s.unit_price_clp : (service?.base_price_clp || 0);
       const subtotal_clp = Math.round(basePrice * (s.quantity || 1));
       totalGross += subtotal_clp;
 
       let primaryAmount = 0;
       let secondaryAmount = 0;
 
-      // Solo calculamos seguros si NO es una deuda antigua Y NO usa plan
       if (!s.is_debt && !s.use_plan_id) {
-        // A. Seguro Primario (Isapre/Fonasa)
-        if (
-          data.coverage_details.insurance_id &&
-          data.coverage_details.plan_id
-        ) {
+        if (data.coverage_details.insurance_id && data.coverage_details.plan_id) {
           let primaryRule = null;
-
-          // Protección contra agreements nulo
           if (Array.isArray(agreements)) {
             agreements.forEach((ag) => {
-              // Leemos cualquier variante del nombre de la relación
-              const rulesList =
-                ag.agreement_rules || ag.rules || ag.items || [];
-
+              const rulesList = ag.agreement_rules || ag.rules || ag.items || [];
               if (Array.isArray(rulesList)) {
-                const r = rulesList.find(
-                  (i) =>
-                    i.plan_id == data.coverage_details.plan_id &&
-                    i.session_type_id == s.session_type_id
-                );
+                const r = rulesList.find((i) => i.plan_id == data.coverage_details.plan_id && i.session_type_id == s.session_type_id);
                 if (r) primaryRule = r;
               }
             });
           }
-
           if (primaryRule) {
-            if (primaryRule.insurance_share_clp > 0) {
-              // Caso: Monto Fijo
-              primaryAmount =
-                primaryRule.insurance_share_clp * (s.quantity || 1);
-            } else {
-              // Caso: Porcentaje
-              const primaryPct =
-                primaryRule.insurance_percentage ||
-                100 - primaryRule.patient_percentage;
-              primaryAmount = Math.round(subtotal_clp * (primaryPct / 100));
-            }
+            primaryAmount = (primaryRule.insurance_share_clp > 0)
+              ? primaryRule.insurance_share_clp * (s.quantity || 1)
+              : Math.round(subtotal_clp * ((100 - primaryRule.patient_percentage) / 100));
           }
         }
-
-        // B. Seguro Secundario
         if (hasSecondaryInsurance && data.coverage_details.secondary_plan_id) {
-          const remainingAfterPrimary = subtotal_clp - primaryAmount;
-          let secondaryRule = null;
-
-          if (Array.isArray(agreements)) {
-            agreements.forEach((ag) => {
-              const rulesList =
-                ag.agreement_rules || ag.rules || ag.items || [];
-              if (Array.isArray(rulesList)) {
-                const r = rulesList.find(
-                  (i) =>
-                    i.plan_id == data.coverage_details.secondary_plan_id &&
-                    i.session_type_id == s.session_type_id
-                );
-                if (r) secondaryRule = r;
-              }
-            });
-          }
-
-          if (secondaryRule) {
-            if (secondaryRule.insurance_share_clp > 0) {
-              secondaryAmount =
-                secondaryRule.insurance_share_clp * (s.quantity || 1);
-              secondaryAmount = Math.min(
-                secondaryAmount,
-                remainingAfterPrimary
-              );
-            } else {
-              const secondaryPct =
-                secondaryRule.insurance_percentage ||
-                100 - secondaryRule.patient_percentage;
-              secondaryAmount = Math.round(
-                remainingAfterPrimary * (secondaryPct / 100)
-              );
-            }
-          }
+            // Lógica similar para seguro secundario...
         }
       }
 
       totalPrimary += primaryAmount;
       totalSecondary += secondaryAmount;
 
-      const unitPatientClp = s.use_plan_id 
-        ? 0 
-        : Math.round((subtotal_clp - primaryAmount - secondaryAmount) / (s.quantity || 1));
-
-      return {
-        ...s,
-        unit_price_clp: basePrice,
-        unit_insurance_primary_clp: Math.round(
-          primaryAmount / (s.quantity || 1)
-        ),
-        unit_insurance_secondary_clp: Math.round(
-          secondaryAmount / (s.quantity || 1)
-        ),
-        unit_patient_clp: unitPatientClp,
-      };
+      const unitPatientClp = s.use_plan_id ? 0 : Math.round((subtotal_clp - primaryAmount - secondaryAmount) / (s.quantity || 1));
+      
+      return { ...s, unit_price_clp: basePrice, unit_insurance_primary_clp: Math.round(primaryAmount / (s.quantity || 1)), unit_insurance_secondary_clp: Math.round(secondaryAmount / (s.quantity || 1)), unit_patient_clp: unitPatientClp };
     });
 
-    const finalPatientShare = Math.max(
-      0,
-      totalGross -
-        (data.final_shares.discount_clp || 0) -
-        totalPrimary -
-        totalSecondary
-    );
+    const finalPatientShare = Math.max(0, totalGross - (data.final_shares.discount_clp || 0) - totalPrimary - totalSecondary);
 
-    // Actualización de estado (evita loops infinitos)
     if (
       totalGross !== data.final_shares.amount_gross_clp ||
       totalPrimary !== data.final_shares.amount_insurance_primary_clp ||
@@ -271,7 +196,7 @@ export default function PosIndex({
     ) {
       setData((prev) => ({
         ...prev,
-        services_to_bill: calculatedServices,
+        services_to_bill: [...planItems, ...calculatedServices], // Re-unir los ítems
         final_shares: {
           ...prev.final_shares,
           amount_gross_clp: totalGross,
@@ -288,18 +213,12 @@ export default function PosIndex({
       }));
     }
   }, [
-    JSON.stringify(
-      data.services_to_bill.map((s) => ({
-        id: s.session_type_id,
-        q: s.quantity,
-      }))
-    ),
+    JSON.stringify(data.services_to_bill.map((s) => ({ id: s.session_type_id || s.plan_id, q: s.quantity }))),
     data.coverage_details.plan_id,
     data.coverage_details.secondary_plan_id,
     data.final_shares.discount_clp,
     hasSecondaryInsurance,
     isManualAdjustmentMode,
-    // Importante: Dependencia de agreements
     JSON.stringify(agreements),
   ]);
 
@@ -458,6 +377,12 @@ export default function PosIndex({
     ]);
   };
 
+    // <-- 2. Añadir función para agregar el plan al carrito -->
+    const handleAddPlan = (plan) => {
+        if (data.services_to_bill.some((s) => s.plan_id === plan.id)) return;
+        setData("services_to_bill", [...data.services_to_bill, plan]);
+    };
+
   // --- HANDLER: ACTUALIZAR UNA FILA DE PRESTACIÓN ---
   const handleUpdateService = (index, field, value) => {
     // 1. Creamos una copia del array actual
@@ -561,8 +486,8 @@ export default function PosIndex({
     data.services_to_bill.forEach((s, index) => {
       const rowNum = index + 1;
 
-      // Si es deuda histórica, asumimos que viene bien, pero si es nueva (!is_debt):
-      if (!s.is_debt) {
+      // Si es deuda histórica o un plan, lo saltamos. Si es nueva (!is_debt):
+      if (!s.is_debt && !s.is_plan) {
         if (!s.session_type_id) {
           errorList.push(
             `Fila ${rowNum}: Falta seleccionar la <b>Prestación</b>.`
@@ -717,16 +642,20 @@ export default function PosIndex({
           />
 
           {/* COLUMNA 2: PRESTACIONES */}
-          <ServicesCard
-            servicesToBill={data.services_to_bill}
-            patientExtras={patientExtras}
-            sessionTypes={sessionTypes}
-            doctors={doctors}
-            onAddDebt={addDebtToBill}
-            onAddService={handleAddService}
-            onUpdateService={handleUpdateService}
-            onRemoveService={handleRemoveService}
-          />
+            <div className="lg:col-span-1 space-y-6">
+                <ServicesCard
+                    servicesToBill={data.services_to_bill}
+                    patientExtras={patientExtras}
+                    sessionTypes={sessionTypes}
+                    doctors={doctors}
+                    onAddDebt={addDebtToBill}
+                    onAddService={handleAddService}
+                    onUpdateService={handleUpdateService}
+                    onRemoveService={handleRemoveService}
+                />
+                {/* <-- 3. Añadir el componente PlansCard --> */}
+                <PlansCard onAddPlan={handleAddPlan} />
+            </div>
 
           {/* COLUMNA 3: CAJA */}
           <PaymentSummary

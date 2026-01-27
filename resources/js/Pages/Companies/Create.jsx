@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { Building2, Save, ArrowLeft, Image as ImageIcon } from "lucide-react";
+import axios from "axios";
 
 export default function Create() {
   // 1. Hook de formulario Inertia
@@ -13,6 +14,32 @@ export default function Create() {
     phone: "",
     logo: null,
   });
+
+  // Estado local para loading de búsqueda externa
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleRutBlur = async () => {
+    if (!data.rut || data.rut.length < 8) return;
+
+    setIsSearching(true);
+    try {
+      const response = await axios.get(route("external-data.company", { rut: data.rut }));
+      if (response.data.success) {
+        const { razon_social, giro } = response.data.data;
+        
+        // Actualizamos múltiples campos a la vez
+        setData((prevData) => ({
+          ...prevData,
+          business_name: razon_social || prevData.business_name,
+          giro: giro || prevData.giro,
+        }));
+      }
+    } catch (error) {
+      console.warn("No se pudo obtener la información de la empresa automáticamente.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   // Estado local solo para la previsualización de la imagen
   const [preview, setPreview] = useState(null);
@@ -80,9 +107,10 @@ export default function Create() {
                         placeholder="Ej: 76.123.456-K"
                         className={`w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white ${
                         errors.rut ? "border-red-500" : ""
-                        }`}
+                        } ${isSearching ? "animate-pulse opacity-70" : ""}`}
                         value={data.rut}
                         onChange={(e) => setData("rut", e.target.value)}
+                        onBlur={handleRutBlur}
                     />
                     {errors.rut && (
                         <p className="mt-1 text-xs text-red-500 font-bold">{errors.rut}</p>

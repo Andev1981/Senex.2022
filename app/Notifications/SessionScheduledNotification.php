@@ -104,11 +104,18 @@ class SessionScheduledNotification extends Notification implements ShouldQueue, 
             $mail->line("La sesión de {$patientName} ha sido agendada exitosamente.");
         }
 
+        $branchName = $this->session->branch ? $this->session->branch->name : 'Nuestra Clínica';
+        $fullAddress = '';
+        if ($this->session->branch && $this->session->branch->primaryAddress) {
+            $addr = $this->session->branch->primaryAddress;
+            $fullAddress = " ({$addr->street} {$addr->number}, " . ($addr->commune->name ?? '') . ")";
+        }
+
         return $mail
             ->line('📅 Fecha: ' . $date)
             ->line('⏰ Hora: ' . $time)
             ->line('👨‍⚕️ Profesional: ' . $doctorName)
-            ->line('📍 Lugar: ' . ($this->session->branch ? $this->session->branch->address : 'Sucursal Principal'))
+            ->line('📍 Lugar: ' . $branchName . $fullAddress)
             ->action('Ver Atenciones', route('patient.login'))
             ->line('¡Nos vemos pronto!');
     }

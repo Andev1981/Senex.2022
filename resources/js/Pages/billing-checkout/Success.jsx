@@ -166,23 +166,78 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-50">
-                    {payment?.payment_allocation?.map((alloc) => (
-                      <tr key={alloc.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-5">
-                          <div className="text-sm font-black text-gray-900 uppercase tracking-tight">
-                            {alloc.treatment_session?.session_type?.name ||
-                              "Atención Médica"}
-                          </div>
-                          <div className="mt-1 font-mono text-[10px] font-bold text-brand-gray uppercase tracking-widest">
-                            Sesión ID: {alloc.treatment_session_id} | Cod:{" "}
-                            {alloc.treatment_session?.session_type?.code}
-                          </div>
-                        </td>
-                        <td className="px-6 py-5 text-sm font-black text-right text-gray-900 font-mono">
-                          {formatMoney(alloc.amount_clp)}
-                        </td>
-                      </tr>
-                    ))}
+                    {payment?.payment_allocation?.map((alloc) => {
+                      // Determinamos el nombre del servicio
+                      let serviceName = "Atención Médica / Servicio";
+                      let serviceDetails = "";
+                      let extraInfo = null;
+
+                      if (alloc.treatment_session?.session_type?.name) {
+                        serviceName = alloc.treatment_session.session_type.name;
+                        serviceDetails = `Sesión ID: ${alloc.treatment_session_id} | Cod: ${alloc.treatment_session.session_type?.code}`;
+                      } else if (alloc.invoice?.items?.length > 0) {
+                        // Si no es sesión, buscamos en los ítems de la factura (ej. Planes)
+                        const items = alloc.invoice.items;
+                        serviceName = items.map(i => i.description).join(', ');
+                        
+                        // Si detectamos que es un Plan, extraemos info detallada
+                        const planItem = items.find(i => i.sellable_type === 'Plan');
+                        if (planItem && planItem.sellable) {
+                          const plan = planItem.sellable;
+                          serviceName = `Plan: ${plan.name}`;
+                          serviceDetails = `Vigencia: ${plan.valid_months} meses | Tipo: ${plan.type}`;
+                          
+                          // Detalle de sesiones incluidas en el plan
+                          if (plan.session_types?.length > 0) {
+                            extraInfo = (
+                              <div className="mt-3 space-y-2">
+                                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Contenido del Plan:</div>
+                                <div className="grid grid-cols-1 gap-2">
+                                  {plan.session_types.map(st => (
+                                    <div key={st.id} className="flex justify-between items-center p-2 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                      <span className="text-[10px] font-bold text-gray-700 uppercase">{st.name}</span>
+                                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-lg text-[9px] font-black">
+                                        {st.pivot?.max_sessions || '∞'} Sesiones
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {plan.description && (
+                                  <div className="mt-2 p-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-600 font-medium italic">
+                                    "{plan.description}"
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } else if (plan.description) {
+                            extraInfo = (
+                              <div className="mt-2 p-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-600 font-medium italic">
+                                "{plan.description}"
+                              </div>
+                            );
+                          }
+                        } else {
+                          serviceDetails = `Ref: ${alloc.invoice.type_name || 'Doc'} #${alloc.invoice.dte_folio || 'S/N'}`;
+                        }
+                      }
+
+                      return (
+                        <tr key={alloc.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-5">
+                            <div className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                              {serviceName}
+                            </div>
+                            <div className="mt-1 font-mono text-[10px] font-bold text-brand-gray uppercase tracking-widest">
+                              {serviceDetails}
+                            </div>
+                            {extraInfo}
+                          </td>
+                          <td className="px-6 py-5 text-sm font-black text-right text-gray-900 font-mono">
+                            {formatMoney(alloc.amount_clp)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

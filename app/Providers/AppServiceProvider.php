@@ -12,6 +12,7 @@ use App\Models\PaymentAllocation;
 use App\Models\TreatmentSession;
 use App\Models\Product;
 use App\Models\SessionType;
+use App\Models\Plan;
 use App\Models\User;
 use App\Models\Invoice;
 use App\Models\Dte;
@@ -82,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'Product' => Product::class,
             'SessionType' => SessionType::class,
+            'Plan' => Plan::class,
             'TreatmentSession' => TreatmentSession::class,
             'Company' => Company::class,
             'Patient' => Patient::class,
