@@ -33,33 +33,33 @@ El sistema ha migrado de una "doble contabilidad" (Deudas + Facturas) a un model
     *   Se eliminó `invoices.payment_id`. La relación es 1:N vía `payment_allocations`.
     *   `payments.insurance_id` ahora es `liquidation_insurance_id` (para diferenciar del seguro del paciente).
 
-3.  **Motor DTE (Facturación Electrónica):**
-    *   **Sincronización:** `EmitDteJob` delega 100% en `DteService`, evitando duplicidad de lógica.
-    *   **Seguridad:** Uso de `lockForUpdate` para reserva atómica de folios SII.
-    *   **Tributación:** Exención de IVA dinámica leyendo `SessionType->is_exempt`.
+### 🚀 Migración de Datos (Legacy)
+Se ha implementado un motor de migración robusto para importar datos desde SQL dumps antiguos (`old-db`).
 
-### 🏢 Gestión de Empresas (Nuevo)
-- **CompanyDataService:** Implementado con patrón "Cache on Demand".
-    - Busca localmente (`companies_directory`).
-    - Si es antiguo (>30 días) o no existe, consulta API externa.
-    - Cachea resultados para optimizar costos/latencia.
-- **Frontend:** Autocompletado de Razón Social/Giro en formularios mediante `ExternalDataController`.
+- **Seeder:** `LegacyDataMigrationSeeder` implementado y ejecutado.
+- **Entidades Migradas:**
+    - **Usuarios & Roles:** Mapeo de perfiles y asignación de roles mediante Spatie.
+    - **Pacientes & Doctores:** Perfiles creados con vinculación a direcciones polimórficas.
+    - **Estructura Clínica:**
+        - `applications` -> `Treatments`.
+        - `apply_items` -> `TreatmentSessions` + `InvoiceItems`.
+    - **Finanzas:** Cruce de `payment_incomes` con `apply_items` para generar `Payments` y `PaymentAllocations` precisos.
+    - **Contactos:** Migración de `keepers` a `PatientContacts`.
 
 ### ⚙️ Refactorización & Calidad
-- **Enums Estrictos:** Modelos `Treatment` y `TreatmentSession` migrados 100% a `TreatmentStatusEnum` y `AppointmentStatusEnum`. Eliminación de "magic strings" y corrección de scopes.
-- **Rutas:** Estandarización de rutas frontend a `/sessions` (eliminado `/sesiones` para evitar 404s).
-- **Correcciones:** `ClientDashboardController` y `PatientPlansController` movidos a los namespaces correctos (`Admin\Clients` y `Admin\Plans`).
+- **Enums Estrictos:** Modelos `Treatment` y `TreatmentSession` migrados 100% a `TreatmentStatusEnum` y `AppointmentStatusEnum`.
+- **Rutas:** Estandarización de rutas frontend a kebab-case (ej: `attendances/index`).
+- **Database:** Reseteo completo (`migrate:fresh --seed`) realizado exitosamente en Enero 2026.
 
 ## 💡 NOTAS TÉCNICAS
 
 - **Deuda del Paciente:** Se calcula sumando `Invoice` con estado `unpaid`/`partial` menos los pagos asignados en `payment_allocations`.
-- **Rutinas de Mantenimiento:**
-    - `php artisan queue:work` (Vital para DTE asíncrono y Notificaciones).
-    - `php artisan cache:clear` (Si se tocan regiones/comunas).
-- **Inertia:** Rutas estandarizadas a kebab-case (ej: `attendances/index`).
+- **Inertia:** Rutas estandarizadas a kebab-case.
 
 ## 📝 PRÓXIMOS PASOS (Roadmap)
 
-- [x] Verificar la visualización de la dirección de sucursal en las notificaciones de mail (Implementado en `SessionScheduledNotification` y layouts de correo).
-- [x] Implementar la lógica de "Re-enviar Notificación" desde el detalle de la sesión (Botón "Notificar" añadido).
-- [x] Revisar el cierre automático de tratamientos tras alcanzar el `total_sessions` (Lógica corregida en `TreatmentService` usando Enums).
+- [x] Implementar la lógica de "Re-enviar Notificación" desde el detalle de la sesión.
+- [x] Revisar el cierre automático de tratamientos tras alcanzar el `total_sessions`.
+- [x] Migración de datos históricos desde SQL dumps (`LegacyDataMigrationSeeder`).
+- [ ] Verificar consistencia de direcciones migradas (Posible issue con parseo de SQL).
+- [ ] Implementar dashboard financiero consolidado usando los nuevos modelos de `Invoice`.

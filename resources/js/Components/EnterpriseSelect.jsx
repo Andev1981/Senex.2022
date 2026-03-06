@@ -1,27 +1,65 @@
 import React from 'react';
-import { usePage } from '@inertiajs/react';
-import { Building2, MapPin } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
-const EnterpriseSelect = ({ className = "" }) => {
-  const { props } = usePage();
-  const { current_company, current_branch } = props;
+const EnterpriseSelect = ({
+    label,
+    value,
+    onChange,
+    options = [],
+    placeholder = "-- Seleccionar --",
+    disabled = false,
+    className = "",
+    error = null,
+    required = false,
+    icon: Icon = null, // Soporte para icono opcional
+}) => {
+    return (
+        <div className={`space-y-1 ${className}`}>
+            {label && (
+                <label className="enterprise-label ml-1 opacity-60">
+                    {label} {required && <span className="text-red-500">*</span>}
+                </label>
+            )}
+            
+            <div className="relative group">
+                {Icon && (
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400 group-focus-within:text-brand-primary transition-colors">
+                        <Icon className="w-4 h-4" />
+                    </div>
+                )}
+                
+                <select
+                    value={value || ""}
+                    onChange={(e) => onChange(e.target.value)}
+                    disabled={disabled}
+                    required={required}
+                    className={`
+                        w-full appearance-none pr-12 py-4 
+                        rounded-2xl border-gray-100 bg-gray-100 
+                        font-black text-xs uppercase tracking-tight
+                        focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary 
+                        shadow-inner transition-all outline-none cursor-pointer
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        ${Icon ? 'pl-12' : 'pl-6'} 
+                        ${error ? 'border-red-500 ring-red-100' : ''}
+                    `}
+                >
+                    <option value="" disabled>{placeholder}</option>
+                    {options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+                
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400 group-focus-within:text-brand-primary transition-colors">
+                    <ChevronDown className="w-4 h-4" />
+                </div>
+            </div>
 
-  return (
-    <div className={`flex items-center gap-2 p-3 bg-white border border-gray-100 rounded-2xl shadow-sm ${className}`}>
-      <Building2 className="w-5 h-5 text-brand-primary" />
-      <div className="flex flex-col min-w-0">
-        <span className="text-[10px] font-black uppercase tracking-widest text-brand-gray truncate">
-          {current_company?.business_name || "Cargando Empresa..."}
-        </span>
-        <div className="flex items-center gap-1">
-          <MapPin className="w-3 h-3 text-gray-400" />
-          <span className="text-xs font-bold text-gray-700 truncate">
-            {current_branch?.name || "Cargando Sucursal..."}
-          </span>
+            {error && <p className="mt-1 text-[10px] font-black uppercase text-red-600 ml-2 tracking-widest">{error}</p>}
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default EnterpriseSelect;

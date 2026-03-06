@@ -118,7 +118,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->command->info('Running Migrated Patients Seeder...');
-        $this->call(MigratedPatientsSeeder::class);
-        $this->call(DoctorsSeeder::class);
+        $this->call(LegacyDataMigrationSeeder::class);
+        // $this->call(DoctorsSeeder::class);
     }
 }

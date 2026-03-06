@@ -12,26 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('dte_configurations', function (Blueprint $table) {
-           $table->id();
+            $table->id();
 
-           $table->foreignId('company_id')->constrained()->after('id')->comment('Llave foránea a la empresa dueña de este registro.');
+            $table->foreignId('company_id')->constrained()->after('id')->comment('Foreign key to the owner company.');
 
-            // Clave única para la empresa (RUT sin guion, para mejor compatibilidad)
-            $table->string('rut_empresa', 10)->unique()->comment('RUT de la empresa sin dígito verificador ni guion.'); 
-            
-            // Credenciales del Certificado PFX
-            $table->string('certificado_path')->comment('Ruta física al archivo .pfx del certificado digital.');
-            
-            // IMPORTANTE: Almacenar la contraseña cifrada. Usar 'text' o 'string' de largo suficiente.
-            $table->text('certificado_password')->comment('Contraseña del certificado PFX (DEBE ser cifrada en la aplicación).');
-            
-            // Ambiente de operación
-            $table->enum('ambiente', ['homologacion', 'produccion'])->default('homologacion');
-
-            $table->boolean('simulation_mode')->default(true)->comment('Si es true, no envía datos al SII y permite operar sin certificado real.');
-
-            // Datos de Caducidad (para gestión de alertas)
-            $table->timestamp('fecha_caducidad')->nullable()->comment('Fecha de caducidad del certificado PFX.');
+            // Technical Fields in English
+            $table->string('company_rut', 12)->comment('Company RUT (tax ID) for DTE operations.'); 
+            $table->string('certificate_path')->comment('Physical path to the .pfx certificate file.');
+            $table->text('certificate_password')->comment('Encrypted PFX password.');
+            $table->enum('environment', ['certification', 'production'])->default('certification');
+            $table->boolean('simulation_mode')->default(true)->comment('If true, bypasses SII and certificate requirements.');
+            $table->timestamp('expiration_date')->nullable()->comment('PFX certificate expiration date.');
             
             $table->timestamps();
         });

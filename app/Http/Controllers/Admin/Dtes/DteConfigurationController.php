@@ -15,29 +15,28 @@ class DteConfigurationController extends Controller
     public function storeOrUpdate(Request $request, Company $company)
     {
         $this->authorize('update', $company);
+        
+        // Validación actualizada con nombres en inglés
         $request->validate([
-            'rut_empresa' => 'required|string',
-            'certificado_file' => 'nullable|file|mimes:p12,pfx|max:2048', // PFX suele ser p12
-            'certificado_password' => 'required_with:certificado_file|string',
-            'ambiente' => 'required|in:homologacion,produccion',
+            'company_rut' => 'required|string',
+            'certificate_file' => 'nullable|file|mimes:p12,pfx|max:2048',
+            'certificate_password' => 'required_with:certificate_file|string',
+            'environment' => 'required|in:certification,production',
             'simulation_mode' => 'required|boolean',
         ]);
 
         DB::beginTransaction();
         try {
-            // Buscamos o instanciamos la config
             $config = $company->dteConfiguration ?? new DteConfiguration(['company_id' => $company->id]);
 
-            $config->rut_empresa = $request->rut_empresa;
-            $config->ambiente = $request->ambiente;
+            $config->company_rut = $request->company_rut;
+            $config->environment = $request->environment;
             $config->simulation_mode = $request->simulation_mode;
 
-            // Lógica de Certificado Digital
-            if ($request->hasFile('certificado_file')) {
-                $password = $request->certificado_password;
-                $file = $request->file('certificado_file');
+            if ($request->hasFile('certificate_file')) {
+                $password = $request->certificate_password;
+                $file = $request->file('certificate_file');
 
-                // 1. Validar que el certificado y la clave sean válidos antes de guardar
                 $pfxContent = file_get_contents($file->getRealPath());
                 $certStore = [];
 
@@ -45,32 +44,27 @@ class DteConfigurationController extends Controller
                     throw new \Exception("La contraseña del certificado es incorrecta o el archivo está dañado.");
                 }
 
-                // 2. Extraer fecha de caducidad del certificado
                 $certData = openssl_x509_parse($certStore['cert']);
                 $validTo = isset($certData['validTo_time_t'])
                     ? date('Y-m-d H:i:s', $certData['validTo_time_t'])
                     : null;
 
-                // 3. Guardar archivo en carpeta PRIVADA y SEGURA
                 $path = $file->store('tenants/' . $company->id . '/dte/certificates', 'private');
 
-                // 4. Actualizar campos
-                $config->certificado_path = $path;
-                $config->certificado_password = Crypt::encryptString($password); // 🔒 ENCRIPTADO
-                $config->fecha_caducidad = $validTo;
+                $config->certificate_path = $path;
+                $config->certificate_password = Crypt::encryptString($password);
+                $config->expiration_date = $validTo;
             }
 
             $company->dteConfiguration()->save($config);
 
-            // Lógica de Logo (Polimórfico)
+            // Lógica de Logo
             if ($request->hasFile('logo')) {
-                // 1. Obtener logo anterior para borrar el archivo físico
                 $oldLogo = $company->logo;
                 if ($oldLogo && Storage::disk('public')->exists($oldLogo->path)) {
                     Storage::disk('public')->delete($oldLogo->path);
                 }
 
-                // 2. Guardar nuevo logo
                 $file = $request->file('logo');
                 $extension = $file->getClientOriginalExtension();
                 $path = $file->storeAs(
@@ -79,7 +73,6 @@ class DteConfigurationController extends Controller
                     'public'
                 );
 
-                // 3. Actualizar registro polimórfico
                 $company->logo()->updateOrCreate(
                     ['type' => 'logo'],
                     [
@@ -91,7 +84,7 @@ class DteConfigurationController extends Controller
             }
 
             DB::commit();
-            return back()->with('success', 'Configuración DTE guardada. Certificado expira el: ' . $config->fecha_caducidad);
+            return back()->with('success', 'Configuración DTE guardada. Certificado expira el: ' . $config->expiration_date);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => $e->getMessage()]);

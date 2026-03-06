@@ -27,6 +27,8 @@ import {
 import TablePagination from "@/components/TablePagination";
 import { fmtCLP } from "@/utils/utils";
 
+import { router } from "@inertiajs/react";
+
 export default function TableDoctors({
   doctors,
   setSelectedDoctor,
@@ -35,6 +37,7 @@ export default function TableDoctors({
   setIsModalOpenDetail,
   getStatusBadge,
   getMobileBadge,
+  filters,
   user,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,11 +46,34 @@ export default function TableDoctors({
   const [pageIndex, setPageIndex] = useState(0);
   const [columnFilters, setColumnFilters] = useState([]);
 
-  // Estados para los filtros
+  // Estados para los filtros locales
   const [filterspeciality, setFilterspeciality] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
-  const hasActiveFilters = !!(filterspeciality || filterStatus);
+  // Estados para filtros de fecha (Server-side)
+  const [month, setMonth] = useState(filters?.month || new Date().getMonth() + 1);
+  const [year, setYear] = useState(filters?.year || new Date().getFullYear());
+
+  const handleDateChange = (newMonth, newYear) => {
+    setMonth(newMonth);
+    setYear(newYear);
+    router.visit(route("doctors.index"), {
+      data: { month: newMonth, year: newYear },
+      preserveState: true,
+      only: ["doctors", "filters"],
+    });
+  };
+
+  const months = [
+    { value: 1, label: "Enero" }, { value: 2, label: "Febrero" }, { value: 3, label: "Marzo" },
+    { value: 4, label: "Abril" }, { value: 5, label: "Mayo" }, { value: 6, label: "Junio" },
+    { value: 7, label: "Julio" }, { value: 8, label: "Agosto" }, { value: 9, label: "Septiembre" },
+    { value: 10, label: "Octubre" }, { value: 11, label: "Noviembre" }, { value: 12, label: "Diciembre" }
+  ];
+
+  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+
+  const hasActiveFilters = !!(filterspeciality || filterStatus || searchTerm);
 
   const clearFilters = () => {
     setFilterspeciality("");
@@ -56,19 +82,12 @@ export default function TableDoctors({
     setColumnFilters([]);
   };
 
-  const mapStatus = (label) => {
-    if (!label || label === "Todos") return undefined;
-    if (label.toLowerCase() === "activo") return "active";
-    if (label.toLowerCase() === "inactivo") return "inactive";
-    return label;
-  };
-
   useEffect(() => {
     const next = [];
     if (filterspeciality && filterspeciality !== "Todas")
       next.push({ id: "speciality", value: filterspeciality });
     if (filterStatus)
-      next.push({ id: "branch_status", value: mapStatus(filterStatus) });
+      next.push({ id: "branch_status", value: filterStatus });
     setColumnFilters(next);
   }, [filterspeciality, filterStatus]);
 
@@ -261,7 +280,7 @@ export default function TableDoctors({
         Rut: item.rut,
         Teléfono: item.phone,
         Especialidad: item.speciality,
-        Estado: item.branch_status?.status || "active",
+        Estado: item.branch_status || "active",
         "Sesiones Mes": item.sessions_month || 0,
         "Ingresos Mes": item.revenue_month || 0,
       };
@@ -288,7 +307,31 @@ export default function TableDoctors({
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="space-y-1">
+              <label className="ml-1 enterprise-label opacity-60">Periodo</label>
+              <div className="flex gap-2">
+                <select
+                  value={month}
+                  onChange={(e) => handleDateChange(e.target.value, year)}
+                  className="py-2.5 px-4 border-gray-100 bg-gray-50 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-brand-primary cursor-pointer min-w-[120px]"
+                >
+                  {months.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+                <select
+                  value={year}
+                  onChange={(e) => handleDateChange(month, e.target.value)}
+                  className="py-2.5 px-4 border-gray-100 bg-gray-50 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-brand-primary cursor-pointer min-w-[100px]"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-1">
               <label className="ml-1 enterprise-label opacity-60">
                 Especialidad
@@ -315,8 +358,9 @@ export default function TableDoctors({
                 className="w-full py-2.5 px-4 border-gray-100 bg-gray-50 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-brand-primary cursor-pointer min-w-[140px]"
               >
                 <option value="">Todos</option>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
+                <option value="active">Operativo</option>
+                <option value="suspended">Suspendido</option>
+                <option value="cancelled">Inactivo</option>
               </select>
             </div>
 

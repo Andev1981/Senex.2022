@@ -66,8 +66,8 @@ return new class extends Migration {
             $table->unsignedTinyInteger('strength_gain')->default(0);
 
             // Logística
-            $table->unsignedTinyInteger('total_sessions')->nullable();
-            $table->unsignedTinyInteger('completed_sessions')->default(0);
+            $table->unsignedInteger('total_sessions')->nullable();
+            $table->unsignedInteger('completed_sessions')->default(0);
             $table->unsignedTinyInteger('frequency')->default(0);
             $table->enum('frequency_time', ['day', 'week', 'month'])->nullable();
             $table->boolean('is_indefinite')->default(false);

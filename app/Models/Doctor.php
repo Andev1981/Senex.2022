@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
@@ -81,9 +82,9 @@ class Doctor extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function address(): BelongsTo
+    public function address(): MorphOne
     {
-        return $this->belongsTo(Address::class);
+        return $this->morphOne(Address::class, 'addressable');
     }
 
 
@@ -121,7 +122,8 @@ class Doctor extends Model
     {
         return Attribute::make(
             get: fn() => $this->sessions()
-                ->where('status', 'attended')
+                ->where('company_id', $this->company_id)
+                ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
                 ->whereMonth('date', now()->month)
                 ->whereYear('date', now()->year)
                 ->count()
@@ -133,7 +135,8 @@ class Doctor extends Model
     {
         return Attribute::make(
             get: fn() => $this->sessions()
-                ->where('status', 'attended')
+                ->where('company_id', $this->company_id)
+                ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
                 ->whereMonth('date', now()->month)
                 ->whereYear('date', now()->year)
                 ->sum('doctor_amount_clp')
@@ -145,7 +148,7 @@ class Doctor extends Model
     {
         return Attribute::make(
             get: fn() => $this->sessions()
-                ->where('status', 'scheduled')
+                ->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)
                 ->where('date', '>=', now()->toDateString())
                 ->count()
         );

@@ -34,6 +34,7 @@ class DteService
     {
         // 1. Cargar Configuración
         $config = $this->cargarConfiguracion($invoice->company_id);
+        $environment = $config['environment'];
 
         // 2. Determinar Tipo y Calcular Montos (Centralizado)
         $tipoDte = $this->calculator->calculateAndDetermineType($invoice);
@@ -46,7 +47,7 @@ class DteService
 
         // REGLA: Si tiene folio y NO fue rechazado formalmente por el SII (o sea, es nuevo o error técnico), reutilizamos.
         if ($folioAUsar && $invoice->dte_status !== Invoice::SII_STATUS_REJECTED) {
-            $objetoFolios = $this->foliosService->recuperarCAF($invoice->company_id, $tipoDte);
+            $objetoFolios = $this->foliosService->recuperarCAF($invoice->company_id, $tipoDte, $environment);
         } else {
             // Verificar si estamos en MODO SIMULACIÓN
             if (!empty($config['simulation_mode']) && $config['simulation_mode'] === true) {
@@ -56,8 +57,9 @@ class DteService
                  // Si no tiene folio o el SII rechazó el anterior, reservamos uno nuevo.
                  list($objetoFolios, $folioAUsar) = $this->foliosService->reservarFolio(
                     $invoice->company_id,
-                    $config['rut_empresa'],
-                    $tipoDte
+                    $config['company_rut'],
+                    $tipoDte,
+                    $environment
                  );
             }
             $invoice->dte_folio = $folioAUsar;
@@ -118,6 +120,7 @@ class DteService
     {
         // 1. Cargar Configuración
         $config = $this->cargarConfiguracion($invoice->company_id);
+        $environment = $config['environment'];
 
         // 2. Obtener el DTE Original (el que vamos a anular)
         // Buscamos el último DTE aceptado asociado a esta venta.
@@ -133,8 +136,9 @@ class DteService
         // 3. Reservar Folio para Nota de Crédito (Tipo 61)
         list($objetoFolios, $folioReservado) = $this->foliosService->reservarFolio(
             $invoice->company_id,
-            $config['rut_empresa'], // Pasamos el RUT Emisor como string
-            61                      // Tipo fijo para Nota de Crédito
+            $config['company_rut'], // Pasamos el RUT Emisor como string
+            61,                     // Tipo fijo para Nota de Crédito
+            $environment
         );
 
         // 4. Preparar la Referencia (Exigido por el SII)
@@ -225,20 +229,20 @@ class DteService
      */
     protected function cargarConfiguracion(int $companyId): array
     {
-        // Buscar la configuración en la tabla 'dte_configuracion'
-        $config = Company::findOrFail($companyId)->dteConfiguration; // Nombre corregido
+        // Buscar la configuración en la tabla 'dte_configurations'
+        $config = Company::findOrFail($companyId)->dteConfiguration;
 
         if (!$config) {
             throw new Exception("Configuración DTE no encontrada para la Compañía ID: {$companyId}");
         }
 
-        // Retorna un array con las credenciales necesarias
+        // Retorna un array con las credenciales en nombres profesionales (Inglés)
         return [
-            'rut_empresa' => $config->rut_empresa, 
-            'ambiente' => $config->ambiente,
-            'path' => Storage::disk('private')->path($config->certificado_path), 
-            'password' => decrypt($config->certificado_password),
-            'simulation_mode' => $config->simulation_mode,
+            'company_rut'      => $config->company_rut, 
+            'environment'      => $config->environment,
+            'certificate_path' => Storage::disk('private')->path($config->certificate_path), 
+            'certificate_pass' => Crypt::decryptString($config->certificate_password),
+            'simulation_mode'  => $config->simulation_mode,
         ];
     }
 

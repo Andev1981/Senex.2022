@@ -42,25 +42,31 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
         .reduce((s, p) => s + (p.amount_clp || 0), 0),
     [payments]
   );
-  const totalPending = useMemo(
-    () =>
-      payments
-        .filter((p) => p.status === "pending")
-        .reduce((s, p) => s + (p.amount_clp || 0), 0),
-    [payments]
-  );
+
+  const totalDebt = useMemo(() => {
+    return (patient.invoices || []).reduce((acc, inv) => {
+        const status = typeof inv.payment_status === 'object' ? inv.payment_status.value : inv.payment_status;
+        if (status === 'unpaid' || status === 'partial') {
+            return acc + (Number(inv.amount_total_clp) || 0);
+        }
+        return acc;
+    }, 0);
+  }, [patient.invoices]);
 
   const columns = useMemo(
     () => [
       {
         accessorKey: "paid_at",
         header: "Fecha de Operación",
-        cell: ({ getValue }) => (
-          <div className="flex items-center gap-2 font-mono text-xs font-bold text-gray-600">
-            <Calendar className="w-3.5 h-3.5 text-brand-primary opacity-50" />
-            {new Date(getValue()).toLocaleDateString("es-CL")}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const val = row.original.paid_at || row.original.payment_date || row.original.created_at;
+          return (
+            <div className="flex items-center gap-2 font-mono text-xs font-bold text-gray-600">
+              <Calendar className="w-3.5 h-3.5 text-brand-primary opacity-50" />
+              {val ? new Date(val).toLocaleDateString("es-CL") : "N/A"}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "transaction_reference",
@@ -188,16 +194,16 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
           value={clp.format(totalPaid)}
         />
         <StatCard
-          title="Cobros Pendientes"
+          title="Deuda Pendiente"
           icon={Clock}
-          colorClass="bg-amber-500"
-          value={clp.format(totalPending)}
+          colorClass="bg-red-500"
+          value={clp.format(totalDebt)}
         />
         <StatCard
-          title="Balance Acumulado"
+          title="Total Facturado"
           icon={Activity}
           colorClass="bg-gray-900"
-          value={clp.format(totalPaid + totalPending)}
+          value={clp.format(totalPaid + totalDebt)}
         />
       </div>
 

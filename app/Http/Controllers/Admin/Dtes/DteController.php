@@ -294,14 +294,14 @@ class DteController extends Controller
             'entity_id' => $patientId,
             'dte_type' => $data['dte_type'],
             'issue_date' => $data['issue_date'],
-            // Los montos se inicializan en 0 y se calculan luego via DteCalculatorService
-            'amount_neto_clp' => 0,
-            'amount_exento_clp' => 0,
-            'amount_iva_clp' => 0,
-            'amount_total_clp' => 0,
+            // Professionals English Naming
+            'net_amount_clp' => 0,
+            'exempt_amount_clp' => 0,
+            'vat_amount_clp' => 0,
+            'total_amount_clp' => 0,
             'dte_status' => 'pending',
             'payment_status' => 'unpaid',
-            'global_discount_clp' => $globalDiscount,
+            'global_discount_clp' => $data['global_discount_clp'] ?? 0,
             'observations' => $data['observations'] ?? null,
             'metadata' => [
                 'client' => [

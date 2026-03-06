@@ -683,6 +683,11 @@ Route::prefix('patient')->name('patient.')->group(function () {
 });
 
 
+// Ruta ligera para mantener la sesión activa
+Route::get('/session-keep-alive', function () {
+    return response()->json(['status' => 'alive']);
+})->middleware(['web']);
+
     
 
 /* Tareas pendientes */

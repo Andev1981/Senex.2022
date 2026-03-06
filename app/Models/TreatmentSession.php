@@ -108,7 +108,6 @@ class TreatmentSession extends Model
 
     /**
      * El profesional que atendió la sesión.
-     * Nota: La migración dice constrained('users'), por eso relacionamos con User.
      */
     public function doctor(): BelongsTo
     {

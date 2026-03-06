@@ -17,6 +17,7 @@ export default function Index({
   communes,
   provinces,
   regions,
+  filters,
   user,
 }) {
 
@@ -141,25 +142,47 @@ export default function Index({
 
 
 
-        <TableDoctors
+                <TableDoctors
 
-          doctors={doctors}
 
-          setSelectedDoctor={setSelectedDoctor}
 
-          setIsModalOpenCommissions={setIsModalOpenCommissions}
+                  doctors={doctors}
 
-          setIsModalOpenPatients={setIsModalOpenPatients}
 
-          setIsModalOpenDetail={setIsModalOpenDetail}
 
-          getStatusBadge={getStatusBadge}
+                  setSelectedDoctor={setSelectedDoctor}
 
-          getMobileBadge={getMobileBadge}
 
-          user={user}
 
-        />
+                  setIsModalOpenCommissions={setIsModalOpenCommissions}
+
+
+
+                  setIsModalOpenPatients={setIsModalOpenPatients}
+
+
+
+                  setIsModalOpenDetail={setIsModalOpenDetail}
+
+
+
+                  getStatusBadge={getStatusBadge}
+
+
+
+                  getMobileBadge={getMobileBadge}
+
+
+
+                  filters={filters}
+
+
+
+                  user={user}
+
+
+
+                />
 
       </div>
 

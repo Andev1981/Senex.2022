@@ -3,10 +3,10 @@ import { ShieldCheck, RefreshCw } from "lucide-react";
 
 export default function DteConfigurationForm({ company, dteConfig }) {
   const { data, setData, post, processing, errors } = useForm({
-    rut_empresa: dteConfig?.rut_empresa || company.rut,
-    ambiente: dteConfig?.ambiente || "homologacion",
-    certificado_password: "", // Siempre pedir de nuevo por seguridad
-    certificado_file: null, // Archivo
+    company_rut: dteConfig?.company_rut || company.rut,
+    environment: dteConfig?.environment || "certification",
+    certificate_password: "", // Siempre pedir de nuevo por seguridad
+    certificate_file: null, // Archivo
     logo: null, // Imagen polimórfica
     simulation_mode: dteConfig ? !!dteConfig.simulation_mode : true,
   });
@@ -61,25 +61,26 @@ export default function DteConfigurationForm({ company, dteConfig }) {
         <label className="enterprise-label ml-1">RUT Empresa (Emisor SII)</label>
         <input
           type="text"
-          value={data.rut_empresa}
-          onChange={(e) => setData("rut_empresa", e.target.value)}
+          value={data.company_rut}
+          onChange={(e) => setData("company_rut", e.target.value)}
           placeholder="76.123.123-K"
           className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white"
         />
-        {errors.rut_empresa && <p className="text-xs text-red-500 font-bold mt-1">{errors.rut_empresa}</p>}
+        {errors.company_rut && <p className="text-xs text-red-500 font-bold mt-1">{errors.company_rut}</p>}
       </div>
 
       {/* Ambiente */}
       <div className="space-y-1">
         <label className="enterprise-label ml-1">Ambiente de Operación</label>
         <select
-          value={data.ambiente}
-          onChange={(e) => setData("ambiente", e.target.value)}
+          value={data.environment}
+          onChange={(e) => setData("environment", e.target.value)}
           className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-gray-50/50 focus:bg-white cursor-pointer"
         >
-          <option value="homologacion">Certificación (Modo Pruebas)</option>
-          <option value="produccion">Producción (Operación Real)</option>
+          <option value="certification">Certificación (Modo Pruebas)</option>
+          <option value="production">Producción (Operación Real)</option>
         </select>
+        {errors.environment && <p className="text-xs text-red-500 font-bold mt-1">{errors.environment}</p>}
       </div>
 
       {/* Certificado Digital */}
@@ -91,9 +92,10 @@ export default function DteConfigurationForm({ company, dteConfig }) {
             <input
             type="file"
             accept=".pfx,.p12"
-            onChange={(e) => setData("certificado_file", e.target.files[0])}
+            onChange={(e) => setData("certificate_file", e.target.files[0])}
             className="block w-full text-[10px] font-black uppercase tracking-widest text-gray-400 file:mr-6 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-gray-200 file:text-gray-600 hover:file:bg-gray-300 transition-all cursor-pointer"
             />
+            {errors.certificate_file && <p className="text-xs text-red-500 font-bold mt-1">{errors.certificate_file}</p>}
         </div>
 
         <div className="space-y-1">
@@ -101,10 +103,11 @@ export default function DteConfigurationForm({ company, dteConfig }) {
             <input
             type="password"
             placeholder="••••••••"
-            value={data.certificado_password}
-            onChange={(e) => setData("certificado_password", e.target.value)}
+            value={data.certificate_password}
+            onChange={(e) => setData("certificate_password", e.target.value)}
             className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all bg-white"
             />
+            {errors.certificate_password && <p className="text-xs text-red-500 font-bold mt-1">{errors.certificate_password}</p>}
         </div>
       </div>
 

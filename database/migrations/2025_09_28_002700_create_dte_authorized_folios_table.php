@@ -18,6 +18,7 @@ return new class extends Migration
             // Datos del CAF
             $table->string('rut_emisor', 12)->comment('RUT del emisor al que se le autorizó el CAF.');
             $table->unsignedSmallInteger('tipo_dte')->comment('Tipo de DTE (ej: 33 para Factura Electrónica).');
+            $table->string('environment', 20)->default('certification')->index()->comment('Environment: certification or production');
             $table->unsignedInteger('folio_desde')->comment('Primer folio autorizado en el rango.');
             $table->unsignedInteger('folio_hasta')->comment('Último folio autorizado en el rango.');
             
@@ -30,8 +31,8 @@ return new class extends Migration
             $table->boolean('activo')->default(true);
             
             // Índices para optimizar la búsqueda y el bloqueo por RUT/TipoDTE
-            $table->unique(['rut_emisor', 'tipo_dte', 'folio_desde', 'folio_hasta'], 'caf_unique_range');
-            $table->index(['rut_emisor', 'tipo_dte', 'activo']);
+            $table->unique(['rut_emisor', 'tipo_dte', 'environment', 'folio_desde', 'folio_hasta'], 'caf_unique_range');
+            $table->index(['rut_emisor', 'tipo_dte', 'environment', 'activo']);
             
             $table->timestamps();
         });

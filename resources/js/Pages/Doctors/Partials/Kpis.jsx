@@ -4,8 +4,8 @@ import { avg } from "@/utils/utils";
 
 export default function Kpis({ doctors }) {
   const kpis = useMemo(() => {
-    const actives = doctors.filter((d) => d.branch.status === "active");
-    const inactives = doctors.filter((d) => d.branch.status !== "active");
+    const actives = doctors.filter((d) => d.branch_status === "active");
+    const inactives = doctors.filter((d) => d.branch_status !== "active");
     const commissions = actives.map((d) =>
       d.commission?.type === "percentage" ? d.commission.value : 0
     );
@@ -30,7 +30,7 @@ export default function Kpis({ doctors }) {
             <Users className="w-5 h-5" />
           </div>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60">Staff Total</p>
+        <p className="enterprise-label text-[8px]! opacity-60">Staff Total</p>
         <p className="text-3xl font-black text-gray-900 tracking-tighter leading-none">{kpis.total}</p>
       </div>
       
@@ -40,7 +40,7 @@ export default function Kpis({ doctors }) {
             <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60 text-green-600">Disponibles</p>
+        <p className="enterprise-label text-[8px]! opacity-60 text-green-600">Disponibles</p>
         <p className="text-3xl font-black text-green-600 tracking-tighter leading-none">{kpis.actives}</p>
       </div>
 
@@ -50,7 +50,7 @@ export default function Kpis({ doctors }) {
             <AlertCircle className="w-5 h-5" />
           </div>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60">Bajas / Pausa</p>
+        <p className="enterprise-label text-[8px]! opacity-60">Bajas / Pausa</p>
         <p className="text-3xl font-black text-gray-900 tracking-tighter leading-none">{kpis.inactives}</p>
       </div>
 
@@ -60,7 +60,7 @@ export default function Kpis({ doctors }) {
             <Percent className="w-5 h-5" />
           </div>
         </div>
-        <p className="enterprise-label !text-[8px] opacity-60 text-brand-primary">Comisión Avg.</p>
+        <p className="enterprise-label text-[8px]! opacity-60 text-brand-primary">Comisión Avg.</p>
         <p className="text-3xl font-black text-brand-primary tracking-tighter leading-none font-mono">
           {kpis.avgCommission}%
         </p>

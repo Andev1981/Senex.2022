@@ -89,18 +89,18 @@ export default function IndexDocuments({
 
   const dashboardStats = useMemo(() => {
     const netos = invoices.reduce(
-      (sum, d) => sum + (d.amount_neto_clp || 0),
+      (sum, d) => sum + (d.net_amount_clp || 0),
       0
     );
     const exentos = invoices.reduce(
-      (sum, d) => sum + (d.amount_exento_clp || 0),
+      (sum, d) => sum + (d.exempt_amount_clp || 0),
       0
     );
-    const ivas = invoices.reduce((sum, d) => sum + (d.amount_iva_clp || 0), 0);
+    const ivas = invoices.reduce((sum, d) => sum + (d.vat_amount_clp || 0), 0);
     const total = netos + exentos + ivas;
     const pendientes_pago = invoices
       .filter((d) => d.payment_status !== "paid")
-      .reduce((sum, d) => sum + (d.amount_total_clp || 0), 0);
+      .reduce((sum, d) => sum + (d.total_amount_clp || 0), 0);
     return {
       totalMonto: total,
       ticketPromedio:

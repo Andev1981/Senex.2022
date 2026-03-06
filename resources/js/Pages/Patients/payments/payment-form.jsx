@@ -26,20 +26,25 @@ export default function PaymentForm({
   const [selectedSessions, setSelectedSessions] = useState([]);
   const { current_company_id } = usePage().props;
 
-  // Filtramos solo sesiones con deuda pendiente
-  const pendingSessions = sessions.filter(
-    (s) => s.debt && s.debt.status === "pending"
-  );
+  // Filtramos solo sesiones con deuda pendiente (vía Invoice)
+  const pendingSessions = sessions.filter((s) => {
+    // Buscamos si algún ítem de factura asociado a esta sesión está impago
+    const invoice = s.invoice_items?.[0]?.invoice || s.invoice_item?.invoice;
+    if (!invoice) return false;
+    const status = typeof invoice.payment_status === 'object' ? invoice.payment_status.value : invoice.payment_status;
+    return status === "unpaid" || status === "partial";
+  });
 
   // Totales
-  const totalPending = pendingSessions.reduce(
-    (sum, s) => sum + (parseFloat(s.debt.original_amount) || 0),
-    0
-  );
+  const totalPending = pendingSessions.reduce((sum, s) => {
+    const invoice = s.invoice_items?.[0]?.invoice || s.invoice_item?.invoice;
+    return sum + (parseFloat(invoice?.amount_total_clp) || 0);
+  }, 0);
 
   const selectedTotal = selectedSessions.reduce((sum, sessId) => {
     const session = pendingSessions.find((s) => s.id === sessId);
-    return sum + (parseFloat(session?.debt.original_amount) || 0);
+    const invoice = session?.invoice_items?.[0]?.invoice || session?.invoice_item?.invoice;
+    return sum + (parseFloat(invoice?.amount_total_clp) || 0);
   }, 0);
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -58,23 +63,20 @@ export default function PaymentForm({
 
   useEffect(() => {
     if (payment && payment.id) {
-      setSelectedSessions(payment.debts?.map((d) => d.session_id) || []);
-      // ... logic to sync data ...
+      setSelectedSessions(payment.allocations?.map((a) => a.treatment_session_id).filter(Boolean) || []);
     } else {
       if (sessions.length > 0 && selectedSessions.length === 0) {
-        const payable = sessions.filter(
-          (s) =>
-            s.status === "completed" && s.debt && s.debt.status === "pending"
-        );
-        setSelectedSessions(payable.map((s) => s.id));
+        // Sugerir pagar todas las sesiones impagas por defecto
+        setSelectedSessions(pendingSessions.map((s) => s.id));
       }
     }
-  }, [payment]);
+  }, [payment, sessions.length]);
 
   useEffect(() => {
     const total = selectedSessions.reduce((sum, id) => {
       const s = sessions.find((s) => s.id === id);
-      return sum + (s?.debt?.original_amount || 0);
+      const invoice = s?.invoice_items?.[0]?.invoice || s?.invoice_item?.invoice;
+      return sum + (Number(invoice?.amount_total_clp) || 0);
     }, 0);
     setData("amount_clp", total.toString());
     setData("session_ids", selectedSessions);
@@ -183,7 +185,9 @@ export default function PaymentForm({
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`font-black font-mono text-sm ${isSelected ? 'text-brand-primary' : 'text-gray-400'}`}>${parseFloat(session.debt.original_amount).toLocaleString("es-CL")}</p>
+                        <p className={`font-black font-mono text-sm ${isSelected ? 'text-brand-primary' : 'text-gray-400'}`}>
+                          ${(Number(session.invoice_items?.[0]?.invoice?.amount_total_clp || session.invoice_item?.invoice?.amount_total_clp || 0)).toLocaleString("es-CL")}
+                        </p>
                       </div>
                     </button>
                   );

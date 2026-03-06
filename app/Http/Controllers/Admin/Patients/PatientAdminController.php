@@ -178,9 +178,9 @@ class PatientAdminController extends Controller
                 'sessionType',
                 'doctor',
                 'diagnostic', 
-                // Cargamos sesiones ordenadas para usarlas en el historial
                 'sessions' => fn($q) => $q->orderBy('date', 'desc')->orderBy('time', 'desc'),
                 'sessions.doctor',
+                'sessions.invoiceItems.invoice', // <-- AGREGADO PARA DETECTAR DEUDA
             ])
             ->latest()
             ->get();

@@ -174,7 +174,7 @@ class PaymentService
         // Validar si la factura quedó pagada
         // Recalculamos lo pagado para esta factura
         $paid = PaymentAllocation::where('invoice_id', $invoice->id)->sum('amount_clp');
-        if ($paid >= $invoice->amount_total_clp) {
+        if ($paid >= $invoice->total_amount_clp) {
             $invoice->update(['payment_status' => 'paid']);
         } else {
             $invoice->update(['payment_status' => 'partial']);
@@ -252,7 +252,7 @@ class PaymentService
                 'entity_id' => $data['patient_id'],
                 
                 // Montos
-                'amount_total_clp' => $session->patient_amount_clp,
+                'total_amount_clp' => $session->patient_amount_clp,
                 'amount_patient_clp' => $session->patient_amount_clp,
                 'amount_gross_clp' => $session->patient_amount_clp, // Asumiendo 100% copago en este flujo ad-hoc
                 
@@ -600,7 +600,7 @@ class PaymentService
 
         // 🎯 VALIDACIÓN DE SEGURIDAD: Evitar sobre-pagos
         $alreadyAllocated = PaymentAllocation::where('invoice_id', $invoice->id)->sum('amount_clp');
-        $balance = $invoice->amount_total_clp - $alreadyAllocated;
+        $balance = $invoice->total_amount_clp - $alreadyAllocated;
 
         $amountToAllocate = min($payment->amount_clp, $balance);
 
@@ -618,7 +618,7 @@ class PaymentService
         ]);
 
         // Actualizar estado de la factura
-        if (($alreadyAllocated + $amountToAllocate) >= $invoice->amount_total_clp) {
+        if (($alreadyAllocated + $amountToAllocate) >= $invoice->total_amount_clp) {
             $invoice->update(['payment_status' => 'paid']); 
         }
     }
@@ -846,7 +846,7 @@ class PaymentService
                 
                 // Calcular saldo pendiente de la factura
                 $paidSoFar = $invoice->paymentAllocations()->sum('amount_clp');
-                $balance = $invoice->amount_total_clp - $paidSoFar;
+                $balance = $invoice->total_amount_clp - $paidSoFar;
 
                 if ($balance <= 0) continue;
 
@@ -861,7 +861,7 @@ class PaymentService
 
                 // Actualizar factura
                 $newPaid = $paidSoFar + $amountToAllocate;
-                if ($newPaid >= $invoice->amount_total_clp) {
+                if ($newPaid >= $invoice->total_amount_clp) {
                     $invoice->update(['payment_status' => 'paid']);
                 } else {
                     $invoice->update(['payment_status' => 'partial']);
@@ -926,7 +926,7 @@ class PaymentService
                 'entity_type' => 'Patient',
                 'entity_id' => $session->patient_id,
                 
-                'amount_total_clp' => $amount_clp,
+                'total_amount_clp' => $amount_clp,
                 'amount_patient_clp' => $amount_clp,
                 'amount_gross_clp' => $amount_clp,
                 
@@ -1025,7 +1025,7 @@ class PaymentService
 
             // Calcular saldo pendiente
             $paidSoFar = $invoice->paymentAllocations()->sum('amount_clp');
-            $balance = $invoice->amount_total_clp - $paidSoFar;
+            $balance = $invoice->total_amount_clp - $paidSoFar;
 
             if ($balance <= 0) continue;
 
@@ -1041,7 +1041,7 @@ class PaymentService
 
             // Actualizar factura
             $newPaid = $paidSoFar + $amountToAllocate;
-            if ($newPaid >= $invoice->amount_total_clp) {
+            if ($newPaid >= $invoice->total_amount_clp) {
                 $invoice->update(['payment_status' => 'paid']);
             } else {
                 $invoice->update(['payment_status' => 'partial']);
@@ -1177,7 +1177,7 @@ class PaymentService
             ->where('status', 'completed')
             ->get();
 
-        $totalInvoiced = $invoices->sum('amount_total_clp');
+        $totalInvoiced = $invoices->sum('total_amount_clp');
         
         // Calcular lo pagado revisando las asignaciones o el estado
         // Opción A: Sumar payment_allocations

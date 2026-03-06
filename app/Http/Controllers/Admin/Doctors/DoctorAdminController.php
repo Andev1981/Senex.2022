@@ -26,44 +26,39 @@ use Inertia\Inertia;
 class DoctorAdminController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
         $currentCompanyId = session('current_company_id');
         $activeBranchId = session('active_branch_id');
 
+        // --- 0. Gestión de Fechas (Filtros) ---
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+
         // --- 1. Obtener el "Catálogo Maestro" de Sesiones ---
-        // Esto es vital para que el frontend sepa cuáles son los valores "Por Defecto" (Gris)
-        // Filtramos solo por la empresa actual y que estén activos.
         $sessionTypes = SessionType::where('company_id', $currentCompanyId)
             ->where('is_active', true)
             ->get(['id', 'name', 'base_price_clp', 'default_doctor_commission_clp']);
 
-        // --- 2. Query de Doctores (Tu lógica de direcciones + Seguridad) ---
-        // Mantenemos tu subconsulta de direcciones, está perfecta.
+        // --- 2. Query de Doctores ---
         $addrPick = DB::table('addresses as a')
             ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
-            ->where('a.addressable_type', 'Doctor') // O 'App\Models\Doctor' según tu morfología
+            ->where('a.addressable_type', 'Doctor')
             ->groupBy('a.addressable_id');
 
         $doctors = Doctor::query()
-            // 🔒 SEGURIDAD: Filtrar siempre por empresa
             ->where('doctors.company_id', $currentCompanyId)
-
-            // Joins de Dirección (Tu lógica original)
             ->leftJoinSub($addrPick, 'addr_pick', function ($join) {
                 $join->on('addr_pick.addressable_id', '=', 'doctors.id');
             })
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
             ->leftJoin('communes', 'addr.commune_id', '=', 'communes.id')
-
-            // Filtro de Sucursal Activa
             ->when($activeBranchId, function ($query) use ($activeBranchId) {
                 $query->whereHas('branches', function ($q) use ($activeBranchId) {
                     $q->where('branches.id', $activeBranchId);
                 });
             })
             ->select([
-                // Tus campos seleccionados...
                 'doctors.*',
                 DB::raw("CONCAT_WS(' ', doctors.name, doctors.last_name) as full_name"),
                 'addr.street as street',
@@ -72,55 +67,52 @@ class DoctorAdminController extends Controller
                 'addr.commune_id as commune_id',
                 'addr.province_id as province_id',
                 'addr.region_id as region_id',
-                'communes.name as comuna_name',
-                DB::raw("CONCAT_WS(' ', addr.street, addr.number) as full_address"),
+                'communes.name as sql_commune_name',
+                DB::raw("CONCAT_WS(' ', addr.street, addr.number) as sql_full_address"),
             ])
-            // ⚡ EAGER LOADING OPTIMIZADO
-            // Cargamos 'commissionRates' filtrando solo las de esta empresa (por seguridad redundante)
             ->with(['commissionRates' => function ($q) use ($currentCompanyId) {
                 $q->where('company_id', $currentCompanyId);
             }])
-            ->with(['patientAssignments', 'branches']) // Agregué branches por si quieres mostrar dónde trabaja
+            ->with(['branches'])
             ->get();
 
-        // --- 3. Transformación de Datos (Opcional pero Recomendada) ---
-        // Inyectamos la "Foto" de las tarifas para que el frontend no tenga que calcular tanto.
-        // Esto mapea las tarifas personalizadas vs las globales.
+        // --- 3. Transformación de Datos & Estadísticas ---
+        $doctors->transform(function ($doctor) use ($sessionTypes, $month, $year) {
+            $doctor->comuna_name = $doctor->sql_commune_name;
+            $doctor->full_address = $doctor->sql_full_address . ' ' . ($doctor->sql_commune_name ?? '');
 
-        // NOTA: Si tienes MUCHOS doctores, es mejor hacer esto en el frontend. 
-        // Si son < 100, hacerlo aquí es cómodo.
-        $doctors->transform(function ($doctor) use ($sessionTypes) {
-            // Creamos un mapa de las excepciones de este doctor: [session_type_id => rate_object]
             $customRates = $doctor->commissionRates->keyBy('session_type_id');
-
-            // Como filtramos arriba, la colección 'branches' tendrá 0 o 1 elemento.
             $currentBranch = $doctor->branches->first();
 
-            // Creamos propiedades directas para el frontend
             $doctor->branch_status = $currentBranch ? $currentBranch->pivot->status : 'unassigned';
+            $doctor->branch_status_reason = $currentBranch ? $currentBranch->pivot->status_reason : '';
             $doctor->mobile_app_access = $currentBranch ? (bool)$currentBranch->pivot->mobile_app_access : false;
 
-            // ... (Aquí va tu lógica de rates_summary que hicimos antes) ...
+            // --- CÁLCULO DE ESTADÍSTICAS DEL MES SELECCIONADO ---
+            $sessions = $doctor->sessions()
+                ->whereMonth('date', $month)
+                ->whereYear('date', $year)
+                ->get();
 
-            // Limpiamos la relación para no enviar basura al front
+            $doctor->sessions_month = $sessions->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->count();
+            $doctor->revenue_month = $sessions->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->sum('doctor_amount_clp');
+            $doctor->pending_sessions_count = $sessions->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)->count();
+            
+            // Para compatibilidad con CamelCase en Kpis.jsx
+            $doctor->sessionsMonth = $doctor->sessions_month;
+            $doctor->revenueMonth = $doctor->revenue_month;
+
             unset($doctor->branches);
 
-            // Adjuntamos un resumen de tarifas listo para usar en la tabla "Editar Tarifas"
             $doctor->rates_summary = $sessionTypes->map(function ($st) use ($customRates) {
                 $custom = $customRates->get($st->id);
-
                 return [
                     'session_type_id' => $st->id,
                     'name' => $st->name,
-
-                    // LÓGICA DE HERENCIA:
-                    // Si existe custom, usalo. Si no, usa el default del SessionType.
                     'price_to_patient' => $st->base_price_clp ?? 0,
                     'current_value' => $custom ? $custom->amount_clp : $st->default_doctor_commission_clp,
                     'default_value' => $st->default_doctor_commission_clp,
-
-                    // Flags visuales
-                    'is_customized' => (bool) $custom, // True = Azul/Negrita, False = Gris
+                    'is_customized' => (bool) $custom,
                     'commission_type' => $custom ? $custom->commission_type : 'fixed_amount'
                 ];
             });
@@ -128,10 +120,7 @@ class DoctorAdminController extends Controller
             return $doctor;
         });
 
-
-        // Listas auxiliares para filtros o formularios de creación
-        // Quitamos DoctorCommissionRate::all() porque ya viene dentro de cada $doctor
-        $patients = Patient::where('company_id', $currentCompanyId)->where('status', 'active')->get(); // Ojo con el company_id
+        $patients = Patient::where('company_id', $currentCompanyId)->where('status', 'active')->get();
         $provinces = Province::all(['id', 'name', 'region_id']);
         $communes  = Commune::all(['id', 'name', 'province_id']);
         $regions   = Region::all(['id', 'name']);
@@ -143,6 +132,10 @@ class DoctorAdminController extends Controller
             'communes' => $communes,
             'provinces' => $provinces,
             'regions' => $regions,
+            'filters' => [
+                'month' => (int)$month,
+                'year' => (int)$year
+            ],
             'user' => auth()->user()->load('roles'),
         ]);
     }

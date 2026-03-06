@@ -45,10 +45,10 @@ class Invoice extends Model
     'entity_id',
 
     // --- MONTOS CONTABLES (VITALES) ---
-    'amount_neto_clp',        // Monto Afecto antes de IVA
-    'amount_exento_clp',      // Monto que no paga IVA (Servicios Médicos)
-    'amount_iva_clp',         // El 19% del Neto
-    'amount_total_clp',       // Neto + Exento + IVA
+    'net_amount_clp',        // Amount subject to VAT
+    'exempt_amount_clp',     // Amount exempt from VAT (Health Services)
+    'vat_amount_clp',        // 19% VAT
+    'total_amount_clp',      // Net + Exempt + VAT
 
     // --- DESGLOSE DE COPAGO (CLÍNICO) ---
     'amount_gross_clp',              // Valor arancel total

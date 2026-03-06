@@ -74,10 +74,10 @@ class DummyDteSeeder extends Seeder
                 'dte_type' => $d['type'],
                 'dte_folio' => 900 + $idx,
                 'issue_date' => now(),
-                'amount_neto_clp' => $d['exempt'] ? 0 : $d['price'],
-                'amount_exento_clp' => $d['exempt'] ? $d['price'] : 0,
-                'amount_iva_clp' => $iva,
-                'amount_total_clp' => $d['price'] + $iva,
+                'net_amount_clp' => $d['exempt'] ? 0 : $d['price'],
+                'exempt_amount_clp' => $d['exempt'] ? $d['price'] : 0,
+                'vat_amount_clp' => $iva,
+                'total_amount_clp' => $d['price'] + $iva,
                 'dte_status' => 'sent',
                 'payment_status' => 'paid',
                 'metadata' => ['client' => ['rut' => $patient->rut, 'razonSocial' => $patient->full_name]]
@@ -102,7 +102,7 @@ class DummyDteSeeder extends Seeder
                 'folio' => 900 + $idx,
                 'rut_emisor' => $rutLimpio,
                 'rut_receptor' => $patient->rut,
-                'amount_total_clp' => $invoice->amount_total_clp,
+                'total_amount_clp' => $invoice->total_amount_clp,
                 'estado_sii' => 'ENVIADO',
                 'track_id' => time() + $idx,
                 'xml_data' => '<xml>Dummy</xml>'

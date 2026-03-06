@@ -79,7 +79,7 @@ class PaymentFlowSeeder extends Seeder
                 'amount_patient_clp' => 10000,
                 'amount_insurance_primary_clp' => 35000,
                 'amount_insurance_secondary_clp' => 5000,
-                'amount_total_clp' => 10000,
+                'total_amount_clp' => 10000,
                 'dte_type' => 39,
                 'issue_date' => now(),
                 'dte_status' => 'PENDIENTE'

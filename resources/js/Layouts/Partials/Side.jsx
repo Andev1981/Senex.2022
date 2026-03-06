@@ -36,45 +36,53 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 
   // Define tus items con los IDs como NOMBRES DE RUTA de Ziggy
   const menuItems = useMemo(
-    () => [
-      { id: "/", label: "Dashboard", icon: Home },
-      {
-        id: "clinical_management",
-        label: "Gestión Clínica",
-        icon: Stethoscope,
-        submenu: [
-          { id: "patients.index", label: "Pacientes", icon: Users },
-          { id: "doctors.index", label: "Kines", icon: Stethoscope },
-          { id: "attendances.index", label: "Atenciones", icon: List },
-          { id: "session-types.index", label: "Tipos de Sesión", icon: Shell },
-        ],
-      },
-      {
-        id: "finance_admin",
-        label: "Administración",
-        icon: Building,
-        submenu: [
-          { id: "agreements.index", label: "Convenios", icon: Handshake },
-          { id: "insurances.index", label: "Aseguradoras", icon: Shield },
-          { id: "payrolls.index", label: "Liquidaciones", icon: NotebookText },
-          { id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign },
-          { id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package },
-          { id: "payments.index", label: "Caja / POS", icon: DollarSign },
-          { id: "documents", label: "Boleta SII", icon: FileText },
-        ],
-      },
-      {
-        id: "system_config",
-        label: "Configuración",
-        icon: Computer,
-        submenu: [
-          { id: "companies.index", label: "Compañias", icon: Building },
-          { id: "products.index", label: "Productos", icon: Package },
-          { id: "subscription.index", label: "Mi Suscripción", icon: Shield },
-        ],
+    () => {
+      const items = [
+        { id: "/", label: "Dashboard", icon: Home },
+        {
+          id: "clinical_management",
+          label: "Gestión Clínica",
+          icon: Stethoscope,
+          submenu: [
+            { id: "patients.index", label: "Pacientes", icon: Users },
+            { id: "doctors.index", label: "Kines", icon: Stethoscope },
+            { id: "attendances.index", label: "Atenciones", icon: List },
+            { id: "session-types.index", label: "Tipos de Sesión", icon: Shell },
+          ],
+        },
+        {
+          id: "finance_admin",
+          label: "Administración",
+          icon: Building,
+          submenu: [
+            { id: "agreements.index", label: "Convenios", icon: Handshake },
+            { id: "insurances.index", label: "Aseguradoras", icon: Shield },
+            { id: "payrolls.index", label: "Liquidaciones", icon: NotebookText },
+            { id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign },
+            { id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package },
+            { id: "payments.index", label: "Caja / POS", icon: DollarSign },
+            { id: "documents", label: "Boleta SII", icon: FileText },
+          ],
+        },
+      ];
+
+      // Solo añadir Configuración si es Superadmin
+      if (userIsSuperAdmin) {
+        items.push({
+          id: "system_config",
+          label: "Configuración",
+          icon: Computer,
+          submenu: [
+            { id: "companies.index", label: "Compañias", icon: Building },
+            { id: "products.index", label: "Productos", icon: Package },
+            { id: "subscription.index", label: "Mi Suscripción", icon: Shield },
+          ],
+        });
       }
-    ],
-    []
+
+      return items;
+    },
+    [userIsSuperAdmin]
   );
 
   const bottomMenuItems = useMemo(
@@ -233,7 +241,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
               >
                 <div className="flex items-center min-w-0 gap-3">
                   <Icon
-                    className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                    className={`w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-110 ${
                       active
                         ? "text-white"
                         : "text-gray-400 group-hover:text-brand-primary"
@@ -330,71 +338,3 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 }
 
 export default Side;
-
-/* <div className="h-full px-3 py-5 overflow-y-auto bg-white dark:bg-gray-800">
-        <ul className="py-2 space-y-2 border-b border-primary-light/30 dark:border-gray-700">
-          <li>
-            <Link
-              href={route("listado.pacientes")}
-              className={
-                location.pathname === "/listado-pacientes" ||
-                location.pathname === "/"
-                  ? styleSelected
-                  : styleNotSelected
-              }
-            >
-              <img
-                src={"/icons/resolucion-de-problemas.gif"}
-                className="w-6 h-6"
-              />
-              <span className="ml-1 text-sm text-primary">
-                Pacientes(*Nuevo)
-              </span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href={route("boleta")}
-              className={
-                location.pathname === "/boleta-crear"
-                  ? styleSelected
-                  : styleNotSelected
-              }
-            >
-              <img src={"/icons/libro-medico.gif"} className="w-6 h-6" />
-              <span className="ml-1 text-sm text-primary">Boleta(*Nuevo)</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href={route("attendances.index")}
-              className={
-                location.pathname === "/attendances"
-                  ? styleSelected
-                  : styleNotSelected
-              }
-            >
-              <img src={"/icons/controlar.gif"} className="w-6 h-6" />
-              <span className="ml-1 text-sm text-primary">Informes</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href={route("pos")}
-              className={
-                location.pathname === "/pos" ? styleSelected : styleNotSelected
-              }
-            >
-              <img src={"/icons/controlar.gif"} className="w-6 h-6" />
-              <span className="ml-1 text-sm text-primary">POS</span>
-            </Link>
-          </li>
-        </ul>
-      </div> 
-    </div>
-  );
-}
-
-export default Side;
-
-*/

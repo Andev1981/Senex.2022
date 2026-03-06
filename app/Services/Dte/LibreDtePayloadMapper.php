@@ -49,18 +49,18 @@ class LibreDtePayloadMapper
     // 3. PREPARAR TOTALES (Usamos los cálculos guardados en la BD)
     // Esto evita errores de redondeo al recalcular.
     $totales = [
-      'MntTotal' => (int) $invoice->amount_total_clp,
+      'MntTotal' => (int) $invoice->total_amount_clp,
     ];
 
     // Si hay monto neto > 0, agregamos el desglose de IVA
-    if ($invoice->amount_neto_clp > 0) {
-      $totales['MntNeto'] = (int) $invoice->amount_neto_clp;
-      $totales['IVA']     = (int) $invoice->amount_iva_clp;
+    if ($invoice->net_amount_clp > 0) {
+      $totales['MntNeto'] = (int) $invoice->net_amount_clp;
+      $totales['IVA']     = (int) $invoice->vat_amount_clp;
     }
 
     // Si hay monto exento > 0
-    if ($invoice->amount_exento_clp > 0) {
-      $totales['MntExe'] = (int) $invoice->amount_exento_clp;
+    if ($invoice->exempt_amount_clp > 0) {
+      $totales['MntExe'] = (int) $invoice->exempt_amount_clp;
     }
 
     // 4. DATOS DEL RECEPTOR

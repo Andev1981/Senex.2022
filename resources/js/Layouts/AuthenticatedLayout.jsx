@@ -4,10 +4,12 @@ import Nav from "./Partials/Nav";
 import Side from "./Partials/Side";
 import { toast } from "sonner";
 import Swal from "sweetalert2"; // Importar SweetAlert2
+import { useSessionKeeper } from '@/hooks/useSessionKeeper';
 
 const DevToolbar = lazy(() => import("@/components/DevToolbar"));
 
 export default function AuthenticatedLayout({ header, children }) {
+  const isOnline = useSessionKeeper(5);
   const user = usePage().props.auth.user;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const userIsSuperAdmin = usePage().props.auth.roles.includes("superadmin");
@@ -30,6 +32,8 @@ export default function AuthenticatedLayout({ header, children }) {
     }
   }, [flash]);
 
+  // En tu Layout principal de React
+
   return (
     <>
       {env === 'local' && (
@@ -38,6 +42,13 @@ export default function AuthenticatedLayout({ header, children }) {
         </Suspense>
       )}
       <div className={`flex w-full overflow-hidden min-h-dvh bg-gray-50/50 ${env === 'local' ? 'pt-8' : ''}`}>
+      {/* Banner de Advertencia */}
+            {!isOnline && (
+                <div className="bg-red-600 text-white text-center py-2 sticky top-0 z-50 animate-pulse">
+                    ⚠️ <strong>Atención:</strong> Se ha perdido la conexión con el servidor. 
+                    No cierres esta ventana para no perder los cambios.
+                </div>
+            )}
         <aside
           className={`${
             sidebarOpen ? "w-72" : "w-24"

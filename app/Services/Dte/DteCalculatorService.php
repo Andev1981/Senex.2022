@@ -56,10 +56,10 @@ class DteCalculatorService
     }
 
     // Actualizar el Modelo Invoice
-    $invoice->amount_neto_clp = $netoTotal;
-    $invoice->amount_exento_clp = $exentoTotal;
-    $invoice->amount_iva_clp = $ivaTotal;
-    $invoice->amount_total_clp = $netoTotal + $ivaTotal + $exentoTotal;
+    $invoice->net_amount_clp = $netoTotal;
+    $invoice->exempt_amount_clp = $exentoTotal;
+    $invoice->vat_amount_clp = $ivaTotal;
+    $invoice->total_amount_clp = $netoTotal + $ivaTotal + $exentoTotal;
     $invoice->dte_type = $tipoDte;
     
     $invoice->save(); 

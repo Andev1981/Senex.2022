@@ -14,6 +14,7 @@ class AuthorizedFolio extends Model
         'company_id',
         'rut_emisor',
         'tipo_dte',
+        'environment',
         'folio_desde',
         'folio_hasta',
         'ultimo_folio_usado',

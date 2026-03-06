@@ -38,5 +38,14 @@ return Application::configure(basePath: dirname(__DIR__))
       ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->respond(function ($response, $e, $request) {
+            if ($response->getStatusCode() === 419) {
+                return back()->with([
+                    'flash' => [
+                        'error' => 'Tu sesión expiró por seguridad, pero hemos refrescado la página para ti.'
+                    ]
+                ]);
+            }
+            return $response;
+        });
     })->create();

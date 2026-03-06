@@ -13,17 +13,17 @@ class DteConfiguration extends Model
 
     protected $fillable = [
         'company_id',
-        'rut_empresa',
-        'certificado_path',
-        'certificado_password',
-        'ambiente',
-        'fecha_caducidad',
+        'company_rut',
+        'certificate_path',
+        'certificate_password',
+        'environment',
+        'expiration_date',
         'simulation_mode',
     ];
 
     protected $casts = [
         'simulation_mode' => 'boolean',
-        'fecha_caducidad' => 'date',
+        'expiration_date' => 'datetime',
     ];
 
     public function company() : BelongsTo

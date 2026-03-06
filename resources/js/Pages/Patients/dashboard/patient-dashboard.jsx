@@ -12,17 +12,16 @@ export default function PatientDashboard({
 
     // --- CÁLCULOS RÁPIDOS PARA LAS TARJETAS (KPIs) ---
     
-    // 1. Deuda Total (Sumar saldo de sesiones no pagadas o parciales)
-    const totalDebt = treatments.reduce((acc, treatment) => {
-        const treatmentDebt = (treatment.sessions || []).reduce((sAcc, session) => {
-            const debt = session.debt;
-            if (debt) {
-                const remaining = Number(debt.original_amount || 0) - Number(debt.paid_amount || 0);
-                return sAcc + Math.max(0, remaining);
-            }
-            return sAcc;
-        }, 0);
-        return acc + treatmentDebt;
+    // 1. Deuda Total (Sumar saldo de Facturas/Boletas no pagadas)
+    const totalDebt = (patient.invoices || []).reduce((acc, invoice) => {
+        const status = typeof invoice.payment_status === 'object' 
+            ? invoice.payment_status.value 
+            : invoice.payment_status;
+
+        if (status === 'unpaid' || status === 'partial') {
+            return acc + (Number(invoice.amount_total_clp) || 0);
+        }
+        return acc;
     }, 0);
 
     // 2. Tratamientos Activos

@@ -19,7 +19,7 @@ class Dte extends Model
         'folio',
         'rut_emisor',
         'rut_receptor',
-        'amount_total_clp',
+        'total_amount_clp',
         'estado_sii',
         'track_id',
         'glosa_rechazo',

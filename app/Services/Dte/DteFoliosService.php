@@ -2,48 +2,42 @@
 
 namespace App\Services\Dte;
 
+use App\Models\AuthorizedFolio;
 use sasco\LibreDTE\Sii\Folios;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB; // Usaremos la Facade DB
+use Illuminate\Support\Facades\DB;
 
 class DteFoliosService
 {
-    // Ya no es necesario almacenar el objeto Folios en memoria, la DB es la fuente de verdad.
-    // private $foliosPorTipo = []; 
-
-    public function cargarCAF(string $rutaArchivoCAF)
+    /**
+     * Procesa y guarda un archivo CAF en la base de datos.
+     */
+    public function cargarCAF(int $companyId, string $xmlContent, string $environment = 'certification'): int
     {
-        // 1. Validaciones y carga del XML (igual que antes)
-        if (!file_exists($rutaArchivoCAF)) {
-            throw new \Exception("Archivo CAF no encontrado en: " . $rutaArchivoCAF);
-        }
-        $xmlData = file_get_contents($rutaArchivoCAF);
-
         try {
-            $folios = new Folios($xmlData);
+            $folios = new Folios($xmlContent);
             $tipoDTE = $folios->getTipo();
-            $rutEmisor = $folios->getEmisor(); // Se asume que el método getEmisor() existe
+            $rutEmisor = $folios->getEmisor();
 
             if (!$tipoDTE || !$rutEmisor) {
                 throw new \Exception("CAF no válido o faltan datos esenciales (TipoDTE/RutEmisor).");
             }
 
-            // 2. Insertar en la Base de Datos
-            DB::table('dte_folios')->insert([
-                'rut_emisor' => $rutEmisor,
-                'tipo_dte' => $tipoDTE,
-                'folio_desde' => $folios->getDesde(),
-                'folio_hasta' => $folios->getHasta(),
-                // Al inicio, el último folio usado es 1 menos que el primero.
+            // Guardar usando el Modelo para aprovechar Mutators/Traits si existen
+            AuthorizedFolio::create([
+                'company_id'         => $companyId,
+                'rut_emisor'         => $rutEmisor,
+                'tipo_dte'           => $tipoDTE,
+                'environment'        => $environment,
+                'folio_desde'        => $folios->getDesde(),
+                'folio_hasta'        => $folios->getHasta(),
                 'ultimo_folio_usado' => $folios->getDesde() - 1,
-                'caf_xml' => $xmlData,
-                'fecha_vencimiento' => $folios->getFechaVencimiento(),
-                'activo' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'caf_xml'            => $xmlContent,
+                'fecha_vencimiento'  => $folios->getFechaVencimiento(),
+                'activo'             => true,
             ]);
 
-            Log::info("CAF cargado exitosamente en DB para Tipo DTE: " . $tipoDTE);
+            Log::info("CAF cargado exitosamente para Empresa #$companyId, Tipo DTE: $tipoDTE, Ambiente: $environment");
             return $tipoDTE;
         } catch (\Exception $e) {
             throw new \Exception("Fallo al procesar o guardar el archivo CAF: " . $e->getMessage());
@@ -52,90 +46,78 @@ class DteFoliosService
 
     /**
      * Reserva el siguiente folio disponible y devuelve el objeto Folios del core.
-     * @param string $rutEmisor Rut del emisor.
-     * @param int $tipoDTE Código del DTE (ej. 33).
-     * @return array [Folios $objetoFolios, int $folioReservado]
-     * @throws \Exception si no hay folios disponibles.
      */
-    public function reservarFolio(int $company, string $rutEmisor, int $tipoDTE): array
+    public function reservarFolio(int $companyId, string $rutEmisor, int $tipoDTE, string $environment = 'certification'): array
     {
         $folioReservado = null;
         $cafData = null;
 
-        // 1. Usar transacción y LOCK FOR UPDATE para garantizar atomicidad
-        DB::transaction(function () use ($company, $rutEmisor, $tipoDTE, &$folioReservado, &$cafData) {
-            // Normalizar RUT emisor que viene del controlador (quitar todo lo que no sea número)
+        DB::transaction(function () use ($companyId, $rutEmisor, $tipoDTE, $environment, &$folioReservado, &$cafData) {
             $rutLimpio = preg_replace('/[^0-9]/', '', $rutEmisor);
 
-            // A. Buscar el rango de folios activo para este DTE y bloquearlo
-            // Usamos REPLACE en la base de datos para comparar manzanas con manzanas
+            // Buscar el rango de folios activo para este DTE, Ambiente y Empresa
             $registroFolio = DB::table('authorized_folios')
-                ->where('company_id', $company)
+                ->where('company_id', $companyId)
                 ->where('tipo_dte', $tipoDTE)
+                ->where('environment', $environment)
                 ->where('activo', true)
                 ->whereColumn('ultimo_folio_usado', '<', 'folio_hasta')
                 ->where(function($query) use ($rutLimpio) {
                     $query->where(DB::raw("REGEXP_REPLACE(rut_emisor, '[^0-9]', '')"), $rutLimpio);
                 })
+                ->orderBy('folio_desde', 'asc') // Consumir primero el rango más antiguo
                 ->lockForUpdate()
                 ->first();
 
             if (!$registroFolio) {
-                throw new \Exception("No se encontró un rango de folios activo para RUT: $rutEmisor, Tipo DTE: $tipoDTE.");
+                throw new \Exception("No hay folios disponibles para RUT: $rutEmisor, DTE: $tipoDTE, Ambiente: $environment.");
             }
 
-            // B. Calcular y validar el siguiente folio
             $siguienteFolio = $registroFolio->ultimo_folio_usado + 1;
 
-            if ($siguienteFolio > $registroFolio->folio_hasta) {
-                throw new \Exception("Folios agotados para Tipo DTE: $tipoDTE. Último folio: $registroFolio->folio_hasta");
-            }
-
-            // C. Reservar el folio: Actualizar el contador en la DB
             DB::table('authorized_folios')
                 ->where('id', $registroFolio->id)
-                ->update(['ultimo_folio_usado' => $siguienteFolio]);
+                ->update([
+                    'ultimo_folio_usado' => $siguienteFolio,
+                    'updated_at' => now()
+                ]);
 
-            // D. Asignar datos para el retorno
             $folioReservado = $siguienteFolio;
             $cafData = $registroFolio->caf_xml;
-        }); // ⬅️ La transacción se cierra y libera el bloqueo
+        });
 
-        // 2. Crear el objeto Folios fuera de la transacción (uso de CPU)
         if (is_null($cafData)) {
-            // Este caso solo ocurre si el lock falla, pero lo manejamos como fallback
-            throw new \Exception("Error desconocido en la reserva de folio.");
+            throw new \Exception("Error crítico en la reserva de folio.");
         }
-        $objetoFolios = new Folios($cafData);
 
-        // 3. Devolver los resultados
-        return [$objetoFolios, $folioReservado];
+        return [new Folios($cafData), $folioReservado];
     }
 
     /**
-     * Recupera el objeto Folios (CAF) para un tipo de DTE sin incrementar nada.
+     * Recupera el objeto Folios (CAF) activo sin incrementar el contador.
      */
-    public function recuperarCAF(int $company, int $tipoDTE): Folios
+    public function recuperarCAF(int $companyId, int $tipoDTE, string $environment = 'certification'): Folios
     {
-        $registro = DB::table('authorized_folios')
-            ->where('company_id', $company)
+        $registro = AuthorizedFolio::where('company_id', $companyId)
             ->where('tipo_dte', $tipoDTE)
+            ->where('environment', $environment)
             ->where('activo', true)
+            ->whereColumn('ultimo_folio_usado', '<', 'folio_hasta')
+            ->orderBy('folio_desde', 'asc')
             ->first();
 
         if (!$registro) {
-            throw new \Exception("No se encontró un CAF activo para el tipo: $tipoDTE");
+            throw new \Exception("No se encontró un CAF activo para el tipo: $tipoDTE en ambiente: $environment");
         }
 
         return new Folios($registro->caf_xml);
     }
 
     /**
-     * Genera un objeto Folios simulado y un número aleatorio.
+     * Genera un objeto Folios simulado (Solo para desarrollo).
      */
     public function getSimulatedFolio(int $tipo): array
     {
-        // XML CAF Dummy minímo para que LibreDTE no falle al instanciar class Folios
         $dummyCaf = <<<XML
 <?xml version="1.0"?>
 <AUTORIZACION>
@@ -154,7 +136,6 @@ class DteFoliosService
 </AUTORIZACION>
 XML;
         
-        // Retornar objeto Folios y número aleatorio
-        return [new Folios($dummyCaf), rand(500000, 999999)];
+        return [new Folios($dummyCaf), rand(1, 999999)];
     }
 }

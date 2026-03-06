@@ -115,7 +115,7 @@ class TreatmentSessionSeeder extends Seeder
                         'patient_id'       => $patient->id,
                         'entity_type'      => 'Patient',
                         'entity_id'        => $patient->id,
-                        'amount_total_clp' => $session->patient_amount_clp,
+                        'total_amount_clp' => $session->patient_amount_clp,
                         'amount_patient_clp' => $session->patient_amount_clp,
                         'amount_gross_clp' => $session->patient_amount_clp, // Valor total
                         
