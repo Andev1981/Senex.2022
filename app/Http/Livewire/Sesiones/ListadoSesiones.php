@@ -32,45 +32,71 @@ class ListadoSesiones extends Component
     {
         if ($this->reloadStatus == 0) {
             $this->buscarFecha = Carbon::now();
-            $this->pacientes = Patient::orderBy('name', 'asc')->get(['id', 'name', 'last_name']);
-            $this->kines = Doctor::where('status', 1)->orderBy('name', 'asc')->get(['id', 'name', 'last_name']);
+
+            $this->pacientes = Patient::select('id', 'name', 'last_name')
+                ->orderBy('name', 'asc')
+                ->get();
+
+            $this->kines = Doctor::select('id', 'name', 'last_name')
+                ->where('status', 1)
+                ->orderBy('name', 'asc')
+                ->get();
+
             $this->month = $this->buscarFecha->format('m');
             $this->year = $this->buscarFecha->format('Y');
             $this->reloadStatus = 1;
         }
 
+        // Fecha base según el filtro
+        $fechaBase = Carbon::createFromDate($this->year, $this->month, $this->dia ?: 1);
+
+        // Construcción del query
+        $query = ApplyItem::select(
+            'apply_items.id',
+            'apply_items.status',
+            'apply_items.created_at',
+            'patients.name as patient_name',
+            'patients.last_name as patient_last_name',
+            'doctors.name as doctor_name',
+            'doctors.last_name as doctor_last_name',
+            'application_types.name as type_name',
+            'apply_items.price',
+            'apply_items.fecha_atencion',
+            'apply_items.numero_sesion',
+        )
+            ->join('patients', 'patients.id', '=', 'apply_items.patient_id')
+            ->join('doctors', 'doctors.id', '=', 'apply_items.doctor_id')
+            ->join('applications', 'applications.id', '=', 'apply_items.application_id')
+            ->join('application_types', 'application_types.id', '=', 'apply_items.application_type_id')
+            ->where('apply_items.status', 1);
+
+        // Filtro de paciente
+        if ($this->selPaciente) {
+            $query->where('apply_items.patient_id', $this->selPaciente);
+        }
+
+        // Filtro de kinesiólogo
+        if ($this->selKine) {
+            $query->where('apply_items.doctor_id', $this->selKine);
+        }
+
+        // Filtro de fecha_atencion
         if ($this->dia == 0) {
-            $this->buscarFecha =  $this->year . '-' . $this->month . '-';
+            // Mes completo
+            $query->whereBetween('apply_items.fecha_atencion', [
+                $fechaBase->copy()->startOfMonth()->toDateString(),
+                $fechaBase->copy()->endOfMonth()->toDateString()
+            ]);
         } else {
-
-            $this->buscarFecha =  $this->year . '-' . $this->month . '-' . $this->dia . '';
+            // Día exacto
+            $query->whereDate('apply_items.fecha_atencion', $fechaBase->toDateString());
         }
-        if ($this->selPaciente != 0 && $this->selKine != 0) {
-            if ($this->dia == 0) {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->orWhere('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha  . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            }
-        } elseif ($this->selPaciente != 0) {
 
-            if ($this->dia == 0) {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('patient_id', $this->selPaciente)->where('fecha_atencion', 'like', $this->buscarFecha  . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            }
-        } elseif ($this->selKine != 0) {
-            if ($this->dia == 0) {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('doctor_id', $this->selKine)->where('fecha_atencion', 'like', $this->buscarFecha  . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            }
-        } else {
-            if ($this->dia == 0) {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            } else {
-                $applyItems = ApplyItem::with('application', 'patient', 'doctor')->where('fecha_atencion', 'like', $this->buscarFecha . ' 00:00:00')->orderBy($this->sort, $this->direction)->paginate($this->quantity);
-            }
-        }
+        // Orden y paginación
+        $applyItems = $query->orderBy($this->sort, $this->direction)
+            ->paginate($this->quantity);
+
+
         return view('livewire.sesiones.listado-sesiones', compact('applyItems'));
     }
 }

@@ -312,7 +312,7 @@
               @enderror
             </div>
             <div class="gap-4 lg:flex lg:items-center lg:justify-between">
-
+              @if (!is_null($doctor->status))
               @if ($doctor->status == 1)
               <label class="inline-flex items-center cursor-pointer">
                 <input wire:click="changeStatus" type="checkbox" value="" class="sr-only peer" checked>
@@ -330,6 +330,8 @@
                 <span class="text-sm font-medium text-gray-900 ms-3 dark:text-gray-300">Kine</span>
               </label>
               @endif
+              @endif
+
               @if ($doctor->user->status == 1)
               <label class="inline-flex items-center cursor-pointer">
                 <input wire:click="changeStatusApp" type="checkbox" value="" class="sr-only peer" checked>

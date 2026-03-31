@@ -176,7 +176,7 @@
                     </div>
                     <div>
                         <textarea wire:model.defer="comments" placeholder="Observaciones" readonly
-                            class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{$comments}</textarea>
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{$comments}</textarea>
                     </div>
 
                     <hr>

@@ -5,8 +5,6 @@ namespace App\Http\Livewire\Sesiones;
 use App\Models\ApplicationType;
 use App\Models\ApplyItem;
 use App\Models\Doctor;
-use App\Models\Patient;
-use App\Models\Wallet;
 use Carbon\Carbon;
 use Livewire\Component;
 
@@ -29,8 +27,7 @@ class EditarSesion extends Component
         $comments = '',
         $price,
         $numero_sesion,
-        $errorNumSesion = false,
-        $wallet;
+        $errorNumSesion = false;
 
     protected $rules = [
         'selectedKine' => 'required',
@@ -51,10 +48,8 @@ class EditarSesion extends Component
     public function mount(ApplyItem $applyItem)
     {
 
-        dd($applyItem);
-
         $this->applyItem = $applyItem;
-        $this->application = $applyItem->application;
+        $this->application = $applyItem->application_id;
         $this->patient = $this->applyItem->patient;
         if ($applyItem->doctor) {
             $this->selectedKine = $applyItem->doctor->id;
@@ -69,17 +64,16 @@ class EditarSesion extends Component
         $this->selectedType = $applyItem->application_type_id;
         $this->price = $applyItem->price;
         $this->numero_sesion = $applyItem->numero_sesion;
-        $this->countApplies = ApplyItem::where('application_id', $this->application->id)->count();
-        $this->kines = Doctor::where('status', 1)->orderBy('name', 'ASC')->get();
-        $this->types = ApplicationType::where('estado', 1)->get();
-        $this->wallet = Wallet::where('patient_id', $this->patient->id)->first();
-        $allPacientes = Patient::with('applyItems')->where('status', 1)->orderBy('updated_at', 'asc')->get();
+        $this->countApplies = ApplyItem::where('application_id', $this->application)->count();
+        $this->kines = Doctor::select('id', 'name', 'last_name')->get();
+        $this->types = ApplicationType::select('id', 'name',)->get();
     }
 
     public function save()
     {
 
         $this->validate();
+
 
         $this->applyItem->user_id = $this->selectedKine;
         $this->applyItem->doctor_id = $this->selectedKine;
@@ -95,13 +89,6 @@ class EditarSesion extends Component
         $this->applyItem->numero_sesion = $this->numero_sesion;
         $this->applyItem->save();
         $this->clear();
-
-        if ($this->selectedStatus === 1 && $this->wallet->balance >= $this->valor) {
-            $this->wallet->balance = $this->wallet->balance - $this->valor;
-            $this->wallet->save();
-        }
-
-        $this->statusPaciente();
     }
 
     public function delete()
@@ -119,22 +106,5 @@ class EditarSesion extends Component
         $this->openItem = 'hidden';
         $this->openDelItem = 'hidden';
         $this->errorNumSesion = false;
-    }
-
-    public function statusPaciente()
-    {
-        $res = ApplyItem::where('patient_id', $this->patient->id)->where('status', 1)->where('estado_pago', 0)->get();
-
-        if (count($res) === 0) {
-            $paciente = Patient::find($this->patient->id);
-            $paciente->payment_status = 2;
-
-            $paciente->save();
-        } else {
-            $paciente = Patient::find($this->patient->id);
-            $paciente->payment_status = 1;
-
-            $paciente->save();
-        }
     }
 }

@@ -17,84 +17,68 @@ class IndexInformes extends Component
     public $user;
     public $year;
     public $month;
-    public $statusFindView = -1;
-    public $statusFind = [0, 1, 2, 3];
     public $status = 0;
+
     public $file_path;
     public $applyItems = [];
     public $buscarFecha;
-    public $buscarFechaIn;
-    public $kineValues;
+    public $kineValues = [];
+
     public $totalPacientes = 0;
     public $totalKine = 0;
+
     public $pacientes = [];
     public $selPaciente;
-    public $tipos;
+    public $tipos = [];
     public $selTipo = 0;
+
+    public function mount(Doctor $doctor)
+    {
+        $this->kine = $doctor;
+        $this->status = $this->kine->id ? 1 : 0;
+
+        $this->tipos = ApplicationType::all();
+        $this->pacientes = Patient::active()->orderBy('name')->get(); // scopeActive()
+        $this->buscarFecha = Carbon::now();
+        $this->month = $this->buscarFecha->format('m');
+        $this->year = $this->buscarFecha->format('Y');
+
+        $this->searchByItems();
+    }
 
     public function render()
     {
         return view('livewire.informes.index-informes');
     }
 
-    public function mount(Doctor $doctor)
-    {
-
-        $this->kine = $doctor;
-        if ($this->kine->id) {
-            $this->status = 1;
-        }
-
-        $this->tipos = ApplicationType::all();
-        $this->pacientes = Patient::where('status', 1)->orderBy('name', 'asc')->get();
-        $this->buscarFecha = Carbon::now();
-        $this->month = $this->buscarFecha->format('m');
-        $this->year = $this->buscarFecha->format('Y');
-        $this->searchByItems();
-    }
-
     public function searchByItems()
     {
+        $this->buscarFecha = $this->year . '-' . $this->month;
 
-        $this->totalKine = 0;
-        $this->totalPacientes = 0;
+        // Base query
+        $query = ApplyItem::with(['patient:id,name,last_name', 'applicationType:id,name', 'doctor:id,name,last_name', 'doctor.applyTypes'])
+            ->where('status', 1)
+            ->where('fecha_atencion', 'like', $this->buscarFecha . '%');
 
-        $this->buscarFecha =  $this->year . '-' . $this->month;
-
+        // Filtro por tipo si aplica
         if ($this->selTipo > 0) {
-            $this->applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orderBy('name', 'asc');
-            }], 'application', 'doctor')
-                ->where('application_type_id', $this->selTipo)
-                ->where('status', 1)
-                ->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
-                    $query->from('patients')
-                        ->select('name')
-                        ->limit(1);
-                })->orderBy('fecha_atencion', 'asc')->get();
-        } else {
-            $this->applyItems = ApplyItem::with(['patient' => function ($query) {
-                $query->orderBy('name', 'asc');
-            }], 'application', 'doctor')
-                ->where('status', 1)
-                ->where('fecha_atencion', 'like', $this->buscarFecha . '%')->orderByDesc(function ($query) {
-                    $query->from('patients')
-                        ->select('name')
-                        ->limit(1);
-                })->orderBy('fecha_atencion', 'asc')->get();
+            $query->where('application_type_id', $this->selTipo);
         }
 
+        $this->applyItems = $query
+            ->orderBy('fecha_atencion', 'asc')
+            ->get();
 
+        // Traer precios de kinesiólogo
+        $this->kineValues = ApplicationTypeUser::where('user_id', $this->kine->id)->get()->keyBy('application_type_id');
 
-        $this->kineValues = ApplicationTypeUser::where('user_id', $this->kine->id)->get();
+        // Calcular totales sin doble foreach
+        $applyItemsCollection = collect($this->applyItems);
+        $this->totalPacientes = $applyItemsCollection->sum('price');
 
-        foreach ($this->applyItems as $applyItem) {
-            $this->totalPacientes += $applyItem->price;
-
-            foreach ($applyItem->doctor->applyTypes as $kineValue)
-                if ($kineValue->application_type_id == $applyItem->application_type_id) {
-                    $this->totalKine += $kineValue->price;
-                }
-        }
+        $this->totalKine = $applyItemsCollection->reduce(function ($carry, $item) {
+            $kinePrice = $item->doctor->applyTypes->firstWhere('application_type_id', $item->application_type_id)?->price ?? 0;
+            return $carry + $kinePrice;
+        }, 0);
     }
 }

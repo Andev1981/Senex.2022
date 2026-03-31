@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Inertia\ApplyItemController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\HomeController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\PaymentIncomeController;
 use App\Http\Controllers\ReportePdfController;
 use App\Http\Livewire\Informes\IndexInformes;
 use App\Http\Livewire\Inicio;
+use App\Http\Livewire\Kine\Atenciones;
 use App\Http\Livewire\Kine\ListadoKines;
 use App\Http\Livewire\Kinesiologos\AtencionDetalle;
 use App\Http\Livewire\Paciente\ListadosIndex;
@@ -22,6 +24,7 @@ use App\Http\Livewire\Kinesiologos\KineIndex;
 use App\Http\Livewire\Kinesiologos\ListadoPacientes;
 use App\Http\Livewire\Kinesiologos\NoAutorizado;
 use App\Http\Livewire\Kinesiologos\Resumenes;
+use App\Http\Controllers\Inertia\PatientController;
 
 //Reoptimized class loader:
 Route::get('/optimize', function () {
@@ -95,6 +98,7 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('pacientes', ListadosIndex::class)->name('pacientes');
 
   Route::get('kines', ListadoKines::class)->name('kines');
+  Route::get('kines-detalles/{id}', Atenciones::class)->name('kines-detalles');
   Route::get('types', Index::class)->name('types');
 
   //Livewire componentes app kines
@@ -131,8 +135,24 @@ Route::group(['middleware' => ['auth']], function () {
   Route::get('/kinesiologos/pacientes/{paciente}', AtencionDetalle::class);
 
   Route::get('informes', IndexInformes::class)->name('informes');
-});
 
+  /* Rutas React Inertia */
+  /* pacientes */
+  Route::get('listado-pacientes', [PatientController::class, 'index'])->name('listado.pacientes');
+  Route::post('pacientes-update/{patient}', [PatientController::class, 'update'])->name('pacientes.update');
+  Route::post('pacientes-store', [PatientController::class, 'store'])->name('pacientes.store');
+  Route::get('pacientes-destroy/{patient}', [PatientController::class, 'destroy'])->name('pacientes.destroy');
+
+  /* kines */
+  Route::get('listado-kines', [PatientController::class, 'kines'])->name('listado.kines');
+  Route::get('kines-detalles-inertia/{id}', [PatientController::class, 'kineDetalles'])->name('kines-detalles-inertia');
+
+  /* sesiones, applyitems */
+  Route::get('apply-items', [ApplyItemController::class, 'index'])->name('apply.items');
+  Route::post('apply-items-store', [ApplyItemController::class, 'store'])->name('apply.items.store');
+  Route::post('apply-items-update/{applyItem}', [ApplyItemController::class, 'update'])->name('apply.items.update');
+  Route::get('apply-items-borrar/{applyItem}', [ApplyItemController::class, 'destroy'])->name('apply.items.destroy');
+});
 
 
 //Transbank

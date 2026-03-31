@@ -32,7 +32,7 @@ class Atenciones extends Component
   public $pacientes = [];
   public $selPaciente;
 
-  protected $listeners = ['success-value' => 'searchByItems'];
+  /*   protected $listeners = ['success-value' => 'searchByItems']; */
 
 
 
@@ -41,10 +41,10 @@ class Atenciones extends Component
     return view('livewire.kine.atenciones');
   }
 
-  public function mount(Doctor $doctor)
+  public function mount($id)
   {
+    $this->kine = Doctor::find($id);
 
-    $this->kine = $doctor;
     if ($this->kine->id) {
       $this->status = 1;
     }
@@ -117,6 +117,6 @@ class Atenciones extends Component
 
   public function closeModal()
   {
-    $this->isOpen = false;
+    return redirect()->route('kines');
   }
 }

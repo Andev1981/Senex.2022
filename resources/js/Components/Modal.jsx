@@ -1,0 +1,106 @@
+import React, { Fragment } from "react";
+import {
+    Dialog,
+    DialogPanel,
+    Transition,
+    TransitionChild,
+} from "@headlessui/react";
+/* import { XMarkIcon } from "@heroicons/react/24/outline"; */
+
+export default function Modal({
+    children,
+    open,
+    onClose,
+    title,
+    description,
+    maxWidth = "2xl",
+}) {
+    const close = () => {
+        if (closeable) {
+            onClose();
+        }
+    };
+
+    const maxWidthClass = {
+        sm: "sm:max-w-sm",
+        md: "sm:max-w-md",
+        lg: "sm:max-w-lg",
+        xl: "sm:max-w-xl",
+        "2xl": "sm:max-w-2xl",
+        "3xl": "sm:max-w-3xl",
+        "4xl": "sm:max-w-4xl",
+        "5xl": "sm:max-w-5xl",
+        "6xl": "sm:max-w-6xl",
+        "7xl": "sm:max-w-7xl",
+    }[maxWidth];
+
+    return (
+        <Transition show={open} leave="duration-200">
+            <Dialog onClose={onClose} className="relative z-50">
+                {/* Fondo oscuro */}
+                <TransitionChild
+                    as={Fragment}
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 bg-black/30" />
+                </TransitionChild>
+
+                {/* Contenedor del modal */}
+                <div className="fixed inset-0 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-full p-4">
+                        <TransitionChild
+                            as={Fragment}
+                            enter="ease-out duration-300"
+                            enterFrom="opacity-0 scale-95"
+                            enterTo="opacity-100 scale-100"
+                            leave="ease-in duration-200"
+                            leaveFrom="opacity-100 scale-100"
+                            leaveTo="opacity-0 scale-95"
+                        >
+                            <DialogPanel
+                                className={`mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full dark:bg-gray-800 ${maxWidthClass}`}
+                            >
+                                <div className="flex justify-between">
+                                    {/* Header */}
+                                    <div className="flex items-center gap-2 px-4">
+                                        <label
+                                            htmlFor=""
+                                            className="text-lg font-bold text-primary-light"
+                                        >
+                                            {title}
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <button
+                                            onClick={onClose}
+                                            className="px-2 py-1.5 border border-primary text-primary m-2 rounded-lg text-sm font-medium leading-4 bg-white hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                                        >
+                                            X
+                                        </button>
+                                    </div>
+                                </div>
+                                {/* Descripción opcional */}
+                                {description && (
+                                    <p className="px-4 mb-4 text-sm text-gray-500 dark:text-gray-400">
+                                        {description}
+                                    </p>
+                                )}
+
+                                {/* Contenido del modal con scroll si es necesario */}
+                                <hr className="my-4" />
+                                <div className="max-h-[90vh] overflow-y-auto">
+                                    {children}
+                                </div>
+                            </DialogPanel>
+                        </TransitionChild>
+                    </div>
+                </div>
+            </Dialog>
+        </Transition>
+    );
+}

@@ -35,6 +35,7 @@ class Pendiente extends Component
         $pacientes = Patient::where(function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')->orWhere('last_name', 'like', '%' . $this->search . '%');
         })->where('status', 1)->where('payment_status', 1)->orderBy($this->sort, $this->direction)->paginate($this->quantity);
+
         return view('livewire.pagos-paciente.estados.pendiente', compact('pacientes'));
     }
 

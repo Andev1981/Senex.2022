@@ -88,18 +88,32 @@
                     class="px-2 py-0 mr-2 text-xs font-semibold text-white bg-red-600 rounded-full dark:bg-green-200 dark:text-red-900">
                     Deshabilitado
                   </span>
-                  @endif
+                  @endif 
 
                 </td>
                 <td class="py-0">
-                  <livewire:kine.atenciones :doctor="$doctor" :key="time().$doctor->id.'-3'" />
-                </td>
+                   <button
+                  type="button"
+                  onclick="window.location='{{ route('kines-detalles', ['id' => $doctor]) }}'"
+                 class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800"
+                >
+                  Ver Atenciones
+                </button>
+
+                 <button
+                  type="button"
+                  onclick="window.location='{{ route('kines-detalles-inertia', ['id' => $doctor]) }}'"
+                 class="inline-flex items-center px-2 py-1 ml-5 text-sm font-medium text-center text-white rounded-lg bg-sky-700 hover:bg-sky-800 focus:ring-4 focus:outline-none focus:ring-sky-300 dark:bg-sky-600 dark:hover:bg-sky-700 dark:focus:ring-sky-800"
+                >
+                  Ver Atenciones (*Nueva)
+                </button>
+                 </td>
 
                 <td class="py-0">
-                  <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
-                </td>
+                   <livewire:kine.editar :doctor="$doctor" :key="time().$doctor->id.'-5'" />
+                 </td>
                 <td class="py-0">
-                  <livewire:kine.eliminar :doctor="$doctor" :key="time().$doctor->id.'-6'" />
+                   <livewire:kine.eliminar :doctor="$doctor" :key="time().$doctor->id.'-6'" />
                 </td>
               </tr>
               @endforeach
@@ -107,7 +121,9 @@
           </table>
         </div>
         <nav class="flex justify-between p-4" aria-label="Table navigation">
+          @if (count($doctores) > 0)
           {{ $doctores->links() }}
+          @endif
         </nav>
       </div>
     </div>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Patient extends Model
 {
@@ -24,6 +25,8 @@ class Patient extends Model
         'orden',
     ];
 
+
+
     public function applications()
     {
         return $this->hasMany(Application::class);
@@ -36,6 +39,11 @@ class Patient extends Model
     public function applyItems()
     {
         return $this->hasMany(ApplyItem::class);
+    }
+
+    public function lastAttention()
+    {
+        return $this->hasOne(ApplyItem::class)->latestOfMany(); // usa created_at o fecha
     }
 
     public function images()
@@ -52,4 +60,52 @@ class Patient extends Model
     {
         return $this->hasMany(PacienteKine::class);
     }
+
+    public function getComunaNombreAttribute()
+    {
+        if (!$this->address || !$this->address->comuna) {
+            return null;
+        }
+        return $this->address->comuna->name ?? null;
+    }
+
+    public function getDoctorNombreAttribute()
+    {
+        if (!$this->lastAttention || !$this->lastAttention->doctor) {
+            return null;
+        }
+        return $this->lastAttention->doctor->name . ' ' . $this->lastAttention->doctor->last_name ?? null;
+    }
+
+    public function getDireccionAttribute()
+    {
+        if (!$this->address || !$this->address->address || !$this->address->number) {
+            return null;
+        }
+        if (!$this->address->number) {
+            return $this->address->address . ' ' . $this->address->number ?? null;
+        }
+        return $this->address->address ?? null;
+    }
+
+    public function getAgeAttribute()
+    {
+        if (!$this->birth || !Carbon::hasFormat($this->birth, 'Y-m-d')) {
+            return null;
+        }
+
+        return Carbon::parse($this->birth)->age . ' años';
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    protected $appends = [
+        'comuna_nombre',
+        'doctor_nombre',
+        'age',
+        'direccion',
+    ];
 }
