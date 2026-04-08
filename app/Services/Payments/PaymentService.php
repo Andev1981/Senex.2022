@@ -240,6 +240,27 @@ class PaymentService
     }
 
     /**
+     * Registra una transacción que fue abortada/cancelada por el usuario
+     */
+    public function logAbortedTransaction(?string $token, array $params): void
+    {
+        $certLog = "\n" . str_repeat("=", 50) . "\n";
+        $certLog .= "📝 EVIDENCIA DE ANULACIÓN (ABORT) - CERTIFICACIÓN\n";
+        $certLog .= str_repeat("-", 50) . "\n";
+        $certLog .= "Fecha/Hora:      " . now()->toDateTimeString() . "\n";
+        $certLog .= "Resultado:       ❌ CANCELADA POR USUARIO\n";
+        $certLog .= str_repeat("-", 50) . "\n";
+        $certLog .= "TBK_TOKEN:       " . ($token ?: 'N/A') . "\n";
+        $certLog .= "Orden Compra:    " . ($params['TBK_ORDEN_COMPRA'] ?? 'N/A') . "\n";
+        $certLog .= "ID Sesión:       " . ($params['TBK_ID_SESION'] ?? 'N/A') . "\n";
+        $certLog .= "Acción:          El usuario presionó 'Anular' o el tiempo expiró.\n";
+        $certLog .= str_repeat("=", 50) . "\n";
+
+        Log::warning($certLog);
+        \Illuminate\Support\Facades\File::append(storage_path('logs/transbank_certification.log'), $certLog);
+    }
+
+    /**
      * Genera un buy_order único
      */
     private function generateBuyOrder(int $patientId): string
