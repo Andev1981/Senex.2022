@@ -19,6 +19,7 @@ import InputPesoChileno from "@/components/InputPesoChileno";
 import Switch from "@/components/Switch";
 import Checkbox from "@/components/Checkbox";
 import Swal from "sweetalert2";
+import InputError from "@/components/InputError";
 
 export default function ProductModal({ isOpen, onClose, product = null }) {
   const isEdit = !!product?.id;
@@ -26,6 +27,7 @@ export default function ProductModal({ isOpen, onClose, product = null }) {
   const { data, setData, post, put, processing, errors, reset } = useForm({
     id: product?.id || "",
     name: product?.name || "",
+    description: product?.description || "",
     sku: product?.sku || "",
     barcode: product?.barcode || "",
     cost_price: product?.cost_price || 0,
@@ -42,6 +44,7 @@ export default function ProductModal({ isOpen, onClose, product = null }) {
       setData({
         id: product.id,
         name: product.name || "",
+        description: product.description || "",
         sku: product.sku || "",
         barcode: product.barcode || "",
         cost_price: product.cost_price || 0,
@@ -104,7 +107,7 @@ export default function ProductModal({ isOpen, onClose, product = null }) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <div className="md:col-span-12 space-y-1">
-                    <label className="enterprise-label !text-[8px] ml-1 opacity-60">Nombre Comercial / Descripción</label>
+                    <label className="enterprise-label !text-[8px] ml-1 opacity-60">Nombre Comercial / Descripción Corta</label>
                     <TextInput
                         value={data.name}
                         onChange={e => setData("name", e.target.value)}
@@ -113,6 +116,17 @@ export default function ProductModal({ isOpen, onClose, product = null }) {
                         placeholder="EJ: BANDA ELÁSTICA TERABAND NIVEL 3"
                     />
                     <InputError message={errors.name} />
+                </div>
+                <div className="md:col-span-12 space-y-1">
+                    <label className="enterprise-label !text-[8px] ml-1 opacity-60">Descripción Detallada (Opcional)</label>
+                    <textarea
+                        value={data.description}
+                        onChange={e => setData("description", e.target.value)}
+                        className="w-full rounded-xl border-gray-100 py-3 px-4 font-medium text-sm text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary transition-all shadow-inner resize-none"
+                        placeholder="Detalles técnicos, dimensiones o uso recomendado..."
+                        rows="3"
+                    />
+                    <InputError message={errors.description} />
                 </div>
                 <div className="md:col-span-6 space-y-1">
                     <label className="enterprise-label !text-[8px] ml-1 opacity-60">Código SKU (Interno)</label>
@@ -156,7 +170,7 @@ export default function ProductModal({ isOpen, onClose, product = null }) {
                         price={data.price}
                         onChange={e => setData("price", e.target.value)}
                         required
-                        className="!rounded-xl !py-3 !px-4 font-black text-sm bg-white shadow-sm border-gray-100"
+                        className="!rounded-xl !py-3 font-black text-sm bg-white shadow-sm border-gray-100"
                     />
                 </div>
                 <div className="space-y-1">
@@ -164,7 +178,7 @@ export default function ProductModal({ isOpen, onClose, product = null }) {
                     <InputPesoChileno
                         price={data.cost_price}
                         onChange={e => setData("cost_price", e.target.value)}
-                        className="!rounded-xl !py-3 !px-4 font-bold text-xs bg-gray-50/50 border-gray-100"
+                        className="!rounded-xl !py-3 font-bold text-xs bg-gray-50/50 border-gray-100"
                     />
                 </div>
                 <label className="md:col-span-2 flex items-center justify-between p-4 bg-white/60 rounded-2xl border border-gray-100 cursor-pointer hover:bg-white transition-all shadow-inner">

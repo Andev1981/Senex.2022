@@ -22,8 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'payments/webpay/return',
-            'public/payments/webpay/return',
-            'payments/webpay/confirm'
+            'webpay/public/return',
+            'payments/webpay/confirm',
+            'certificacion/webpay/product'
         ]);
 
         $middleware->web(append: [

@@ -23,6 +23,7 @@ import PainMapCard from "@/components/Body/PainMapCard";
 import GenericModal from "@/components/Body/GenericModal";
 import HandSelector from "@/components/Body/HandSelector";
 import InputError from "@/components/InputError";
+import Switch from "@/components/Switch";
 import Swal from "sweetalert2";
 
 const STATUS_OPTIONS = [
@@ -89,7 +90,8 @@ export default function SessionFormModal({
     diagnostic_code: "",
     referral_doctor_name: "", 
     referral_diagnosis: "",   
-    total_sessions: 10,
+    total_sessions: 20,
+    is_indefinite: false, // Nueva bandera
     body_part: sessionData?.body_part || "", // Nuevo campo
     laterality: sessionData?.laterality || "", // Nuevo campo
 
@@ -384,6 +386,7 @@ export default function SessionFormModal({
                                         <option value="">✨ Nuevo Tratamiento / Evaluación Inicial</option>
                                         {(selectedPatientFinal.active_treatments || selectedPatientFinal.treatments || []).map((t) => (
                                             <option key={t.id} value={t.id}>
+                                                {t.status === 'completed' ? '🏁 (CERRADO) ' : ''}
                                                 {t.diagnostic?.code ? `[${t.diagnostic.code}] ` : ''} 
                                                 {t.diagnostic?.description || t.referral_diagnosis || "Tratamiento sin nombre"} 
                                                 {' '} — (Sesión {t.completed_sessions}/{t.is_indefinite ? '∞' : t.total_sessions})
@@ -413,7 +416,7 @@ export default function SessionFormModal({
                                                     />
                                                     <InputError message={errors.diagnostic_code} className="mt-1" />
                                                 </div>
-                                                <div className="grid grid-cols-3 gap-3">
+                                                <div className="grid grid-cols-4 gap-3">
                                                     <div className="col-span-2 space-y-1">
                                                         <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Médico Derivante</label>
                                                         <input type="text" placeholder="Ej: Dr. Juan Pérez" value={data.referral_doctor_name} onChange={(e) => setData("referral_doctor_name", e.target.value)} className="w-full px-3 py-2.5 text-xs font-bold border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all"/>
@@ -421,8 +424,22 @@ export default function SessionFormModal({
                                                     </div>
                                                     <div className="space-y-1">
                                                         <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Nº Sesiones</label>
-                                                        <input type="number" placeholder="10" value={data.total_sessions} onChange={(e) => setData("total_sessions", e.target.value)} className="w-full px-3 py-2.5 text-xs font-bold border-purple-100 bg-white rounded-xl focus:ring-purple-200 transition-all text-center"/>
+                                                        <input 
+                                                            type={data.is_indefinite ? "text" : "number"} 
+                                                            placeholder="10" 
+                                                            disabled={data.is_indefinite}
+                                                            value={data.is_indefinite ? "∞" : data.total_sessions} 
+                                                            onChange={(e) => setData("total_sessions", e.target.value)} 
+                                                            className={`w-full px-3 py-2.5 text-xs font-bold border-purple-100 rounded-xl focus:ring-purple-200 transition-all text-center ${data.is_indefinite ? 'bg-purple-50 text-purple-600 text-lg leading-none' : 'bg-white'}`}
+                                                        />
                                                         <InputError message={errors.total_sessions} className="mt-1" />
+                                                    </div>
+                                                    <div className="space-y-1 flex flex-col justify-center items-center">
+                                                        <label className="enterprise-label text-purple-700 text-[8px] uppercase mb-1">Indefinido</label>
+                                                        <Switch 
+                                                            checked={data.is_indefinite} 
+                                                            onChange={(e) => setData("is_indefinite", e.target.checked)} 
+                                                        />
                                                     </div>
                                                     <div className="col-span-3 space-y-1">
                                                         <label className="ml-1 enterprise-label text-purple-700 text-[10px]">Diagnóstico Médico (Texto Orden)</label>
@@ -449,9 +466,34 @@ export default function SessionFormModal({
                                             </div>
                                             <div>
                                                 <p className="text-[9px] font-bold text-blue-400 uppercase">Progreso</p>
-                                                <p className="font-bold text-gray-700">
-                                                    Sesión {selectedTreatmentInfo.completed_sessions} de {selectedTreatmentInfo.is_indefinite ? '∞' : selectedTreatmentInfo.total_sessions}
-                                                </p>
+                                                <div className="flex flex-col gap-1">
+                                                    <p className={`font-bold ${!selectedTreatmentInfo.is_indefinite && selectedTreatmentInfo.completed_sessions >= selectedTreatmentInfo.total_sessions ? 'text-red-600' : 'text-gray-700'}`}>
+                                                        Sesión {selectedTreatmentInfo.completed_sessions} de {selectedTreatmentInfo.is_indefinite ? '∞' : selectedTreatmentInfo.total_sessions}
+                                                    </p>
+                                                    
+                                                    {/* Mostrar alerta y botón si no es indefinido y hay sobrecupo */}
+                                                    {!selectedTreatmentInfo.is_indefinite && selectedTreatmentInfo.completed_sessions >= selectedTreatmentInfo.total_sessions && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-[8px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-black uppercase animate-pulse">Cupo Agotado</span>
+                                                            <button 
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const newTotal = Number(selectedTreatmentInfo.total_sessions) + 5;
+                                                                    router.patch(route('treatments.update', selectedTreatmentInfo.id), {
+                                                                        total_sessions: newTotal,
+                                                                        status: 'in_progress'
+                                                                    }, {
+                                                                        preserveScroll: true,
+                                                                        onSuccess: () => Swal.fire('¡Cupo Ampliado!', `El tratamiento ahora permite ${newTotal} sesiones.`, 'success')
+                                                                    });
+                                                                }}
+                                                                className="text-[8px] bg-brand-primary text-white px-2 py-1 rounded-md font-black uppercase hover:brightness-110 transition-all shadow-sm active:scale-95"
+                                                            >
+                                                                +5 Sesiones
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="col-span-2">
                                                 <p className="text-[9px] font-bold text-blue-400 uppercase">Diagnóstico Médico</p>

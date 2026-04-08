@@ -70,6 +70,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
                 'message' => $request->session()->get('message'),
                 'type' => $request->session()->get('type'),
+                'patient' => $request->session()->get('patient'),
             ]),
 
             //Datos generales de la app
@@ -196,15 +197,14 @@ class HandleInertiaRequests extends Middleware
                 $allCompanies = Company::select(['id', 'business_name', 'rut'])->get();
                 if ($contextCompanyId) {
                     $availableBranches = Branch::where('company_id', $contextCompanyId)
-                        ->select('id', 'name')->get();
+                        ->select('id', 'name', 'is_home_care_only')->get();
                 }
-            } else {
+                } else {
                 // Usuarios normales: Solo sus sucursales en ESA empresa
                 $availableBranches = $user->branches()
                     ->where('branches.company_id', $contextCompanyId)
-                    ->select('branches.id', 'branches.name')->get();
-            }
-
+                    ->select('branches.id', 'branches.name', 'branches.is_home_care_only')->get();
+                }
             // --- 5. DETERMINAR SUCURSAL ACTIVA (Solo lectura) ---
             $activeBranchId = $request->session()->get('active_branch_id');
 

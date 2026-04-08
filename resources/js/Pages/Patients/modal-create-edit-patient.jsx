@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useForm, router } from "@inertiajs/react";
+import { useForm, router, usePage } from "@inertiajs/react";
 import axios from "axios";
 import InputLabel from "@/components/InputLabel";
 import InputError from "@/components/InputError";
@@ -41,6 +41,9 @@ export default function ModalCreateEditPatient({
   regions = [],
   provinces = [],
 }) {
+  const { current_branch } = usePage().props;
+  const isHomeCareOnlyBranch = !!current_branch?.is_home_care_only;
+
   const [isExistingInSystem, setIsExistingInSystem] = useState(false);
   const addPatient = usePatientStore((state) => state.addPatient);
 
@@ -75,20 +78,28 @@ export default function ModalCreateEditPatient({
     prefers_mail: patient?.prefers_mail ?? true,
     prefers_sms: patient?.prefers_sms ?? false,
     require_tutor: !!patient?.require_tutor,
+    send_welcome_notification: true, // Nueva bandera independiente
     guardian_name: patient?.contact?.name || "",
     guardian_relationship: patient?.contact?.relationship || "",
     guardian_phone: patient?.contact?.phone || "",
     guardian_email: patient?.contact?.email || "",
     guardian_rut: patient?.contact?.rut || "",
     // Campos de dirección
-    is_home_care: !!patient?.address,
+    is_home_care: isHomeCareOnlyBranch || !!patient?.address,
     street: patient?.address?.street || "",
     number: patient?.address?.number || "",
     details: patient?.address?.details || "",
-    region_id: patient?.address?.commune?.province?.region_id || "",
-    province_id: patient?.address?.commune?.province_id || "",
-    commune_id: patient?.address?.commune_id || "",
+    region_id: patient?.address?.commune?.province?.region_id || (patient?.id ? "" : "13"),
+    province_id: patient?.address?.commune?.province_id || (patient?.id ? "" : "2401"),
+    commune_id: patient?.address?.commune_id || (patient?.id ? "" : "13101"),
   });
+
+  // Lógica para forzar is_home_care si la sucursal es solo domicilio
+  useEffect(() => {
+    if (isHomeCareOnlyBranch) {
+        setData("is_home_care", true);
+    }
+  }, [isHomeCareOnlyBranch]);
 
   // Filtrado dinámico de provincias y comunas
   const filteredProvinces = useMemo(
@@ -104,20 +115,14 @@ export default function ModalCreateEditPatient({
   // Sincronizar datos cuando cambia el paciente seleccionado (Edición)
   useEffect(() => {
     if (patient) {
-      // Normalizar contacto (puede venir como primary_contact o contact)
+      // ... (resto del código de sincronización intacto)
       const contact = patient.primary_contact || patient.contact;
-
-      // Normalizar dirección (puede venir anidada en address o aplanada)
       const hasAddress = !!patient.address || !!patient.address_id;
       const street = patient.address?.street || patient.street || "";
       const number = patient.address?.number || patient.number || "";
       const details = patient.address?.details || patient.details || "";
-      const regionId =
-        patient.address?.commune?.province?.region_id ||
-        patient.region_id ||
-        "";
-      const provinceId =
-        patient.address?.commune?.province_id || patient.province_id || "";
+      const regionId = patient.address?.commune?.province?.region_id || patient.region_id || "";
+      const provinceId = patient.address?.commune?.province_id || patient.province_id || "";
       const communeId = patient.address?.commune_id || patient.commune_id || "";
 
       setData({
@@ -141,15 +146,11 @@ export default function ModalCreateEditPatient({
         prefers_mail: patient.prefers_mail ?? true,
         prefers_sms: patient.prefers_sms ?? false,
         require_tutor: !!patient.require_tutor,
-
-        // Datos del tutor
         guardian_name: contact?.name || "",
         guardian_relationship: contact?.relationship || "",
         guardian_phone: contact?.phone || "",
         guardian_email: contact?.email || "",
         guardian_rut: contact?.rut || "",
-
-        // Campos de dirección
         is_home_care: hasAddress,
         street: street,
         number: number,
@@ -160,11 +161,42 @@ export default function ModalCreateEditPatient({
       });
       setIsExistingInSystem(true);
     } else {
-      // Limpiar formulario para nuevo registro
       reset();
       setIsExistingInSystem(false);
     }
   }, [patient]);
+
+  // Lógica automática para menores de edad (Reactiva y Precisa)
+  useEffect(() => {
+    if (data.birth_date && data.birth_date.length === 10) {
+      const parts = data.birth_date.split('-');
+      const birthDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      const today = new Date();
+      
+      if (!isNaN(birthDate.getTime()) && birthDate.getFullYear() > 1900) {
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+
+        if (age < 18 && age >= 0) {
+          if (!data.require_tutor || data.marital_status !== "single") {
+            setData((prev) => ({
+              ...prev,
+              require_tutor: true,
+              marital_status: "single",
+            }));
+          }
+        } else if (age >= 18) {
+          if (data.require_tutor) {
+            setData("require_tutor", false);
+          }
+        }
+      }
+    }
+  }, [data.birth_date]);
 
   const handleRutBlur = async (e) => {
     const cleanRut = e.target.value.replace(/\./g, "");
@@ -206,7 +238,9 @@ export default function ModalCreateEditPatient({
 
     method(url, {
       onSuccess: (page) => {
-        const newPatient = page.props.patient || patient;
+        // Buscamos el paciente en flash (nuevo) o usamos el actual (editado)
+        const newPatientId = page.props.flash?.patient?.id || patient?.id;
+        
         setOpenModalPatient(false);
         reset();
 
@@ -215,13 +249,13 @@ export default function ModalCreateEditPatient({
           text: `Paciente gestionado correctamente.`,
           icon: "success",
           showCancelButton: true,
-          confirmButtonText: "🚀 Agendar Atención",
+          confirmButtonText: "👁️ Ver Perfil Clínico",
           cancelButtonText: "Cerrar",
           confirmButtonColor: "#3292b3",
         }).then((result) => {
-          if (result.isConfirmed && newPatient?.id) {
+          if (result.isConfirmed && newPatientId) {
             router.visit(
-              route("attendances.index", { patient_id: newPatient.id })
+              route("patients.show", newPatientId)
             );
           }
         });
@@ -307,7 +341,8 @@ export default function ModalCreateEditPatient({
                   </span>
                   <Switch
                     checked={data.is_home_care}
-                    onChange={(e) => setData("is_home_care", e.target.checked)}
+                    onChange={(e) => !isHomeCareOnlyBranch && setData("is_home_care", e.target.checked)}
+                    disabled={isHomeCareOnlyBranch}
                   />
                 </label>
                 <label className="flex items-center gap-3 px-4 py-2 transition-all border border-gray-100 shadow-sm cursor-pointer bg-gray-50 rounded-xl hover:bg-white group">
@@ -615,59 +650,82 @@ export default function ModalCreateEditPatient({
             </div>
           )}
 
-          {/* BLOQUE 4: PREFERENCIAS DE CONECTIVIDAD */}
-          <div className="space-y-6">
+          {/* BLOQUE 4: CENTRO DE COMUNICACIONES */}
+          <div className="space-y-8">
             <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
-              <Smartphone className="w-4 h-4" /> Centro de Notificaciones
+              <Smartphone className="w-4 h-4" /> Centro de Comunicaciones
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <label className="flex items-center justify-between p-6 transition-all bg-white border border-gray-100 shadow-sm cursor-pointer rounded-3xl hover:border-brand-primary/30 group">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`p-2 rounded-xl transition-colors ${
-                      data.opt_out_reminders
-                        ? "bg-green-50 text-green-600"
-                        : "bg-gray-100 text-gray-400"
-                    }`}
-                  >
-                    <Activity className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="mb-1 text-xs font-black leading-none tracking-tight text-gray-900 uppercase">
-                      Recordatorios
-                    </p>
-                    <p className="text-[8px] font-bold text-gray-400 uppercase">
-                      Alertas de pago y sesiones
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={data.opt_out_reminders}
-                  onChange={(e) =>
-                    setData("opt_out_reminders", e.target.checked)
-                  }
-                />
-              </label>
 
-              {data.opt_out_reminders && (
-                <div className="flex items-center justify-around p-6 duration-300 border bg-brand-primary/5 border-brand-primary/10 rounded-3xl animate-in zoom-in-95">
-                  <Checkbox
-                    label="WhatsApp"
-                    checked={data.prefers_whatsapp}
-                    onChange={(e) =>
-                      setData("prefers_whatsapp", e.target.checked)
-                    }
-                  />
-                  <div className="w-px h-6 bg-brand-primary/10"></div>
-                  <Checkbox
-                    label="Email"
-                    checked={data.prefers_mail}
-                    onChange={(e) =>
-                      setData("prefers_mail", e.target.checked)
-                    }
-                  />
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              {/* SUB-BLOQUE: BIENVENIDA (Solo nuevos) */}
+              {!data.id && (
+                <div className="p-6 bg-orange-50/50 border border-orange-100 rounded-[2rem] space-y-4 animate-in zoom-in-95 duration-500">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 text-orange-600 bg-white rounded-xl shadow-sm">
+                        <UserPlus className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Hito de Bienvenida</p>
+                        <p className="text-[8px] font-bold text-brand-gray uppercase">Notificación de primer ingreso</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={data.send_welcome_notification}
+                      onChange={(e) => setData("send_welcome_notification", e.target.checked)}
+                    />
+                  </div>
+                  
+                  {data.send_welcome_notification && (
+                    <div className="flex items-center justify-center gap-6 pt-2">
+                       <Checkbox
+                        label="WhatsApp"
+                        checked={data.prefers_whatsapp}
+                        onChange={(e) => setData("prefers_whatsapp", e.target.checked)}
+                      />
+                      <Checkbox
+                        label="Email"
+                        checked={data.prefers_mail}
+                        onChange={(e) => setData("prefers_mail", e.target.checked)}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* SUB-BLOQUE: RECORDATORIOS FUTUROS */}
+              <div className={`p-6 border rounded-[2rem] space-y-4 transition-all duration-500 ${data.opt_out_reminders ? 'bg-green-50/30 border-green-100' : 'bg-gray-50 border-gray-100'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl shadow-sm ${data.opt_out_reminders ? 'bg-white text-green-600' : 'bg-white text-gray-400'}`}>
+                      <Activity className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Recordatorios Operativos</p>
+                      <p className="text-[8px] font-bold text-brand-gray uppercase">Alertas de sesiones y pagos</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={data.opt_out_reminders}
+                    onChange={(e) => setData("opt_out_reminders", e.target.checked)}
+                  />
+                </div>
+
+                {data.opt_out_reminders && (
+                   <div className="flex items-center justify-center gap-6 pt-2">
+                    <Checkbox
+                      label="WhatsApp"
+                      checked={data.prefers_whatsapp}
+                      onChange={(e) => setData("prefers_whatsapp", e.target.checked)}
+                    />
+                    <Checkbox
+                      label="Email"
+                      checked={data.prefers_mail}
+                      onChange={(e) => setData("prefers_mail", e.target.checked)}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

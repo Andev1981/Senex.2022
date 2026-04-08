@@ -179,8 +179,8 @@ class Treatment extends Model
     {
         $this->increment('completed_sessions');
 
-        // Si completó todas las sesiones, marcar como completado
-        if ($this->total_sessions && $this->completed_sessions >= $this->total_sessions) {
+        // Si completó todas las sesiones y NO es indefinido, marcar como completado
+        if (!$this->is_indefinite && $this->total_sessions && $this->completed_sessions >= $this->total_sessions) {
             $this->update(['status' => TreatmentStatusEnum::COMPLETED]);
         }
     }

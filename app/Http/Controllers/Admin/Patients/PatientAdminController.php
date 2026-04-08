@@ -103,7 +103,7 @@ class PatientAdminController extends Controller
                         ->whereColumn('i.patient_id', 'patients.id')
                         ->whereIn('i.payment_status', ['unpaid', 'partial'])
                         // Subquery para restar lo pagado es compleja, por ahora sumamos el total de documentos pendientes
-                        ->selectRaw("COALESCE(SUM(i.amount_total_clp), 0)");
+                        ->selectRaw("COALESCE(SUM(i.total_amount_clp), 0)");
                 },
             ])
 
@@ -450,10 +450,9 @@ class PatientAdminController extends Controller
             $patient->branches()->syncWithoutDetaching([$activeBranchId]);
 
             // Si NO existía, es un paciente nuevo -> Bienvenida
-
             DB::commit();
 
-            if (!$exists) {
+            if (!$exists && $request->boolean('send_welcome_notification', true)) {
                 if ($request->require_tutor) {
                     // Notificamos al tutor
                     $contact->notify(new PatientTutorWelcomeNotification($patient, $contact));

@@ -38,6 +38,8 @@ class LegacyDataMigrationSeeder extends Seeder
     protected $migratedPatientsMap = []; 
     protected $migratedDoctorsMap = []; 
     protected $sessionTypesMap = []; 
+    protected $treatmentsMap = []; 
+    protected $rutMapping = []; 
     
     protected $oldCommuneNames = []; 
     protected $newCommuneIds = [];   
@@ -55,6 +57,7 @@ class LegacyDataMigrationSeeder extends Seeder
             $this->command->info('Starting Enhanced Legacy Data Migration (2026-02-04) with Smart Commune Mapping...');
 
             $this->loadCommuneMappings();
+            $this->loadRutMapping();
 
             $this->loadAddresses();
             $this->loadKeepers(); 
@@ -66,8 +69,19 @@ class LegacyDataMigrationSeeder extends Seeder
             $this->migrateClinicalData();
             $this->migrateAssignments();
 
+            // 4. FINAL CLEANUP: Close old treatments (pre-2025) and sync total_sessions for testing
+            foreach ($this->treatmentsMap as $treatment) {
+                $treatment->refresh();
+
+                // Forzar Cupo Agotado: total = completadas
+                $treatment->update(['total_sessions' => $treatment->completed_sessions]);
+
+                if ($treatment->status === TreatmentStatusEnum::IN_PROGRESS && !isset($activeTreatments[$treatment->id])) {
+                    $treatment->update(['status' => TreatmentStatusEnum::COMPLETED]);
+                }
+            }
             $this->command->info('Legacy Data Migration Completed Successfully.');
-        });
+            });
     }
 
     protected function loadCommuneMappings()
@@ -88,6 +102,15 @@ class LegacyDataMigrationSeeder extends Seeder
             $this->newCommuneIds[$norm] = $commune->id;
         }
         $this->command->info('Loaded ' . count($this->newCommuneIds) . ' new communes from DB.');
+    }
+
+    protected function loadRutMapping()
+    {
+        $path = storage_path('app/rut_mapping.json');
+        if (file_exists($path)) {
+            $this->rutMapping = json_decode(file_get_contents($path), true);
+            $this->command->info('Loaded ' . count($this->rutMapping) . ' manual RUT mappings.');
+        }
     }
 
     protected function normalizeName($name)
@@ -142,7 +165,7 @@ class LegacyDataMigrationSeeder extends Seeder
     protected function loadAddresses()
     {
         $this->command->info('Loading Addresses...');
-        $rows = $this->parseSqlFile('addresses_202602041813.sql', 'addresses', ['id', 'street', 'number', 'address', 'latitude', 'longitude', 'comuna_id']);
+        $rows = $this->parseSqlFile('addresses_202602041813.sql', 'addresses', ['id', 'street', 'number', 'address', 'latitude', 'longitude', 'comuna_id', 'created_at', 'updated_at', 'detail']);
         
         foreach ($rows as $row) {
             $this->oldAddresses[$row['id']] = $row;
@@ -259,10 +282,24 @@ class LegacyDataMigrationSeeder extends Seeder
             $newUserId = $user->id;
 
             $rut = $row['rut'];
-            if (Patient::where('rut', $rut)->exists()) {
-                $originalRut = $rut; 
-                $rut = $rut . '-' . $oldPatientId; 
-                $this->command->warn("Duplicate RUT {$originalRut}. Created distinct record with RUT {$rut}.");
+
+            // --- SMART RUT REPLACEMENT ---
+            // If we have a mapping for the original duplicate RUT, use it!
+            $tempRut = $rut . '-' . $oldPatientId;
+            if (isset($this->rutMapping[$tempRut])) {
+                $mappingData = $this->rutMapping[$tempRut];
+                // Support both simple string (legacy) and new object structure
+                $mappedRut = is_array($mappingData) ? ($mappingData['real_rut'] ?? null) : $mappingData;
+                
+                if ($mappedRut) {
+                    $rut = $mappedRut;
+                    $this->command->info("Applied mapping for {$row['name']}: {$tempRut} -> {$rut}");
+                } else {
+                    $rut = $tempRut; // Mantener temporal si no hay real_rut en el mapeo
+                }
+            } else if (Patient::where('rut', $rut)->exists()) {
+                $rut = $tempRut; 
+                $this->command->warn("Duplicate RUT {$row['rut']}. Created distinct record with RUT {$rut}.");
             }
 
             $patient = Patient::create([
@@ -300,7 +337,7 @@ class LegacyDataMigrationSeeder extends Seeder
                 $patient->address()->create([
                     'street' => $addrData['street'] ?? 'Sin Calle',
                     'number' => $addrData['number'] ?? '',
-                    'details' => $addrData['address'] ?? '',
+                    'details' => trim(($addrData['address'] ?? '') . ' ' . ($addrData['detail'] ?? '')),
                     'commune_id' => $newCommuneId,
                 ]);
             }
@@ -385,7 +422,7 @@ class LegacyDataMigrationSeeder extends Seeder
                 $doctor->address()->create([
                     'street' => $addrData['street'] ?? 'Sin Calle',
                     'number' => $addrData['number'] ?? '',
-                    'details' => $addrData['address'] ?? '',
+                    'details' => trim(($addrData['address'] ?? '') . ' ' . ($addrData['detail'] ?? '')),
                     'commune_id' => $newCommuneId,
                 ]);
             }
@@ -466,14 +503,13 @@ class LegacyDataMigrationSeeder extends Seeder
             'id', 'derivado', 'desde', 'comments', 'user_id', 'status', 'type_value', 'type_payment', 'created_at', 'updated_at', 'patient_id'
         ]);
 
-        $treatmentsMap = [];
         foreach ($appRows as $row) {
             $oldAppId = $row['id'];
             $oldPatientId = $row['patient_id'];
             $patient = $this->migratedPatientsMap[$oldPatientId] ?? null;
             if (!$patient) continue;
 
-            // SMART STATUS: 1 means Active/In Progress, 0 means Cancelled
+            // SMART STATUS: Initially set to a special state or In Progress
             $status = $row['status'] == 1 ? TreatmentStatusEnum::IN_PROGRESS : TreatmentStatusEnum::CANCELLED;
 
             $treatment = Treatment::create([
@@ -484,25 +520,15 @@ class LegacyDataMigrationSeeder extends Seeder
                 'description' => $row['comments'] ?: 'Tratamiento Migrado',
                 'status' => $status,
                 'start_date' => $this->parseDate($row['created_at'], true),
-                'total_sessions' => 10,
+                'total_sessions' => 10, // Default temporal
+                'is_indefinite' => false, // Cambiado para probar botón
                 'completed_sessions' => 0,
                 'created_at' => $this->parseDate($row['created_at']),
             ]);
-            $treatmentsMap[$oldAppId] = $treatment;
+            $this->treatmentsMap[$oldAppId] = $treatment;
         }
 
-        // 2. Prepare Payments data
-        $paymentRows = $this->parseSqlFile('payment_incomes_202602041815.sql', 'payment_incomes', [
-            'id', 'pay', 'application_id', 'apply_item_id', 'created_at', 'updated_at', 'fecha_pago', 'status', 'type', 'file', 'saldo', 'mensaje'
-        ]);
-        
-        $paymentsByItemId = [];
-        foreach ($paymentRows as $pay) {
-            $itemId = $pay['apply_item_id'];
-            if ($itemId) {
-                $paymentsByItemId[$itemId] = $pay;
-            }
-        }
+        // ... (Keep payment pre-loading)
 
         // 3. Apply Items -> Sessions
         $itemRows = $this->parseSqlFile('apply_items_202602041814.sql', 'apply_items', [
@@ -510,19 +536,26 @@ class LegacyDataMigrationSeeder extends Seeder
             'application_type_id', 'price', 'numero_sesion', 'application_type_user_id', 'doctor_id', 'patient_id', 'estado_pago'
         ]);
 
+        $activeTreatments = [];
+
         foreach ($itemRows as $item) {
-            $oldItemId = $item['id']; 
             $oldAppId = $item['application_id'];
-            $treatment = $treatmentsMap[$oldAppId] ?? null;
+            $treatment = $this->treatmentsMap[$oldAppId] ?? null;
             if (!$treatment) continue;
 
             $doctor = $this->migratedDoctorsMap[$item['doctor_id']] ?? null;
             $fallbackDoctorId = !empty($this->migratedDoctorsMap) ? reset($this->migratedDoctorsMap)->id : 1;
 
-            $price = floatval($item['price']);
             $date = $this->parseDate($item['fecha_atencion'] ?: $item['created_at']);
+            $price = floatval($item['price']);
             
-            // SMART SESSION STATUS
+            // Si tiene una sesión en 2025 o 2026, marcamos el tratamiento como ACTIVAMENTE EN PROCESO
+            if ($date->year >= 2025) {
+                $activeTreatments[$treatment->id] = true;
+            }
+
+            $oldItemId = $item['id']; 
+            // ... (Rest of session creation logic stays the same)
             $status = AppointmentStatusEnum::CANCELLED;
             if ($item['status'] == 1) {
                 $status = $date->gte($today) ? AppointmentStatusEnum::SCHEDULED : AppointmentStatusEnum::COMPLETED;

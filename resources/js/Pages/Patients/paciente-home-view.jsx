@@ -1,7 +1,7 @@
 import React from "react";
-import PanelAcciones from "./PanelAcciones";
-import PanelFinanciero from "./PanelFinanciero";
-import PanelSesionesRecientes from "./PanelSesionesRecientes";
+import PanelAcciones from "./panel-acciones";
+import PanelFinanciero from "./panel-financiero";
+import PanelSesionesRecientes from "./panel-sesiones-recientes";
 
 const PacienteHomeView = ({
   pacienteData,

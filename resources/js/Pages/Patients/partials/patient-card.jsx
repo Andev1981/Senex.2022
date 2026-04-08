@@ -1,6 +1,6 @@
 import { Cake, Edit, IdCard, User, VenusAndMars } from "lucide-react";
 import { useState } from "react";
-import ModalCreateEditPatient from "./../ModalCreateEditPatient";
+import ModalCreateEditPatient from "./../modal-create-edit-patient";
 import SideModal from "@/components/SideModal";
 import { t } from "@/constants/translations";
 

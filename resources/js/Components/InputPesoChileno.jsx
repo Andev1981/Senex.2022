@@ -42,18 +42,22 @@ const InputPesoChileno = ({
 
   return (
     <div className="relative">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gray opacity-40">
-        <DollarSign className="w-4 h-4" />
-      </div>
+      {(!price || price === 0) && (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-gray opacity-40 pointer-events-none">
+          <DollarSign className="w-4 h-4" />
+        </div>
+      )}
       <input
         type="text"
         name={name}
-        value={formatNumber(price)}
+        value={price && price !== 0 ? formatNumber(price) : ""}
         onChange={handleChange}
         onFocus={handleFocus}
+        placeholder="0"
         disabled={disabled}
         className={
-          "w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-100 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
+          "w-full pr-4 py-4 rounded-2xl border-gray-100 bg-gray-100 font-mono font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none " +
+          (price && price !== 0 ? "pl-4" : "pl-12 ") +
           className
         }
       />

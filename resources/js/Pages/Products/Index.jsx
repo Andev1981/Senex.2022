@@ -103,8 +103,13 @@ export default function Index({ products }) {
                 </div>
                 <div className="min-w-0">
                     <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate leading-none mb-1.5">{row.original.name}</p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1">
                         <span className="font-mono text-[9px] font-bold text-brand-gray opacity-60 uppercase tracking-widest">SKU: {row.original.sku || 'S/N'}</span>
+                        {row.original.description && (
+                            <p className="text-[10px] text-gray-400 truncate max-w-[200px]" title={row.original.description}>
+                                {row.original.description}
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -118,8 +123,10 @@ export default function Index({ products }) {
             <div className="font-black text-gray-900 font-mono text-sm tracking-tighter">
               {fmtCLP(getValue())}
             </div>
-            {row.original.is_exempt && (
+            {row.original.is_exempt ? (
               <span className="text-[8px] text-brand-primary uppercase font-black tracking-widest bg-brand-secondary/10 px-1.5 py-0.5 rounded border border-brand-secondary/20">Exento</span>
+            ) : (
+              <span className="text-[8px] text-amber-600 uppercase font-black tracking-widest bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">Afecto IVA</span>
             )}
           </div>
         ),
@@ -165,8 +172,14 @@ export default function Index({ products }) {
     },
   ], []);
 
+  const tableData = useMemo(() => {
+    if (products?.data) return products.data;
+    if (Array.isArray(products)) return products;
+    return [];
+  }, [products]);
+
   const table = useReactTable({
-    data: products.data || products,
+    data: tableData,
     columns,
     state: { sorting, globalFilter: searchTerm, pagination: { pageSize, pageIndex } },
     onSortingChange: setSorting,

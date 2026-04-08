@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Products;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Http\Requests\Product\StoreProductRequest;
-use App\Http\Requests\Product\UpdateProductRequest;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -40,11 +40,14 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request)
     {
-        // 1. Inyectamos el ID de la empresa
         $data = $request->validated();
+        
+        // Inyectamos contexto
         $data['company_id'] = auth()->user()->company_id;
+        $data['branch_id']  = session('current_branch_id');
+        $data['user_id']    = auth()->id();
 
-        // 2. Crear
+        // Crear
         Product::create($data);
 
         return redirect()->route('products.index')

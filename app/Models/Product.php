@@ -13,6 +13,8 @@ class Product extends Model
 
     protected $fillable = [
         'company_id',
+        'branch_id',
+        'user_id',
         'name',
         'description',
         'sku',
@@ -26,10 +28,9 @@ class Product extends Model
         'is_active'
     ];
 
-    public function sellable()
+    public function invoiceItems()
     {
-        // Esto permite que el ítem sea un "TreatmentSession" O un "Product"
-        return $this->morphTo();
+        return $this->morphMany(InvoiceItem::class, 'sellable');
     }
 
     // Calculamos el Neto (para DTE) al vuelo

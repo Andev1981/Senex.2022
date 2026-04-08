@@ -15,8 +15,9 @@ class WebpayPlusService
 
     public function __construct()
     {
-        $this->commerceCode = config('webpay.commerce_code');
-        $this->apiKey = config('webpay.api_key');
+        // Limpiamos espacios o saltos de línea que puedan venir del .env
+        $this->commerceCode = trim(config('webpay.commerce_code') ?: '');
+        $this->apiKey = trim(config('webpay.api_key') ?: '');
         $this->environment = config('webpay.environment', 'integration');
     }
 
@@ -25,12 +26,19 @@ class WebpayPlusService
      */
     protected function getTransaction(): Transaction
     {
-        // SDK v5: Usar buildForIntegration() o buildForProduction()
+        // Credenciales de prueba genéricas de Transbank
+        $testCommerceCode = '597055555532';
+        $testApiKey = '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C';
+
+        $code = $this->commerceCode ?: $testCommerceCode;
+        $key = $this->apiKey ?: $testApiKey;
+
+        // SDK v5 usa (apiKey, commerceCode) para AMBOS ambientes cuando se pasan argumentos
         if ($this->environment === 'production') {
-            return Transaction::buildForProduction($this->apiKey, $this->commerceCode);
+            return Transaction::buildForProduction($key, $code);
         }
-        
-        return Transaction::buildForIntegration($this->apiKey, $this->commerceCode);
+
+        return Transaction::buildForIntegration($key, $code);
     }
 
     /**

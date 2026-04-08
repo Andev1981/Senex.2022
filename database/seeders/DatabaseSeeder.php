@@ -62,6 +62,7 @@ class DatabaseSeeder extends Seeder
                 'codigo_sucursal_sii' => '2', 
                 'email' => 'senex@senex.cl',        
                 'is_main' => true,
+                'is_home_care_only' => true,
                 'active' => true,
             ]);
 
@@ -80,6 +81,7 @@ class DatabaseSeeder extends Seeder
                 'codigo_sucursal_sii' => '2',
                 'email' => 'senex@senex.cl',
                 'is_main' => true,
+                'is_home_care_only' => true,
                 'active' => true,
             ]);
         }

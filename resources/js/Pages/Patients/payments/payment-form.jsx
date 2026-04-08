@@ -205,13 +205,13 @@ export default function PaymentForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-1">
                     <label className="enterprise-label ml-1">Monto a Recibir</label>
-                    <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-brand-primary">$</span>
+                    <div className="flex items-center w-full px-4 py-4 rounded-2xl border border-gray-100 bg-white shadow-inner focus-within:ring-2 focus-within:ring-brand-primary transition-all">
+                        <span className="font-black text-brand-primary mr-2">$</span>
                         <input
                             type="number"
                             value={data.amount_clp}
                             onChange={(e) => setData("amount_clp", e.target.value)}
-                            className="w-full pl-8 pr-4 py-4 rounded-2xl border-gray-100 font-black text-gray-900 focus:ring-brand-primary bg-white shadow-inner"
+                            className="w-full p-0 border-none font-black text-gray-900 focus:ring-0 bg-transparent"
                             required
                         />
                     </div>

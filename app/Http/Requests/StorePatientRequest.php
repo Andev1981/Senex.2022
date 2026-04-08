@@ -35,6 +35,15 @@ class StorePatientRequest extends FormRequest
         // Usamos el ID del request si viene (edición) o buscamos por RUT
         $patientId = $this->id;
 
+        // Verificar si la sucursal actual requiere atención a domicilio obligatoria
+        $activeBranchId = session('active_branch_id');
+        $isHomeCareOnly = false;
+        if ($activeBranchId) {
+            $isHomeCareOnly = \App\Models\Branch::where('id', $activeBranchId)
+                ->where('is_home_care_only', true)
+                ->exists();
+        }
+
         return [
             // Datos del paciente
             'name'      => ['required', 'string', 'max:255'],
@@ -61,12 +70,19 @@ class StorePatientRequest extends FormRequest
             'phone'      => ['nullable', 'string', 'max:30'],
             'birth_date' => ['required', 'date', 'before:today'],
 
+            // Dirección (Obligatoria si la sucursal es solo domicilio o si se marcó el switch)
+            'is_home_care' => ['boolean'],
+            'street'       => [$isHomeCareOnly ? 'required' : 'required_if:is_home_care,true', 'nullable', 'string', 'max:255'],
+            'number'       => [$isHomeCareOnly ? 'required' : 'required_if:is_home_care,true', 'nullable', 'string', 'max:50'],
+            'commune_id'   => [$isHomeCareOnly ? 'required' : 'required_if:is_home_care,true', 'nullable', 'exists:communes,id'],
+
             // Preferencias y Flags
             'opt_out_reminders' => ['boolean'],
             'prefers_whatsapp'  => ['boolean'],
             'prefers_mail'      => ['boolean'],
             'prefers_sms'       => ['boolean'],
             'require_tutor'     => ['boolean'],
+            'send_welcome_notification' => ['boolean'],
 
             // Datos del Tutor (Obligatorios solo si require_tutor es true)
             'guardian_name'         => ['required_if:require_tutor,true', 'nullable', 'string', 'max:255'],
@@ -108,6 +124,14 @@ class StorePatientRequest extends FormRequest
             'guardian_phone.required_if'        => 'El teléfono del tutor es obligatorio para coordinar notificaciones y cobros.',
             'guardian_email.required_if'        => 'El correo del tutor es obligatorio para el envío de documentos.',
             'guardian_rut.required_if'          => 'El RUT del tutor es obligatorio para la facturación.',
+
+            // Mensajes Dirección
+            'street.required'    => 'La calle es obligatoria para la atención a domicilio.',
+            'number.required'    => 'El número de domicilio es obligatorio.',
+            'commune_id.required' => 'La comuna es obligatoria para coordinar la visita.',
+            'street.required_if' => 'Debe ingresar la calle para atención a domicilio.',
+            'number.required_if' => 'Debe ingresar el número para atención a domicilio.',
+            'commune_id.required_if' => 'Debe seleccionar la comuna para atención a domicilio.',
         ];
     }
 }

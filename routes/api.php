@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+use App\Http\Controllers\ExternalDataController;
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::prefix('external')->group(function () {
+    Route::get('/search-name', [ExternalDataController::class, 'searchByName']);
 });

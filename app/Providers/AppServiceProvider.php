@@ -18,6 +18,7 @@ use App\Models\Invoice;
 use App\Models\Dte;
 use App\Models\Address;
 use App\Models\Branch;
+use App\Models\VitalSign;
 use App\Services\TwilioService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Schema;
@@ -79,6 +80,8 @@ class AppServiceProvider extends ServiceProvider
         // Configuración para fechas en español
         Carbon::setLocale(config('app.locale'));
         /*      setlocale(LC_ALL, 'es_CL', 'es', 'ES'); */
+
+        TreatmentSession::observe(\App\Observers\TreatmentSessionObserver::class);
 
         Relation::enforceMorphMap([
             'Product' => Product::class,

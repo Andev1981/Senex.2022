@@ -28,8 +28,15 @@ class WebpayController extends Controller
         private PaymentService $paymentService,
         private WebpayPlusService $webpayService
     ) {
-        // Las rutas de retorno deben ser públicas (Transbank las llama)
-        $this->middleware(['auth', 'verified'])->except(['return', 'publicReturn','portalPagosIndex','consultarDeudas']);
+        // Las rutas de retorno y certificación deben ser públicas
+        $this->middleware(['auth', 'verified'])->except([
+            'return', 
+            'publicReturn',
+            'portalPagosIndex',
+            'consultarDeudas',
+            'checkoutView',
+            'initiateProductPayment'
+        ]);
     }
 
      /**
@@ -164,7 +171,68 @@ class WebpayController extends Controller
             'mode' => 'auto', // Indica al frontend que viene de un link mágico
         ]);
     }
-    
+    public function checkoutView()
+    {
+        return Inertia::render('products/ProductCheckout', [
+            'products' => \App\Models\Product::where('is_active', true)->get(),
+        ]);
+    }
+
+    /**
+     * Inicia un pago de producto (Certificación)
+     */
+    public function initiateProductPayment(Request $request)
+    {
+        $validated = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'quantity'   => ['required', 'integer', 'min:1'],
+        ]);
+
+        // Para certificación usamos un paciente por defecto sin filtrar por empresa (ya que es un portal público)
+        $patient = Patient::withoutGlobalScopes()->first() 
+                   ?? abort(404, 'Debe crear al menos un paciente en el sistema para realizar pruebas');
+        
+        $product = \App\Models\Product::findOrFail($validated['product_id']);
+        $amount_clp = (int) ($product->price * $validated['quantity']);
+
+        try {
+            $result = $this->paymentService->initiateWebpayTransaction([
+                'patient_id' => $patient->id,
+                'company_id' => $product->company_id,
+                'branch_id'  => $product->branch_id,
+                'user_id'    => $product->user_id,
+                'amount_clp' => $amount_clp,
+                'notes'      => "Certificación Transbank Pública: {$product->name} (x{$validated['quantity']})",
+                'metadata'   => [
+                    'type'       => 'product_certification',
+                    'product_id' => $product->id,
+                    'quantity'   => $validated['quantity'],
+                    'unit_price' => $product->price
+                ]
+            ], route('public.webpay.return')); // Enviamos la URL pública de retorno
+
+            Log::info('Webpay public product payment initiated', [
+                'payment_id' => $result['payment_id'],
+                'product_id' => $product->id,
+                'patient_id' => $patient->id,
+                'amount_clp' => $amount_clp,
+            ]);
+
+            // Redirigir usando una vista que haga el POST automático a Transbank
+            return view('webpay.redirect', [
+                'url' => $result['url'],
+                'token' => $result['token']
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error iniciando pago público de producto Webpay', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Inicia un pago individual para una sesión
      * POST /payments/webpay/session/{session}
@@ -366,12 +434,10 @@ class WebpayController extends Controller
      */
     public function return(Request $request)
     {
-        // Casos de abort/timeout (sin token_ws)
+        // Casos de abort/timeout (Viene TBK_TOKEN o nada)
         if (!$request->filled('token_ws')) {
-            Log::warning('Webpay return sin token_ws (abort/timeout)', [
-                'all_params' => $request->all(),
-                'method' => $request->method(),
-            ]);
+            $token = $request->input('TBK_TOKEN');
+            $this->paymentService->logAbortedTransaction($token, $request->all());
 
             return Inertia::render('payments/WebpayResult', [
                 'success' => false,
@@ -441,9 +507,12 @@ class WebpayController extends Controller
     public function publicReturn(Request $request)
     {
         if (!$request->filled('token_ws')) {
+            $token = $request->input('TBK_TOKEN');
+            $this->paymentService->logAbortedTransaction($token, $request->all());
+
             return Inertia::render('payments/Publicwebpayresult', [
                 'success' => false,
-                'message' => 'El pago fue cancelado o expiró',
+                'message' => 'La transacción fue cancelada o el tiempo expiró',
             ]);
         }
 
@@ -453,9 +522,11 @@ class WebpayController extends Controller
             $payment = $this->paymentService->confirmWebpayTransaction($token);
             $success = $payment->status === 'completed';
 
-            // Actualizar payment link si existe
-            if ($success && session()->has('payment_link_id')) {
-                $this->updatePaymentLink(session('payment_link_id'), $payment);
+            // Cargar paciente para mostrar nombre en la vista
+            $payment->load('patient');
+
+            if ($success) {
+                $this->allocatePendingItems($payment);
             }
 
             return Inertia::render('payments/Publicwebpayresult',[
@@ -463,7 +534,7 @@ class WebpayController extends Controller
                 'payment' => $payment,
                 'message' => $success 
                     ? '¡Pago realizado exitosamente!'
-                    : 'El pago no pudo ser procesado',
+                    : 'El pago fue rechazado por la entidad bancaria',
             ]);
 
         } catch (\Exception $e) {
@@ -474,7 +545,7 @@ class WebpayController extends Controller
 
             return Inertia::render('payments/Publicwebpayresult', [
                 'success' => false,
-                'message' => 'Ocurrió un error al procesar el pago',
+                'message' => 'Ocurrió un error inesperado al procesar la confirmación del pago',
             ]);
         }
     }
@@ -570,6 +641,29 @@ class WebpayController extends Controller
                 ]);
             }
             session()->forget('pending_payment_plan');
+        }
+
+        // Lógica para productos (Certificación)
+        if ($payment->metadata && ($payment->metadata['type'] ?? '') === 'product_certification') {
+            $productId = $payment->metadata['product_id'];
+            $qty = $payment->metadata['quantity'];
+            
+            try {
+                $product = \App\Models\Product::find($productId);
+                if ($product && $product->manage_stock) {
+                    $product->decrement('stock', $qty);
+                    Log::info('Stock decremented for product certification', [
+                        'product_id' => $productId,
+                        'qty' => $qty,
+                        'new_stock' => $product->stock
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Error processing stock for product certification', [
+                    'payment_id' => $payment->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
     }
 }

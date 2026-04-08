@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useEffect } from "react";
 
@@ -184,7 +184,7 @@ export default function PublicWebpayResult({ success, message, payment }) {
               >
                 <p className={`text-sm ${alertTextColor} text-center`}>
                   {success ? (
-                    <>✓ Recibirás un comprobante por correo electrónico</>
+                    <>✓ Transacción finalizada correctamente</>
                   ) : (
                     <>
                       Si tienes problemas con el pago, por favor contacta a
@@ -194,14 +194,23 @@ export default function PublicWebpayResult({ success, message, payment }) {
                 </p>
               </div>
 
-              {/* Botón para cerrar */}
-              <div className="mt-6">
-                <button
-                  onClick={() => router.get("/")}
-                  className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-                >
-                  Cerrar Ventana
-                </button>
+              {/* Acciones */}
+              <div className="mt-6 space-y-3">
+                {success ? (
+                  <button
+                    onClick={() => router.get("/certificacion/webpay/checkout")}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-indigo-200"
+                  >
+                    Volver al Portal de Pruebas
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => router.get("/certificacion/webpay/checkout")}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-indigo-200"
+                  >
+                    Volver a Intentar
+                  </button>
+                )}
               </div>
 
               {/* Contador de auto-cierre (solo si es exitoso) */}

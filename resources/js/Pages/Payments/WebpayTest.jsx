@@ -808,15 +808,16 @@ export default function WebpayTest({
                     Monto a Pagar (CLP) *
                   </label>
 
-                  <div className="relative">
-                    <span className="absolute text-2xl font-bold text-gray-500 -translate-y-1/2 left-4 top-1/2">
-                      $
-                    </span>
+                  <div className={`flex items-center w-full px-5 py-4 bg-white border-2 rounded-lg transition-all ${
+                    data.amount_clp
+                      ? "border-green-400 ring-4 ring-green-200"
+                      : "border-gray-300 focus-within:border-green-400 focus-within:ring-2 focus-within:ring-green-200"
+                  }`}>
+                    <span className="text-2xl font-bold text-gray-400">$</span>
                     <input
                       type="number"
                       value={data.amount_clp}
                       onChange={(e) => setData("amount_clp", e.target.value)}
-                      placeholder="0"
                       min="50"
                       step="1"
                       disabled={
@@ -824,11 +825,7 @@ export default function WebpayTest({
                           selectedSessions.length > 0) ||
                         (paymentType === "debts" && selectedDebts.length > 0)
                       }
-                      className={`w-full pl-10 pr-4 py-4 border-2 rounded-lg text-2xl font-bold text-center transition-all ${
-                        data.amount_clp
-                          ? "border-green-400 bg-white text-green-700 focus:ring-4 focus:ring-green-200"
-                          : "border-gray-300 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-200"
-                      } disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                      className="w-full p-0 ml-2 text-2xl font-bold text-center text-green-700 bg-transparent border-none focus:ring-0 disabled:text-gray-400"
                     />
                   </div>
 

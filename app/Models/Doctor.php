@@ -19,6 +19,7 @@ class Doctor extends Model
     use HasFactory, HasAddresses;
 
     protected $fillable = [
+        'company_id',
         'user_id',
         'name',
         'last_name',

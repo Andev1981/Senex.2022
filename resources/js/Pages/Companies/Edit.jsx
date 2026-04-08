@@ -37,14 +37,13 @@ import {
   Trash2,
   Pencil
 } from "lucide-react";
-
 import axios from "axios";
 import Modal from "@/components/Modal";
-import DteConfigurationForm from "./components/DteConfigurationForm";
-import CafUploader from "./components/CafUploader";
 import ChilePhoneInput from "@/components/ChilePhoneInput";
 import { router } from "@inertiajs/react";
 import Swal from "sweetalert2";
+import DteConfigurationForm from "./components/DteConfigurationForm";
+import CafUploader from "./components/CafUploader";
 
 export default function Edit({ company, dteConfig, folios, logo, branches = [], regions = [] }) {
   // --- ESTADOS DE MODALES ---

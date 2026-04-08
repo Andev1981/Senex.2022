@@ -15,6 +15,7 @@ return new class extends Migration {
       $table->string('phone', 30)->nullable();
       $table->string('email')->nullable();
       $table->boolean('is_main')->default(false)->comment('Indica si es la Casa Matriz');
+      $table->boolean('is_home_care_only')->default(false)->comment('Atención exclusiva a domicilio');
       $table->boolean('active')->default(true)->index();
       $table->timestamps();
       $table->index(['id']); // soporte a FKs compuestas

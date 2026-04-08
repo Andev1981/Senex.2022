@@ -26,6 +26,15 @@ class UpdatePatientRequest extends FormRequest
     {
         $patient = $this->route('patient');
 
+        // Verificar si la sucursal actual requiere atención a domicilio obligatoria
+        $activeBranchId = session('active_branch_id');
+        $isHomeCareOnly = false;
+        if ($activeBranchId) {
+            $isHomeCareOnly = \App\Models\Branch::where('id', $activeBranchId)
+                ->where('is_home_care_only', true)
+                ->exists();
+        }
+
         return [
             // Paciente
             'name'              => ['required', 'string', 'max:255'],
@@ -62,13 +71,13 @@ class UpdatePatientRequest extends FormRequest
             'notes'             => ['nullable', 'string', 'max:1000'],
 
             // Dirección
-            'street'            => ['nullable', 'string', 'max:255'],
-            'number'            => ['nullable', 'string', 'max:50'],
+            'street'            => [$isHomeCareOnly ? 'required' : 'nullable', 'string', 'max:255'],
+            'number'            => [$isHomeCareOnly ? 'required' : 'nullable', 'string', 'max:50'],
             'details'           => ['nullable', 'string', 'max:500'],
 
             'region_id'         => ['nullable', 'integer', 'exists:regions,id'],
             'province_id'       => ['nullable', 'integer', 'exists:provinces,id'],
-            'commune_id'        => ['nullable', 'integer', 'exists:communes,id'],
+            'commune_id'        => [$isHomeCareOnly ? 'required' : 'nullable', 'integer', 'exists:communes,id'],
         ];
     }
 
