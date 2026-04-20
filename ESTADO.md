@@ -2,66 +2,64 @@
 
 1. **ROL:** Eres un Arquitecto de Software experto en Laravel 12 (PHP 8.3) y React 19 e Inertia.js 2.0.
 2. **ESTILO:** Respuestas extremadamente breves y técnicas ("Show, don't tell").
-3. **CÓDIGO:** Usa siempre sintaxis moderna: Arrow Functions, Null Safe Operator (`?->`), Enums y TailwindCSS.
-4. **REGLA DE ORO:** Al hacer SQL/Eloquent, SIEMPRE prefija las columnas (`patients.id` en vez de `id`) para evitar conflictos en Joins.
-5. **FORMATO:** Si hay error, usa: "Causa -> Solución".
+3. **MODIFICACIONES QUIRÚRGICAS:** Es fundamental atacar únicamente las líneas de código que corresponden a la tarea solicitada. Evitar refactorizaciones masivas.
+4. **CÓDIGO:** Usa siempre sintaxis moderna: Arrow Functions, Null Safe Operator (`?->`), Enums y TailwindCSS.
+5. **REGLA DE ORO:** Al hacer SQL/Eloquent, SIEMPRE prefija las columnas (`patients.id` en vez de `id`) para evitar conflictos en Joins.
+6. **FORMATO:** Si hay error, usa: "Causa -> Solución".
 
 ---
 
-# PROYECTO: Sistema de Gestión Clínica (Enterprise)
+# PROYECTO: Sistema de Gestión Clínica & Comercial (Enterprise)
 
-## 🛠 STACK TECNOLÓGICO (Inmutable)
+## 🌐 ARQUITECTURA DE AMBIENTES (INMUTABLE)
+Para evitar fragmentación técnica, el sistema utiliza un estándar único de dos estados que se mapean automáticamente a los proveedores (SII/Transbank):
 
-- **Backend:** Laravel 12 + PHP 8.3
-- **Frontend:** React 19 + Inertia.js 2.0
-- **Estilos:** TailwindCSS 4
-- **DB:** MySQL
-- **Deploy:** cPanel (Atención con cachés y rutas)
+| Concepto App | Enum / DB | SII (LibreDTE) | Transbank (Webpay) | Visual (UI) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Pruebas** | `certification` | `certification` | `integration` | Amber (Certificación) |
+| **Real** | `production` | `production` | `production` | Green (Producción) |
 
-## 📍 ESTADO ACTUAL: SISTEMA REFACTORIZADO (Marzo 2026)
+> **Regla de Oro:** El "Modo Entrenamiento" es una bandera adicional que, al estar activa, fuerza el ambiente a `certification` y genera TrackIDs ficticios ("SIM-XXXX") sin conectar con el SII.
+
+---
+
+## 📍 ESTADO ACTUAL: SISTEMA MULTI-NEGOCIO REFACTORIZADO
 
 ### 🛡️ Nueva Arquitectura de Pagos & DTE
-- **Eliminación de Deuda (Debt):** La deuda ahora es una `Invoice` con estado `payment_status = 'unpaid'`.
-- **Integración Transbank (En curso):**
-    - **Flujo de Certificación:** Implementado checkout público de productos (`/certificacion/webpay/checkout`) para validación ante Transbank sin requerir login.
-    - **Log de Certificación:** Sistema de log dedicado en `storage/logs/transbank_certification.log` con formato "copy-paste" para el formulario técnico.
-    - **Fixes Críticos:** Unificación de firma SDK v5 y corrección de ENUM `payment_method` en la base de datos.
-- **Consistencia de Datos:** Todos los montos CLP son `bigInteger`.
-- **Dashboard Financiero:** Implementado en `ReportsController` con métricas de Flujo de Caja (6 meses), Cuentas por Cobrar (Receivables), Pendientes de Facturación y Estados DTE (SII).
+- **Certificados Digitales (SII):**
+    - **Extracción Nativa:** Uso de `sasco/LibreDTE` para obtener el RUT del firmante (`getID()`).
+    - **Acteco:** Implementado campo de Código de Actividad Económica en la configuración de la empresa y su mapeo al XML.
+- **Motor de Emisión Inteligente:**
+    - **Hibridación B2B/B2C:** El sistema decide automáticamente entre Factura (33/34) y Boleta (39/41) detectando el tipo de receptor.
+    - **Maestro de Clientes Empresa:** Transformada la tabla `company_directories` en un repositorio B2B completo (RUT, Razón Social, Giro, Dirección).
+    - **Integridad Contable:** Sincronización forzada entre el Monto del Pago y el `total_amount_clp` de la factura, prorrateando descuentos globales para cuadratura ante el SII.
+- **Trazabilidad:** Sistema de logs detallado en `laravel.log` para cada paso del flujo `issueInvoiceDte` (Folio -> Payload -> Firma -> Envío).
 
-### 🚀 Ciclo de Vida & Operación (Nuevas Reglas)
-1.  **Cierre Automático de Tratamientos:** Implementado `TreatmentSessionObserver` para actualizar `completed_sessions` y cerrar tratamientos al alcanzar `total_sessions`.
-2.  **Gestión de Cupos:** 
-    - Implementado botón **"+5 Sesiones"** en frontend para ampliación rápida cuando hay sobrecupo.
-    - Soporte para **Sesiones Indefinidas** (`is_indefinite`) con visualización de símbolo **∞**.
-3.  **Atención Domiciliaria (Home Care):**
-    - Nueva bandera `is_home_care_only` en sucursales.
-    - Frontend bloquea switch "A Domicilio" en ON y obliga a ingresar dirección si la sucursal lo requiere.
-4.  **Validación Inteligente de Pacientes:**
-    - Detección precisa de edad (Día/Mes/Año).
-    - Menores de 18 activan automáticamente `require_tutor: true` y `marital_status: 'single'`.
-    - Mayores de 18 desactivan tutor automáticamente.
-5.  **Notificaciones:** Separación de Recordatorios Operativos y Notificación de Bienvenida (independientes).
+### 🏢 Gestión Multipropósito (Camaleónica)
+- **Perfiles de Empresa:** Implementado `business_type` (`clinical`, `service`, `retail`).
+- **Sidebar & UI Dinámica:** Ocultamiento automático de módulos clínicos y transformación de labels ("Pacientes" a "Clientes") según el giro.
+- **Catálogo Jerárquico:** 
+    - Implementado Maestro de Categorías y Subcategorías con visualización en árbol.
+    - Soporte polimórfico para `Product` y `SessionType` en la misma factura.
+    - Tipificado de ítems: `product` (con stock) vs `service` (intangible).
 
-### 📦 Migración & Enriquecimiento de Datos
-- **Seeder:** `LegacyDataMigrationSeeder` corregido para incluir campos de `detail` (dirección) y mapeo de comunas ("Santiago Centro").
-- **Smart RUT Enrichment:** Comando `migration:enrich-ruts` implementado para generar un mapa JSON (`rut_mapping.json`) con nombres y RUTs temporales para corrección manual/API sin tocar los dumps originales.
-- **Tratamientos Legacy:** Todos los tratamientos migrados se establecen como `is_indefinite: false` y `total_sessions = completed_sessions` para permitir pruebas del sistema de ampliación de cupos.
+### 💳 Caja / POS (Punto de Venta)
+- **UI/UX Moderno:** Selector de pagos tipo Toggle (💳 POS vs 💵 Efectivo) con **POS Integrado como predeterminado**.
+- **Lógica de Venta:** 
+    - Soporte real para cantidades (`quantity`) y precios unitarios en el cálculo del DTE.
+    - Descuento comercial con campo obligatorio de "Motivo" para auditoría.
+    - Validación dinámica de existencia de clientes (Persona/Empresa) con prefijos de ID.
+- **Integración Transbank POS:** Lógica real preparada (comentada) para comunicación con el terminal físico vía HTTP.
 
-### ⚙️ Calidad & UI
-- **Inertia Flash:** Corregida la redirección tras registro exitoso compartiendo el objeto `patient` en las props de Inertia.
-- **UI UX:** Inputs de ubicación (Santiago/RM) predefinidos por defecto para agilizar el alta en flujo de domicilio.
+### 🐛 Fixes Críticos Recientes:
+- **Polimorfismo:** Corregido MorphMap en `AppServiceProvider` para `CorporateClient` y `Patient`.
+- **Base de Datos:** Eliminadas referencias a columnas inexistentes (`uuid`, `session_type_id`).
+- **Relaciones:** Corregida relación `User -> Company` a `belongsTo` para evitar error de `user_id` en tabla `companies`.
+- **Contexto:** Implementado auto-descubrimiento de Sucursal Activa en el Middleware global para evitar pantallas vacías.
 
-## 💡 NOTAS TÉCNICAS
-- **Location Default:** RM (13), Santiago (2401), Santiago Centro (13101).
-- **Tratamientos Activos:** Aquellos con sesiones en 2025 o 2026 se mantienen `in_progress` tras migrar.
+---
 
-## 📝 PRÓXIMOS PASOS (Roadmap)
-
-- [ ] **Certificación SII:**
-    - Implementar Set de Pruebas (Casos 1-10) en ambiente de certificación.
-    - Verificar carga de Folios Autorizados (`dte_authorized_folios`).
-    - Validar JSON de exportación para Boletas/Facturas Exentas de Salud.
-- [ ] **Refinar Búsqueda de RUT:** Conectar `RutSearchService` con API oficial (Sinacofi/Equifax) si se requiere automatización total.
-- [ ] **Reportes Médicos:** Implementar generación de PDF de Epicrisis basado en el historial unificado.
-- [ ] **Operación Móvil:** Adaptar el formulario de sesión para uso de Kines en terreno (Offline-first prep).
+## 🚀 PRÓXIMOS PASOS (MAÑANA)
+- [ ] **Certificación SII:** Realizar la primera emisión real del Tipo 34 (Factura Exenta) en ambiente de certificación.
+- [ ] **Dashboard Home:** Adaptar las métricas de la página principal para ocultar lo clínico si la empresa es de Software.
+- [ ] **PDF Personalizado:** Adaptar el formato de la Boleta/Factura para que no sea estrictamente clínico (quitar "Kinesiólogo", "Tratamiento").

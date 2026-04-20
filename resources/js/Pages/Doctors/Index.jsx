@@ -3,245 +3,54 @@ import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/components/SideModal";
 import TableDoctors from "./TableDoctors";
-import DoctorDetailModal from "./DoctorDetailModal";
-import DoctorCommissions from "./Partials/DoctorCommissions";
-import DoctorPatients from "./Partials/DoctorPatients";
-import Kpis from "./Partials/Kpis";
-import { HeaderDoctors } from "./Partials/HeaderDoctor";
-import { Smartphone, ShieldBan, ShieldCheck, AlertCircle, XCircle, UserCog } from "lucide-react";
+import DoctorDetailModal from "./DoctorDetailModal"; // Solo para CREACIÓN
+import { UserPlus } from "lucide-react";
 
-export default function Index({
-  doctors,
-  sessionTypes,
-  patients,
-  communes,
-  provinces,
-  regions,
-  filters,
-  user,
-}) {
-
-  const [isModalOpenDetail, setIsModalOpenDetail] = useState(false);
-  const [isModalOpenCommissions, setIsModalOpenCommissions] = useState(false);
-  const [isModalOpenPatients, setIsModalOpenPatients] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-
-  const getStatusBadge = (statusObj) => {
-
-    const status = typeof statusObj === 'object' ? statusObj?.status : statusObj;
-
-    switch (status) {
-
-      case "active":
-
-        return (
-
-          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-green-50 text-green-600 border border-green-100 shadow-sm shadow-green-500/5">
-
-            <span className="w-1.5 h-1.5 mr-2 bg-green-500 rounded-full animate-pulse"></span>
-
-            Operativo
-
-          </span>
-
-        );
-
-      case "suspended":
-
-        return (
-
-          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-amber-50 text-amber-600 border border-amber-100 shadow-sm">
-
-            <AlertCircle className="w-3 h-3 mr-1.5" />
-
-            Suspendido
-
-          </span>
-
-        );
-
-      case "cancelled":
-
-        return (
-
-          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-red-50 text-red-600 border border-red-100 shadow-sm">
-
-            <XCircle className="w-3 h-3 mr-1.5" />
-
-            Inactivo
-
-          </span>
-
-        );
-
-      default:
-
-        return (
-
-          <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] bg-gray-50 text-gray-400 border border-gray-100">
-
-            Desconocido
-
-          </span>
-
-        );
-
-    }
-
-  };
-
-
-
-  const getMobileBadge = (mobile_app_access) => {
-
-    return (
-
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] border shadow-sm transition-all ${
-
-            mobile_app_access 
-
-            ? "bg-brand-secondary/10 text-brand-primary border-brand-secondary/20" 
-
-            : "bg-gray-50 text-gray-300 border-gray-100 opacity-60"
-
-        }`}>
-
-            {mobile_app_access ? <Smartphone className="w-3 h-3" /> : <ShieldBan className="w-3 h-3" />}
-
-            {mobile_app_access ? 'Mobile Link' : 'No App'}
-
-        </div>
-
-    );
-
-  };
-
-
+export default function Index(props) {
+  const { doctors, regions, provinces, communes } = props;
+  const [isModalOpenCreate, setIsModalOpenCreate] = useState(false);
 
   return (
-
     <AuthenticatedLayout>
+      <Head title="Gestión de Profesionales" />
 
-      <Head title="Especialistas Médicos" />
+      <div className="max-w-full p-4 mx-auto sm:p-6 lg:p-8">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-10">
+          <div>
+            <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight">
+              Especialistas
+            </h2>
+            <p className="text-sm font-bold text-brand-gray uppercase tracking-widest opacity-60">
+              Administración de personal y honorarios
+            </p>
+          </div>
 
+          <button
+            onClick={() => setIsModalOpenCreate(true)}
+            className="inline-flex items-center justify-center px-8 py-4 bg-brand-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:brightness-110 transition-all shadow-xl shadow-brand-primary/20 active:scale-95"
+          >
+            <UserPlus className="w-4 h-4 mr-3" />
+            Registrar Especialista
+          </button>
+        </div>
 
-
-      <div className="min-h-screen p-6 md:p-10 bg-gray-50/50 space-y-10">
-
-        <HeaderDoctors
-
-          setSelectedDoctor={setSelectedDoctor}
-
-          setIsModalOpenDetail={setIsModalOpenDetail}
-
-        />
-
-
-
-        <Kpis doctors={doctors} />
-
-
-
-                <TableDoctors
-
-
-
-                  doctors={doctors}
-
-
-
-                  setSelectedDoctor={setSelectedDoctor}
-
-
-
-                  setIsModalOpenCommissions={setIsModalOpenCommissions}
-
-
-
-                  setIsModalOpenPatients={setIsModalOpenPatients}
-
-
-
-                  setIsModalOpenDetail={setIsModalOpenDetail}
-
-
-
-                  getStatusBadge={getStatusBadge}
-
-
-
-                  getMobileBadge={getMobileBadge}
-
-
-
-                  filters={filters}
-
-
-
-                  user={user}
-
-
-
-                />
-
+        <TableDoctors {...props} />
       </div>
 
-
-
-      {/* MODAL: TARIFARIO & COMISIONES */}
-
-      <SideModal open={isModalOpenCommissions} onClose={() => setIsModalOpenCommissions(false)} width="4xl">
-
-        <DoctorCommissions
-
-          doctor={selectedDoctor}
-
-          sessionTypes={sessionTypes}
-
-        />
-
-      </SideModal>
-
-
-
-      {/* MODAL: CARTERA DE PACIENTES */}
-
-      <SideModal open={isModalOpenPatients} onClose={() => setIsModalOpenPatients(false)} width="4xl">
-
-        <DoctorPatients
-
-          doctor={selectedDoctor}
-
-          patients={patients}
-
-        />
-
-      </SideModal>
-
-
-
-      {/* MODAL: REGISTRO & DIRECCIÓN */}
-
-      <SideModal open={isModalOpenDetail} onClose={() => setIsModalOpenDetail(false)} width="4xl">
-
+      {/* Modal solo para registrar uno NUEVO */}
+      <SideModal
+        open={isModalOpenCreate}
+        onClose={() => setIsModalOpenCreate(false)}
+        title="Nuevo Profesional"
+        subtitle="Registro de cuenta y datos básicos"
+      >
         <DoctorDetailModal
-
-          doctor={selectedDoctor}
-
-          provinces={provinces}
-
+          onClose={() => setIsModalOpenCreate(false)}
           regions={regions}
-
+          provinces={provinces}
           communes={communes}
-
-          setIsModalOpenDetail={setIsModalOpenDetail}
-
         />
-
       </SideModal>
-
     </AuthenticatedLayout>
-
   );
-
 }

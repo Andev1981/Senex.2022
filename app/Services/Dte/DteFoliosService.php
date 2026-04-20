@@ -45,32 +45,26 @@ class DteFoliosService
     }
 
     /**
-     * Reserva el siguiente folio disponible y devuelve el objeto Folios del core.
+     * Reserva el siguiente folio disponible.
      */
-    public function reservarFolio(int $companyId, string $rutEmisor, int $tipoDTE, string $environment = 'certification'): array
+    public function reservarFolio(int $companyId, int $tipoDte, string $environment = 'certification'): int
     {
         $folioReservado = null;
-        $cafData = null;
 
-        DB::transaction(function () use ($companyId, $rutEmisor, $tipoDTE, $environment, &$folioReservado, &$cafData) {
-            $rutLimpio = preg_replace('/[^0-9]/', '', $rutEmisor);
-
+        DB::transaction(function () use ($companyId, $tipoDte, $environment, &$folioReservado) {
             // Buscar el rango de folios activo para este DTE, Ambiente y Empresa
             $registroFolio = DB::table('authorized_folios')
                 ->where('company_id', $companyId)
-                ->where('tipo_dte', $tipoDTE)
+                ->where('tipo_dte', $tipoDte)
                 ->where('environment', $environment)
                 ->where('activo', true)
                 ->whereColumn('ultimo_folio_usado', '<', 'folio_hasta')
-                ->where(function($query) use ($rutLimpio) {
-                    $query->where(DB::raw("REGEXP_REPLACE(rut_emisor, '[^0-9]', '')"), $rutLimpio);
-                })
                 ->orderBy('folio_desde', 'asc') // Consumir primero el rango más antiguo
                 ->lockForUpdate()
                 ->first();
 
             if (!$registroFolio) {
-                throw new \Exception("No hay folios disponibles para RUT: $rutEmisor, DTE: $tipoDTE, Ambiente: $environment.");
+                throw new \Exception("No hay folios disponibles para Empresa #$companyId, DTE: $tipoDte, Ambiente: $environment.");
             }
 
             $siguienteFolio = $registroFolio->ultimo_folio_usado + 1;
@@ -83,14 +77,13 @@ class DteFoliosService
                 ]);
 
             $folioReservado = $siguienteFolio;
-            $cafData = $registroFolio->caf_xml;
         });
 
-        if (is_null($cafData)) {
+        if (is_null($folioReservado)) {
             throw new \Exception("Error crítico en la reserva de folio.");
         }
 
-        return [new Folios($cafData), $folioReservado];
+        return $folioReservado;
     }
 
     /**

@@ -96,23 +96,45 @@ export default function AgreementRuleFormModal({
   const handlePriceChange = (field, value) => {
     const newValue = parseInt(value) || 0;
     let updates = { [field]: newValue };
+    
     let gross = field === "gross_price_clp" ? newValue : data.gross_price_clp;
-    let patient =
-      field === "patient_share_clp" ? newValue : data.patient_share_clp;
+    let patient = field === "patient_share_clp" ? newValue : data.patient_share_clp;
 
-    const insuranceShare = Math.max(0, gross - patient);
-    updates.insurance_share_clp = insuranceShare;
+    if (field === "gross_price_clp") {
+        // Si cambia el precio bruto, mantenemos el % de cobertura actual y recalculamos montos
+        const insuranceShare = Math.round(gross * (data.insurance_percentage / 100));
+        updates.insurance_share_clp = insuranceShare;
+        updates.patient_share_clp = gross - insuranceShare;
+    } else {
+        // Si cambia el copago del paciente, recalculamos porcentajes
+        const insuranceShare = Math.max(0, gross - patient);
+        updates.insurance_share_clp = insuranceShare;
 
-    let insurancePct = 0;
-    let patientPct = 0;
-    if (gross > 0) {
-      insurancePct = Math.round((insuranceShare / gross) * 100);
-      patientPct = 100 - insurancePct;
+        if (gross > 0) {
+            const insurancePct = Math.round((insuranceShare / gross) * 100);
+            updates.insurance_percentage = insurancePct;
+            updates.patient_percentage = 100 - insurancePct;
+        }
     }
-    updates.insurance_percentage = insurancePct;
-    updates.patient_percentage = patientPct;
 
     setData((prev) => ({ ...prev, ...updates }));
+  };
+
+  const handlePctChange = (type, pct) => {
+    const gross = data.gross_price_clp;
+    const insurancePct = type === 'insurance' ? pct : 100 - pct;
+    const patientPct = 100 - insurancePct;
+    
+    const insuranceShare = Math.round(gross * (insurancePct / 100));
+    const patientShare = gross - insuranceShare;
+
+    setData(prev => ({
+        ...prev,
+        insurance_percentage: insurancePct,
+        patient_percentage: patientPct,
+        insurance_share_clp: insuranceShare,
+        patient_share_clp: patientShare
+    }));
   };
 
   return (
@@ -206,7 +228,7 @@ export default function AgreementRuleFormModal({
           </h3>
 
           <div className="relative z-10 grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <label className="ml-1 enterprise-label">
                 Precio Bruto (SII/Convenio)
               </label>
@@ -217,8 +239,9 @@ export default function AgreementRuleFormModal({
                 }
                 className="!rounded-2xl !py-4 !px-5 font-black text-lg bg-white shadow-sm border-gray-100"
               />
+              <p className="text-[9px] font-bold text-gray-400 ml-2 uppercase">Valor total de la prestación antes de coberturas</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <label className="enterprise-label !text-red-600 ml-1">
                 Copago Paciente
               </label>
@@ -229,33 +252,60 @@ export default function AgreementRuleFormModal({
                 }
                 className="!rounded-2xl !py-4 !px-5 font-black text-lg bg-white shadow-sm border-red-100 text-red-700"
               />
+              <p className="text-[9px] font-bold text-red-400 ml-2 uppercase">Monto final que pagará el paciente en caja</p>
             </div>
           </div>
 
-          <div className="relative z-10 grid grid-cols-1 gap-6 pt-4 md:grid-cols-3">
-            <div className="p-5 bg-white border border-gray-100 shadow-sm rounded-2xl">
-              <p className="enterprise-label !text-[8px] opacity-60 mb-1">
-                Aporte Isapre/Fonasa
-              </p>
-              <p className="font-mono text-sm font-black text-green-600">
-                ${data.insurance_share_clp.toLocaleString("es-CL")}
-              </p>
+          {/* SELECTOR DE PORCENTAJES INTEGRADO */}
+          <div className="relative z-10 grid grid-cols-1 gap-6 pt-4 md:grid-cols-2">
+            {/* Cobertura (%) */}
+            <div className="p-6 border shadow-sm bg-white rounded-3xl border-gray-100 space-y-4">
+               <div className="flex justify-between items-center">
+                  <p className="enterprise-label !text-[10px] text-brand-primary !mb-0">Cobertura Seguro (%)</p>
+                  <span className="font-mono text-xl font-black text-brand-primary">{data.insurance_percentage}%</span>
+               </div>
+               <div className="relative">
+                  <select
+                    value={data.insurance_percentage}
+                    onChange={(e) => handlePctChange('insurance', parseInt(e.target.value))}
+                    className="w-full px-5 py-4 text-sm font-black transition-all border-gray-100 rounded-2xl focus:ring-brand-primary bg-gray-50/50 appearance-none cursor-pointer"
+                  >
+                    {Array.from({ length: 101 }, (_, i) => i).map(p => (
+                        <option key={`ins-opt-${p}`} value={p}>{p}% de Cobertura</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
+                     <Percent className="w-4 h-4 text-brand-primary/40" />
+                  </div>
+               </div>
+               <div className="pt-2 border-t border-gray-50">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase">Monto Aporte: <span className="text-gray-900 font-mono font-black">${data.insurance_share_clp.toLocaleString("es-CL")}</span></p>
+               </div>
             </div>
-            <div className="p-5 border border-red-100 shadow-sm bg-red-50 rounded-2xl">
-              <p className="enterprise-label !text-[8px] text-red-600 mb-1">
-                Copago (%)
-              </p>
-              <p className="font-mono text-sm font-black text-red-700">
-                {data.patient_percentage}%
-              </p>
-            </div>
-            <div className="p-5 border shadow-sm bg-brand-secondary/10 rounded-2xl border-brand-secondary/20">
-              <p className="enterprise-label !text-[8px] text-brand-primary mb-1">
-                Cobertura (%)
-              </p>
-              <p className="font-mono text-sm font-black text-brand-primary">
-                {data.insurance_percentage}%
-              </p>
+
+            {/* Copago (%) */}
+            <div className="p-6 border shadow-sm bg-white rounded-3xl border-gray-100 space-y-4">
+               <div className="flex justify-between items-center">
+                  <p className="enterprise-label !text-[10px] text-red-600 !mb-0">Copago Paciente (%)</p>
+                  <span className="font-mono text-xl font-black text-red-700">{data.patient_percentage}%</span>
+               </div>
+               <div className="relative">
+                  <select
+                    value={data.patient_percentage}
+                    onChange={(e) => handlePctChange('patient', parseInt(e.target.value))}
+                    className="w-full px-5 py-4 text-sm font-black transition-all border-gray-100 rounded-2xl focus:ring-brand-primary bg-gray-50/50 appearance-none cursor-pointer"
+                  >
+                    {Array.from({ length: 101 }, (_, i) => i).map(p => (
+                        <option key={`pat-opt-${p}`} value={p}>{p}% de Copago</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
+                     <Percent className="w-4 h-4 text-red-400/40" />
+                  </div>
+               </div>
+               <div className="pt-2 border-t border-gray-50">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase">Monto Paciente: <span className="text-gray-900 font-mono font-black">${data.patient_share_clp.toLocaleString("es-CL")}</span></p>
+               </div>
             </div>
           </div>
         </div>

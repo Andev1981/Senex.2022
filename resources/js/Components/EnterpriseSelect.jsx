@@ -44,7 +44,7 @@ const EnterpriseSelect = ({
                         ${error ? 'border-red-500 ring-red-100' : ''}
                     `}
                 >
-                    <option value="" disabled>{placeholder}</option>
+                    {placeholder && <option value="">{placeholder}</option>}
                     {options.map((option) => (
                         <option key={option.value} value={option.value}>
                             {option.label}

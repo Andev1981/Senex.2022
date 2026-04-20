@@ -85,23 +85,30 @@ class TreatmentSessionService
                 $commissionPercentage = $doctorCommission->commission_percentage;
                 
             } else {
-                // CASO 2: NO HAY REGLA -> VERIFICAR CONFIRMACIÓN
+                // CASO 2: NO HAY REGLA -> VERIFICAR CONFIRMACIÓN (SOLO PARA ADMINS)
                 $defaultAmount = $sessionType->default_doctor_commission_clp ?? 0;
 
-                // Si NO viene confirmado explícitamente, lanzamos alerta para el Frontend
-                if (empty($data['confirm_defaults'])) {
+                // Solo pedir confirmación si el usuario es Admin. 
+                // Si no es admin, procedemos con el valor por defecto sin preguntar (evita fuga de info).
+                $isAdmin = auth()->user() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'));
+
+                if ($isAdmin && empty($data['confirm_defaults'])) {
                     throw new \Exception("COMMISSION_CONFIRMATION_NEEDED:{$defaultAmount}");
                 }
 
-                Log::info("⚠️ Usando comisión por defecto (SessionType) tras confirmación para Dr. {$doctor->id}. Monto: {$defaultAmount}");
+                if (!$isAdmin) {
+                    Log::info("Usuario no admin creando sesión sin comisión configurada. Usando default silencioso.");
+                } else {
+                    Log::info("⚠️ Usando comisión por defecto (SessionType) tras confirmación de Admin para Dr. {$doctor->id}. Monto: {$defaultAmount}");
+                }
                 
                 $doctorAmount = $defaultAmount;
                 $commissionType = 'default_session_type';
             }
 
-            // Asignación de montos finales
-            if (!isset($data['patient_amount_clp'])) {
-                $data['patient_amount_clp'] = $sessionType['base_price_clp'];
+            // Asignación de montos finales (Aseguramos que siempre tenga el arancel base del servicio)
+            if (empty($data['patient_amount_clp']) || (int)$data['patient_amount_clp'] === 0) {
+                $data['patient_amount_clp'] = (int)($sessionType->base_price_clp ?? 0);
             }
 
             // Si se encontró comisión específica, usamos su método de cálculo. 
@@ -124,11 +131,17 @@ class TreatmentSessionService
             $this->assignPatientToDoctor($data['patient_id'], $data['doctor_id'], $data['company_id'], $data['branch_id']);
 
             // ============================================
-            // 2.- Buscar o crear tratamiento
+            // 2.- Buscar o crear tratamiento (Garantizar consistencia)
             // ============================================
-            if (!isset($data['treatment_id'])) {
+            if (empty($data['treatment_id'])) {
+                Log::info("Creando/Buscando tratamiento automático para paciente {$data['patient_id']}");
                 $treatment = $this->treatmentService->createTreatmentFromSession($data);
                 $data['treatment_id'] = $treatment->id;
+            }
+
+            // Aseguramos que el treatment_id no sea nulo al llegar aquí
+            if (empty($data['treatment_id'])) {
+                throw new \RuntimeException('No se pudo determinar un tratamiento para la sesión.');
             }
 
             if (!isset($data['month_session_number'])) {
@@ -143,7 +156,8 @@ class TreatmentSessionService
             // ============================================
             // 3.- Guardar snapshot de comisión
             // ============================================
-            // Ya calculamos commission_amount_clp arriba
+            $data['doctor_amount_clp'] = (int)($doctorAmount ?? 0);
+            $data['clinic_amount_clp'] = (int)($data['patient_amount_clp'] - ($doctorAmount ?? 0));
             $data['commission_percentage'] = $commissionPercentage;
             $data['commission_type'] = $commissionType;
 

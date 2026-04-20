@@ -14,6 +14,8 @@ class DteConfiguration extends Model
     protected $fillable = [
         'company_id',
         'company_rut',
+        'acteco',
+        'signer_rut',
         'certificate_path',
         'certificate_password',
         'environment',

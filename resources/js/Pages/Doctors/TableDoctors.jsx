@@ -27,16 +27,10 @@ import {
 import TablePagination from "@/components/TablePagination";
 import { fmtCLP } from "@/utils/utils";
 
-import { router } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 
 export default function TableDoctors({
   doctors,
-  setSelectedDoctor,
-  setIsModalOpenCommissions,
-  setIsModalOpenPatients,
-  setIsModalOpenDetail,
-  getStatusBadge,
-  getMobileBadge,
   filters,
   user,
 }) {
@@ -45,6 +39,31 @@ export default function TableDoctors({
   const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
   const [columnFilters, setColumnFilters] = useState([]);
+
+  // Definición de insignias locales para evitar errores de prop faltante
+  const getStatusBadge = (status) => {
+    const config = {
+        active: { label: 'Operativo', class: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+        suspended: { label: 'Suspendido', class: 'bg-amber-100 text-amber-700 border-amber-200' },
+        cancelled: { label: 'Inactivo', class: 'bg-gray-100 text-gray-400 border-gray-200' },
+    };
+    const current = config[status] || config.active;
+    return (
+        <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${current.class}`}>
+            {current.label}
+        </span>
+    );
+  };
+
+  const getMobileBadge = (hasAccess) => {
+    return hasAccess ? (
+        <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[8px] font-black uppercase rounded-lg border border-blue-100 shadow-sm flex items-center gap-1.5 w-fit mx-auto">
+            <div className="w-1 h-1 bg-blue-600 rounded-full animate-pulse" /> Mobile OK
+        </span>
+    ) : (
+        <span className="px-3 py-1 bg-gray-50 text-gray-400 text-[8px] font-black uppercase rounded-lg border border-gray-100 opacity-60 w-fit mx-auto block">Sin Acceso</span>
+    );
+  };
 
   // Estados para los filtros locales
   const [filterspeciality, setFilterspeciality] = useState("");
@@ -195,15 +214,13 @@ export default function TableDoctors({
           header: "Gestión",
           cell: ({ row }) => (
             <div className="flex items-center justify-end gap-1.5">
-              <button
+              <Link
+                href={route("doctors.show", row.original.id)}
                 className="p-2 cursor-pointer transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
-                onClick={() => (
-                  setSelectedDoctor(row.original), setIsModalOpenDetail(true)
-                )}
-                title="Perfil & Dirección"
+                title="Ver Ficha Detallada"
               >
                 <Eye className="w-4 h-4" />
-              </button>
+              </Link>
               <button
                 className="p-2 cursor-pointer text-indigo-600 transition-all border border-indigo-100 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white active:scale-90"
                 onClick={() => (
@@ -227,19 +244,11 @@ export default function TableDoctors({
           enableSorting: false,
         },
       ];
-      if (user && user.roles.some(role => role.name === 'superadmin')) {
-        baseColumns.splice(0, 0, {
-          accessorKey: "company_id",
-          header: "Company ID",
-        });
-      }
+
       return baseColumns;
     },
     [
       doctors,
-      setIsModalOpenCommissions,
-      setIsModalOpenPatients,
-      setIsModalOpenDetail,
       user,
     ]
   );
@@ -405,7 +414,7 @@ export default function TableDoctors({
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-6 py-5 text-left cursor-pointer select-none group"
+                      className="px-4 py-3 text-left cursor-pointer select-none group"
                       onClick={header.column.getToggleSortingHandler()}
                     >
                       <div
@@ -469,7 +478,7 @@ export default function TableDoctors({
                     className="transition-all hover:bg-brand-secondary/5 group"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-6 py-3 whitespace-nowrap">
+                      <td key={cell.id} className="px-4 py-2 whitespace-nowrap">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

@@ -30,6 +30,35 @@ class PosService
             'card_digits' => '4502',
             'raw' => ['status' => 'APPROVED_SIMULATED']
         ];
+
+        /*
+        // --- LÓGICA REAL: CONEXIÓN A TERMINAL TRANSBANK (Integrado) ---
+        try {
+            // El endpoint suele ser servido por el Agente de Transbank instalado en el PC de la caja
+            $response = Http::timeout(60)->post("{$this->baseUrl}/sale", [
+                'amount'            => (int) $amount,
+                'ticket_number'     => $ticketNumber,
+                'collect_card_data' => true
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                // responseCode 0 indica aprobación exitosa del terminal
+                if (isset($data['responseCode']) && $data['responseCode'] === 0) {
+                    return [
+                        'success'            => true,
+                        'authorization_code' => $data['authorizationCode'] ?? '000000',
+                        'card_digits'        => $data['last4Digits'] ?? '****',
+                        'raw'                => $data
+                    ];
+                }
+            }
+            return ['success' => false, 'error' => 'Transacción rechazada por el terminal o tarjeta inválida.'];
+        } catch (\Exception $e) {
+            Log::error("Fallo comunicación POS Físico: " . $e->getMessage());
+            return ['success' => false, 'error' => 'No se pudo conectar con la máquina POS. Verifique que el Agente Transbank esté corriendo.'];
+        }
+        */
     }
 
     public function abortTransaction()

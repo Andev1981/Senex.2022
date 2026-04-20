@@ -46,8 +46,13 @@ use App\Http\Controllers\Admin\Clients\{
 
 /* Companies */
 use App\Http\Controllers\Admin\Companies\{
-  CompanyController,
+    CompanyController,
   CompanySwitchController
+};
+
+/* Companies */
+use App\Http\Controllers\Admin\Branches\{
+    BranchController
 };
 
 /* Doctors */
@@ -240,8 +245,11 @@ Route::middleware(['auth'])->group(function () {
   // Pagos Internos
   Route::resource('payments', PaymentsController::class)->names('payments');
   Route::post('payment/process', [PaymentsController::class, 'processPayment'])->name('payments.process');
-  
-  // Webpay Administrativo (Autenticado)
+  Route::get('patients/{id}/status', [PaymentsController::class, 'getPatientStatus'])->name('patients.status');
+  Route::post('payments/pos/abort', [PaymentsController::class, 'abortPos'])->name('payments.pos.abort');
+  Route::get('payments/{uuid}/success', [PaymentsController::class, 'success'])->name('payments.success');
+  Route::get('payments/{uuid}/pdf/{download?}', [PaymentsController::class, 'downloadReceiptPdf'])->name('payments.receipt.pdf');
+  Route::get('payments/{uuid}/receipt-pdf', [PaymentsController::class, 'downloadReceiptPdf'])->name('payments.pdf'); // Alias funcional  // Webpay Administrativo (Autenticado)
   Route::prefix('payments/webpay')->name('payments.webpay.')->group(function () {
       Route::post('/session/{session}', [WebpayController::class, 'initSessionPayment'])->name('session');
       Route::post('/sessions/multiple', [WebpayController::class, 'initMultipleSessionsPayment'])->name('sessions.multiple');
@@ -253,15 +261,70 @@ Route::middleware(['auth'])->group(function () {
   // Retorno Webpay Administrativo
   Route::match(['GET', 'POST'], '/payments/webpay/return', [WebpayController::class, 'return'])->name('payments.webpay.return');
 
+  // Liquidaciones (Payroll)
+  Route::prefix('payrolls')->name('payrolls.')->group(function () {
+      Route::post('preview', [PayrollController::class, 'preview'])->name('preview');
+      Route::post('{payroll}/approve', [PayrollController::class, 'approve'])->name('approve');
+      Route::post('{payroll}/paid', [PayrollController::class, 'markPaid'])->name('paid');
+      Route::get('{payroll}/pdf', [PayrollController::class, 'downloadPdf'])->name('pdf');
+  });
+  Route::resource('payrolls', PayrollController::class)->names('payrolls');
+
+  // Adquisiciones y Proveedores
+  Route::prefix('acquisitions')->name('acquisitions.')->group(function () {
+      Route::resource('suppliers', SupplierController::class)->names('suppliers');
+      Route::resource('purchase-orders', PurchaseOrderController::class)->names('purchase-orders');
+  });
+
+  // Finanzas / Cuentas por Cobrar
+  Route::prefix('finance')->name('finance.')->group(function () {
+      Route::get('receivables', [ReceivablesController::class, 'index'])->name('receivables.index');
+  });
+
+  // Panel Kinesiólogo (Mobile/Dashboard)
+  Route::prefix('kine')->name('kine.')->group(function () {
+      Route::get('/dashboard', [DashboardMobileController::class, 'index'])->name('dashboard');
+      Route::post('/dashboard/refresh', [DashboardMobileController::class, 'refreshKpis'])->name('dashboard.refresh');
+      
+      // My Patients & My Sessions (Rutas placeholder o vinculadas a controladores móviles)
+      Route::get('/my-patients', [DashboardMobileController::class, 'index'])->name('my-patients'); 
+      Route::get('/my-sessions', [DashboardMobileController::class, 'index'])->name('my-sessions');
+  });
+
   // Productos
   Route::resource('products', ProductController::class);
+  Route::resource('categories', \App\Http\Controllers\Admin\Products\CategoryController::class);
 
   // Otros Módulos
   Route::resource('companies', CompanyController::class);
+  Route::post('companies/{company}/dte-config', [DteConfigurationController::class, 'storeOrUpdate'])->name('companies.dte_config.store');
+  Route::get('companies/{company}/folios', [AuthorizedFolioController::class, 'index'])->name('companies.folios.index');
+  Route::post('companies/{company}/folios', [AuthorizedFolioController::class, 'store'])->name('companies.folios.store');
+
+  // Módulo DTE / Documentos
+  Route::get('documents', [DteController::class, 'index'])->name('documents');
+  Route::post('documents', [DteController::class, 'store'])->name('documents.store');
+  Route::post('documents/{invoice}/issue', [DteController::class, 'issueDte'])->name('dte.issue');
+  Route::get('documents/{invoice}/status', [DteController::class, 'checkDteStatus'])->name('dte.status');
+  Route::get('documents/lookup/{folio}', [DteController::class, 'lookupByFolio'])->name('dte.lookup');
+
+  // Datos Externos
+  Route::get('external-data/company/{rut}', [DteController::class, 'consultContribuyente'])->name('external-data.company');
+  Route::get('external-data/search-name', [ExternalDataController::class, 'searchByName'])->name('external-data.search-name');
+
+  Route::resource('branches', BranchController::class);
+  
+  Route::prefix('doctors')->name('doctors.')->group(function () {
+      Route::post('{doctor}/assign-patient', [DoctorAdminController::class, 'assignPatient'])->name('patients.assign');
+      Route::delete('{doctor}/unassign-patient/{patient}', [DoctorAdminController::class, 'unassignPatient'])->name('patients.unassign');
+      Route::post('check-existing', [DoctorAdminController::class, 'checkExisting'])->name('check-existing');
+      Route::post('{doctor}/commission-rules', [DoctorAdminController::class, 'updateCommissionRules'])->name('commissions.update');
+  });
   Route::resource('doctors', DoctorAdminController::class)->names('doctors');
   Route::resource('plans', PlanController::class)->names('plans');
   Route::resource('insurances', InsuranceController::class)->names('insurances');
   Route::resource('agreements', AgreementController::class)->names('agreements');
+  Route::resource('agreement-rules', AgreementRuleController::class)->names('agreement.rules');
   Route::resource('session-types', SessionTypeController::class)->names('session-types');
   Route::get('informes', [ReportsController::class, 'index'])->name('informes');
 

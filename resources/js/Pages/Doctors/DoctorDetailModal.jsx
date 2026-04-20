@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "@inertiajs/react";
+import axios from "axios"; // <--- Importar axios
 import InputLabel from "@/components/InputLabel";
 import InputError from "@/components/InputError";
 import TextInput from "@/components/TextInput";
@@ -176,9 +177,22 @@ export default function DoctorDetailModal({
                         options={[
                             { value: 'active', label: 'Activo' },
                             { value: 'suspended', label: 'Suspendido' },
-                            { value: 'cancelled', label: 'Cancelado' },
+                            { value: 'cancelled', label: 'Inactivo' },
                         ]}
                     />
+                    {data.status !== 'active' && (
+                        <div className="mt-4 animate-in slide-in-from-top-2 duration-300">
+                            <label className="enterprise-label ml-1 text-red-600">Motivo del Cambio *</label>
+                            <TextInput 
+                                value={data.status_reason} 
+                                onChange={e => setData("status_reason", e.target.value)} 
+                                placeholder="Ej: Licencia médica, Vacaciones..." 
+                                required 
+                                className="w-full !border-red-100 !bg-red-50/30"
+                            />
+                            <InputError message={errors.status_reason} />
+                        </div>
+                    )}
                 </div>
                 <div className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">

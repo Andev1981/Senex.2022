@@ -261,14 +261,14 @@ export default function ResourceFormModal({
     return map[columns] || "md:grid-cols-2";
   }, [columns]);
 
-  // Reset al abrir y cuando cambian los initialValues
+  // Reset al abrir: Solo cuando 'open' cambia a true
   useEffect(() => {
     if (open) {
       reset(initialValues);
       clearErrors();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, JSON.stringify(initialValues)]);
+  }, [open]); // Eliminamos JSON.stringify(initialValues) para evitar bucles infinitos
 
   // Detecta si hay campo file (también soporta `isFile: true` en el schema)
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 namespace App\Services\Treatments;
 
+use App\Enums\TreatmentStatusEnum;
 use App\Models\SessionType;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
@@ -96,9 +97,8 @@ class TreatmentService
                 ->first();
 
             // Si encontramos uno activo reciente, ASUMIMOS que la sesión es para ese.
-            // NOTA: Si el Kine quería uno nuevo para otra lesión, debió crearlo manualmente en el Dashboard.
-            // Este método automático asume continuidad por defecto.
             if ($activeTreatment) {
+                Log::info("Reutilizando tratamiento activo ID {$activeTreatment->id} para nueva sesión del paciente {$patientId}");
                 return $activeTreatment;
             }
 

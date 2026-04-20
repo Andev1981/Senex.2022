@@ -78,6 +78,16 @@ class Doctor extends Model
         return $this->hasMany(TreatmentSession::class);
     }
 
+    public function treatmentSessions(): HasMany
+    {
+        return $this->sessions();
+    }
+
+    public function payrolls(): HasMany
+    {
+        return $this->hasMany(Payroll::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -122,7 +132,7 @@ class Doctor extends Model
     public function sessionsMonth(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->sessions()
+            get: fn() => $this->treatmentSessions()
                 ->where('company_id', $this->company_id)
                 ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
                 ->whereMonth('date', now()->month)
@@ -135,7 +145,7 @@ class Doctor extends Model
     public function revenueMonth(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->sessions()
+            get: fn() => $this->treatmentSessions()
                 ->where('company_id', $this->company_id)
                 ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
                 ->whereMonth('date', now()->month)
@@ -148,7 +158,7 @@ class Doctor extends Model
     public function pendingSessionsCount(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->sessions()
+            get: fn() => $this->treatmentSessions()
                 ->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)
                 ->where('date', '>=', now()->toDateString())
                 ->count()

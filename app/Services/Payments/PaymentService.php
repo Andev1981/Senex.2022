@@ -10,6 +10,8 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Patient;
 use App\Models\Receivable;
+use App\Enums\FinanceStatusEnum;
+use App\Enums\DteStatusEnum;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -30,16 +32,21 @@ class PaymentService
     public function processPayment(array $data): Payment
     {
         return DB::transaction(function () use ($data) {
+            // Determinar el monto de forma robusta
+            $amount_clp = $data['amount_clp'] 
+                ?? $data['amount_total_clp'] 
+                ?? data_get($data, 'final_shares.amount_patient_clp', 0);
+
             // 1. Crear el Registro de Pago
             $payment = Payment::create([
                 'uuid' => (string) Str::uuid(),
                 'user_id' => auth()->id(),
-                'company_id' => session('current_company_id'),
-                'branch_id' => session('current_branch_id'),
+                'company_id' => $data['company_id'] ?? session('current_company_id'),
+                'branch_id' => $data['branch_id'] ?? session('active_branch_id'),
                 'patient_id' => $data['patient_id'],
-                'amount_clp' => $data['amount_clp'],
+                'amount_clp' => $amount_clp,
                 'payment_date' => $data['payment_date'] ?? now(),
-                'payment_method' => $data['payment_method'],
+                'payment_method' => $data['payment_details']['payment_method'] ?? $data['payment_method'],
                 'transaction_reference' => $data['transaction_reference'] ?? null,
                 'status' => 'completed',
                 'paid_at' => now(),
@@ -269,10 +276,150 @@ class PaymentService
     }
 
     /**
+     * Procesa la compra de un plan para un paciente.
+     */
+    public function processPlanPurchase(int $patientId, int $planId, array $paymentDetails): Payment
+    {
+        return DB::transaction(function () use ($patientId, $planId, $paymentDetails) {
+            $plan = \App\Models\Plan::findOrFail($planId);
+            $patient = \App\Models\Patient::findOrFail($patientId);
+            $companyId = $patient->company_id;
+
+            // 1. Crear el Pago
+            $payment = Payment::create([
+                'company_id' => $companyId,
+                'branch_id' => $paymentDetails['branch_id'],
+                'user_id' => auth()->id(),
+                'patient_id' => $patientId,
+                'amount_gross_clp' => $plan->price,
+                'amount_clp' => $plan->price,
+                'payment_method' => $paymentDetails['payment_method'],
+                'payment_date' => $paymentDetails['payment_date'] ?? now(),
+                'transaction_reference' => $paymentDetails['transaction_reference'],
+                'status' => 'completed',
+                'paid_at' => now(),
+            ]);
+
+            // 2. Activar el Plan (Suscribir al paciente)
+            $patientPlan = \App\Models\PatientPlan::create([
+                'company_id' => $companyId,
+                'patient_id' => $patientId,
+                'plan_id' => $planId,
+                'payment_id' => $payment->id,
+                'start_date' => now(),
+                'end_date' => now()->addMonths($plan->valid_months ?? 12),
+                'total_sessions' => $plan->total_sessions,
+                'remaining_sessions' => $plan->total_sessions,
+                'status' => 'active',
+            ]);
+
+            // 3. Generar la Factura (Invoice) vinculada al Plan
+            $invoice = Invoice::create([
+                'company_id' => $companyId,
+                'branch_id' => $paymentDetails['branch_id'],
+                'user_id' => auth()->id(),
+                'patient_id' => $patientId,
+                'entity_type' => 'Patient',
+                'entity_id' => $patientId,
+                'net_amount_clp' => 0,
+                'exempt_amount_clp' => $plan->price,
+                'vat_amount_clp' => 0,
+                'total_amount_clp' => $plan->price,
+                'amount_gross_clp' => $plan->price,
+                'amount_patient_clp' => $plan->price,
+                'issue_date' => now(),
+                'dte_type' => Invoice::TYPE_BOLETA_EXENTA,
+                'dte_status' => DteStatusEnum::PENDING,
+                'payment_status' => FinanceStatusEnum::PAID,
+            ]);
+
+            // 4. Crear el ítem de la factura
+            $invoice->items()->create([
+                'company_id' => $companyId,
+                'branch_id' => $paymentDetails['branch_id'],
+                'sellable_type' => 'App\Models\Plan',
+                'sellable_id' => $planId,
+                'description' => "Compra de Plan: " . $plan->name,
+                'quantity' => 1,
+                'unit_price_clp' => $plan->price,
+                'unit_patient_clp' => $plan->price,
+                'total_gross_clp' => $plan->price,
+                'total_patient_clp' => $plan->price,
+                'is_exento' => true,
+            ]);
+
+            // 5. Vincular Pago con Factura
+            $payment->paymentAllocations()->create([
+                'company_id' => $companyId,
+                'invoice_id' => $invoice->id,
+                'amount_clp' => $plan->price,
+            ]);
+
+            Log::info("Plan {$plan->name} adquirido exitosamente por paciente {$patientId}. Pago ID: {$payment->id}");
+
+            return $payment;
+        });
+    }
+
+    /**
      * Asigna un pago a un plan específico
      */
     public function allocateToPlan(Payment $payment, int $planId): void
     {
         // Lógica para asignar a plan (por implementar)
+    }
+
+    /**
+     * Crea una factura pendiente (deuda) para una sesión de tratamiento.
+     */
+    public function createPendingInvoiceForSession(TreatmentSession $session): Invoice
+    {
+        return DB::transaction(function () use ($session) {
+            // 1. Crear el Encabezado de la Factura (Pendiente)
+            $invoice = Invoice::create([
+                'company_id' => $session->company_id,
+                'branch_id' => $session->branch_id,
+                'user_id' => auth()->id() ?? $session->user_id,
+                'patient_id' => $session->patient_id,
+                'entity_type' => 'Patient',
+                'entity_id' => $session->patient_id,
+                
+                // Montos
+                'net_amount_clp' => 0,
+                'exempt_amount_clp' => (int)$session->patient_amount_clp,
+                'vat_amount_clp' => 0,
+                'total_amount_clp' => (int)$session->patient_amount_clp,
+                
+                'amount_gross_clp' => (int)$session->patient_amount_clp,
+                'amount_patient_clp' => (int)$session->patient_amount_clp,
+                
+                'issue_date' => now(),
+                'dte_type' => Invoice::TYPE_BOLETA_EXENTA, // Por defecto para salud exento (41)
+                'dte_status' => DteStatusEnum::PENDING,
+                'payment_status' => FinanceStatusEnum::UNPAID,
+            ]);
+
+            // 2. Crear el ítem vinculado
+            // Apuntamos sellable al SessionType para consistencia con reportes de ventas,
+            // pero mantenemos treatment_session_id para saber EXACTAMENTE qué cita se cobra.
+            $invoice->items()->create([
+                'company_id' => $session->company_id,
+                'branch_id' => $session->branch_id,
+                'sellable_type' => 'App\Models\SessionType',
+                'sellable_id' => $session->session_type_id,
+                'treatment_session_id' => $session->id,
+                'description' => $session->sessionType?->name ?? 'Sesión Médica',
+                'quantity' => 1,
+                'unit_price_clp' => (int)$session->patient_amount_clp,
+                'unit_patient_clp' => (int)$session->patient_amount_clp,
+                'total_gross_clp' => (int)$session->patient_amount_clp,
+                'total_patient_clp' => (int)$session->patient_amount_clp,
+                'is_exento' => true,
+            ]);
+
+            Log::info("Deuda (Invoice Unpaid) creada para sesión {$session->id}, monto: {$session->patient_amount_clp}");
+
+            return $invoice;
+        });
     }
 }

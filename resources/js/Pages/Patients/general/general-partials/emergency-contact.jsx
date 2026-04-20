@@ -9,23 +9,23 @@ export default function EmergencyContact({ patient, contact }) {
 
   const contactSchema = useMemo(
     () => [
-      { name: "name", label: "Nombre", type: "text", required: true },
+      { name: "contact_name", label: "Nombre", type: "text", required: true },
       {
-        name: "email",
+        name: "contact_email",
         label: "Email",
         type: "email",
         placeholder: "persona@correo.cl",
         required: true,
       },
       {
-        name: "phone",
+        name: "contact_phone",
         label: "Teléfono",
         type: "tel",
         placeholder: "+56 9 1234 5678",
         help: "Ej: +56 9 1234 5678",
       },
       {
-        name: "relationship",
+        name: "contact_relationship",
         label: "Parentesco",
         type: "select",
         options: [
@@ -64,24 +64,8 @@ export default function EmergencyContact({ patient, contact }) {
         ],
       },
       {
-        name: "type",
-        label: "Tipo de Contacto",
-        type: "select",
-        options: [
-          { value: "emergency", label: "Emergencia" },
-          { value: "guardian", label: "Apoderado" },
-          { value: "other", label: "Otro" },
-        ],
-      },
-      {
-        type: "hidden",
-        name: "is_active",
-        label: "",
-        placeholder: "Contacto principal",
-      },
-      {
-        type: "hidden",
         name: "patient_id",
+        type: "hidden",
       },
     ],
     [patient, mainContact]
@@ -134,7 +118,7 @@ export default function EmergencyContact({ patient, contact }) {
           </div>
           <div className="col-span-2 pt-4 border-t border-gray-100">
             <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black bg-white border border-gray-100 text-brand-gray uppercase tracking-[0.2em] shadow-sm">
-                Rol: {t("contactType", mainContact?.type) || 'Emergencia'}
+                Rol: {mainContact?.type === 'guardian' ? 'Apoderado' : 'Emergencia'}
             </span>
           </div>
         </div>
@@ -151,24 +135,21 @@ export default function EmergencyContact({ patient, contact }) {
         }
         submitLabel={mainContact?.id ? "Actualizar" : "Crear"}
         schema={contactSchema}
-        submitRoute={
-          mainContact?.id
-            ? route("patients.contacts.update", {
-                patientContact: mainContact?.id,
-              })
-            : route("patients.contacts.store", patient.id)
-        }
-        method={mainContact?.id ? "patch" : "post"}
+        submitRoute={route("patients.update", patient.id)}
+        method="patch"
         initialValues={{
-          patient_id: patient?.id ?? null,
-          name: mainContact?.name ?? null,
-          email: mainContact?.email ?? null,
-          phone: mainContact?.phone ?? null,
-          relationship: mainContact?.relationship ?? null,
-          type: mainContact?.type ?? null,
-          is_active: mainContact?.is_active ?? true,
+          name: patient.name,
+          last_name: patient.last_name,
+          rut: patient.rut,
+          email: patient.email,
+          birth_date: patient.birth_date,
+          phone: patient.phone,
+          contact_name: mainContact?.name ?? null,
+          contact_email: mainContact?.email ?? null,
+          contact_phone: mainContact?.phone ?? null,
+          contact_relationship: mainContact?.relationship ?? null,
         }}
-        afterSubmitReloadOnly={["patient", "mainContact"]}
+        afterSubmitReloadOnly={["patient"]}
         columns={3}
         maxWidth={"3xl"}
         key={`cont-${mainContact?.id ?? "new"}`}

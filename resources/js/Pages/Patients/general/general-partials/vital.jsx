@@ -195,14 +195,16 @@ export default function Vital({ patient, vital }) {
         title="Datos Vitales Paciente"
         description={vital?.id ? "Editar datos vitales" : "Crear datos vitales"}
         schema={vitalSchema}
-        submitRoute={
-          vital?.id
-            ? route("patients.vitals.update", vital?.id)
-            : route("patients.vitals.store")
-        }
+        submitRoute={route("patients.update", patient.id)}
         submitLabel={vital?.id ? "Actualizar" : "Crear"}
-        method={vital?.id ? "patch" : "post"}
+        method="patch"
         initialValues={{
+          name: patient.name,
+          last_name: patient.last_name,
+          rut: patient.rut,
+          email: patient.email,
+          birth_date: patient.birth_date,
+          phone: patient.phone,
           patient_id: patient?.id ?? null,
           height_cm: vital?.height_cm ?? null,
           weight_kg: vital?.weight_kg ?? null,
@@ -210,9 +212,9 @@ export default function Vital({ patient, vital }) {
           bp_systolic: vital?.bp_systolic ?? null,
           resp_rate: vital?.resp_rate ?? null,
           heart_rate: vital?.heart_rate ?? null,
-          spo2: vital?.spo2 ?? true,
-          temperature_c: vital?.temperature_c ?? true,
-          blood_type: vital?.blood_type ?? true,
+          spo2: vital?.spo2 ?? null,
+          temperature_c: vital?.temperature_c ?? null,
+          blood_type: vital?.blood_type ?? null,
         }}
         afterSubmitReloadOnly={["patient"]}
         columns={3}

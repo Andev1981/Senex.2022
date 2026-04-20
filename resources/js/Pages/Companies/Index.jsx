@@ -64,19 +64,39 @@ export default function Index({ companies }) {
         id: "estado_dte",
         header: "Certificación SII",
         accessorFn: (row) => (row.is_configured ? "Activo" : "Pendiente"),
-        cell: ({ getValue }) => (
-          <div className="text-center">
-            {getValue() === "Activo" ? (
-              <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-[9px] font-black bg-green-50 text-green-600 uppercase tracking-widest border border-green-100">
-                <CheckCircle className="w-3 h-3 mr-2" /> DTE Activo
+        cell: ({ row }) => {
+          const company = row.original;
+          if (!company.is_configured) {
+            return (
+              <div className="flex justify-center">
+                <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-[9px] font-black bg-amber-50 text-amber-600 uppercase tracking-widest border border-amber-100 shadow-sm">
+                  <AlertTriangle className="w-3 h-3 mr-2" /> No Configurado
+                </span>
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex flex-col items-center gap-1">
+              <span className={`inline-flex items-center px-4 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border shadow-sm ${
+                company.is_expired 
+                ? 'bg-red-50 text-red-600 border-red-100' 
+                : 'bg-green-50 text-green-600 border-green-100'
+              }`}>
+                {company.is_expired ? (
+                  <><AlertTriangle className="w-2.5 h-2.5 mr-1.5" /> Expirado</>
+                ) : (
+                  <><CheckCircle className="w-2.5 h-2.5 mr-1.5" /> {company.dte_environment === 'production' ? 'Producción' : 'Certificación'}</>
+                )}
               </span>
-            ) : (
-              <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-[9px] font-black bg-amber-50 text-amber-600 uppercase tracking-widest border border-amber-100">
-                <AlertTriangle className="w-3 h-3 mr-2" /> No Configurado
-              </span>
-            )}
-          </div>
-        ),
+              {company.dte_expiration && (
+                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">
+                  Vence: {new Date(company.dte_expiration).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: '2-digit' })}
+                </p>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: "actions",

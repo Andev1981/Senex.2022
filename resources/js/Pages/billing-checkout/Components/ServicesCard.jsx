@@ -13,7 +13,10 @@ export default function ServicesCard({
   onAddService,
   onUpdateService,
   onRemoveService,
+  business_type = "clinical",
 }) {
+  const isClinical = business_type === "clinical";
+
   return (
     <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-3xl h-fit hover:scale-[1.01] transition-all duration-300">
       {/* Título */}
@@ -21,11 +24,11 @@ export default function ServicesCard({
         <span className="flex items-center justify-center w-8 h-8 mr-3 text-xs font-black text-brand-primary bg-brand-secondary/10 rounded-xl">
           2
         </span>
-        Prestaciones y Productos
+        {isClinical ? "Prestaciones y Productos" : "Detalle de Venta"}
       </h2>
 
-      {/* Sección Deudas (si existen) */}
-      {patientExtras.debts?.length > 0 && (
+      {/* Sección Deudas (si existen - SOLO CLÍNICO por ahora) */}
+      {isClinical && patientExtras.debts?.length > 0 && (
         <div className="p-6 mb-6 border-2 border-orange-100 rounded-[2rem] bg-orange-50/30 shadow-inner">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[10px] font-black text-orange-700 uppercase tracking-widest flex items-center gap-2">
@@ -40,7 +43,7 @@ export default function ServicesCard({
             {patientExtras.debts.map((debt) => {
               const isAdded = servicesToBill.some((s) => s.debt_id === debt.id);
               const displayAmount =
-                debt.original_amount_clp || debt.original_amount || 0;
+                debt.amount_patient_clp || debt.total_amount_clp || 0;
 
               return (
                 <button
@@ -82,7 +85,7 @@ export default function ServicesCard({
             <div className="flex justify-center mb-4">
                 <Plus className="w-12 h-12 text-gray-200" />
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No hay servicios agregados</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">No hay ítems agregados</p>
           </div>
         )}
 
@@ -103,6 +106,7 @@ export default function ServicesCard({
               patientExtras={patientExtras}
               onUpdate={onUpdateService}
               onRemove={onRemoveService}
+              business_type={business_type}
             />
           )
         ))}
@@ -116,7 +120,7 @@ export default function ServicesCard({
           <div className="bg-brand-secondary/20 text-brand-primary rounded-full p-1.5 group-hover:bg-brand-primary group-hover:text-white transition-all">
             <Plus className="w-4 h-4" />
           </div>
-          Añadir Nueva Prestación
+          {isClinical ? "Añadir Nueva Prestación" : "Añadir Nuevo Ítem"}
         </button>
       </div>
     </div>

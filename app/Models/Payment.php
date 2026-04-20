@@ -78,7 +78,7 @@ class Payment extends Model
         return $this->belongsTo(Insurance::class, 'liquidation_insurance_id');
     }
 
-    public function paymentAllocation(): HasMany
+    public function paymentAllocations(): HasMany
     {
         return $this->hasMany(PaymentAllocation::class);
     }

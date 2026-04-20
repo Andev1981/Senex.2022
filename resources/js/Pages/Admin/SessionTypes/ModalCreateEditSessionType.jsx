@@ -88,12 +88,12 @@ function ModalCreateEditSessionType({ sessionType, onClose }) {
 
     if (data.id) {
       // OJO: con useForm no necesitas pasar { data }, el form ya lo conoce
-      put(route("admin.session-types.update", data.id), {
+      put(route("session-types.update", data.id), {
         preserveScroll: true,
         onSuccess,
       });
     } else {
-      post(route("admin.session-types.store"), {
+      post(route("session-types.store"), {
         preserveScroll: true,
         onSuccess,
       });

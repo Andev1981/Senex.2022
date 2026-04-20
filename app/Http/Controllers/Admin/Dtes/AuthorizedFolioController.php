@@ -53,17 +53,17 @@ class AuthorizedFolioController extends Controller
                 ]);
             }
 
-            // 2. Determinar ambiente (mapear de DteConfiguration a estándar inglés)
-            $ambienteSii = $company->dteConfiguration->ambiente ?? 'homologacion';
-            $environment = ($ambienteSii === 'produccion') ? 'production' : 'certification';
+            // 2. Determinar ambiente usando el nuevo estándar
+            $environment = $company->dteConfiguration->environment ?? 'certification';
 
             // 3. Delegar al servicio para guardar
             $tipoDte = $this->foliosService->cargarCAF($company->id, $xmlContent, $environment);
 
             $desde = $foliosDte->getDesde();
             $hasta = $foliosDte->getHasta();
+            $tipoLabel = $tipoDte == 33 ? 'Factura' : ($tipoDte == 39 ? 'Boleta' : ($tipoDte == 61 ? 'Nota Crédito' : "Tipo $tipoDte"));
 
-            return back()->with('success', "CAF cargado exitosamente: Tipo $tipoDte, Rango [$desde - $hasta], Ambiente: $environment");
+            return back()->with('success', "Folios autorizados correctamente para $tipoLabel (Rango: $desde - $hasta).");
 
         } catch (\Exception $e) {
             Log::error("Error al cargar CAF para Empresa #{$company->id}: " . $e->getMessage());

@@ -14,21 +14,37 @@ class StorePaymentRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $activeBranchId = session('active_branch_id');
         $companyId = session('current_company_id');
+        $activeBranchId = session('active_branch_id');
+        
+        // Fallback: Si no hay sucursal en sesión, buscar la primera de la empresa
+        if (!$activeBranchId && $companyId) {
+            $activeBranchId = \App\Models\Branch::where('company_id', $companyId)->first()?->id;
+        }
+
         $userId = auth()->user()->id;
 
-        // 1. Inyectar IDs de contexto (Prioriza request, si no, usa sesión)
+        // --- MANEJO DE ID CON PREFIJO ---
+        $rawPatientId = $this->input('patient_id');
+        $numericPatientId = $rawPatientId;
+        if (is_string($rawPatientId)) {
+            $numericPatientId = (int) str_replace(['person_', 'company_'], '', $rawPatientId);
+        }
+
+        // 1. Inyectar IDs de contexto
         $this->merge([
             'company_id' => $this->company_id ?: $companyId,
             'branch_id'  => $this->branch_id  ?: $activeBranchId,
-            'user_id'  => $this->user_id  ?: $userId,
+            'user_id'    => $this->user_id     ?: $userId,
+            'patient_id' => $numericPatientId, // Inyectamos el ID puro para las reglas de Laravel
         ]);
 
-        // 2. Sincronizar campo raíz amount_total_clp para validación (Desde final_shares)
+        // 2. Sincronizar campos de monto total (Aliasing para compatibilidad)
         if ($this->has('final_shares.amount_patient_clp')) {
+            $total = $this->input('final_shares.amount_patient_clp');
             $this->merge([
-                'amount_total_clp' => $this->input('final_shares.amount_patient_clp'),
+                'amount_total_clp' => $total,
+                'amount_clp'       => $total, // La llave que el Service busca
             ]);
         }
 
@@ -49,6 +65,7 @@ class StorePaymentRequest extends FormRequest
                     'unit_insurance_primary_clp'   => 0,
                     'unit_insurance_secondary_clp' => 0,
                     'unit_patient_clp'             => 0,
+                    'is_exempt'       => true, // Por defecto exento (prestación de salud)
                     'debt_id'         => null,
                     'treatment_id'    => null,
                     'treatment_session_id'      => null,
@@ -56,7 +73,6 @@ class StorePaymentRequest extends FormRequest
                     'plan_id'         => null,
                 ];
                 // Fusionar los valores por defecto con el item que viene del request.
-                // Los valores de $item sobrescribirán los de $defaults si existen.
                 return array_merge($defaults, $item);
             })->toArray();
 
@@ -66,13 +82,17 @@ class StorePaymentRequest extends FormRequest
 
     public function rules(): array
     {
+        $rawPatientId = $this->request->get('patient_id'); // El original del form (con prefijo)
+        $patientTable = str_contains($rawPatientId, 'company_') ? 'companies_directory' : 'patients';
+
         return [
             // --- Contexto ---
             'user_id' => ['required', 'exists:users,id'],
-            'patient_id' => ['required', 'exists:patients,id'],
+            'patient_id' => ['required', "exists:{$patientTable},id"],
             'company_id' => ['required', 'exists:companies,id'],
             'branch_id'  => ['required', 'exists:branches,id'],
-            'amount_total_clp' => ['required', 'numeric', 'min:0'], // El copago a validar en raíz
+            'amount_total_clp' => ['required', 'numeric', 'min:0'], 
+            'amount_clp' => ['required', 'numeric', 'min:0'], 
 
             // --- Cobertura (Metadata) ---
             'coverage_details' => ['nullable', 'array'],
@@ -82,23 +102,25 @@ class StorePaymentRequest extends FormRequest
             'coverage_details.external_transaction_code' => ['nullable', 'string'],
             'coverage_details.affiliate_rut' => ['required_with:coverage_details.insurance_id', 'nullable', 'string'],
 
-            // --- Servicios (El Carrito) ---
-            'services_to_bill' => ['required', 'array', 'min:1'],
-            'services_to_bill.*.is_plan' => ['sometimes', 'boolean'],
-            'services_to_bill.*.plan_id' => ['required_if:services_to_bill.*.is_plan,true', 'nullable', 'exists:plans,id'],
+            // El sellable_id es el que identifica qué se está vendiendo (SessionType o Product)
+            'services_to_bill.*.sellable_id'   => ['nullable'],
+            'services_to_bill.*.sellable_type' => ['nullable', 'string'],
             'services_to_bill.*.treatment_session_id' => ['nullable', 'exists:treatment_sessions,id'],
             'services_to_bill.*.invoice_id' => ['nullable', 'exists:invoices,id'],
             'services_to_bill.*.name' => ['nullable', 'string'],
+            'services_to_bill.*.quantity' => ['required', 'integer', 'min:1'],
+            'services_to_bill.*.unit_price_clp' => ['required', 'numeric'],
+            'services_to_bill.*.unit_insurance_primary_clp' => ['nullable', 'numeric'],
+            'services_to_bill.*.unit_insurance_secondary_clp' => ['nullable', 'numeric'],
+            'services_to_bill.*.unit_patient_clp' => ['required', 'numeric'],
+            'services_to_bill.*.is_exempt' => ['nullable', 'boolean'],
+            'services_to_bill.*.debt_id' => ['nullable'],
+            'services_to_bill.*.treatment_id' => ['nullable'],
             
-                        // Validación Condicional para doctor_id y session_type_id
+            // Validación Condicional para doctor_id
+            'services_to_bill.*.doctor_id' => ['nullable'], 
             
-                        'services_to_bill.*.doctor_id' => ['required_unless:services_to_bill.*.is_plan,true', 'nullable', 'exists:doctors,id'],
-            
-                        'services_to_bill.*.session_type_id' => ['required_unless:services_to_bill.*.is_plan,true', 'nullable', 'exists:session_types,id'],
-            
-                    
-            
-                        // --- Detalles del Pago Físico ---
+            // --- Detalles del Pago Físico ---
             
             
             'payment_details' => ['required', 'array'],

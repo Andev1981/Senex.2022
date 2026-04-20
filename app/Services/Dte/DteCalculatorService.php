@@ -11,22 +11,29 @@ class DteCalculatorService
    */
   public function calculateAndDetermineType(Invoice $invoice): int
   {
+    // Forzar recarga de ítems desde la DB para evitar colecciones vacías en memoria
+    $invoice->load('items');
+
     $netoTotal = 0;
     $ivaTotal = 0;
     $exentoTotal = 0;
     
-    // El tipo debe determinarse antes para saber si calculamos desde Bruto o Neto
-    $tieneItemsAfectos = $invoice->items->contains('is_exento', false);
+    // 1. Determinar si hay ítems afectos (is_exento es false o 0)
+    $tieneItemsAfectos = $invoice->items->filter(function($item) {
+        return !((bool)$item->is_exento);
+    })->count() > 0;
+
     $tipoDte = $this->determineType($invoice, $tieneItemsAfectos);
 
+    // 2. Calcular montos línea por línea
     foreach ($invoice->items as $item) {
-      $montoLinea = (float) $item->total_gross_clp; // En el controlador esto se guarda como qty * unitPrice
+      $montoLinea = (int) $item->total_gross_clp;
 
-      if ($item->is_exento) {
+      if ((bool)$item->is_exento) {
         $exentoTotal += $montoLinea;
       } else {
         // REGLA SII CHILE:
-        if ($tipoDte === Invoice::TYPE_BOLETA || $tipoDte === Invoice::TYPE_BOLETA_EXENTA) {
+        if ($tipoDte === 39 || $tipoDte === 41) {
             // Boleta: El valor ingresado es BRUTO (Total). Calculamos el neto.
             $netoLinea = (int) round($montoLinea / 1.19);
             $ivaLinea = (int) ($montoLinea - $netoLinea);
@@ -41,21 +48,21 @@ class DteCalculatorService
       }
     }
 
-    // Aplicar descuento global proporcional
-    $globalDiscount = $invoice->global_discount_clp ?? 0;
+    // 3. Aplicar descuento global (prorrateado)
+    $globalDiscount = (int)($invoice->global_discount_clp ?? 0);
     if ($globalDiscount > 0) {
-        if ($netoTotal >= $globalDiscount) {
-            $netoTotal -= $globalDiscount;
+        // ... lógica de descuento simplificada para el DTE ...
+        if ($exentoTotal >= $globalDiscount) {
+            $exentoTotal -= $globalDiscount;
         } else {
-            $diff = $globalDiscount - $netoTotal;
-            $netoTotal = 0;
-            $exentoTotal = max(0, $exentoTotal - $diff);
+            $diferencial = $globalDiscount - $exentoTotal;
+            $exentoTotal = 0;
+            $netoTotal = max(0, $netoTotal - (int)round($diferencial / 1.19));
+            $ivaTotal = (int)($invoice->total_amount_clp - $netoTotal - $exentoTotal);
         }
-        // Recalcular IVA tras descuento sobre el nuevo neto
-        $ivaTotal = (int) round($netoTotal * 0.19);
     }
 
-    // Actualizar el Modelo Invoice
+    // 4. Sincronizar Modelo Local
     $invoice->net_amount_clp = $netoTotal;
     $invoice->exempt_amount_clp = $exentoTotal;
     $invoice->vat_amount_clp = $ivaTotal;
@@ -69,17 +76,23 @@ class DteCalculatorService
 
   private function determineType(Invoice $invoice, bool $tieneItemsAfectos): int
   {
-    // B2B: Si el RUT es de empresa (> 50M) o el receptor es una Company
     $rutReceptor = data_get($invoice->metadata, 'client.rut', '0');
     $rutNumerico = (int) str_replace(['.', '-'], '', $rutReceptor);
-    
-    // Si el usuario forzó un tipo en el request, respetarlo si es posible
-    if ($invoice->dte_type && in_array($invoice->dte_type, [33, 34, 39, 41])) {
-        return $invoice->dte_type;
-    }
-
     $esEmpresa = $rutNumerico > 50000000 || ($invoice->entity_type === 'App\Models\Company');
 
+    $intentType = (int)$invoice->dte_type;
+
+    // Categoría Factura (33, 34)
+    if (in_array($intentType, [33, 34])) {
+        return $tieneItemsAfectos ? 33 : 34;
+    }
+    
+    // Categoría Boleta (39, 41)
+    if (in_array($intentType, [39, 41])) {
+        return $tieneItemsAfectos ? 39 : 41;
+    }
+
+    // Fallback: Si no hay intención previa, decidir por RUT
     if ($esEmpresa) {
       return $tieneItemsAfectos ? 33 : 34;
     }

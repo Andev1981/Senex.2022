@@ -35,7 +35,19 @@ function useSyncedTab(defaultTab = "dashboard") {
 
 export default function DetailPatient(props) {
   const [activeTab, setActiveTab] = useSyncedTab("dashboard");
-  const { patient, doctors, session_types, communes, regions, provinces, diagnostics, history, treatments, sessions  } = props;
+  const { 
+    patient, 
+    doctors, 
+    session_types, 
+    communes, 
+    regions, 
+    provinces, 
+    diagnostics, 
+    history, 
+    treatments, 
+    active_treatments, // <--- Agregar esta línea
+    sessions  
+  } = props;
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
 
@@ -109,12 +121,12 @@ export default function DetailPatient(props) {
                     />
                 )}
                 {activeTab === "general" && <IndexGeneral {...props} />}
-                {activeTab === "history" && <IndexHistorial {...props} treatments={patient.active_treatments || []} />}
+                {activeTab === "history" && <IndexHistorial {...props} treatments={active_treatments || []} />}
                 {activeTab === "treatments" && (
                     <IndexTreatments 
                         {...props} 
-                        treatments={patient.active_treatments || []}
-                        sessions={(patient.active_treatments || []).flatMap(t => t.sessions || [])}
+                        treatments={treatments || []}
+                        sessions={(treatments || []).flatMap(t => t.sessions || [])}
                     />
                 )}
                 {activeTab === "plans" && <IndexPlans {...props} patient={patient} />} {/* Nuevo caso para la pestaña de planes */}

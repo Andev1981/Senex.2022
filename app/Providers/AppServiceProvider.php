@@ -97,6 +97,7 @@ class AppServiceProvider extends ServiceProvider
             'Address' => Address::class,
             'Branch' => Branch::class,
             'VitalSign' => VitalSign::class,
+            'CorporateClient' => \App\Models\CompanyDirectory::class,
         ]);
     }
 }

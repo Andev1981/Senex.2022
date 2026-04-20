@@ -63,39 +63,39 @@ class LibreDtePayloadMapper
       $totales['MntExe'] = (int) $invoice->exempt_amount_clp;
     }
 
-    // 4. DATOS DEL RECEPTOR
-    // Para Boletas (39/41) a consumidor final, se usa el genérico.
-    // Para Facturas (33) o Notas de Crédito asociadas (61), se usan datos reales.
-    $rutReceptor = '66666666-6'; // Genérico por defecto
-    $razonSocial = 'Consumidor Final';
-
-    // Lógica: Si es Factura (33) o si el cliente tiene RUT válido y lo solicita
-    if ($tipoDte === 33 || ($cliente && $cliente->rut && $tipoDte !== 39 && $tipoDte !== 41)) {
-      $rutReceptor = $cliente->rut;
-      $razonSocial = $cliente->full_name ?? $cliente->business_name;
-    }
+    // 4. DATOS DEL RECEPTOR (Desde Metadata o Relación)
+    $clientMeta = data_get($invoice->metadata, 'client', []);
+    $rutReceptor = $clientMeta['rut'] ?? '66666666-6';
+    $razonSocial = $clientMeta['name'] ?? 'Consumidor Final';
+    $giroReceptor = $clientMeta['giro'] ?? 'PARTICULAR';
 
     // 5. CONSTRUCCIÓN DEL ENCABEZADO
+    $company = $invoice->company;
+    
+    // Formatear RUT Emisor (Garantizar guion y DV para LibreDTE)
+    $rutEmisorRaw = preg_replace('/[^0-9Kk]/', '', $config['company_rut']);
+    $rutEmisor = substr($rutEmisorRaw, 0, -1) . '-' . substr($rutEmisorRaw, -1);
+
     $encabezado = [
       'IdDoc' => [
         'TipoDTE' => $tipoDte,
-        'Folio'   => 0, // El folio se asigna al firmar si pasas el CAF, o puedes pasarlo aquí si ya lo reservaste ($invoice->dte_folio)
+        'Folio'   => $invoice->dte_folio ?? 0,
         'FchEmis' => Carbon::parse($invoice->issue_date)->format('Y-m-d'),
-        // 'IndServicio' => 3, // Solo para boletas de servicios (Opcional, ver documentación SII)
       ],
       'Emisor' => [
-        'RUTEmisor'  => $config['rut_empresa'], // O $config->rut_empresa
-        'RznSoc'     => mb_substr($config['razon_social'] ?? 'Emisor', 0, 100),
-        'GiroEmis'   => mb_substr($config['giro'] ?? 'Servicios Médicos', 0, 80),
-        'Acteco'     => $config['acteco'] ?? 869090,
-        'DirOrigen'  => mb_substr($config['direccion'] ?? '', 0, 60),
-        'CmnaOrigen' => mb_substr($config['comuna'] ?? 'Santiago', 0, 20),
+        'RUTEmisor'  => $rutEmisor, 
+        'RznSoc'     => mb_substr($company->business_name ?? 'Emisor', 0, 100),
+        'GiroEmis'   => mb_substr($company->giro ?? 'Servicios', 0, 80),
+        'Acteco'     => $config['acteco'] ?? 620100, //   Valor por defecto para servicios médicos
+        'DirOrigen'  => mb_substr($company->address ?? 'Santiago', 0, 60),
+        'CmnaOrigen' => mb_substr($company->commune?->name ?? 'Santiago', 0, 20),
       ],
       'Receptor' => [
         'RUTRecep'    => $rutReceptor,
         'RznSocRecep' => mb_substr($razonSocial, 0, 100),
-        'DirRecep'    => mb_substr($cliente->address_line ?? 'S/D', 0, 70),
-        'CmnaRecep'   => mb_substr($cliente->commune_name ?? 'S/D', 0, 20),
+        'GiroRecep'   => mb_substr($giroReceptor, 0, 40),
+        'DirRecep'    => mb_substr($clientMeta['address'] ?? 'S/D', 0, 70),
+        'CmnaRecep'   => mb_substr($clientMeta['commune'] ?? 'S/D', 0, 20),
       ],
       'Totales' => $totales,
     ];

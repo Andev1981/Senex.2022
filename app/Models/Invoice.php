@@ -12,28 +12,22 @@ use App\Enums\DteStatusEnum;
 
 class Invoice extends Model
 {
-
   use Multitenantable;
 
-  // ===== Códigos Oficiales SII =====
+  // ===== Códigos Oficiales SII (Mantener por utilidad en código) =====
   public const TYPE_FACTURA          = 33;
   public const TYPE_FACTURA_EXENTA   = 34;
   public const TYPE_BOLETA           = 39;
-  public const TYPE_BOLETA_EXENTA    = 41; // Muy común en salud (sin IVA)
+  public const TYPE_BOLETA_EXENTA    = 41; 
   public const TYPE_NCREDITO         = 61;
   public const TYPE_NDEBITO          = 56;
 
-  // ===== Estados TRIBUTARIOS (Relación con el SII) =====
-  public const SII_STATUS_PENDING  = 'pending';  // Aún no enviado al SII
-  public const SII_STATUS_SENT     = 'sent';     // Enviado, esperando respuesta
-  public const SII_STATUS_ACCEPTED  = 'accepted'; // ¡Todo OK!
-  public const SII_STATUS_REJECTED  = 'rejected'; // Rechazo legal del SII (Folio invalidado)
-  public const SII_STATUS_ERROR     = 'error';    // Error técnico (Certificado, Conexión, etc. Folio reusable)
-
-  // ===== Estados FINANCIEROS (Relación con tu caja) =====
-  public const PAYMENT_STATUS_UNPAID  = 'unpaid';  // Emitida pero no pagada (ej. Factura a 30 días)
-  public const PAYMENT_STATUS_PAID    = 'paid';    // Dinero recibido
-  public const PAYMENT_STATUS_VOIDED  = 'voided';  // Anulada administrativamente
+  // ===== Estados TRIBUTARIOS (Sincronizados con Enum) =====
+  public const SII_STATUS_PENDING  = 'pending';
+  public const SII_STATUS_SENT     = 'sent';
+  public const SII_STATUS_ACCEPTED  = 'accepted';
+  public const SII_STATUS_REJECTED  = 'rejected';
+  public const SII_STATUS_ERROR     = 'error';
 
   protected $fillable = [
     'company_id',
@@ -127,35 +121,35 @@ class Invoice extends Model
   // ===== Scopes =====
   public function scopePendingSii($q)
   {
-    return $q->where('dte_status', self::SII_STATUS_PENDING);
+    return $q->where('dte_status', DteStatusEnum::PENDING);
   }
   public function scopeAccepted($q)
   {
-    return $q->where('dte_status', self::SII_STATUS_ACCEPTED);
+    return $q->where('dte_status', DteStatusEnum::ACCEPTED);
   }
   public function scopeVoided($q)
   {
-    return $q->where('status', self::PAYMENT_STATUS_VOIDED);
+    return $q->where('payment_status', FinanceStatusEnum::VOIDED);
   }
   public function scopePaid($q)
   {
-    return $q->where('status', self::PAYMENT_STATUS_PAID);
+    return $q->where('payment_status', FinanceStatusEnum::PAID);
   }
 
   // ===== Helpers de estado =====
   public function isPaid(): bool
   {
-    return $this->payment_status === self::PAYMENT_STATUS_PAID;
+    return $this->payment_status === FinanceStatusEnum::PAID;
   }
   public function markVoided(?string $number = null): void
   {
-    $this->payment_status = self::PAYMENT_STATUS_VOIDED;
+    $this->payment_status = FinanceStatusEnum::VOIDED;
     if ($number) $this->dte_folio = $number;
     $this->save();
   }
   public function markAccepted(?string $trackId = null): void
   {
-    $this->dte_status = self::SII_STATUS_ACCEPTED;
+    $this->dte_status = DteStatusEnum::ACCEPTED;
     // El track_id se guarda en la relación DTE, pero si queremos guardarlo aquí también
     if ($trackId) {
         $meta = $this->metadata ?? [];
@@ -166,7 +160,7 @@ class Invoice extends Model
   }
   public function markRejected(?string $reason = null): void
   {
-    $this->dte_status = self::SII_STATUS_REJECTED;
+    $this->dte_status = DteStatusEnum::REJECTED;
     $meta = $this->metadata ?? [];
     if ($reason) $meta['reject_reason'] = $reason;
     $this->metadata = $meta;
@@ -174,7 +168,7 @@ class Invoice extends Model
   }
   public function settleAsPaid(): void
   {
-    $this->payment_status = self::PAYMENT_STATUS_PAID;
+    $this->payment_status = FinanceStatusEnum::PAID;
     $this->save();
   }
 

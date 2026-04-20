@@ -12,6 +12,14 @@ export const dtesStatuses = {
     label: "Aceptado ✅",
     className: "bg-green-50 text-green-700 border border-green-300",
   },
+  created: {
+    label: "Generado 📄",
+    className: "bg-blue-50 text-blue-700 border border-blue-200",
+  },
+  pending_retry: {
+    label: "Reenvío Pendiente 🔄",
+    className: "bg-amber-50 text-amber-700 border border-amber-200",
+  },
   rejected: {
     label: "Rechazado ❌",
     className: "bg-red-50 text-red-700 border border-red-300",

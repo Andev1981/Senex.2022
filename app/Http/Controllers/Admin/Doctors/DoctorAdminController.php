@@ -267,13 +267,13 @@ class DoctorAdminController extends Controller
 
 
             // 🎯 LA MAGIA: syncWithoutDetaching permite pasar datos adicionales
-            // Si no existe, lo crea con esos datos. Si ya existe, NO borra los otros sedes.
-            $doctor->branches()->syncWithoutDetaching([
-                $activeBranchId => $branchData
-            ]);
+            if ($activeBranchId) {
+                $doctor->branches()->syncWithoutDetaching([
+                    $activeBranchId => $branchData
+                ]);
+            }
 
-            if (!$doctor->user->hasRole('kine')) {
-                // Evitar cambiar email de kinesiologo
+            if ($doctor->user && !$doctor->user->hasRole('kine')) {
                 $doctor->user->assignRole('kine');
             }
             // -------------------------------
@@ -351,78 +351,46 @@ class DoctorAdminController extends Controller
         }
     }
 
-    public function updateCommissionRules(Request $request, Doctor $doctor)
+    public function updateCommissionRules(Request $request, $id)
     {
-        // 1. Validación (Value ahora es nullable para permitir borrar/heredar)
+        $doctor = Doctor::findOrFail($id);
+        
         $validated = $request->validate([
-            'rules' => 'required|array',
-            'rules.*.session_type_id' => 'required|exists:session_types,id',
-            'rules.*.type' => 'required|in:fixed_amount,percentage',
-            'rules.*.value' => 'nullable|numeric|min:0', // Nullable para permitir "borrar"
+            'session_type_id' => 'required|exists:session_types,id',
+            'percentage' => 'nullable|integer|min:0|max:100',
+            'fixed_amount_clp' => 'nullable|integer|min:0',
+            'commission_type' => 'required|in:fixed_amount,percentage',
         ]);
 
-        try {
-            DB::beginTransaction();
+        $percentage = (int)($validated['percentage'] ?? 0);
+        $fixedAmount = (int)($validated['fixed_amount_clp'] ?? 0);
+        $type = $validated['commission_type'];
 
-            foreach ($validated['rules'] as $rule) {
-                // Si el valor es NULL, significa que el usuario borró el input.
-                // Borramos la excepción para que vuelva a heredar el valor global.
-                if (is_null($rule['value'])) {
-                    $doctor->commissionRates()
-                        ->where('session_type_id', $rule['session_type_id'])
-                        ->delete();
-                } else {
-                    // Si hay valor, actualizamos o creamos la excepción (Upsert)
-                    $doctor->commissionRates()->updateOrCreate(
-                        [
-                            'session_type_id' => $rule['session_type_id'],
-                        ],
-                        [
-                            'commission_type'  => $rule['type'],
-                            'amount_clp' => $rule['value'],
-                            // Estos campos extras no suelen ir aquí si ya están en session_types, 
-                            // pero los dejo por compatibilidad con tu código:
-                            'effective_from'   => now(),
-                        ]
-                    );
-                }
-            }
+        // REGLA DE NEGOCIO: Si el valor del tipo seleccionado es cero, evaluamos si borrar o heredar
+        $activeValue = ($type === 'fixed_amount') ? $fixedAmount : $percentage;
 
-            DB::commit();
+        if ($activeValue === 0) {
+            $doctor->commissionRates()
+                ->where('session_type_id', $validated['session_type_id'])
+                ->delete();
 
-            // --- CLAVE DEL ÉXITO ---
-            // Recalculamos el 'rates_summary' aquí mismo para devolverlo al frontend.
-            // Esto asegura que el frontend reciba la verdad absoluta de la BD.
-            $companyId = $doctor->company_id;
-            $sessionTypes = SessionType::where('company_id', $companyId)
-                ->where('is_active', true)
-                ->get(['id', 'name', 'base_price_clp', 'default_doctor_commission_clp']);
-
-            $customRates = $doctor->commissionRates()->get()->keyBy('session_type_id');
-
-            $updatedSummary = $sessionTypes->map(function ($st) use ($customRates) {
-                $custom = $customRates->get($st->id);
-                return [
-                    'session_type_id' => $st->id,
-                    'name' => $st->name,
-                    'price_to_patient' => $st->base_price_clp, // ARREGLO VISUAL: Aseguramos que este campo viaje
-                    'current_value' => $custom ? $custom->amount_clp : $st->default_doctor_commission_clp, // Ojo: amount_clp vs amount_clp según tu BD
-                    'default_value' => $st->default_doctor_commission_clp,
-                    'is_customized' => (bool) $custom,
-                    'commission_type' => $custom ? $custom->commission_type : 'fixed_amount'
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Tarifas actualizadas correctamente',
-                'updated_summary' => $updatedSummary
-            ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Error updating commissions: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Error al guardar'], 500);
+            return back()->with('message', 'Tarifa personalizada eliminada. Ahora usa el valor global.')->with('type', 'success');
         }
+
+        // Actualizar o crear la excepción respetando el tipo elegido
+        $doctor->commissionRates()->updateOrCreate(
+            ['session_type_id' => $validated['session_type_id']],
+            [
+                'company_id' => $doctor->company_id,
+                'commission_type' => $type,
+                'amount_clp' => ($type === 'fixed_amount') ? $fixedAmount : 0,
+                'commission_percentage' => ($type === 'percentage') ? $percentage : 0,
+                'is_active' => true,
+                'effective_from' => now(),
+            ]
+        );
+
+        return back()->with('message', 'Comisión actualizada correctamente.')->with('type', 'success');
     }
 
     public function assignPatient(Request $request, Doctor $doctor)
@@ -509,6 +477,69 @@ class DoctorAdminController extends Controller
             session()->flash('message', 'Error al activar.');
             session()->flash('type', 'error');
         }
+    }
+
+    public function show($id)
+    {
+        $doctor = Doctor::with([
+            'user',
+            'branches',
+            'commissionRates.sessionType',
+            'treatmentSessions' => function($q) {
+                $q->with(['patient', 'sessionType'])->orderBy('date', 'desc')->limit(50);
+            },
+            'payrolls' => function($q) {
+                $q->orderBy('period_end', 'desc');
+            }
+        ])->findOrFail($id);
+
+        // KPIs Rápidos
+        $month = now()->month;
+        $year = now()->year;
+
+        // Datos para el gráfico (últimos 6 meses)
+        $chartData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $chartData[] = [
+                'month' => $date->translatedFormat('M'),
+                'sessions' => $doctor->treatmentSessions()
+                    ->whereMonth('date', $date->month)
+                    ->whereYear('date', $date->year)
+                    ->where('status', 'completed')
+                    ->count(),
+                'earnings' => (int)$doctor->treatmentSessions()
+                    ->whereMonth('date', $date->month)
+                    ->whereYear('date', $date->year)
+                    ->where('status', 'completed')
+                    ->sum('doctor_amount_clp'),
+            ];
+        }
+
+        $stats = [
+            'sessions_month' => $doctor->treatmentSessions()
+                ->whereMonth('date', $month)
+                ->whereYear('date', $year)
+                ->where('status', 'completed')
+                ->count(),
+            'pending_earnings' => (int)$doctor->treatmentSessions()
+                ->where('status', 'completed')
+                ->whereDoesntHave('payrollDetail')
+                ->sum('doctor_amount_clp'),
+            'last_payroll' => $doctor->payrolls()->latest()->first(),
+            'chart_data' => $chartData,
+        ];
+
+        return Inertia::render('doctors/DetailDoctor', [
+            'doctor' => $doctor,
+            'stats' => $stats,
+            'sessions' => $doctor->treatmentSessions,
+            'payrolls' => $doctor->payrolls,
+            'regions' => Region::all(['id', 'name']),
+            'provinces' => Province::all(['id', 'name', 'region_id']),
+            'communes' => Commune::all(['id', 'name', 'province_id']),
+            'session_types' => SessionType::all(['id', 'name', 'base_price_clp', 'default_doctor_commission_clp']),
+        ]);
     }
 
     public function checkExisting(Request $request)

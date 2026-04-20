@@ -22,6 +22,7 @@ import {
   Building,
   Package,
   Building2,
+  Layers,
 } from "lucide-react";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import BranchSwitcher from "@/components/BranchSwitcher";
@@ -37,9 +38,18 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
   // Define tus items con los IDs como NOMBRES DE RUTA de Ziggy
   const menuItems = useMemo(
     () => {
+      const businessType = current_company?.business_type || 'clinical';
+      const isClinical = businessType === 'clinical';
+      const isService = businessType === 'service';
+      const isRetail = businessType === 'retail';
+
       const items = [
         { id: "/", label: "Dashboard", icon: Home },
-        {
+      ];
+
+      // BLOQUE: GESTIÓN DE PERSONAS (Dinámico)
+      if (isClinical) {
+        items.push({
           id: "clinical_management",
           label: "Gestión Clínica",
           icon: Stethoscope,
@@ -49,22 +59,44 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
             { id: "attendances.index", label: "Atenciones", icon: List },
             { id: "session-types.index", label: "Tipos de Sesión", icon: Shell },
           ],
-        },
-        {
-          id: "finance_admin",
-          label: "Administración",
-          icon: Building,
+        });
+      } else {
+        // Para Service o Retail, mostramos "Gestión Comercial"
+        items.push({
+          id: "commercial_management",
+          label: isService ? "Gestión de Servicios" : "Ventas & Retail",
+          icon: isService ? Computer : Package,
           submenu: [
-            { id: "agreements.index", label: "Convenios", icon: Handshake },
-            { id: "insurances.index", label: "Aseguradoras", icon: Shield },
-            { id: "payrolls.index", label: "Liquidaciones", icon: NotebookText },
-            { id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign },
-            { id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package },
-            { id: "payments.index", label: "Caja / POS", icon: DollarSign },
-            { id: "documents", label: "Boleta SII", icon: FileText },
+            { id: "patients.index", label: "Clientes", icon: Users },
+            { id: "products.index", label: "Catálogo", icon: Package },
+            { id: "categories.index", label: "Categorías", icon: Layers },
           ],
-        },
-      ];
+        });
+      }
+
+      // BLOQUE: ADMINISTRACIÓN (Filtrado)
+      const adminSubmenu = [];
+      
+      // Solo salud
+      if (isClinical) {
+        adminSubmenu.push({ id: "agreements.index", label: "Convenios", icon: Handshake });
+        adminSubmenu.push({ id: "insurances.index", label: "Aseguradoras", icon: Shield });
+      }
+
+      // Comunes
+      adminSubmenu.push({ id: "payrolls.index", label: isClinical ? "Liquidaciones" : "Pagos Honorarios", icon: NotebookText });
+      adminSubmenu.push({ id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign });
+      adminSubmenu.push({ id: "acquisitions.suppliers.index", label: "Proveedores", icon: Building2 });
+      adminSubmenu.push({ id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package });
+      adminSubmenu.push({ id: "payments.index", label: "Caja / POS", icon: DollarSign });
+      adminSubmenu.push({ id: "documents", label: "Facturación SII", icon: FileText });
+
+      items.push({
+        id: "finance_admin",
+        label: "Administración",
+        icon: Building,
+        submenu: adminSubmenu,
+      });
 
       // Solo añadir Configuración si es Superadmin
       if (userIsSuperAdmin) {
@@ -74,7 +106,6 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
           icon: Computer,
           submenu: [
             { id: "companies.index", label: "Compañias", icon: Building },
-            { id: "products.index", label: "Productos", icon: Package },
             { id: "subscription.index", label: "Mi Suscripción", icon: Shield },
           ],
         });
@@ -82,7 +113,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 
       return items;
     },
-    [userIsSuperAdmin]
+    [userIsSuperAdmin, current_company?.business_type]
   );
 
   const bottomMenuItems = useMemo(

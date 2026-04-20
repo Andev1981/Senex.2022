@@ -433,6 +433,9 @@ export default function IndexDocuments({
   const docStyles = selectedDte.styles || {};
   const esNotaCredito = data.dte_type === 61;
 
+
+  console.log("Data: ", data?.dte_type, selectedDte, docStyles);
+
   return (
     <AuthenticatedLayout>
       <Head title="Centro de Facturación SII" />
@@ -726,20 +729,37 @@ export default function IndexDocuments({
 
                 {/* SELECTOR TIPO DTE PREMIUM */}
                 <div className="flex flex-wrap justify-center gap-3 p-2 bg-white border border-gray-100 shadow-xl rounded-3xl">
-                  {DTES_TYPES.map((type) => (
-                    <button
-                      key={type.code}
-                      type="button"
-                      onClick={() => handleTypeChange(type.code)}
-                      className={`px-6 py-3 rounded-2xl border-2 flex items-center gap-3 transition-all text-[10px] font-black uppercase tracking-widest ${
-                        data.dte_type === type.code
-                          ? `${type.styles.border} ${type.styles.bg} ${type.styles.text} shadow-lg scale-105`
-                          : "border-transparent bg-white text-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      <type.icon className="w-4 h-4" /> {type.label}
-                    </button>
-                  ))}
+                  {DTES_TYPES.map((type) => {
+                    const caf = active_caf.find(c => c.type === type.code);
+                    const hasFolios = caf && caf.available > 0;
+                    
+                    return (
+                      <button
+                        key={type.code}
+                        type="button"
+                        onClick={() => handleTypeChange(type.code)}
+                        className={`px-6 py-3 rounded-2xl border-2 flex flex-col items-center gap-1 transition-all text-[10px] font-black uppercase tracking-widest relative ${
+                          data.dte_type === type.code
+                            ? `${type.styles.border} ${type.styles.bg} ${type.styles.text} shadow-lg scale-105`
+                            : "border-transparent bg-white text-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                            <type.icon className="w-4 h-4" /> {type.label}
+                        </div>
+                        {!hasFolios && (
+                            <span className="text-[7px] font-bold text-red-500 flex items-center gap-1">
+                                <AlertTriangle className="w-2 h-2" /> Sin Folios (CAF)
+                            </span>
+                        )}
+                        {hasFolios && (
+                            <span className="text-[7px] font-bold text-green-600 flex items-center gap-1">
+                                <CheckCircle className="w-2 h-2" /> {caf.available} Libres
+                            </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {data.dte_type ? (
@@ -751,6 +771,19 @@ export default function IndexDocuments({
                     }`}
                   >
                     <div className="space-y-10 lg:col-span-8">
+                      {/* ADVERTENCIA DE FOLIOS SI NO HAY */}
+                      {!data.simulate && !active_caf.find(c => c.type === data.dte_type)?.available && (
+                        <div className="p-6 bg-red-50 border-2 border-red-100 rounded-[2rem] flex items-center gap-4 animate-bounce">
+                            <div className="p-3 bg-white rounded-xl text-red-500 shadow-sm">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-red-800 uppercase tracking-widest">Atención: Sin Folios Disponibles</p>
+                                <p className="text-xs font-bold text-red-700/70">Debe cargar un nuevo archivo CAF para emitir este tipo de documento oficialmente.</p>
+                            </div>
+                        </div>
+                      )}
+
                       {/* FORMULARIO PRINCIPAL */}
                       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                         {/* RECEPTOR */}

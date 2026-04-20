@@ -2,388 +2,266 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Comprobante de Pago #{{ substr($payment->uuid, 0, 8) }}</title>
+    <title>Recibo de Pago #{{ substr($payment->uuid, 0, 8) }}</title>
     <style>
-        /* Variables de Color (simulando Tailwind) */
         :root {
             --brand-primary: #3292b3;
-            --brand-primary-light: #e0f2f7; /* bg-brand-primary/10 */
+            --brand-secondary: #e0f2f7;
             --gray-900: #111827;
-            --gray-800: #1f2937;
-            --gray-700: #374151;
             --gray-600: #4b5563;
-            --gray-500: #6b7280;
-            --gray-400: #9ca3af;
-            --gray-300: #d1d5db;
-            --gray-200: #e5e7eb;
             --gray-100: #f3f4f6;
-            --gray-50: #f9fafb;
-            --green-600: #16a34a;
-            --green-50: #f0fdf4;
-            --orange-600: #ea580c;
-            --orange-50: #fff7ed;
-            --red-600: #dc2626;
-            --red-50: #fef2f2;
         }
 
         body {
-            font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
-            font-size: 10px; /* Base más pequeña */
-            color: var(--gray-700);
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            /* background-color: var(--gray-50); */ /* Eliminado */
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 1rem; /* rounded-xl */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* shadow-lg */
-            padding: 40px; /* Más padding */
-            border: 1px solid var(--gray-100);
+            color: var(--gray-900);
+            background: white;
         }
 
-        /* Header */
-        .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start; /* Alineación superior */
-            padding-bottom: 25px; /* Más espacio */
-            margin-bottom: 25px;
-            border-bottom: 2px solid var(--gray-100); /* Borde más grueso */
+        .receipt-container {
+            max-width: 700px;
+            margin: 20px auto;
+            border: 1px solid var(--gray-100);
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        .header-left .title {
-            font-size: 28px; /* Más grande */
-            font-weight: 800; /* Extra bold */
+
+        .header {
+            padding: 40px;
+            text-align: center;
+            background-color: #f9fafb;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .header .logo {
+            max-width: 150px;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 10px;
+            font-weight: 900;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .grid {
+            display: table;
+            width: 100%;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--gray-100);
+            padding-bottom: 20px;
+        }
+
+        .grid-col {
+            display: table-cell;
+            width: 33%;
+            vertical-align: top;
+        }
+
+        .label {
+            font-size: 9px;
+            font-weight: 900;
             color: var(--brand-primary);
             text-transform: uppercase;
-            letter-spacing: -0.04em; /* Más tracking-tight */
-            line-height: 1.1;
+            letter-spacing: 0.1em;
+            margin-bottom: 5px;
+            display: block;
         }
-        .header-left .subtitle {
-            font-size: 11px; /* Ligeramente más grande */
-            color: var(--gray-600);
-            text-transform: uppercase;
-            letter-spacing: 0.15em; /* Más tracking-widest */
+
+        .value {
+            font-size: 12px;
             font-weight: 700;
-            margin-top: 5px;
-        }
-        .header-right {
-            text-align: right;
-        }
-        .header-right .company-name {
-            font-size: 16px; /* Más grande */
-            font-weight: 800;
-            color: var(--gray-900);
-            line-height: 1.3;
-        }
-        .header-right .company-rut {
-            font-size: 11px;
-            color: var(--gray-600);
-            font-weight: 500;
-            margin-top: 3px;
-        }
-
-        /* Section Title */
-        .section-title {
-            font-size: 11px;
-            font-weight: 800;
             text-transform: uppercase;
-            color: var(--gray-800);
-            margin-bottom: 20px; /* Más espacio */
-            border-bottom: 1px solid var(--gray-200); /* Borde sólido, más claro */
-            padding-bottom: 10px;
-            letter-spacing: 0.05em;
         }
 
-        /* Details Table (Ahora para ambas secciones de tabla) */
-        .details-table {
+        .sub-value {
+            font-size: 10px;
+            color: var(--gray-600);
+            font-family: monospace;
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 40px;
-            background-color: var(--gray-50);
-            border-radius: 1rem; /* rounded-xl */
-            overflow: hidden;
-            border: 1px solid var(--gray-100);
+            margin-top: 20px;
         }
-        .details-table th, .details-table td {
-            padding: 15px 20px; /* Más padding */
-            text-align: left; /* Asegurar alineación izquierda por defecto para headers */
-        }
-        .details-table th {
-            background-color: var(--brand-primary-light);
-            font-size: 10px;
-            font-weight: 800;
+
+        th {
+            background-color: #f9fafb;
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 9px;
+            font-weight: 900;
             text-transform: uppercase;
             color: var(--brand-primary);
-            letter-spacing: 0.08em;
-            border-bottom: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--gray-100);
         }
-        .details-table td {
-            border-bottom: 1px solid var(--gray-200); /* Borde más visible */
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--gray-100);
             font-size: 11px;
-            color: var(--gray-700);
         }
-        .details-table tbody tr:last-child td {
-            border-bottom: none;
+
+        .item-name {
+            font-weight: 900;
+            text-transform: uppercase;
         }
-        /* Estilos para los contenidos dentro de las celdas de las details-table */
-        .details-table .service-name {
-            font-weight: 700;
-            color: var(--gray-900);
-            font-size: 12px;
-            line-height: 1.3;
-        }
-        .details-table .service-code {
+
+        .item-details {
             font-size: 9px;
-            color: var(--gray-500);
-            margin-top: 2px;
+            color: var(--gray-600);
+            font-family: monospace;
         }
 
-        /* Summary */
-        .summary-wrapper {
-            background-color: var(--gray-50);
-            border: 1px solid var(--gray-200);
-            border-radius: 1rem; /* rounded-xl */
-            padding: 25px; /* Más padding */
-            width: 350px; /* Un poco más ancho */
-            margin-left: auto;
-            box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.06); /* shadow-inner más pronunciado */
-            /* Se añade un div clear-fix al final del HTML de summary-wrapper */
-        }
-        .summary-item {
-            margin-bottom: 12px;
-            font-size: 13px; /* Más grande */
-            clear: both; /* Asegurar que cada item empiece en nueva línea */
-        }
-        .summary-item:last-of-type {
-            margin-bottom: 0;
-        }
-        .summary-item .summary-label {
-            float: left;
-            color: var(--gray-700);
-            font-weight: 500;
-        }
-        .summary-item .summary-value {
-            float: right;
+        .amount {
             font-weight: 700;
-            color: var(--gray-900);
+            text-align: right;
+            font-family: monospace;
         }
-        .summary-total-item {
-            border-top: 2px solid var(--brand-primary-light); /* Borde más grueso y de color */
-            padding-top: 20px; /* Más padding */
-            margin-top: 20px;
-            font-size: 18px; /* Mucho más grande */
-            font-weight: 800;
-            color: var(--brand-primary);
-            clear: both; /* Asegurar que empiece en nueva línea */
-        }
-        .summary-total-item .summary-label {
-            float: left;
-             color: var(--brand-primary); /* Asegurar color principal */
-        }
-        .summary-total-item .summary-value {
+
+        .summary-box {
+            margin-top: 30px;
+            background-color: #f9fafb;
+            border-radius: 1.5rem;
+            padding: 25px;
+            width: 300px;
             float: right;
-             color: var(--brand-primary); /* Asegurar color principal */
         }
 
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
 
-        /* Footer */
-        .footer-section {
-            margin-top: 50px; /* Más espacio */
+        .summary-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #d1d5db;
+            color: var(--brand-primary);
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .footer {
+            margin-top: 50px;
             text-align: center;
             font-size: 9px;
-            color: var(--gray-500);
-            padding-top: 25px;
-            border-top: 1px solid var(--gray-100); /* Borde sólido más claro */
-            font-weight: 500;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding-bottom: 40px;
         }
-        .footer-section p {
-            margin: 3px 0;
-        }
-        .app-name {
-            font-weight: bold;
-            color: var(--gray-700);
-        }
-
-        /* Utilidades */
-        .text-right { text-align: right !important; }
-        .text-left { text-align: left; }
-        .font-bold { font-weight: bold; }
-        .font-semibold { font-weight: 600; }
-        .font-medium { font-weight: 500; }
-        .text-primary { color: var(--brand-primary); }
-        .text-green { color: var(--green-600); }
-        .text-orange { color: var(--orange-600); }
-        .text-red { color: var(--red-600); }
-        .text-capitalize { text-transform: capitalize; }
-        .text-sm { font-size: 11px; }
-        .text-xs { font-size: 10px; }
-
-
-        /* Flexbox fallbacks para PDF */
-        .flex { display: flex; }
-        .justify-between { justify-content: space-between; }
-        .items-center { align-items: center; }
-        .items-flex-start { align-items: flex-start; }
-        .w-full { width: 100%; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-section">
-            <div class="header-left">
-                <div class="title">Comprobante de Pago</div>
-                <div class="subtitle">Transacción #{{ strtoupper(substr($payment->uuid, 0, 8)) }}</div>
-            </div>
-            <div class="header-right">
-                <div class="company-name">{{ $payment->company->business_name }}</div>
-                <div class="company-rut">RUT: {{ $payment->company->rut }}</div>
-            </div>
+    <div class="receipt-container">
+        <div class="header">
+            <img src="{{ public_path('img/logo-cabecera.png') }}" alt="Senex Logo" class="logo">
+            <h1>¡Pago Recibido!</h1>
+            <p>Transacción #{{ strtoupper(substr($payment->uuid, 0, 8)) }}</p>
         </div>
 
-        <div class="section-title">Información del Pago</div>
-        <table class="details-table"> <!-- Usar clase details-table para su estructura y estilos -->
-            <thead>
-                <tr>
-                    <th style="width: 33%;">Paciente</th>
-                    <th style="width: 33%;">Fecha y Hora</th>
-                    <th style="width: 34%;">Método de Pago</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="width: 33%;">
-                        <div class="service-name">{{ $payment->patient->full_name }}</div>
-                        <div class="service-code">RUT: {{ $payment->patient->rut }}</div>
-                    </td>
-                    <td style="width: 33%;">
-                        <div class="service-name">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : $payment->created_at->format('d/m/Y H:i') }}</div>
-                        <div class="service-code">
-                            <strong>{{ $payment->branch->name ?? 'Casa Central' }}</strong><br>
-                            @if($payment->branch && $payment->branch->primaryAddress)
-                                {{ $payment->branch->primaryAddress->street }} {{ $payment->branch->primaryAddress->number }}, 
-                                {{ $payment->branch->primaryAddress->commune->name ?? '' }}
-                            @endif
-                        </div>
-                    </td>
-                    <td style="width: 34%;">
-                        <div class="service-name text-capitalize">
-                            @php
-                                $methods = [
-                                    'cash' => 'Efectivo',
-                                    'pos_integrado' => 'Tarjeta (POS)',
-                                    'transfer' => 'Transferencia',
-                                    'clinic_plan' => 'Plan Clínica',
-                                    'webpay' => 'Webpay Online'
-                                ];
-                                echo $methods[$payment->payment_method] ?? $payment->payment_method;
-                            @endphp
-                        </div>
-                        @if($payment->transaction_reference)
-                            <div class="service-code">Ref: {{ $payment->transaction_reference }}</div>
-                        @endif
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="content">
+            <div class="grid">
+                <div class="grid-col">
+                    <span class="label">Paciente</span>
+                    <div class="value">{{ $payment->patient->full_name }}</div>
+                    <div class="sub-value">RUT: {{ $payment->patient->rut }}</div>
+                </div>
+                <div class="grid-col">
+                    <span class="label">Sucursal</span>
+                    <div class="value">{{ $payment->branch->name ?? 'Casa Central' }}</div>
+                    <div class="sub-value">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : $payment->created_at->format('d/m/Y H:i') }}</div>
+                </div>
+                <div class="grid-col">
+                    <span class="label">Método</span>
+                    <div class="value">
+                        @php
+                            $methods = ['cash' => 'Efectivo', 'pos_integrado' => 'Tarjeta (POS)', 'transfer' => 'Transferencia', 'clinic_plan' => 'Plan Clínica'];
+                            echo $methods[$payment->payment_method] ?? $payment->payment_method;
+                        @endphp
+                    </div>
+                    @if($payment->transaction_reference)
+                        <div class="sub-value">Ref: {{ $payment->transaction_reference }}</div>
+                    @endif
+                </div>
+            </div>
 
-        <div class="section-title">Detalle de Prestaciones</div>
-        <table class="details-table">
-            <thead>
-                <tr>
-                    <th>Servicio / Descripción</th>
-                    <th class="text-right">Monto</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($payment->paymentAllocation as $alloc)
-                @php
-                    $serviceName = 'Atención Médica / Servicio';
-                    $serviceDetails = '';
-                    $description = null;
-                    $planSessions = [];
-
-                    if ($alloc->treatmentSession && $alloc->treatmentSession->sessionType) {
-                        $serviceName = $alloc->treatmentSession->sessionType->name;
-                        $serviceDetails = "SESIÓN ID: {$alloc->treatment_session_id} | COD: " . ($alloc->treatmentSession->sessionType->code ?? 'N/A');
-                    } elseif ($alloc->invoice && $alloc->invoice->items->count() > 0) {
-                        $planItem = $alloc->invoice->items->where('sellable_type', 'Plan')->first();
-                        if ($planItem && $planItem->sellable) {
-                            $plan = $planItem->sellable;
-                            $serviceName = "Plan: {$plan->name}";
-                            $serviceDetails = "VIGENCIA: {$plan->valid_months} MESES | TIPO: {$plan->type}";
-                            $description = $plan->description;
-                            $planSessions = $plan->sessionTypes;
-                        } else {
-                            $serviceName = $alloc->invoice->items->pluck('description')->implode(', ');
-                            $serviceDetails = "REF: " . ($alloc->invoice->type_name ?? 'Doc') . " #" . ($alloc->invoice->dte_folio ?? 'S/N');
+            <span class="label">Detalle de Prestaciones</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Servicio</th>
+                        <th style="text-align: right;">Monto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($payment->paymentAllocations as $alloc)
+                    @php
+                        $serviceName = 'Servicio Médico';
+                        $serviceDetails = '';
+                        if ($alloc->treatmentSession && $alloc->treatmentSession->sessionType) {
+                            $serviceName = $alloc->treatmentSession->sessionType->name;
+                            $serviceDetails = "Sesión ID: {$alloc->treatment_session_id} | Cod: " . ($alloc->treatmentSession->sessionType->code ?? 'N/A');
                         }
-                    }
-                @endphp
-                <tr>
-                    <td>
-                        <div class="service-name">{{ $serviceName }}</div>
-                        <div class="service-code">{{ $serviceDetails }}</div>
-                        
-                        @if(count($planSessions) > 0)
-                            <div style="margin-top: 10px; margin-bottom: 5px; font-weight: 800; font-size: 8px; color: var(--brand-primary); text-transform: uppercase;">Contenido del Plan:</div>
-                            @foreach($planSessions as $st)
-                                <div style="padding: 4px 8px; background: #f0f9ff; border: 1px solid #e0f2fe; border-radius: 6px; margin-bottom: 3px; font-size: 9px; clear: both;">
-                                    <span style="float: left; font-weight: 700; color: #1e40af;">{{ strtoupper($st->name) }}</span>
-                                    <span style="float: right; font-weight: 800; color: #1d4ed8;">{{ $st->pivot->max_sessions ?? '∞' }} SESIONES</span>
-                                    <div style="clear: both;"></div>
-                                </div>
-                            @endforeach
-                        @endif
+                    @endphp
+                    <tr>
+                        <td>
+                            <div class="item-name">{{ $serviceName }}</div>
+                            <div class="item-details">{{ $serviceDetails }}</div>
+                        </td>
+                        <td class="amount">${{ number_format($alloc->amount_clp, 0, ',', '.') }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
 
-                        @if($description)
-                            <div style="margin-top: 5px; font-style: italic; color: #666; font-size: 9px;">
-                                "{{ $description }}"
-                            </div>
-                        @endif
-                    </td>
-                    <td class="text-right font-bold">
-                        ${{ number_format($alloc->amount_clp, 0, ',', '.') }}
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+            <div style="width: 100%; display: inline-block;">
+                <div class="summary-box">
+                    <div style="overflow: hidden; margin-bottom: 5px;">
+                        <span style="float: left; font-size: 9px; font-weight: 900; color: #6b7280; text-transform: uppercase;">Total Bruto</span>
+                        <span style="float: right; font-weight: 700;">${{ number_format($payment->amount_gross_clp, 0, ',', '.') }}</span>
+                    </div>
 
-        <div class="summary-wrapper">
-            <div class="summary-item">
-                <span class="summary-label">Total Bruto</span>
-                <span class="summary-value">${{ number_format($payment->amount_gross_clp, 0, ',', '.') }}</span>
-            </div>
-            
-            @foreach($payment->receivables as $rec)
-            <div class="summary-item text-green">
-                <span class="summary-label">Cobertura {{ $rec->insurance->name }}</span>
-                <span class="summary-value">-${{ number_format($rec->amount_clp, 0, ',', '.') }}</span>
-            </div>
-            @endforeach
+                    @if($payment->discount_clp > 0)
+                    <div style="overflow: hidden; margin-bottom: 5px; color: #ea580c;">
+                        <span style="float: left; font-size: 9px; font-weight: 900; text-transform: uppercase;">Descuento</span>
+                        <span style="float: right; font-weight: 900;">-${{ number_format($payment->discount_clp, 0, ',', '.') }}</span>
+                    </div>
+                    @endif
 
-            @if($payment->discount_clp > 0)
-            <div class="summary-item text-orange">
-                <span class="summary-label">Descuento Aplicado</span>
-                <span class="summary-value">-${{ number_format($payment->discount_clp, 0, ',', '.') }}</span>
+                    <div class="summary-total" style="overflow: hidden;">
+                        <span style="float: left;">COPAGO</span>
+                        <span style="float: right;">${{ number_format($payment->amount_clp, 0, ',', '.') }}</span>
+                    </div>
+                </div>
             </div>
-            @endif
-
-            <div class="summary-total-item">
-                <span class="summary-label text-primary">COPAGO PAGADO</span>
-                <span class="summary-value text-primary">${{ number_format($payment->amount_clp, 0, ',', '.') }}</span>
-            </div>
-            <div style="clear: both;"></div>
         </div>
 
-        <div class="footer-section">
-            <p>Este documento es un comprobante interno de recepción de pago. No tiene validez tributaria.</p>
-            <p>Generado por <span class="app-name">{{ config('app.name') }}</span> el {{ date('d/m/Y H:i:s') }}</p>
+        <div class="footer">
+            <p>Gracias por confiar en {{ $payment->company->business_name }}</p>
+            <p style="font-size: 7px; margin-top: 10px; opacity: 0.5;">Comprobante Interno de Pago</p>
         </div>
     </div>
 </body>

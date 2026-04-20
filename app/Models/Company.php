@@ -19,7 +19,11 @@ class Company extends Model
         'giro',
         'email',
         'phone',
+        'business_type',
+    ];
 
+    protected $casts = [
+        'business_type' => \App\Enums\BusinessTypeEnum::class,
     ];
 
     protected $appends = ['logo_url'];

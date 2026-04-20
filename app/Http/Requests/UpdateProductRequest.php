@@ -14,10 +14,12 @@ class UpdateProductRequest extends FormRequest
 
     public function rules(): array
     {
-        $companyId = auth()->user()->company_id;
+        $companyId = session('current_company_id');
         $productId = $this->route('product')->id; // ID del producto que estamos editando
 
         return [
+            'type'           => 'required|string|in:product,service',
+            'category_id'    => 'nullable|exists:categories,id',
             'name'           => 'required|string|max:255',
             'description'    => 'nullable|string|max:1000',
             'sku'            => [

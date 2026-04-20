@@ -10,7 +10,11 @@ export default function ServiceItem({
   patientExtras,
   onUpdate,
   onRemove,
+  business_type = "clinical",
 }) {
+  const isClinical = business_type === "clinical";
+  const isItemEmpty = !item.session_type_id;
+
   // Helpers para cambio de cantidad tipo Stepper
   const handleDecrement = () => {
     if (item.quantity > 1) {
@@ -22,14 +26,12 @@ export default function ServiceItem({
     onUpdate(index, "quantity", (item.quantity || 0) + 1);
   };
 
-  // --- LÓGICA DE PLANES ---
-  // Buscamos si hay planes que cubran esta prestación específica
-  const availablePlans = (patientExtras.activePlans || []).filter(
+  // --- LÓGICA DE PLANES (SOLO CLÍNICO) ---
+  const availablePlans = isClinical ? (patientExtras.activePlans || []).filter(
     (p) => p.session_type_id == item.session_type_id && p.available > 0
-  );
+  ) : [];
 
   // Calculamos subtotal visual para esta fila
-  // Si usa plan, el costo para el paciente es 0
   const subtotal = item.use_plan_id 
     ? 0 
     : (item.unit_price_clp || 0) * (item.quantity || 1);
@@ -44,33 +46,33 @@ export default function ServiceItem({
           : "bg-white border-gray-100 shadow-sm hover:border-brand-secondary/50"
       }`}
     >
-      {/* 1. ENCABEZADO: TIPO DE PRESTACIÓN */}
+      {/* 1. ENCABEZADO: TIPO DE ITEM */}
       <div className="mb-4">
         {item.is_debt ? (
           <div className="flex flex-col">
             <span className="text-[9px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1 mb-1">
-              Deuda Pendiente
+              {isClinical ? "Deuda Pendiente" : "Cargo Histórico"}
             </span>
             <span className="text-sm font-black text-gray-900 uppercase tracking-tight">{item.name}</span>
             <span className="mt-1 font-mono text-[10px] font-bold text-gray-500">
-              Realizada el: {item.date_label}
+              Registrado el: {item.date_label}
             </span>
           </div>
         ) : (
           <div className="space-y-3">
             <div>
               <EnterpriseSelect
-                label="Prestación"
+                label={isClinical ? "Prestación" : "Ítem / Servicio"}
                 value={item.session_type_id}
                 onChange={(val) => onUpdate(index, "session_type_id", val)}
                 options={sessionTypes.map((st) => ({ value: st.id, label: st.name }))}
-                placeholder="Seleccionar prestación..."
+                placeholder={`Seleccionar ${isClinical ? 'prestación' : 'item'}...`}
                 className="bg-gray-50"
               />
             </div>
 
-            {/* SELECTOR DE PLAN (Si aplica) */}
-            {availablePlans.length > 0 && (
+            {/* SELECTOR DE PLAN (Si aplica - SOLO CLÍNICO) */}
+            {isClinical && availablePlans.length > 0 && (
               <div className="animate-in fade-in zoom-in-95 duration-500">
                 <label className="text-[10px] uppercase font-black text-green-600 mb-1 block tracking-widest ml-1">
                   Plan Disponible
@@ -90,34 +92,36 @@ export default function ServiceItem({
         )}
       </div>
 
-      {/* 2. CUERPO: DOCTOR */}
-      <div className="mb-5">
-        {!item.is_debt && (
-          <>
-            <EnterpriseSelect
-              value={item.doctor_id}
-              onChange={(val) => onUpdate(index, "doctor_id", val)}
-              options={doctors.map((d) => ({ value: d.id, label: `${d.name} ${d.last_name}` }))}
-              placeholder="Asignar Profesional..."
-              icon={Stethoscope}
-            />
-          </>
-        )}
-        {item.is_debt && (
-          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tight pl-1 italic">
-            Profesional original asignado
-          </div>
-        )}
-      </div>
+      {/* 2. CUERPO: PROFESIONAL (SOLO CLÍNICO) */}
+      {isClinical && (
+        <div className="mb-5">
+          {!item.is_debt && (
+            <>
+              <EnterpriseSelect
+                value={item.doctor_id}
+                onChange={(val) => onUpdate(index, "doctor_id", val)}
+                options={doctors.map((d) => ({ value: d.id, label: `${d.name} ${d.last_name}` }))}
+                placeholder="Asignar Profesional..."
+                icon={Stethoscope}
+              />
+            </>
+          )}
+          {item.is_debt && (
+            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tight pl-1 italic">
+              Profesional original asignado
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 3. FOOTER: CANTIDAD, PRECIO Y BORRAR */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-50">
         {/* A. Stepper de Cantidad */}
-        <div className="flex items-center border-2 border-gray-50 rounded-xl overflow-hidden h-10 bg-gray-50">
+        <div className={`flex items-center border-2 border-gray-50 rounded-xl overflow-hidden h-10 transition-all ${isItemEmpty ? 'opacity-30 bg-gray-100 cursor-not-allowed' : 'bg-gray-50'}`}>
           <button
             type="button"
             onClick={handleDecrement}
-            disabled={item.is_debt || item.quantity <= 1}
+            disabled={item.is_debt || item.quantity <= 1 || isItemEmpty}
             className="px-3 h-full hover:bg-gray-100 text-brand-gray disabled:opacity-30 transition-all active:scale-90"
           >
             <Minus className="w-3.5 h-3.5" />
@@ -131,7 +135,7 @@ export default function ServiceItem({
           <button
             type="button"
             onClick={handleIncrement}
-            disabled={item.is_debt}
+            disabled={item.is_debt || isItemEmpty}
             className="px-3 h-full hover:bg-gray-100 text-brand-gray disabled:opacity-30 transition-all active:scale-90"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -141,10 +145,8 @@ export default function ServiceItem({
         {/* B. Precio y Subtotal */}
         <div className="flex flex-col items-end mr-4">
           <span className="text-[9px] font-black text-brand-gray uppercase tracking-widest opacity-60">
-            {item.quantity > 1
-              ? `${item.quantity} x $${item.unit_price_clp.toLocaleString(
-                  "es-CL"
-                )}`
+            {item.quantity > 1 && !isItemEmpty
+              ? `${item.quantity} x $${(item.unit_price_clp || 0).toLocaleString("es-CL")}`
               : "Valor Item"}
           </span>
           <span className={`text-lg font-black font-mono ${item.use_plan_id ? 'text-green-600' : 'text-brand-primary'}`}>

@@ -237,19 +237,29 @@ export default function SessionFormModal({
 
 
   // Sincronizar datos cuando cambia el tratamiento seleccionado
+  // Solo disparamos el efecto si el ID cambia realmente
+  const treatmentIdKey = data.treatment_id;
+
   useEffect(() => {
-      if (data.treatment_id && selectedTreatmentInfo) {
-          setData(prev => ({
-              ...prev,
-              diagnostic_code: selectedTreatmentInfo.diagnostic?.code || selectedTreatmentInfo.diagnostic_code || "",
-              referral_diagnosis: selectedTreatmentInfo.referral_diagnosis || "",
-              referral_doctor_name: selectedTreatmentInfo.referral_doctor_name || "",
-              // No sobreescribimos body_part/laterality si la sesión ya tiene datos propios
-              body_part: prev.body_part || selectedTreatmentInfo.body_part || "",
-              laterality: prev.laterality || selectedTreatmentInfo.laterality || ""
-          }));
+      if (treatmentIdKey && selectedTreatmentInfo) {
+          // Usamos una función de actualización para evitar dependencias circulares con 'data'
+          setData(prev => {
+              // Solo actualizar si hay cambios reales para evitar bucles
+              if (prev.diagnostic_code === (selectedTreatmentInfo.diagnostic?.code || selectedTreatmentInfo.diagnostic_code || "")) {
+                  return prev;
+              }
+
+              return {
+                ...prev,
+                diagnostic_code: selectedTreatmentInfo.diagnostic?.code || selectedTreatmentInfo.diagnostic_code || "",
+                referral_diagnosis: selectedTreatmentInfo.referral_diagnosis || "",
+                referral_doctor_name: selectedTreatmentInfo.referral_doctor_name || "",
+                body_part: prev.body_part || selectedTreatmentInfo.body_part || "",
+                laterality: prev.laterality || selectedTreatmentInfo.laterality || ""
+              };
+          });
       }
-  }, [data.treatment_id, selectedTreatmentInfo]);
+  }, [treatmentIdKey]); // Solo dependemos del ID
 
   const handleSubmit = (e) => {
     e.preventDefault();

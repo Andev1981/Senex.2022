@@ -13,9 +13,12 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $companyId = auth()->user()->company_id;
+        $companyId = session('current_company_id');
 
         $products = Product::where('company_id', $companyId)
+            ->with('category')
+            ->when($request->type, fn($q, $type) => $q->where('type', $type))
+            ->when($request->category_id, fn($q, $cat) => $q->where('category_id', $cat))
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -27,55 +30,42 @@ class ProductController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        // Lista de categorías para filtros y formularios
+        $categories = \App\Models\Category::where('company_id', $companyId)
+            ->with('children')
+            ->whereNull('parent_id')
+            ->get();
+
         return Inertia::render('products/Index', [
             'products' => $products,
-            'filters'  => $request->only(['search']),
+            'categories' => $categories,
+            'filters'  => $request->only(['search', 'type', 'category_id']),
         ]);
-    }
-
-    public function create()
-    {
-        return Inertia::render('products/Create');
     }
 
     public function store(StoreProductRequest $request)
     {
         $data = $request->validated();
         
-        // Inyectamos contexto
-        $data['company_id'] = auth()->user()->company_id;
+        $data['company_id'] = session('current_company_id');
         $data['branch_id']  = session('current_branch_id');
         $data['user_id']    = auth()->id();
 
-        // Crear
         Product::create($data);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Producto creado exitosamente.');
-    }
-
-    public function edit(Product $product)
-    {
-        // Validar que el producto pertenezca a la empresa del usuario
-        if ($product->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
-
-        return Inertia::render('products/Edit', [
-            'product' => $product
-        ]);
+        return back()->with('success', 'Ítem creado exitosamente.');
     }
 
     public function update(UpdateProductRequest $request, Product $product)
     {
-        if ($product->company_id !== auth()->user()->company_id) {
+        // Validar propiedad
+        if ($product->company_id !== (int)session('current_company_id')) {
             abort(403);
         }
 
         $product->update($request->validated());
 
-        return redirect()->route('products.index')
-            ->with('success', 'Producto actualizado correctamente.');
+        return back()->with('success', 'Ítem actualizado correctamente.');
     }
 
     public function destroy(Product $product)

@@ -14,7 +14,6 @@ class InvoiceItem extends Model
     'invoice_id',
     'company_id',
     'branch_id',
-    'session_type_id',
     'treatment_session_id',
     'agreement_rule_id',
     'sellable_id',

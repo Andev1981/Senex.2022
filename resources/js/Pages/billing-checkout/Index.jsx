@@ -15,12 +15,17 @@ import PlansCard from "./components/PlansCard"; // <-- 1. Importar PlansCard
 export default function PosIndex({
   patients = [],
   sessionTypes = [],
+  products = [],
   insurances = [],
   plans = [],
   paymentMethods = [],
   agreements = [],
   doctors = [],
+  business_type = "clinical"
 }) {
+  const isClinical = business_type === "clinical";
+  const entityLabel = isClinical ? "Paciente" : "Cliente";
+
   // ... (TUS ESTADOS MANTIENEN IGUAL) ...
   const [modalState, setModalState] = useState({
     isOpen: false,
@@ -63,7 +68,7 @@ export default function PosIndex({
     },
     services_to_bill: [],
     payment_details: {
-      payment_method: "cash",
+      payment_method: "pos_integrado",
       amount_paid: 0,
       payment_date: new Date().toISOString().split("T")[0],
     },
@@ -86,8 +91,8 @@ export default function PosIndex({
         .then((res) => {
           setPatientExtras(res.data);
           
-          // Si el paciente tiene seguro activo, lo inyectamos automáticamente
-          if (res.data.insurance) {
+          // Si el paciente tiene seguro activo, lo inyectamos automáticamente (SOLO CLÍNICO)
+          if (isClinical && res.data.insurance) {
             setData((prev) => ({
               ...prev,
               coverage_details: {
@@ -100,14 +105,14 @@ export default function PosIndex({
         })
         .catch((err) => console.error("Error cargando paciente:", err));
     }
-  }, [data.patient_id]);
+  }, [data.patient_id, isClinical]);
 
   // 2. Función para añadir deudas (CORREGIDA PARA _clp)
   const addDebtToBill = (debt) => {
     if (data.services_to_bill.some((s) => s.debt_id === debt.id)) return;
 
-    // Detectamos el nombre correcto de la variable en tu BD nueva
-    const debtAmount = debt.original_amount_clp || debt.original_amount || 0;
+    // Usar el monto que efectivamente debe pagar el paciente
+    const debtAmount = debt.amount_patient_clp || debt.total_amount_clp || 0;
 
     const newItem = {
       session_type_id: debt.treatment_session?.session_type_id,
@@ -115,7 +120,7 @@ export default function PosIndex({
       quantity: 1,
       unit_price_clp: debtAmount, // Precio fijo histórico
       name:
-        debt.treatment_session?.session_type?.name || "Prestación Histórica",
+        debt.treatment_session?.session_type?.name || "Cargo Histórico",
       debt_id: debt.id,
       treatment_id: debt.treatment_session?.treatment_id,
       treatment_session_id: debt.treatment_session_id,
@@ -149,14 +154,15 @@ export default function PosIndex({
     const calculatedServices = serviceItems.map((s) => {
       const service = sessionTypes.find((t) => t.id == s.session_type_id);
       
-      let basePrice = s.is_debt ? s.unit_price_clp : (service?.base_price_clp || 0);
+      let basePrice = s.is_debt ? s.unit_price_clp : (service?.price || service?.base_price_clp || 0);
       const subtotal_clp = Math.round(basePrice * (s.quantity || 1));
       totalGross += subtotal_clp;
 
       let primaryAmount = 0;
       let secondaryAmount = 0;
 
-      if (!s.is_debt && !s.use_plan_id) {
+      // SOLO CLÍNICO APLICA COBERTURAS
+      if (isClinical && !s.is_debt && !s.use_plan_id) {
         if (data.coverage_details.insurance_id && data.coverage_details.plan_id) {
           let primaryRule = null;
           if (Array.isArray(agreements)) {
@@ -173,9 +179,6 @@ export default function PosIndex({
               ? primaryRule.insurance_share_clp * (s.quantity || 1)
               : Math.round(subtotal_clp * ((100 - primaryRule.patient_percentage) / 100));
           }
-        }
-        if (hasSecondaryInsurance && data.coverage_details.secondary_plan_id) {
-            // Lógica similar para seguro secundario...
         }
       }
 
@@ -220,6 +223,7 @@ export default function PosIndex({
     hasSecondaryInsurance,
     isManualAdjustmentMode,
     JSON.stringify(agreements),
+    isClinical
   ]);
 
   // 4. Limpieza si se selecciona "Particular"
@@ -261,7 +265,7 @@ export default function PosIndex({
         },
         services_to_bill: [],
         payment_details: {
-          payment_method: "cash",
+          payment_method: "pos_integrado",
           amount_paid: 0,
           payment_date: new Date().toISOString().split("T")[0],
         },
@@ -316,7 +320,15 @@ export default function PosIndex({
     const calcPatientShare = (gross, discount, primary, secondary) =>
       Math.max(0, gross - discount - primary - secondary);
 
-    if (field === "amount_patient_clp") {
+    if (field === "discount_clp") {
+        newShares.discount_clp = val;
+        newShares.amount_patient_clp = calcPatientShare(
+            current.amount_gross_clp,
+            val,
+            current.amount_insurance_primary_clp,
+            current.amount_insurance_secondary_clp
+        );
+    } else if (field === "amount_patient_clp") {
       newShares.amount_patient_clp = val;
       newShares.amount_insurance_primary_clp = Math.max(
         0,
@@ -363,7 +375,7 @@ export default function PosIndex({
         session_type_id: "", // Vacío para que el select muestre "Seleccionar..."
         treatment_id: null,
         treatment_session_id: null,
-        doctor_id: "", // Vacío
+        doctor_id: isClinical ? "" : 1, // Si no es clínico, asignamos un ID genérico o nulificamos
         quantity: 1, // Cantidad inicial 1
         unit_price_clp: 0, // Precio 0 hasta que elija el tipo
         name: "", // Nombre vacío
@@ -388,16 +400,17 @@ export default function PosIndex({
     // 1. Creamos una copia del array actual
     const newServices = [...data.services_to_bill];
 
-    // 2. Lógica especial si cambiamos el tipo de sesión (actualizar precio base)
+    // 2. Lógica especial si cambiamos el tipo de sesión (actualizar metadatos)
     if (field === "session_type_id") {
       const service = sessionTypes.find((t) => t.id == value);
 
-      // Actualizamos precio y nombre automáticamente desde el catálogo
-      newServices[index].unit_price_clp = service ? service.base_price_clp : 0;
+      newServices[index].unit_price_clp = service ? (service.price || service.base_price_clp || 0) : 0;
       newServices[index].name = service ? service.name : "";
+      newServices[index].sellable_type = service ? (service.sellable_type || 'Product') : 'Product';
+      newServices[index].is_exempt = service ? (!!service.is_exempt) : true;
     }
 
-    // 3. Actualizamos el campo específico (quantity, doctor_id, etc.)
+    // 3. Actualizamos el campo específico
     newServices[index][field] = value;
 
     // 4. Guardamos en el estado
@@ -432,7 +445,7 @@ export default function PosIndex({
       });
       Swal.fire({
         icon: "success",
-        title: "Paciente creado",
+        title: `${entityLabel} creado`,
         timer: 1500,
         showConfirmButton: false,
       });
@@ -440,7 +453,7 @@ export default function PosIndex({
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo crear el paciente.",
+        text: `No se pudo crear el ${entityLabel.toLowerCase()}.`,
       });
     }
   };
@@ -474,12 +487,12 @@ export default function PosIndex({
 
     // 1. Validar Paciente
     if (!data.patient_id) {
-      errorList.push("Debes seleccionar un <b>Paciente</b>.");
+      errorList.push(`Debes seleccionar un <b>${entityLabel}</b>.`);
     }
 
     // 2. Validar que existan servicios
     if (data.services_to_bill.length === 0) {
-      errorList.push("La venta debe tener al menos una <b>prestación</b>.");
+      errorList.push("La venta debe tener al menos un <b>ítem o servicio</b>.");
     }
 
     // 3. Validar fila por fila (Prestación, Doctor, Cantidad)
@@ -490,10 +503,10 @@ export default function PosIndex({
       if (!s.is_debt && !s.is_plan) {
         if (!s.session_type_id) {
           errorList.push(
-            `Fila ${rowNum}: Falta seleccionar la <b>Prestación</b>.`
+            `Fila ${rowNum}: Falta seleccionar el <b>Ítem/Servicio</b>.`
           );
         }
-        if (!s.doctor_id) {
+        if (isClinical && !s.doctor_id) {
           errorList.push(
             `Fila ${rowNum}: Falta asignar al <b>Profesional</b>.`
           );
@@ -549,8 +562,19 @@ export default function PosIndex({
     }
 
     try {
+      // --- REFUERZO DE DATOS ANTES DE ENVIAR ---
+      const payload = {
+          ...data,
+          services_to_bill: data.services_to_bill.map(item => ({
+              ...item,
+              quantity: item.quantity || 1, // Aseguramos que siempre viaje
+              unit_price_clp: item.unit_price_clp || 0,
+              sellable_type: item.sellable_type || 'Product'
+          }))
+      };
+
       // 3. ENVIAR DATOS
-      const response = await axios.post(route("payments.store"), data);
+      const response = await axios.post(route("payments.store"), payload);
 
       if (response.data.status === "success") {
         setModalState({ isOpen: false, message: "", isAbortable: true });
@@ -610,10 +634,10 @@ export default function PosIndex({
     }
   };
 
-  console.log("Data: ", data);
+
   return (
     <AuthenticatedLayout>
-      <Head title="Caja - Nueva Venta" />
+      <Head title={`Caja - Nueva Venta (${isClinical ? 'Clínica' : 'Comercial'})`} />
       <div className="max-w-full p-4 mx-auto sm:p-6 lg:p-8">
         <form
           onSubmit={submit}
@@ -628,6 +652,7 @@ export default function PosIndex({
             selectedPatientId={data.patient_id}
             coverageDetails={data.coverage_details}
             errors={errors}
+            business_type={business_type}
             // Estados UI
             isImedMode={isImedMode}
             hasSecondaryInsurance={hasSecondaryInsurance}
@@ -648,13 +673,14 @@ export default function PosIndex({
                     patientExtras={patientExtras}
                     sessionTypes={sessionTypes}
                     doctors={doctors}
+                    business_type={business_type}
                     onAddDebt={addDebtToBill}
                     onAddService={handleAddService}
                     onUpdateService={handleUpdateService}
                     onRemoveService={handleRemoveService}
                 />
-                {/* <-- 3. Añadir el componente PlansCard --> */}
-                <PlansCard onAddPlan={handleAddPlan} />
+                {/* Solo clínico: Planes Médicos */}
+                {isClinical && <PlansCard onAddPlan={handleAddPlan} />}
             </div>
 
           {/* COLUMNA 3: CAJA */}
@@ -666,6 +692,7 @@ export default function PosIndex({
             hasSecondaryInsurance={hasSecondaryInsurance}
             paymentMethods={paymentMethods}
             isProcessing={isProcessing}
+            business_type={business_type}
             canSubmit={data.services_to_bill.length > 0}
             onToggleManualMode={() =>
               setIsManualAdjustmentMode(!isManualAdjustmentMode)
@@ -681,13 +708,13 @@ export default function PosIndex({
         </form>
       </div>
 
-      {/* --- MODAL PACIENTE RÁPIDO --- */}
+      {/* --- MODAL CLIENTE/PACIENTE RÁPIDO --- */}
       {isPatientModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-md p-4">
           <div className="w-full max-w-lg bg-white shadow-2xl rounded-[2.5rem] overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="bg-brand-primary p-8 flex justify-between items-center relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-              <h3 className="font-black text-white uppercase tracking-widest text-sm relative z-10">Registro Rápido</h3>
+              <h3 className="font-black text-white uppercase tracking-widest text-sm relative z-10">Registro Rápido de {entityLabel}</h3>
               <button
                 onClick={() => setIsPatientModalOpen(false)}
                 className="text-white/80 hover:text-white transition-colors relative z-10 bg-white/10 p-2 rounded-xl"
@@ -748,7 +775,7 @@ export default function PosIndex({
               </div>
               <div className="space-y-1">
                 <label className="enterprise-label ml-1">
-                  Email de Contacto
+                  Email
                 </label>
                 <input
                   type="email"
@@ -773,7 +800,7 @@ export default function PosIndex({
                   type="submit"
                   className="flex-1 py-4 bg-brand-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20 active:scale-95"
                 >
-                  Guardar Paciente
+                  Guardar {entityLabel}
                 </button>
               </div>
             </form>

@@ -16,7 +16,7 @@ function ModalDeletePatient({ patient, setOpenModalDelete }) {
     e.preventDefault();
 
     if (data?.id !== "") {
-      get(route("pacientes.destroy", data.id), {
+      destroy(route("patients.destroy", data.id), {
         onSuccess: () => {
           setOpenModalDelete(false);
           reset();

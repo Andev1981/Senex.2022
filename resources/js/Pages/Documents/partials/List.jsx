@@ -134,7 +134,7 @@ export default function List({
       ),
     },
     {
-      accessorKey: "amount_total_clp",
+      accessorKey: "total_amount_clp",
       header: "Monto Total",
       cell: ({ getValue }) => (
         <div className="text-right font-black text-gray-900 font-mono text-sm">

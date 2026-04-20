@@ -8,15 +8,20 @@ enum AppEnvironmentEnum: string
 {
     use EnumOptions;
 
-    case HOMOLOGACION = 'homologacion';
-    case PRODUCCION = 'produccion';
+    case CERTIFICATION = 'certification';
+    case PRODUCTION = 'production';
 
     public function label(): string {
         return match($this) {
-            self::HOMOLOGACION => 'Certificación / Prueba',
-            self::PRODUCCION => 'Producción (Real)',
+            self::CERTIFICATION => 'Certificación / Pruebas',
+            self::PRODUCTION => 'Producción Real',
         };
     }
 
-    public function color(): string { return 'gray'; }
+    public function color(): string {
+        return match($this) {
+            self::CERTIFICATION => 'amber',
+            self::PRODUCTION => 'green',
+        };
+    }
 }

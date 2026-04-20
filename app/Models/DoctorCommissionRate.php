@@ -18,6 +18,7 @@ class DoctorCommissionRate extends Model
         'session_type_id',
         'commission_type',
         'amount_clp',
+        'commission_percentage',
         'effective_from',
         'effective_until',
         'is_active',

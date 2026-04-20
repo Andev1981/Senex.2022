@@ -14,6 +14,7 @@ use App\Models\Patient;
 use App\Models\Plan;
 use App\Models\Product;
 use App\Models\SessionType;
+use App\Services\Dte\DteCalculatorService;
 use App\Services\Dte\DteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,7 +69,15 @@ class DteController extends Controller
             });
         })->select('id', 'name', 'last_name', 'rut')->get();
 
-        $invoices = Invoice::with('patient', 'items', 'dtes', 'currentDte')->where('branch_id', $activeBranchId)->orderByDesc('created_at')->get();
+        $invoices = Invoice::with(['patient', 'items', 'currentDte'])
+            ->where('branch_id', $activeBranchId)
+            ->select([
+                'id', 'patient_id', 'dte_type', 'dte_folio', 'dte_status', 'issue_date',
+                'net_amount_clp', 'exempt_amount_clp', 'vat_amount_clp', 'total_amount_clp',
+                'payment_status', 'metadata', 'created_at'
+            ])
+            ->orderByDesc('created_at')
+            ->get();
 
         $communes = Commune::with('province.region')
             ->orderBy('name')
@@ -208,11 +217,13 @@ class DteController extends Controller
 
             return response()->json([
                 'success' => true,
-                'razon_social' => $data['razon_social'] ?? 'Sin Razón Social',
-                'giro' => $data['glosa_giro'] ?? 'Particular',
-                'direccion' => $data['direccion_sucursal'] ?? $data['direccion'] ?? '',
-                'comuna' => $data['comuna'] ?? '',
-                'es_empresa' => $esEmpresa
+                'data' => [
+                    'razon_social' => $data['razon_social'] ?? 'Sin Razón Social',
+                    'giro' => $data['glosa_giro'] ?? 'Particular',
+                    'direccion' => $data['direccion_sucursal'] ?? $data['direccion'] ?? '',
+                    'comuna' => $data['comuna'] ?? '',
+                    'es_empresa' => $esEmpresa
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error("RUT_CONSULT_ERROR: " . $e->getMessage());
@@ -340,14 +351,14 @@ class DteController extends Controller
                 'total_gross_clp' => $gross,
                 'total_patient_clp' => $gross,
                 'discount_percentage' => $disc,
-                'is_exento' => $item['is_exempt'] ?? (in_array($data['dte_type'], [34, 41])),
+                'is_exento' => $item['is_exempt'] ?? true,
                 'sellable_type' => $item['sellable_type'] ?? null,
                 'sellable_id' => $item['sellable_id'] ?? null,
             ]);
         }
 
         // Una vez creados los ítems, invocamos al calculador para setear los totales de la factura
-        app(\App\Services\Dte\DteCalculatorService::class)->calculateAndDetermineType($invoice);
+        app(DteCalculatorService::class)->calculateAndDetermineType($invoice);
 
         return $invoice;
     }

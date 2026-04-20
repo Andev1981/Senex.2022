@@ -30,11 +30,34 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
-        $authData = $this->getAuthContext($request);
+        $user = $request->user();
+
+        // --- 1. AUTO-DESCUBRIMIENTO DE CONTEXTO ---
+        // Si el usuario entró directo y no tiene sesión de contexto, la inicializamos
+        if ($user && (!session('current_company_id') || !session('active_branch_id'))) {
+            $company = $user->company ?: \App\Models\Company::first();
+
+            if ($company) {
+                if (!session('current_company_id')) {
+                    session(['current_company_id' => $company->id]);
+                }
+
+                if (!session('active_branch_id')) {
+                    $branch = $company->branches()->first();
+                    if ($branch) {
+                        session(['active_branch_id' => $branch->id]);
+                    }
+                }
+                // Guardar cambios en sesión física
+                $request->session()->save();
+            }
+        }
+
+        $context = $this->getAuthContext($request);
 
         return [
             ...parent::share($request),
-            'auth' => $authData['auth'],
+            'auth' => $context['auth'],
 
             // ENUMS COMPARTIDOS (Centralizados para todo el Frontend)
             'enums' => [
@@ -53,16 +76,16 @@ class HandleInertiaRequests extends Middleware
             ],
 
             // Contexto de Compañía
-            'current_company' => $authData['current_company'],
-            'current_company_id' => $authData['current_company'] ? $authData['current_company']['id'] : null,
+            'current_company' => $context['current_company'],
+            'current_company_id' => $context['current_company'] ? $context['current_company']['id'] : null,
 
             // Contexto de Sucursal
-            'current_branch' => $authData['current_branch'],
-            'current_branch_id' => $authData['current_branch'] ? $authData['current_branch']['id'] : null,
+            'current_branch' => $context['current_branch'],
+            'current_branch_id' => $context['current_branch'] ? $context['current_branch']['id'] : null,
 
             // Listados para Switchers
-            'all_companies' => $authData['all_companies'],
-            'available_branches' => $authData['available_branches'],
+            'all_companies' => $context['all_companies'],
+            'available_branches' => $context['available_branches'],
 
             // Mensajes Flash (Genérico)
             'flash' => array_filter([
@@ -188,7 +211,7 @@ class HandleInertiaRequests extends Middleware
                 // Usamos withoutGlobalScopes() por pura seguridad, aunque ya quitamos el trait
                 $currentCompany = Company::withoutGlobalScopes()
                     ->with('logo')
-                    ->select(['id', 'business_name', 'rut', 'giro', 'email', 'phone'])
+                    ->select(['id', 'business_name', 'rut', 'giro', 'email', 'phone', 'business_type'])
                     ->find($contextCompanyId);
             }
 

@@ -19,7 +19,7 @@ export default function PatientDashboard({
             : invoice.payment_status;
 
         if (status === 'unpaid' || status === 'partial') {
-            return acc + (Number(invoice.amount_total_clp) || 0);
+            return acc + (Number(invoice.total_amount_clp) || 0);
         }
         return acc;
     }, 0);

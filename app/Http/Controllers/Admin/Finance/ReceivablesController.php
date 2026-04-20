@@ -12,19 +12,25 @@ class ReceivablesController extends Controller
 {
     public function index()
     {
-        $allReceivables = Receivable::whereIn('status', ['pending', 'partial', 'overdue'])->get();
+        $currentCompanyId = session('current_company_id');
+        
+        $allReceivables = Receivable::where('company_id', $currentCompanyId)
+            ->whereIn('status', ['pending', 'partial', 'overdue'])
+            ->with(['patient', 'insurance', 'payment'])
+            ->orderBy('due_date', 'asc')
+            ->get();
 
-        $totalDebt = $allReceivables->sum(function($receivable) {
-            return $receivable->amount - $receivable->paid_amount;
-        });
+        $totalDebt = $allReceivables->sum('amount_clp');
 
-        $patientReceivables = $allReceivables->where('type', 'copay')->load('payable');
-        $insurerReceivables = $allReceivables->where('type', 'insurance_refund')->load('payable');
+        // Separar por tipo para el frontend
+        $insurerReceivables = $allReceivables->whereNotNull('insurance_id')->values();
+        $patientReceivables = $allReceivables->whereNull('insurance_id')->values();
 
         return Inertia::render('finance/Receivables/Index', [
             'totalDebt' => $totalDebt,
             'patientReceivables' => $patientReceivables,
             'insurerReceivables' => $insurerReceivables,
+            'allReceivables' => $allReceivables
         ]);
     }
 }

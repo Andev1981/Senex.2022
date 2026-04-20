@@ -14,9 +14,11 @@ class StoreProductRequest extends FormRequest
 
     public function rules(): array
     {
-        $companyId = auth()->user()->company_id; // O como obtengas el ID de la empresa
+        $companyId = session('current_company_id');
 
         return [
+            'type'           => 'required|string|in:product,service',
+            'category_id'    => 'nullable|exists:categories,id',
             'name'           => 'required|string|max:255',
             'description'    => 'nullable|string|max:1000',
             // El SKU debe ser único dentro de la misma empresa

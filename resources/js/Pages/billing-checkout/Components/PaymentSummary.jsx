@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function PaymentSummary({
   finalShares,
   paymentDetails,
@@ -12,7 +10,12 @@ export default function PaymentSummary({
   onToggleManualMode,
   onManualChange,
   onPaymentMethodChange,
+  business_type = "clinical",
 }) {
+  const isClinical = business_type === "clinical";
+
+  const hasItems = finalShares.amount_gross_clp > 0;
+
   return (
     <div className="p-8 bg-white border border-gray-100 shadow-xl rounded-[2.5rem] h-fit sticky top-6 hover:scale-[1.01] transition-all duration-300">
       {/* 1. CABECERA: TÍTULO Y TOGGLE MANUAL */}
@@ -21,11 +24,15 @@ export default function PaymentSummary({
         <button
           type="button"
           onClick={onToggleManualMode}
+          disabled={!hasItems}
           className={`text-[9px] px-3 py-1.5 rounded-xl font-black uppercase tracking-widest transition-all shadow-sm ${
-            isManualAdjustmentMode
+            !hasItems 
+              ? "bg-gray-100 text-gray-300 cursor-not-allowed opacity-50"
+              : isManualAdjustmentMode
               ? "bg-red-500 text-white shadow-red-200"
               : "bg-gray-100 text-brand-gray hover:bg-gray-200"
           }`}
+          title={!hasItems ? "Agregue ítems con valor para habilitar ajuste" : ""}
         >
           {isManualAdjustmentMode
             ? "Manual ON"
@@ -43,24 +50,48 @@ export default function PaymentSummary({
           </span>
         </div>
 
-        {/* Descuento Particular */}
-        {(!coverageDetails.insurance_id || isManualAdjustmentMode) && (
-          <div className="flex justify-between items-center text-orange-600 bg-orange-50/50 p-4 rounded-2xl border border-orange-100/50">
-            <span className="enterprise-label !mb-0 !text-orange-600">Descuento</span>
-            <div className="flex items-center gap-2">
-              <span className="font-black">-</span>
-              <input
-                type="number"
-                className="w-24 p-2 text-right text-sm font-black bg-white border-orange-200 rounded-xl focus:ring-orange-500 text-orange-700 shadow-sm"
-                value={finalShares.discount_clp}
-                onChange={(e) => onManualChange("discount_clp", e.target.value)}
-              />
+        {/* Descuento Comercial (Sincronizado con Ajuste Manual y Total > 0) */}
+        <div className={`space-y-3 p-5 rounded-2xl border transition-all duration-500 ${
+            isManualAdjustmentMode && hasItems
+            ? 'bg-orange-50 border-orange-200 shadow-inner' 
+            : 'bg-gray-50/50 border-gray-100 opacity-40 pointer-events-none'
+        }`}>
+            <div className="flex justify-between items-center text-orange-600">
+                <span className="enterprise-label !mb-0 !text-orange-600">Descuento</span>
+                <div className="flex items-center gap-2">
+                    <span className="font-black">-</span>
+                    <input
+                        type="number"
+                        disabled={!isManualAdjustmentMode}
+                        className="w-24 p-2 text-right text-sm font-black bg-white border-orange-200 rounded-xl focus:ring-orange-500 text-orange-700 shadow-sm disabled:cursor-not-allowed"
+                        value={finalShares.discount_clp || 0}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            if (val > finalShares.amount_gross_clp) {
+                                onManualChange("discount_clp", finalShares.amount_gross_clp);
+                            } else {
+                                onManualChange("discount_clp", val);
+                            }
+                        }}
+                        min="0"
+                    />
+                </div>
             </div>
-          </div>
-        )}
+            {/* GLOSA DE DESCUENTO */}
+            <div className="pt-2 border-t border-orange-200/30">
+                <input 
+                    type="text"
+                    disabled={!isManualAdjustmentMode}
+                    placeholder="¿Motivo del descuento?"
+                    value={finalShares.discount_detail || ""}
+                    onChange={(e) => onManualChange("discount_detail", e.target.value)}
+                    className="w-full text-[9px] font-bold uppercase tracking-wider bg-transparent border-none focus:ring-0 p-0 text-orange-800 placeholder:text-orange-300 disabled:cursor-not-allowed"
+                />
+            </div>
+        </div>
 
-        {/* Coberturas de Seguro */}
-        {coverageDetails.insurance_id && (
+        {/* Coberturas de Seguro (SOLO CLÍNICO) */}
+        {isClinical && coverageDetails.insurance_id && (
           <div className="space-y-3 pt-4 border-t-2 border-dashed border-gray-100">
             {/* Isapre / Fonasa */}
             <div className="flex justify-between items-center">
@@ -120,10 +151,12 @@ export default function PaymentSummary({
           </div>
         )}
 
-        {/* TOTAL A PAGAR (COPAGO) */}
+        {/* TOTAL A PAGAR */}
         <div className="pt-6 mt-6 border-t-4 border-gray-50">
           <div className="flex flex-col gap-2">
-            <span className="enterprise-label text-center !text-xs !mb-0">Monto Final a Recaudar</span>
+            <span className="enterprise-label text-center !text-xs !mb-0">
+                {isClinical ? "Monto Final a Recaudar" : "Total a Pagar"}
+            </span>
             {isManualAdjustmentMode ? (
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-brand-primary text-xl">$</span>
@@ -145,23 +178,39 @@ export default function PaymentSummary({
         </div>
       </div>
 
-      {/* 3. ZONA DE PAGO */}
-      <div className="pt-10 space-y-5">
+      {/* 3. ZONA DE PAGO (SELECTOR GRÁFICO) */}
+      <div className="pt-10 space-y-6">
         <div>
-          <label className="enterprise-label ml-1">
+          <label className="enterprise-label ml-1 mb-3 block">
             Método de Pago
           </label>
-          <select
-            className="w-full py-4 px-4 font-bold text-gray-700 border-gray-100 rounded-2xl focus:ring-brand-primary bg-gray-50/50 transition-all cursor-pointer"
-            value={paymentDetails.payment_method}
-            onChange={(e) => onPaymentMethodChange(e.target.value)}
-          >
-            {paymentMethods.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-2 gap-3 bg-gray-50 p-1.5 rounded-[1.8rem] border border-gray-100 shadow-inner">
+            {paymentMethods.map((m) => {
+              const isSelected = paymentDetails.payment_method === m.value;
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() => onPaymentMethodChange(m.value)}
+                  className={`relative flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-[1.4rem] transition-all duration-300 group ${
+                    isSelected
+                      ? "bg-white text-brand-primary shadow-lg shadow-brand-primary/10 scale-100 border border-brand-primary/10"
+                      : "text-gray-400 hover:text-gray-500 hover:bg-gray-100/50 grayscale opacity-60"
+                  }`}
+                >
+                  <span className={`text-2xl transition-transform duration-300 ${isSelected ? 'scale-110 rotate-0' : 'group-hover:scale-110 group-hover:-rotate-3'}`}>
+                    {m.value === 'pos_integrado' ? '💳' : '💵'}
+                  </span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.15em] text-center leading-tight">
+                    {m.value === 'pos_integrado' ? 'POS Transbank' : 'Efectivo'}
+                  </span>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-primary rounded-full animate-ping"></div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <button

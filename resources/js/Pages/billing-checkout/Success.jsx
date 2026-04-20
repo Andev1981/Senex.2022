@@ -19,6 +19,7 @@ import {
 const Success = ({ payment, invoice, is_dte_pending }) => {
   const [email, setEmail] = useState(payment?.patient?.email || "");
   const [sending, setSending] = useState(false);
+  const [showVoucherModal, setShowVoucherModal] = useState(false);
 
   const paymentMethodsMap = {
     'cash': 'Efectivo',
@@ -73,7 +74,18 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
     <AuthenticatedLayout>
       <Head title={`Pago Exitoso - ${payment.uuid.substring(0, 8)}`} />
 
-      <div className="max-w-4xl px-4 py-8 mx-auto sm:px-6">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          nav, aside, header, footer, .print\\:hidden { display: none !important; }
+          body { background: white !important; margin: 0 !important; padding: 0 !important; }
+          .AuthenticatedLayout_main { padding: 0 !important; margin: 0 !important; }
+          .print\\:no-shadow { shadow: none !important; border: none !important; }
+          .print\\:center { display: flex !important; justify-content: center !important; width: 100% !important; }
+          @page { margin: 1cm; }
+        }
+      `}} />
+
+      <div className="max-w-4xl px-4 py-8 mx-auto sm:px-6 print:max-w-none print:p-0">
         {/* Botón Volver (Oculto en impresión) */}
         <div className="mb-6 print:hidden">
           <Link
@@ -155,18 +167,18 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
               </h3>
               <div className="overflow-hidden border border-gray-100 rounded-2xl shadow-sm">
                 <table className="min-w-full divide-y divide-gray-50">
-                  <thead className="bg-gray-50/50">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left enterprise-label !mb-0">
+                      <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-brand-gray/80">
                         Servicio
                       </th>
-                      <th className="px-6 py-4 text-right enterprise-label !mb-0">
+                      <th className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest text-brand-gray/80">
                         Monto Bruto
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-50">
-                    {payment?.payment_allocation?.map((alloc) => {
+                    {payment?.payment_allocations?.map((alloc) => {
                       // Determinamos el nombre del servicio
                       let serviceName = "Atención Médica / Servicio";
                       let serviceDetails = "";
@@ -186,36 +198,6 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
                           const plan = planItem.sellable;
                           serviceName = `Plan: ${plan.name}`;
                           serviceDetails = `Vigencia: ${plan.valid_months} meses | Tipo: ${plan.type}`;
-                          
-                          // Detalle de sesiones incluidas en el plan
-                          if (plan.session_types?.length > 0) {
-                            extraInfo = (
-                              <div className="mt-3 space-y-2">
-                                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Contenido del Plan:</div>
-                                <div className="grid grid-cols-1 gap-2">
-                                  {plan.session_types.map(st => (
-                                    <div key={st.id} className="flex justify-between items-center p-2 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                      <span className="text-[10px] font-bold text-gray-700 uppercase">{st.name}</span>
-                                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-lg text-[9px] font-black">
-                                        {st.pivot?.max_sessions || '∞'} Sesiones
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                                {plan.description && (
-                                  <div className="mt-2 p-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-600 font-medium italic">
-                                    "{plan.description}"
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          } else if (plan.description) {
-                            extraInfo = (
-                              <div className="mt-2 p-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-600 font-medium italic">
-                                "{plan.description}"
-                              </div>
-                            );
-                          }
                         } else {
                           serviceDetails = `Ref: ${alloc.invoice.type_name || 'Doc'} #${alloc.invoice.dte_folio || 'S/N'}`;
                         }
@@ -230,7 +212,6 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
                             <div className="mt-1 font-mono text-[10px] font-bold text-brand-gray uppercase tracking-widest">
                               {serviceDetails}
                             </div>
-                            {extraInfo}
                           </td>
                           <td className="px-6 py-5 text-sm font-black text-right text-gray-900 font-mono">
                             {formatMoney(alloc.amount_clp)}
@@ -352,20 +333,12 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
             {/* Acciones Finales (Ocultas en impresión) */}
             <div className="flex flex-col gap-4 pt-10 md:flex-row print:hidden">
               <button
-                onClick={handlePrint}
+                onClick={() => setShowVoucherModal(true)}
                 className="flex items-center justify-center flex-1 px-8 py-5 font-black text-brand-gray uppercase tracking-widest text-[10px] transition-all border-2 border-gray-100 rounded-2xl hover:bg-white hover:border-brand-primary hover:text-brand-primary active:scale-95 shadow-sm"
               >
                 <Printer className="w-5 h-5 mr-3" />
-                Imprimir
+                Ver Comprobante
               </button>
-
-              <a
-                href={route("payments.pdf", { uuid: payment.uuid, download: 'download' })}
-                className="flex items-center justify-center flex-1 px-8 py-5 font-black text-white uppercase tracking-widest text-[10px] transition-all bg-brand-primary shadow-xl shadow-brand-primary/20 rounded-2xl hover:brightness-110 active:scale-95"
-              >
-                <Download className="w-5 h-5 mr-3" />
-                Descargar PDF
-              </a>
 
               <Link
                 href={route("payments.index")}
@@ -377,6 +350,43 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
             </div>
           </div>
         </div>
+
+        {/* --- MODAL DE VISUALIZACIÓN DE COMPROBANTE --- */}
+        {showVoucherModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 md:p-10 animate-in fade-in duration-300">
+            <div className="w-full max-w-5xl bg-white shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col h-[90vh]">
+                <div className="bg-brand-primary p-6 flex justify-between items-center text-white shrink-0">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-white/20 p-2 rounded-xl">
+                            <Receipt className="w-5 h-5" />
+                        </div>
+                        <h3 className="font-black uppercase tracking-widest text-sm">Comprobante de Pago</h3>
+                    </div>
+                    <button 
+                        onClick={() => setShowVoucherModal(false)}
+                        className="p-2 hover:bg-white/10 rounded-xl transition-colors font-black"
+                    >
+                        ✕
+                    </button>
+                </div>
+                <div className="flex-1 bg-gray-100">
+                    <iframe 
+                        src={route("payments.pdf", { uuid: payment.uuid })} 
+                        className="w-full h-full border-none"
+                        title="Comprobante de Pago"
+                    />
+                </div>
+                <div className="p-4 bg-white border-t border-gray-50 flex justify-center shrink-0">
+                    <button 
+                        onClick={() => setShowVoucherModal(false)}
+                        className="w-full md:w-48 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all border border-gray-100"
+                    >
+                        Cerrar Visor
+                    </button>
+                </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer del recibo (Solo impresión) */}
         <div className="hidden print:block mt-16 text-center text-[10px] font-black uppercase tracking-[0.2em] text-brand-gray opacity-50">

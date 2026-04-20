@@ -18,8 +18,9 @@ return new class extends Migration
 
             // Technical Fields in English
             $table->string('company_rut', 12)->comment('Company RUT (tax ID) for DTE operations.'); 
-            $table->string('certificate_path')->comment('Physical path to the .pfx certificate file.');
-            $table->text('certificate_password')->comment('Encrypted PFX password.');
+            $table->string('signer_rut', 12)->nullable()->comment('Signer RUT (Person) extracted from certificate.');
+            $table->string('certificate_path')->nullable()->comment('Physical path to the .pfx certificate file.');
+            $table->text('certificate_password')->nullable()->comment('Encrypted PFX password.');
             $table->enum('environment', ['certification', 'production'])->default('certification');
             $table->boolean('simulation_mode')->default(true)->comment('If true, bypasses SII and certificate requirements.');
             $table->timestamp('expiration_date')->nullable()->comment('PFX certificate expiration date.');

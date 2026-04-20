@@ -15,6 +15,8 @@ class Product extends Model
         'company_id',
         'branch_id',
         'user_id',
+        'type',
+        'category_id',
         'name',
         'description',
         'sku',
@@ -27,6 +29,21 @@ class Product extends Model
         'manage_stock',
         'is_active'
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function scopeProducts($query)
+    {
+        return $query->where('type', 'product');
+    }
+
+    public function scopeServices($query)
+    {
+        return $query->where('type', 'service');
+    }
 
     public function invoiceItems()
     {

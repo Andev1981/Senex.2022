@@ -261,7 +261,7 @@ export default function TableTreatments({
   const detailPatient = ({ id }) => {
     // Lógica para mostrar los detalles del paciente
 
-    get(route("pacientes.show", { id: id }));
+    get(route("patients.show", { id: id }));
   };
 
   return (

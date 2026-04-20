@@ -139,16 +139,18 @@ export default function PatientAddress({
         description={address ? "Edición de dirección" : "Creación de dirección"}
         submitLabel={address ? "Actualizar" : "Crear"}
         schema={addressSchema}
-        submitRoute={
-          address?.id
-            ? route("patients.addresses.update", patient.id)
-            : route("patients.addresses.store", patient.id)
-        }
-        method={address?.id ? "patch" : "post"}
+        submitRoute={route("patients.update", patient.id)}
+        method="patch"
         initialValues={{
-          patient_id: address?.patient_id ?? null,
-          region_id: address?.region_id ?? null,
-          province_id: address?.province_id ?? null,
+          name: patient.name,
+          last_name: patient.last_name,
+          rut: patient.rut,
+          email: patient.email,
+          birth_date: patient.birth_date,
+          phone: patient.phone,
+          patient_id: patient.id,
+          region_id: address?.commune?.province?.region_id ?? null,
+          province_id: address?.commune?.province_id ?? null,
           commune_id: address?.commune_id ?? null,
           street: address?.street ?? "",
           number: address?.number ?? "",

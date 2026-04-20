@@ -73,6 +73,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
       region_id: "",
       commune_id: "",
       is_main: false,
+      company_id: company?.id || null,
   });
 
   const openNewBranchModal = () => {
@@ -87,6 +88,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
           region_id: "",
           commune_id: "",
           is_main: false,
+          company_id: company?.id || null,
       });
       clearBranchErrors();
       setIsBranchModalOpen(true);
@@ -111,6 +113,8 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
           region_id: address?.region_id || "",
           commune_id: address?.commune_id || "",
           is_main: Boolean(branch.is_main),
+          company_id: company?.id || null,
+          is_main: Boolean(branch.is_main),
       });
       setIsBranchModalOpen(true);
   };
@@ -119,7 +123,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
       e.preventDefault();
       
       if (editingBranch) {
-          updateBranch(route('companies.branches.update', [company.id, editingBranch.id]), {
+          updateBranch(route('branches.update', [editingBranch.id]), {
               onSuccess: () => {
                   setIsBranchModalOpen(false);
                   resetBranch();
@@ -127,7 +131,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
               }
           });
       } else {
-          storeBranch(route('companies.branches.store', company.id), {
+          storeBranch(route('branches.store'), {
               onSuccess: () => {
                   setIsBranchModalOpen(false);
                   resetBranch();
@@ -182,6 +186,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
     giro: company.giro || "",
     email: company.email || "",
     phone: company.phone || "",
+    business_type: company.business_type || "clinical",
     logo: null,
   });
 
@@ -244,8 +249,12 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                     ? "Boleta Electrónica"
                     : f.tipo_dte === 33
                     ? "Factura Electrónica"
+                    : f.tipo_dte === 34
+                    ? "Factura Exenta"
                     : f.tipo_dte === 41
                     ? "Boleta Exenta"
+                    : f.tipo_dte === 61
+                    ? "Nota de Crédito"
                     : f.tipo_dte}
                 </div>
                 <p className="text-[8px] font-bold text-gray-400 uppercase">
@@ -330,8 +339,8 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
   });
 
   const certStats = useMemo(() => {
-    if (!dteConfig?.fecha_caducidad) return null;
-    const expiry = new Date(dteConfig.fecha_caducidad);
+    if (!dteConfig?.expiration_date) return null;
+    const expiry = new Date(dteConfig.expiration_date);
     const today = new Date();
     const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
     return {
@@ -350,7 +359,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
     <AuthenticatedLayout>
       <Head title={`Empresa: ${company.business_name}`} />
 
-      <div className="min-h-screen p-6 space-y-10 md:p-10 bg-gray-50/50">
+      <div className="min-h-screen p-3 space-y-5 md:p-5 bg-gray-50/50">
         {/* HEADER HERO COMPACTO */}
         <div className="relative p-8 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
           <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full opacity-50 bg-brand-primary/5 blur-3xl"></div>
@@ -400,42 +409,64 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                 <Key className="w-5 h-5" />
               </div>
               <span className="text-[9px] font-black uppercase tracking-widest opacity-40">
-                {dteConfig ? "Certificado" : "No detectado"}
+                Firma SII
               </span>
             </div>
-            <p className="enterprise-label !text-[8px] opacity-60 mb-1">
-              Caducidad de Firma
-            </p>
-            <p className="text-xl font-black tracking-tight text-gray-900">
-              {certStats
-                ? `${certStats.daysLeft} días restantes`
-                : "Pendiente carga"}
-            </p>
+            
+            <div className="space-y-1">
+              <p className="enterprise-label !text-[8px] opacity-60 mb-0">
+                {dteConfig ? (
+                  dteConfig.signer_rut 
+                    ? `RUT: ${dteConfig.signer_rut.replace(/^(\d{1,2})(\d{3})(\d{3})([\dkK])$/, '$1.$2.$3-$4')}` 
+                    : 'RUT no detectado (re-subir)'
+                ) : 'Pendiente carga'}
+              </p>
+              <p className="text-xl font-black tracking-tight text-gray-900">
+                {certStats
+                  ? `${certStats.daysLeft} días ${certStats.isExpired ? 'vencido' : 'vence'}`
+                  : "Sin Firma"}
+              </p>
+              {certStats && (
+                <p className="text-[9px] font-bold text-gray-400 uppercase">
+                   Expiración: {certStats.formattedDate}
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Ambiente */}
+          {/* Motor de Emisión (Ambiente & Simulación) */}
           <div className="p-6 bg-white border border-gray-100 shadow-sm rounded-[2rem] border-b-4 border-b-brand-primary">
             <div className="flex items-center justify-between mb-4">
               <div className="p-2.5 bg-brand-secondary/10 text-brand-primary rounded-xl">
                 <Activity className="w-5 h-5" />
               </div>
-              <span
-                className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
-                  dteConfig?.ambiente === "produccion"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-blue-100 text-blue-700"
-                }`}
-              >
-                {dteConfig?.ambiente || "Manual"}
-              </span>
+              <div className="flex gap-1.5">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
+                      dteConfig?.environment === "production"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {dteConfig?.environment || "No Config"}
+                  </span>
+                  {dteConfig?.simulation_mode && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-[8px] font-black uppercase tracking-widest">
+                        SIMULACIÓN
+                    </span>
+                  )}
+              </div>
             </div>
-            <p className="enterprise-label !text-[8px] opacity-60 mb-1">
-              Entorno de Emisión
+            <p className="enterprise-label !text-[8px] opacity-60 mb-1 uppercase tracking-widest font-black">
+              Motor de Emisión
             </p>
             <p className="text-xl font-black tracking-tight text-gray-900 uppercase">
-              {dteConfig?.ambiente === "produccion"
-                ? "Producción SII"
-                : "Certificación"}
+              {dteConfig?.environment === "production"
+                ? "Producción Real"
+                : "Certificación / Pruebas"}
+            </p>
+            <p className="text-[9px] font-bold text-gray-400 uppercase mt-1 italic">
+                {dteConfig?.simulation_mode ? "⚠️ Modo Entrenamiento Activo" : "✅ Operación Oficial SII"}
             </p>
           </div>
 
@@ -853,14 +884,28 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                 />
               </div>
             </div>
-            <div className="space-y-1">
-              <label className="ml-1 enterprise-label">Giro Comercial</label>
-              <input
-                type="text"
-                value={companyData.giro}
-                onChange={(e) => setCompanyData("giro", e.target.value)}
-                className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
-              />
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label">Perfil de Negocio</label>
+                <select
+                  value={companyData.business_type}
+                  onChange={(e) => setCompanyData("business_type", e.target.value)}
+                  className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary cursor-pointer"
+                >
+                  <option value="clinical">🏥 Gestión Clínica / Salud</option>
+                  <option value="service">💻 Servicios / Software / Consultoría</option>
+                  <option value="retail">🛍️ Venta de Productos / Retail</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label">Giro Comercial</label>
+                <input
+                  type="text"
+                  value={companyData.giro}
+                  onChange={(e) => setCompanyData("giro", e.target.value)}
+                  className="w-full px-5 py-4 text-sm font-bold transition-all border-gray-100 rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                />
+              </div>
             </div>
             <div className="space-y-1">
               <label className="ml-1 enterprise-label">
@@ -917,9 +962,11 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
           title="Centro de Control SII / DTE"
           maxWidth="2xl"
         >
-          <div className="p-10">
-            <DteConfigurationForm company={company} dteConfig={dteConfig} />
-          </div>
+          <DteConfigurationForm 
+            company={company} 
+            dteConfig={dteConfig} 
+            onSuccess={() => setIsDteModalOpen(false)}
+          />
         </Modal>
       </div>
     </AuthenticatedLayout>

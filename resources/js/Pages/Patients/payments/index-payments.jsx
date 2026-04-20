@@ -47,7 +47,7 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
     return (patient.invoices || []).reduce((acc, inv) => {
         const status = typeof inv.payment_status === 'object' ? inv.payment_status.value : inv.payment_status;
         if (status === 'unpaid' || status === 'partial') {
-            return acc + (Number(inv.amount_total_clp) || 0);
+            return acc + (Number(inv.total_amount_clp) || 0);
         }
         return acc;
     }, 0);

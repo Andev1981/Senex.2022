@@ -38,13 +38,13 @@ export default function PaymentForm({
   // Totales
   const totalPending = pendingSessions.reduce((sum, s) => {
     const invoice = s.invoice_items?.[0]?.invoice || s.invoice_item?.invoice;
-    return sum + (parseFloat(invoice?.amount_total_clp) || 0);
+    return sum + (parseFloat(invoice?.total_amount_clp) || 0);
   }, 0);
 
   const selectedTotal = selectedSessions.reduce((sum, sessId) => {
     const session = pendingSessions.find((s) => s.id === sessId);
     const invoice = session?.invoice_items?.[0]?.invoice || session?.invoice_item?.invoice;
-    return sum + (parseFloat(invoice?.amount_total_clp) || 0);
+    return sum + (parseFloat(invoice?.total_amount_clp) || 0);
   }, 0);
 
   const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -186,7 +186,7 @@ export default function PaymentForm({
                       </div>
                       <div className="text-right">
                         <p className={`font-black font-mono text-sm ${isSelected ? 'text-brand-primary' : 'text-gray-400'}`}>
-                          ${(Number(session.invoice_items?.[0]?.invoice?.amount_total_clp || session.invoice_item?.invoice?.amount_total_clp || 0)).toLocaleString("es-CL")}
+                          ${(Number(session.invoice_items?.[0]?.invoice?.total_amount_clp || session.invoice_item?.invoice?.total_amount_clp || 0)).toLocaleString("es-CL")}
                         </p>
                       </div>
                     </button>

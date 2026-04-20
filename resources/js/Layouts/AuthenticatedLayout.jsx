@@ -17,17 +17,25 @@ export default function AuthenticatedLayout({ header, children }) {
   const { flash, env } = usePage().props;
 
   useEffect(() => {
-    if (flash && flash.message) {
-      if (flash.type === 'success') {
-        toast.success(flash.message);
-      } else if (flash.type === 'error') {
-        toast.error(flash.message);
-      } else if (flash.type === 'warning') {
-        toast.warning(flash.message);
-      } else if (flash.type === 'info') {
-        toast.info(flash.message);
-      } else {
-        toast(flash.message); // Default toast
+    if (flash) {
+      if (flash.success) {
+        toast.success(flash.success);
+      }
+      if (flash.error) {
+        toast.error(flash.error);
+      }
+      if (flash.message) {
+        if (flash.type === 'success') {
+          toast.success(flash.message);
+        } else if (flash.type === 'error') {
+          toast.error(flash.message);
+        } else if (flash.type === 'warning') {
+          toast.warning(flash.message);
+        } else if (flash.type === 'info') {
+          toast.info(flash.message);
+        } else {
+          toast(flash.message); // Default toast
+        }
       }
     }
   }, [flash]);

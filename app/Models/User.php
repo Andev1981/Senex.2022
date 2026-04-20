@@ -54,9 +54,9 @@ class User extends Authenticatable
         return $this->hasOne(Doctor::class);
     }
 
-    public function company() : HasOne
+    public function company() : \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->hasOne(Company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function branches() : BelongsToMany
