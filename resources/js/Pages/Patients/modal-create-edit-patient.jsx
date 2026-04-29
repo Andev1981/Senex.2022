@@ -93,9 +93,9 @@ export default function ModalCreateEditPatient({
     street: patient?.address?.street || "",
     number: patient?.address?.number || "",
     details: patient?.address?.details || "",
-    region_id: patient?.address?.commune?.province?.region_id || (patient?.id ? "" : "13"),
-    province_id: patient?.address?.commune?.province_id || (patient?.id ? "" : "2401"),
-    commune_id: patient?.address?.commune_id || (patient?.id ? "" : "13101"),
+    region_id: (patient?.address?.region_id || patient?.address?.commune?.province?.region_id || "").toString(),
+    province_id: (patient?.address?.province_id || patient?.address?.commune?.province_id || "").toString(),
+    commune_id: (patient?.address?.commune_id || "").toString(),
   });
 
   // Lógica para forzar is_home_care si la sucursal es solo domicilio
@@ -105,28 +105,26 @@ export default function ModalCreateEditPatient({
     }
   }, [isHomeCareOnlyBranch, isClinical]);
 
-  // Filtrado dinámico de provincias y comunas
+  // Filtrado dinámico de provincias y comunas (Aseguramos que data.X sea string para comparar)
   const filteredProvinces = useMemo(
-    () => provinces.filter((p) => p.region_id == data.region_id),
+    () => provinces.filter((p) => p.region_id.toString() === data.region_id.toString()),
     [data.region_id, provinces]
   );
 
   const filteredCommunes = useMemo(
-    () => communes.filter((c) => c.province_id == data.province_id),
+    () => communes.filter((c) => c.province_id.toString() === data.province_id.toString()),
     [data.province_id, communes]
   );
 
   // Sincronizar datos cuando cambia el paciente seleccionado (Edición)
   useEffect(() => {
     if (patient) {
-      const contact = patient.primary_contact || patient.contact;
-      const hasAddress = !!patient.address || !!patient.address_id;
-      const street = patient.address?.street || patient.street || "";
-      const number = patient.address?.number || patient.number || "";
-      const details = patient.address?.details || patient.details || "";
-      const regionId = patient.address?.commune?.province?.region_id || patient.region_id || "";
-      const provinceId = patient.address?.commune?.province_id || patient.province_id || "";
-      const communeId = patient.address?.commune_id || patient.commune_id || "";
+      const contact = patient.contacts?.find(c => c.is_primary) || patient.contacts?.[0] || patient.contact;
+      const addr = patient.address;
+      
+      const regionId = (addr?.region_id || addr?.commune?.province?.region_id || "").toString();
+      const provinceId = (addr?.province_id || addr?.commune?.province_id || "").toString();
+      const communeId = (addr?.commune_id || "").toString();
 
       setData({
         id: patient.id,
@@ -154,10 +152,10 @@ export default function ModalCreateEditPatient({
         guardian_phone: contact?.phone || "",
         guardian_email: contact?.email || "",
         guardian_rut: contact?.rut || "",
-        is_home_care: hasAddress,
-        street: street,
-        number: number,
-        details: details,
+        is_home_care: !!addr,
+        street: addr?.street || "",
+        number: addr?.number || "",
+        details: addr?.details || "",
         region_id: regionId,
         province_id: provinceId,
         commune_id: communeId,
@@ -241,21 +239,28 @@ export default function ModalCreateEditPatient({
 
     method(url, {
       onSuccess: (page) => {
-        const newId = page.props.flash?.patient?.id || patient?.id;
+        const newId = page.props.flash?.patient_id || patient?.id;
         
         setOpenModalPatient(false);
         reset();
 
         Swal.fire({
           title: "¡Registro Exitoso!",
-          text: `${entityLabel} gestionado correctamente.`,
+          text: `${entityLabel} gestionado correctamente. ¿Qué desea hacer ahora?`,
           icon: "success",
+          showDenyButton: true,
           showCancelButton: true,
-          confirmButtonText: `👁️ Ver Perfil de ${entityLabel}`,
+          confirmButtonText: "➕ Crear Atención",
+          denyButtonText: `👁️ Ver Perfil`,
           cancelButtonText: "Cerrar",
-          confirmButtonColor: "#3292b3",
+          confirmButtonColor: "#10b981", // Verde para crear atención
+          denyButtonColor: "#3292b3",    // Azul corporativo para ver perfil
         }).then((result) => {
           if (result.isConfirmed && newId) {
+            // Acción: Crear Atención. Redirigimos al índice de atenciones (o al perfil abriendo el modal si fuera posible, pero ir a atenciones es lo estándar)
+            router.visit(route("attendances.index", { patient_id: newId, action: 'create' }));
+          } else if (result.isDenied && newId) {
+            // Acción: Ver Perfil
             router.visit(route("patients.show", newId));
           }
         });
@@ -382,15 +387,35 @@ export default function ModalCreateEditPatient({
               </h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div className="space-y-1">
-                  <EnterpriseSelect label="Región" value={data.region_id} onChange={(val) => setData((d) => ({ ...d, region_id: val, province_id: "", commune_id: "" }))} options={regions.map(r => ({ value: r.id, label: r.name }))} placeholder="-- Seleccionar --" />
+                  <EnterpriseSelect 
+                    label="Región" 
+                    value={data.region_id} 
+                    onChange={(val) => setData((d) => ({ ...d, region_id: val, province_id: "", commune_id: "" }))} 
+                    options={regions.map(r => ({ value: r.id.toString(), label: r.name }))} 
+                    placeholder="-- Seleccionar --" 
+                  />
                   <InputError message={errors.region_id} />
                 </div>
                 <div className="space-y-1">
-                  <EnterpriseSelect label="Provincia" value={data.province_id} onChange={(val) => setData((d) => ({ ...d, province_id: val, commune_id: "" }))} options={filteredProvinces.map(p => ({ value: p.id, label: p.name }))} disabled={!data.region_id} placeholder="-- Seleccionar --" />
+                  <EnterpriseSelect 
+                    label="Provincia" 
+                    value={data.province_id} 
+                    onChange={(val) => setData((d) => ({ ...d, province_id: val, commune_id: "" }))} 
+                    options={filteredProvinces.map(p => ({ value: p.id.toString(), label: p.name }))} 
+                    disabled={!data.region_id} 
+                    placeholder="-- Seleccionar --" 
+                  />
                   <InputError message={errors.province_id} />
                 </div>
                 <div className="space-y-1">
-                  <EnterpriseSelect label="Comuna" value={data.commune_id} onChange={(val) => setData("commune_id", val)} options={filteredCommunes.map(c => ({ value: c.id, label: c.name }))} disabled={!data.province_id} placeholder="-- Seleccionar --" />
+                  <EnterpriseSelect 
+                    label="Comuna" 
+                    value={data.commune_id} 
+                    onChange={(val) => setData("commune_id", val)} 
+                    options={filteredCommunes.map(c => ({ value: c.id.toString(), label: c.name }))} 
+                    disabled={!data.province_id} 
+                    placeholder="-- Seleccionar --" 
+                  />
                   <InputError message={errors.commune_id} />
                 </div>
                 <div className="space-y-1 md:col-span-2">
@@ -408,31 +433,29 @@ export default function ModalCreateEditPatient({
           )}
 
           {/* BLOQUE 2: CONTACTO & OCUPACIÓN */}
-          {!data.require_tutor && (
-            <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-3xl"></div>
-              <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 relative z-10">
-                <Smartphone className="w-4 h-4" /> Contactabilidad & Profesión
-              </h3>
-              <div className="relative z-10 grid grid-cols-1 gap-8 md:grid-cols-3">
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">Ocupación</label>
-                  <TextInput value={data.occupation} onChange={(e) => setData("occupation", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white" placeholder="Ej: Ingeniero" />
-                  <InputError message={errors.occupation} />
-                </div>
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">Correo Electrónico</label>
-                  <TextInput type="email" value={data.email} onChange={(e) => setData("email", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white" placeholder="ejemplo@correo.com" />
-                  <InputError message={errors.email} />
-                </div>
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">Teléfono Directo</label>
-                  <ChilePhoneInput value={data.phone} onChange={(v) => setData("phone", v)} className="w-full" />
-                  <InputError message={errors.phone} />
-                </div>
+          <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-3xl"></div>
+            <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 relative z-10">
+              <Smartphone className="w-4 h-4" /> Contactabilidad & Profesión
+            </h3>
+            <div className="relative z-10 grid grid-cols-1 gap-8 md:grid-cols-3">
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label opacity-60">Ocupación</label>
+                <TextInput value={data.occupation} onChange={(e) => setData("occupation", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white" placeholder="Ej: Ingeniero" />
+                <InputError message={errors.occupation} />
+              </div>
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label opacity-60">Correo Electrónico</label>
+                <TextInput type="email" value={data.email} onChange={(e) => setData("email", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white" placeholder="ejemplo@correo.com" />
+                <InputError message={errors.email} />
+              </div>
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label opacity-60">Teléfono Directo</label>
+                <ChilePhoneInput value={data.phone} onChange={(v) => setData("phone", v)} className="w-full" />
+                <InputError message={errors.phone} />
               </div>
             </div>
-          )}
+          </div>
 
           {/* BLOQUE 3: TUTOR RESPONSABLE (Solo si se requiere) */}
           {isClinical && data.require_tutor && (

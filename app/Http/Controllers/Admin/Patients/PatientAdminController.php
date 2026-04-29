@@ -10,7 +10,7 @@ use App\Models\Patient;
 use App\Models\Company;
 use App\Models\Doctor;
 use App\Models\Diagnostic;
-use App\Models\SessionType;
+use App\Models\Item;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
 use App\Http\Requests\StorePatientRequest;
@@ -48,9 +48,12 @@ class PatientAdminController extends Controller
             })
             ->select([
                 'patients.id', 'patients.name', 'patients.last_name', 'patients.email', 'patients.birth_date',
-                'patients.rut', 'patients.phone', 'patients.status', 'patients.occupation',
+                'patients.rut', 'patients.phone', 'patients.status', 'patients.occupation', 'patients.marital_status', 'patients.gender',
+                'patients.opt_out_reminders', 'patients.prefers_whatsapp', 'patients.prefers_mail', 'patients.prefers_sms', 'patients.require_tutor',
                 DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) as full_name"),
-                DB::raw('addr.id as address_id'), 'addr.street', 'addr.number', 'c.name as comuna_name',
+                DB::raw('addr.id as address_id'), 'addr.street', 'addr.number', 'addr.details',
+                'addr.region_id', 'addr.province_id', 'addr.commune_id',
+                'c.name as comuna_name',
             ]);
 
         // Información solo si es perfil clínico
@@ -97,7 +100,7 @@ class PatientAdminController extends Controller
             'business_type' => $businessType,
             'doctors' => $isClinical ? Doctor::all(['id', 'name', 'last_name']) : [],
             'diagnostics' => $isClinical ? Diagnostic::all(['code', 'description']) : [],
-            'sessionTypes' => $isClinical ? SessionType::all(['id', 'name']) : [],
+            'session_types' => $isClinical ? Item::all(['id', 'name']) : [],
         ]);
     }
 
@@ -119,10 +122,11 @@ class PatientAdminController extends Controller
             'contacts',
             'attachments',
             'treatments.sessions.doctor',
-            'treatments.sessions.sessionType',
+            'treatments.sessions.item',
             'treatments.sessions.invoiceItems.invoice',
             'treatmentSessions.doctor',
-            'treatmentSessions.sessionType',
+            'treatmentSessions.item',
+            'treatmentSessions.invoiceItems.invoice',
             'invoices.items',
         ])->findOrFail($id);
 
@@ -147,7 +151,7 @@ class PatientAdminController extends Controller
             'business_type' => $businessType,
             'doctors' => $isClinical ? Doctor::all(['id', 'name', 'last_name']) : [],
             'diagnostics' => $isClinical ? Diagnostic::all(['code', 'description']) : [],
-            'session_types' => $isClinical ? SessionType::all(['id', 'name']) : [],
+            'session_types' => $isClinical ? Item::all(['id', 'name']) : [],
             'regions' => $regions,
             'provinces' => $provinces,
             'communes' => $communes,
@@ -166,34 +170,104 @@ class PatientAdminController extends Controller
 
     public function store(\App\Http\Requests\StorePatientRequest $request)
     {
-        return DB::transaction(function () use ($request) {
-            $data = $request->validated();
-            $data['company_id'] = session('current_company_id');
-            $data['user_id'] = auth()->id();
+        try {
+            return DB::transaction(function () use ($request) {
+                $data = $request->validated();
+                $currentCompanyId = session('current_company_id');
+                $activeBranchId = session('active_branch_id');
 
-            $patient = Patient::create($data);
+                // Asegurar RUT limpio
+                $rut = \App\Rules\ValidRut::clean($data['rut']);
 
-            // Guardar dirección si viene
-            if ($request->filled('street')) {
-                $patient->address()->create([
-                    'company_id' => $data['company_id'],
-                    'street' => $request->street,
-                    'number' => $request->number,
-                    'commune_id' => $request->commune_id,
-                    'is_primary' => true,
-                ]);
-            }
+                // 1. Verificar si el paciente ya existe en el sistema (Globalmente)
+                $patient = Patient::withoutGlobalScopes()
+                    ->where('rut', $rut)
+                    ->first();
 
-            // Vincular a la sucursal actual
-            $activeBranchId = session('active_branch_id');
-            if ($activeBranchId) {
-                $patient->branches()->attach($activeBranchId, ['status' => 'active']);
-            }
+                if ($patient) {
+                    // Si existe, actualizamos sus datos (incluyendo preferencias de notificación)
+                    $patient->company_id = $currentCompanyId;
+                    $patient->update($data);
+                } else {
+                    // Si no existe, creamos el registro
+                    $data['company_id'] = $currentCompanyId;
+                    $data['user_id'] = auth()->id();
+                    $patient = Patient::create($data);
+                }
 
-            return redirect()->route('patients.index')
-                ->with('message', 'Paciente creado exitosamente')
-                ->with('type', 'success');
-        });
+                // 2. Guardar dirección si viene o si es a domicilio
+                if ($request->filled('street') || $request->is_home_care) {
+                    $patient->primaryAddress()->updateOrCreate(
+                        ['addressable_id' => $patient->id, 'addressable_type' => 'Patient'],
+                        [
+                            'company_id' => $currentCompanyId,
+                            'street' => $request->street,
+                            'number' => $request->number,
+                            'commune_id' => $request->commune_id,
+                            'province_id' => $request->province_id,
+                            'region_id' => $request->region_id,
+                            'details' => $request->details,
+                            'is_primary' => true,
+                        ]
+                    );
+                }
+
+                // 3. Guardar Tutor si es requerido
+                $tutor = null;
+                if ($request->require_tutor) {
+                    $tutor = $patient->contacts()->updateOrCreate(
+                        ['is_primary' => true],
+                        [
+                            'company_id' => $currentCompanyId,
+                            'name' => $request->guardian_name,
+                            'rut' => $request->guardian_rut,
+                            'relationship' => $request->guardian_relationship,
+                            'phone' => $request->guardian_phone,
+                            'email' => $request->guardian_email,
+                            'is_active' => true,
+                        ]
+                    );
+                }
+
+                // 4. Vincular a la sucursal actual si no está vinculado
+                if ($activeBranchId && !$patient->branches()->where('branches.id', $activeBranchId)->exists()) {
+                    $patient->branches()->attach($activeBranchId, ['status' => 'active']);
+                }
+
+                // 5. Enviar Notificación de Bienvenida si se solicita
+                if ($request->boolean('send_welcome_notification')) {
+                    // Refrescamos paciente para tener cargadas las preferencias actualizadas si se crearon/actualizaron
+                    $patient = $patient->fresh();
+
+                    if ($request->require_tutor && $tutor) {
+                        // Notificar al Tutor
+                        $tutor->notify(new \App\Notifications\PatientTutorWelcomeNotification($patient, $tutor));
+                    } else {
+                        // Notificar al Paciente Directo
+                        $channels = [];
+                        if ($patient->prefers_mail && $patient->email) $channels[] = 'mail';
+                        if ($patient->prefers_whatsapp && $patient->phone) $channels[] = 'whatsapp';
+                        
+                        if (!empty($channels)) {
+                            // Importante: pasar los canales explícitos al constructor
+                            $patient->notify(new \App\Notifications\PatientWelcomeNotification($patient, $channels));
+                        }
+                    }
+                }
+
+                return redirect()->route('patients.index')
+                    ->with('message', 'Paciente procesado y vinculado exitosamente')
+                    ->with('type', 'success')
+                    ->with('patient_id', $patient->id);
+            });
+        } catch (\Exception $e) {
+            \Log::error("Error al guardar paciente: " . $e->getMessage());
+            return back()->withInput()->with([
+                'flash' => [
+                    'error' => 'No se pudo procesar el paciente: ' . $e->getMessage()
+                ]
+            ]);
+        }
     }
 
     public function edit($id)
@@ -211,29 +285,34 @@ class PatientAdminController extends Controller
             $patient = Patient::findOrFail($id);
             $patient->update($data);
 
-            // Actualizar o crear dirección
+            // Actualizar o crear dirección principal
             if ($request->filled('street')) {
-                $patient->address()->updateOrCreate(
+                $patient->primaryAddress()->updateOrCreate(
                     ['addressable_id' => $patient->id, 'addressable_type' => 'Patient'],
                     [
                         'company_id' => $patient->company_id,
                         'street' => $request->street,
                         'number' => $request->number,
                         'commune_id' => $request->commune_id,
+                        'province_id' => $request->province_id,
+                        'region_id' => $request->region_id,
+                        'details' => $request->details,
+                        'is_primary' => true,
                     ]
                 );
             }
 
-            // Actualizar o crear contacto de emergencia
-            if ($request->filled('contact_name')) {
+            // Actualizar o crear contacto de Tutor (si aplica)
+            if ($request->filled('guardian_name')) {
                 $patient->contacts()->updateOrCreate(
                     ['is_primary' => true],
                     [
                         'company_id' => $patient->company_id,
-                        'name' => $request->contact_name,
-                        'email' => $request->contact_email,
-                        'phone' => $request->contact_phone,
-                        'relationship' => $request->contact_relationship,
+                        'name' => $request->guardian_name,
+                        'rut' => $request->guardian_rut,
+                        'relationship' => $request->guardian_relationship,
+                        'phone' => $request->guardian_phone,
+                        'email' => $request->guardian_email,
                         'is_active' => true,
                     ]
                 );
@@ -290,24 +369,63 @@ class PatientAdminController extends Controller
             'phone' => 'nullable|string',
         ]);
 
-        $patient = DB::transaction(function () use ($request) {
-            $data = $request->only(['rut', 'name', 'last_name', 'email', 'phone']);
-            $data['company_id'] = session('current_company_id');
-            $data['user_id'] = auth()->id();
-            $data['birth_date'] = now()->subYears(30)->format('Y-m-d'); // Default dummy date
-            
-            $patient = Patient::create($data);
+        try {
+            $patient = DB::transaction(function () use ($request) {
+                $currentCompanyId = session('current_company_id');
+                $activeBranchId = session('active_branch_id');
+                
+                // Asegurar RUT limpio
+                $rut = \App\Rules\ValidRut::clean($request->rut);
 
-            // Vincular sucursal
-            $activeBranchId = session('active_branch_id');
-            if ($activeBranchId) {
-                $patient->branches()->attach($activeBranchId, ['status' => 'active']);
-            }
+                // 1. Verificar si ya existe el paciente por RUT globalmente
+                $patient = Patient::withoutGlobalScopes()
+                    ->where('rut', $rut)
+                    ->first();
 
-            return $patient;
-        });
+                if (!$patient) {
+                    // Si no existe, creamos el registro
+                    $data = $request->only(['name', 'last_name', 'email', 'phone']);
+                    $data['rut'] = $rut;
+                    $data['company_id'] = $currentCompanyId;
+                    $data['user_id'] = auth()->id();
+                    $data['birth_date'] = now()->subYears(30)->format('Y-m-d'); 
+                    
+                    // Defaults para notificaciones (True = Activas)
+                    $data['opt_out_reminders'] = true;
+                    $data['prefers_whatsapp'] = true;
+                    $data['prefers_mail'] = true;
+                    
+                    $patient = Patient::create($data);
 
-        return response()->json($patient);
+                    // Notificación de bienvenida automática en registro rápido
+                    $channels = [];
+                    if ($patient->email) $channels[] = 'mail';
+                    if ($patient->phone) $channels[] = 'whatsapp';
+
+                    if (!empty($channels)) {
+                        $patient->notify(new \App\Notifications\PatientWelcomeNotification($patient, $channels));
+                    }
+                } else {
+                    // Si existe, actualizamos su información y aseguramos la empresa
+                    $patient->company_id = $currentCompanyId;
+                    $patient->update($request->only(['name', 'last_name', 'email', 'phone']));
+                }
+
+                // 2. Vincular a la sucursal actual si no está vinculado
+                if ($activeBranchId && !$patient->branches()->where('branches.id', $activeBranchId)->exists()) {
+                    $patient->branches()->attach($activeBranchId, ['status' => 'active']);
+                }
+
+                return $patient;
+            });
+
+            return response()->json($patient);
+        } catch (\Exception $e) {
+            \Log::error("Error en quickStore de paciente: " . $e->getMessage());
+            return response()->json([
+                'message' => 'Error al registrar el paciente: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function checkExisting(Request $request)

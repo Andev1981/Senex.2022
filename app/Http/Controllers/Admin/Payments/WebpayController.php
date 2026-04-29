@@ -173,8 +173,8 @@ class WebpayController extends Controller
     }
     public function checkoutView()
     {
-        return Inertia::render('products/ProductCheckout', [
-            'products' => \App\Models\Product::where('is_active', true)->get(),
+        return Inertia::render('items/ProductCheckout', [
+            'items' => \App\Models\Item::where('is_active', true)->get(),
         ]);
     }
 
@@ -184,7 +184,7 @@ class WebpayController extends Controller
     public function initiateProductPayment(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'item_id' => ['required', 'integer', 'exists:items,id'],
             'quantity'   => ['required', 'integer', 'min:1'],
         ]);
 
@@ -192,7 +192,7 @@ class WebpayController extends Controller
         $patient = Patient::withoutGlobalScopes()->first() 
                    ?? abort(404, 'Debe crear al menos un paciente en el sistema para realizar pruebas');
         
-        $product = \App\Models\Product::findOrFail($validated['product_id']);
+        $product = \App\Models\Item::findOrFail($validated['item_id']);
         $amount_clp = (int) ($product->price * $validated['quantity']);
 
         try {
@@ -205,7 +205,7 @@ class WebpayController extends Controller
                 'notes'      => "Certificación Transbank Pública: {$product->name} (x{$validated['quantity']})",
                 'metadata'   => [
                     'type'       => 'product_certification',
-                    'product_id' => $product->id,
+                    'item_id' => $product->id,
                     'quantity'   => $validated['quantity'],
                     'unit_price' => $product->price
                 ]
@@ -213,7 +213,7 @@ class WebpayController extends Controller
 
             Log::info('Webpay public product payment initiated', [
                 'payment_id' => $result['payment_id'],
-                'product_id' => $product->id,
+                'item_id' => $product->id,
                 'patient_id' => $patient->id,
                 'amount_clp' => $amount_clp,
             ]);
@@ -645,15 +645,15 @@ class WebpayController extends Controller
 
         // Lógica para productos (Certificación)
         if ($payment->metadata && ($payment->metadata['type'] ?? '') === 'product_certification') {
-            $productId = $payment->metadata['product_id'];
+            $productId = $payment->metadata['item_id'];
             $qty = $payment->metadata['quantity'];
             
             try {
-                $product = \App\Models\Product::find($productId);
+                $product = \App\Models\Item::find($productId);
                 if ($product && $product->manage_stock) {
                     $product->decrement('stock', $qty);
                     Log::info('Stock decremented for product certification', [
-                        'product_id' => $productId,
+                        'item_id' => $productId,
                         'qty' => $qty,
                         'new_stock' => $product->stock
                     ]);

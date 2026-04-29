@@ -11,7 +11,10 @@ const InputPesoChileno = ({
   
   // Función de formateo limpia: solo devuelve el string con $ si hay un número > 0
   const formatNumber = (value) => {
-    const numericValue = parseInt(String(value).replace(/\D/g, ""), 10);
+    // Si el valor viene como string decimal "45000.00", parseFloat lo corregirá antes de quitar caracteres no numéricos
+    const parsedValue = typeof value === 'string' ? parseFloat(value) : value;
+    const numericValue = Math.round(parsedValue);
+
     if (!numericValue || isNaN(numericValue)) return "";
     
     return new Intl.NumberFormat("es-CL", {
@@ -43,7 +46,7 @@ const InputPesoChileno = ({
   return (
     <div className="relative group">
       {/* Símbolo estático a la izquierda que NO desaparece */}
-      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-brand-gray/40 group-focus-within:text-brand-primary font-black text-sm pointer-events-none transition-colors">
+      <div className="absolute left-1 top-1/2 -translate-y-1/2 text-brand-gray/20 group-focus-within:text-brand-primary font-black text-sm pointer-events-none transition-colors">
         $
       </div>
       

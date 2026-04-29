@@ -17,11 +17,11 @@ $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 $admin = User::role('admin')->first() ?: User::first();
 auth()->login($admin);
 
-// Configurar sesión de sucursal Home Care (ID 2)
-session(['active_branch_id' => 2, 'current_company_id' => 2]);
+// Configurar sesión de sucursal Home Care (ID 3)
+session(['active_branch_id' => 3, 'current_company_id' => 2]);
 
 echo "--- INICIANDO PRUEBA DE OPERACIÓN DE PACIENTES ---\n";
-echo "Sucursal Activa: " . Branch::find(2)->name . " (Home Care Only: " . (Branch::find(2)->is_home_care_only ? 'SI' : 'NO') . ")\n\n";
+echo "Sucursal Activa: " . Branch::find(3)->name . " (Home Care Only: " . (Branch::find(3)->is_home_care_only ? 'SI' : 'NO') . ")\n\n";
 
 /**
  * Caso 1: Intentar crear adulto SIN dirección (Debe fallar por validación)
@@ -64,7 +64,11 @@ echo "CASO 2: Menor de edad con dirección y tutor...\n";
 DB::beginTransaction();
 try {
     $time = time();
-    $rut = substr($time, 0, 8).'-'.substr($time, -1);
+    $base_rut = substr($time, 0, 8);
+    
+    // Función simple para dígito verificador
+    $s=0;$m=2;for($i=strlen($base_rut)-1;$i>=0;$i--){$s+=$base_rut[$i]*$m;$m=$m==7?2:$m+1;}$d=11-($s%11);$dv=$d==11?0:($d==10?'K':$d);
+    $rut = $base_rut."-".$dv;
     
     $data = [
         'name' => 'Niño Prueba',
@@ -86,10 +90,18 @@ try {
     ];
 
     $controller = app(PatientAdminController::class);
-    $request = new Request($data);
     
-    // Ejecutamos el store (simulando que la validación ya pasó)
-    $response = $controller->store($app->make(StorePatientRequest::class)->merge($data));
+    // Crear el StorePatientRequest correctamente con los datos
+    $storeRequest = new StorePatientRequest();
+    $storeRequest->merge($data);
+    $storeRequest->setContainer($app);
+    
+    // Configurar el validador manualmente
+    $validator = Validator::make($data, $storeRequest->rules(), $storeRequest->messages());
+    $storeRequest->setValidator($validator);
+    
+    // Ejecutamos el store
+    $response = $controller->store($storeRequest);
     
     $patient = Patient::where('rut', $rut)->first();
     if ($patient) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Head, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/components/SideModal";
@@ -31,6 +31,21 @@ export default function Index({
   const [showCreateSessionModal, setShowCreateSessionModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
   const [sessionData, setSessionData] = useState({});
+
+  useEffect(() => {
+    // Revisa si viene por redirección directa para crear atención
+    const searchParams = new URLSearchParams(window.location.search);
+    const action = searchParams.get('action');
+    const patientId = searchParams.get('patient_id');
+
+    if (action === 'create' && patientId) {
+      setSessionData({ patient_id: Number(patientId) });
+      setShowCreateSessionModal(true);
+      
+      // Limpia la URL para evitar que el modal se vuelva a abrir al recargar
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   // Acciones sobre sesiones
   const openStartModal = (session) => {

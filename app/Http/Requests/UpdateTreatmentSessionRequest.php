@@ -39,7 +39,7 @@ class UpdateTreatmentSessionRequest extends FormRequest
             'room_id' => 'nullable|exists:rooms,id',
             'doctor_id' => 'sometimes|exists:doctors,id',
             'patient_id' => 'sometimes|exists:patients,id',
-            'session_type_id' => 'nullable|exists:session_types,id',
+            'item_id' => 'nullable|exists:items,id',
             /* 'branch_id' => 'nullable|exists:branches,id', */
 
             'month_session_number' => 'sometimes',
@@ -141,39 +141,40 @@ class UpdateTreatmentSessionRequest extends FormRequest
         $validator->after(function ($validator) {
             $session = $this->route('session');
             
-            // Si la sesión no existe o no está completada, no aplicamos restricciones
-            if (!$session || !in_array($session->status, ['completed', 'attended'])) {
+            // Asegurar que tenemos el modelo resuelto
+            if (!$session instanceof \App\Models\TreatmentSession && is_numeric($session)) {
+                $session = \App\Models\TreatmentSession::find($session);
+            }
+
+            if (!$session) {
                 return;
             }
 
-            // Permitir a superadmins editar todo
-            if ($this->user()->hasRole('superadmin')) {
-                return;
+            // 1. Validar que no se cambie el estado de una sesión completada
+            $newStatus = $this->input('status');
+            if ($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED && $this->has('status') && $newStatus !== 'completed') {
+                $validator->errors()->add('status', 'No se puede cambiar el estado de una sesión que ya ha sido completada.');
             }
+            
+            // 2. Si la sesión está completada, restringir edición de campos logísticos a no-superadmins
+            if (($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED || $session->status->value === 'completed') && !$this->user()->hasRole('superadmin')) {
+                $protectedFields = [
+                    'treatment_id', 
+                    'item_id', 
+                    'patient_id', 
+                    'doctor_id', 
+                    'date', 
+                    'time', 
+                    'consumes_plan'
+                ];
 
-            // Campos protegidos una vez completada la sesión
-            $protectedFields = [
-                'treatment_id', 
-                'session_type_id', 
-                'patient_id', 
-                'doctor_id', 
-                'date', 
-                'time', 
-                'consumes_plan'
-            ];
+                foreach ($protectedFields as $field) {
+                    if ($this->has($field) && $this->input($field) != $session->{$field}) {
+                         // Ignorar si son fechas/horas virtualmente iguales
+                         if (in_array($field, ['date', 'time'])) continue;
 
-            foreach ($protectedFields as $field) {
-                if ($this->has($field) && $this->input($field) != $session->{$field}) {
-                    // Comparación laxa (!=) para evitar problemas de tipos (string vs int)
-                    // Para fechas, podríamos necesitar algo más robusto, pero por ahora basta.
-                    
-                    // Excepción para fechas si son equivalentes (string vs carbon)
-                    if (in_array($field, ['date', 'time'])) {
-                         // Aquí podrías agregar lógica de carbon diff, pero lo dejamos simple
-                         continue; 
+                        $validator->errors()->add($field, "No se puede modificar '{$field}' en una sesión ya completada.");
                     }
-
-                    $validator->errors()->add($field, "No se puede modificar '{$field}' en una sesión completada.");
                 }
             }
         });
@@ -184,24 +185,6 @@ class UpdateTreatmentSessionRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Para sesiones completadas, asegurar que tengan evaluación de dolor
-        if ($this->has('status') && $this->status === 'Completada') {
-            $this->validate([
-                'pain_before' => 'required|integer|min:0|max:10',
-                'pain_after' => 'required|integer|min:0|max:10',
-            ]);
-        }
-
-        // Validación personalizada: prevenir cambiar datos de una sesión completada
-        $this->validate([
-            'status' => [
-                function ($attribute, $value, $fail) {
-                    $session = $this->route('session');
-                    if ($session && $session->status === 'Completada' && $value !== 'Completada') {
-                        $fail('No se puede cambiar el estado de una sesión completada.');
-                    }
-                }
-            ]
-        ]);
+        // Limpieza de datos si es necesario
     }
 }

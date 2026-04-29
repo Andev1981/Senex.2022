@@ -27,7 +27,7 @@ class PlanController extends Controller
      
         // Si la petición espera JSON y se pide planes internos
         if ($request->wantsJson() && ($request->has('is_internal') || $request->has('search'))) {
-            $plansQuery = Plan::with(['insurance', 'agreementRules.sessionType']) // Cargar a través de las reglas del convenio
+            $plansQuery = Plan::with(['insurance', 'agreementRules.item']) // Cargar a través de las reglas del convenio
                 ->where('is_active', true);
         
             if ($request->has('is_internal')) {
@@ -41,8 +41,8 @@ class PlanController extends Controller
             
             $plans = $plansQuery->get()->map(function ($plan) {
                 // Mapear las reglas para obtener los nombres de los tipos de sesión
-                $sessionTypesNames = $plan->agreementRules->map(function ($rule) {
-                    return $rule->sessionType?->name;
+                $itemsNames = $plan->agreementRules->map(function ($rule) {
+                    return $rule->item?->name;
                 })->filter()->unique()->implode(', ');
 
                 return [
@@ -54,7 +54,7 @@ class PlanController extends Controller
                     'valid_months' => $plan->valid_months,
                     'description' => $plan->description,
                     'insurance_name' => $plan->insurance?->name ?? 'Particular / Interno',
-                    'session_types' => $sessionTypesNames, // Usar la nueva variable
+                    'items' => $itemsNames, // Usar la nueva variable
                 ];
             });
 
@@ -154,36 +154,25 @@ class PlanController extends Controller
     public function update(UpdatePlanRequest $request, Plan $plan)
     {
         $validated = $request->validated();
-        try{
+        try {
+            $this->planService->updatePlanWithContent($plan, $validated);
 
-        $plan->update($validated);
-        // Si llegamos aquí, la transacción fue exitosa
             session()->flash('message', 'Plan actualizado correctamente.');
             session()->flash('type', 'success');
         } catch (\Throwable $th) {
-                    Log::error("Error al actualizar el Plan:", [
-                        'user_id' => auth()->id(), // Si usas autenticación
-                        'exception' => $th->getMessage(),
-                        'trace' => $th->getTraceAsString(),
-                    ]);
+            Log::error("Error al actualizar el Plan:", [
+                'user_id' => auth()->id(),
+                'exception' => $th->getMessage(),
+                'trace' => $th->getTraceAsString(),
+            ]);
 
-                    // 2. Mostrar el mensaje específico de la excepción al usuario
-                    // Solo mostrar el getMessage() si es seguro y relevante para el usuario.
-                    $errorMessage = "La actualización ha fallado. Razón: " . $th->getMessage();
-
-                    // En un entorno de producción, a veces quieres mostrar un mensaje más amigable
-                    // si el error es de bajo nivel (ej. "Error de conexión").
-                    /**/
-                    if (app()->environment('production')) {
-                        $errorMessage = 'La actualización ha fallado debido a un error del sistema. Por favor, intente de nuevo.';
-                    } else {
-                        $errorMessage = $th->getMessage();
-                    }
-                    
-                    
-                    session()->flash('message', $errorMessage);
-                    session()->flash('type', 'error');
-                }
+            $errorMessage = app()->environment('production')
+                ? 'La actualización ha fallado debido a un error del sistema.'
+                : $th->getMessage();
+            
+            session()->flash('message', $errorMessage);
+            session()->flash('type', 'error');
+        }
     }
 
     public function destroy(Plan $plan)

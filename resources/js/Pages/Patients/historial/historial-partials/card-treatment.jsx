@@ -120,8 +120,18 @@ export default function CardTreatment({ treatment, handleTreatmentModal }) {
           </div>
         </div>
 
-        {/* Timeline Metadata */}
+        {/* Timeline Metadata & Actions */}
         <div className="flex flex-col items-end gap-3 shrink-0">
+          <div className="flex gap-2">
+               {statusKey !== 'completed' && (
+                    <button
+                        onClick={() => handleTreatmentModal({ ...treatment, status: 'completed' })}
+                        className="px-4 py-2 bg-green-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-green-200 hover:brightness-110 transition-all active:scale-95 flex items-center gap-2"
+                    >
+                        <Award className="w-3.5 h-3.5" /> Alta Clínica
+                    </button>
+               )}
+          </div>
           <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-right min-w-[180px]">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-4">

@@ -14,14 +14,24 @@ use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
     public function create(): Response
     {
+        $devUsers = [];
+        if (config('app.env') === 'local') {
+            $devUsers = \App\Models\User::role(['superadmin', 'admin', 'kine'])->get()->map(function($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'role' => $u->roles->first()?->name ?? 'User',
+                ];
+            });
+        }
+
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'dev_users' => $devUsers
         ]);
     }
 
@@ -64,53 +74,40 @@ class AuthenticatedSessionController extends Controller
 
     protected function getRedirectRoute($user): string
     {
-        // 1. KINE → Validar sucursales y redirigir
+        // 1. ADMIN / SUPERADMIN (Prioridad máxima)
+        if ($user->hasAnyRole(['superadmin', 'admin'])) {
+            return route('dashboard');
+        }
+
+        // 2. KINE → Validar sucursales y redirigir
         if ($user->hasRole('kine')) {
             $doctor = $user->doctor;
 
-            // A. Validar que el perfil existe
             if (!$doctor) {
                 Auth::logout();
                 session()->flash('error', 'No se encontró tu perfil de kinesiólogo.');
                 return route('login');
             }
 
-            // B. Buscar Sucursales Válidas
-            // Buscamos si tiene al menos UNA sucursal donde:
-            // 1. El estado sea 'active'
-            // 2. Tenga acceso móvil habilitado (mobile_app_access = 1)
             $validBranch = $doctor->branches()
                 ->wherePivot('status', 'active')
                 ->wherePivot('mobile_app_access', true)
-                ->first(); // Obtenemos la primera que cumpla
+                ->first();
 
-            // C. Si no tiene ninguna sucursal válida, expulsamos
             if (!$validBranch) {
                 Auth::logout();
-                session()->flash('error', 'No tienes acceso habilitado en ninguna sucursal activa. Contacta a administración.');
+                session()->flash('error', 'No tienes acceso habilitado en ninguna sucursal activa.');
                 return route('login');
             }
 
-            // D. ✅ Todo OK - Configuración de entorno
-
-            // IMPORTANTE: Como tu modelo usa session('active_branch_id') en el getBranchAttribute,
-            // debemos inicializarlo aquí para que el dashboard cargue con datos.
             if (!session()->has('active_branch_id')) {
                 session(['active_branch_id' => $validBranch->id]);
             }
 
-            // Actualizamos última conexión
             $doctor->update(['last_mobile_login' => now()]);
-
             return route('kine.dashboard');
         }
 
-        // 2. ADMIN/SUPERADMIN
-        if ($user->hasRole(['admin', 'superadmin'])) {
-            return route('/');
-        }
-
-        // 3. FALLBACK
         return '/';
     }
 

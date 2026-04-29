@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\RedirectCajero::class,
         ]);
         $middleware->alias([
             'ensure.kine' => EnsureUserIsKine::class,
@@ -39,6 +40,22 @@ return Application::configure(basePath: dirname(__DIR__))
       ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'No tienes los permisos necesarios para realizar esta acción.',
+                    'required_roles' => $e->getRequiredRoles(),
+                    'required_permissions' => $e->getRequiredPermissions(),
+                ], 403);
+            }
+
+            return back()->with([
+                'flash' => [
+                    'error' => 'Acceso denegado: No tienes el rol o permiso adecuado para entrar aquí.'
+                ]
+            ]);
+        });
+
         $exceptions->respond(function ($response, $e, $request) {
             if ($response->getStatusCode() === 419) {
                 return back()->with([

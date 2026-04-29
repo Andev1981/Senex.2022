@@ -5,11 +5,11 @@ import { CreditCard, Package, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 export default function ProductCheckout({ products = [] }) {
     const [data, setData] = useState({
-        product_id: "",
+        item_id: "",
         quantity: 1,
     });
 
-    const selectedProduct = products.find(p => p.id == data.product_id);
+    const selectedProduct = products.find(p => p.id == data.item_id);
     const total = selectedProduct ? selectedProduct.price * data.quantity : 0;
 
     // Obtener el token CSRF para el formulario manual
@@ -62,7 +62,7 @@ export default function ProductCheckout({ products = [] }) {
                                                 <label 
                                                     key={p.id}
                                                     className={`relative flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer group ${
-                                                        data.product_id == p.id 
+                                                        data.item_id == p.id 
                                                         ? 'border-indigo-600 bg-indigo-50/30 shadow-md' 
                                                         : 'border-slate-100 hover:border-slate-200'
                                                     }`}
@@ -70,11 +70,11 @@ export default function ProductCheckout({ products = [] }) {
                                                     <div className="flex items-center gap-4">
                                                         <input 
                                                             type="radio"
-                                                            name="product_id"
+                                                            name="item_id"
                                                             value={p.id}
                                                             required
-                                                            checked={data.product_id == p.id}
-                                                            onChange={e => setData({...data, product_id: e.target.value})}
+                                                            checked={data.item_id == p.id}
+                                                            onChange={e => setData({...data, item_id: e.target.value})}
                                                             className="w-5 h-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                                                         />
                                                         <div>
@@ -85,7 +85,7 @@ export default function ProductCheckout({ products = [] }) {
                                                     <div className="text-right">
                                                         <p className="font-black text-slate-900 font-mono">{fmtCLP(p.price)}</p>
                                                     </div>
-                                                    {data.product_id == p.id && (
+                                                    {data.item_id == p.id && (
                                                         <div className="absolute -top-2 -right-2 text-indigo-600">
                                                             <CheckCircle2 size={24} fill="white" />
                                                         </div>
@@ -153,7 +153,7 @@ export default function ProductCheckout({ products = [] }) {
 
                                     <button
                                         type="submit"
-                                        disabled={!data.product_id}
+                                        disabled={!data.item_id}
                                         className="w-full py-5 bg-indigo-500 hover:bg-indigo-400 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-indigo-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                                     >
                                         <CreditCard size={18} />

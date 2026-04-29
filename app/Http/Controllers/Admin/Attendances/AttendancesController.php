@@ -8,7 +8,7 @@ use App\Models\Doctor;
 use App\Models\DoctorCommissionRate;
 use App\Models\Patient;
 use App\Models\PatientPlan;
-use App\Models\SessionType;
+use App\Models\Item;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
 use App\Models\Diagnostic;
@@ -60,7 +60,7 @@ class AttendancesController extends Controller
             $sessionsQuery = TreatmentSession::with([
                 'patient',
                 'doctor',
-                'sessionType',
+                'item',
                 'paymentAllocation',
                 'invoiceItems.invoice', // 🔹 CRÍTICO: Cargar facturas para ver estado DTE
             ])
@@ -72,7 +72,7 @@ class AttendancesController extends Controller
                     'treatment_id',
                     'patient_id',
                     'doctor_id',
-                    'session_type_id',
+                    'item_id',
                     'date',
                     'time',
                     'status',
@@ -119,8 +119,8 @@ class AttendancesController extends Controller
 
                 $activeItem = $session->invoiceItems->first(function ($item) {
                     return $item->invoice && 
-                        $item->invoice->payment_status !== FinanceStatusEnum::VOIDED && // Que no esté anulada internamente
-                        $item->invoice->dte_status !== DteStatusEnum::REJECTED;     // Que no esté rechazada por el SII
+                        $item->invoice->payment_status !== FinanceStatusEnum::VOIDED && 
+                        $item->invoice->dte_status !== DteStatusEnum::REJECTED;
                 });
 
                 $activeInvoice = $activeItem ? $activeItem->invoice : null;
@@ -129,17 +129,17 @@ class AttendancesController extends Controller
 
                     // Información básica
                     'treatment_id' => $session->treatment_id,
-                    'patient_id' => $session->patient_id, // Use ID directly from session for safety
+                    'patient_id' => $session->patient_id, 
                     'doctor_id' => $session->doctor_id,
-                    'session_type_id' => $session->session_type_id,
+                    'item_id' => $session->item_id,
 
                     // Nombres para mostrar (Null Safe)
                     'patient_full_name' => $session->patient?->full_name ?? 'Paciente no encontrado',
                     'patient_rut' => $session->patient?->rut ?? 'S/R',
                     'patient_phone' => $session->patient?->phone ?? '',
                     'doctor_full_name' => $session->doctor ? ($session->doctor->name . ' ' . $session->doctor->last_name) : 'Doctor no asignado',
-                    'name_session_type' => $session->sessionType?->name ?? 'Tipo desconocido',
-                    'session_type_base_price' => $session->sessionType?->base_price ?? 0,
+                    'name_session_type' => $session->item?->name ?? 'Tipo desconocido',
+                    'session_type_base_price' => $session->item?->base_price ?? 0,
 
                     // Fecha y hora
                     'date' => $session->date,
@@ -148,7 +148,7 @@ class AttendancesController extends Controller
                     'duration' => $session->duration,
 
                     // Estado
-                    'status' => $session->status,
+                    'status' => $session->status instanceof \App\Enums\AppointmentStatusEnum ? $session->status->value : $session->status,
                     'dte_generated' => $session->dte_generated,
 
                     // Precios
@@ -187,13 +187,13 @@ class AttendancesController extends Controller
                     // Estado real de facturación (Combinamos Invoice + DTE)
                     'billing_info' => $activeInvoice ? [
                         'invoice_id'      => $activeInvoice->id,
-                        'status_internal' => $activeInvoice->payment_status, // paid, unpaid
-                        'dte_status'      => $activeInvoice->dte_status,     // pending, accepted, rejected
-                        'folio'           => $activeInvoice->dte_folio,      // El folio real si ya existe
-                        'type'            => $activeInvoice->dte_type,       // 39, 33, etc.
-                        'pdf_path'        => $activeInvoice->pdf_path,       // Para descargar
+                        'status_internal' => $activeInvoice->payment_status, 
+                        'dte_status'      => $activeInvoice->dte_status,     
+                        'folio'           => $activeInvoice->dte_folio,      
+                        'type'            => $activeInvoice->dte_type,       
+                        'pdf_path'        => $activeInvoice->pdf_path,       
                     ] : null,
-                    'is_locked'       => $activeInvoice ? true : false,      // ¿Bloquear checkbox?
+                    'is_locked'       => $activeInvoice ? true : false,      
                     'dte_generated'   => $activeInvoice && $activeInvoice->dte_status === DteStatusEnum::ACCEPTED,
                 ];
             });
@@ -201,15 +201,15 @@ class AttendancesController extends Controller
 
             $kpis = [
                 'total' => $sessions->count(),
-                'completadas' => $sessions->where('status', 'completed')->count(),
-                'pendientes' => $sessions->where('status', 'scheduled')->count(),
-                'canceladas' => $sessions->where('status', 'cancelled')->count(),
-                'totalCobrado' =>  $sessions->whereIn('status', ['completed', 'in_progress', 'scheduled'])
+                'completadas' => $sessions->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->count(),
+                'pendientes' => $sessions->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)->count(),
+                'canceladas' => $sessions->where('status', \App\Enums\AppointmentStatusEnum::CANCELLED)->count(),
+                'totalCobrado' =>  $sessions->whereIn('status', [\App\Enums\AppointmentStatusEnum::COMPLETED, \App\Enums\AppointmentStatusEnum::IN_PROGRESS, \App\Enums\AppointmentStatusEnum::SCHEDULED])
                     ->filter(fn($session) => $session->paymentAllocations !== null)
                     ->sum(function ($session) {
                         return $session->paymentAllocations->sum('amount_clp');
                     }) ?? 0,
-                'totalPorCobrar' => $sessions->whereIn('status', ['scheduled', 'completed', 'in_progress'])
+                'totalPorCobrar' => $sessions->whereIn('status', [\App\Enums\AppointmentStatusEnum::SCHEDULED, \App\Enums\AppointmentStatusEnum::COMPLETED, \App\Enums\AppointmentStatusEnum::IN_PROGRESS])
                     ->sum('patient_amount_clp'),
             ];
 
@@ -231,7 +231,7 @@ class AttendancesController extends Controller
                     'treatments' => function ($query) {
                         $query->whereIn('status', ['in_progress', 'evaluation'])
                               ->select('id', 'patient_id', 'status', 'diagnostic_code', 'referral_diagnosis', 'referral_doctor_name', 'total_sessions', 'completed_sessions', 'is_indefinite')
-                              ->with('diagnostic:code,description'); // Cargar diagnóstico si existe relación
+                              ->with(['diagnostic:code,description', 'lastSession']); // Cargar diagnóstico y última sesión
                     }
                 ])
                 ->get()
@@ -254,6 +254,18 @@ class AttendancesController extends Controller
                         'total_sessions' => $t->total_sessions,
                         'completed_sessions' => $t->completed_sessions,
                         'is_indefinite' => $t->is_indefinite,
+                        'last_session' => $t->lastSession ? [
+                            'subjective' => $t->lastSession->subjective,
+                            'objective' => $t->lastSession->objective,
+                            'assessment' => $t->lastSession->assessment,
+                            'plan' => $t->lastSession->plan,
+                            'evaluation_data' => $t->lastSession->evaluation_data,
+                            'activities_data' => $t->lastSession->activities_data,
+                            'session_pain_map' => $t->lastSession->session_pain_map,
+                            'pain_level' => $t->lastSession->pain_level,
+                            'body_part' => $t->lastSession->body_part,
+                            'laterality' => $t->lastSession->laterality,
+                        ] : null,
                     ]),
                     'active_plans' => $p->activePlans->map(fn($plan) => [
                         'patient_plans.id' => $plan->id,
@@ -298,9 +310,19 @@ class AttendancesController extends Controller
                     ];
                 });
 
-            $session_types = SessionType::select('id', 'name', 'code', 'category', 'base_price_clp', 'plan_discount_clp')
-                ->orderBy('name')
-                ->get();
+            $items = Item::services()
+                ->with('serviceDetail')
+                ->get(['id', 'name', 'sku as code', 'price'])
+                ->map(function($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'code' => $item->sku,
+                        'price' => (int)$item->price,
+                        'base_price_clp' => (int)$item->price,
+                        'duration' => $item->serviceDetail?->duration_minutes
+                    ];
+                });
 $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get(['code', 'description']);
 
             return Inertia::render('attendances/index', [
@@ -312,9 +334,9 @@ $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get
                     'estado' => $estado,
                     'query' => $query,
                 ],
-                'patients' => $patients,      // ← Agregar
-                'doctors' => $doctors,        // ← Agregar
-                'session_types' => $session_types, // ← Agregar
+                'patients' => $patients,
+                'doctors' => $doctors,
+                'session_types' => $items, 
                 'diagnostics' => $diagnostics
             ]);
         } catch (\Exception $e) {
@@ -355,14 +377,14 @@ $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get
         try {
             $session = TreatmentSession::findOrFail($id);
 
-            if ($session->status !== 'scheduled') {
+            if ($session->status !== \App\Enums\AppointmentStatusEnum::SCHEDULED) {
                 session()->flash('message', 'Solo se pueden iniciar sesiones programadas.');
                 session()->flash('type', 'error');
                 return back();
             }
 
             $session->update([
-                'status' => 'in_progress',
+                'status' => \App\Enums\AppointmentStatusEnum::IN_PROGRESS,
             ]);
 
             Log::info("Sesión iniciada: ID {$id}");
@@ -386,12 +408,14 @@ $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get
         try {
             $session = TreatmentSession::findOrFail($id);
 
-            if (!in_array($session->status, ['scheduled', 'in_progress'])) {
-                session()->flash('message', 'Esta sesión no puede ser completada');
+            // 1. Validar estado permitido usando Enum
+            if (!in_array($session->status, [\App\Enums\AppointmentStatusEnum::SCHEDULED, \App\Enums\AppointmentStatusEnum::IN_PROGRESS])) {
+                session()->flash('message', 'Solo se pueden finalizar sesiones que estén programadas o en curso. Estado actual: ' . $session->status->label());
                 session()->flash('type', 'error');
                 return back();
             }
 
+            // 2. Validar datos clínicos básicos
             $validated = $request->validate([
                 'pain_before' => 'required|integer|min:0|max:10',
                 'pain_after' => 'required|integer|min:0|max:10',
@@ -405,28 +429,21 @@ $diagnostics = Diagnostic::where('is_active', true)->orderBy('description')->get
                 'next_goals' => 'nullable|string',
             ]);
 
-            // Convertir arrays a JSON
-            if (isset($validated['techniques'])) {
-                $validated['techniques'] = json_encode($validated['techniques']);
-            }
-            if (isset($validated['exercises'])) {
-                $validated['exercises'] = json_encode($validated['exercises']);
-            }
+            // 3. Procesar mediante el servicio maestro
+            $sessionService = app(\App\Services\Treatments\TreatmentSessionService::class);
+            $sessionService->completeSession($session, $validated);
 
-            $validated['status'] = 'completed';
-            $validated['completed_at'] = now();
+            Log::info("Sesión finalizada exitosamente via controlador: ID {$id}");
 
-            $session->update($validated);
-
-            Log::info("Sesión completada: ID {$id}");
-
-            session()->flash('message', 'Sesión completada correctamente');
+            session()->flash('message', '¡Atención finalizada con éxito! Los registros clínicos han sido actualizados.');
             session()->flash('type', 'success');
 
             return back();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e; // Dejar que Laravel maneje errores de validación
         } catch (\Exception $e) {
-            Log::error("Error al completar sesión {$id}: " . $e->getMessage());
-            session()->flash('message', 'Esta sesión no puede ser completada');
+            Log::error("Error crítico al completar sesión {$id}: " . $e->getMessage());
+            session()->flash('message', 'No se pudo completar la sesión: ' . $e->getMessage());
             session()->flash('type', 'error');
             return back();
         }

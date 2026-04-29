@@ -49,9 +49,9 @@ class UpdateAgreementRuleRequest extends FormRequest
         return [
             'agreement_id' => ['sometimes', 'required', 'exists:agreements,id'],
 
-            'session_type_id' => [
+            'item_id' => [
                 'required',
-                'exists:session_types,id',
+                'exists:items,id',
 
                 // Validación de Unicidad
                 Rule::unique('agreement_rules')
@@ -86,7 +86,7 @@ class UpdateAgreementRuleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'session_type_id.unique'    => 'Ya existe una regla configurada para este tipo de sesión y plan en este convenio.',
+            'item_id.unique'    => 'Ya existe una regla configurada para este tipo de sesión y plan en este convenio.',
             'patient_share_clp.lte'     => 'El copago del paciente no puede ser mayor que el precio bruto.',
             'end_date.after_or_equal'   => 'La fecha de término no puede ser anterior a la de inicio.',
         ];

@@ -27,6 +27,19 @@ class PaymentService
     }
 
     /**
+     * Alias for registerLocalPayment used by POS
+     */
+    public function registerLocalPayment(array $data): Payment
+    {
+        // El POS envía el monto en final_shares.amount_patient_clp
+        if (!isset($data['amount_clp'])) {
+            $data['amount_clp'] = data_get($data, 'final_shares.amount_patient_clp', 0);
+        }
+
+        return $this->processPayment($data);
+    }
+
+    /**
      * Procesa un pago (flujo general para manual/transferencia)
      */
     public function processPayment(array $data): Payment
@@ -38,12 +51,20 @@ class PaymentService
                 ?? data_get($data, 'final_shares.amount_patient_clp', 0);
 
             // 1. Crear el Registro de Pago
+            $rawPatientId = $data['patient_id'] ?? null;
+            $numericPatientId = null;
+
+            if ($rawPatientId) {
+                // Si viene con el prefijo person_X o company_X lo limpiamos
+                $numericPatientId = (int) str_replace(['person_', 'company_'], '', (string)$rawPatientId);
+            }
+
             $payment = Payment::create([
                 'uuid' => (string) Str::uuid(),
                 'user_id' => auth()->id(),
                 'company_id' => $data['company_id'] ?? session('current_company_id'),
                 'branch_id' => $data['branch_id'] ?? session('active_branch_id'),
-                'patient_id' => $data['patient_id'],
+                'patient_id' => $numericPatientId,
                 'amount_clp' => $amount_clp,
                 'payment_date' => $data['payment_date'] ?? now(),
                 'payment_method' => $data['payment_details']['payment_method'] ?? $data['payment_method'],
@@ -110,21 +131,27 @@ class PaymentService
         $sessions = TreatmentSession::whereIn('id', $sessionIds)->get();
 
         foreach ($sessions as $session) {
-            // Buscamos si hay un Receivable pendiente para esta sesión
-            $receivable = Receivable::where('treatment_session_id', $session->id)
-                ->where('status', 'pending')
-                ->first();
+            // Buscamos si tiene una factura asociada para marcarla como pagada si corresponde
+            // (Opcional, dependiendo de si queremos que el flujo manual también afecte facturas)
+            $invoice = $session->invoiceItems()->first()?->invoice;
 
-            if ($receivable) {
-                $amount = min($payment->amount_clp, $receivable->amount_clp);
-                
-                PaymentAllocation::create([
-                    'payment_id' => $payment->id,
-                    'receivable_id' => $receivable->id,
-                    'amount_clp' => $amount,
-                ]);
+            PaymentAllocation::create([
+                'company_id' => $payment->company_id,
+                'branch_id' => $payment->branch_id,
+                'payment_id' => $payment->id,
+                'treatment_session_id' => $session->id,
+                'invoice_id' => $invoice?->id,
+                'amount_clp' => $session->patient_amount_clp, // Asumimos pago total de la sesión
+            ]);
 
-                $receivable->update(['status' => 'paid', 'paid_at' => now()]);
+            // Si hay factura, actualizamos su estado
+            if ($invoice) {
+                $invoice->increment('paid_amount_clp', $session->patient_amount_clp);
+                if ($invoice->paid_amount_clp >= $invoice->total_amount_clp) {
+                    $invoice->update(['payment_status' => 'paid']);
+                } else {
+                    $invoice->update(['payment_status' => 'partial']);
+                }
             }
         }
     }
@@ -375,10 +402,17 @@ class PaymentService
     public function createPendingInvoiceForSession(TreatmentSession $session): Invoice
     {
         return DB::transaction(function () use ($session) {
+            $branchId = $session->branch_id ?? session('active_branch_id');
+            
+            if (!$branchId) {
+                // Si aún es nulo, buscamos la primera sucursal de la empresa como último recurso
+                $branchId = \App\Models\Branch::where('company_id', $session->company_id)->first()?->id;
+            }
+
             // 1. Crear el Encabezado de la Factura (Pendiente)
             $invoice = Invoice::create([
                 'company_id' => $session->company_id,
-                'branch_id' => $session->branch_id,
+                'branch_id' => $branchId,
                 'user_id' => auth()->id() ?? $session->user_id,
                 'patient_id' => $session->patient_id,
                 'entity_type' => 'Patient',
@@ -395,20 +429,18 @@ class PaymentService
                 
                 'issue_date' => now(),
                 'dte_type' => Invoice::TYPE_BOLETA_EXENTA, // Por defecto para salud exento (41)
-                'dte_status' => DteStatusEnum::PENDING,
-                'payment_status' => FinanceStatusEnum::UNPAID,
+                'dte_status' => \App\Enums\DteStatusEnum::PENDING,
+                'payment_status' => \App\Enums\FinanceStatusEnum::UNPAID,
             ]);
 
             // 2. Crear el ítem vinculado
-            // Apuntamos sellable al SessionType para consistencia con reportes de ventas,
-            // pero mantenemos treatment_session_id para saber EXACTAMENTE qué cita se cobra.
             $invoice->items()->create([
                 'company_id' => $session->company_id,
-                'branch_id' => $session->branch_id,
-                'sellable_type' => 'App\Models\SessionType',
-                'sellable_id' => $session->session_type_id,
+                'branch_id' => $branchId,
+                'sellable_type' => 'App\Models\Item',
+                'sellable_id' => $session->item_id,
                 'treatment_session_id' => $session->id,
-                'description' => $session->sessionType?->name ?? 'Sesión Médica',
+                'description' => $session->item?->name ?? 'Sesión Médica',
                 'quantity' => 1,
                 'unit_price_clp' => (int)$session->patient_amount_clp,
                 'unit_patient_clp' => (int)$session->patient_amount_clp,

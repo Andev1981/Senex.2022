@@ -26,20 +26,27 @@
     <div class="wrapper">
         <div class="container">
             <div class="header">
-                <h1>{{ config('app.name') }}</h1>
+                @if($invoice->company && $invoice->company->logo_url)
+                    <img src="{{ $invoice->company->logo_url }}" alt="{{ $invoice->company->business_name }}" style="max-height: 70px; margin-bottom: 10px;">
+                @endif
+                <h1>{{ $invoice->company->business_name ?? config('app.name') }}</h1>
             </div>
             
             <div class="content">
                 <div class="greeting">¡Hola, {{ $invoice->patient->name }}!</div>
                 <div class="message">
-                    Confirmamos la recepción de tu pago. Adjunto a este correo encontrarás tu <strong>{{ $invoice->type_name }}</strong> oficial emitida ante el SII.
+                    Confirmamos la recepción de tu pago. Adjunto a este correo encontrarás tu <strong>Comprobante de Pago</strong> electrónico.
                 </div>
 
                 <div class="summary-card">
                     <div class="summary-label">Monto de la Transacción</div>
-                    <div class="summary-total">${{ number_format($invoice->amount_total_clp, 0, ',', '.') }}</div>
-                    <div class="summary-detail">Documento: {{ $invoice->type_name }} #{{ $invoice->dte_folio ?? 'S/N' }}</div>
+                    <div class="summary-total">${{ number_format($invoice->total_amount_clp, 0, ',', '.') }}</div>
+                    <div class="summary-detail">Tipo: Comprobante de Recepción de Pago</div>
                 </div>
+
+                <p class="message" style="font-size: 13px; background-color: #fffbeb; border: 1px solid #fef3c7; padding: 15px; border-radius: 8px; color: #92400e;">
+                    <strong>Nota:</strong> Este documento es un comprobante interno de la transacción y <strong>no es válido como boleta de ventas y servicios</strong> ante el SII.
+                </p>
 
                 <p class="message">
                     Si tienes cualquier duda sobre este comprobante o tu tratamiento, por favor contáctanos respondiendo a este mismo correo o a través de nuestros canales oficiales.

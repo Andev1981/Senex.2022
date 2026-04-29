@@ -49,7 +49,9 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
      */
     public function via($notifiable): array
     {
-        if ($notifiable->opt_out_reminders) {
+        // En la interfaz, el switch "Notificaciones del Sistema" controla opt_out_reminders.
+        // Si el switch está APAGADO (false), no enviamos nada.
+        if (!$notifiable->opt_out_reminders) {
             return [];
         }
 

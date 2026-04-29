@@ -47,9 +47,9 @@ class InvoiceItem extends Model
     return $this->belongsTo(TreatmentSession::class);
   }
 
-  public function sessionType()
+  public function item()
   {
-    return $this->belongsTo(SessionType::class);
+    return $this->belongsTo(Item::class);
   }
 
   // Helper para setear totales coherentes

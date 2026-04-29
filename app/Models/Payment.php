@@ -83,6 +83,11 @@ class Payment extends Model
         return $this->hasMany(PaymentAllocation::class);
     }
 
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class);
+    }
+
     public function receivables(): HasMany
     {
         return $this->hasMany(Receivable::class);

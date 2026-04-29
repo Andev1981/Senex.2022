@@ -24,18 +24,18 @@ class PatientMobileController extends Controller
         $query = $doctor->patients()
             ->with([
                 'treatments' => function ($q) use ($doctor) {
-                    $q->where('doctor_id', $doctor->id)
-                        ->where('status', 'InProgress')
-                        ->with('sessionType:id,name');
+                    $q->where('treatments.doctor_id', $doctor->id)
+                        ->where('treatments.status', \App\Enums\TreatmentStatusEnum::IN_PROGRESS)
+                        ->with('item:id,name');
                 }
             ])
             ->withCount([
                 'sessions as total_sessions' => function ($q) use ($doctor) {
-                    $q->where('doctor_id', $doctor->id);
+                    $q->where('treatment_sessions.doctor_id', $doctor->id);
                 },
                 'sessions as completed_sessions' => function ($q) use ($doctor) {
-                    $q->where('doctor_id', $doctor->id)
-                        ->where('status', 'completed');
+                    $q->where('treatment_sessions.doctor_id', $doctor->id)
+                        ->where('treatment_sessions.status', \App\Enums\AppointmentStatusEnum::COMPLETED);
                 }
             ]);
 
@@ -62,13 +62,13 @@ class PatientMobileController extends Controller
                 'active_treatment' => $activeTreatment ? [
                     'id' => $activeTreatment->id,
                     'diagnosis' => $activeTreatment->diagnosis,
-                    'session_type' => $activeTreatment->sessionType->name,
+                    'session_type' => $activeTreatment->item->name,
                     'progress' => $activeTreatment->completed_sessions . '/' . ($activeTreatment->total_sessions ?? '∞'),
                 ] : null,
             ];
         });
 
-        return Inertia::render('kineMobile/MyPatients', [
+        return Inertia::render('kine-mobile/my-patients', [
             'patients' => $patients,
             'search' => $search,
             'totalPatients' => $patients->count(),
@@ -91,12 +91,12 @@ class PatientMobileController extends Controller
         $patient->load([
             'treatments' => function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
-                    ->with('sessionType:id,name')
+                    ->with('item:id,name')
                     ->latest();
             },
             'sessions' => function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
-                    ->with('sessionType:id,name')
+                    ->with('item:id,name')
                     ->latest()
                     ->limit(20);
             },
@@ -105,7 +105,7 @@ class PatientMobileController extends Controller
             }
         ]);
 
-        return Inertia::render('kineMobile/PatientDetail', [
+        return Inertia::render('kine-mobile/patient-detail', [
             'patient' => [
                 'id' => $patient->id,
                 'name' => $patient->name . ' ' . $patient->last_name,
@@ -119,7 +119,7 @@ class PatientMobileController extends Controller
                     return [
                         'id' => $treatment->id,
                         'diagnosis' => $treatment->diagnosis,
-                        'session_type' => $treatment->sessionType->name,
+                        'session_type' => $treatment->item->name,
                         'start_date' => $treatment->start_date,
                         'status' => $treatment->status,
                         'progress' => [
@@ -136,7 +136,7 @@ class PatientMobileController extends Controller
                         'id' => $session->id,
                         'date' => $session->date,
                         'time' => $session->time,
-                        'session_type' => $session->sessionType->name,
+                        'session_type' => $session->item->name,
                         'status' => $session->status,
                         'notes' => $session->notes,
                     ];

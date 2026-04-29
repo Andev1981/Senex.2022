@@ -14,8 +14,8 @@ class UpdateProductRequest extends FormRequest
 
     public function rules(): array
     {
-        $companyId = session('current_company_id');
-        $productId = $this->route('product')->id; // ID del producto que estamos editando
+        $companyId = auth()->user()->company_id;
+        $productId = $this->route('product')->id;
 
         return [
             'type'           => 'required|string|in:product,service',
@@ -26,17 +26,25 @@ class UpdateProductRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:50',
-                // Único en la empresa, pero ignorando este producto
-                Rule::unique('products')->where(fn($q) => $q->where('company_id', $companyId))->ignore($productId)
+                Rule::unique('items')->where(fn($q) => $q->where('company_id', $companyId))->ignore($productId)
             ],
+            'price'          => 'required|integer|min:0',
+            'is_exempt'      => 'nullable|boolean',
+            'is_active'      => 'nullable|boolean',
+
+            // Campos específicos de Producto
             'barcode'        => 'nullable|string|max:100',
             'cost_price'     => 'nullable|integer|min:0',
-            'price'          => 'required|integer|min:0',
-            'stock'          => 'required|integer',
+            'stock'          => 'required_if:type,product|integer',
             'critical_stock' => 'nullable|integer|min:0',
-            'is_exempt'      => 'boolean',
-            'manage_stock'   => 'boolean',
-            'is_active'      => 'boolean',
+            'manage_stock'   => 'nullable|boolean',
+
+            // Campos específicos de Servicio
+            'duration_minutes'              => 'required_if:type,service|integer|min:1',
+            'default_doctor_commission_clp' => 'nullable|integer|min:0',
+            'requires_diagnosis'            => 'nullable|boolean',
+            'requires_referral'             => 'nullable|boolean',
+            'specialty'                     => 'nullable|string|max:100',
         ];
     }
 }

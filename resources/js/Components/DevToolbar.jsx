@@ -90,10 +90,21 @@ export default function DevToolbar() {
     const handleLoginAs = (e) => {
         e.preventDefault();
         if(!userId) return;
-        router.post('/dev/login-as/' + userId, {}, {
-             onSuccess: () => toast.success('Login exitoso como ID: ' + userId),
-             onError: () => toast.error('Error al hacer login')
-        });
+        
+        // Usamos un formulario nativo o axios para hacer el login y luego window.location
+        // para forzar que toda la aplicación se recargue con el nuevo contexto de rol
+        axios.post('/dev/login-as/' + userId)
+            .then(response => {
+                toast.success('Cambiando de identidad...');
+                // Pequeño delay para el toast y recarga forzada
+                setTimeout(() => {
+                    window.location.href = response.data.redirect || '/dashboard';
+                }, 500);
+            })
+            .catch(err => {
+                toast.error('Error al cambiar de identidad');
+                console.error(err);
+            });
     }
 
     const handleRebuildApp = () => {

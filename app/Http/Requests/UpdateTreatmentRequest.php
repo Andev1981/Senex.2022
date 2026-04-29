@@ -31,7 +31,7 @@ class UpdateTreatmentRequest extends FormRequest
     {
 
         return [
-            'session_type_id' => 'sometimes|exists:session_types,id',
+            'item_id' => 'sometimes|exists:items,id',
             'patient_id' => 'sometimes|exists:patients,id',
             'doctor_id' => 'sometimes|exists:doctors,id',
             'diagnostic_code' => 'sometimes|exists:diagnostics,code',
@@ -76,7 +76,7 @@ class UpdateTreatmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'session_type_id.exists' => 'El tipo de sesión seleccionado no existe',
+            'item_id.exists' => 'El tipo de sesión seleccionado no existe',
             'patient_id.exists' => 'El paciente seleccionado no existe',
             'doctor_id.exists' => 'El kinesiólogo seleccionado no existe',
             'end_date.after' => 'La fecha de fin debe ser posterior a la fecha de inicio',

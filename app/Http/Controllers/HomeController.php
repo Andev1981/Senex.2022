@@ -16,6 +16,11 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
+        if ($user && $user->hasRole('cajero')) {
+            return redirect()->route('payments.index');
+        }
+
         $activeBranchId = session('active_branch_id');
         
         $invoices = Invoice::where('branch_id', $activeBranchId)

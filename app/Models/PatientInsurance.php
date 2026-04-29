@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PatientInsurance extends Model
 {
-    use HasFactory, Multitenantable;
+    use HasFactory;
 
     protected $table = 'patient_insurances'; 
 

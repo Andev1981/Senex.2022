@@ -28,10 +28,13 @@ import CompanySwitcher from "@/components/CompanySwitcher";
 import BranchSwitcher from "@/components/BranchSwitcher";
 import ContextSelectorModal from "@/components/ContextSelectorModal";
 
-function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
+import { usePermission } from "@/hooks/usePermission";
+
+function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
   const { props } = usePage();
   const { current_company, current_branch } = props;
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
+  const { hasPermission } = usePermission();
   // Trae la URL actual para reaccionar a cambios de ruta
   const { url } = usePage();
 
@@ -43,77 +46,116 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
       const isService = businessType === 'service';
       const isRetail = businessType === 'retail';
 
+      // Módulos habilitados (Prioridad Sucursal > Empresa)
+      const enabledModules = current_branch?.enabled_modules 
+        || current_company?.enabled_modules 
+        || ['clinical_management', 'commercial_management', 'finance_admin', 'system_config']; // Por defecto todos si es null para no romper nada actual
+
       const items = [
-        { id: "/", label: "Dashboard", icon: Home },
+        { id: "dashboard", label: "Dashboard", icon: Home },
       ];
 
       // BLOQUE: GESTIÓN DE PERSONAS (Dinámico)
-      if (isClinical) {
-        items.push({
-          id: "clinical_management",
-          label: "Gestión Clínica",
-          icon: Stethoscope,
-          submenu: [
+      if (isClinical && enabledModules.includes('clinical_management')) {
+        const clinicalSubmenu = [
             { id: "patients.index", label: "Pacientes", icon: Users },
             { id: "doctors.index", label: "Kines", icon: Stethoscope },
             { id: "attendances.index", label: "Atenciones", icon: List },
-            { id: "session-types.index", label: "Tipos de Sesión", icon: Shell },
-          ],
-        });
-      } else {
+            { id: "products.index", label: "Catálogo", icon: Package },
+            { id: "categories.index", label: "Categorías", icon: Layers },
+        ].filter(item => hasPermission(item.id));
+
+        if (clinicalSubmenu.length > 0) {
+            items.push({
+                id: "clinical_management",
+                label: "Gestión Clínica",
+                icon: Stethoscope,
+                submenu: clinicalSubmenu,
+            });
+        }
+      } else if (!isClinical && enabledModules.includes('commercial_management')) {
         // Para Service o Retail, mostramos "Gestión Comercial"
-        items.push({
-          id: "commercial_management",
-          label: isService ? "Gestión de Servicios" : "Ventas & Retail",
-          icon: isService ? Computer : Package,
-          submenu: [
+        const commercialSubmenu = [
             { id: "patients.index", label: "Clientes", icon: Users },
             { id: "products.index", label: "Catálogo", icon: Package },
             { id: "categories.index", label: "Categorías", icon: Layers },
-          ],
-        });
+        ].filter(item => hasPermission(item.id));
+
+        if (commercialSubmenu.length > 0) {
+            items.push({
+                id: "commercial_management",
+                label: isService ? "Gestión de Servicios" : "Ventas & Retail",
+                icon: isService ? Computer : Package,
+                submenu: commercialSubmenu,
+            });
+        }
       }
 
       // BLOQUE: ADMINISTRACIÓN (Filtrado)
-      const adminSubmenu = [];
-      
-      // Solo salud
-      if (isClinical) {
-        adminSubmenu.push({ id: "agreements.index", label: "Convenios", icon: Handshake });
-        adminSubmenu.push({ id: "insurances.index", label: "Aseguradoras", icon: Shield });
+      if (enabledModules.includes('finance_admin')) {
+        const adminSubmenu = [];
+        
+        // Solo salud
+        if (isClinical) {
+            if (hasPermission("agreements.index")) adminSubmenu.push({ id: "agreements.index", label: "Convenios", icon: Handshake });
+            if (hasPermission("insurances.index")) adminSubmenu.push({ id: "insurances.index", label: "Aseguradoras", icon: Shield });
+        }
+
+        // Comunes
+        if (hasPermission("payrolls.index")) adminSubmenu.push({ id: "payrolls.index", label: isClinical ? "Liquidaciones" : "Pagos Honorarios", icon: NotebookText });
+        if (hasPermission("payments.index")) adminSubmenu.push({ id: "payments.index", label: "Caja / POS", icon: DollarSign });
+
+        if (adminSubmenu.length > 0) {
+            items.push({
+                id: "finance_admin",
+                label: "Administración",
+                icon: Building,
+                submenu: adminSubmenu,
+            });
+        }
       }
 
-      // Comunes
-      adminSubmenu.push({ id: "payrolls.index", label: isClinical ? "Liquidaciones" : "Pagos Honorarios", icon: NotebookText });
-      adminSubmenu.push({ id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign });
-      adminSubmenu.push({ id: "acquisitions.suppliers.index", label: "Proveedores", icon: Building2 });
-      adminSubmenu.push({ id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package });
-      adminSubmenu.push({ id: "payments.index", label: "Caja / POS", icon: DollarSign });
-      adminSubmenu.push({ id: "documents", label: "Facturación SII", icon: FileText });
-
-      items.push({
-        id: "finance_admin",
-        label: "Administración",
-        icon: Building,
-        submenu: adminSubmenu,
-      });
-
-      // Solo añadir Configuración si es Superadmin
+      // BLOQUE: LABORATORIO (DESARROLLO) - Solo Superadmin
       if (userIsSuperAdmin) {
         items.push({
-          id: "system_config",
-          label: "Configuración",
-          icon: Computer,
-          submenu: [
-            { id: "companies.index", label: "Compañias", icon: Building },
-            { id: "subscription.index", label: "Mi Suscripción", icon: Shield },
-          ],
+            id: "dev_lab",
+            label: "Laboratorio Dev",
+            icon: Shell,
+            submenu: [
+                { id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign },
+                { id: "acquisitions.suppliers.index", label: "Proveedores", icon: Building2 },
+                { id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package },
+                { id: "documents", label: "Facturación SII", icon: FileText },
+            ],
         });
+      }
+
+      // Solo añadir Configuración si es Superadmin o Admin
+      if (userIsSuperAdmin || userIsAdmin) {
+        const configSubmenu = [];
+        
+        if (hasPermission("admin.users-management.index")) {
+            configSubmenu.push({ id: "admin.users-management.index", label: "Usuarios y Permisos", icon: Users });
+        }
+
+        if (userIsSuperAdmin) {
+            configSubmenu.push({ id: "companies.index", label: "Compañias", icon: Building });
+            configSubmenu.push({ id: "subscription.index", label: "Mi Suscripción", icon: Shield });
+        }
+
+        if (configSubmenu.length > 0) {
+            items.push({
+              id: "system_config",
+              label: "Configuración",
+              icon: Computer,
+              submenu: configSubmenu,
+            });
+        }
       }
 
       return items;
     },
-    [userIsSuperAdmin, current_company?.business_type]
+    [userIsSuperAdmin, userIsAdmin, current_company?.business_type, current_company?.enabled_modules, current_branch?.enabled_modules, hasPermission]
   );
 
   const bottomMenuItems = useMemo(
@@ -124,17 +166,19 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
     []
   );
   // Ejemplo de función de ayuda isRouteActive (usando Ziggy/Laravel)
-  const isRouteActive = (routeId) => {
+  const isRouteActive = (routeId, query = null) => {
     // 1. Coincidencia directa con patrón simple
-    if (route().current(routeId + "*")) return true;
+    if (!route().current(routeId + "*")) return false;
 
-    // 2. Si es una ruta resource (.index), verificar la raíz del recurso (ej: patients.index -> patients.*)
-    if (routeId.endsWith('.index')) {
-        const resourceRoot = routeId.replace('.index', '');
-        return route().current(resourceRoot + '*');
+    // 2. Si hay query (como type=service), verificar que coincida
+    if (query) {
+        const currentQuery = new URLSearchParams(window.location.search);
+        for (const key in query) {
+            if (currentQuery.get(key) !== query[key]) return false;
+        }
     }
 
-    return false;
+    return true;
   };
 
   // 🎯 FUNCIÓN CLAVE: Determina si el ÍTEM CONTENEDOR debe estar ACTIVO
@@ -146,7 +190,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 
     // 2. Verificar si el ítem tiene submenú y si ALGUNA de sus sub-rutas está activa
     if (item.submenu?.length) {
-      return item.submenu.some((sub) => isRouteActive(sub.id));
+      return item.submenu.some((sub) => isRouteActive(sub.id, sub.query));
     }
 
     return false;
@@ -162,12 +206,19 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
     const nextOpen = {};
     for (const item of menuItems) {
       if (item.submenu?.length) {
-        const anyChildActive = item.submenu.some((s) => isRouteActive(s.id));
+        const anyChildActive = item.submenu.some((s) => isRouteActive(s.id, s.query));
         if (anyChildActive) nextOpen[item.id] = true;
       }
     }
     setOpenMenus((prev) => ({ ...prev, ...nextOpen }));
   }, [url, menuItems]);
+
+  const canSwitchContext = useMemo(() => {
+    if (userIsSuperAdmin) {
+      return (props.all_companies?.length > 1) || (props.available_branches?.length > 1);
+    }
+    return props.available_branches?.length > 1;
+  }, [userIsSuperAdmin, props.all_companies, props.available_branches]);
 
   return (
     <div className="sticky py-4 top-0 z-40 flex flex-col bg-white border-r border-gray-100 shadow-2xl h-dvh shadow-gray-500/5">
@@ -176,25 +227,25 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
         {sidebarOpen ? (
           <>
             <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-              {/* LOGO TRIGGER - Abre Modal de Contexto */}
+              {/* LOGO TRIGGER - Abre Modal de Contexto solo si hay opciones */}
               <button 
-                onClick={() => setIsContextModalOpen(true)}
-                className="group relative shrink-0 transition-transform active:scale-95 focus:outline-none"
-                title="Cambiar Empresa / Contexto"
+                onClick={() => canSwitchContext && setIsContextModalOpen(true)}
+                className={`group relative shrink-0 transition-transform focus:outline-none ${canSwitchContext ? 'active:scale-95 cursor-pointer' : 'cursor-default'}`}
+                title={canSwitchContext ? "Cambiar Empresa / Contexto" : "Entorno único"}
               >
                 {current_company?.logo_url ? (
                    <img 
                       src={current_company.logo_url} 
                       alt="Logo" 
-                      className="w-9 h-9 object-contain bg-white rounded-lg shadow-sm border border-gray-100 p-0.5 group-hover:border-brand-primary/50 transition-colors"
+                      className={`w-9 h-9 object-contain bg-white rounded-lg shadow-sm border border-gray-100 p-0.5 transition-colors ${canSwitchContext ? 'group-hover:border-brand-primary/50' : ''}`}
                    />
                 ) : (
-                  <div className="flex items-center justify-center w-9 h-9 shadow-lg bg-brand-primary rounded-lg shadow-brand-primary/20 text-white group-hover:brightness-110 transition-all">
+                  <div className={`flex items-center justify-center w-9 h-9 shadow-lg rounded-lg transition-all ${canSwitchContext ? 'bg-brand-primary shadow-brand-primary/20 text-white group-hover:brightness-110' : 'bg-gray-100 text-gray-400 shadow-none'}`}>
                     <HeartPulse className="w-5 h-5" />
                   </div>
                 )}
-                {/* Indicador visual de que es clickeable si hay múltiples empresas */}
-                {props.all_companies?.length > 1 && (
+                {/* Indicador visual de que es clickeable si hay múltiples opciones */}
+                {canSwitchContext && (
                     <div className="absolute z-50 -bottom-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                     </div>
@@ -244,7 +295,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
             const hasSubmenu = !!item.submenu?.length;
             const open = hasSubmenu
               ? openMenus[item.id] ||
-                item.submenu.some((s) => isRouteActive(s.id))
+                item.submenu.some((s) => isRouteActive(s.id, s.query))
               : false;
 
             const baseBtnClasses =
@@ -311,7 +362,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
               <div key={item.id}>
                 {/* Si el item tiene ruta real, envolvemos con Link; si es contenedor puro, dejamos button */}
                 {route().has(item.id) && !hasSubmenu ? (
-                  <Link href={route(item.id)}>{MainButton}</Link>
+                  <Link href={route(item.id, item.query || {})}>{MainButton}</Link>
                 ) : isContainerOnly ? (
                   MainButton
                 ) : hasSubmenu ? (
@@ -322,17 +373,17 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin }) {
 
                 {/* Submenu */}
                 {hasSubmenu && sidebarOpen && open && (
-                  <div className="pl-4 mt-2 ml-6 space-y-1 duration-300 border-l-2 border-gray-50 animate-in slide-in-from-left-2">
+                  <div className="pl-4 mt-2 ml-6 space-y-1 duration-300 border-l-2 border-gray-100 animate-in slide-in-from-left-2">
                     {item.submenu.map((sub) => {
                       const SubIcon = sub.icon;
-                      const subActive = isRouteActive(sub.id);
+                      const subActive = isRouteActive(sub.id, sub.query);
                       return route().has(sub.id) ? (
-                        <Link key={sub.id} href={route(sub.id)}>
+                        <Link key={sub.id} href={route(sub.id, sub.query || {})}>
                           <div
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
                               subActive
-                                ? "text-brand-primary font-black"
-                                : "text-gray-400 hover:text-brand-primary"
+                                ? "bg-brand-secondary/10 text-brand-primary font-black"
+                                : "text-gray-400 hover:text-brand-primary hover:bg-gray-50"
                             }`}
                           >
                             <SubIcon className="w-4 h-4" />

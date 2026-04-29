@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -14,9 +14,14 @@ import {
   Building2,
   CreditCard,
   Receipt,
+  FileText,
 } from "lucide-react";
 
 const Success = ({ payment, invoice, is_dte_pending }) => {
+  const { auth, current_company } = usePage().props;
+  const userIsSuperAdmin = auth.roles.includes("superadmin");
+  const isDteOperational = current_company?.dte_configuration?.environment === 'production' && !current_company?.dte_configuration?.simulation_mode;
+
   const [email, setEmail] = useState(payment?.patient?.email || "");
   const [sending, setSending] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
@@ -262,47 +267,77 @@ const Success = ({ payment, invoice, is_dte_pending }) => {
               </div>
             </div>
 
-            {/* 4. Estado de la Boleta (DTE) */}
+            {/* 4. Estado de la Boleta (DTE) / Comprobante Digital */}
             {invoice && (
-              <div
-                className={`p-8 rounded-[2rem] border-2 flex flex-col md:flex-row items-center justify-between gap-6 transition-all ${
-                  is_dte_pending
-                    ? "bg-amber-50/50 border-amber-100"
-                    : "bg-blue-50/50 border-blue-100 shadow-lg shadow-blue-500/5"
-                }`}
-              >
-                <div className="flex items-center text-center md:text-left">
-                  <div className={`p-4 rounded-2xl mr-6 transform -rotate-6 shadow-sm ${is_dte_pending ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
-                    <Receipt className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${is_dte_pending ? 'text-amber-700' : 'text-blue-700'}`}>
-                      Documento SII
-                    </p>
-                    <p className="text-lg font-black text-gray-900 tracking-tight leading-none mb-1">
-                      {is_dte_pending
-                        ? "Generación en proceso"
-                        : `${invoice.type_name || 'Boleta Electrónica'} Folio #${
-                            invoice.dte_folio || "S/N"
-                          }`}
-                    </p>
-                    <p className="text-xs text-gray-500 font-bold uppercase tracking-tight opacity-70">
-                      {is_dte_pending
-                        ? "Validando con los servidores del SII..."
-                        : "Emitida y validada correctamente"}
-                    </p>
-                  </div>
-                </div>
-                {!is_dte_pending && (
-                  <a
-                    href={route("invoices.pdf", invoice.id)}
-                    target="_blank"
-                    className="w-full md:w-auto px-8 py-4 bg-white border-2 border-blue-100 text-blue-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95"
-                  >
-                    <Printer className="w-4 h-4" /> Ver Boleta SII
-                  </a>
+              <>
+                {(isDteOperational || userIsSuperAdmin) ? (
+                    <div
+                        className={`p-8 rounded-[2rem] border-2 flex flex-col md:flex-row items-center justify-between gap-6 transition-all ${
+                        is_dte_pending
+                            ? "bg-amber-50/50 border-amber-100"
+                            : "bg-blue-50/50 border-blue-100 shadow-lg shadow-blue-500/5"
+                        }`}
+                    >
+                        <div className="flex items-center text-center md:text-left">
+                        <div className={`p-4 rounded-2xl mr-6 transform -rotate-6 shadow-sm ${is_dte_pending ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                            <Receipt className="w-8 h-8" />
+                        </div>
+                        <div>
+                            <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${is_dte_pending ? 'text-amber-700' : 'text-blue-700'}`}>
+                            Documento SII
+                            </p>
+                            <p className="text-lg font-black text-gray-900 tracking-tight leading-none mb-1">
+                            {is_dte_pending
+                                ? "Generación en proceso"
+                                : `${invoice.type_name || 'Boleta Electrónica'} Folio #${
+                                    invoice.dte_folio || "S/N"
+                                }`}
+                            </p>
+                            <p className="text-xs text-gray-500 font-bold uppercase tracking-tight opacity-70">
+                            {is_dte_pending
+                                ? "Validando con los servidores del SII..."
+                                : "Emitida y validada correctamente"}
+                            </p>
+                        </div>
+                        </div>
+                        {!is_dte_pending && (
+                        <a
+                            href={route("invoices.pdf", invoice.id)}
+                            target="_blank"
+                            className="w-full md:w-auto px-8 py-4 bg-white border-2 border-blue-100 text-blue-600 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95"
+                        >
+                            <Printer className="w-4 h-4" /> Ver Boleta SII
+                        </a>
+                        )}
+                    </div>
+                ) : (
+                    /* Vista simplificada cuando NO es operacional (Modo Recibo Digital) */
+                    <div className="p-8 rounded-[2rem] border-2 border-brand-secondary/20 bg-brand-secondary/5 flex flex-col md:flex-row items-center justify-between gap-6 print:hidden">
+                         <div className="flex items-center text-center md:text-left">
+                            <div className="p-4 rounded-2xl mr-6 bg-brand-secondary/20 text-brand-primary transform -rotate-3 shadow-sm">
+                                <FileText className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 text-brand-primary">
+                                Comprobante Digital
+                                </p>
+                                <p className="text-lg font-black text-gray-900 tracking-tight leading-none mb-1">
+                                Recibo Interno de Pago
+                                </p>
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-tight opacity-70">
+                                Documento listo para descarga y envío
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowVoucherModal(true)}
+                            className="w-full md:w-auto px-8 py-4 bg-white border-2 border-brand-secondary/30 text-brand-primary rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95"
+                        >
+                            <Download className="w-4 h-4" /> Descargar Recibo
+                        </button>
+                    </div>
                 )}
-              </div>
+              </>
             )}
 
             <div className="p-8 mt-10 bg-gray-50/50 border border-gray-100 rounded-[2rem] print:hidden">

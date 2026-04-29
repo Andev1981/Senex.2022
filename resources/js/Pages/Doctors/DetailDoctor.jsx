@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import SideModal from "@/components/SideModal";
+import DoctorDetailModal from "./DoctorDetailModal";
 import { 
     LayoutDashboard, 
     Stethoscope, 
@@ -26,8 +28,9 @@ import DoctorPatients from "./Partials/DoctorPatients";
 import DoctorConfig from "./Partials/DoctorConfig";
 
 export default function DetailDoctor(props) {
-    const { doctor, stats, sessions, payrolls, session_types } = props;
+    const { doctor, stats, sessions, payrolls, session_types, regions, provinces, communes, branches } = props;
     const [activeTab, setActiveTab] = useState("dashboard");
+    const [isModalOpenEdit, setIsModalOpenEdit] = useState(false);
 
     const tabs = [
         { id: "dashboard", label: "Resumen", icon: LayoutDashboard },
@@ -51,6 +54,14 @@ export default function DetailDoctor(props) {
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Volver al Listado
                     </Link>
+
+                    <button
+                        onClick={() => setIsModalOpenEdit(true)}
+                        className="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-brand-primary text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-brand-primary hover:text-white transition-all shadow-sm active:scale-95 gap-2"
+                    >
+                        <Settings className="w-4 h-4" />
+                        Editar Perfil
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
@@ -140,6 +151,23 @@ export default function DetailDoctor(props) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal para EDITAR existente */}
+            <SideModal
+                open={isModalOpenEdit}
+                onClose={() => setIsModalOpenEdit(false)}
+                width="4xl"
+                hideDefaultHeader={true}
+            >
+                <DoctorDetailModal
+                    doctor={doctor}
+                    setIsModalOpenDetail={() => setIsModalOpenEdit(false)}
+                    regions={regions}
+                    provinces={provinces}
+                    communes={communes}
+                    branches={branches}
+                />
+            </SideModal>
         </AuthenticatedLayout>
     );
 }

@@ -28,7 +28,7 @@ class StoreAttendanceRequest extends FormRequest
             'consume_plan' => 'nullable|boolean',
             'patient_plan_id' => 'nullable|exists:patient_plans,id',
             'doctor_id' => 'required|exists:doctors,id',
-            'session_type_id' => 'required|exists:session_types,id',
+            'item_id' => 'required|exists:items,id',
             'patient_amount_cl' => 'required|numeric|min:0',
             'date' => 'required|date',
             'time' => 'required',
@@ -52,8 +52,8 @@ class StoreAttendanceRequest extends FormRequest
         'doctor_id.required' => 'Debe asignar un profesional (doctor/kinesiólogo) a la sesión.',
         'doctor_id.exists' => 'El profesional seleccionado no es válido o no existe.',
         
-        'session_type_id.required' => 'Debe seleccionar un tipo de atención (ej: Kinesiología General).',
-        'session_type_id.exists' => 'El tipo de atención seleccionado no es válido o no existe.',
+        'item_id.required' => 'Debe seleccionar un tipo de atención (ej: Kinesiología General).',
+        'item_id.exists' => 'El tipo de atención seleccionado no es válido o no existe.',
         
         // ===== FECHA, HORA Y DURACIÓN =====
         'date.required' => 'La fecha de la sesión es obligatoria.',

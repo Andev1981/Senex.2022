@@ -102,7 +102,7 @@ class TreatmentAdminController extends Controller
     public function apiIndex(Request $request, Patient $patient)
     {
         $query = Treatment::where('patient_id', $patient->id)
-            ->with(['sessionType', 'doctor']);
+            ->with(['item', 'doctor']);
 
         // Filtros
         if ($request->filled('status')) {

@@ -10,7 +10,7 @@ use App\Models\Insurance;
 use App\Models\Patient;
 use App\Models\PatientInsurance;
 use App\Models\Plan;
-use App\Models\SessionType;
+use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -28,11 +28,11 @@ class AgreementController extends Controller
 
         // 1. Cargamos Agreements filtrando por la compañía actual
         $agreements = Agreement::where('company_id', $currentCompanyId)
-            ->with('insurance', 'rules', 'rules.plan', 'rules.sessionType')
+            ->with('insurance', 'rules', 'rules.plan', 'rules.item')
             ->get();
 
         // 2. Cargamos SessionTypes (El trait hace el where company_id si aplica)
-        $sessionTypes = SessionType::get(['id', 'name', 'base_price_clp']);
+        $sessionTypes = Item::services()->get(['id', 'name', 'price']);
 
         // 3. Cargamos Aseguradoras (El trait hace el where company_id)
         $insurances = Insurance::get(['id', 'name']);

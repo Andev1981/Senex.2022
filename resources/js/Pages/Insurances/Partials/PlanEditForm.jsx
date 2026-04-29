@@ -58,7 +58,9 @@ export default function PlanEditForm({ editingInsurance, plan, sessionTypes, onC
 
   useEffect(() => {
     const selectedIds = data.content.map(item => item.session_type_id).filter(id => id !== "");
-    setFilteredSessionTypes(sessionTypes.filter(s => !selectedIds.includes(s.id.toString())));
+    if (sessionTypes) {
+      setFilteredSessionTypes(sessionTypes.filter(s => !selectedIds.includes(s.id.toString())));
+    }
   }, [data.content, sessionTypes]);
 
   const addContentItem = () => {

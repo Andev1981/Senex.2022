@@ -1,13 +1,13 @@
 import React from "react";
 import { Calculator, CheckCircle2, Plus } from "lucide-react";
-import ServiceItem from "./ServiceItem"; // Importamos el componente de arriba
-import PlanItem from "./PlanItem"; // <-- 1. Importar PlanItem
+import ServiceItem from "./ServiceItem";
+import PlanItem from "./PlanItem";
 import {fmtDate} from "@/utils/utils";
 
 export default function ServicesCard({
   servicesToBill,
   patientExtras,
-  sessionTypes,
+  items, // Cambiado de sessionTypes a items
   doctors,
   onAddDebt,
   onAddService,
@@ -19,7 +19,6 @@ export default function ServicesCard({
 
   return (
     <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-3xl h-fit hover:scale-[1.01] transition-all duration-300">
-      {/* Título */}
       <h2 className="flex items-center mb-8 text-xl font-black text-gray-800 tracking-tight">
         <span className="flex items-center justify-center w-8 h-8 mr-3 text-xs font-black text-brand-primary bg-brand-secondary/10 rounded-xl">
           2
@@ -27,7 +26,6 @@ export default function ServicesCard({
         {isClinical ? "Prestaciones y Productos" : "Detalle de Venta"}
       </h2>
 
-      {/* Sección Deudas (si existen - SOLO CLÍNICO por ahora) */}
       {isClinical && patientExtras.debts?.length > 0 && (
         <div className="p-6 mb-6 border-2 border-orange-100 rounded-[2rem] bg-orange-50/30 shadow-inner">
           <div className="flex items-center justify-between mb-4">
@@ -59,7 +57,7 @@ export default function ServicesCard({
                 >
                   <div className="flex flex-col items-start">
                     <span className="font-black uppercase tracking-tight text-sm">
-                      {debt.treatment_session?.session_type?.name || "Sesión"}
+                      {debt.treatment_session?.item?.name || "Sesión"}
                     </span>
                     <span className="mt-1 font-mono text-[10px] font-bold opacity-60">
                       {fmtDate(debt.treatment_session?.date)}
@@ -78,7 +76,6 @@ export default function ServicesCard({
         </div>
       )}
 
-      {/* Lista de Servicios Agregados */}
       <div className="space-y-5">
         {servicesToBill.length === 0 && (!patientExtras.debts || patientExtras.debts.length === 0) && (
           <div className="text-center py-16 border-2 border-dashed border-gray-100 rounded-[2.5rem] bg-gray-50/30">
@@ -101,7 +98,7 @@ export default function ServicesCard({
               key={`service-${index}`}
               item={item}
               index={index}
-              sessionTypes={sessionTypes}
+              items={items} // Enviamos items
               doctors={doctors}
               patientExtras={patientExtras}
               onUpdate={onUpdateService}
@@ -111,7 +108,6 @@ export default function ServicesCard({
           )
         ))}
 
-        {/* Botón Agregar */}
         <button
           type="button"
           onClick={onAddService}

@@ -18,7 +18,9 @@ import {
   Plus,
   XCircle,
   MessageSquare,
-  History
+  History,
+  Calendar,
+  Clock
 } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import SecondaryButton from "@/components/SecondaryButton";

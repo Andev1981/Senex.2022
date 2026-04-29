@@ -17,6 +17,7 @@ return new class extends Migration {
       $table->boolean('is_main')->default(false)->comment('Indica si es la Casa Matriz');
       $table->boolean('is_home_care_only')->default(false)->comment('Atención exclusiva a domicilio');
       $table->boolean('active')->default(true)->index();
+      $table->json('enabled_modules')->nullable();
       $table->timestamps();
       $table->index(['id']); // soporte a FKs compuestas
     });

@@ -39,6 +39,15 @@ return [
         'api_key' => env('WEBPAY_API_KEY'),
     ],
 
+    'transbank' => [
+        'mode' => env('TRANSBANK_POS_MODE', 'local'), // 'local' (agente) o 'cloud' (directo)
+        'environment' => env('TRANSBANK_POS_ENVIRONMENT', 'integration'),
+        'pos_endpoint' => env('TRANSBANK_POS_ENDPOINT', 'http://localhost:8081'),
+        'commerce_code' => env('TRANSBANK_POS_COMMERCE_CODE'),
+        'api_key' => env('TRANSBANK_POS_API_KEY'),
+        'terminal_id' => env('TRANSBANK_POS_TERMINAL_ID'),
+    ],
+
     /*  'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),

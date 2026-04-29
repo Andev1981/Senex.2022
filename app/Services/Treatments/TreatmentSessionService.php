@@ -9,7 +9,7 @@ use App\Jobs\SendPaymentReminderJob;
 use App\Models\Doctor;
 use App\Models\DoctorCommissionRate;
 use App\Models\PatientPlan;
-use App\Models\SessionType;
+use App\Models\Item;
 use App\Models\TreatmentSession;
 use App\Services\Payments\PaymentService;
 use App\Services\Plans\PlanService;
@@ -44,25 +44,24 @@ class TreatmentSessionService
 
             // Validar disponibilidad de doctor si se proporciona
             if (isset($data['doctor_id']) && isset($data['date']) && isset($data['time'])) {
+                // 1. Validaciones de Negocio
                 $this->validateDoctorAvailability($data['doctor_id'], $data['date'], $data['time']);
+
+                if (isset($data['patient_id'])) {
+                    $this->validatePatientAvailability($data['patient_id'], $data['date'], $data['time']);
+                }
             }
 
-            if (isset($data['patient_id']) && isset($data['date']) && isset($data['time'])) {
-                $this->validatePatientAvailability($data['patient_id'], $data['date'], $data['time']);
+            $itemId = $data['item_id'] ?? $data['session_type_id'] ?? null;
+            if (!$itemId) {
+                throw new \Exception('Debe seleccionar un tipo de servicio');
             }
 
-            $sessionType = SessionType::findOrFail($data['session_type_id']);
+            $item = Item::findOrFail($itemId);
 
             $doctorCommission = DoctorCommissionRate::active()
                 ->forDoctor($data['doctor_id'])
-                ->forSessionType($data['session_type_id'])
-                ->validAt(Carbon::parse($data['date']))
-                ->first();
-
-
-            $doctorCommission = DoctorCommissionRate::active()
-                ->forDoctor($data['doctor_id'])
-                ->forSessionType($data['session_type_id'])
+                ->forSessionType($itemId)
                 ->validAt(Carbon::parse($data['date']))
                 ->first();
 
@@ -75,9 +74,9 @@ class TreatmentSessionService
             if ($doctorCommission) {
                 // CASO 1: HAY REGLA ESPECÍFICA
                 if ($doctorCommission->commission_type === 'percentage' && !$doctorCommission->commission_percentage) {
-                     Log::warning("Comisión porcentual sin valor para Dr. {$doctor->id}, Tipo {$sessionType->id}. Se usará 0.");
+                     Log::warning("Comisión porcentual sin valor para Dr. {$doctor->id}, Tipo {$item->id}. Se usará 0.");
                 } elseif ($doctorCommission->commission_type === 'fixed_amount' && !$doctorCommission->commission_value) {
-                     Log::warning("Comisión fija sin valor para Dr. {$doctor->id}, Tipo {$sessionType->id}. Se usará 0.");
+                     Log::warning("Comisión fija sin valor para Dr. {$doctor->id}, Tipo {$item->id}. Se usará 0.");
                 }
 
                 $doctorAmount = $doctorCommission['amount_clp']; 
@@ -86,29 +85,29 @@ class TreatmentSessionService
                 
             } else {
                 // CASO 2: NO HAY REGLA -> VERIFICAR CONFIRMACIÓN (SOLO PARA ADMINS)
-                $defaultAmount = $sessionType->default_doctor_commission_clp ?? 0;
+                // Buscamos en el detalle del servicio
+                $defaultAmount = (int)($item->serviceDetail?->default_doctor_commission_clp ?? 0);
 
                 // Solo pedir confirmación si el usuario es Admin. 
-                // Si no es admin, procedemos con el valor por defecto sin preguntar (evita fuga de info).
                 $isAdmin = auth()->user() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'));
 
-                if ($isAdmin && empty($data['confirm_defaults'])) {
+                if ($isAdmin && empty($data['confirm_defaults']) && $defaultAmount === 0) {
                     throw new \Exception("COMMISSION_CONFIRMATION_NEEDED:{$defaultAmount}");
                 }
 
                 if (!$isAdmin) {
-                    Log::info("Usuario no admin creando sesión sin comisión configurada. Usando default silencioso.");
+                    Log::info("Usuario no admin creando sesión sin comisión configurada. Usando default silencioso ({$defaultAmount}).");
                 } else {
-                    Log::info("⚠️ Usando comisión por defecto (SessionType) tras confirmación de Admin para Dr. {$doctor->id}. Monto: {$defaultAmount}");
+                    Log::info("⚠️ Usando comisión por defecto (ServiceDetail) para Dr. {$data['doctor_id']}. Monto: {$defaultAmount}");
                 }
                 
                 $doctorAmount = $defaultAmount;
-                $commissionType = 'default_session_type';
+                $commissionType = 'default_service_type';
             }
 
             // Asignación de montos finales (Aseguramos que siempre tenga el arancel base del servicio)
             if (empty($data['patient_amount_clp']) || (int)$data['patient_amount_clp'] === 0) {
-                $data['patient_amount_clp'] = (int)($sessionType->base_price_clp ?? 0);
+                $data['patient_amount_clp'] = (int)($item->price ?? 0);
             }
 
             // Si se encontró comisión específica, usamos su método de cálculo. 
@@ -161,10 +160,13 @@ class TreatmentSessionService
             $data['commission_percentage'] = $commissionPercentage;
             $data['commission_type'] = $commissionType;
 
+            // Aseguramos que los campos SOAP y técnicos estén presentes si vienen en el request
+            // No los tocamos para que Eloquent los guarde directamente
+            
             // ============================================
             // 4. Verificar y validar plan (si aplica)
             // ============================================
-            $consumePlan = $data['consume_plan'] ?? false;
+            $consumePlan = $data['consumes_plan'] ?? false;
             $patientPlan = null;
 
             if ($consumePlan) {
@@ -200,10 +202,10 @@ class TreatmentSessionService
 
                 // Verificar tipos de sesión permitidos en el plan
                 $plan = $patientPlan->plan;
-                if ($plan->session_types) {
-                    $allowedTypes = $plan->session_types; // Ya es array, no necesita json_decode
+                if ($plan->items) {
+                    $allowedTypes = $plan->items; // Ya es array, no necesita json_decode
 
-                    if (count($allowedTypes) > 0 && !in_array($data['session_type_id'], $allowedTypes)) {
+                    if (count($allowedTypes) > 0 && !in_array($itemId, $allowedTypes)) {
                         DB::rollBack();
                         throw new \Exception(
                             "⚠️ El tipo de sesión seleccionado no está cubierto por este plan"
@@ -222,6 +224,9 @@ class TreatmentSessionService
                 Log::info("No se consumirá plan para esta sesión");
             }
 
+            // Asegurar item_id final
+            $data['item_id'] = $itemId;
+
             // 2. Crear/Guardar el nuevo registro en la base de datos (¡El dato ya existe!)
             $session = TreatmentSession::create($data);
 
@@ -234,17 +239,21 @@ class TreatmentSessionService
             // === NUEVO BLOQUE: deuda para tratamientos INDEFINIDOS o sin deuda pre-creada ===
             $treatment = Treatment::find($session->treatment_id);
 
+            // Verificar operatividad DTE antes de proceder con facturación
+            $dteConfig = \App\Models\DteConfiguration::where('company_id', $session->company_id)->first();
+            $isDteOperational = $dteConfig && $dteConfig->environment === 'production' && !$dteConfig->simulation_mode;
+
             // Verificar si ya existe factura para esta sesión
             $invoiceExists = Invoice::whereHas('items', function($q) use ($session) {
                 $q->where('treatment_session_id', $session->id);
             })->exists();
 
-            // Si es indefinido o no hay deuda pre-creada, resolvemos ahora
-            if ($treatment->is_indefinite || !$invoiceExists) {
+            // Si es indefinido o no hay deuda pre-creada, resolvemos ahora (SOLO SI DTE ESTÁ OPERATIVO)
+            if ($isDteOperational && ($treatment->is_indefinite || !$invoiceExists)) {
 
                 $patientPlan = $this->planService->hasActivePlanForSessionType(
                     $session->patient_id,
-                    $session->session_type_id
+                    $session->item_id
                 );
 
                 if ($patientPlan && $patientPlan->sessionsRemaining() > 0 && !$treatment->is_indefinite) {
@@ -255,7 +264,7 @@ class TreatmentSessionService
 
                     // --- [LÓGICA DE NOTIFICACIÓN] ---
                     $totalDeuda = (int) $session->patient_amount_clp; // Usamos el monto de la sesión
-                    $session_type = $sessionType['name'];
+                    $session_type = $item['name'];
                     $treatment_session = $session;
 
                     if ($patient && $totalDeuda > 0) {
@@ -273,8 +282,9 @@ class TreatmentSessionService
                     }
                 }
             } else {
-                // Tratamiento con total fijo: asociar deuda pre-creada (LEGACY - Adaptar si se usa pre-facturación)
-                // Por ahora, asumimos que se generan al vuelo.
+                if (!$isDteOperational) {
+                    Log::info("Omitiendo generación de factura automática para sesión {$session->id}: Empresa no operativa en SII.");
+                }
             }
 
 
@@ -355,89 +365,78 @@ class TreatmentSessionService
     }
 
     /**
-     * Validar disponibilidad del doctor en una fecha/hora
+     * Validar disponibilidad del doctor en una fecha/hora (Permite hasta 3 simultáneas)
      */
     private function validateDoctorAvailability(int $doctorId, string $date, string $time): void
     {
-        $exists = TreatmentSession::where('doctor_id', $doctorId)
+        $count = TreatmentSession::where('doctor_id', $doctorId)
             ->where('date', $date)
             ->where('time', $time)
-            ->whereNotIn('status', ['cancelled'])
-            ->exists();
+            ->whereNotIn('status', [\App\Enums\AppointmentStatusEnum::CANCELLED, \App\Enums\AppointmentStatusEnum::NO_SHOW])
+            ->count();
 
-        if ($exists) {
-            throw new \Exception('El doctor no está disponible en ese horario');
+        if ($count >= 3) {
+            throw new \Exception('El especialista ya posee el máximo de sesiones simultáneas permitidas (3)');
         }
     }
 
     /**
-     * Validar disponibilidad del doctor en una fecha/hora
+     * Validar disponibilidad del paciente en una fecha/hora
      */
     private function validatePatientAvailability(int $patientId, string $date, string $time): void
     {
         $exists = TreatmentSession::where('patient_id', $patientId)
             ->where('date', $date)
             ->where('time', $time)
-            ->whereNotIn('status', ['cancelled'])
+            ->whereNotIn('status', [\App\Enums\AppointmentStatusEnum::CANCELLED, \App\Enums\AppointmentStatusEnum::NO_SHOW])
             ->exists();
 
         if ($exists) {
-            throw new \Exception('El paciente ya posee una sesion agendada en ese horario');
+            throw new \Exception('El paciente ya posee una sesión agendada en ese horario');
         }
     }
 
-    /**
-     * Actualizar una sesión recalculando números si es necesario
-     */
     public function updateSession(TreatmentSession $session, array $data): TreatmentSession
     {
         return DB::transaction(function () use ($session, $data) {
+            $status = $data['status'] ?? $session->status;
+            $newDate = $data['date'] ?? $session->date;
 
-            $oldDate = $session->date;
-            $newDate = $data['date'] ?? $oldDate;
-            $status = $data['status'];
-            
-            // Buscar factura asociada
+            // 1. Gestión de Deuda según estado
             $invoice = Invoice::whereHas('items', function($q) use ($session) {
                 $q->where('treatment_session_id', $session->id);
             })->where('payment_status', 'unpaid')->first();
 
-            if ($status === "cancelled" || $status === "not_attend") {
-
+            if (in_array($status, ["cancelled", "not_attend"])) {
                 if ($invoice) {
-                    $invoice->delete(); // Eliminamos la deuda pendiente
+                    $invoice->delete();
                 }
-
                 $data['month_session_number'] = 0;
-                $session->update($data);
-            } else {
-                $data['month_session_number'] = 1;
-                $session->update($data);
             }
 
-            if (!$invoice && in_array($status, ['scheduled', 'confirmed'])) {
-                $this->paymentService->createPendingInvoiceForSession($session);
-            }
-
-            $this->resequenceMonthSessions(
-                $session->treatment_id,
-                $newDate,
-            );
-
-            // Actualizar la sesión
+            // 2. Actualizar Registro
             $session->update($data);
+            $session->refresh();
 
-            $session->fresh()->status;
+            // 3. Verificar generación de deuda automática (Solo si SII está operativo)
+            $dteConfig = \App\Models\DteConfiguration::where('company_id', $session->company_id)->first();
+            $isDteOperational = $dteConfig && $dteConfig->environment === 'production' && !$dteConfig->simulation_mode;
 
-            // ⚡ ACTUALIZAR TRATAMIENTO
-            $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
+            if (!$invoice && in_array($status, ['scheduled', 'confirmed']) && $isDteOperational) {
+                if ($session->patient_id) {
+                    $this->paymentService->createPendingInvoiceForSession($session);
+                }
+            }
 
-            Log::info('Sesión actualizada', [
-                'session_id' => $session->id,
-                'updated_fields' => array_keys($data),
-            ]);
+            // 4. Resecuenciar si pertenece a un tratamiento
+            if ($session->treatment_id) {
+                $this->resequenceMonthSessions($session->treatment_id, $newDate);
+                $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
+            }
 
-            return $session->fresh();
+            Log::info('Sesión actualizada exitosamente', ['session_id' => $session->id]);
+
+            return $session;
         });
     }
 
@@ -680,7 +679,7 @@ class TreatmentSessionService
     public function getTreatmentSessionsSummary(int $treatmentId): array
     {
         $sessions = TreatmentSession::where('treatment_id', $treatmentId)
-            ->with(['doctor', 'sessionType'])
+            ->with(['doctor', 'item'])
             ->orderBy('date')
             ->orderBy('time')
             ->get();
@@ -728,10 +727,19 @@ class TreatmentSessionService
      */
     private function handleSessionPayment(TreatmentSession $session): void
     {
-        // Verificar si tiene plan activo para este tipo de sesión
+        // 1. Verificar si la empresa está operativa para facturación DTE
+        $dteConfig = \App\Models\DteConfiguration::where('company_id', $session->company_id)->first();
+        $isDteOperational = $dteConfig && $dteConfig->environment === 'production' && !$dteConfig->simulation_mode;
+
+        if (!$isDteOperational) {
+            Log::info("handleSessionPayment: Omitiendo generación de deuda para sesión {$session->id} (SII no operativo).");
+            return;
+        }
+
+        // 2. Verificar si tiene plan activo para este tipo de sesión
         $patientPlan = $this->planService->hasActivePlanForSessionType(
             $session->patient_id,
-            $session->session_type_id
+            $session->item_id
         );
 
         if ($patientPlan) {

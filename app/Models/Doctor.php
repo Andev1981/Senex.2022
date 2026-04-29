@@ -27,6 +27,7 @@ class Doctor extends Model
         'email',
         'phone',
         'speciality',
+        'is_active',
         'birth_date',
         'gender',
         'signature_path',
@@ -34,6 +35,7 @@ class Doctor extends Model
 
     protected $casts = [
         'birth_date' => 'date:Y-m-d',
+        'is_active' => 'boolean'
     ];
 
     /* RELACIONES */
@@ -112,11 +114,11 @@ class Doctor extends Model
     }
 
     /*  ----------------- CÁLCULOS -------------------- */
-    public function getCommissionForSession($sessionTypeId, $basePrice)
+    public function getCommissionForSession($itemId, $basePrice)
     {
         $rate = DoctorCommissionRate::getApplicableCommission(
             $this->id,
-            $sessionTypeId
+            $itemId
         );
 
         if (!$rate) {

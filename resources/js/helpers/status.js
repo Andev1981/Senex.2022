@@ -97,11 +97,9 @@ export const PATIENT_STATUS_TRANSITIONS = {
 
 export const paymentMethods = [
   { value: "cash", label: "Efectivo", icon: "💵" },
-  { value: "transfer", label: "Transferencia", icon: "🏦" },
-  { value: "webpay_debit", label: "Tarjeta de Débito", icon: "💳" },
-  { value: "webpay_credit", label: "Tarjeta de Crédito", icon: "💳" },
-  { value: "paycheck", label: "Cheque", icon: "📝" },
-  { value: "other", label: "Otro", icon: "💰" },
+  { value: "transfer", label: "Transferencia", icon: "📲" },
+  { value: "pos_integrado", label: "Tarjeta (POS)", icon: "💳" },
+  { value: "webpay", label: "Webpay (Online)", icon: "🌐" },
 ];
 
 export const statusOptions = [

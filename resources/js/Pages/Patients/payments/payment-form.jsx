@@ -76,7 +76,7 @@ export default function PaymentForm({
     const total = selectedSessions.reduce((sum, id) => {
       const s = sessions.find((s) => s.id === id);
       const invoice = s?.invoice_items?.[0]?.invoice || s?.invoice_item?.invoice;
-      return sum + (Number(invoice?.amount_total_clp) || 0);
+      return sum + (Number(invoice?.total_amount_clp) || 0);
     }, 0);
     setData("amount_clp", total.toString());
     setData("session_ids", selectedSessions);

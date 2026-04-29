@@ -16,7 +16,7 @@ class AttendanceStoreRequest extends FormRequest
     return [
       'patient_id'      => ['required', 'integer'],
       'doctor_id'       => ['required', 'integer'],
-      'session_type_id' => ['required', 'integer'],
+      'item_id' => ['required', 'integer'],
       'treatment_id'    => ['nullable', 'integer'],
       'appointment_id'  => ['nullable', 'integer'],
       'attended_at'     => ['nullable', 'date'],

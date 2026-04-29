@@ -24,6 +24,7 @@ return new class extends Migration {
           ->constrained()
           ->comment('Sucursal donde se emitió el DTE.'); */
             $table->string('speciality')->nullable();
+            $table->boolean('is_active')->default(true)->index();
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['male', 'female', 'other', 'unknown'])->nullable();
             $table->string('signature_path')->nullable()->comment('Ruta a la imagen de la firma digital en el disco privado.');

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Head, router } from "@inertiajs/react";
-import Modal from "@/components/Modal";
 import { Plus, Handshake } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import AgreementRuleFormModal from "./Modals/AgreementRuleFormModal";
@@ -117,6 +116,7 @@ export default function Index({ agreements, insurances, sessionTypes, plans, use
           rules={modalState.data?.rules}
           agreement={modalState.data?.agreement}
           ruleToEdit={modalState.data?.ruleToEdit}
+          handleOpenRuleForm={handleOpenRuleForm}
           setRuleToEdit={(rule) =>
             handleOpenRuleForm(modalState.data?.agreement, rule)
           }

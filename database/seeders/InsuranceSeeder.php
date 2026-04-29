@@ -6,90 +6,49 @@ use App\Models\Insurance;
 use App\Models\Plan;
 use Illuminate\Database\Seeder;
 
-use Faker\Factory as Faker;
-
-
-
 class InsuranceSeeder extends Seeder
-
 {
-
     public function run($company)
-
     {
-
-        $faker = Faker::create('es_CL');
-
         $insurances = [
-
-            ['name' => 'Fondo Nacional de Salud (FONASA)', 'institution_type' => 'health_insurer'],
-
-            ['name' => 'Isapre Colmena Golden Cross', 'institution_type' => 'health_insurer'],
-
-            ['name' => 'Isapre CruzBlanca', 'institution_type' => 'health_insurer'],
-
-            ['name' => 'Isapre Consalud', 'institution_type' => 'health_insurer'],
-
-            ['name' => 'Isapre Banmédica', 'institution_type' => 'health_insurer'],
-
-            ['name' => 'BICE Vida (Seguro Complementario)', 'institution_type' => 'insurance_company'],
-
-            ['name' => 'Mapfre (Seguro de Salud)', 'institution_type' => 'insurance_company'],
-
+            ['name' => 'Fondo Nacional de Salud (FONASA)', 'institution_type' => 'health_insurer', 'rut' => '61603000-0'],
+            ['name' => 'Isapre Colmena Golden Cross', 'institution_type' => 'health_insurer', 'rut' => '96538340-4'],
+            ['name' => 'Isapre CruzBlanca', 'institution_type' => 'health_insurer', 'rut' => '96515430-8'],
+            ['name' => 'Isapre Consalud', 'institution_type' => 'health_insurer', 'rut' => '96500590-6'],
+            ['name' => 'Isapre Banmédica', 'institution_type' => 'health_insurer', 'rut' => '96525140-0'],
+            ['name' => 'BICE Vida (Seguro Complementario)', 'institution_type' => 'insurance_company', 'rut' => '96557400-5'],
+            ['name' => 'Mapfre (Seguro de Salud)', 'institution_type' => 'insurance_company', 'rut' => '96541570-5'],
         ];
 
-
-
         foreach ($insurances as $insuranceData) {
-
-            $insurance = Insurance::create([
-
-                'company_id' => $company->id,
-
-                'name' => $company->id . ' - ' . $insuranceData['name'],
-
-                'rut' => $faker->unique()->numerify('########-#'),
-
-                'institution_type' => $insuranceData['institution_type'],
-
-                'is_active' => true,
-
-            ]);
-
-
+            $insurance = Insurance::updateOrCreate(
+                [
+                    'company_id' => $company->id,
+                    'name' => $company->id . ' - ' . $insuranceData['name']
+                ],
+                [
+                    'rut' => $insuranceData['rut'],
+                    'institution_type' => $insuranceData['institution_type'],
+                    'is_active' => true,
+                ]
+            );
 
             // Create some plans for each insurance
-
             for ($i = 0; $i < 3; $i++) {
-
-                Plan::create([
-
-                    'company_id' => $company->id,
-
-                    'insurance_id' => $insurance->id,
-
-                    'name' => 'Plan ' . ($i + 1),
-
-                    'code' => $insurance->id . '-P' . ($i + 1),
-
-                    'price' => 10000,
-
-                    'coverage_percentage' => 80,
-
-                    'is_active' => true,
-
-                ]);
-
+                Plan::updateOrCreate(
+                    [
+                        'company_id' => $company->id,
+                        'insurance_id' => $insurance->id,
+                        'code' => $insurance->id . '-P' . ($i + 1),
+                    ],
+                    [
+                        'name' => 'Plan ' . ($i + 1),
+                        'price' => 10000,
+                        'coverage_percentage' => 80,
+                        'is_active' => true,
+                    ]
+                );
             }
-
         }
-
     }
-
 }
-
-
-
-                
-
-        

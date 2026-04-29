@@ -1,4 +1,4 @@
-// resources/js/pages/KineMobile/components/SessionCard.jsx
+// resources/js/pages/kine-mobile/Partials/SessionCard.jsx
 import React from "react";
 import {
   Clock,
@@ -8,27 +8,28 @@ import {
   CheckCircle2,
   XCircle,
   Calendar,
+  ChevronRight,
 } from "lucide-react";
 import { router } from "@inertiajs/react";
 
 const statusConfig = {
-  Programada: {
-    color: "bg-blue-50 border-blue-200",
-    textColor: "text-blue-700",
+  scheduled: {
+    color: "bg-white",
     icon: Clock,
-    badgeColor: "bg-blue-100 text-blue-700",
+    badgeColor: "bg-blue-50 text-blue-600",
+    label: "Programada",
   },
-  Completada: {
-    color: "bg-green-50 border-green-200",
-    textColor: "text-green-700",
+  completed: {
+    color: "bg-white",
     icon: CheckCircle2,
-    badgeColor: "bg-green-100 text-green-700",
+    badgeColor: "bg-green-50 text-green-600",
+    label: "Completada",
   },
-  Cancelada: {
-    color: "bg-red-50 border-red-200",
-    textColor: "text-red-700",
+  cancelled: {
+    color: "bg-white",
     icon: XCircle,
-    badgeColor: "bg-red-100 text-red-700",
+    badgeColor: "bg-red-50 text-red-600",
+    label: "Cancelada",
   },
 };
 
@@ -36,9 +37,10 @@ export default function SessionCard({
   session,
   onComplete,
   onCancel,
-  showDate = false,
+  showDate = true,
 }) {
-  const config = statusConfig[session.status] || statusConfig["Programada"];
+  const status = session.status?.toLowerCase() || "scheduled";
+  const config = statusConfig[status] || statusConfig["scheduled"];
   const StatusIcon = config.icon;
 
   const handleCallPatient = (e) => {
@@ -54,107 +56,71 @@ export default function SessionCard({
 
   return (
     <div
-      className={`p-4 border rounded-lg ${config.color} shadow-sm transition-all hover:shadow-md cursor-pointer`}
+      className="p-5 bg-white border border-slate-100 rounded-[32px] shadow-sm active:scale-[0.98] transition-all cursor-pointer group"
       onClick={handleViewDetail}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <User className="w-4 h-4 text-gray-600" />
-            <span className="font-semibold text-gray-900">
-              {session.patient_name}
-            </span>
-          </div>
-
-          <div className="space-y-1 text-sm text-gray-600">
-            {showDate && (
-              <div className="flex items-center gap-2">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>
-                  {new Date(session.date).toLocaleDateString("es-CL")}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5" />
-              <span>
-                {new Date(session.time).toLocaleDateString("es-CL")} •{" "}
-                {session.duration} min
-              </span>
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors">
+                <User className="w-5 h-5" />
             </div>
-            <div className="flex items-center gap-2">
-              <FileText className="w-3.5 h-3.5" />
-              <span>{session.session_type}</span>
+            <div>
+                <h4 className="font-black text-slate-900 leading-none tracking-tight">{session.patient_name}</h4>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
+                    {session.session_type}
+                </p>
             </div>
-          </div>
         </div>
-
-        <div className="flex flex-col items-end gap-2">
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${config.badgeColor}`}
-          >
-            <StatusIcon className="inline w-3 h-3 mr-1" />
-            {session.status}
-          </span>
-          {session.patient_phone && (
-            <button
-              onClick={handleCallPatient}
-              className="p-2 text-teal-600 transition-colors bg-white rounded-full hover:bg-teal-50"
-            >
-              <Phone className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+        <span className={`px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-full ${config.badgeColor}`}>
+            {config.label}
+        </span>
       </div>
 
-      {/* Diagnóstico */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-xl">
+              <Calendar className="w-3 h-3 text-brand-primary" />
+              <span className="text-[11px] font-bold text-slate-600">{session.date}</span>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-xl">
+              <Clock className="w-3 h-3 text-brand-primary" />
+              <span className="text-[11px] font-bold text-slate-600">{session.time}</span>
+          </div>
+      </div>
+
       {session.diagnosis && session.diagnosis !== "Sin diagnóstico" && (
-        <div className="p-2 mb-3 text-xs text-gray-600 bg-white rounded">
-          <span className="font-semibold">Dx:</span> {session.diagnosis}
-        </div>
+          <div className="mb-4 px-3 py-2 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
+              <p className="text-[9px] font-black text-brand-primary uppercase tracking-widest mb-0.5">Diagnóstico</p>
+              <p className="text-xs font-bold text-slate-700 truncate">{session.diagnosis}</p>
+          </div>
       )}
 
-      {/* Notas */}
-      {session.notes && (
-        <div className="p-2 mb-3 text-xs text-gray-600 bg-white rounded">
-          <span className="font-semibold">Notas:</span> {session.notes}
-        </div>
-      )}
-
-      {/* Acciones (solo para sesiones programadas) */}
-      {session.status === "Programada" && onComplete && onCancel && (
-        <div className="flex gap-2 pt-3 border-t border-gray-200">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onComplete(session);
-            }}
-            className="flex-1 px-3 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
-          >
-            ✓ Completar
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCancel(session);
-            }}
-            className="px-4 py-2 text-sm font-medium text-gray-700 transition-colors bg-gray-200 rounded-lg hover:bg-gray-300"
-          >
-            Cancelar
-          </button>
-        </div>
-      )}
-
-      {/* Earnings (solo si está completada) */}
-      {session.status === "Completada" && session.earnings && (
-        <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200">
-          <span className="text-xs text-gray-600">Tu comisión</span>
-          <span className="text-sm font-bold text-teal-600">
-            ${session.earnings.toLocaleString("es-CL")}
-          </span>
-        </div>
-      )}
+      <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+          <div>
+              {session.earnings ? (
+                  <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Mi Comisión</span>
+                      <span className="text-sm font-black text-slate-900 tracking-tight">
+                          ${session.earnings.toLocaleString('es-CL')}
+                      </span>
+                  </div>
+              ) : (
+                  <span className="text-[10px] font-bold text-slate-300 italic">Ver detalles</span>
+              )}
+          </div>
+          <div className="flex items-center gap-2">
+                {session.patient_phone && (
+                    <button
+                    onClick={handleCallPatient}
+                    className="w-10 h-10 flex items-center justify-center bg-teal-50 text-teal-600 rounded-2xl active:scale-90 transition-all hover:bg-teal-100 shadow-sm shadow-teal-100"
+                    >
+                        <Phone className="w-4 h-4" />
+                    </button>
+                )}
+                <div className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-brand-primary group-hover:text-white transition-all shadow-sm">
+                    <ChevronRight className="w-4 h-4" />
+                </div>
+          </div>
+      </div>
     </div>
   );
 }

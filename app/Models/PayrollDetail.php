@@ -20,7 +20,7 @@ class PayrollDetail extends Model
     'treatment_session_id',
     'patient_id',
     'doctor_id',
-    'session_type_id',
+    'item_id',
     'service_date',
     'attended',
     'patient_amount_clp',
@@ -79,8 +79,8 @@ class PayrollDetail extends Model
         return $this->belongsTo(Patient::class);
     }
 
-    public function sessionType(): BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(SessionType::class);
+        return $this->belongsTo(Item::class);
     }
 }

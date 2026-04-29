@@ -18,20 +18,23 @@ class SendInvoiceMail extends Mailable
 
     public function __construct(Invoice $invoice)
     {
-        $this->invoice = $invoice->load(['patient', 'company', 'branch.primaryAddress.commune', 'items']);
+        $this->invoice = $invoice->load(['patient', 'company.logo', 'branch.primaryAddress.commune', 'items']);
     }
 
     public function build()
     {
-        $email = $this->subject('Tu comprobante de pago: ' . $this->invoice->type_name . ' #' . ($this->invoice->dte_folio ?? $this->invoice->id))
+        $email = $this->subject('Comprobante de Pago: ' . ($this->invoice->patient->full_name ?? $this->invoice->patient->name))
                     ->view('emails.invoices.send');
 
-        // 1. Adjuntar el PDF oficial si existe (SII)
+        // 1. Adjuntar el PDF oficial SOLO si existe (SII)
+        // Por ahora comentamos esto si el usuario prefiere que no se mencione como boleta oficial
+        /*
         if ($this->invoice->pdf_path && Storage::exists($this->invoice->pdf_path)) {
             $email->attachFromStorage($this->invoice->pdf_path, 'Boleta_' . ($this->invoice->dte_folio ?? 'SII') . '.pdf', [
                 'mime' => 'application/pdf',
             ]);
         }
+        */
 
         // 2. Generar y Adjuntar el Comprobante Interno (Diseño profesional)
         // Buscamos el pago asociado para tener el desglose completo
@@ -43,7 +46,8 @@ class SendInvoiceMail extends Mailable
             // Cargar relaciones necesarias para el PDF
             $payment->load([
                 'patient', 'company', 'branch.primaryAddress.commune', 
-                'paymentAllocation.treatmentSession.sessionType', 
+                'paymentAllocations.invoice.items',
+                'paymentAllocations.treatmentSession.item', 
                 'receivables.insurance'
             ]);
 

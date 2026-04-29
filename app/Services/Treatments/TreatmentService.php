@@ -3,7 +3,7 @@
 namespace App\Services\Treatments;
 
 use App\Enums\TreatmentStatusEnum;
-use App\Models\SessionType;
+use App\Models\Item;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
 use App\Services\Plans\PlanService;
@@ -111,7 +111,7 @@ class TreatmentService
 
             return Treatment::create([
                 // Trait inyecta company_id / branch_id
-                'session_type_id' => $data['session_type_id'] ?? null,
+                'item_id' => $data['item_id'] ?? null,
                 'patient_id'      => $patientId,
                 'doctor_id'       => $data['doctor_id'],
                 'start_date'      => $data['date'] ?? now(),
@@ -617,7 +617,7 @@ class TreatmentService
 
             $slots[] = [
                 'date'            => $date->format('Y-m-d'),
-                'session_type_id' => $treatment->default_session_type_id,
+                'item_id' => $treatment->default_item_id,
             ];
         }
 

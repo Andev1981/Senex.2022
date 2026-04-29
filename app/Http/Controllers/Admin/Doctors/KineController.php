@@ -37,14 +37,14 @@ class KineController extends Controller
 
         $kpis = [
             'sessions_today' => $sessionsToday->count(),
-            'completed_today' => $sessionsToday->where('status', 'Completada')->count(),
-            'pending_today' => $sessionsToday->where('status', 'Programada')->count(),
-            'today_earnings' => $sessionsToday->sum('doctor_amount_clp'),
-            'month_earnings' => $sessionsMont->sum('doctor_amount_clp'),
+            'completed_today' => $sessionsToday->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->count(),
+            'pending_today' => $sessionsToday->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)->count(),
+            'today_earnings' => $sessionsToday->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->sum('doctor_amount_clp'),
+            'month_earnings' => $sessionsMont->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->sum('doctor_amount_clp'),
         ];
 
         // Agenda del día
-        $agenda = TreatmentSession::with(['patient', 'treatment', 'sessionType'])
+        $agenda = TreatmentSession::with(['patient', 'treatment', 'item'])
             ->where('doctor_id', $doctor->id)
             ->whereDate('date', $today)
             ->orderBy('time')
@@ -76,7 +76,7 @@ class KineController extends Controller
             ->withCount(['sessions as total_sessions'])
             ->get();
 
-        return Inertia::render('kineMobile/MyPatients', [
+        return Inertia::render('kine-mobile/my-patients', [
             'doctor' => $doctor,
             'patients' => $patients,
         ]);
@@ -89,12 +89,12 @@ class KineController extends Controller
     {
         $doctor = Auth::user()->doctor;
 
-        // Filtros
-        $startDate = $request->input('start_date', Carbon::today()->startOfMonth());
-        $endDate = $request->input('end_date', Carbon::today()->endOfMonth());
+        // Filtros (Si no hay, mostramos desde HOY en adelante)
+        $startDate = $request->input('start_date', Carbon::today()->toDateString());
+        $endDate = $request->input('end_date', Carbon::today()->addDays(7)->toDateString());
         $status = $request->input('status');
 
-        $query = TreatmentSession::with(['patient', 'treatment', 'sessionType'])
+        $query = TreatmentSession::with(['patient', 'treatment', 'item'])
             ->where('doctor_id', $doctor->id)
             ->whereBetween('date', [$startDate, $endDate]);
 
@@ -104,17 +104,32 @@ class KineController extends Controller
 
         $sessions = $query->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'id' => $session->id,
+                    'date' => $session->date->format('d/m/Y'),
+                    'time' => $session->time->format('H:i'),
+                    'status' => $session->status,
+                    'patient_name' => $session->patient->name . ' ' . $session->patient->last_name,
+                    'patient_phone' => $session->patient->phone,
+                    'session_type' => $session->item->name,
+                    'duration' => $session->duration,
+                    'diagnosis' => $session->treatment->referral_diagnosis ?? 'Sin diagnóstico',
+                    'earnings' => $session->doctor_amount_clp,
+                ];
+            });
 
         // Estadísticas
         $stats = [
             'total' => $sessions->count(),
-            'completed' => $sessions->where('status', 'Completada')->count(),
-            'pending' => $sessions->where('status', 'Programada')->count(),
-            'revenue' => $sessions->sum('doctor_amount_clp'),
+            'completed' => $sessions->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->count(),
+            'pending' => $sessions->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)->count(),
+            'cancelled' => $sessions->where('status', \App\Enums\AppointmentStatusEnum::CANCELLED)->count(),
+            'revenue' => $sessions->sum('earnings'),
         ];
 
-        return Inertia::render('kineMobile/MySessions', [
+        return Inertia::render('kine-mobile/my-sessions', [
             'doctor' => $doctor,
             'sessions' => $sessions,
             'stats' => $stats,
@@ -133,12 +148,12 @@ class KineController extends Controller
     {
         $doctor = Auth::user()->doctor;
 
-        $doctor->load(['commissionRates.sessionType', 'branch']);
+        $doctor->load(['commissionRates.item', 'branch']);
 
         // Estadísticas del mes
         $currentMonth = Carbon::now()->startOfMonth();
         $sessions = TreatmentSession::where('doctor_id', $doctor->id)
-            ->where('status', 'Completada')
+            ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
             ->where('date', '>=', $currentMonth)
             ->get();
 
@@ -149,7 +164,7 @@ class KineController extends Controller
             'commission_month' => $sessions->sum('doctor_amount_clp'),
         ];
 
-        return Inertia::render('kineMobile/MyProfile', [
+        return Inertia::render('kine-mobile/my-profile', [
             'doctor' => $doctor,
             'stats' => $stats,
         ]);

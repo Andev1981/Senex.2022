@@ -3,85 +3,150 @@
 namespace App\Http\Controllers\Admin\Products;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
+use App\Models\Item;
+use App\Models\ProductDetail;
+use App\Models\ServiceDetail;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $companyId = session('current_company_id');
+        $companyId = auth()->user()->company_id;
+        $company = \App\Models\Company::find($companyId);
+        
+        // Si es clínica y no hay filtro de tipo, por defecto mostramos servicios
+        if (!$request->has('type') && $company && $company->business_type->value === 'clinical') {
+            $request->merge(['type' => 'service']);
+        }
 
-        $products = Product::where('company_id', $companyId)
-            ->with('category')
+        $items = Item::query()
+            ->where('company_id', $companyId)
+            ->with(['category', 'productDetail', 'serviceDetail'])
             ->when($request->type, fn($q, $type) => $q->where('type', $type))
-            ->when($request->category_id, fn($q, $cat) => $q->where('category_id', $cat))
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('sku', 'like', "%{$search}%")
-                        ->orWhere('barcode', 'like', "%{$search}%");
+                        ->orWhereHas('productDetail', function($qd) use ($search) {
+                            $qd->where('barcode', 'like', "%{$search}%");
+                        });
                 });
             })
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
-        // Lista de categorías para filtros y formularios
         $categories = \App\Models\Category::where('company_id', $companyId)
-            ->with('children')
             ->whereNull('parent_id')
             ->get();
 
         return Inertia::render('products/Index', [
-            'products' => $products,
+            'items' => $items,
             'categories' => $categories,
-            'filters'  => $request->only(['search', 'type', 'category_id']),
+            'filters'  => $request->only(['search', 'category_id', 'type']),
         ]);
     }
 
     public function store(StoreProductRequest $request)
     {
-        $data = $request->validated();
-        
-        $data['company_id'] = session('current_company_id');
-        $data['branch_id']  = session('current_branch_id');
-        $data['user_id']    = auth()->id();
+        return DB::transaction(function() use ($request) {
+            $validated = $request->validated();
+            
+            $item = Item::create([
+                'company_id'  => auth()->user()->company_id,
+                'branch_id'   => session('active_branch_id'),
+                'user_id'     => auth()->id(),
+                'type'        => $validated['type'],
+                'category_id' => $validated['category_id'] ?? null,
+                'name'        => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'sku'         => $validated['sku'] ?? null,
+                'price'       => $validated['price'],
+                'is_exempt'   => $validated['is_exempt'] ?? true,
+                'is_active'   => $validated['is_active'] ?? true,
+            ]);
 
-        Product::create($data);
+            if ($item->type === 'product') {
+                ProductDetail::create([
+                    'item_id'        => $item->id,
+                    'barcode'        => $validated['barcode'] ?? null,
+                    'cost_price'     => $validated['cost_price'] ?? null,
+                    'stock'          => $validated['stock'] ?? 0,
+                    'critical_stock' => $validated['critical_stock'] ?? 0,
+                    'manage_stock'   => $validated['manage_stock'] ?? true,
+                ]);
+            } else {
+                ServiceDetail::create([
+                    'item_id'                       => $item->id,
+                    'duration_minutes'              => $validated['duration_minutes'] ?? 45,
+                    'requires_diagnosis'            => $validated['requires_diagnosis'] ?? false,
+                    'requires_referral'             => $validated['requires_referral'] ?? false,
+                    'default_doctor_commission_clp' => $validated['default_doctor_commission_clp'] ?? 0,
+                    'specialty'                     => $validated['specialty'] ?? null,
+                ]);
+            }
 
-        return back()->with('success', 'Ítem creado exitosamente.');
+            return back()->with('success', 'Ítem creado exitosamente.');
+        });
     }
 
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(UpdateProductRequest $request, Item $product)
     {
-        // Validar propiedad
-        if ($product->company_id !== (int)session('current_company_id')) {
-            abort(403);
-        }
+        return DB::transaction(function() use ($request, $product) {
+            $validated = $request->validated();
 
-        $product->update($request->validated());
+            $product->update([
+                'type'        => $validated['type'],
+                'category_id' => $validated['category_id'] ?? null,
+                'name'        => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'sku'         => $validated['sku'] ?? null,
+                'price'       => $validated['price'],
+                'is_exempt'   => $validated['is_exempt'] ?? true,
+                'is_active'   => $validated['is_active'] ?? true,
+            ]);
 
-        return back()->with('success', 'Ítem actualizado correctamente.');
+            if ($product->type === 'product') {
+                $product->productDetail()->updateOrCreate(
+                    ['item_id' => $product->id],
+                    [
+                        'barcode'        => $validated['barcode'] ?? null,
+                        'cost_price'     => $validated['cost_price'] ?? null,
+                        'stock'          => $validated['stock'] ?? 0,
+                        'critical_stock' => $validated['critical_stock'] ?? 0,
+                        'manage_stock'   => $validated['manage_stock'] ?? true,
+                    ]
+                );
+            } else {
+                $product->serviceDetail()->updateOrCreate(
+                    ['item_id' => $product->id],
+                    [
+                        'duration_minutes'              => $validated['duration_minutes'] ?? 45,
+                        'requires_diagnosis'            => $validated['requires_diagnosis'] ?? false,
+                        'requires_referral'             => $validated['requires_referral'] ?? false,
+                        'default_doctor_commission_clp' => $validated['default_doctor_commission_clp'] ?? 0,
+                        'specialty'                     => $validated['specialty'] ?? null,
+                    ]
+                );
+            }
+
+            return back()->with('success', 'Ítem actualizado correctamente.');
+        });
     }
 
-    public function destroy(Product $product)
+    public function destroy(Item $product)
     {
         if ($product->company_id !== auth()->user()->company_id) {
             abort(403);
         }
 
-        // Validación Opcional: No borrar si ya tiene ventas
-        if ($product->sales()->exists()) {
-            return back()->with('error', 'No puedes eliminar un producto que ya ha sido vendido. Desactívalo en su lugar.');
-        }
-
         $product->delete();
 
-        return redirect()->route('products.index')
-            ->with('success', 'Producto eliminado.');
+        return back()->with('success', 'Ítem eliminado.');
     }
 }

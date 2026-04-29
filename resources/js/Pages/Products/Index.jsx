@@ -32,7 +32,7 @@ import SideModal from "@/components/SideModal";
 import ProductModal from "./Partials/ProductModal";
 import Swal from "sweetalert2";
 
-export default function Index({ products, categories, filters }) {
+export default function Index({ items, categories, filters }) {
   const [activeTab, setActiveTab] = useState(filters.type || "product");
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
   const [selectedCategory, setSelectedCategory] = useState(filters.category_id || "");
@@ -55,7 +55,7 @@ export default function Index({ products, categories, filters }) {
         }, {
             preserveState: true,
             replace: true,
-            only: ['products']
+            only: ['items']
         });
     }, 300);
     return () => clearTimeout(timer);
@@ -83,30 +83,36 @@ export default function Index({ products, categories, filters }) {
   };
 
   const getStockBadge = (product) => {
-    if (product.type === 'service' || !product.manage_stock) {
+    const detail = product.product_detail;
+    
+    if (product.type === 'service' || !detail?.manage_stock) {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black bg-blue-50 text-blue-600 uppercase tracking-widest border border-blue-100">
           N/A
         </span>
       );
     }
-    if (product.stock <= 0) {
+
+    const stock = detail.stock || 0;
+    const critical = detail.critical_stock || 0;
+
+    if (stock <= 0) {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black bg-red-50 text-red-600 uppercase tracking-widest border border-red-100">
           Agotado
         </span>
       );
     }
-    if (product.stock <= product.critical_stock) {
+    if (stock <= critical) {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black bg-amber-50 text-amber-600 uppercase tracking-widest border border-amber-100 animate-pulse">
-          Crítico: {product.stock}
+          Crítico: {stock}
         </span>
       );
     }
     return (
       <span className="inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black bg-green-50 text-green-600 uppercase tracking-widest border border-green-100">
-        {product.stock} Unid.
+        {stock} Unid.
       </span>
     );
   };
@@ -151,7 +157,7 @@ export default function Index({ products, categories, filters }) {
         ),
     },
     {
-        accessorKey: "stock",
+        id: "stock",
         header: activeTab === 'product' ? "Existencias" : "Control",
         cell: ({ row }) => <div className="text-center">{getStockBadge(row.original)}</div>,
     },
@@ -190,10 +196,10 @@ export default function Index({ products, categories, filters }) {
   ], [activeTab]);
 
   const tableData = useMemo(() => {
-    if (products?.data) return products.data;
-    if (Array.isArray(products)) return products;
+    if (items?.data) return items.data;
+    if (Array.isArray(items)) return items;
     return [];
-  }, [products]);
+  }, [items]);
 
   const table = useReactTable({
     data: tableData,
@@ -363,7 +369,7 @@ export default function Index({ products, categories, filters }) {
           <div className="p-6 bg-gray-50/30 border-t border-gray-100">
             <TablePagination
                 table={table}
-                total={products.total || (products.data || products).length}
+                total={items.total || (items.data || items).length}
                 pageSize={pageSize}
                 setPageSize={setPageSize}
                 pagesizeOptions={[10, 20, 50]}

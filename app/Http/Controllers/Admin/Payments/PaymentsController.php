@@ -2,41 +2,20 @@
 
 namespace App\Http\Controllers\Admin\Payments;
 
-use App\Enums\PaymentMethodEnum;
-use App\Enums\DteStatusEnum;
-use App\Enums\FinanceStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StorePaymentRequest;
-use App\Jobs\Dte\EmitDteJob;
-use App\Models\Agreement;
-use App\Models\Doctor;
 use App\Models\Insurance;
-use App\Models\Invoice;
 use App\Models\Patient;
-use App\Models\PatientPlan;
-use App\Models\Payment;
 use App\Models\Plan;
-use App\Models\SessionType;
-use App\Models\TreatmentSession;
-use App\Services\Invoices\InvoiceService;
+use App\Models\Item;
+use App\Models\Doctor;
 use App\Services\Payments\PaymentService;
-use App\Services\Payments\WebpayPlusService;
-use App\Services\PosService;
+use App\Services\Invoices\InvoiceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use Pdf;
+use Illuminate\Support\Facades\DB;
 
 class PaymentsController extends Controller
 {
-    public function __construct(
-        private PaymentService $paymentService,
-        private InvoiceService $invoiceService,
-        private WebpayPlusService $webpayService,
-        private PosService $posService
-    ) {}
-
     public function index()
     {
         $currentCompanyId = session('current_company_id');
@@ -48,24 +27,30 @@ class PaymentsController extends Controller
         $insurances = $isClinical ? Insurance::where('company_id', $currentCompanyId)->get(['id', 'name']) : collect();
         $plans = $isClinical ? Plan::whereIn('insurance_id', $insurances->pluck('id'))->get(['id', 'name', 'insurance_id', 'code']) : collect();
         
-        $products = \App\Models\Product::where('company_id', $currentCompanyId)
+        $doctors = Doctor::where('company_id', $currentCompanyId)
             ->where('is_active', true)
-            ->get(['id', 'name', 'price', 'type', 'sku', 'is_exempt', 'manage_stock', 'stock'])
+            ->when($activeBranchId, function ($query) use ($activeBranchId) {
+                $query->whereHas('branches', function ($q) use ($activeBranchId) {
+                    $q->where('branches.id', $activeBranchId);
+                });
+            })
+            ->get(['id', 'name', 'last_name']);
+
+        // Obtener catálogo unificado para la caja
+        $items = Item::where('company_id', $currentCompanyId)
+            ->where('is_active', true)
+            ->get(['id', 'name', 'price', 'type', 'sku', 'is_exempt'])
             ->map(function($p) {
                 return [
                     'id' => $p->id,
                     'name' => $p->name,
-                    'base_price_clp' => $p->price,
-                    'price' => $p->price,
+                    'price' => (int)$p->price,
                     'is_exempt' => (bool)$p->is_exempt,
-                    'sellable_type' => 'Product',
-                    'type' => $p->type
+                    'sellable_type' => 'Item',
+                    'type' => $p->type,
+                    'sku' => $p->sku
                 ];
             });
-
-        $sessionTypes = $isClinical 
-            ? SessionType::get(['id', 'name', 'base_price_clp'])->map(fn($s) => [...$s->toArray(), 'sellable_type' => 'SessionType', 'is_exempt' => true]) 
-            : $products;
 
         $patients = Patient::when($activeBranchId, function ($query) use ($activeBranchId) {
             $query->whereHas('branches', function ($q) use ($activeBranchId) {
@@ -97,114 +82,165 @@ class PaymentsController extends Controller
                 ];
             });
 
-        $allClients = $patients->concat($corporateClients);
-
-        $paymentMethods = [
-            ['value' => 'pos_integrado', 'label' => '💳 POS Integrado (Transbank)'],
-            ['value' => 'cash', 'label' => '💵 Efectivo'],
-        ];
-
-        $doctors = $isClinical ? Doctor::when($activeBranchId, function ($query) use ($activeBranchId) {
-            $query->whereHas('branches', function ($q) use ($activeBranchId) {
-                $q->where('branches.id', $activeBranchId);
-            });
-        })->get() : collect();
+        $patients = $patients->concat($corporateClients);
 
         return Inertia::render('billing-checkout/index', [
-            'patients' => $allClients,
-            'sessionTypes' => $sessionTypes,
-            'products' => $products,
-            'agreements' => $isClinical ? Agreement::with('rules')->get() : collect(),
             'insurances' => $insurances,
             'plans' => $plans,
-            'paymentMethods' => $paymentMethods,
+            'items' => $items,
+            'patients' => $patients,
+            'isClinical' => $isClinical,
             'doctors' => $doctors,
-            'business_type' => $businessType,
+            'paymentMethods' => \App\Enums\PaymentMethodEnum::options(),
+            'agreements' => \App\Models\Agreement::where('company_id', $currentCompanyId)->where('is_active', true)->get(['id', 'name']),
+            'business_type' => $businessType
         ]);
     }
 
-    public function store(StorePaymentRequest $request)
+    public function store(Request $request)
     {
-        $data = $request->validated();
-        $paymentMethod = $data['payment_details']['payment_method'];
+        return $this->processPayment($request);
+    }
 
-        // Limpieza de ID
-        $rawPatientId = $request->input('patient_id');
-        $numericPatientId = (int) str_replace(['person_', 'company_'], '', $rawPatientId);
-        $data['patient_id'] = $numericPatientId;
+    public function processPayment(Request $request)
+    {
+        $validated = $request->validate([
+            'patient_id' => 'required|string',
+            'amount_clp' => 'required|numeric|min:0',
+            'payment_method' => 'required|string',
+            'services_to_bill' => 'nullable|array',
+            'final_shares' => 'nullable|array',
+            'session_ids' => 'nullable|array',
+            'is_pos' => 'boolean'
+        ]);
 
-        DB::beginTransaction();
         try {
-            $payment = $this->paymentService->processPayment($data);
+            $paymentService = app(\App\Services\Payments\PaymentService::class);
+            $invoiceService = app(\App\Services\Invoices\InvoiceService::class);
 
-            if ($paymentMethod === 'pos_integrado') {
-                $posResult = $this->posService->sendTransaction($payment->amount_clp, $payment->id);
-                if (!$posResult['success']) {
-                    throw new \Exception("POS rechazado: " . ($posResult['error'] ?? 'Error desconocido'));
+            return DB::transaction(function() use ($validated, $paymentService, $invoiceService) {
+                // 1. Registrar el Pago
+                $payment = $paymentService->registerLocalPayment($validated);
+
+                // 2. Si hay servicios a facturar (flujo POS)
+                if (!empty($validated['services_to_bill'])) {
+                    $invoice = $invoiceService->processInvoice($payment, $validated, $validated['is_pos'] ?? false);
+                    
+                    return response()->json([
+                        'status' => 'success',
+                        'success' => true,
+                        'payment_id' => $payment->id,
+                        'invoice_id' => $invoice->id,
+                        'dte_status' => $invoice->dte_status,
+                        'url' => route('payments.success', $payment->uuid),
+                        'message' => 'Pago procesado exitosamente'
+                    ]);
                 }
-                $payment->update([
-                    'status' => 'completed',
-                    'paid_at' => now(),
-                    'transaction_reference' => $posResult['authorization_code'],
-                    'webpay_card_detail' => json_encode(['card_number' => $posResult['card_digits']]),
+
+                // 3. Flujo Manual (desde perfil de paciente)
+                return response()->json([
+                    'status' => 'success',
+                    'success' => true,
+                    'payment_id' => $payment->id,
+                    'message' => 'Recaudación registrada exitosamente',
+                    'url' => route('payments.success', $payment->uuid)
                 ]);
-            }
-
-            $invoice = $this->invoiceService->processInvoice($payment, $data, true);
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'uuid' => $payment->uuid,
-                'url' => route('payments.success', ['uuid' => $payment->uuid]),
-                'dte_folio' => $invoice->dte_folio
-            ]);
+            });
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Error en POS Store: " . $e->getMessage());
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+            \Illuminate\Support\Facades\Log::error('Error procesando pago', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el pago: ' . $e->getMessage()
+            ], 500);
         }
-    }
-
-    public function success($uuid)
-    {
-        $payment = Payment::where('uuid', $uuid)
-            ->with([
-                'patient', 
-                'branch', 
-                'company',
-                'paymentAllocations.treatmentSession.sessionType',
-                'paymentAllocations.invoice.items',
-                'receivables.insurance'
-            ])
-            ->firstOrFail();
-
-        $invoice = Invoice::whereHas('paymentAllocations', fn($q) => $q->where('payment_id', $payment->id))
-            ->with(['items'])
-            ->latest()
-            ->first();
-
-        return inertia('billing-checkout/Success', [
-            'payment' => $payment,
-            'invoice' => $invoice,
-            'is_dte_pending' => $invoice ? in_array($invoice->dte_status, [DteStatusEnum::PENDING, DteStatusEnum::GENERATED, DteStatusEnum::RETRY]) : false
-        ]);
-    }
-
-    public function downloadReceiptPdf($uuid, $download = null)
-    {
-        $payment = Payment::where('uuid', $uuid)->with(['patient', 'company', 'branch'])->firstOrFail();
-        $pdf = Pdf::loadView('pdf.payment_receipt', compact('payment'));
-        return ($download === 'download') ? $pdf->download('recibo.pdf') : $pdf->stream('recibo.pdf');
     }
 
     public function getPatientStatus($id)
     {
-        $numericId = (int) str_replace(['person_', 'company_'], '', $id);
-        $patient = Patient::findOrFail($numericId);
-        $debts = Invoice::where('patient_id', $numericId)->whereIn('payment_status', [FinanceStatusEnum::UNPAID, FinanceStatusEnum::PARTIAL])->get();
-        return response()->json(['debts' => $debts, 'activePlans' => [], 'insurance' => null]);
+        $patientId = str_replace('person_', '', $id);
+        
+        // 1. Sesiones completadas pero no facturadas (DTE)
+        $patient = Patient::with(['treatments.sessions' => function($q) {
+            $q->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
+              ->where('dte_generated', false)
+              ->with(['item', 'doctor']);
+        }])->findOrFail($patientId);
+
+        $pendingSessions = $patient->treatments->flatMap->sessions;
+
+        // 2. Mapear sesiones como "deudas" para que la caja las vea
+        $debts = $pendingSessions->map(function($session) {
+            return [
+                'id' => 'session_' . $session->id,
+                'amount_patient_clp' => $session->patient_amount_clp ?? $session->item?->price ?? 0,
+                'treatment_session' => $session,
+                'treatment_session_id' => $session->id,
+                'type' => 'pending_session'
+            ];
+        });
+
+        // 3. Planes Activos (para el selector de planes en cada item)
+        $activePlans = $patient->activePlans()
+            ->with('plan')
+            ->get()
+            ->map(function($pp) {
+                return [
+                    'id' => $pp->id,
+                    'plan_id' => $pp->plan_id,
+                    'plan_name' => $pp->plan->name,
+                    'item_id' => $pp->plan->item_id ?? null,
+                    'available' => $pp->remaining_sessions,
+                    'total' => $pp->total_sessions
+                ];
+            });
+
+        // 4. Cobertura Predefinida
+        $insurance = $patient->insurance()->with(['insurance', 'plan'])->first();
+
+        return response()->json([
+            'debts' => $debts,
+            'activePlans' => $activePlans,
+            'active_plans' => $activePlans, // Retrocompatibilidad
+            'insurance' => $insurance
+        ]);
+    }
+
+    public function success($uuid)
+    {
+        $payment = \App\Models\Payment::where('uuid', $uuid)
+            ->with(['patient', 'branch', 'paymentAllocations.invoice.items', 'paymentAllocations.treatmentSession.item', 'receivables.insurance'])
+            ->firstOrFail();
+
+        $invoice = $payment->paymentAllocations->first()?->invoice;
+        
+        return Inertia::render('billing-checkout/Success', [
+            'payment' => $payment,
+            'invoice' => $invoice,
+            'is_dte_pending' => $invoice ? $invoice->dte_status === \App\Enums\DteStatusEnum::PENDING : false
+        ]);
+    }
+
+    public function downloadReceiptPdf($uuid)
+    {
+        $payment = \App\Models\Payment::where('uuid', $uuid)
+            ->with(['patient', 'branch', 'paymentAllocations.invoice.items', 'paymentAllocations.treatmentSession.item', 'receivables.insurance'])
+            ->firstOrFail();
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.payment_receipt', [
+            'payment' => $payment,
+            'company' => $payment->company
+        ]);
+
+        return $pdf->stream("comprobante-pago-{$payment->id}.pdf");
+    }
+
+    public function abortPos(Request $request)
+    {
+        // Lógica para cancelar un cobro en el terminal si fuera necesario
+        return response()->json(['status' => 'ok']);
     }
 }

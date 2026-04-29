@@ -187,6 +187,18 @@ export default function PaymentSummary({
           <div className="grid grid-cols-2 gap-3 bg-gray-50 p-1.5 rounded-[1.8rem] border border-gray-100 shadow-inner">
             {paymentMethods.map((m) => {
               const isSelected = paymentDetails.payment_method === m.value;
+              
+              // Selector de iconos por tipo
+              const getIcon = (val) => {
+                switch(val) {
+                    case 'pos_integrado': return '💳';
+                    case 'cash': return '💵';
+                    case 'transfer': return '📲';
+                    case 'webpay': return '🌐';
+                    default: return '💰';
+                }
+              };
+
               return (
                 <button
                   key={m.value}
@@ -199,10 +211,10 @@ export default function PaymentSummary({
                   }`}
                 >
                   <span className={`text-2xl transition-transform duration-300 ${isSelected ? 'scale-110 rotate-0' : 'group-hover:scale-110 group-hover:-rotate-3'}`}>
-                    {m.value === 'pos_integrado' ? '💳' : '💵'}
+                    {getIcon(m.value)}
                   </span>
                   <span className="text-[9px] font-black uppercase tracking-[0.15em] text-center leading-tight">
-                    {m.value === 'pos_integrado' ? 'POS Transbank' : 'Efectivo'}
+                    {m.label}
                   </span>
                   {isSelected && (
                     <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-brand-primary rounded-full animate-ping"></div>

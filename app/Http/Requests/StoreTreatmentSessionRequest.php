@@ -87,7 +87,7 @@ class StoreTreatmentSessionRequest extends FormRequest
             'treatment_id' => 'nullable|exists:treatments,id',
             'doctor_id' => 'required|exists:doctors,id',
             'patient_id' => 'required|exists:patients,id',
-            'session_type_id' => 'nullable|exists:session_types,id',
+            'item_id' => 'nullable|exists:items,id',
             'room_id' => 'nullable|exists:rooms,id',
             'base_price_clp' => 'nullable|integer|min:0',
             'patient_plan_id' => 'nullable|exists:patient_plans,id',
@@ -104,6 +104,8 @@ class StoreTreatmentSessionRequest extends FormRequest
             'total_sessions' => 'nullable|integer',
             'initial_pain_level' => 'nullable|integer',
             'initial_pain_map' => 'nullable|array',
+            'body_part' => 'nullable|string',
+            'laterality' => 'nullable|string',
 
             // --- NUEVOS CAMPOS SOAP ---
             'subjective' => 'nullable|string',

@@ -25,6 +25,12 @@ class UpdatePatientRequest extends FormRequest
     public function rules(): array
     {
         $patient = $this->route('patient');
+        $patientId = $patient instanceof \App\Models\Patient ? $patient->id : $patient;
+
+        // Si por alguna razón no hay ID en la ruta, lo buscamos en el body
+        if (!$patientId && $this->has('id')) {
+            $patientId = $this->id;
+        }
 
         // Verificar si la sucursal actual requiere atención a domicilio obligatoria
         $activeBranchId = session('active_branch_id');
@@ -46,7 +52,7 @@ class UpdatePatientRequest extends FormRequest
                 new \App\Rules\ValidRut,
                 Rule::unique('patients', 'rut')
                     ->where('company_id', session('current_company_id'))
-                    ->ignore($patient->id),
+                    ->ignore($patientId),
             ],
             'email'             => [
                 'nullable',
@@ -55,7 +61,7 @@ class UpdatePatientRequest extends FormRequest
                 'max:255',
                 Rule::unique('patients', 'email')
                     ->where('company_id', session('current_company_id'))
-                    ->ignore($patient->id)
+                    ->ignore($patientId)
             ],
             'phone'             => ['nullable', 'string', 'max:30'],
 
@@ -63,6 +69,12 @@ class UpdatePatientRequest extends FormRequest
             'gender'            => ['nullable', 'string', 'max:10'],
             'occupation'        => ['nullable', 'string', 'max:255'],
             'marital_status'    => ['nullable', 'string', 'max:50'],
+
+            'require_tutor'     => ['boolean'],
+            'opt_out_reminders' => ['boolean'],
+            'prefers_whatsapp'  => ['boolean'],
+            'prefers_sms'       => ['boolean'],
+            'prefers_mail'      => ['boolean'],
 
             'status'            => ['nullable', 'string', 'max:50'],
             'status_reason'     => ['nullable', 'string', 'max:255'],

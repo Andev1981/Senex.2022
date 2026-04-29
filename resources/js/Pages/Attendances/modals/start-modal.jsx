@@ -31,7 +31,7 @@ export default function StartModal({
       </p>
       <textarea
         value={data.notes}
-        onChange={(e) => setStartNotes(e.target.value)}
+        onChange={(e) => setData("notes", e.target.value)}
         placeholder="Notas iniciales (opcional)..."
         className="w-full p-3 border-2 border-gray-200 rounded-lg resize-none h-28 focus:border-blue-500 focus:outline-none"
       />

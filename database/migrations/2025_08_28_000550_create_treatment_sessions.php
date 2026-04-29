@@ -51,6 +51,26 @@ return new class extends Migration {
             $table->text('plan')->nullable()->comment('P: Tareas y plan próxima sesión');
 
             // -----------------------------------------------------
+            // CAMPOS ADICIONALES PARA DASHBOARD KINE (Compatibilidad)
+            // -----------------------------------------------------
+            $table->unsignedTinyInteger('pain_before')->nullable();
+            $table->unsignedTinyInteger('pain_after')->nullable();
+            
+            $table->unsignedSmallInteger('rom_flexion_before')->nullable();
+            $table->unsignedSmallInteger('rom_flexion_after')->nullable();
+            $table->unsignedSmallInteger('rom_abduction_before')->nullable();
+            $table->unsignedSmallInteger('rom_abduction_after')->nullable();
+            $table->unsignedSmallInteger('rom_rotation_before')->nullable();
+            $table->unsignedSmallInteger('rom_rotation_after')->nullable();
+
+            $table->json('techniques')->nullable();
+            $table->json('exercises')->nullable();
+
+            $table->text('notes')->nullable();
+            $table->text('homework')->nullable();
+            $table->text('next_goals')->nullable();
+
+            // -----------------------------------------------------
             // FINANZAS
             // -----------------------------------------------------
             $table->unsignedBigInteger('patient_amount_clp')->default(0);
@@ -61,6 +81,14 @@ return new class extends Migration {
             $table->boolean('dte_generated')->default(false);
 
             $table->text('cancellation_note')->nullable();
+            
+            // Firma Digital y Validación de Atención
+            $table->string('signature_path')->nullable();
+            $table->boolean('signature_skipped')->default(false);
+            $table->string('signature_skip_reason')->nullable();
+            $table->timestamp('signed_at')->nullable();
+            $table->string('signature_gps_coords')->nullable();
+
             $table->json('meta')->nullable();
             
             $table->timestamps();

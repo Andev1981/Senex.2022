@@ -212,27 +212,44 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Servicio</th>
-                        <th style="text-align: right;">Monto</th>
+                        <th>Descripción</th>
+                        <th style="text-align: center;">Cant.</th>
+                        <th style="text-align: right;">Total Item</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($payment->paymentAllocations as $alloc)
-                    @php
-                        $serviceName = 'Servicio Médico';
-                        $serviceDetails = '';
-                        if ($alloc->treatmentSession && $alloc->treatmentSession->sessionType) {
-                            $serviceName = $alloc->treatmentSession->sessionType->name;
-                            $serviceDetails = "Sesión ID: {$alloc->treatment_session_id} | Cod: " . ($alloc->treatmentSession->sessionType->code ?? 'N/A');
-                        }
-                    @endphp
-                    <tr>
-                        <td>
-                            <div class="item-name">{{ $serviceName }}</div>
-                            <div class="item-details">{{ $serviceDetails }}</div>
-                        </td>
-                        <td class="amount">${{ number_format($alloc->amount_clp, 0, ',', '.') }}</td>
-                    </tr>
+                    @foreach($payment->allocations as $alloc)
+                        @if($alloc->invoice)
+                            @foreach($alloc->invoice->items as $item)
+                            <tr>
+                                <td>
+                                    <div class="item-name">{{ $item->description }}</div>
+                                    <div class="item-details">
+                                        @if($item->sellable_type === 'App\Models\Plan')
+                                            Plan de Tratamiento
+                                        @else
+                                            {{ $item->treatmentSession ? "Sesión ID: {$item->treatment_session_id}" : "Producto/Servicio" }}
+                                        @endif
+                                    </div>
+                                </td>
+                                <td style="text-align: center; font-weight: 700;">{{ $item->quantity }}</td>
+                                <td class="amount">${{ number_format($item->total_patient_clp, 0, ',', '.') }}</td>
+                            </tr>
+                            @endforeach
+                        @elseif($alloc->treatmentSession)
+                            @php
+                                $serviceName = $alloc->treatmentSession->item->name ?? 'Servicio Médico';
+                                $serviceDetails = "Sesión ID: {$alloc->treatment_session_id}";
+                            @endphp
+                            <tr>
+                                <td>
+                                    <div class="item-name">{{ $serviceName }}</div>
+                                    <div class="item-details">{{ $serviceDetails }}</div>
+                                </td>
+                                <td style="text-align: center; font-weight: 700;">1</td>
+                                <td class="amount">${{ number_format($alloc->amount_clp, 0, ',', '.') }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>

@@ -37,10 +37,10 @@ class StoreAgreementRuleRequest extends FormRequest
         return [
             // Identificadores
             'agreement_id' => 'required|exists:agreements,id',
-            'session_type_id' => [
+            'item_id' => [
                 'required',
-                'exists:session_types,id',
-                // 💡 REGLA DE UNICIDAD: session_type_id debe ser único DENTRO del plan_id (incluyendo NULL)
+                'exists:items,id',
+                // 💡 REGLA DE UNICIDAD: item_id debe ser único DENTRO del plan_id (incluyendo NULL)
                 Rule::unique('agreement_rules')->where(function ($query) use ($planId) {
                     // Si plan_id es null, buscamos donde plan_id también es null.
                     if (is_null($planId)) {
@@ -78,7 +78,7 @@ class StoreAgreementRuleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'session_type_id.unique' => 'Ya existe una regla para este servicio dentro de este plan (o como regla general). Edite la existente.',
+            'item_id.unique' => 'Ya existe una regla para este servicio dentro de este plan (o como regla general). Edite la existente.',
             'patient_share_clp.lte' => 'El copago del paciente no puede ser mayor al precio bruto total.',
             'start_date.required' => 'La fecha de inicio de vigencia es obligatoria.',
             'end_date.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la fecha de inicio.',

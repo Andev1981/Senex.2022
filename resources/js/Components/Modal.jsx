@@ -20,7 +20,7 @@ import { X } from "lucide-react";
  */
 export default function Modal({
   children,
-  open,
+  open = false,
   onClose,
   title,
   subtitle,
@@ -42,7 +42,7 @@ export default function Modal({
   }[maxWidth];
 
   return (
-    <Transition show={open} leave="duration-200">
+    <Transition show={!!open} leave="duration-200">
       <Dialog onClose={onClose} className="relative z-50">
         {/* Backdrop con desenfoque */}
         <TransitionChild

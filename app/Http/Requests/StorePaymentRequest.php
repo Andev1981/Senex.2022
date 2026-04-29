@@ -58,7 +58,7 @@ class StorePaymentRequest extends FormRequest
             $items = collect($this->input('services_to_bill'))->map(function ($item) {
                 // Definir un array de valores por defecto
                 $defaults = [
-                    'session_type_id' => null,
+                    'item_id' => null,
                     'doctor_id'       => null,
                     'quantity'        => 1,
                     'unit_price_clp'      => 0,
@@ -154,7 +154,7 @@ class StorePaymentRequest extends FormRequest
             // Mensajes de Carrito (Servicios)
             'services_to_bill.required' => 'El carrito está vacío. Añade al menos una prestación.',
             'services_to_bill.min'      => 'Debes seleccionar al menos un servicio para facturar.',
-            'services_to_bill.*.session_type_id.required' => 'Falta el tipo de prestación en una de las líneas.',
+            'services_to_bill.*.item_id.required' => 'Falta el tipo de prestación en una de las líneas.',
             'services_to_bill.*.doctor_id.required_without' => 'Debes asignar un profesional a las nuevas prestaciones.',
             'services_to_bill.*.unit_price_clp.required' => 'El precio unitario no puede estar vacío.',
 

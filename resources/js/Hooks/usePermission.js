@@ -1,33 +1,34 @@
 import { usePage } from "@inertiajs/react";
+import { useCallback } from "react";
 
 export function usePermission() {
   const { auth } = usePage().props;
 
-  const hasPermission = (permission) => {
-    if (!auth.user || !auth.user.permissions) {
+  const hasPermission = useCallback((permission) => {
+    if (!auth || !auth.permissions) {
       return false;
     }
-    return auth.user.permissions.includes(permission);
-  };
+    return auth.permissions.includes(permission);
+  }, [auth]);
 
-  const hasRole = (role) => {
-    if (!auth.user || !auth.user.roles) {
+  const hasRole = useCallback((role) => {
+    if (!auth || !auth.roles) {
       return false;
     }
-    return auth.user.roles.includes(role);
-  };
+    return auth.roles.includes(role);
+  }, [auth]);
 
-  const hasAnyPermission = (permissions) => {
+  const hasAnyPermission = useCallback((permissions) => {
     return permissions.some((permission) => hasPermission(permission));
-  };
+  }, [hasPermission]);
 
-  const hasAllPermissions = (permissions) => {
+  const hasAllPermissions = useCallback((permissions) => {
     return permissions.every((permission) => hasPermission(permission));
-  };
+  }, [hasPermission]);
 
-  const hasAnyRole = (roles) => {
+  const hasAnyRole = useCallback((roles) => {
     return roles.some((role) => hasRole(role));
-  };
+  }, [hasRole]);
 
   return {
     hasPermission,

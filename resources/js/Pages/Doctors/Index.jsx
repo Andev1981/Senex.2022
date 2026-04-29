@@ -7,8 +7,15 @@ import DoctorDetailModal from "./DoctorDetailModal"; // Solo para CREACIÓN
 import { UserPlus } from "lucide-react";
 
 export default function Index(props) {
-  const { doctors, regions, provinces, communes } = props;
+  const { doctors, regions, provinces, communes, branches } = props;
   const [isModalOpenCreate, setIsModalOpenCreate] = useState(false);
+  const [isModalOpenEdit, setIsModalOpenEdit] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+
+  const handleEdit = (doctor) => {
+    setSelectedDoctor(doctor);
+    setIsModalOpenEdit(true);
+  };
 
   return (
     <AuthenticatedLayout>
@@ -34,22 +41,42 @@ export default function Index(props) {
           </button>
         </div>
 
-        <TableDoctors {...props} />
+        <TableDoctors {...props} onEdit={handleEdit} />
       </div>
 
       {/* Modal solo para registrar uno NUEVO */}
       <SideModal
         open={isModalOpenCreate}
         onClose={() => setIsModalOpenCreate(false)}
-        title="Nuevo Profesional"
-        subtitle="Registro de cuenta y datos básicos"
+        width="4xl"
+        hideDefaultHeader={true}
       >
         <DoctorDetailModal
-          onClose={() => setIsModalOpenCreate(false)}
+          setIsModalOpenDetail={() => setIsModalOpenCreate(false)}
           regions={regions}
           provinces={provinces}
           communes={communes}
+          branches={branches}
         />
+      </SideModal>
+
+      {/* Modal para EDITAR existente */}
+      <SideModal
+        open={isModalOpenEdit}
+        onClose={() => { setIsModalOpenEdit(false); setSelectedDoctor(null); }}
+        width="4xl"
+        hideDefaultHeader={true}
+      >
+        {selectedDoctor && (
+            <DoctorDetailModal
+                doctor={selectedDoctor}
+                setIsModalOpenDetail={() => { setIsModalOpenEdit(false); setSelectedDoctor(null); }}
+                regions={regions}
+                provinces={provinces}
+                communes={communes}
+                branches={branches}
+            />
+        )}
       </SideModal>
     </AuthenticatedLayout>
   );

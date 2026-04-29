@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Insurance;
 use App\Http\Requests\StoreInsuranceCompanyRequest;
 use App\Http\Requests\UpdateInsuranceCompanyRequest;
-use App\Models\SessionType;
+use App\Models\Item;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -17,7 +17,7 @@ class InsuranceController extends Controller
     {
        
         $patients = Patient::get();
-        $sessionTypes = SessionType::get();
+        $items = Item::get();
         $insurances = Insurance::get();
         $plans = Plan::get();
         $paymentMethods = collect(PaymentMethodEnum::cases())->map(function ($method) {
@@ -31,7 +31,7 @@ class InsuranceController extends Controller
 
         return Inertia::render('billing-checkout/Index', [
             'patients' => $patients,
-            'sessionTypes' => $sessionTypes,
+            'items' => $items,
             'insurances' => $insurances,
             'plans' => $plans,
             'paymentMethods' => $paymentMethods,
@@ -45,7 +45,7 @@ class InsuranceController extends Controller
         // Traemos las aseguradoras con sus planes para mostrarlas en la tabla/modales.
         $insurances = Insurance::where('company_id', $currentCompanyId)->with('plans')->get();
 
-        $sessionTypes = SessionType::where('company_id', $currentCompanyId)->get(['id', 'name', 'base_price_clp']);
+        $sessionTypes = Item::services()->where('company_id', $currentCompanyId)->get(['id', 'name', 'price']);
 
         return Inertia::render('insurances/InsuranceIndex', [
             'insurances' => $insurances,

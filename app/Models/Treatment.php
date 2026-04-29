@@ -25,7 +25,7 @@ class Treatment extends Model
         'patient_id',
         'doctor_id',
         'plan_id',
-        'session_type_id',
+        'item_id',
 
         // Origen
         'referral_doctor_name',
@@ -93,9 +93,9 @@ class Treatment extends Model
         return $this->belongsTo(Diagnostic::class, 'diagnostic_code', 'code');
     }
 
-    public function sessionType(): BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(SessionType::class);
+        return $this->belongsTo(Item::class);
     }
 
     public function doctor(): BelongsTo
@@ -106,6 +106,11 @@ class Treatment extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(TreatmentSession::class);
+    }
+
+    public function lastSession(): HasOne
+    {
+        return $this->hasOne(TreatmentSession::class)->latestOfMany();
     }
 
     public function attachments(): HasMany

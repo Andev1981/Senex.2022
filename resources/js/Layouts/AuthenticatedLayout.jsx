@@ -11,10 +11,20 @@ const DevToolbar = lazy(() => import("@/components/DevToolbar"));
 export default function AuthenticatedLayout({ header, children }) {
   const isOnline = useSessionKeeper(5);
   const user = usePage().props.auth.user;
+  const roles = usePage().props.auth.roles || [];
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const userIsSuperAdmin = usePage().props.auth.roles.includes("superadmin");
+  const userIsSuperAdmin = roles.includes("superadmin");
+  const userIsAdmin = roles.includes("admin");
+  const userIsCajero = roles.includes("cajero");
 
   const { flash, env } = usePage().props;
+
+  useEffect(() => {
+    // Si es cajero, cerramos el sidebar por defecto si es que se llegara a mostrar
+    if (userIsCajero) {
+      setSidebarOpen(false);
+    }
+  }, [userIsCajero]);
 
   useEffect(() => {
     if (flash) {
@@ -44,12 +54,12 @@ export default function AuthenticatedLayout({ header, children }) {
 
   return (
     <>
-      {env === 'local' && (
+      {(env === 'local' || userIsSuperAdmin) && (
         <Suspense fallback={null}>
           <DevToolbar />
         </Suspense>
       )}
-      <div className={`flex w-full overflow-hidden min-h-dvh bg-gray-50/50 ${env === 'local' ? 'pt-8' : ''}`}>
+      <div className={`flex w-full overflow-hidden min-h-dvh bg-gray-50/50 ${(env === 'local' || userIsSuperAdmin) ? 'pt-8' : ''}`}>
       {/* Banner de Advertencia */}
             {!isOnline && (
                 <div className="bg-red-600 text-white text-center py-2 sticky top-0 z-50 animate-pulse">
@@ -57,26 +67,31 @@ export default function AuthenticatedLayout({ header, children }) {
                     No cierres esta ventana para no perder los cambios.
                 </div>
             )}
-        <aside
-          className={`${
-            sidebarOpen ? "w-72" : "w-24"
-          } flex-none sticky top-0 ${env === 'local' ? 'h-[calc(100dvh-32px)]' : 'h-dvh'} overflow-y-auto transition-all duration-500 ease-in-out print:hidden`}
-          
-        >
-          <Side
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-            userIsSuperAdmin={userIsSuperAdmin}
-          />
-        </aside>
-        <div className="flex flex-col flex-1 min-w-0 h-dvh relative">
-          <div className="print:hidden">
-              <Nav
-              user={user}
+        {!userIsCajero && (
+          <aside
+            className={`${
+              sidebarOpen ? "w-72" : "w-24"
+            } flex-none sticky top-0 ${env === 'local' ? 'h-[calc(100dvh-32px)]' : 'h-dvh'} overflow-y-auto transition-all duration-500 ease-in-out print:hidden`}
+            
+          >
+            <Side
               sidebarOpen={sidebarOpen}
               setSidebarOpen={setSidebarOpen}
-              />
-          </div>
+              userIsSuperAdmin={userIsSuperAdmin}
+              userIsAdmin={userIsAdmin}
+            />
+          </aside>
+        )}
+        <div className="flex flex-col flex-1 min-w-0 h-dvh relative">
+          {!userIsCajero && (
+            <div className="print:hidden">
+                <Nav
+                user={user}
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                />
+            </div>
+          )}
           <main className="flex-1 overflow-y-auto custom-scrollbar">{children}</main>
         </div>
       </div>

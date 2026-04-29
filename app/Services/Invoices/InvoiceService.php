@@ -10,8 +10,7 @@ use App\Services\Dte\DteService;
 use App\Jobs\Dte\EmitDteJob;
 use App\Jobs\Dte\CheckDteStatusJob;
 use App\Models\CompanyDirectory;
-use App\Models\Product;
-use App\Models\SessionType;
+use App\Models\Item;
 use App\Models\Plan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -180,13 +179,43 @@ class InvoiceService
         $uPrice = (int)($item['unit_price_clp'] ?? 0);
         $uPatient = (int)($item['unit_patient_clp'] ?? $uPrice);
 
-        // Captura del ID real
-        $sellableId = $item['session_type_id'] ?? $item['sellable_id'] ?? $item['id'] ?? null;
-        $sellableType = $item['sellable_type'] ?? 'Product';
+        // Captura del ID real (Ahora siempre es un Item si no es Plan)
+        $sellableId = $item['item_id'] ?? $item['sellable_id'] ?? $item['id'] ?? null;
+        $sellableType = $item['sellable_type'] ?? 'Item';
+        $treatmentSessionId = $item['treatment_session_id'] ?? null;
+
+        // Si es POS, es una empresa clínica y es un servicio sin sesión previa: CREAR SESIÓN COMPLETADA
+        if ($isPos && $invoice->patient_id && $sellableType === 'Item' && !$treatmentSessionId) {
+            $itemModel = Item::find($sellableId);
+            if ($itemModel && $itemModel->isService()) {
+                try {
+                    // Creamos la sesión usando el service para asegurar la lógica de tratamientos
+                    $sessionData = [
+                        'company_id' => $invoice->company_id,
+                        'branch_id'  => $invoice->branch_id,
+                        'patient_id' => $invoice->patient_id,
+                        'doctor_id'  => $item['doctor_id'] ?? auth()->id(),
+                        'item_id'    => $itemModel->id,
+                        'date'       => now()->format('Y-m-d'),
+                        'time'       => now()->format('H:i:s'),
+                        'status'     => \App\Enums\AppointmentStatusEnum::COMPLETED,
+                        'patient_amount_clp' => $uPatient,
+                        'is_exento'  => (bool)$itemModel->is_exempt,
+                        'dte_generated' => true, // La estamos generando ahora mismo
+                    ];
+                    
+                    $newSession = app(\App\Services\Treatments\TreatmentSessionService::class)->createSession($sessionData);
+                    $treatmentSessionId = $newSession->id;
+                } catch (\Exception $e) {
+                    Log::error("Error auto-creando sesión en POS: " . $e->getMessage());
+                }
+            }
+        }
 
         $invoice->items()->create([
           'company_id'      => $payment->company_id,
           'branch_id'       => $invoice->branch_id,
+          'treatment_session_id' => $treatmentSessionId,
           'sellable_type'   => $sellableType,
           'sellable_id'     => $sellableId,
           'description'     => $item['name'] ?? 'Ítem de venta',
@@ -200,11 +229,16 @@ class InvoiceService
           'is_exento'         => isset($item['is_exempt']) ? (bool)$item['is_exempt'] : true,
         ]);
 
-        // Descuento de Stock
-        if ($sellableType === 'Product' && $sellableId) {
-          $productModel = Product::find($sellableId);
-          if ($productModel && $productModel->manage_stock) {
-            $productModel->decrement('stock', $qty);
+        // Si es una sesión previa, marcar como DTE generado
+        if (!empty($item['treatment_session_id'])) {
+          \App\Models\TreatmentSession::where('id', $item['treatment_session_id'])->update(['dte_generated' => true]);
+        }
+
+        // Descuento de Stock si es Producto
+        if ($sellableType === 'Item' && $sellableId) {
+          $itemModel = Item::with('productDetail')->find($sellableId);
+          if ($itemModel && $itemModel->isProduct() && $itemModel->productDetail && $itemModel->productDetail->manage_stock) {
+            $itemModel->productDetail->decrement('stock', $qty);
           }
         }
       }

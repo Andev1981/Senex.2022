@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Models\PaymentAllocation;
 use App\Models\TreatmentSession;
-use App\Models\Product;
-use App\Models\SessionType;
+use App\Models\Item;
 use App\Models\Plan;
 use App\Models\User;
 use App\Models\Invoice;
@@ -36,13 +35,6 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         Schema::defaultStringLength(191);
-
-        if (config('app.env') === 'production') {
-            URL::forceScheme('https');
-        }
-        if (config('app.env') === 'local') {
-            URL::forceScheme('http');
-        }
 
         $this->app->singleton(TwilioService::class, function ($app) {
             return new TwilioService();
@@ -73,6 +65,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
         if (app()->isLocal()) {
             \Illuminate\Support\Facades\DB::enableQueryLog();
         }
@@ -84,8 +80,9 @@ class AppServiceProvider extends ServiceProvider
         TreatmentSession::observe(\App\Observers\TreatmentSessionObserver::class);
 
         Relation::enforceMorphMap([
-            'Product' => Product::class,
-            'SessionType' => SessionType::class,
+            'Item' => \App\Models\Item::class,
+            'Product' => \App\Models\Item::class,
+            'SessionType' => \App\Models\Item::class,
             'Plan' => Plan::class,
             'TreatmentSession' => TreatmentSession::class,
             'Company' => Company::class,

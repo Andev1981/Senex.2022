@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePlanRequest extends FormRequest
 {
@@ -16,6 +17,16 @@ class UpdatePlanRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $currentCompanyId = session('current_company_id');
+        if (! $this->has('company_id') && $currentCompanyId) {
+            $this->merge([
+                'company_id' => $currentCompanyId,
+            ]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -23,10 +34,15 @@ class UpdatePlanRequest extends FormRequest
      */
     public function rules()
     {
+        $planId = $this->route('plan');
+        if ($planId instanceof \App\Models\Plan) {
+            $planId = $planId->id;
+        }
+
         return [
             'company_id' => 'required|exists:companies,id',
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:255|unique:plans,code',
+            'code' => ['required', 'string', 'max:255', Rule::unique('plans', 'code')->ignore($planId)],
             'insurance_id' => 'required|exists:insurances,id',
             'coverage_percentage' => 'required|numeric',
             'total_sessions' => 'nullable|integer|min:0',
@@ -37,6 +53,9 @@ class UpdatePlanRequest extends FormRequest
             'end_date' => 'nullable|date',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'content' => 'nullable|array',
+            'content.*.session_type_id' => 'required_with:content|exists:items,id',
+            'content.*.max_sessions' => 'required_with:content|integer|min:1',
         ];
     }
 

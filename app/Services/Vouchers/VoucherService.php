@@ -46,7 +46,7 @@ class VoucherService
                 'activation_date' => $data['activation_date'] ?? null,
                 'expiration_date' => $data['expiration_date'] ?? null,
                 'allowed_treatments' => $data['allowed_treatments'] ?? null,
-                'allowed_session_types' => $data['allowed_session_types'] ?? null,
+                'allowed_items' => $data['allowed_items'] ?? null,
                 'is_transferable' => $data['is_transferable'] ?? false,
                 'source' => $data['source'] ?? 'internal',
                 'external_id' => $data['external_id'] ?? null,
@@ -151,13 +151,13 @@ class VoucherService
         int $patientId,
         int $amount_clp,
         ?int $treatmentId = null,
-        ?int $sessionTypeId = null
+        ?int $itemId = null
     ): ?Voucher {
         $vouchers = $this->getAvailableVouchersForPatient($patientId);
 
         // Filtrar por restricciones de tratamiento/tipo de sesión
-        $applicableVouchers = $vouchers->filter(function ($voucher) use ($treatmentId, $sessionTypeId) {
-            return $voucher->availableAmountFor($treatmentId, $sessionTypeId) > 0;
+        $applicableVouchers = $vouchers->filter(function ($voucher) use ($treatmentId, $itemId) {
+            return $voucher->availableAmountFor($treatmentId, $itemId) > 0;
         });
 
         if ($applicableVouchers->isEmpty()) {
@@ -178,11 +178,11 @@ class VoucherService
         int $patientId,
         int $paymentAmount,
         ?int $treatmentId = null,
-        ?int $sessionTypeId = null,
+        ?int $itemId = null,
         ?int $paymentId = null,
         ?int $sessionId = null
     ): ?array {
-        $voucher = $this->getBestVoucherForPayment($patientId, $paymentAmount, $treatmentId, $sessionTypeId);
+        $voucher = $this->getBestVoucherForPayment($patientId, $paymentAmount, $treatmentId, $itemId);
 
         if (!$voucher) {
             return null;

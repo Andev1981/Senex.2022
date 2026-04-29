@@ -300,6 +300,18 @@ export default function IndexPayments({ payments = [], sessions, patient }) {
           pagesizeOptions={[5, 10, 20]}
         />
       </div>
+
+      <SideModal
+        open={openPaymentModal}
+        onClose={() => setOpenPaymentModal(false)}
+        width="4xl"
+      >
+        <PaymentForm
+          setOpenPaymentModal={setOpenPaymentModal}
+          sessions={sessions}
+          patient={patient}
+        />
+      </SideModal>
     </div>
   );
 }

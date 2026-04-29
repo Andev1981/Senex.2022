@@ -10,7 +10,7 @@ class AgreementRule extends Model
 {
     protected $fillable = [
         'agreement_id',          // FK al contrato padre (Agreement)
-        'session_type_id',       // FK al servicio/prestación al que aplica la regla
+        'item_id',               // FK al servicio/prestación al que aplica la regla
         'plan_id',               // FK al plan específico (Plan 300, Tramo B, etc.) - puede ser NULL para regla general
 
         'gross_price_clp',           // Precio Bruto total (Tarifa acordada con la aseguradora)
@@ -38,9 +38,9 @@ class AgreementRule extends Model
     }
 
     // Un Item de Convenio aplica a un tipo de Sesión/Servicio
-    public function sessionType()
+    public function item()
     {
-        return $this->belongsTo(SessionType::class);
+        return $this->belongsTo(Item::class);
     }
 
     // Un Item de Convenio puede aplicar a un Plan específico (para diferenciación de tarifas)

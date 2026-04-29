@@ -121,7 +121,7 @@ export default function DetailPatient(props) {
                     />
                 )}
                 {activeTab === "general" && <IndexGeneral {...props} />}
-                {activeTab === "history" && <IndexHistorial {...props} treatments={active_treatments || []} />}
+                {activeTab === "history" && <IndexHistorial {...props} treatments={treatments || []} />}
                 {activeTab === "treatments" && (
                     <IndexTreatments 
                         {...props} 

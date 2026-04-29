@@ -114,7 +114,6 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
           commune_id: address?.commune_id || "",
           is_main: Boolean(branch.is_main),
           company_id: company?.id || null,
-          is_main: Boolean(branch.is_main),
       });
       setIsBranchModalOpen(true);
   };

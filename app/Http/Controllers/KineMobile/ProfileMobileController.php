@@ -24,12 +24,12 @@ class ProfileMobileController extends Controller
         $doctor = Auth::user()->doctor;
         $user = Auth::user();
 
-        $doctor->load(['commissionRates.sessionType']);
+        $doctor->load(['commissionRates.item']);
 
         // Estadísticas del mes actual
         $currentMonth = Carbon::now()->startOfMonth();
         $sessions = TreatmentSession::where('doctor_id', $doctor->id)
-            ->where('status', 'Completada')
+            ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
             ->where('date', '>=', $currentMonth)
             ->get();
 
@@ -38,7 +38,7 @@ class ProfileMobileController extends Controller
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $monthSessions = TreatmentSession::where('doctor_id', $doctor->id)
-                ->where('status', 'Completada')
+                ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
                 ->whereYear('date', $month->year)
                 ->whereMonth('date', $month->month)
                 ->get();
@@ -50,8 +50,8 @@ class ProfileMobileController extends Controller
             ];
         }
 
-        // Ranking del mes (opcional)
-        $allDoctors = TreatmentSession::where('status', 'Completada')
+        // Ranking del mes
+        $allDoctors = TreatmentSession::where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
             ->whereMonth('date', Carbon::now()->month)
             ->whereYear('date', Carbon::now()->year)
             ->select('doctor_id', DB::raw('COUNT(*) as session_count'))
@@ -71,7 +71,7 @@ class ProfileMobileController extends Controller
             'total_kines' => count($allDoctors),
         ];
 
-        return Inertia::render('kineMobile/MyProfile', [
+        return Inertia::render('kine-mobile/my-profile', [
             'doctor' => [
                 'id' => $doctor->id,
                 'name' => $doctor->name,
@@ -81,20 +81,52 @@ class ProfileMobileController extends Controller
                 'phone' => $doctor->phone,
                 'speciality' => $doctor->speciality,
                 'branch' => $doctor->branch->name ?? 'Sin sucursal',
-                'commission_rates' => $doctor->commissionRates->map(function ($rate) {
-                    return [
-                        'session_type' => $rate->sessionType->name,
-                        'type' => $rate->commission_type,
-                        'value' => $rate->commission_value,
-                    ];
-                }),
-            ],
-            'user' => [
-                'email' => $user->email,
-                'last_login_at' => $user->last_login_at,
             ],
             'stats' => $stats,
             'monthlyData' => $monthlyData,
+        ]);
+    }
+
+    /**
+     * Vista de Billetera y Liquidaciones
+     */
+    public function wallet()
+    {
+        $doctor = auth()->user()->doctor;
+
+        // 1. Liquidaciones oficiales (Payrolls)
+        $payrolls = \App\Models\Payroll::where('doctor_id', $doctor->id)
+            ->orderBy('period_end', 'desc')
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'period' => $p->period_start->format('M Y'),
+                'amount' => $p->total_payable_clp,
+                'status' => $p->status,
+                'date' => $p->created_at->format('d/m/Y'),
+            ]);
+
+        // 2. Pendientes por liquidar (Atenciones completadas sin payroll oficial)
+        $pendingSessions = TreatmentSession::with('patient')
+            ->where('doctor_id', $doctor->id)
+            ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
+            ->whereDoesntHave('payrollDetail')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->map(fn($s) => [
+                'id' => $s->id,
+                'date' => $s->date->format('d/m/Y'),
+                'patient' => $s->patient->name,
+                'amount' => $s->doctor_amount_clp
+            ]);
+
+        return Inertia::render('kine-mobile/my-wallet', [
+            'payrolls' => $payrolls,
+            'pending_attentions' => $pendingSessions,
+            'totals' => [
+                'pending_payout' => $pendingSessions->sum('amount'),
+                'total_paid' => $payrolls->where('status', 'paid')->sum('amount')
+            ]
         ]);
     }
 

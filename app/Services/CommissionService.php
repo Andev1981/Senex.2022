@@ -6,15 +6,24 @@ use App\Models\{DoctorCommissionRate, TreatmentSession};
 
 class CommissionService
 {
-  public function computeFor(int $doctorId, int $sessionTypeId, float $patientAmount): array
+  public function computeFor(int $doctorId, int $itemId, float $patientAmount): array
   {
     $rate = DoctorCommissionRate::query()
-
       ->where('doctor_id', $doctorId)
-      ->where('session_type_id', $sessionTypeId)
+      ->where('item_id', $itemId)
       ->active()
       ->orderByDesc('effective_from')
       ->first();
+
+    if (!$rate) {
+      // Intentar buscar una comisión general (item_id null)
+      $rate = DoctorCommissionRate::query()
+        ->where('doctor_id', $doctorId)
+        ->whereNull('item_id')
+        ->active()
+        ->orderByDesc('effective_from')
+        ->first();
+    }
 
     if (!$rate) {
       // fallback simple: 0 para doctor
@@ -22,9 +31,9 @@ class CommissionService
     }
 
     if ($rate->commission_type === DoctorCommissionRate::TYPE_PERCENTAGE) {
-      $doctor = round($patientAmount * ((float)$rate->commission_value / 100), 0);
+      $doctor = round($patientAmount * ((float)$rate->commission_percentage / 100), 0);
     } else {
-      $doctor = (float) $rate->commission_value;
+      $doctor = (float) $rate->amount_clp;
     }
 
     $doctor = max(0, min($doctor, $patientAmount));
@@ -37,9 +46,9 @@ class CommissionService
 
   public function applyToSession(TreatmentSession $ts): TreatmentSession
   {
-    if (!$ts->session_type_id || !$ts->doctor_id || $ts->patient_amount_clp === null) return $ts;
+    if (!$ts->item_id || !$ts->doctor_id || $ts->patient_amount_clp === null) return $ts;
 
-    $calc = $this->computeFor($ts->doctor_id, $ts->session_type_id, (float)$ts->patient_amount_clp);
+    $calc = $this->computeFor($ts->doctor_id, $ts->item_id, (float)$ts->patient_amount_clp);
     $ts->doctor_amount_clp = $calc['doctor_amount_clp'];
     $ts->clinic_amount_clp = $calc['clinic_amount_clp'];
     $ts->save();

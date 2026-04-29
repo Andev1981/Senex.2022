@@ -19,9 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 
-export default function Login({ status, canResetPassword }) {
-  // ... (Estados, useForm, y features se mantienen)
-
+export default function Login({ status, canResetPassword, dev_users = [] }) {
   const { appVersion } = usePage().props;
 
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -31,20 +29,34 @@ export default function Login({ status, canResetPassword }) {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMode, setLoginMode] = useState("login"); // Asumo que usas 'login' o 'register'
 
   const handleSubmit = (e) => {
     e.preventDefault();
     post(route("login"), { onFinish: () => reset("password") });
   };
 
+  const handleQuickLogin = (email) => {
+    // Para desarrollo asumimos password 'senex2026' segun el WorkshopFlowSeeder
+    setData((prev) => ({
+      ...prev,
+      email: email,
+      password: "senex2026",
+      remember: true
+    }));
+    
+    // El delay es para asegurar que el estado de Inertia se actualice antes del post
+    setTimeout(() => {
+        const btn = document.getElementById('login-submit-btn');
+        if(btn) btn.click();
+    }, 200);
+  };
+
   return (
     <GuestLayout>
       <Head title="Inicio de Sesión" />
 
-      {/* Contenedor ÚNICO (Mobile First: Ocupa toda la pantalla) */}
       <div className="relative flex items-center justify-center p-6 min-h-dvh bg-gray-50/50">
-        {/* Fondo (Imagen y Overlay) */}
+        {/* Fondo Restaurado */}
         <div
           className="absolute inset-0"
           style={{
@@ -54,15 +66,12 @@ export default function Login({ status, canResetPassword }) {
             backgroundPosition: "center",
           }}
         />
-        {/* Overlay Degradado Sutil sobre el fondo */}
         <div
           className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-primary/80 mix-blend-multiply"
           aria-hidden="true"
         />
 
-        {/* Contenedor del Formulario Centrado */}
         <div className="relative z-10 w-full max-w-md p-4 sm:p-0">
-          {/* Header / Logo / Mensaje de Bienvenida */}
           <div className="mb-5 text-center text-white">
             <div className="inline-flex items-center justify-center p-2 mb-6 transition-transform duration-500 transform shadow-2xl w-60 bg-gray-600/50 rounded-3xl hover:rotate-0">
               <Stethoscope className="w-10 h-10 text-brand-primary" />
@@ -73,12 +82,33 @@ export default function Login({ status, canResetPassword }) {
             </p>
           </div>
 
-          {/* TARJETA DEL FORMULARIO (Fondo Blanco) */}
           <div className="p-10 bg-white border border-white shadow-2xl rounded-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
 
+            {/* SECCIÓN DE ACCESO RÁPIDO (Solo en Local) */}
+            {dev_users.length > 0 && (
+                <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                    <p className="text-[9px] font-black text-yellow-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <Zap className="w-3 h-3" /> Acceso Rápido (Dev)
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                        {dev_users.map(u => (
+                            <button
+                                key={u.id}
+                                onClick={() => handleQuickLogin(u.email)}
+                                className="flex flex-col items-start p-2 bg-white border border-yellow-200 rounded-xl hover:bg-yellow-100 transition-colors text-left group"
+                                type="button"
+                            >
+                                <span className="text-[10px] font-bold text-gray-900 truncate w-full">{u.name}</span>
+                                <span className="text-[8px] font-black text-brand-primary uppercase">{u.role}</span>
+                            </button>
+                        ))}
+                    </div>
+                    <p className="mt-2 text-[8px] text-yellow-600 text-center italic font-bold">Auto-login con 'senex2026'</p>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-              {/* Título de la Tarjeta */}
               <div className="text-center sm:text-left">
                 <h2 className="mb-1 text-2xl font-black leading-none tracking-tight text-gray-900 uppercase">
                   Bienvenido
@@ -88,7 +118,6 @@ export default function Login({ status, canResetPassword }) {
                 </p>
               </div>
 
-              {/* Correo */}
               <div className="space-y-1">
                 <InputLabel htmlFor="email" value="Correo Electrónico" />
                 <div className="relative group">
@@ -106,14 +135,8 @@ export default function Login({ status, canResetPassword }) {
                 <InputError message={errors.email} className="mt-2" />
               </div>
 
-              {/* Contraseña */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between pr-1">
-                  <InputLabel htmlFor="password" value="Contraseña" />
-                  {/* {canResetPassword && (
-                        <Link href={route("password.request")} className="text-[9px] font-black text-brand-primary uppercase tracking-widest hover:underline">¿Olvido Clave?</Link>
-                    )} */}
-                </div>
+                <InputLabel htmlFor="password" value="Contraseña" />
                 <div className="relative group">
                   <Lock className="absolute w-4 h-4 transition-colors transform -translate-y-1/2 text-brand-gray left-4 top-1/2 group-focus-within:text-brand-primary" />
                   <TextInput
@@ -130,17 +153,12 @@ export default function Login({ status, canResetPassword }) {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute transition-colors transform -translate-y-1/2 text-brand-gray right-4 top-1/2 hover:text-brand-primary"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 <InputError message={errors.password} className="mt-2" />
               </div>
 
-              {/* Opciones / Recordarme */}
               <div className="flex items-center justify-between pt-2">
                 <label className="flex items-center cursor-pointer group">
                   <Checkbox
@@ -155,8 +173,8 @@ export default function Login({ status, canResetPassword }) {
                 </label>
               </div>
 
-              {/* Botón de Submit */}
               <PrimaryButton  
+                id="login-submit-btn"
                 type="submit"
                 disabled={processing}
                 className="w-full items-center justify-center py-4 rounded-xl"
@@ -173,7 +191,6 @@ export default function Login({ status, canResetPassword }) {
             </form>
           </div>
 
-          {/* Trust Indicators */}
           <div className="flex flex-wrap justify-center gap-8 mt-10 text-[9px] text-white font-black uppercase tracking-[0.2em] opacity-80">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4" />

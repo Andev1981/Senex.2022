@@ -37,9 +37,9 @@ class DoctorCommissionRate extends Model
         return $this->belongsTo(Doctor::class);
     }
 
-    public function sessionType()
+    public function item()
     {
-        return $this->belongsTo(SessionType::class);
+        return $this->belongsTo(Item::class, 'session_type_id');
     }
 
     // Scopes
@@ -66,12 +66,17 @@ class DoctorCommissionRate extends Model
         return $query->where('doctor_id', $doctorId);
     }
 
-    public function scopeForSessionType($query, $sessionTypeId)
+    public function scopeForItem($query, $itemId)
     {
-        return $query->where(function ($q) use ($sessionTypeId) {
-            $q->where('session_type_id', $sessionTypeId)
+        return $query->where(function ($q) use ($itemId) {
+            $q->where('session_type_id', $itemId)
                 ->orWhereNull('session_type_id'); // Comisión general
         });
+    }
+
+    public function scopeForSessionType($query, $itemId)
+    {
+        return $this->scopeForItem($query, $itemId);
     }
 
     // Métodos de cálculo
@@ -81,12 +86,8 @@ class DoctorCommissionRate extends Model
             case 'percentage':
                 return ($basePrice * $this->commission_percentage) / 100;
 
-            case 'fixed':
-                return $this->fixed_commission;
-
-            case 'hybrid':
-                $percentageAmount = ($basePrice * $this->commission_percentage) / 100;
-                return $percentageAmount + $this->fixed_commission;
+            case 'fixed_amount':
+                return $this->amount_clp;
 
             default:
                 return 0;
@@ -94,13 +95,13 @@ class DoctorCommissionRate extends Model
     }
 
     // Método estático para obtener comisión aplicable
-    public static function getApplicableCommission($doctorId, $sessionTypeId, $date = null)
+    public static function getApplicableCommission($doctorId, $itemId, $date = null)
     {
-        // Buscar comisión específica para el tipo de sesión
+        // Buscar comisión específica para el tipo de ítem
         $commission = self::active()
             ->validAt($date)
             ->forDoctor($doctorId)
-            ->forSessionType($sessionTypeId)
+            ->forSessionType($itemId)
             ->orderByRaw('session_type_id IS NULL') // Primero las específicas
             ->first();
 

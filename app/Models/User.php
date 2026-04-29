@@ -15,7 +15,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -27,6 +27,7 @@ class User extends Authenticatable
         'email',
         'company_id',
         'password',
+        'is_active',
     ];
 
     /**
@@ -46,7 +47,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'last_login_at' => 'datetime'
+        'last_login_at' => 'datetime',
+        'is_active' => 'boolean'
     ];
 
     public function doctor(): HasOne

@@ -5,7 +5,7 @@ import { Trash2, Minus, Plus, Stethoscope } from "lucide-react";
 export default function ServiceItem({
   item,
   index,
-  sessionTypes,
+  items, // Cambiado de sessionTypes a items
   doctors,
   patientExtras,
   onUpdate,
@@ -13,7 +13,7 @@ export default function ServiceItem({
   business_type = "clinical",
 }) {
   const isClinical = business_type === "clinical";
-  const isItemEmpty = !item.session_type_id;
+  const isItemEmpty = !item.item_id;
 
   // Helpers para cambio de cantidad tipo Stepper
   const handleDecrement = () => {
@@ -28,7 +28,7 @@ export default function ServiceItem({
 
   // --- LÓGICA DE PLANES (SOLO CLÍNICO) ---
   const availablePlans = isClinical ? (patientExtras.activePlans || []).filter(
-    (p) => p.session_type_id == item.session_type_id && p.available > 0
+    (p) => p.item_id == item.item_id && p.available > 0
   ) : [];
 
   // Calculamos subtotal visual para esta fila
@@ -63,9 +63,9 @@ export default function ServiceItem({
             <div>
               <EnterpriseSelect
                 label={isClinical ? "Prestación" : "Ítem / Servicio"}
-                value={item.session_type_id}
-                onChange={(val) => onUpdate(index, "session_type_id", val)}
-                options={sessionTypes.map((st) => ({ value: st.id, label: st.name }))}
+                value={item.item_id}
+                onChange={(val) => onUpdate(index, "item_id", val)}
+                options={items.map((st) => ({ value: st.id, label: st.name }))}
                 placeholder={`Seleccionar ${isClinical ? 'prestación' : 'item'}...`}
                 className="bg-gray-50"
               />

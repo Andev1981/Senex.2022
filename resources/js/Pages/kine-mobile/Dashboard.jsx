@@ -1,4 +1,4 @@
-// resources/js/pages/KineMobile/Dashboard.jsx
+// resources/js/pages/kine-mobile/dashboard.jsx
 import React, { useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
@@ -10,11 +10,13 @@ import {
   XCircle,
   ChevronRight,
   RefreshCw,
+  Wallet
 } from "lucide-react";
 import KineLayout from "@/Layouts/KineLayout";
 import KPICard from "./Partials/KPICard";
 import SessionCard from "./Partials/SessionCard";
 import QuickActions from "./Partials/QuickActions";
+import StatsBadge from "./Partials/StatsBadge";
 
 export default function Dashboard({
   doctor,
@@ -36,179 +38,118 @@ export default function Dashboard({
   };
 
   const handleCompleteSession = (session) => {
-    router.post(
-      route("kine.sessions.complete", session.id),
-      {
-        notes: "",
-      },
-      {
-        preserveScroll: true,
-        onSuccess: () => {
-          router.reload({ only: ["kpis", "agenda"] });
-        },
-      }
-    );
-  };
-
-  const handleCancelSession = (session) => {
-    const reason = prompt("Motivo de cancelación:");
-    if (!reason) return;
-
-    router.post(
-      route("kine.sessions.cancel", session.id),
-      {
-        cancellation_reason: reason,
-      },
-      {
-        preserveScroll: true,
-        onSuccess: () => {
-          router.reload({ only: ["kpis", "agenda"] });
-        },
-      }
-    );
+    router.visit(route('kine.sessions.form', session.id));
   };
 
   return (
     <KineLayout>
       <Head title="Mi Dashboard" />
 
-      <div className="min-h-screen pb-20 bg-gradient-to-br from-teal-50 to-blue-50">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-4 py-4">
+      <div className="min-h-screen pb-24 bg-[#FDFDFD]">
+        
+        {/* Welcome Section */}
+        <div className="px-6 py-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Hola, {doctor.name.split(" ")[0]} 👋
-                </h1>
-                <p className="text-sm text-gray-600">{doctor.speciality}</p>
-              </div>
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="p-2 text-teal-600 transition-all rounded-full hover:bg-teal-50"
-              >
-                <RefreshCw
-                  className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
-                />
-              </button>
+                <div>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                        Hola, {doctor.name.split(" ")[0]} 👋
+                    </h1>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">
+                        {doctor.speciality || 'Kinesiólogo'}
+                    </p>
+                </div>
+                <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="w-10 h-10 flex items-center justify-center bg-white border border-slate-100 rounded-2xl shadow-sm active:scale-90 transition-all"
+                >
+                    <RefreshCw
+                        className={`w-4 h-4 text-brand-primary ${isRefreshing ? "animate-spin" : ""}`}
+                    />
+                </button>
             </div>
-          </div>
         </div>
 
-        {/* KPIs Grid */}
-        <div className="px-4 py-4 space-y-3">
-          {/* KPIs del día */}
-          <div className="grid grid-cols-2 gap-3">
-            <KPICard
-              icon={Calendar}
-              label="Sesiones hoy"
-              value={kpis.sessions_today}
-              color="blue"
+        {/* Stats Grid - Fijo 4 Columnas al 100% */}
+        <div className="px-6 grid grid-cols-4 gap-2 mb-6">
+            <StatsBadge
+                icon={Calendar}
+                label="Hoy"
+                value={kpis.sessions_today}
+                color="brand"
             />
-            <KPICard
-              icon={CheckCircle2}
-              label="Completadas"
-              value={kpis.completed_today}
-              color="green"
+            <StatsBadge
+                icon={CheckCircle2}
+                label="Hechas"
+                value={kpis.completed_today}
+                color="green"
             />
-            <KPICard
-              icon={Clock}
-              label="Pendientes"
-              value={kpis.pending_today}
-              color="orange"
+            <StatsBadge
+                icon={Clock}
+                label="Pen."
+                value={kpis.pending_today}
+                color="blue"
             />
-            <KPICard
-              icon={TrendingUp}
-              label="Ganancias hoy"
-              value={`$${kpis.today_earnings.toLocaleString("es-CL")}`}
-              color="teal"
-              small
+            <StatsBadge
+                icon={TrendingUp}
+                label="Próx."
+                value={upcomingSessions}
+                color="gray"
             />
-          </div>
-
-          {/* Stats secundarios */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-white rounded-lg shadow-sm">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Users className="w-4 h-4" />
-                <span>Pacientes activos</span>
-              </div>
-              <p className="mt-1 text-2xl font-bold text-gray-900">
-                {activePatientsCount}
-              </p>
-            </div>
-            <div className="p-3 bg-white rounded-lg shadow-sm">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="w-4 h-4" />
-                <span>Próximas sesiones</span>
-              </div>
-              <p className="mt-1 text-2xl font-bold text-gray-900">
-                {upcomingSessions}
-              </p>
-            </div>
-          </div>
-
-          {/* Resumen mensual */}
-          <div className="p-4 bg-white rounded-lg shadow-sm">
-            <h3 className="mb-3 text-sm font-semibold text-gray-700">
-              Resumen del mes
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-gray-600">Sesiones</p>
-                <p className="text-xl font-bold text-teal-600">
-                  {kpis.month_sessions}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Ingresos</p>
-                <p className="text-xl font-bold text-teal-600">
-                  ${kpis.month_earnings.toLocaleString("es-CL")}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Agenda del día */}
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-gray-900">
+        {/* Wallet Highlight */}
+        <div className="px-6 mb-8">
+            <div className="bg-slate-900 p-5 rounded-[32px] shadow-xl shadow-slate-200">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-brand-primary/20 p-2.5 rounded-xl">
+                            <Wallet className="w-5 h-5 text-brand-primary" />
+                        </div>
+                        <div>
+                            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest leading-none mb-1">Ganancias del Mes</p>
+                            <h2 className="text-white text-2xl font-black tracking-tighter leading-none">
+                                ${kpis.month_earnings.toLocaleString("es-CL")}
+                            </h2>
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                         <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">{kpis.month_sessions}</span>
+                         <span className="text-[8px] font-bold text-slate-500 uppercase">Atenciones</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Agenda Section */}
+        <div className="px-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">
               Mi agenda de hoy
             </h2>
-            <span className="text-sm text-gray-600">
-              {new Date().toLocaleDateString("es-CL", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              {new Date().toLocaleDateString("es-CL", { weekday: 'short', day: 'numeric', month: 'short' })}
             </span>
           </div>
 
           {agenda.length === 0 ? (
-            <div className="p-8 text-center bg-white rounded-lg shadow-sm">
-              <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-600">
-                No tienes sesiones programadas hoy
-              </p>
-              <p className="text-sm text-gray-500">¡Disfruta tu día! 🎉</p>
+            <div className="p-12 text-center bg-white border border-slate-100 rounded-[32px]">
+              <Calendar className="w-12 h-12 mx-auto mb-4 text-slate-200" />
+              <p className="text-slate-400 font-bold text-sm">No tienes citas programadas hoy</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {agenda.map((session) => (
                 <SessionCard
                   key={session.id}
                   session={session}
-                  onComplete={handleCompleteSession}
-                  onCancel={handleCancelSession}
+                  onComplete={() => handleCompleteSession(session)}
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* Acciones rápidas */}
         <QuickActions />
       </div>
     </KineLayout>

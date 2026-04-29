@@ -20,7 +20,7 @@ import { X } from "lucide-react";
  */
 export default function SideModal({
   children,
-  open,
+  open = false,
   onClose,
   title,
   subtitle,
@@ -43,7 +43,7 @@ export default function SideModal({
   }[width];
 
   return (
-    <Transition show={open} leave="duration-200">
+    <Transition show={!!open} leave="duration-200">
       <Dialog onClose={onClose} className="relative z-50">
         {/* Backdrop con desenfoque */}
         <TransitionChild

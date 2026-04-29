@@ -20,10 +20,12 @@ class Company extends Model
         'email',
         'phone',
         'business_type',
+        'enabled_modules',
     ];
 
     protected $casts = [
         'business_type' => \App\Enums\BusinessTypeEnum::class,
+        'enabled_modules' => 'array',
     ];
 
     protected $appends = ['logo_url'];

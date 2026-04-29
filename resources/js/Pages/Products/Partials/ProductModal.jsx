@@ -9,10 +9,13 @@ import {
   AlertTriangle,
   Tag,
   CheckCircle2,
-  Trash2,
   Boxes,
   Monitor,
-  Layers
+  Layers,
+  Clock,
+  Stethoscope,
+  Activity,
+  FileText
 } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import SecondaryButton from "@/components/SecondaryButton";
@@ -33,13 +36,21 @@ export default function ProductModal({ isOpen, onClose, product = null, categori
     name: product?.name || "",
     description: product?.description || "",
     sku: product?.sku || "",
-    barcode: product?.barcode || "",
-    cost_price: product?.cost_price || 0,
+    // Campos de Producto
+    barcode: product?.product_detail?.barcode || "",
+    cost_price: product?.product_detail?.cost_price || 0,
     price: product?.price || 0,
-    stock: product?.stock || 0,
-    critical_stock: product?.critical_stock || 5,
-    is_exempt: !!product?.is_exempt,
-    manage_stock: product ? !!product.manage_stock : true,
+    stock: product?.product_detail?.stock || 0,
+    critical_stock: product?.product_detail?.critical_stock || 5,
+    manage_stock: product ? !!product.product_detail?.manage_stock : true,
+    // Campos de Servicio
+    duration_minutes: product?.service_detail?.duration_minutes || 45,
+    default_doctor_commission_clp: product?.service_detail?.default_doctor_commission_clp || 0,
+    requires_diagnosis: !!product?.service_detail?.requires_diagnosis,
+    requires_referral: !!product?.service_detail?.requires_referral,
+    specialty: product?.service_detail?.specialty || "",
+    // Comunes
+    is_exempt: product ? !!product.is_exempt : true,
     is_active: product ? !!product.is_active : true,
   });
 
@@ -52,13 +63,18 @@ export default function ProductModal({ isOpen, onClose, product = null, categori
         name: product.name || "",
         description: product.description || "",
         sku: product.sku || "",
-        barcode: product.barcode || "",
-        cost_price: product.cost_price || 0,
+        barcode: product.product_detail?.barcode || "",
+        cost_price: product.product_detail?.cost_price || 0,
         price: product.price || 0,
-        stock: product.stock || 0,
-        critical_stock: product.critical_stock || 5,
+        stock: product.product_detail?.stock || 0,
+        critical_stock: product.product_detail?.critical_stock || 5,
+        manage_stock: !!product.product_detail?.manage_stock,
+        duration_minutes: product.service_detail?.duration_minutes || 45,
+        default_doctor_commission_clp: product.service_detail?.default_doctor_commission_clp || 0,
+        requires_diagnosis: !!product.service_detail?.requires_diagnosis,
+        requires_referral: !!product.service_detail?.requires_referral,
+        specialty: product.service_detail?.specialty || "",
         is_exempt: !!product.is_exempt,
-        manage_stock: !!product.manage_stock,
         is_active: !!product.is_active,
       });
     } else {
@@ -173,20 +189,11 @@ export default function ProductModal({ isOpen, onClose, product = null, categori
                         onChange={e => setData("name", e.target.value)}
                         required
                         className="w-full !rounded-xl !py-3 font-black uppercase text-sm shadow-inner"
-                        placeholder={isProduct ? "EJ: BANDA ELÁSTICA NIVEL 3" : "EJ: SUSCRIPCIÓN ANUAL SOFTWARE"}
+                        placeholder={isProduct ? "EJ: BANDA ELÁSTICA NIVEL 3" : "EJ: SESIÓN KINESIOLOGÍA"}
                     />
                     <InputError message={errors.name} />
                 </div>
-                <div className="md:col-span-12 space-y-1">
-                    <label className="enterprise-label !text-[8px] ml-1 opacity-60">Descripción (Opcional)</label>
-                    <textarea
-                        value={data.description}
-                        onChange={e => setData("description", e.target.value)}
-                        className="w-full rounded-xl border-gray-100 py-3 px-4 font-medium text-sm text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary transition-all shadow-inner resize-none"
-                        placeholder="Detalles adicionales..."
-                        rows="2"
-                    />
-                </div>
+                
                 <div className="md:col-span-6 space-y-1">
                     <label className="enterprise-label !text-[8px] ml-1 opacity-60">Código SKU / Referencia</label>
                     <div className="relative">
@@ -200,6 +207,19 @@ export default function ProductModal({ isOpen, onClose, product = null, categori
                         />
                     </div>
                 </div>
+
+                {!isProduct && (
+                   <div className="md:col-span-6 space-y-1">
+                        <label className="enterprise-label !text-[8px] ml-1 opacity-60">Especialidad (Texto)</label>
+                        <TextInput
+                            value={data.specialty}
+                            onChange={e => setData("specialty", e.target.value)}
+                            className="w-full !rounded-xl !py-3 font-bold uppercase text-xs shadow-inner"
+                            placeholder="EJ: KINESIOLOGÍA, NUTRICIÓN..."
+                        />
+                    </div>
+                )}
+
                 {isProduct && (
                     <div className="md:col-span-6 space-y-1">
                         <label className="enterprise-label !text-[8px] ml-1 opacity-60">Código de Barras</label>
@@ -233,14 +253,30 @@ export default function ProductModal({ isOpen, onClose, product = null, categori
                         className="!rounded-xl !py-3 font-black text-sm bg-white shadow-sm border-gray-100"
                     />
                 </div>
-                <div className="space-y-1">
-                    <label className="enterprise-label !text-[8px] ml-1 opacity-40">Costo Neto (Referencia)</label>
-                    <InputPesoChileno
-                        price={data.cost_price}
-                        onChange={e => setData("cost_price", e.target.value)}
-                        className="!rounded-xl !py-3 font-bold text-xs bg-gray-50/50 border-gray-100"
-                    />
-                </div>
+                {!isProduct ? (
+                     <div className="space-y-1">
+                        <label className="enterprise-label !text-[8px] !text-purple-600 ml-1">Pago Profesional (Comisión)</label>
+                        <div className="relative">
+                            <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                            <InputPesoChileno
+                                price={data.default_doctor_commission_clp}
+                                onChange={e => setData("default_doctor_commission_clp", e.target.value)}
+                                required
+                                className="!pl-10 !rounded-xl !py-3 font-black text-sm bg-white shadow-sm border-purple-100 text-purple-700"
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-1">
+                        <label className="enterprise-label !text-[8px] ml-1 opacity-40">Costo Neto (Referencia)</label>
+                        <InputPesoChileno
+                            price={data.cost_price}
+                            onChange={e => setData("cost_price", e.target.value)}
+                            className="!rounded-xl !py-3 font-bold text-xs bg-gray-50/50 border-gray-100"
+                        />
+                    </div>
+                )}
+                
                 <label className="md:col-span-2 flex items-center justify-between p-4 bg-white/60 rounded-2xl border border-gray-100 cursor-pointer hover:bg-white transition-all shadow-inner">
                     <div className="flex items-center gap-3">
                         <ShieldCheck className="w-4 h-4 text-brand-primary" />
@@ -251,8 +287,8 @@ export default function ProductModal({ isOpen, onClose, product = null, categori
             </div>
           </div>
 
-          {/* BLOQUE 3: INVENTARIO (SOLO PRODUCTOS) */}
-          {isProduct && (
+          {/* BLOQUE 3: ESPECÍFICOS (PRODUCTO vs SERVICIO) */}
+          {isProduct ? (
             <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
                 <div className="flex items-center justify-between ml-1">
                     <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 !mb-0">
@@ -285,6 +321,50 @@ export default function ProductModal({ isOpen, onClose, product = null, categori
                                 className="w-full pl-10 pr-4 py-3 rounded-xl border-orange-100 bg-orange-50/20 font-black text-sm focus:bg-white focus:ring-orange-500 shadow-inner"
                             />
                         </div>
+                    </div>
+                </div>
+            </div>
+          ) : (
+            <div className="space-y-8 animate-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center justify-between ml-1">
+                    <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 !mb-0">
+                        <Clock className="w-4 h-4" /> Configuración de Sesión
+                    </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-6 space-y-1">
+                        <label className="enterprise-label !text-[8px] ml-1 opacity-60">Duración Estimada</label>
+                        <div className="relative">
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-gray opacity-40" />
+                            <input
+                                type="number"
+                                min="5"
+                                step="5"
+                                value={data.duration_minutes}
+                                onChange={e => setData("duration_minutes", parseInt(e.target.value))}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border-gray-100 bg-gray-50 font-bold text-xs focus:bg-white focus:ring-brand-primary shadow-inner"
+                                required
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-black text-brand-gray uppercase">Min</span>
+                        </div>
+                    </div>
+
+                    <div className="md:col-span-6 flex flex-col justify-center gap-3">
+                        <label className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl cursor-pointer hover:border-brand-primary/30 transition-all shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <Activity className="w-3.5 h-3.5 text-brand-primary" />
+                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-700">Requiere Diagnóstico</span>
+                            </div>
+                            <input type="checkbox" checked={data.requires_diagnosis} onChange={e => setData("requires_diagnosis", e.target.checked)} className="w-5 h-5 rounded border-gray-200 text-brand-primary focus:ring-brand-primary" />
+                        </label>
+                        <label className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl cursor-pointer hover:border-brand-primary/30 transition-all shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-3.5 h-3.5 text-brand-primary" />
+                                <span className="text-[9px] font-black uppercase tracking-tight text-gray-700">Requiere Derivación</span>
+                            </div>
+                            <input type="checkbox" checked={data.requires_referral} onChange={e => setData("requires_referral", e.target.checked)} className="w-5 h-5 rounded border-gray-200 text-brand-primary focus:ring-brand-primary" />
+                        </label>
                     </div>
                 </div>
             </div>

@@ -93,7 +93,7 @@ class PayrollService
                 // 3. Datos Clínicos
                 'patient_id'           => $s->patient_id,
                 'doctor_id'            => $s->doctor_id,
-                'session_type_id'      => $s->session_type_id,
+                'item_id'      => $s->item_id,
                 'service_date'         => $s->date, // Asumiendo que 'date' es la fecha de la sesión
                 'attended'             => ($s->status === 'completed' || $s->status === 'attended') ? 1 : 0,
 

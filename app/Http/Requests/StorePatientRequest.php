@@ -53,9 +53,6 @@ class StorePatientRequest extends FormRequest
                 'string',
                 'max:20',
                 new \App\Rules\ValidRut,
-                Rule::unique('patients', 'rut')
-                    ->where('company_id', session('current_company_id'))
-                    ->ignore($patientId)
             ],
             'email'     => [
                 'required_if:require_tutor,false',
@@ -63,9 +60,6 @@ class StorePatientRequest extends FormRequest
                 'string',
                 'email',
                 'max:255',
-                Rule::unique('patients', 'email')
-                    ->where('company_id', session('current_company_id'))
-                    ->ignore($patientId)
             ],
             'phone'      => ['nullable', 'string', 'max:30'],
             'birth_date' => ['required', 'date', 'before:today'],

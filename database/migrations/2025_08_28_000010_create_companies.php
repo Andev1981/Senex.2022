@@ -18,6 +18,8 @@ return new class extends Migration {
       $t->string('giro')->nullable();
       $t->string('email')->nullable();
       $t->string('phone', 30)->nullable();
+      $t->string('business_type')->default('clinical');
+      $t->json('enabled_modules')->nullable();
       $t->timestamps();
     });
   }

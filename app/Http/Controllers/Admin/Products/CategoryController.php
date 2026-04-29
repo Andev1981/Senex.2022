@@ -70,7 +70,7 @@ class CategoryController extends Controller
             abort(403);
         }
 
-        if ($category->products()->exists()) {
+        if ($category->items()->exists()) {
             return back()->with('error', 'No puedes eliminar una categoría que tiene productos asociados.');
         }
 

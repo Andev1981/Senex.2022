@@ -21,7 +21,6 @@ import {
   X,
   Eye,
   Activity,
-  ClipboardList,
   Users,
 } from "lucide-react";
 import TablePagination from "@/components/TablePagination";
@@ -33,6 +32,7 @@ export default function TableDoctors({
   doctors,
   filters,
   user,
+  onEdit,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sorting, setSorting] = useState([]);
@@ -222,22 +222,11 @@ export default function TableDoctors({
                 <Eye className="w-4 h-4" />
               </Link>
               <button
-                className="p-2 cursor-pointer text-indigo-600 transition-all border border-indigo-100 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white active:scale-90"
-                onClick={() => (
-                  setSelectedDoctor(row.original), setIsModalOpenCommissions(true)
-                )}
-                title="Configuración de Pagos"
+                onClick={() => onEdit(row.original)}
+                className="p-2 cursor-pointer transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
+                title="Editar Datos Básicos"
               >
-                <ClipboardList className="w-4 h-4" />
-              </button>
-              <button
-                className="p-2 cursor-pointer text-purple-600 transition-all border border-purple-100 bg-purple-50 rounded-xl hover:bg-purple-600 hover:text-white active:scale-90"
-                onClick={() => (
-                  setSelectedDoctor(row.original), setIsModalOpenPatients(true)
-                )}
-                title="Cartera de Pacientes"
-              >
-                <Users className="w-4 h-4" />
+                <UserCog className="w-4 h-4" />
               </button>
             </div>
           ),

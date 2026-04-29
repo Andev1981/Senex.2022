@@ -7,109 +7,121 @@ use Illuminate\Support\Facades\Log;
 
 class PosService
 {
+    protected $mode;
     protected $baseUrl;
+    protected $commerceCode;
+    protected $apiKey;
+    protected $terminalId;
 
     public function __construct()
     {
-        // En integración local, suele ser la IP del PC de la caja
-        $this->baseUrl = config('services.transbank.pos_endpoint', 'http://localhost:8001');
+        $this->mode = config('services.transbank.mode', 'local');
+        $this->commerceCode = config('services.transbank.commerce_code');
+        $this->apiKey = config('services.transbank.api_key');
+        $this->terminalId = config('services.transbank.terminal_id');
+
+        if ($this->mode === 'cloud') {
+            $environment = config('services.transbank.environment', 'integration');
+            $this->baseUrl = ($environment === 'production') 
+                ? 'https://pos-integrado.transbank.cl/v1' 
+                : 'https://pos-integrado-int.transbank.cl/v1';
+        } else {
+            // Modo Local (Agente en PC)
+            $this->baseUrl = config('services.transbank.pos_endpoint', 'http://localhost:8081');
+        }
     }
 
     /**
-     * Envía el monto al terminal físico
+     * Envía el monto al terminal (Detección automática de modo)
      */
     public function sendTransaction($amount, $ticketNumber)
     {
-        // SIMULACIÓN: En lugar de Http::post, dormimos el proceso 2 segundos 
-        // para simular que la máquina está procesando y luego aprobamos.
-        sleep(2);
-
-        return [
-            'success' => true,
-            'authorization_code' => 'SIM-' . rand(1000, 9999),
-            'card_digits' => '4502',
-            'raw' => ['status' => 'APPROVED_SIMULATED']
-        ];
-
-        /*
-        // --- LÓGICA REAL: CONEXIÓN A TERMINAL TRANSBANK (Integrado) ---
-        try {
-            // El endpoint suele ser servido por el Agente de Transbank instalado en el PC de la caja
-            $response = Http::timeout(60)->post("{$this->baseUrl}/sale", [
-                'amount'            => (int) $amount,
-                'ticket_number'     => $ticketNumber,
-                'collect_card_data' => true
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                // responseCode 0 indica aprobación exitosa del terminal
-                if (isset($data['responseCode']) && $data['responseCode'] === 0) {
-                    return [
-                        'success'            => true,
-                        'authorization_code' => $data['authorizationCode'] ?? '000000',
-                        'card_digits'        => $data['last4Digits'] ?? '****',
-                        'raw'                => $data
-                    ];
-                }
-            }
-            return ['success' => false, 'error' => 'Transacción rechazada por el terminal o tarjeta inválida.'];
-        } catch (\Exception $e) {
-            Log::error("Fallo comunicación POS Físico: " . $e->getMessage());
-            return ['success' => false, 'error' => 'No se pudo conectar con la máquina POS. Verifique que el Agente Transbank esté corriendo.'];
-        }
-        */
-    }
-
-    public function abortTransaction()
-    {
-        // SIMULACIÓN: Simplemente registramos en el log y devolvemos true
-        Log::info("Simulación: Señal de aborto enviada al terminal.");
-
-        return true;
+        return ($this->mode === 'cloud') 
+            ? $this->sendCloudTransaction($amount, $ticketNumber)
+            : $this->sendLocalTransaction($amount, $ticketNumber);
     }
 
     /**
-     * Envía el monto al terminal físico
+     * MODO LOCAL: Comunicación con Agente instalado en el PC
      */
-    public function sendTransactionMain($amount, $ticketNumber)
+    protected function sendLocalTransaction($amount, $ticketNumber)
     {
         try {
-            // Este es el "Handshake" con el terminal
-            $response = Http::timeout(60)->post("{$this->baseUrl}/sale", [
-                'amount' => (int) $amount,
-                'ticket_number' => $ticketNumber,
+            Log::info("POS Local: Iniciando venta por $amount");
+
+            $response = Http::timeout(65)->post("{$this->baseUrl}/sale", [
+                'amount'            => (int) $amount,
+                'ticket_number'     => (string) $ticketNumber,
                 'collect_card_data' => true
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-
-                // Transbank POS suele devolver 'responseCode' == 0 para éxito
-                if ($data['responseCode'] === 0) {
+                if (isset($data['responseCode']) && (int)$data['responseCode'] === 0) {
                     return [
                         'success' => true,
-                        'authorization_code' => $data['authorizationCode'],
+                        'authorization_code' => $data['authorizationCode'] ?? '000000',
                         'card_digits' => $data['last4Digits'] ?? '****',
                         'raw' => $data
                     ];
                 }
+                return ['success' => false, 'error' => $data['statusMessage'] ?? 'Venta rechazada en el terminal.'];
             }
-
-            return ['success' => false, 'error' => 'Transacción rechazada en terminal'];
+            return ['success' => false, 'error' => 'No se pudo conectar con el Agente POS en localhost:8081.'];
         } catch (\Exception $e) {
-            Log::error("Error de conexión con POS: " . $e->getMessage());
-            return ['success' => false, 'error' => 'No se pudo conectar con el terminal físico'];
+            Log::error("Error POS Local: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Error de conexión local con la máquina POS.'];
         }
     }
 
-    public function abortTransactionMain()
+    /**
+     * MODO CLOUD: Comunicación directa con servidores Transbank
+     */
+    protected function sendCloudTransaction($amount, $ticketNumber)
     {
         try {
-            // El Agente de Transbank suele tener un endpoint /abort o /cancel
-            return Http::timeout(5)->post("{$this->baseUrl}/abort");
+            Log::info("POS Cloud: Iniciando venta por $amount para terminal $this->terminalId");
+
+            $response = Http::withHeaders([
+                'Tbk-Api-Key-Id' => $this->commerceCode,
+                'Tbk-Api-Key-Secret' => $this->apiKey,
+                'Content-Type' => 'application/json'
+            ])
+            ->timeout(70)
+            ->post("{$this->baseUrl}/sales", [
+                'amount' => (int) $amount,
+                'ticketNumber' => (string) $ticketNumber,
+                'terminalId' => $this->terminalId,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['status']) && $data['status'] === 'APPROVED') {
+                    return [
+                        'success' => true,
+                        'authorization_code' => $data['authorizationCode'] ?? '000000',
+                        'card_digits' => $data['last4Digits'] ?? '****',
+                        'raw' => $data
+                    ];
+                }
+                return ['success' => false, 'error' => $data['description'] ?? 'Transacción Cloud rechazada.'];
+            }
+            $err = $response->json();
+            return ['success' => false, 'error' => 'Error Cloud: ' . ($err['description'] ?? 'Fallo de comunicación.')];
         } catch (\Exception $e) {
-            Log::warning("No se pudo enviar señal de aborto al POS físico: " . $e->getMessage());
+            Log::error("Error POS Cloud: " . $e->getMessage());
+            return ['success' => false, 'error' => 'No se pudo conectar con la red Cloud de Transbank.'];
+        }
+    }
+
+    public function abortTransaction()
+    {
+        try {
+            if ($this->mode === 'local') {
+                Http::timeout(5)->post("{$this->baseUrl}/abort");
+            }
+            return true;
+        } catch (\Exception $e) {
             return false;
         }
     }

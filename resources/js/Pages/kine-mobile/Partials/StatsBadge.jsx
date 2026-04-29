@@ -1,13 +1,43 @@
-// resources/js/pages/KineMobile/components/StatsBadge.jsx
+// resources/js/pages/kine-mobile/Partials/StatsBadge.jsx
 import React from "react";
 
 const colorClasses = {
-  gray: "bg-gray-100 text-gray-700 border-gray-200",
-  green: "bg-green-100 text-green-700 border-green-200",
-  blue: "bg-blue-100 text-blue-700 border-blue-200",
-  red: "bg-red-100 text-red-700 border-red-200",
-  orange: "bg-orange-100 text-orange-700 border-orange-200",
-  teal: "bg-teal-100 text-teal-700 border-teal-200",
+  gray: {
+    bg: "bg-slate-50",
+    icon: "text-slate-400",
+    text: "text-slate-600",
+    label: "text-slate-400"
+  },
+  green: {
+    bg: "bg-green-50",
+    icon: "text-green-500",
+    text: "text-green-700",
+    label: "text-green-600/60"
+  },
+  blue: {
+    bg: "bg-blue-50",
+    icon: "text-blue-500",
+    text: "text-blue-700",
+    label: "text-blue-600/60"
+  },
+  red: {
+    bg: "bg-red-50",
+    icon: "text-red-500",
+    text: "text-red-700",
+    label: "text-red-600/60"
+  },
+  orange: {
+    bg: "bg-orange-50",
+    icon: "text-orange-500",
+    text: "text-orange-700",
+    label: "text-orange-600/60"
+  },
+  brand: {
+    bg: "bg-brand-primary/5",
+    icon: "text-brand-primary",
+    text: "text-brand-primary",
+    label: "text-brand-primary/60"
+  },
 };
 
 export default function StatsBadge({
@@ -16,11 +46,21 @@ export default function StatsBadge({
   value,
   color = "gray",
 }) {
+  const theme = colorClasses[color] || colorClasses.gray;
+  
   return (
-    <div className={`p-2 border rounded-lg text-center ${colorClasses[color]}`}>
-      <Icon className="w-4 h-4 mx-auto mb-1" />
-      <p className="text-xs font-medium">{label}</p>
-      <p className="text-lg font-bold">{value}</p>
+    <div className={`w-full py-3 px-1 rounded-[24px] border border-transparent transition-all ${theme.bg}`}>
+      <div className="flex flex-col items-center gap-1 text-center">
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center bg-white shadow-sm mb-0.5`}>
+            <Icon className={`w-3.5 h-3.5 ${theme.icon}`} />
+        </div>
+        <span className={`text-[7px] font-black uppercase tracking-tighter ${theme.label} leading-none truncate w-full px-1`}>
+          {label}
+        </span>
+        <span className={`text-sm font-black tracking-tighter ${theme.text} leading-none`}>
+          {value}
+        </span>
+      </div>
     </div>
   );
 }

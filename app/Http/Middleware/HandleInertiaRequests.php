@@ -94,6 +94,7 @@ class HandleInertiaRequests extends Middleware
                 'message' => $request->session()->get('message'),
                 'type' => $request->session()->get('type'),
                 'patient' => $request->session()->get('patient'),
+                'patient_id' => $request->session()->get('patient_id'),
             ]),
 
             //Datos generales de la app
@@ -210,7 +211,7 @@ class HandleInertiaRequests extends Middleware
             if ($contextCompanyId) {
                 // Usamos withoutGlobalScopes() por pura seguridad, aunque ya quitamos el trait
                 $currentCompany = Company::withoutGlobalScopes()
-                    ->with('logo')
+                    ->with(['logo', 'dteConfiguration'])
                     ->select(['id', 'business_name', 'rut', 'giro', 'email', 'phone', 'business_type'])
                     ->find($contextCompanyId);
             }

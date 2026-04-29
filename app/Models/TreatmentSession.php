@@ -27,7 +27,7 @@ class TreatmentSession extends Model
         'treatment_id',
         'patient_id',
         'doctor_id',       // Apunta a la tabla 'users'
-        'session_type_id',
+        'item_id',
         'appointment_id',
 
         // --- 2. Logística ---
@@ -45,10 +45,12 @@ class TreatmentSession extends Model
 
         // [O]bjective
         'objective',
-        'evaluation_data', // JSON: Mediciones (ROM, Fuerza) - Antes llamado biometric_data
+        'evaluation_data', // JSON: Mediciones (ROM, Fuerza)
         'session_pain_map',// JSON: Coordenadas del dolor HOY
         'activities_data', // JSON: Ejercicios realizados
         'attachments',     // JSON: Fotos/Docs
+        'body_part',       // Nueva adición para consistencia
+        'laterality',      // Nueva adición para consistencia
 
         // [A]ssessment
         'assessment',
@@ -56,7 +58,22 @@ class TreatmentSession extends Model
         // [P]lan
         'plan',
 
-        // --- 4. Finanzas ---
+        // --- 4. CAMPOS ADICIONALES PARA DASHBOARD KINE ---
+        'pain_before',
+        'pain_after',
+        'rom_flexion_before',
+        'rom_flexion_after',
+        'rom_abduction_before',
+        'rom_abduction_after',
+        'rom_rotation_before',
+        'rom_rotation_after',
+        'techniques', // JSON
+        'exercises',  // JSON
+        'notes',
+        'homework',
+        'next_goals',
+
+        // --- 5. Finanzas ---
         'patient_amount_clp',
         'doctor_amount_clp',
         'clinic_amount_clp',
@@ -64,7 +81,14 @@ class TreatmentSession extends Model
         'is_exento',        // boolean
         'dte_generated',    // boolean
 
-        // --- 5. Extras ---
+        // --- 5. Firma y Validación ---
+        'signature_path',
+        'signature_skipped',
+        'signature_skip_reason',
+        'signed_at',
+        'signature_gps_coords',
+
+        // --- 6. Extras ---
         'meta',             // JSON
     ];
 
@@ -78,9 +102,13 @@ class TreatmentSession extends Model
         'consumes_plan' => 'boolean',
         'is_exento' => 'boolean',
         'dte_generated' => 'boolean',
+        'signature_skipped' => 'boolean',
+        'signed_at' => 'datetime',
         'status' => AppointmentStatusEnum::class, // 👈 Casting Mágico
         
         // Arrays (JSONs)
+        'techniques' => 'array',
+        'exercises' => 'array',
         'evaluation_data' => 'array',
         'session_pain_map' => 'array',
         'activities_data' => 'array',
@@ -121,9 +149,9 @@ class TreatmentSession extends Model
         return $this->belongsTo(Patient::class);
     }
 
-    public function sessionType(): BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(SessionType::class);
+        return $this->belongsTo(Item::class);
     }
 
     public function appointment(): BelongsTo
@@ -236,7 +264,7 @@ class TreatmentSession extends Model
     {
         // 1. Buscamos si hay un trato especial con este doctor
         $specialRate = DoctorCommissionRate::where('doctor_id', $this->doctor_id)
-            ->where('session_type_id', $this->session_type_id)
+            ->where('item_id', $this->item_id)
             ->first();
 
         if ($specialRate) {
@@ -244,7 +272,7 @@ class TreatmentSession extends Model
         }
 
         // 2. Si no hay trato especial, retornamos el estándar del servicio
-        return $this->sessionType->default_doctor_commission_clp; // Retorna el base (ej: 20.000)
+        return $this->item->price ?? 0; // Usamos el precio del ítem como base
     }
 
     public function isScheduled(): bool

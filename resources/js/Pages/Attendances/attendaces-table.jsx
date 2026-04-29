@@ -34,7 +34,7 @@ import {
   Activity,
   CheckSquare,
 } from "lucide-react";
-import { router } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
 import { fmtCLP, fmtDate, fmtTime } from "@/utils/utils";
 import { estadoClass, estadoTexto } from "@/helpers/status";
 import SecondaryButton from "@/components/SecondaryButton";
@@ -52,6 +52,10 @@ export default function AttendacesTable({
   openResumenModal,
   filtros,
 }) {
+  const { auth } = usePage().props;
+  const roles = auth?.roles || [];
+  const userIsSuperAdmin = roles.includes("superadmin");
+
   const [query, setQuery] = useState(filtros.query || "");
   const [estado, setEstado] = useState(filtros.estado || "all");
   const [fechaInicio, setFechaInicio] = useState(
@@ -98,31 +102,38 @@ export default function AttendacesTable({
   };
 
   const columns = useMemo(
-    () => [
-      {
-        id: "select",
-        header: ({ table }) => (
-          <div className="px-1">
-            <input
-              type="checkbox"
-              className="w-4 h-4 border-gray-300 rounded text-brand-primary focus:ring-brand-primary"
-              checked={table.getIsAllPageRowsSelected()}
-              onChange={table.getToggleAllPageRowsSelectedHandler()}
-            />
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="px-1">
-            <input
-              type="checkbox"
-              className="w-4 h-4 border-gray-300 rounded text-brand-primary focus:ring-brand-primary disabled:opacity-30"
-              checked={row.getIsSelected()}
-              disabled={!row.getCanSelect() || row.original.status !== 'completed' || !!row.original.dte_generated || row.original.is_locked}
-              onChange={row.getToggleSelectedHandler()}
-            />
-          </div>
-        ),
-      },
+    () => {
+      const baseColumns = [];
+
+      // Solo mostramos selector si es Superadmin (para DTE Masivo)
+      if (userIsSuperAdmin) {
+        baseColumns.push({
+          id: "select",
+          header: ({ table }) => (
+            <div className="px-1">
+              <input
+                type="checkbox"
+                className="w-4 h-4 border-gray-300 rounded text-brand-primary focus:ring-brand-primary"
+                checked={table.getIsAllPageRowsSelected()}
+                onChange={table.getToggleAllPageRowsSelectedHandler()}
+              />
+            </div>
+          ),
+          cell: ({ row }) => (
+            <div className="px-1">
+              <input
+                type="checkbox"
+                className="w-4 h-4 border-gray-300 rounded text-brand-primary focus:ring-brand-primary disabled:opacity-30"
+                checked={row.getIsSelected()}
+                disabled={!row.getCanSelect() || row.original.status !== 'completed' || !!row.original.dte_generated || row.original.is_locked}
+                onChange={row.getToggleSelectedHandler()}
+              />
+            </div>
+          ),
+        });
+      }
+
+      baseColumns.push(
       {
         id: "paciente",
         header: "Identidad & Servicio",
@@ -262,8 +273,8 @@ export default function AttendacesTable({
                 </button>
               )}
 
-              {/* Auditoría / DTE */}
-              {a.status === "completed" && (
+              {/* Auditoría / DTE - SOLO SUPERADMIN */}
+              {userIsSuperAdmin && a.status === "completed" && (
                 <>
                   {!a.dte_generated ? (
                     <button
@@ -318,8 +329,11 @@ export default function AttendacesTable({
         },
         enableSorting: false,
       },
-    ],
-    [atenciones]
+      );
+
+      return baseColumns;
+    },
+    [atenciones, userIsSuperAdmin]
   );
 
   const table = useReactTable({
@@ -344,16 +358,16 @@ export default function AttendacesTable({
   const selectedCount = Object.keys(rowSelection).length;
 
   return (
-    <div className="grid grid-cols-1 gap-8 duration-700 lg:grid-cols-12 animate-in fade-in">
+    <div className="flex flex-col gap-8 duration-700 animate-in fade-in">
       {/* Tabla Maestro */}
-      <div className="bg-white border border-gray-100 shadow-xl lg:col-span-9 rounded-[2rem] overflow-hidden flex flex-col">
+      <div className="bg-white border border-gray-100 shadow-xl rounded-[2rem] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-50 bg-gray-50/30">
           <div className="flex items-center gap-4">
             <h2 className="flex items-center gap-3 text-sm font-black tracking-tight text-gray-900 uppercase">
               <ClipboardList className="w-5 h-5 text-brand-primary" /> Nómina de
               Atenciones
             </h2>
-            {selectedCount > 0 && (
+            {userIsSuperAdmin && selectedCount > 0 && (
               <div className="flex items-center gap-2 px-4 py-1.5 bg-brand-primary text-white rounded-full text-[9px] font-black uppercase tracking-widest animate-in zoom-in">
                 <CheckSquare className="w-3.5 h-3.5" />
                 {selectedCount} Seleccionadas
@@ -531,69 +545,6 @@ export default function AttendacesTable({
             setPageSize={setPageSize}
             pagesizeOptions={[10, 20, 50]}
           />
-        </div>
-      </div>
-
-      {/* Panel de Control Lateral */}
-      <div className="space-y-6 lg:col-span-3">
-        <div className="p-8 bg-white border border-gray-100 shadow-xl rounded-[2.5rem] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
-          <h3 className="enterprise-label text-brand-primary! flex items-center gap-3 mb-8 relative z-10">
-            <Activity className="w-5 h-5" /> Productividad
-          </h3>
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-center justify-between p-5 transition-all border border-green-100 bg-green-50 rounded-2xl group hover:bg-green-600">
-              <span className="text-[10px] font-black uppercase tracking-widest text-green-700 group-hover:text-white">
-                Asistidas
-              </span>
-              <span className="font-mono text-xl font-black text-green-900 group-hover:text-white">
-                {kpis.completadas || 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-5 transition-all border bg-amber-50 rounded-2xl border-amber-100 group hover:bg-amber-600">
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 group-hover:text-white">
-                Pendientes
-              </span>
-              <span className="font-mono text-xl font-black text-amber-900 group-hover:text-white">
-                {kpis.pendientes || 0}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1 p-5 border bg-brand-primary/5 rounded-2xl border-brand-primary/10">
-              <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary opacity-60">
-                Recaudación Validada
-              </span>
-              <span className="font-mono text-lg font-black tracking-tighter text-brand-primary">
-                {fmtCLP(kpis.totalCobrado || 0)}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1 p-5 text-white bg-gray-900 shadow-xl rounded-2xl">
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                Saldo en Cartera
-              </span>
-              <span className="font-mono text-lg font-black tracking-tighter text-brand-secondary">
-                {fmtCLP(kpis.totalPorCobrar || 0)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-8 bg-brand-primary text-white shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 transition-transform duration-1000 rounded-full bg-white/10 blur-2xl group-hover:scale-150"></div>
-          <div className="relative z-10">
-            <CheckCircle2 className="w-10 h-10 mb-6 opacity-40" />
-            <h4 className="mb-2 text-xl font-black leading-tight tracking-tight uppercase">
-              Acción Directa
-            </h4>
-            <p className="mb-8 text-xs font-bold tracking-widest uppercase text-white/60">
-              Gestión de Citas
-            </p>
-            <button
-              onClick={() => openCreateUpdateSessionModal({})}
-              className="w-full py-4 bg-white text-brand-primary font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-brand-secondary transition-all active:scale-95 shadow-xl"
-            >
-              Agendar Atención
-            </button>
-          </div>
         </div>
       </div>
     </div>

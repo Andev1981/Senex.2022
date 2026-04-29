@@ -12,7 +12,7 @@ use App\Models\Patient;
 use App\Models\Payment;
 use App\Models\Province;
 use App\Models\Region;
-use App\Models\SessionType;
+use App\Models\Item;
 use App\Models\TreatmentSession;
 use App\Services\Treatments\TreatmentService;
 use Illuminate\Http\Request;
@@ -31,7 +31,7 @@ class TreatmentController extends Controller
     public function index(Patient $patient): Response
     {
         $treatments = Treatment::where('patient_id', $patient->id)
-            ->with(['sessionType', 'doctor', 'sessions', 'sessions.doctor'])
+            ->with(['item', 'doctor', 'sessions', 'sessions.doctor'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -61,7 +61,7 @@ class TreatmentController extends Controller
 
         $vital = $patient->latestVitalSign;
 
-        $session_types = SessionType::all();
+        $items = Item::all();
 
         $provinces = Province::all();
         $communes  = Commune::all();
@@ -80,7 +80,7 @@ class TreatmentController extends Controller
             'address' => $address,
             'vital' => $vital,
             'doctors' => $doctors,
-            'session_types' => $session_types,
+            'items' => $items,
             'contact' => $contact,
             'allergies' => $allergies,
             'conditions' => $conditions,
@@ -95,7 +95,7 @@ class TreatmentController extends Controller
     {
         $treatment->load([
             'patient',
-            'sessionType',
+            'item',
             'doctor',
             'sessions' => function ($query) {
                 $query->orderBy('date', 'desc');
@@ -187,7 +187,7 @@ class TreatmentController extends Controller
     public function apiIndex(Request $request, Patient $patient)
     {
         $query = Treatment::where('patient_id', $patient->id)
-            ->with(['sessionType', 'doctor']);
+            ->with(['item', 'doctor']);
 
         // Filtros
         if ($request->filled('status')) {

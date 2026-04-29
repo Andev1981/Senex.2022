@@ -42,7 +42,7 @@ class PlanService
                 })->toArray();
                 
                 // Usamos sync para adjuntar/actualizar los datos en la tabla pivote
-                $plan->sessionTypes()->sync($contentToSync);
+                $plan->items()->sync($contentToSync);
             }
 
             DB::commit();
@@ -52,6 +52,40 @@ class PlanService
             DB::rollBack();
             // Relanzar la excepción para que el controlador pueda manejar la respuesta HTTP
             throw new \Exception('Error al crear el Plan y su contenido: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Actualiza un Plan y su contenido asociado.
+     */
+    public function updatePlanWithContent(Plan $plan, array $data): Plan
+    {
+        DB::beginTransaction();
+
+        try {
+            // A. PREPARAR DATOS
+            $planData = collect($data)->except(['content'])->toArray();
+
+            // B. ACTUALIZAR PLAN MAESTRO
+            $plan->update($planData);
+            
+            // C. SINCRONIZAR CONTENIDO (SOLO SI ES INTERNO)
+            if ($plan->type === 'internal' && isset($data['content'])) {
+                $contentToSync = collect($data['content'])->mapWithKeys(function ($item) {
+                    return [
+                        $item['session_type_id'] => ['max_sessions' => $item['max_sessions']]
+                    ];
+                })->toArray();
+                
+                $plan->items()->sync($contentToSync);
+            }
+
+            DB::commit();
+            return $plan->fresh();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new \Exception('Error al actualizar el Plan: ' . $e->getMessage());
         }
     }
 
@@ -99,7 +133,7 @@ class PlanService
     /**
      * Verificar si el paciente tiene un plan activo válido para un tipo de sesión
      */
-    public function hasActivePlanForSessionType(int $patientId, ?int $sessionTypeId = null): ?PatientPlan
+    public function hasActivePlanForSessionType(int $patientId, ?int $itemId = null): ?PatientPlan
     {
         $query = PatientPlan::where('patient_id', $patientId)
             ->where('status', 'active')
@@ -116,21 +150,21 @@ class PlanService
 
         $patientPlans = $query->with('plan')->get();
 
-        // Si no hay sessionTypeId, devolver cualquier plan activo
-        if (!$sessionTypeId) {
+        // Si no hay itemId, devolver cualquier plan activo
+        if (!$itemId) {
             return $patientPlans->first();
         }
 
         // Filtrar por tipo de sesión permitido
         foreach ($patientPlans as $patientPlan) {
-            $raw = $patientPlan->plan->session_types;
+            $raw = $patientPlan->plan->items;
 
             // Si ya es array, usalo directo; si es string, decodealo
             $allowedSessionTypes = is_array($raw)
                 ? $raw
                 : (is_string($raw) ? json_decode($raw, true) : []);
 
-            if (empty($allowedSessionTypes) || in_array($sessionTypeId, $allowedSessionTypes)) {
+            if (empty($allowedSessionTypes) || in_array($itemId, $allowedSessionTypes)) {
                 return $patientPlan;
             }
         }
@@ -167,12 +201,12 @@ class PlanService
 
             // Validar tipo de sesión permitido
             $plan = $patientPlan->plan;
-            $raw = $plan->session_types;
+            $raw = $plan->items;
             $allowedSessionTypes = is_array($raw)
                 ? $raw
                 : (is_string($raw) ? json_decode($raw, true) : []);
 
-            if (!empty($allowedSessionTypes) && !in_array($session->session_type_id, $allowedSessionTypes)) {
+            if (!empty($allowedSessionTypes) && !in_array($session->item_id, $allowedSessionTypes)) {
                 throw new \Exception('Este tipo de sesión no está incluido en el plan');
             }
 
@@ -277,7 +311,7 @@ class PlanService
                 'sessions_used' => $patientPlan->sessions_used,
                 'sessions_remaining' => $remaining,
                 'status' => $patientPlan->status,
-                'allowed_session_types' => json_decode($patientPlan->plan->session_types, true),
+                'allowed_items' => json_decode($patientPlan->plan->items, true),
             ];
         })->toArray();
     }

@@ -28,7 +28,9 @@ import Swal from "sweetalert2";
 
 const STATUS_OPTIONS = [
   { value: "scheduled", label: "📅 Programada" },
-  { value: "attended", label: "✅ Asistida / Completada" },
+  { value: "in_progress", label: "🟡 En Curso" },
+  { value: "completed", label: "✅ Completada" },
+  { value: "attended", label: "✅ Asistida (Legacy)" },
   { value: "missed", label: "🚫 Faltó (Missed)" },
   { value: "cancelled", label: "❌ Cancelada" },
 ];
@@ -77,7 +79,7 @@ export default function SessionFormModal({
     treatment_id: defaultTreatmentId, 
     patient_id: sessionData?.patient_id || preselectedPatient?.id || "",
     doctor_id: sessionData?.doctor_id || "",
-    session_type_id: sessionData?.session_type_id || "",
+    item_id: sessionData?.session_type_id || sessionData?.item_id || "",
     
     // CAMPOS DE SESIÓN
     date: sessionData?.date ? moment.utc(sessionData.date).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD"),
@@ -119,17 +121,33 @@ export default function SessionFormModal({
     confirm_defaults: false,
   });
 
+  // --- SINCRONIZACIÓN DE EDICIÓN ---
+  useEffect(() => {
+    if (sessionData && isEditing) {
+        setData(prev => ({
+            ...prev,
+            ...sessionData,
+            id: sessionData.session_id || sessionData.id,
+            status: sessionData.status,
+            date: sessionData.date ? moment.utc(sessionData.date).format("YYYY-MM-DD") : prev.date,
+            subjective: sessionData.subjective || "",
+            objective: sessionData.objective || "",
+            assessment: sessionData.assessment || "",
+            plan: sessionData.plan || "",
+            pain_level: sessionData.pain_level || 0,
+            body_part: sessionData.body_part || "",
+            laterality: sessionData.laterality || "",
+        }));
+    }
+  }, [sessionData, isEditing]);
+
   // --- LÓGICA BOTÓN ---
   const submitLabel = useMemo(() => {
       if (processing) return "Procesando...";
-      if (isEditing) return "Guardar Cambios";
-      switch (data.status) {
-          case 'scheduled': return "Agendar Sesión";
-          case 'attended': return "Finalizar Evolución";
-          case 'missed': return "Registrar Inasistencia";
-          case 'cancelled': return "Registrar Cancelación";
-          default: return "Guardar";
+      if (isEditing) {
+          return data.status === 'completed' ? "Actualizar Registro" : "Guardar Cambios";
       }
+      return "Agendar Sesión";
   }, [data.status, isEditing, processing]);
 
   // --- MANEJADORES ---
@@ -244,12 +262,11 @@ export default function SessionFormModal({
       if (treatmentIdKey && selectedTreatmentInfo) {
           // Usamos una función de actualización para evitar dependencias circulares con 'data'
           setData(prev => {
-              // Solo actualizar si hay cambios reales para evitar bucles
-              if (prev.diagnostic_code === (selectedTreatmentInfo.diagnostic?.code || selectedTreatmentInfo.diagnostic_code || "")) {
-                  return prev;
-              }
-
-              return {
+              // Si ya estamos editando una sesión existente, no sobreescribimos los datos con los de la sesión anterior
+              // a menos que el usuario esté cambiando de tratamiento deliberadamente (opcional, pero por ahora protegemos edición)
+              const isChangingTreatment = prev.treatment_id !== sessionData?.treatment_id;
+              
+              const baseUpdate = {
                 ...prev,
                 diagnostic_code: selectedTreatmentInfo.diagnostic?.code || selectedTreatmentInfo.diagnostic_code || "",
                 referral_diagnosis: selectedTreatmentInfo.referral_diagnosis || "",
@@ -257,7 +274,41 @@ export default function SessionFormModal({
                 body_part: prev.body_part || selectedTreatmentInfo.body_part || "",
                 laterality: prev.laterality || selectedTreatmentInfo.laterality || ""
               };
+
+              // Si hay una sesión anterior, cargamos los datos clínicos para dar continuidad (Evolución)
+              if (selectedTreatmentInfo.last_session && !isEditing) {
+                  const last = selectedTreatmentInfo.last_session;
+                  return {
+                      ...baseUpdate,
+                      subjective: last.subjective || "",
+                      objective: last.objective || "",
+                      assessment: last.assessment || "",
+                      plan: last.plan || "",
+                      pain_level: last.pain_level || 0,
+                      session_pain_map: last.session_pain_map || [],
+                      evaluation_data: last.evaluation_data || { rom: {} },
+                      activities_data: last.activities_data || { techniques: [], exercises: [] },
+                  };
+              }
+
+              return baseUpdate;
           });
+      } else if (!treatmentIdKey && !isEditing) {
+          // Si selecciona "Nuevo Tratamiento", limpiamos los campos clínicos
+          setData(prev => ({
+              ...prev,
+              diagnostic_code: "",
+              referral_diagnosis: "",
+              referral_doctor_name: "",
+              subjective: "",
+              objective: "",
+              assessment: "",
+              plan: "",
+              pain_level: 0,
+              session_pain_map: [],
+              evaluation_data: { rom: {} },
+              activities_data: { techniques: [], exercises: [] },
+          }));
       }
   }, [treatmentIdKey]); // Solo dependemos del ID
 
@@ -518,127 +569,130 @@ export default function SessionFormModal({
                         )}
 
                         {/* C) DATOS DE AGENDA (Kine, Servicio, Fecha...) */}
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-50">
-                            <div>
-                                <SearchSelect
-                                    label="Kinesiólogo *"
-                                    options={formattedDoctors.map((d) => ({ value: d.id, label: d.full_name }))}
-                                    value={data.doctor_id}
-                                    onChange={(val) => setData("doctor_id", val)}
-                                    disabled={!isFieldEditable("doctor_id")}
-                                    className="rounded-2xl!"
-                                />
-                                <InputError message={errors.doctor_id} className="mt-1" />
-                            </div>
-                            <div className="space-y-1">
-                                    <label className="ml-1 enterprise-label opacity-60 text-[10px]">Tipo de Servicio</label>
+                        <div className="space-y-6 pt-6 border-t border-gray-50">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
                                     <SearchSelect
-                                        options={session_types.map((st) => ({ value: st.id, label: st.name }))}
-                                        value={data.session_type_id}
-                                        onChange={(val) => {
-                                            const type = session_types.find((t) => t.id === val);
-                                            setData((prev) => ({
-                                                ...prev,
-                                                session_type_id: val,
-                                                patient_amount_clp: type ? Number(type.base_price_clp) : 0,
-                                            }));
-                                        }}
-                                        disabled={!isFieldEditable("context")}
-                                        placeholder="Seleccionar..."
-                                        className="rounded-xl!"
+                                        label="Kinesiólogo *"
+                                        options={formattedDoctors.map((d) => ({ value: d.id, label: d.full_name }))}
+                                        value={data.doctor_id}
+                                        onChange={(val) => setData("doctor_id", val)}
+                                        disabled={!isFieldEditable("doctor_id")}
+                                        className="rounded-2xl!"
                                     />
-                                    <InputError message={errors.session_type_id} className="mt-1" />
+                                    <InputError message={errors.doctor_id} className="mt-1" />
+                                </div>
+                                <div className="space-y-1">
+                                        <label className="ml-1 enterprise-label opacity-60 text-[10px]">Tipo de Servicio</label>
+                                        <SearchSelect
+                                            options={session_types.map((st) => ({ value: st.id, label: st.name }))}
+                                            value={data.item_id}
+                                            onChange={(val) => {
+                                                const type = session_types.find((t) => t.id === val);
+                                                setData((prev) => ({
+                                                    ...prev,
+                                                    item_id: val,
+                                                    patient_amount_clp: type ? Number(type.base_price_clp) : 0,
+                                                }));
+                                            }}
+                                            disabled={!isFieldEditable("context")}
+                                            placeholder="Seleccionar..."
+                                            className="rounded-xl!"
+                                        />
+                                        <InputError message={errors.item_id} className="mt-1" />
+                                </div>
                             </div>
-                            
 
-                       
-                             
-
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-1">
                                     <label className="ml-1 enterprise-label opacity-60 text-[10px]">Modalidad de Cobro</label>
                                     <select
                                         value={data.consumes_plan ? "yes" : "no"}
                                         onChange={(e) => setData("consumes_plan", e.target.value === "yes")}
-                                        className="w-full px-4 py-3 font-mono text-xs font-bold text-gray-700 border-gray-100 shadow-sm rounded-xl bg-white focus:ring-brand-primary transition-all"
+                                        className="w-full px-5 py-4 font-black uppercase tracking-widest text-[10px] text-gray-700 border-gray-100 shadow-sm rounded-2xl bg-white focus:ring-brand-primary transition-all cursor-pointer"
                                         disabled={!isFieldEditable("context")}
                                     >
-                                        <option value="no">💵 Pago Directo</option>
+                                        <option value="no">💵 Pago Directo / Caja</option>
                                         <option value="yes" disabled={activePlans.length === 0}>
-                                            🎫 Usar Plan ({activePlans.length > 0 ? "Disponible" : "Sin Saldo"})
+                                            🎫 Consumir Plan ({activePlans.length > 0 ? "Disponible" : "Sin Saldo"})
                                         </option>
                                     </select>
                                 </div>
+
+                                {data.consumes_plan && activePlans.length > 0 && (
+                                    <div className="space-y-1 animate-in slide-in-from-left-2">
+                                        <label className="ml-1 enterprise-label text-brand-primary! text-[10px]">Plan a Descontar</label>
+                                        <select
+                                            value={data.patient_plan_id}
+                                            onChange={(e) => setData("patient_plan_id", e.target.value)}
+                                            className="w-full px-5 py-4 font-mono text-[10px] font-black text-brand-primary border-brand-primary/20 bg-brand-primary/5 rounded-2xl focus:ring-brand-primary transition-all"
+                                        >
+                                            <option value="">-- Seleccionar Plan --</option>
+                                            {activePlans.map(p => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.plan_name} ({p.sessions_remaining} disp.)
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
                           
 
-                            <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50/50 rounded-[1.5rem] border border-gray-100">
-                                <div className="space-y-1">
-                                    <label className="ml-1 enterprise-label opacity-60 text-[10px]">Fecha</label>
+                            <div className="grid grid-cols-3 gap-6 p-8 bg-gray-50/50 rounded-[2.5rem] border-2 border-dashed border-gray-100">
+                                <div className="space-y-2">
+                                    <label className="ml-1 enterprise-label text-gray-400 text-[10px] flex items-center gap-2">
+                                        <Calendar className="w-3 h-3"/> Fecha de Atención
+                                    </label>
                                     <input 
                                         type="date" 
                                         value={data.date} 
                                         onChange={(e) => setData("date", e.target.value)} 
                                         disabled={!isFieldEditable("date")} 
-                                        className="enterprise-input w-full font-mono text-xs py-3! rounded-xl bg-white"
+                                        className="w-full font-mono text-sm font-black py-4! px-6! rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-brand-primary/10 transition-all"
                                     />
                                     <InputError message={errors.date} className="mt-1" />
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="ml-1 enterprise-label opacity-60 text-[10px]">Hora</label>
+                                <div className="space-y-2">
+                                    <label className="ml-1 enterprise-label text-gray-400 text-[10px] flex items-center gap-2">
+                                        <Clock className="w-3 h-3"/> Hora Inicio
+                                    </label>
                                     <input 
                                         type="time" 
                                         value={data.time} 
                                         onChange={(e) => setData("time", e.target.value)} 
                                         disabled={!isFieldEditable("time")} 
-                                        className="enterprise-input w-full font-mono text-xs py-3! rounded-xl! bg-white"
+                                        className="w-full font-mono text-sm font-black py-4! px-6! rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-brand-primary/10 transition-all"
                                     />
                                     <InputError message={errors.time} className="mt-1" />
                                 </div>
                                 
-                                <div className="space-y-1">
-                                    <label className="ml-1 enterprise-label opacity-60 text-[10px] flex items-center gap-1">
-                                    Duración (Min)
+                                <div className="space-y-2">
+                                    <label className="ml-1 enterprise-label text-gray-400 text-[10px] flex items-center gap-2">
+                                        <Timer className="w-3 h-3"/> Duración
                                     </label>
-                                    <input 
-                                        type="number" 
-                                        value={data.duration} 
-                                        onChange={(e) => setData("duration", e.target.value)} 
-                                        disabled={!isFieldEditable("time")} 
-                                        className="enterprise-input w-full font-mono text-xs py-3! rounded-xl! bg-white text-center"
-                                        placeholder="45"
-                                    />
+                                    <div className="relative">
+                                        <input 
+                                            type="number" 
+                                            value={data.duration} 
+                                            onChange={(e) => setData("duration", e.target.value)} 
+                                            disabled={!isFieldEditable("time")} 
+                                            className="w-full font-mono text-sm font-black py-4! px-6! pr-12! rounded-2xl border-none shadow-sm focus:ring-4 focus:ring-brand-primary/10 transition-all"
+                                            placeholder="45"
+                                        />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-300 uppercase">Min</span>
+                                    </div>
                                     <InputError message={errors.duration} className="mt-1" />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 2. SOAP (Permanece igual) */}
-                    {["attended", "scheduled"].includes(data.status) && (
+                    {/* 2. SOAP */}
+                    {["attended", "scheduled", "completed", "in_progress"].includes(data.status) && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            {/* ... (Resto del SOAP igual) ... */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-blue-200 transition-all flex flex-col">
-                                    <h3 className="enterprise-label text-blue-600! flex gap-2 mb-4"><User className="w-4 h-4"/> [S] Subjetivo</h3>
-                                    <textarea 
-                                        value={data.subjective} 
-                                        onChange={(e) => setData("subjective", e.target.value)} 
-                                        rows={4}
-                                        className="w-full flex-1 text-sm font-medium border-blue-100 bg-blue-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-blue-500 transition-all shadow-inner resize-none"
-                                        placeholder="Relato del paciente..."
-                                    />
-                                </div>
-                                <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-purple-200 transition-all flex flex-col">
-                                    <h3 className="enterprise-label text-purple-600! flex gap-2 mb-4"><Activity className="w-4 h-4"/> [O] Examen Físico</h3>
-                                    <textarea 
-                                        value={data.objective} 
-                                        onChange={(e) => setData("objective", e.target.value)} 
-                                        rows={4}
-                                        className="w-full flex-1 text-sm font-medium border-purple-100 bg-purple-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-purple-500 transition-all shadow-inner resize-none"
-                                        placeholder="Palpación, observación..."
-                                    />
-                                </div>
-                            </div>
-
+                            
+                            {/* Biometría & Rangos (ROM) - Movido arriba */}
                             <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-brand-primary/20 transition-all">
                                 <h3 className="enterprise-label text-slate-500! flex gap-2 mb-6"><Ruler className="w-4 h-4"/> Biometría & Rangos (ROM)</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-6">
@@ -659,6 +713,29 @@ export default function SessionFormModal({
                                 <div className="flex gap-4 pt-6 border-t border-gray-50">
                                     <input type="text" value={newRomName} onChange={(e) => setNewRomName(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleAddRomMetric(); } }} className="w-full px-5 py-3 text-xs font-bold border-gray-100 bg-gray-50 rounded-2xl focus:bg-white focus:ring-brand-primary transition-all shadow-inner" placeholder="Nueva medición (ej: Flexión Hombro, Rot. Ext)..." />
                                     <button type="button" onClick={handleAddRomMetric} className="bg-slate-800 text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-slate-700 transition-all shadow-lg shadow-slate-200 hover:shadow-xl active:scale-95">+ Agregar</button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-blue-200 transition-all flex flex-col">
+                                    <h3 className="enterprise-label text-blue-600! flex gap-2 mb-4"><User className="w-4 h-4"/> [S] Subjetivo</h3>
+                                    <textarea 
+                                        value={data.subjective} 
+                                        onChange={(e) => setData("subjective", e.target.value)} 
+                                        rows={4}
+                                        className="w-full flex-1 text-sm font-medium border-blue-100 bg-blue-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-blue-500 transition-all shadow-inner resize-none"
+                                        placeholder="Relato del paciente..."
+                                    />
+                                </div>
+                                <div className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-500/5 group hover:border-purple-200 transition-all flex flex-col">
+                                    <h3 className="enterprise-label text-purple-600! flex gap-2 mb-4"><Activity className="w-4 h-4"/> [O] Examen Físico</h3>
+                                    <textarea 
+                                        value={data.objective} 
+                                        onChange={(e) => setData("objective", e.target.value)} 
+                                        rows={4}
+                                        className="w-full flex-1 text-sm font-medium border-purple-100 bg-purple-50/10 rounded-2xl py-4 px-5 focus:bg-white focus:ring-purple-500 transition-all shadow-inner resize-none"
+                                        placeholder="Palpación, observación..."
+                                    />
                                 </div>
                             </div>
 

@@ -49,8 +49,7 @@ class CompanySwitchController extends Controller
             session()->flash('message', 'Ha cambiado de empresa');
             session()->flash('type', 'success');
             
-            // Usar redirect()->intended() o back() es más seguro que route('/') a veces
-            return redirect()->to('/'); 
+            return redirect()->route('dashboard'); 
 
         } catch (\Throwable $th) {
             session()->flash('message', 'No se ha podido cambiar de empresa');
@@ -90,7 +89,7 @@ class CompanySwitchController extends Controller
         //code...
         session()->flash('message', 'Ha cambiado de sucursal');
         session()->flash('type', 'success');
-            return redirect()->to('/'); 
+            return redirect()->route('dashboard'); 
             /* return back();  */
         } catch (\Throwable $th) {
             //throw $th;

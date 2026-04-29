@@ -14,7 +14,8 @@ import {
   Home,
 } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage, Link } from "@inertiajs/react";
+import { usePermission } from "@/hooks/usePermission";
 import {
   PieChart,
   Pie,
@@ -31,6 +32,7 @@ import {
 
 export default function Dashboard({ dte_stats }) {
   const user = usePage().props.auth.user;
+  const { hasPermission } = usePermission();
   const [selectedPeriod, setSelectedPeriod] = useState("hoy");
 
   const COLORS = [
@@ -42,122 +44,24 @@ export default function Dashboard({ dte_stats }) {
     "#6366f1",
   ];
 
-  // Datos de ejemplo
+  // Datos reales desde dte_stats
   const stats = {
-    pacientesTotal: 156,
-    pacientesHoy: 12,
-    pacientesChange: 8.2,
-    sesionesTotal: 48,
-    sesionesHoy: 8,
-    sesionesChange: 12.5,
-    ingresosMes: dte_stats?.total_facturado || 0,
-    ingresosHoy: 240000,
-    ingresosChange: 15.3,
-    tratamientosActivos: 34,
-    tratamientosChange: 5.1,
+    pacientesTotal: dte_stats?.pacientesTotal || 0,
+    pacientesHoy: dte_stats?.pacientesHoy || 0,
+    pacientesChange: 0, // Podrías calcular esto comparando con ayer si fuera necesario
+    sesionesTotal: dte_stats?.sesionesTotal || 0,
+    sesionesHoy: dte_stats?.sesionesHoy || 0,
+    sesionesChange: 0,
+    ingresosMes: dte_stats?.ingresosMes || 0,
+    ingresosHoy: dte_stats?.ingresosHoy || 0,
+    ingresosChange: 0,
+    tratamientosActivos: dte_stats?.tratamientosActivos || 0,
+    tratamientosChange: 0,
   };
 
-  const todayAppointments = [
-    {
-      id: 1,
-      time: "09:00",
-      patient: "María González",
-      treatment: "Rehabilitación Hombro",
-      status: "Completada",
-      type: "control",
-    },
-    {
-      id: 2,
-      time: "10:00",
-      patient: "Carlos Ramírez",
-      treatment: "Terapia Lumbar",
-      status: "Completada",
-      type: "sesion",
-    },
-    {
-      id: 3,
-      time: "11:30",
-      patient: "Ana Martínez",
-      treatment: "Evaluación Inicial",
-      status: "En Curso",
-      type: "evaluacion",
-    },
-    {
-      id: 4,
-      time: "14:00",
-      patient: "Pedro Soto",
-      treatment: "Control Rodilla",
-      status: "Pendiente",
-      type: "control",
-    },
-    {
-      id: 5,
-      time: "15:30",
-      patient: "Laura Díaz",
-      treatment: "Sesión Cervical",
-      status: "Pendiente",
-      type: "sesion",
-    },
-  ];
-
-  const recentPatients = [
-    {
-      id: 1,
-      name: "Juan Pérez",
-      lastVisit: "2024-10-10",
-      nextAppointment: "2024-10-15",
-      status: "Activo",
-      progress: 75,
-    },
-    {
-      id: 2,
-      name: "Sofía López",
-      lastVisit: "2024-10-09",
-      nextAppointment: "2024-10-16",
-      status: "Activo",
-      progress: 45,
-    },
-    {
-      id: 3,
-      name: "Diego Torres",
-      lastVisit: "2024-10-08",
-      nextAppointment: null,
-      status: "Finalizado",
-      progress: 100,
-    },
-    {
-      id: 4,
-      name: "Carmen Silva",
-      lastVisit: "2024-10-07",
-      nextAppointment: "2024-10-14",
-      status: "Activo",
-      progress: 60,
-    },
-  ];
-
-  const pendingPayments = [
-    {
-      id: 1,
-      patient: "Roberto Gómez",
-      amount_clp: 45000,
-      dueDate: "2024-10-15",
-      overdue: false,
-    },
-    {
-      id: 2,
-      patient: "Elena Vargas",
-      amount_clp: 32000,
-      dueDate: "2024-10-10",
-      overdue: true,
-    },
-    {
-      id: 3,
-      patient: "Francisco Muñoz",
-      amount_clp: 28000,
-      dueDate: "2024-10-18",
-      overdue: false,
-    },
-  ];
+  const todayAppointments = dte_stats?.todayAppointments || [];
+  const recentPatients = dte_stats?.recentPatients || [];
+  const pendingPayments = dte_stats?.pendingPayments || [];
 
   const monthlyStats = [
     { month: "Jun", sessions: 142, revenue: 2840 },
@@ -298,112 +202,177 @@ export default function Dashboard({ dte_stats }) {
           </div>
         </div>
 
+        {/* Quick Actions - Acceso Directo */}
+        <div className="grid grid-cols-2 gap-4 mb-8 md:grid-cols-3 lg:grid-cols-5">
+          {[
+            {
+              id: "patients.index",
+              icon: Users,
+              label: "Pacientes",
+              color: "bg-brand-primary",
+              desc: "Gestionar ingresos",
+              href: route("patients.index"),
+            },
+            {
+              id: "attendances.index",
+              icon: Calendar,
+              label: "Agenda",
+              color: "bg-indigo-600",
+              desc: "Citas del día",
+              href: route("attendances.index"),
+            },
+            {
+              id: "attendances.index",
+              icon: Clipboard,
+              label: "Atención",
+              color: "bg-green-600",
+              desc: "Nueva sesión",
+              href: route("attendances.index"),
+            },
+            {
+              id: "payments.index",
+              icon: DollarSign,
+              label: "Caja / POS",
+              color: "bg-orange-600",
+              desc: "Registrar pago",
+              href: route("payments.index"),
+            },
+            {
+              id: "documents",
+              icon: FileText,
+              label: "Documentos",
+              color: "bg-gray-900",
+              desc: "Facturas y DTE",
+              href: route("documents"),
+            },
+          ].filter(action => hasPermission(action.id)).map((action, i) => (
+            <Link
+              key={i}
+              href={action.href}
+              className={`p-6 text-left text-white transition-all ${action.color} rounded-[2rem] hover:scale-[1.05] hover:shadow-2xl group relative overflow-hidden`}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 -mt-12 -mr-12 transition-all duration-700 rounded-full bg-white/10 group-hover:scale-150"></div>
+              <action.icon className="relative z-10 w-8 h-8 mb-4 transition-transform group-hover:scale-110" />
+              <h3 className="relative z-10 mb-1 text-[11px] font-black tracking-widest uppercase">
+                {action.label}
+              </h3>
+              <p className="text-[9px] font-bold uppercase opacity-60 tracking-widest relative z-10">
+                {action.desc}
+              </p>
+            </Link>
+          ))}
+        </div>
+
         {/* Analisis Visual */}
         <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-2">
-          <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[2.5rem]">
-            <h2 className="flex items-center gap-3 mb-8 enterprise-label">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              Distribución Documentos (DTE)
-            </h2>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dte_stats?.dte_distribution || []}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={100}
-                    paddingAngle={8}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {(dte_stats?.dte_distribution || []).map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                        className="focus:outline-none"
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: "16px",
-                      border: "none",
-                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                      fontWeight: "bold",
-                    }}
-                    formatter={(value) => [`${value} emitidos`, "Cantidad"]}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    wrapperStyle={{
-                      fontSize: "10px",
-                      fontWeight: "900",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+          {hasPermission("documents") && (
+            <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[2.5rem]">
+              <h2 className="flex items-center gap-3 mb-8 enterprise-label">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                Distribución Documentos (DTE)
+              </h2>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dte_stats?.dte_distribution || []}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      paddingAngle={8}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {(dte_stats?.dte_distribution || []).map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                          className="focus:outline-none"
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "16px",
+                        border: "none",
+                        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                        fontWeight: "bold",
+                      }}
+                      formatter={(value) => [`${value} emitidos`, "Cantidad"]}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      iconType="circle"
+                      wrapperStyle={{
+                        fontSize: "10px",
+                        fontWeight: "900",
+                        textTransform: "uppercase",
+                        letterSpacing: "1px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[2.5rem]">
-            <h2 className="flex items-center gap-3 mb-8 enterprise-label">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              Flujo por Medio de Pago
-            </h2>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={dte_stats?.payment_distribution || []}
-                  layout="vertical"
-                  margin={{ left: 20 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    horizontal={false}
-                    stroke="#f1f5f9"
-                  />
-                  <XAxis type="number" hide />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    width={120}
-                    axisLine={false}
-                    tickLine={false}
-                    style={{
-                      fontSize: "9px",
-                      fontWeight: "900",
-                      textTransform: "uppercase",
-                      fill: "#858793",
-                    }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: "16px",
-                      border: "none",
-                      boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                      fontWeight: "bold",
-                    }}
-                    formatter={(value) => [
-                      `$${value.toLocaleString("es-CL")}`,
-                      "Recaudado",
-                    ]}
-                  />
-                  <Bar
-                    dataKey="value"
-                    fill="#3292b3"
-                    radius={[0, 12, 12, 0]}
-                    barSize={24}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+          {hasPermission("payments.index") && (
+            <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[2.5rem]">
+              <h2 className="flex items-center gap-3 mb-8 enterprise-label">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                Flujo por Medio de Pago
+              </h2>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={dte_stats?.payment_distribution || []}
+                    layout="vertical"
+                    margin={{ left: 20 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={120}
+                      axisLine={false}
+                      tickLine={false}
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: "900",
+                        textTransform: "uppercase",
+                        fill: "#858793",
+                      }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "16px",
+                        border: "none",
+                        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                        fontWeight: "bold",
+                      }}
+                      formatter={(value) => [
+                        `$${value.toLocaleString("es-CL")}`,
+                        "Recaudado",
+                      ]}
+                    />
+                    <Bar
+                      dataKey="value"
+                      fill="#3292b3"
+                      radius={[0, 12, 12, 0]}
+                      barSize={24}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-8 mb-8 lg:grid-cols-3">
@@ -414,9 +383,14 @@ export default function Dashboard({ dte_stats }) {
                 <Calendar className="w-6 h-6 text-brand-primary" />
                 Planificación del Día
               </h2>
-              <button className="px-4 py-2 bg-gray-50 text-brand-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all shadow-sm">
-                Ver Todo
-              </button>
+              {hasPermission("attendances.index") && (
+                <Link 
+                  href={route("attendances.index")}
+                  className="px-4 py-2 bg-gray-50 text-brand-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all shadow-sm"
+                >
+                  Ver Todo
+                </Link>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -469,9 +443,11 @@ export default function Dashboard({ dte_stats }) {
                     </span>
                   </div>
 
-                  <button className="flex-shrink-0 p-3 transition-colors border border-transparent shadow-sm hover:bg-white rounded-2xl hover:border-gray-100">
-                    <MoreVertical className="w-4 h-4 text-brand-gray" />
-                  </button>
+                  {hasPermission("attendances.index") && (
+                    <button className="flex-shrink-0 p-3 transition-colors border border-transparent shadow-sm hover:bg-white rounded-2xl hover:border-gray-100">
+                      <MoreVertical className="w-4 h-4 text-brand-gray" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -517,45 +493,60 @@ export default function Dashboard({ dte_stats }) {
               ))}
             </div>
 
-            <button className="w-full py-5 mt-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 transition-all border-2 border-gray-50 rounded-[1.5rem] hover:bg-gray-50 hover:text-brand-primary active:scale-95">
-              Gestionar Deudas
-            </button>
+            {hasPermission("payments.index") && (
+              <Link 
+                href={route("payments.index")}
+                className="w-full py-5 mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 transition-all border-2 border-gray-50 rounded-[1.5rem] hover:bg-gray-50 hover:text-brand-primary active:scale-95 block"
+              >
+                Gestionar Deudas
+              </Link>
+            )}
           </div>
         </div>
 
-        {/* Pacientes Recientes */}
-        <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[3rem] overflow-hidden relative">
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="flex items-center gap-4 text-2xl font-black tracking-tight text-gray-900">
-              <Users className="w-8 h-8 text-brand-primary" />
-              Ingresos Recientes
-            </h2>
-            <button className="px-6 py-3 bg-brand-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20 active:scale-95">
-              Ficha Clínica Global
-            </button>
+        {/* Pacientes Recientes - Rediseño Visual */}
+        <div className="bg-white border border-gray-100 shadow-sm rounded-[2rem] overflow-hidden">
+          <div className="flex items-center justify-between p-8 border-b border-gray-50">
+            <div>
+              <h2 className="flex items-center gap-3 text-xl font-black tracking-tight text-gray-900 uppercase">
+                <Users className="w-6 h-6 text-brand-primary" />
+                Ingresos Recientes
+              </h2>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                Últimos pacientes registrados en el sistema
+              </p>
+            </div>
+            {hasPermission("patients.index") && (
+              <Link 
+                href={route("patients.index")}
+                className="px-5 py-2.5 bg-gray-50 text-brand-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all shadow-sm"
+              >
+                Ver Listado Completo
+              </Link>
+            )}
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-50">
-                  <th className="px-6 py-5 text-left enterprise-label">
+                <tr className="bg-gray-50/50">
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-brand-gray uppercase tracking-widest">
                     Paciente
                   </th>
-                  <th className="px-6 py-5 text-left enterprise-label">
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-brand-gray uppercase tracking-widest">
                     Última Visita
                   </th>
-                  <th className="px-6 py-5 text-left enterprise-label">
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-brand-gray uppercase tracking-widest">
                     Próxima Cita
                   </th>
-                  <th className="px-6 py-5 text-left enterprise-label">
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-brand-gray uppercase tracking-widest">
                     Estado
                   </th>
-                  <th className="px-6 py-5 text-left enterprise-label">
-                    Progreso Clínico
+                  <th className="px-8 py-4 text-left text-[10px] font-black text-brand-gray uppercase tracking-widest">
+                    Progreso
                   </th>
-                  <th className="px-6 py-5 text-center enterprise-label">
-                    Acciones
+                  <th className="px-8 py-4 text-center text-[10px] font-black text-brand-gray uppercase tracking-widest">
+                    Ficha
                   </th>
                 </tr>
               </thead>
@@ -563,13 +554,14 @@ export default function Dashboard({ dte_stats }) {
                 {recentPatients.map((patient) => (
                   <tr
                     key={patient.id}
-                    className="transition-all hover:bg-gray-50 group"
+                    className="transition-all hover:bg-brand-secondary/5 group"
                   >
-                    <td className="px-6 py-6">
+                    <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 text-xs font-black text-white transition-all shadow-lg rounded-2xl bg-brand-primary shadow-brand-primary/10 group-hover:rotate-6">
+                        <div className="flex items-center justify-center w-10 h-10 text-[10px] font-black text-brand-primary bg-brand-secondary/20 rounded-xl group-hover:scale-110 transition-transform">
                           {patient.name
                             .split(" ")
+                            .slice(0, 2)
                             .map((n) => n[0])
                             .join("")}
                         </div>
@@ -578,48 +570,54 @@ export default function Dashboard({ dte_stats }) {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-6 font-mono text-sm font-bold text-gray-500">
-                      {new Date(patient.lastVisit).toLocaleDateString("es-CL")}
+                    <td className="px-8 py-5">
+                      <p className="font-mono text-xs font-bold text-gray-500">
+                        {patient.lastVisit && patient.lastVisit !== "-" 
+                          ? new Date(patient.lastVisit).toLocaleDateString("es-CL") 
+                          : "Sin visitas"}
+                      </p>
                     </td>
-                    <td className="px-6 py-6 font-mono text-sm font-bold text-gray-500">
-                      {patient.nextAppointment
-                        ? new Date(patient.nextAppointment).toLocaleDateString(
-                            "es-CL"
-                          )
-                        : "-"}
+                    <td className="px-8 py-5">
+                      <p className="font-mono text-xs font-bold text-brand-primary">
+                        {patient.nextAppointment 
+                          ? new Date(patient.nextAppointment).toLocaleDateString("es-CL") 
+                          : "--"}
+                      </p>
                     </td>
-                    <td className="px-6 py-6">
+                    <td className="px-8 py-5">
                       <span
-                        className={`inline-flex items-center px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${
+                        className={`inline-flex items-center px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
                           patient.status === "Activo"
                             ? "bg-green-50 text-green-600"
-                            : "bg-gray-50 text-gray-500"
+                            : "bg-gray-100 text-gray-500"
                         }`}
                       >
                         {patient.status}
                       </span>
                     </td>
-                    <td className="px-6 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="flex-1 h-2.5 overflow-hidden bg-gray-100 rounded-full">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-1.5 overflow-hidden bg-gray-100 rounded-full w-24">
                           <div
-                            className="h-full shadow-sm bg-brand-primary"
+                            className="h-full bg-brand-primary transition-all duration-1000"
                             style={{ width: `${patient.progress}%` }}
                           ></div>
                         </div>
-                        <span className="w-12 text-xs font-black text-right text-gray-900">
-                          {patient.progress}%
+                        <span className="text-[10px] font-black text-gray-900 w-8">
+                          {Math.round(patient.progress)}%
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-6">
-                      <div className="flex items-center justify-center gap-3">
-                        <button className="p-3 transition-all border border-transparent text-brand-primary hover:bg-brand-secondary/10 rounded-2xl hover:border-brand-secondary/20">
-                          <Eye className="w-5 h-5" />
-                        </button>
-                        <button className="p-3 transition-all border border-transparent text-brand-gray hover:bg-gray-50 rounded-2xl hover:border-gray-100">
-                          <FileText className="w-5 h-5" />
-                        </button>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center justify-center gap-2">
+                        {hasPermission("patients.show") && (
+                          <Link 
+                            href={route("patients.show", patient.id)}
+                            className="p-2.5 text-brand-primary hover:bg-brand-primary hover:text-white rounded-xl transition-all border border-transparent hover:shadow-md"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -627,57 +625,6 @@ export default function Dashboard({ dte_stats }) {
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Quick Actions Footer */}
-        <div className="grid grid-cols-1 gap-6 mt-10 md:grid-cols-5">
-          {[
-            {
-              icon: Users,
-              label: "Nuevo Paciente",
-              color: "bg-brand-primary",
-              desc: "Registrar ingreso",
-            },
-            {
-              icon: Calendar,
-              label: "Agendar Cita",
-              color: "bg-indigo-600",
-              desc: "Programar sesión",
-            },
-            {
-              icon: Clipboard,
-              label: "Nueva Sesión",
-              color: "bg-green-600",
-              desc: "Ficha clínica",
-            },
-            {
-              icon: DollarSign,
-              label: "Registrar Pago",
-              color: "bg-orange-600",
-              desc: "Caja presencial",
-            },
-            {
-              icon: FileText,
-              label: "Emitir DTE",
-              color: "bg-gray-900",
-              desc: "Factura/Boleta",
-              link: "documents",
-            },
-          ].map((action, i) => (
-            <button
-              key={i}
-              className={`p-8 text-left text-white transition-all ${action.color} rounded-[2rem] hover:scale-[1.05] hover:shadow-2xl group relative overflow-hidden`}
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 -mt-12 -mr-12 transition-all duration-700 rounded-full bg-white/10 group-hover:scale-150"></div>
-              <action.icon className="relative z-10 w-10 h-10 mb-4 transition-transform group-hover:scale-110" />
-              <h3 className="relative z-10 mb-1 text-sm font-black tracking-widest uppercase">
-                {action.label}
-              </h3>
-              <p className="text-[10px] font-bold uppercase opacity-60 tracking-widest relative z-10">
-                {action.desc}
-              </p>
-            </button>
-          ))}
         </div>
       </div>
     </AuthenticatedLayout>

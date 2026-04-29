@@ -36,39 +36,42 @@ class PatientTutorWelcomeNotification extends Notification implements ShouldQueu
         return $channels;
     }
 
+    /**
+     * Get the WhatsApp representation.
+     */
     public function toTwilioWhatsAppChannel($notifiable): array
     {
+        $this->patient->load('company');
         $nombreTutor = $this->getFirstName($notifiable->name);
         $nombrePaciente = $this->patient->name;
-        $clinica = config('app.name');
+        $clinica = $this->patient->company->business_name ?? config('app.name');
 
         return [
             'body' => "🤝 *¡Hola {$nombreTutor}! Bienvenido/a a {$clinica}* 🤝\n\n" .
                 "Te informamos que has sido registrado como *Tutor Responsable* de la ficha médica de *{$nombrePaciente}*.\n\n" .
                 "Como apoderado, recibirás por este canal:\n" .
-                "📅 Agendamiento de citas\n" .
-                "💳 Estados de cuenta y recaudación\n" .
-                "📈 Seguimiento del plan de salud\n\n" .
+                "📅 *Agendamiento de citas*\n" .
+                "💳 *Estados de cuenta y recaudación*\n" .
+                "📈 *Seguimiento del plan de salud*\n\n" .
                 "Estamos a tu disposición para cualquier consulta. ¡Gracias por confiar en nosotros!",
             'event_key' => 'tutor.welcome'
         ];
     }
 
+    /**
+     * Get the mail representation.
+     */
     public function toMail($notifiable): MailMessage
     {
-        $nombreTutor = $this->getFirstName($notifiable->name);
-        $nombrePaciente = $this->patient->full_name;
-        $clinica = config('app.name');
+        $this->patient->load('company.logo');
+        $clinica = $this->patient->company->business_name ?? config('app.name');
 
         return (new MailMessage)
             ->subject("🤝 Registro de Tutor Responsable - {$clinica}")
-            ->greeting("Hola {$nombreTutor},")
-            ->line("Te damos la bienvenida a {$clinica}. Este correo confirma que has sido registrado como el apoderado responsable de la ficha clínica de:")
-            ->line("**Paciente:** {$nombrePaciente}")
-            ->line("Como tutor, centralizaremos contigo toda la información técnica y administrativa relacionada con el tratamiento.")
-            ->line("Desde ahora recibirás notificaciones sobre citas, planes de tratamiento y documentos de facturación.")
-            ->action("Acceder al Portal", url('/'))
-            ->line("Agradecemos tu confianza en nuestro equipo médico.")
-            ->salutation("Cordialmente,\nEquipo " . $clinica);
+            ->view('emails.patients.tutor_welcome', [
+                'patient' => $this->patient,
+                'company' => $this->patient->company,
+                'contact' => $this->contact
+            ]);
     }
 }

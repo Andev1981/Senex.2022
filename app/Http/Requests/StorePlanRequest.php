@@ -98,7 +98,7 @@ class StorePlanRequest extends FormRequest
                 // Validación de cada item del contenido: ID, Sesiones
                 'content.*.session_type_id' => [
                     'required', 
-                    'exists:session_types,id',
+                    'exists:items,id',
                     'distinct', // 💡 CRÍTICO: Asegura que no se repitan servicios en el mismo paquete
                 ],
                 'content.*.max_sessions' => 'required|integer|min:1',
@@ -177,9 +177,9 @@ class StorePlanRequest extends FormRequest
             
             'content.required' => 'Debe agregar al menos un servicio al paquete interno.',
             'content.array' => 'El contenido del plan debe ser un listado de servicios.',
-            'content.*.session_type_id.required' => 'El servicio del item :attribute es obligatorio.',
-            'content.*.session_type_id.distinct' => 'Hay servicios duplicados en el paquete. Cada servicio debe ser único.',
-            'content.*.session_type_id.exists' => 'El servicio seleccionado no es válido.',
+            'content.*.item_id.required' => 'El servicio del item :attribute es obligatorio.',
+            'content.*.item_id.distinct' => 'Hay servicios duplicados en el paquete. Cada servicio debe ser único.',
+            'content.*.item_id.exists' => 'El servicio seleccionado no es válido.',
             'content.*.max_sessions.required' => 'La cantidad de sesiones del item :attribute es obligatoria.',
             'content.*.max_sessions.min' => 'La cantidad de sesiones debe ser al menos 1.',
             

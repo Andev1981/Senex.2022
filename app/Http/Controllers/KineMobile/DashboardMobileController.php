@@ -37,12 +37,12 @@ class DashboardMobileController extends Controller
 
                 return [
                     'sessions_today' => $sessionsToday->count(),
-                    'completed_today' => $sessionsToday->where('status', 'Completada')->count(),
-                    'pending_today' => $sessionsToday->where('status', 'Programada')->count(),
-                    'cancelled_today' => $sessionsToday->where('status', 'Cancelada')->count(),
-                    'today_earnings' => $sessionsToday->where('status', 'Completada')->sum('doctor_amount_clp'),
+                    'completed_today' => $sessionsToday->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->count(),
+                    'pending_today' => $sessionsToday->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)->count(),
+                    'cancelled_today' => $sessionsToday->where('status', \App\Enums\AppointmentStatusEnum::CANCELLED)->count(),
+                    'today_earnings' => $sessionsToday->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->sum('doctor_amount_clp'),
                     'month_sessions' => $sessionsMonth->count(),
-                    'month_earnings' => $sessionsMonth->where('status', 'Completada')->sum('doctor_amount_clp'),
+                    'month_earnings' => $sessionsMonth->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->sum('doctor_amount_clp'),
                 ];
             }
         );
@@ -50,19 +50,18 @@ class DashboardMobileController extends Controller
         // Agenda del día (NO cacheada - debe ser en tiempo real)
         $agenda = TreatmentSession::with([
             'patient:id,name,last_name,phone',
-            'treatment:id,diagnosis',
-            'sessionType:id,name,duration_minutes'
+            'treatment:id,referral_diagnosis',
+            'item:id,name'
         ])
             ->select(
                 'id',
                 'patient_id',
                 'treatment_id',
-                'session_type_id',
+                'item_id',
                 'date',
                 'time',
                 'status',
-                'doctor_amount_clp',
-                'notes'
+                'doctor_amount_clp'
             )
             ->where('doctor_id', $doctor->id)
             ->whereDate('date', $today)
@@ -71,13 +70,13 @@ class DashboardMobileController extends Controller
             ->map(function ($session) {
                 return [
                     'id' => $session->id,
-                    'time' => $session->time,
+                    'time' => $session->time->format('H:i'),
                     'status' => $session->status,
                     'patient_name' => $session->patient->name . ' ' . $session->patient->last_name,
                     'patient_phone' => $session->patient->phone,
-                    'session_type' => $session->sessionType->name,
-                    'duration' => $session->sessionType->duration_minutes,
-                    'diagnosis' => $session->treatment->diagnosis ?? 'Sin diagnóstico',
+                    'session_type' => $session->item->name,
+                    'duration' => $session->duration,
+                    'diagnosis' => $session->treatment->referral_diagnosis ?? 'Sin diagnóstico',
                     'earnings' => $session->doctor_amount_clp,
                 ];
             });
@@ -92,7 +91,7 @@ class DashboardMobileController extends Controller
         $activePatientsCount = $doctor->patients()
             ->whereHas('treatments', function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
-                    ->where('status', 'InProgress');
+                    ->where('status', \App\Enums\TreatmentStatusEnum::IN_PROGRESS);
             })
             ->count();
 

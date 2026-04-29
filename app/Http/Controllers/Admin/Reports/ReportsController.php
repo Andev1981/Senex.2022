@@ -73,13 +73,13 @@ class ReportsController extends Controller
 
         // 6. Distribución de Atenciones
         $distributionData = TreatmentSession::select(
-            'session_types.name',
+            'items.name',
             DB::raw('count(*) as count')
         )
-        ->join('session_types', 'treatment_sessions.session_type_id', '=', 'session_types.id')
+        ->join('items', 'treatment_sessions.item_id', '=', 'items.id')
         ->where('treatment_sessions.company_id', $companyId)
         ->where('treatment_sessions.status', AppointmentStatusEnum::COMPLETED)
-        ->groupBy('session_types.name')
+        ->groupBy('items.name')
         ->get();
 
         return Inertia::render('reports/Index', [
