@@ -207,20 +207,21 @@ export default function TableInsurances({
 
   return (
     <div className="space-y-6 duration-700 animate-in fade-in">
-      <div className="relative p-6 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-3xl">
-        <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl">
-          <div className="relative z-10 max-w-xl group">
-            <Search className="absolute w-4 h-4 transition-colors transform -translate-y-1/2 text-brand-gray left-4 top-1/2 group-focus-within:text-brand-primary" />
-            <input
-              value={globalFilter ?? ""}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              placeholder="Buscar por nombre de Isapre o RUT..."
-              className="w-full py-4 pl-12 pr-4 text-sm font-bold transition-all border-gray-100 shadow-inner outline-none bg-gray-50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary"
-            />
-          </div>
+      <div className="bg-white border border-gray-100 shadow-xl rounded-[2rem] overflow-hidden flex flex-col">
+        {/* Toolbar */}
+        <div className="flex flex-col gap-6 p-6 bg-white border-b border-gray-50">
+            <div className="relative max-w-2xl group">
+                <Search className="absolute w-4 h-4 transition-colors transform -translate-y-1/2 text-brand-gray left-4 top-1/2 group-focus-within:text-brand-primary" />
+                <input
+                    value={globalFilter ?? ""}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    placeholder="Buscar por nombre de Isapre o RUT..."
+                    className="w-full py-4 pl-12 pr-4 text-sm font-bold transition-all border-gray-50 bg-gray-50/50 rounded-2xl focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary outline-none"
+                />
+            </div>
         </div>
 
-        <div className="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl-xl">
+        <div className="overflow-hidden bg-white">
           <div className="flex items-center justify-between p-6 border-b border-gray-50 bg-gray-50/30">
             <h2 className="flex items-center gap-3 text-sm font-black tracking-tight text-gray-900 uppercase">
               <BrickWallShield className="w-5 h-5 text-brand-primary" /> Nómina
@@ -284,7 +285,7 @@ export default function TableInsurances({
                           <Layers className="w-12 h-12" />
                         </div>
                         <p className="enterprise-label opacity-40">
-                          No se detectaron aseguradorasvinculadas
+                          No se detectaron aseguradoras vinculadas
                         </p>
                       </div>
                     </td>

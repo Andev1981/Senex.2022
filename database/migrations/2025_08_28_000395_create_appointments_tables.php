@@ -23,6 +23,8 @@ return new class extends Migration {
                       ->constrained('rooms')
                       ->nullOnDelete();
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('item_id')->nullable()->constrained('items')->nullOnDelete();
+            $table->string('modality', 20)->default('onsite');
     
 
             // Horarios

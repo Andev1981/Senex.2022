@@ -7,7 +7,7 @@ import DoctorDetailModal from "./DoctorDetailModal"; // Solo para CREACIÓN
 import { UserPlus } from "lucide-react";
 
 export default function Index(props) {
-  const { doctors, regions, provinces, communes, branches } = props;
+  const { doctors, regions, provinces, communes, branches, availabilities = [], rooms = [] } = props;
   const [isModalOpenCreate, setIsModalOpenCreate] = useState(false);
   const [isModalOpenEdit, setIsModalOpenEdit] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -57,6 +57,8 @@ export default function Index(props) {
           provinces={provinces}
           communes={communes}
           branches={branches}
+          availabilities={availabilities}
+          rooms={rooms}
         />
       </SideModal>
 
@@ -75,6 +77,8 @@ export default function Index(props) {
                 provinces={provinces}
                 communes={communes}
                 branches={branches}
+                availabilities={availabilities.filter(av => av.doctor_id === selectedDoctor.id)}
+                rooms={rooms}
             />
         )}
       </SideModal>

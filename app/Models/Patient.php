@@ -157,6 +157,20 @@ class Patient extends Authenticatable
             ->where('status', 'active');
     }
 
+    public function activeExternalPlans(): HasMany
+    {
+        return $this->hasMany(PatientPlan::class)
+            ->where('status', 'active')
+            ->whereHas('plan', fn($q) => $q->where('type', 'external'));
+    }
+
+    public function activeInternalPacks(): HasMany
+    {
+        return $this->hasMany(PatientPlan::class)
+            ->where('status', 'active')
+            ->whereHas('plan', fn($q) => $q->where('type', 'internal'));
+    }
+
     public function doctorAssignments(): HasMany
     {
         return $this->hasMany(DoctorPatientAssignment::class);

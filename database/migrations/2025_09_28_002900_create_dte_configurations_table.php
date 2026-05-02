@@ -18,6 +18,7 @@ return new class extends Migration
 
             // Technical Fields in English
             $table->string('company_rut', 12)->comment('Company RUT (tax ID) for DTE operations.'); 
+            $table->integer('acteco')->nullable()->comment('Código de Actividad Económica principal ante el SII');
             $table->string('signer_rut', 12)->nullable()->comment('Signer RUT (Person) extracted from certificate.');
             $table->string('certificate_path')->nullable()->comment('Physical path to the .pfx certificate file.');
             $table->text('certificate_password')->nullable()->comment('Encrypted PFX password.');

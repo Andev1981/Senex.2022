@@ -148,7 +148,7 @@ class PlanService
                   ->orWhereRaw('sessions_used < sessions_included');
             });
 
-        $patientPlans = $query->with('plan')->get();
+        $patientPlans = $query->with('plan.items')->get();
 
         // Si no hay itemId, devolver cualquier plan activo
         if (!$itemId) {
@@ -157,14 +157,9 @@ class PlanService
 
         // Filtrar por tipo de sesión permitido
         foreach ($patientPlans as $patientPlan) {
-            $raw = $patientPlan->plan->items;
+            $allowedItemIds = $patientPlan->plan->items->pluck('id')->toArray();
 
-            // Si ya es array, usalo directo; si es string, decodealo
-            $allowedSessionTypes = is_array($raw)
-                ? $raw
-                : (is_string($raw) ? json_decode($raw, true) : []);
-
-            if (empty($allowedSessionTypes) || in_array($itemId, $allowedSessionTypes)) {
+            if (empty($allowedItemIds) || in_array($itemId, $allowedItemIds)) {
                 return $patientPlan;
             }
         }
@@ -201,12 +196,9 @@ class PlanService
 
             // Validar tipo de sesión permitido
             $plan = $patientPlan->plan;
-            $raw = $plan->items;
-            $allowedSessionTypes = is_array($raw)
-                ? $raw
-                : (is_string($raw) ? json_decode($raw, true) : []);
+            $allowedItemIds = $plan->items->pluck('id')->toArray();
 
-            if (!empty($allowedSessionTypes) && !in_array($session->item_id, $allowedSessionTypes)) {
+            if (!empty($allowedItemIds) && !in_array($session->item_id, $allowedItemIds)) {
                 throw new \Exception('Este tipo de sesión no está incluido en el plan');
             }
 
@@ -237,7 +229,7 @@ class PlanService
                 'patient_plan_id' => $patientPlan->id,
                 'session_id' => $session->id,
                 'sessions_consumed' => $sessionsToConsume,
-                'remaining' => $patientPlan->sessions_included - $patientPlan->sessions_used,
+                'remaining' => ($patientPlan->sessions_included ?? 0) - $patientPlan->sessions_used,
             ]);
 
             return $consumption;
@@ -287,7 +279,7 @@ class PlanService
     {
         $activePlans = PatientPlan::where('patient_id', $patientId)
             ->where('status', 'active')
-            ->with('plan')
+            ->with('plan.items')
             ->get();
 
         return $activePlans->map(function ($patientPlan) {
@@ -304,14 +296,14 @@ class PlanService
                 'id' => $patientPlan->id,
                 'plan_name' => $patientPlan->plan->name,
                 'plan_type' => $patientPlan->plan->type,
-                'purchased_at' => $patientPlan->purchased_at->format('Y-m-d'),
+                'purchased_at' => $patientPlan->purchased_at?->format('Y-m-d'),
                 'expiry_date' => $patientPlan->expiry_date?->format('Y-m-d'),
                 'days_until_expiry' => $daysUntilExpiry,
                 'sessions_included' => $patientPlan->sessions_included ?? 'Ilimitado',
                 'sessions_used' => $patientPlan->sessions_used,
                 'sessions_remaining' => $remaining,
                 'status' => $patientPlan->status,
-                'allowed_items' => json_decode($patientPlan->plan->items, true),
+                'allowed_items' => $patientPlan->plan->items->pluck('id')->toArray(),
             ];
         })->toArray();
     }

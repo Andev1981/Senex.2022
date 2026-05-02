@@ -23,9 +23,7 @@ export default function CancelModal({
 
     const sessionId = sessionData.session_id || sessionData.id;
 
-    patch(route("attendances.cancel", sessionId), {
-      cancellation_reason: data.session_cancellation_notes 
-    }, {
+    post(route("treatment-sessions.cancel", sessionId), {
       onSuccess: () => {
         setShowCancelModal(false);
         setSessionData(false);
@@ -34,35 +32,41 @@ export default function CancelModal({
   };
 
   return (
-    <div className="p-6 bg-white">
-      <h3 className="mb-4 text-xl font-bold text-gray-900">Cancelar Sesión</h3>
-      <p className="mb-4 text-sm text-gray-600">
-        Proporciona un motivo para la cancelación de la sesión de{" "}
-        <strong>{sessionData?.patient_full_name || sessionData?.paciente}</strong>
-      </p>
-      <textarea
-        value={data.session_cancellation_notes}
-        onChange={(e) => setData("session_cancellation_notes", e.target.value)}
-        placeholder="Motivo de cancelación (mínimo 10 caracteres)..."
-        className="w-full p-3 border-2 border-gray-200 rounded-lg resize-none h-28 focus:border-blue-500 focus:outline-none"
-      />
-      <div className="flex gap-2 mt-4">
+    <div className="space-y-6 flex flex-col h-full">
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-gray-600 leading-relaxed">
+            Está a punto de anular la sesión de <strong>{sessionData?.patient_full_name || sessionData?.paciente}</strong>. 
+            Esta acción es reversible pero requiere un motivo justificado.
+        </p>
+        
+        <div className="space-y-2">
+            <label className="enterprise-label ml-1 opacity-60">Motivo de Cancelación</label>
+            <textarea
+                value={data.session_cancellation_notes}
+                onChange={(e) => setData("session_cancellation_notes", e.target.value)}
+                placeholder="Indique el motivo detallado (mínimo 10 caracteres)..."
+                className="w-full p-4 rounded-2xl border-gray-100 bg-gray-50 text-sm font-medium focus:bg-white focus:ring-brand-primary transition-all resize-none h-32 shadow-inner"
+            />
+        </div>
+      </div>
+
+      <div className="flex gap-3 mt-auto pt-6 border-t border-gray-50">
         <button
           onClick={() => {
             setShowCancelModal(false);
             setSessionData(false);
           }}
-          className="flex-1 px-4 py-2 font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+          className="flex-1 px-6 py-3.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
           disabled={processing}
         >
-          Cancelar
+          Descartar
         </button>
         <button
           onClick={cancelSession}
-          disabled={processing}
-          className="flex-1 px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+          disabled={processing || data.session_cancellation_notes.length < 10}
+          className="flex-2 px-8 py-3.5 text-[10px] font-black uppercase tracking-widest text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
         >
-          {processing ? "Procesando..." : "Confirmar Cancelación"}
+          {processing ? "Procesando..." : "Confirmar Anulación"}
         </button>
       </div>
     </div>

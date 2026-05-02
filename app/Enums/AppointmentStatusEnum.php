@@ -10,6 +10,7 @@ enum AppointmentStatusEnum: string
 
     case SCHEDULED = 'scheduled';
     case CONFIRMED = 'confirmed';
+    case CHECKED_IN = 'checked_in';
     case IN_PROGRESS = 'in_progress';
     case COMPLETED = 'completed';
     case CANCELLED = 'cancelled';
@@ -20,7 +21,8 @@ enum AppointmentStatusEnum: string
         return match ($this) {
             self::SCHEDULED => 'Programada',
             self::CONFIRMED => 'Confirmada',
-            self::IN_PROGRESS => 'En Sala',
+            self::CHECKED_IN => 'Llegó (En espera)',
+            self::IN_PROGRESS => 'En Box',
             self::COMPLETED => 'Realizada',
             self::CANCELLED => 'Anulada',
             self::NO_SHOW => 'No Asistió',
@@ -32,6 +34,7 @@ enum AppointmentStatusEnum: string
         return match ($this) {
             self::SCHEDULED => 'blue',      //bg-blue-100 text-blue-800
             self::CONFIRMED => 'indigo',
+            self::CHECKED_IN => 'orange',
             self::IN_PROGRESS => 'amber',   //bg-amber-100
             self::COMPLETED => 'green',
             self::CANCELLED => 'red',

@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Multitenantable;
 
 
 class Room extends Model
 {
+  use Multitenantable;
 
 
-  protected $fillable = ['branch_id', 'name', 'capacity','status'];
+  protected $fillable = ['company_id', 'branch_id', 'name', 'capacity','status'];
 
   protected $casts = ['capacity' => 'integer'];
 

@@ -27,10 +27,7 @@ use App\Http\Controllers\Admin\Agreements\{
   AgreementRuleController
 };
 
-/* Attendances */
-use App\Http\Controllers\Admin\Attendances\{
-  AttendancesController
-};
+/* Attendances - DEFUNCT (Merged into TreatmentSessions) */
 
 /* Calendars */
 use App\Http\Controllers\Admin\Calendars\{
@@ -195,6 +192,17 @@ Route::match(['GET', 'POST'], '/webpay/public/return', [WebpayController::class,
   ->name('public.webpay.return');
 
 // =============================================================================
+// CONFIRMACIÓN DE CITAS (PÚBLICO CON FIRMA)
+// =============================================================================
+Route::get('/confirmar-cita/{appointment}', [\App\Http\Controllers\Public\AppointmentConfirmationController::class, 'confirm'])
+    ->name('appointment.confirm')
+    ->middleware('signed');
+
+Route::get('/cancelar-cita/{appointment}', [\App\Http\Controllers\Public\AppointmentConfirmationController::class, 'cancel'])
+    ->name('appointment.cancel')
+    ->middleware('signed');
+
+// =============================================================================
 // PORTAL DE PAGOS PACIENTES (PÚBLICO)
 // =============================================================================
 Route::get('/pagar', [WebpayController::class, 'portalPagosIndex'])->name('portal.pago');
@@ -256,7 +264,14 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     // Otros Módulos Maestros
     Route::resource('companies', CompanyController::class);
     Route::resource('branches', BranchController::class);
-    Route::resource('doctors', DoctorAdminController::class)->names('doctors');
+    Route::resource('availabilities', \App\Http\Controllers\Admin\Calendars\AvailabilityController::class);
+    Route::post('availabilities/exceptions', [\App\Http\Controllers\Admin\Calendars\AvailabilityController::class, 'storeException'])->name('availabilities.exceptions.store');
+    Route::delete('availabilities/exceptions/{exception}', [\App\Http\Controllers\Admin\Calendars\AvailabilityController::class, 'destroyException'])->name('availabilities.exceptions.destroy');
+    Route::post('availabilities/holidays', [\App\Http\Controllers\Admin\Calendars\AvailabilityController::class, 'storeHoliday'])->name('availabilities.holidays.store');
+    Route::delete('availabilities/holidays/{holiday}', [\App\Http\Controllers\Admin\Calendars\AvailabilityController::class, 'destroyHoliday'])->name('availabilities.holidays.destroy');
+    Route::post('branches/{branch}/rooms', [\App\Http\Controllers\Admin\Branches\RoomController::class, 'store'])->name('branches.rooms.store');
+    Route::put('rooms/{room}', [\App\Http\Controllers\Admin\Branches\RoomController::class, 'update'])->name('rooms.update');
+    Route::delete('rooms/{room}', [\App\Http\Controllers\Admin\Branches\RoomController::class, 'destroy'])->name('rooms.destroy');    Route::resource('doctors', DoctorAdminController::class)->names('doctors');
     Route::resource('plans', PlanController::class)->names('plans');
     Route::resource('insurances', InsuranceController::class)->names('insurances');
     Route::resource('agreements', AgreementController::class)->names('agreements');
@@ -270,12 +285,18 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     Route::get('documents/{invoice}/status', [DteController::class, 'checkDteStatus'])->name('dte.status');
   });
 
-  // ÁREA COMPARTIDA (Admin, Superadmin y Cajero)
-  Route::middleware(['role:admin|superadmin|cajero'])->group(function () {
+    // ÁREA COMPARTIDA (Admin, Superadmin y Cajero)
+    Route::middleware(['role:admin|superadmin|cajero'])->group(function () {
+    Route::get('agendas/available-slots', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'getAvailableSlots'])->name('agendas.available-slots');
+    Route::get('agendas', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'index'])->name('agendas.index');
+    Route::post('agendas', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'store'])->name('agendas.store');
+    Route::post('agendas/{appointment}/checkin', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'checkin'])->name('agendas.checkin');
+    Route::post('agendas/{appointment}/cancel', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'cancel'])->name('agendas.cancel');
+    
     Route::get('patients', [PatientAdminController::class, 'index'])->name('patients.index');
     Route::get('patients/{patient}', [PatientAdminController::class, 'show'])->name('patients.show');
     Route::post('patients/validate-rut', [PatientAdminController::class, 'checkExisting'])->name('patients.check-existing');
-    Route::post('patient/quick/store', [PatientAdminController::class, "quickStore"])->name('patients.quick_store');
+    Route::post('patients/quick-store', [PatientAdminController::class, "quickStore"])->name('patients.quick_store');
     Route::get('/patients/search', [PatientSearchController::class, 'search']);
     
     Route::get('/invoices/{invoice}', [InvoicesController::class, 'show'])->name('invoices.show');
@@ -316,12 +337,12 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
   // RUTAS COMUNES (Atenciones, Pagos y Consultas)
   // =============================================================================
   
-  // Atenciones (Presencial)
-  Route::get('/attendances', [AttendancesController::class, 'index'])->name('attendances.index');
-  Route::patch('/attendances/{id}/start', [AttendancesController::class, 'startSession'])->name('attendances.start');
-  Route::patch('/attendances/{id}/complete', [AttendancesController::class, 'completeSession'])->name('attendances.complete');
-  Route::patch('/attendances/{id}/cancel', [AttendancesController::class, 'cancelSession'])->name('attendances.cancel');
-  Route::patch('/attendances/{id}/absent', [AttendancesController::class, 'markAbsent'])->name('attendances.absent');
+  // Sesiones Clínicas (Presencial)
+  Route::get('/clinical-sessions', [TreatmentSessionController::class, 'index'])->name('treatment-sessions.index');
+  Route::post('/clinical-sessions/{session}/start', [TreatmentSessionController::class, 'start'])->name('treatment-sessions.start');
+  Route::post('/clinical-sessions/{session}/complete', [TreatmentSessionController::class, 'complete'])->name('treatment-sessions.complete');
+  Route::post('/clinical-sessions/{session}/cancel', [TreatmentSessionController::class, 'cancel'])->name('treatment-sessions.cancel');
+  Route::post('/clinical-sessions/{session}/absent', [TreatmentSessionController::class, 'absent'])->name('treatment-sessions.absent');
 
   // Pagos Internos (Caja)
   Route::resource('payments', PaymentsController::class)->names('payments');

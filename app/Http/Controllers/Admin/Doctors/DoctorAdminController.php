@@ -23,9 +23,27 @@ class DoctorAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $currentCompanyId = session('current_company_id');
+        $user = auth()->user();
+        
+        // 🎯 DETERMINAR CONTEXTO DE EMPRESA (Con fallback seguro)
+        $currentCompanyId = session('current_company_id') ?: $user->company_id;
+        if (!$currentCompanyId) {
+            $currentCompanyId = Company::first()?->id;
+        }
+
+        // 🎯 DETERMINAR CONTEXTO DE SUCURSAL
         $activeBranchId = session('active_branch_id');
         
+        // Validar que la sucursal activa pertenezca a la empresa actual
+        if ($activeBranchId) {
+            $branchExists = Branch::where('id', $activeBranchId)
+                ->where('company_id', $currentCompanyId)
+                ->exists();
+            if (!$branchExists) {
+                $activeBranchId = null;
+            }
+        }
+
         $month = $request->input('month', now()->month);
         $year = $request->input('year', now()->year);
 
@@ -37,6 +55,7 @@ class DoctorAdminController extends Controller
             ->get();
 
         // 2. Consulta principal de Doctores
+        // Optimizamos la obtención de la dirección principal
         $addrPick = DB::table('addresses as a')
             ->selectRaw('a.addressable_id, COALESCE(MAX(CASE WHEN a.is_primary = 1 THEN a.id END), MAX(a.id)) as addr_id')
             ->where('a.addressable_type', 'Doctor')
@@ -50,10 +69,10 @@ class DoctorAdminController extends Controller
             })
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
             ->leftJoin('communes', 'addr.commune_id', '=', 'communes.id')
-            // Join con branch_doctor para obtener estatus en la sucursal actual
+            // Join con branch_doctor para obtener estatus en la sucursal actual (si hay una seleccionada)
             ->leftJoin('branch_doctor', function($join) use ($activeBranchId) {
                 $join->on('branch_doctor.doctor_id', '=', 'doctors.id')
-                    ->where('branch_doctor.branch_id', '=', $activeBranchId);
+                    ->when($activeBranchId, fn($q) => $q->where('branch_doctor.branch_id', '=', $activeBranchId));
             })
             ->when($activeBranchId, function ($query) use ($activeBranchId) {
                 $query->whereHas('branches', function ($q) use ($activeBranchId) {
@@ -62,11 +81,12 @@ class DoctorAdminController extends Controller
             })
             ->select([
                 'doctors.*',
-                'users.email as user_email', // Email real del login
+                'users.email as user_email', 
                 'communes.name as commune_name',
                 'addr.street',
                 'addr.number',
                 'addr.details',
+                'addr.commune_id',
                 'addr.region_id',
                 'addr.province_id',
                 'addr.id as address_id',
@@ -77,9 +97,13 @@ class DoctorAdminController extends Controller
             ->with(['branches:id,name', 'commissionRates', 'user:id,is_active,email'])
             ->get()
             ->map(function($d) {
-                // Si el doctor no tiene email propio, usamos el del usuario
+                // Aseguramos que el email no sea nulo para el frontend
                 if (empty($d->email)) {
                     $d->email = $d->user_email;
+                }
+                // Fallback para estatus de sucursal si no hay branch activa seleccionada
+                if (empty($d->branch_status)) {
+                    $d->branch_status = $d->is_active ? 'active' : 'cancelled';
                 }
                 return $d;
             });
@@ -89,8 +113,7 @@ class DoctorAdminController extends Controller
         $provinces = Province::orderBy('name')->get(['id', 'name', 'region_id'])->map(fn($p) => ['value' => (string)$p->id, 'label' => $p->name, 'region_id' => (string)$p->region_id]);
         $communes = Commune::orderBy('name')->get(['id', 'name', 'province_id'])->map(fn($c) => ['value' => (string)$c->id, 'label' => $c->name, 'province_id' => (string)$c->province_id]);
         
-        // 4. Determinar Sucursales Disponibles (Restringido por Admin)
-        $user = auth()->user();
+        // 4. Determinar Sucursales Disponibles
         if ($user->isSuperAdmin()) {
             $availableBranches = Branch::where('company_id', $currentCompanyId)
                 ->select(['id', 'name'])->get();
@@ -100,19 +123,26 @@ class DoctorAdminController extends Controller
                 ->select(['branches.id', 'branches.name'])->get();
         }
 
-        // 5. Determinar la vista correcta
-        $viewPath = 'doctors/Index'; 
+        // 5. Disponibilidad y Salas Globales para la empresa actual
+        $availabilities = \App\Models\Availability::where('company_id', $currentCompanyId)
+            ->with(['branch', 'room'])
+            ->get();
+        
+        $allRooms = \App\Models\Room::where('company_id', $currentCompanyId)->get();
 
-        return Inertia::render($viewPath, [
+        return Inertia::render('doctors/Index', [
             'doctors'   => $doctors,
             'items'     => $items,
             'regions'   => $regions,
             'provinces' => $provinces,
             'communes'  => $communes,
             'branches'  => $availableBranches,
+            'availabilities' => $availabilities,
+            'rooms' => $allRooms,
             'filters'   => [
                 'month' => (int)$month,
-                'year'  => (int)$year
+                'year'  => (int)$year,
+                'active_branch_id' => $activeBranchId
             ]
         ]);
     }
@@ -232,6 +262,20 @@ class DoctorAdminController extends Controller
                 ->select(['branches.id', 'branches.name'])->get();
         }
 
+        $activeBranchId = session('active_branch_id');
+        $currentBranchPivot = $doctor->branches->where('id', $activeBranchId)->first()?->pivot;
+
+        // 10. Disponibilidad y Salas
+        $availabilities = \App\Models\Availability::where('doctor_id', $doctor->id)
+            ->with(['branch', 'room'])
+            ->get();
+        
+        $allAvailabilities = \App\Models\Availability::where('company_id', $currentCompanyId)
+            ->with(['doctor', 'branch', 'room'])
+            ->get();
+        
+        $allRooms = \App\Models\Room::where('company_id', $currentCompanyId)->get();
+
         return Inertia::render('doctors/DetailDoctor', [
             'doctor' => [
                 'id' => $doctor->id,
@@ -255,6 +299,9 @@ class DoctorAdminController extends Controller
                 'street' => $doctor->address?->street,
                 'number' => $doctor->address?->number,
                 'details' => $doctor->address?->details,
+                'mobile_app_access' => (bool) ($currentBranchPivot?->mobile_app_access ?? false),
+                'branch_status' => $currentBranchPivot?->status ?? 'active',
+                'branch_status_reason' => $currentBranchPivot?->status_reason ?? '',
             ],
             'stats' => $stats,
             'sessions' => $sessions,
@@ -265,6 +312,9 @@ class DoctorAdminController extends Controller
             'provinces' => $provinces,
             'communes' => $communes,
             'branches' => $availableBranches,
+            'availabilities' => $availabilities,
+            'all_availabilities' => $allAvailabilities,
+            'rooms' => $allRooms,
         ]);
     }
 

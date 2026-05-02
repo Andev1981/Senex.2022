@@ -71,7 +71,7 @@ export default function AuthenticatedLayout({ header, children }) {
           <aside
             className={`${
               sidebarOpen ? "w-72" : "w-24"
-            } flex-none sticky top-0 ${env === 'local' ? 'h-[calc(100dvh-32px)]' : 'h-dvh'} overflow-y-auto transition-all duration-500 ease-in-out print:hidden`}
+            } flex-none sticky top-0 ${env === 'local' ? 'h-[calc(100dvh-32px)]' : 'h-dvh'} transition-all duration-500 ease-in-out print:hidden bg-white overflow-hidden`}
             
           >
             <Side

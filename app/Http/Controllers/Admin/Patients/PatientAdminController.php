@@ -362,69 +362,59 @@ class PatientAdminController extends Controller
     public function quickStore(Request $request)
     {
         $request->validate([
-            'rut' => 'required|string',
-            'name' => 'required|string',
-            'last_name' => 'required|string',
-            'email' => 'nullable|email',
-            'phone' => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'rut' => 'nullable|string',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:255',
         ]);
 
         try {
-            $patient = DB::transaction(function () use ($request) {
+            return DB::transaction(function () use ($request) {
                 $currentCompanyId = session('current_company_id');
                 $activeBranchId = session('active_branch_id');
                 
-                // Asegurar RUT limpio
-                $rut = \App\Rules\ValidRut::clean($request->rut);
+                $rut = $request->rut ? \App\Rules\ValidRut::clean($request->rut) : null;
 
-                // 1. Verificar si ya existe el paciente por RUT globalmente
-                $patient = Patient::withoutGlobalScopes()
-                    ->where('rut', $rut)
-                    ->first();
+                // 1. Verificar si ya existe el paciente por RUT
+                $patient = null;
+                if ($rut) {
+                    $patient = Patient::withoutGlobalScopes()
+                        ->where('rut', $rut)
+                        ->first();
+                }
+
+                $basicData = [
+                    'name' => $request->name,
+                    'email' => $request->email ?: null,
+                    'phone' => $request->phone ?: null,
+                ];
 
                 if (!$patient) {
                     // Si no existe, creamos el registro
-                    $data = $request->only(['name', 'last_name', 'email', 'phone']);
+                    $data = $basicData;
                     $data['rut'] = $rut;
                     $data['company_id'] = $currentCompanyId;
-                    $data['user_id'] = auth()->id();
-                    $data['birth_date'] = now()->subYears(30)->format('Y-m-d'); 
-                    
-                    // Defaults para notificaciones (True = Activas)
-                    $data['opt_out_reminders'] = true;
-                    $data['prefers_whatsapp'] = true;
-                    $data['prefers_mail'] = true;
+                    $data['status'] = 'active';
                     
                     $patient = Patient::create($data);
-
-                    // Notificación de bienvenida automática en registro rápido
-                    $channels = [];
-                    if ($patient->email) $channels[] = 'mail';
-                    if ($patient->phone) $channels[] = 'whatsapp';
-
-                    if (!empty($channels)) {
-                        $patient->notify(new \App\Notifications\PatientWelcomeNotification($patient, $channels));
-                    }
                 } else {
-                    // Si existe, actualizamos su información y aseguramos la empresa
+                    // Si existe, aseguramos que pertenezca a la empresa actual y actualizamos datos básicos si vienen
                     $patient->company_id = $currentCompanyId;
-                    $patient->update($request->only(['name', 'last_name', 'email', 'phone']));
+                    $patient->fill(array_filter($basicData));
+                    $patient->save();
                 }
 
                 // 2. Vincular a la sucursal actual si no está vinculado
-                if ($activeBranchId && !$patient->branches()->where('branches.id', $activeBranchId)->exists()) {
+                if ($activeBranchId && method_exists($patient, 'branches') && !$patient->branches()->where('branches.id', $activeBranchId)->exists()) {
                     $patient->branches()->attach($activeBranchId, ['status' => 'active']);
                 }
 
-                return $patient;
+                return back()->with('success', "Paciente {$patient->name} registrado correctamente.");
             });
 
-            return response()->json($patient);
         } catch (\Exception $e) {
             \Log::error("Error en quickStore de paciente: " . $e->getMessage());
-            return response()->json([
-                'message' => 'Error al registrar el paciente: ' . $e->getMessage()
-            ], 500);
+            return back()->withErrors(['error' => 'Error al registrar el paciente: ' . $e->getMessage()]);
         }
     }
 

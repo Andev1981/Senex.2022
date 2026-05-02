@@ -314,7 +314,12 @@ export default function SessionFormModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!data.patient_id) return alert("Selecciona un paciente");
+    if (!data.patient_id) return Swal.fire("Atención", "Selecciona un paciente", "warning");
+    
+    // Validación adicional: Si es tratamiento nuevo, el diagnóstico es obligatorio
+    if (!data.treatment_id && !data.diagnostic_code) {
+        return Swal.fire("Campo Requerido", "Para crear un nuevo tratamiento debes seleccionar un diagnóstico CIE-10", "error");
+    }
     
     const submitOptions = {
       onSuccess: () => { 
@@ -362,13 +367,13 @@ export default function SessionFormModal({
       <form onSubmit={handleSubmit} className="flex flex-col h-full">
         
         {/* --- HEADER --- */}
-        <div className={`flex flex-col justify-between gap-6 p-6 border-b border-gray-100 md:flex-row md:items-center shrink-0 transition-colors duration-500 ${isEditing ? "bg-indigo-50/50" : "bg-gray-50/50"}`}>
+        <div className={`flex flex-col justify-between gap-4 px-8 py-4 border-b border-gray-100 md:flex-row md:items-center shrink-0 transition-colors duration-500 ${isEditing ? "bg-indigo-50/50" : "bg-gray-50/50"}`}>
           <div className="flex items-center gap-4">
-            <div className={`flex items-center justify-center text-white transform shadow-xl w-14 h-14 rounded-2xl rotate-3 transition-colors ${isEditing ? "bg-indigo-600 shadow-indigo-200" : "bg-brand-primary shadow-brand-primary/20"}`}>
-              {isEditing ? <Edit3 className="w-7 h-7" /> : <Plus className="w-7 h-7" />}
+            <div className={`flex items-center justify-center text-white transform shadow-lg w-12 h-12 rounded-xl rotate-3 transition-colors ${isEditing ? "bg-indigo-600 shadow-indigo-200" : "bg-brand-primary shadow-brand-primary/20"}`}>
+              {isEditing ? <Edit3 className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
             </div>
             <div>
-              <h1 className="mb-1 text-2xl font-black leading-none tracking-tight text-gray-900 uppercase">
+              <h1 className="mb-1 text-xl font-black leading-none tracking-tight text-gray-900 uppercase">
                 {isEditing ? "Editar Sesión" : "Nueva Sesión"}
               </h1>
               <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">
@@ -377,12 +382,12 @@ export default function SessionFormModal({
             </div>
           </div>
 
-          <div className="flex flex-col w-full gap-1 md:w-64">
+          <div className="flex flex-col w-full gap-1 md:w-56">
             <label className="ml-1 enterprise-label opacity-60">Estado Actual</label>
             <select
               value={data.status}
               onChange={(e) => setData("status", e.target.value)}
-              className="w-full text-[10px] font-black uppercase tracking-widest border-gray-100 rounded-xl bg-white focus:ring-brand-primary transition-all py-3 shadow-sm cursor-pointer"
+              className="w-full text-[10px] font-black uppercase tracking-widest border-gray-100 rounded-xl bg-white focus:ring-brand-primary transition-all py-2.5 shadow-sm cursor-pointer"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -392,7 +397,7 @@ export default function SessionFormModal({
         </div>
 
         {/* --- CUERPO --- */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-8">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 {/* === COLUMNA IZQUIERDA (7/12) === */}
@@ -817,9 +822,9 @@ export default function SessionFormModal({
         </div>
 
         {/* --- FOOTER UNIFICADO --- */}
-        <div className="flex justify-end gap-4 p-4 border-t border-gray-100 bg-white z-20 shrink-0">
-            <button type="button" onClick={() => setShowModal(false)} className="cursor-pointer px-8 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all" disabled={processing}>Cancelar</button>
-            <button type="submit" className="px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-brand-primary rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 disabled:opacity-50 transition-all active:scale-95 transform cursor-pointer" disabled={processing}>{submitLabel}</button>
+        <div className="flex justify-end gap-3 px-8 py-4 border-t border-gray-100 bg-white z-20 shrink-0">
+            <button type="button" onClick={() => setShowModal(false)} className="cursor-pointer px-6 py-3 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-xl transition-all" disabled={processing}>Cancelar</button>
+            <button type="submit" className="px-10 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white bg-brand-primary rounded-xl shadow-lg shadow-brand-primary/20 hover:brightness-110 disabled:opacity-50 transition-all active:scale-95 transform cursor-pointer" disabled={processing}>{submitLabel}</button>
         </div>
 
       </form>

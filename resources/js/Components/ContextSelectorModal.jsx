@@ -66,21 +66,21 @@ export default function ContextSelectorModal({ isOpen, onClose }) {
         {/* LADO IZQUIERDO: EMPRESAS (Estrictamente Superadmin) */}
         {userIsSuperAdmin ? (
           <div className="w-full md:w-5/12 border-r border-gray-100 flex flex-col bg-gray-50/30">
-            <div className="p-8 border-b border-gray-100 bg-white">
-              <label className="enterprise-label mb-4 block">1. Directorio de Empresas</label>
+            <div className="px-8 py-5 border-b border-gray-100 bg-white">
+              <label className="enterprise-label mb-3 block">1. Directorio de Empresas</label>
               <div className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-gray group-focus-within:text-brand-primary transition-colors" />
                 <input 
                   type="text"
                   placeholder="Buscar por RUT o Nombre..."
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-brand-primary transition-all text-sm font-bold"
+                  className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-brand-primary transition-all text-sm font-bold"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-5 space-y-3 custom-scrollbar">
               {filteredCompanies.map((company) => {
                 const isViewing = company.id === viewingCompany?.id;
                 const isCurrentlyActive = company.id === currentCompany?.id;
@@ -119,24 +119,24 @@ export default function ContextSelectorModal({ isOpen, onClose }) {
 
         {/* LADO DERECHO: SUCURSALES (Abierto para todos los usuarios con su empresa actual) */}
         <div className={`flex flex-col bg-white ${userIsSuperAdmin ? 'w-full md:w-7/12' : 'w-full'}`}>
-          <div className="p-8 border-b border-gray-100 relative">
+          <div className="px-8 py-5 border-b border-gray-100 relative">
             {isLoadingBranches && (
                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
                     <div className="w-8 h-8 border-4 border-brand-secondary/20 border-t-brand-primary rounded-full animate-spin"></div>
                 </div>
             )}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
                 <label className="enterprise-label !mb-0">2. Selección de Sucursal</label>
-                <div className="px-4 py-1.5 bg-brand-primary rounded-xl shadow-lg shadow-brand-primary/20">
-                    <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">
+                <div className="px-3 py-1 bg-brand-primary rounded-lg shadow-lg shadow-brand-primary/20">
+                    <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">
                         {viewingCompany?.business_name || currentCompany?.business_name}
                     </span>
                 </div>
             </div>
-            <p className="text-sm text-gray-500 font-medium">Configure su sede de trabajo para las operaciones actuales.</p>
+            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-tight">Configure su sede de trabajo para las operaciones actuales.</p>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar relative">
+          <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar relative">
             {isLoadingBranches && (
                 <div className="absolute inset-0 bg-white/20 z-10"></div>
             )}

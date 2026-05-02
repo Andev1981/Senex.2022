@@ -73,24 +73,8 @@ export default function DteModal({
   };
 
   return (
-    <div className="p-6 bg-white rounded-xl">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 text-purple-600 bg-purple-100 rounded-2xl">
-          <Receipt className="w-6 h-6" />
-        </div>
-        <div>
-          <h3 className="text-xl font-black tracking-tight text-gray-900 uppercase">
-            Emitir DTE {isBulk ? "Masivo" : ""}
-          </h3>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-            {isBulk
-              ? `${sessions.length} Sesiones seleccionadas`
-              : "Documento Individual"}
-          </p>
-        </div>
-      </div>
-
-      <div className="p-6 mb-6 border-2 border-gray-100 rounded-2xl bg-gray-50/50">
+    <div className="space-y-6">
+      <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50/50">
         <div className="space-y-4 text-sm">
           <div className="grid grid-cols-2 gap-4 mb-4">
             <button
@@ -158,21 +142,21 @@ export default function DteModal({
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 mt-auto pt-6 border-t border-gray-50">
         <button
           onClick={() => {
             setShowDTEModal(false);
             setSessionData(null);
           }}
           disabled={processing}
-          className="flex-1 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+          className="flex-1 px-6 py-3.5 text-[10px] font-black uppercase tracking-widest text-gray-500 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all"
         >
           Cancelar
         </button>
         <button
           onClick={issueDTE}
           disabled={processing}
-          className="flex-2 px-8 py-4 text-[10px] font-black uppercase tracking-widest text-white bg-purple-600 rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="flex-2 px-8 py-3.5 text-[10px] font-black uppercase tracking-widest text-white bg-purple-600 rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
         >
           {processing ? (
             <RefreshCw className="w-4 h-4 animate-spin" />

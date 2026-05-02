@@ -5,7 +5,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Modal from "@/components/Modal";
 import SideModal from "@/components/SideModal";
 import TableInsurances from "./Partials/TableInsurances";
-import PlanEditForm from "./Partials/PlanEditForm";
+import PlanForm from "../plans/Partials/PlanForm";
 import InsuranceFormModal from "./Partials/InsuranceFormModal";
 import TablePlans from "./Partials/TablePlans";
 
@@ -137,8 +137,8 @@ const InsuranceIndex = ({ insurances, sessionTypes, user }) => {
         onClose={closePlansFormModal}
         width="4xl"
       >
-        <PlanEditForm
-          editingInsurance={editingInsurance}
+        <PlanForm
+          insurance={editingInsurance}
           plan={editingPlan}
           sessionTypes={sessionTypes}
           onClose={closePlansFormModal}

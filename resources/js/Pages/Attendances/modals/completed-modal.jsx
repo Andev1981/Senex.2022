@@ -50,8 +50,8 @@ export default function CompletedModal({
       exercises: getExercises(),
     };
 
-    router.patch(
-      `/attendances/${sessionData.session_id}/complete`,
+    router.post(
+      route("treatment-sessions.complete", sessionData.session_id),
       dataToSend,
       {
         onSuccess: () => {
@@ -68,23 +68,23 @@ export default function CompletedModal({
   return (
     <div className="bg-white flex flex-col h-full animate-in fade-in duration-500">
       {/* HEADER HERO */}
-      <div className="p-8 bg-gray-50/50 border-b border-gray-100 rounded-t-[2rem] flex items-center justify-between gap-6 shrink-0 relative overflow-hidden">
+      <div className="px-8 py-5 bg-gray-50/50 border-b border-gray-100 rounded-t-[2rem] flex items-center justify-between gap-6 shrink-0 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
         <div className="flex items-center gap-4 relative z-10">
-            <div className="p-3.5 bg-green-500 text-white rounded-2xl shadow-xl shadow-green-500/20 transform rotate-3">
-                <CheckCircle2 className="w-7 h-7" />
+            <div className="p-2.5 bg-green-500 text-white rounded-xl shadow-xl shadow-green-500/20 transform rotate-3">
+                <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-                <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">Finalizar Atención</h2>
+                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">Finalizar Atención</h2>
                 <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">{sessionData?.patient_full_name} • Protocolo de Alta</p>
             </div>
         </div>
       </div>
 
-      <div className="flex-1 p-10 space-y-12 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 p-8 space-y-10 overflow-y-auto custom-scrollbar">
         
         {/* INFO CARD COMPACTA */}
-        <div className="p-6 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 grid grid-cols-2 md:grid-cols-4 gap-6 items-center">
+        <div className="p-5 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 grid grid-cols-2 md:grid-cols-4 gap-6 items-center">
             <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-brand-primary opacity-40" />
                 <div>
@@ -199,9 +199,9 @@ export default function CompletedModal({
       </div>
 
       {/* FOOTER FIJO PREMIUM */}
-      <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 shrink-0 rounded-b-[2rem]">
-        <SecondaryButton onClick={() => setShowCompletedModal(false)} className="px-10! py-4!">Descartar</SecondaryButton>
-        <PrimaryButton onClick={markCompleted} className="px-14! py-4! shadow-xl shadow-brand-primary/20">
+      <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0 rounded-b-[2rem]">
+        <SecondaryButton onClick={() => setShowCompletedModal(false)} className="px-8! py-3!">Descartar</SecondaryButton>
+        <PrimaryButton onClick={markCompleted} className="px-10! py-3! shadow-xl shadow-brand-primary/20">
             Confirmar Cierre de Sesión
         </PrimaryButton>
       </div>

@@ -98,7 +98,7 @@ class StoreTreatmentSessionRequest extends FormRequest
             'status' => 'required|in:scheduled,in_progress,completed,cancelled,not_show,confirmed',
             
             // --- CAMPOS DE TRATAMIENTO (Para creación automática) ---
-            'diagnostic_code' => 'nullable|string',
+            'diagnostic_code' => 'required_without:treatment_id|nullable|exists:diagnostics,code',
             'referral_doctor_name' => 'nullable|string',
             'referral_diagnosis' => 'nullable|string',
             'total_sessions' => 'nullable|integer',

@@ -12,6 +12,7 @@ import {
   Eye,
   MoreVertical,
   Home,
+  List,
 } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage, Link } from "@inertiajs/react";
@@ -214,20 +215,20 @@ export default function Dashboard({ dte_stats }) {
               href: route("patients.index"),
             },
             {
-              id: "attendances.index",
+              id: "agendas.index",
               icon: Calendar,
               label: "Agenda",
               color: "bg-indigo-600",
               desc: "Citas del día",
-              href: route("attendances.index"),
+              href: route("agendas.index"),
             },
             {
-              id: "attendances.index",
-              icon: Clipboard,
+              id: "treatment-sessions.index",
+              icon: List,
               label: "Atención",
               color: "bg-green-600",
               desc: "Nueva sesión",
-              href: route("attendances.index"),
+              href: route("treatment-sessions.index"),
             },
             {
               id: "payments.index",
@@ -383,9 +384,9 @@ export default function Dashboard({ dte_stats }) {
                 <Calendar className="w-6 h-6 text-brand-primary" />
                 Planificación del Día
               </h2>
-              {hasPermission("attendances.index") && (
+              {hasPermission("treatment-sessions.index") && (
                 <Link 
-                  href={route("attendances.index")}
+                  href={route("treatment-sessions.index")}
                   className="px-4 py-2 bg-gray-50 text-brand-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all shadow-sm"
                 >
                   Ver Todo
@@ -443,7 +444,7 @@ export default function Dashboard({ dte_stats }) {
                     </span>
                   </div>
 
-                  {hasPermission("attendances.index") && (
+                  {hasPermission("treatment-sessions.index") && (
                     <button className="flex-shrink-0 p-3 transition-colors border border-transparent shadow-sm hover:bg-white rounded-2xl hover:border-gray-100">
                       <MoreVertical className="w-4 h-4 text-brand-gray" />
                     </button>

@@ -10,13 +10,14 @@ return new class extends Migration {
 
     Schema::create('rooms', function (Blueprint $table) {
       $table->id();
+      $table->foreignId('company_id')->constrained()->cascadeOnDelete();
       $table->foreignId('branch_id')
-          ->nullable() // Puede ser null si es una operación central.
+          ->nullable() 
           ->constrained()
-          ->comment('Sucursal donde se emitió el DTE.');
+          ->nullOnDelete();
       $table->string('name', 80);
       $table->unsignedTinyInteger('capacity')->default(1);
-      $table->enum('status', ['available', 'occupied', 'cleaning', 'maintenance'])->default('available');
+      $table->enum('status', ['active', 'inactive', 'maintenance'])->default('active');
       $table->timestamps();
       $table->unique(['branch_id', 'name']);
     });

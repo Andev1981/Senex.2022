@@ -10,8 +10,8 @@ export default function StartModal({
     notes: sessionData?.session_start_notes || "",
   });
   const startSession = () => {
-    router.patch(
-      route("attendances.start", sessionData.session_id),
+    router.post(
+      route("treatment-sessions.start", sessionData.session_id),
       {},
       {
         onSuccess: () => {
@@ -23,31 +23,37 @@ export default function StartModal({
   };
 
   return (
-    <div className="p-6 bg-white rounded-xl">
-      <h3 className="mb-4 text-xl font-bold text-gray-900">Iniciar Sesión</h3>
-      <p className="mb-4 text-sm text-gray-600">
-        ¿Confirmas que deseas iniciar la sesión de{" "}
-        <strong>{sessionData?.paciente}</strong>?
-      </p>
-      <textarea
-        value={data.notes}
-        onChange={(e) => setData("notes", e.target.value)}
-        placeholder="Notas iniciales (opcional)..."
-        className="w-full p-3 border-2 border-gray-200 rounded-lg resize-none h-28 focus:border-blue-500 focus:outline-none"
-      />
-      <div className="flex gap-2 mt-4">
+    <div className="space-y-8 flex flex-col h-full">
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-gray-600 leading-relaxed">
+            ¿Confirmas que deseas iniciar la sesión clínica de <strong>{sessionData?.paciente || sessionData?.patient_full_name}</strong>? 
+            Se registrará la hora de inicio actual.
+        </p>
+        
+        <div className="space-y-2">
+            <label className="enterprise-label ml-1 opacity-60">Notas Iniciales (Opcional)</label>
+            <textarea
+                value={data.notes}
+                onChange={(e) => setData("notes", e.target.value)}
+                placeholder="Indique cualquier observación previa..."
+                className="w-full p-4 rounded-2xl border-gray-100 bg-gray-50 text-sm font-medium focus:bg-white focus:ring-brand-primary transition-all resize-none h-32 shadow-inner"
+            />
+        </div>
+      </div>
+
+      <div className="flex gap-3 mt-auto pt-6 border-t border-gray-50">
         <button
           onClick={() => {
             setShowStartModal(false);
             setSessionData({});
           }}
-          className="flex-1 px-4 py-2 font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+          className="flex-1 px-6 py-3.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
         >
           Cancelar
         </button>
         <button
           onClick={startSession}
-          className="flex-1 px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+          className="flex-2 px-8 py-3.5 text-[10px] font-black uppercase tracking-widest text-white bg-brand-primary rounded-xl hover:brightness-110 shadow-lg shadow-brand-primary/20 transition-all active:scale-95"
         >
           Confirmar Inicio
         </button>

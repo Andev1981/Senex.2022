@@ -20,7 +20,7 @@ return new class extends Migration {
       $table->string('code')->unique();
 
       // Plan type and sessions
-      $table->foreignId('insurance_id')->constrained()->onDelete('cascade');
+      $table->foreignId('insurance_id')->nullable()->constrained()->onDelete('cascade');
 
       $table->integer('initial_fee')->default(0)->coment('Monto de incorporación o matrícula');
 
@@ -38,8 +38,8 @@ return new class extends Migration {
       $table->date('end_date')->nullable();
 
 
-      $table->decimal('coverage_percentage', 5, 2); // Porcentaje cubierto por el plan (ej: 70.00)
-      $table->integer('price');
+      $table->decimal('coverage_percentage', 5, 2)->nullable(); // Porcentaje cubierto por el plan (ej: 70.00)
+      $table->integer('price')->nullable();
 
       $table->boolean('is_active')->default(true);
 

@@ -7,272 +7,295 @@ use App\Http\Requests\StoreTreatmentSessionRequest;
 use App\Http\Requests\UpdateTreatmentSessionRequest;
 use App\Models\TreatmentSession;
 use App\Models\Patient;
+use App\Models\Item;
+use App\Models\Doctor;
+use App\Models\Diagnostic;
 use App\Services\Plans\PlanService;
 use App\Services\Treatments\TreatmentSessionService;
+use App\Enums\AppointmentStatusEnum;
+use App\Enums\FinanceStatusEnum;
+use App\Enums\DteStatusEnum;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class TreatmentSessionController extends Controller
 {
-
-    /**
-     * Inyectar el service en el constructor
-     */
     public function __construct(
         private TreatmentSessionService $sessionService,
         private PlanService $planService
     ) {}
 
-
     /**
-     * STORE - POST /sessions
-     * Retorna JsonResponse para manejo desde formularios modales
+     * Muestra la vista principal de atenciones y sesiones.
+     * Consolidado de AttendancesController y TreatmentSessionController.
      */
-    public function store(StoreTreatmentSessionRequest $request)
+    public function index(Request $request)
     {
+        $companyId = session('current_company_id');
 
         try {
-            /* dd($request->all()); */
-            // El service maneja toda la lógica:
-            // - Asigna month_session_number automáticamente
-            // - Valida disponibilidad del doctor
-            // - Crea logs
-            /* dd($request->validated()); */
-            // DEBUG: Ver qué datos llegan
-            Log::info('TreatmentSessionController::store validated data:', $request->validated());
+            $inicioMes = now()->startOfMonth()->format('Y-m-d');
+            $finMes = now()->endOfMonth()->format('Y-m-d');
 
-            $this->sessionService->createSession($request->validated());
+            $fechaInicio = $request->input('fecha_inicio', $inicioMes);
+            $fechaFin = $request->input('fecha_fin', $finMes);
+            $estado = $request->input('estado', 'all');
+            $query = $request->input('query', '');
 
-            // Si la sesión es completada, el service ya incrementó el contador
-            // Ya no necesitas hacerlo manualmente aquí
-
-            session()->flash('message', 'Sesión creada exitosamente.');
-            session()->flash('type', 'success');
+            if ($fechaInicio > $fechaFin) {
+                $temp = $fechaInicio; $fechaInicio = $fechaFin; $fechaFin = $temp;
+            }
             
-            return back();
-        } catch (\Exception $e) {
-            // MANEJO DE CONFIRMACIÓN DE COMISIÓN
-            if (str_starts_with($e->getMessage(), 'COMMISSION_CONFIRMATION_NEEDED')) {
-                $parts = explode(':', $e->getMessage());
-                $defaultAmount = count($parts) > 1 ? $parts[1] : 0;
-                
-                return back()->withErrors([
-                    'commission_alert' => "No existe comisión específica configurada. El valor por defecto del servicio es $" . number_format($defaultAmount, 0, ',', '.') . ". ¿Desea continuar?",
-                    'default_amount' => $defaultAmount // Dato extra por si se requiere
-                ]);
+            $sessionsQuery = TreatmentSession::with([
+                'patient',
+                'doctor',
+                'item',
+                'appointment',
+                'invoiceItems.invoice',
+            ])
+                ->where('treatment_sessions.company_id', $companyId)
+                ->whereBetween('treatment_sessions.date', [$fechaInicio, $fechaFin])
+                ->orderBy('treatment_sessions.date', 'desc')
+                ->orderBy('treatment_sessions.time', 'desc');
+
+            if ($estado !== 'all') {
+                $sessionsQuery->where('treatment_sessions.status', $estado);
             }
 
-            // FALLO: Capturar la excepción del Service, loguear y redirigir con el mensaje de error
-            Log::error("Error de lógica al agendar sesión: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            if (!empty($query)) {
+                $sessionsQuery->whereHas('patient', function ($q) use ($query) {
+                    $q->where(DB::raw("LOWER(CONCAT(patients.name, ' ', patients.last_name))"), 'like', '%' . strtolower($query) . '%')
+                        ->orWhere('patients.rut', 'like', "%{$query}%");
+                })->orWhereHas('doctor', function ($q) use ($query) {
+                    $q->where(DB::raw("LOWER(CONCAT(doctors.name, ' ', doctors.last_name))"), 'like', '%' . strtolower($query) . '%');
+                });
+            }
 
-            session()->flash('message', "ERROR: " . $e->getMessage());
-            session()->flash('type', 'error');
+            $sessions = $sessionsQuery->get();
+
+            $atenciones = $sessions->map(function ($session) {
+                $activeItem = $session->invoiceItems->first(function ($item) {
+                    return $item->invoice && 
+                        $item->invoice->payment_status !== FinanceStatusEnum::VOIDED && 
+                        $item->invoice->dte_status !== DteStatusEnum::REJECTED;
+                });
+
+                $activeInvoice = $activeItem ? $activeItem->invoice : null;
+
+                return [
+                    'session_id' => $session->id,
+                    'patient_id' => $session->patient_id,
+                    'patient_full_name' => $session->patient?->full_name ?? 'N/A',
+                    'doctor_full_name' => $session->doctor?->full_name ?? 'N/A',
+                    'name_session_type' => $session->item?->name ?? 'Servicio',
+                    'date' => $session->date->toDateString(),
+                    'time' => $session->time?->format('H:i'),
+                    'status' => $session->status instanceof AppointmentStatusEnum ? $session->status->value : $session->status,
+                    'month_session_number' => $session->month_session_number,
+                    'patient_amount_clp' => $session->patient_amount_clp,
+                    
+                    'pain_before' => $session->pain_before,
+                    'pain_after' => $session->pain_after,
+                    'techniques' => $session->techniques ?? [],
+                    'exercises' => $session->exercises ?? [],
+                    'notes' => $session->notes,
+                    'homework' => $session->homework,
+                    'next_goals' => $session->next_goals,
+
+                    'billing_info' => $activeInvoice ? [
+                        'invoice_id'      => $activeInvoice->id,
+                        'status_internal' => $activeInvoice->payment_status, 
+                        'dte_status'      => $activeInvoice->dte_status,     
+                        'folio'           => $activeInvoice->dte_folio,      
+                        'type'            => $activeInvoice->dte_type,       
+                        'pdf_path'        => $activeInvoice->pdf_path,       
+                    ] : null,
+                    'is_locked'       => $activeInvoice ? true : false,      
+                    'dte_generated'   => $activeInvoice && $activeInvoice->dte_status === DteStatusEnum::ACCEPTED,
+                ];
+            });
+
+            $kpis = [
+                'total' => $sessions->count(),
+                'completadas' => $sessions->where('status', AppointmentStatusEnum::COMPLETED)->count(),
+                'pendientes' => $sessions->whereIn('status', [AppointmentStatusEnum::SCHEDULED, AppointmentStatusEnum::CHECKED_IN])->count(),
+                'canceladas' => $sessions->where('status', AppointmentStatusEnum::CANCELLED)->count(),
+                'totalCobrado' => $sessions->sum(function($s) {
+                    return $s->invoiceItems->sum(function($ii) {
+                        return $ii->invoice ? $ii->invoice->amount_paid : 0;
+                    });
+                }),
+                'totalPorCobrar' => $sessions->sum('patient_amount_clp'),
+            ];
+
+
+            return Inertia::render('attendances/index', [
+                'atenciones' => $atenciones,
+                'kpis' => $kpis,
+                'filtros' => [
+                    'fecha_inicio' => $fechaInicio,
+                    'fecha_fin' => $fechaFin,
+                    'estado' => $estado,
+                    'query' => $query,
+                ],
+                'patients' => Patient::get()->map(fn($p) => [
+                    'id' => $p->id,
+                    'full_name' => $p->full_name,
+                    'rut' => $p->rut,
+                ]),
+                'doctors' => Doctor::get()->map(fn($d) => [
+                    'id' => $d->id,
+                    'full_name' => $d->full_name,
+                ]),
+                'session_types' => Item::services()->get()->map(fn($i) => [
+                    'id' => $i->id,
+                    'name' => $i->name,
+                    'price' => (int)$i->price,
+                ]),
+                'diagnostics' => Diagnostic::where('is_active', true)->get(['code', 'description']),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al cargar sesiones: ' . $e->getMessage());
+            return back()->with('error', 'Error al cargar las sesiones');
         }
     }
 
     /**
-     * UPDATE - PUT/PATCH /sessions/{session}
-     * Retorna JsonResponse para manejo desde formularios modales
+     * Inicia una sesión (CHECKED_IN -> IN_PROGRESS)
      */
-    public function update(UpdateTreatmentSessionRequest $request, TreatmentSession $treatmentSession)
+    public function start(TreatmentSession $session)
     {
         try {
+            if ($session->status !== AppointmentStatusEnum::CHECKED_IN && $session->status !== AppointmentStatusEnum::SCHEDULED) {
+                return back()->with('error', 'Solo se pueden iniciar sesiones programadas o en recepción.');
+            }
 
-            // El service recalcula month_session_number si cambió la fecha
-            $this->sessionService->updateSession($treatmentSession, $request->validated());
+            $session->update([
+                'status' => AppointmentStatusEnum::IN_PROGRESS,
+                'started_at' => now(),
+            ]);
 
-            session()->flash('message', 'Sesión actualizada exitosamente.');
-            session()->flash('type', 'success');
-            return back();
+            if ($session->appointment) {
+                $session->appointment->update(['status' => AppointmentStatusEnum::IN_PROGRESS]);
+            }
+
+            return back()->with('success', 'Sesión iniciada.');
         } catch (\Exception $e) {
-            session()->flash('message', 'Error al actualizar la sesión: ' . $e->getMessage());
-            session()->flash('type', 'error');
-            return back();
+            return back()->with('error', 'Error al iniciar la sesión.');
         }
     }
 
     /**
-     * DESTROY - DELETE /sessions/{session}
-     * Retorna JsonResponse para manejo desde modales
+     * Finaliza una sesión con datos clínicos.
      */
+    public function complete(Request $request, TreatmentSession $session)
+    {
+        try {
+            $this->sessionService->completeSession($session, $request->all());
+
+            if ($session->appointment) {
+                $session->appointment->update(['status' => AppointmentStatusEnum::COMPLETED]);
+            }
+
+            return back()->with('success', 'Sesión completada y guardada.');
+        } catch (\Exception $e) {
+            Log::error("Error al completar sesión: " . $e->getMessage());
+            return back()->with('error', 'Error al completar la sesión.');
+        }
+    }
+
+    /**
+     * Marca sesión como ausente.
+     */
+    public function absent(TreatmentSession $session)
+    {
+        try {
+            $this->sessionService->markAsNoShow($session);
+
+            if ($session->appointment) {
+                $session->appointment->update(['status' => AppointmentStatusEnum::NO_SHOW]);
+            }
+
+            return back()->with('success', 'Paciente marcado como ausente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al procesar la ausencia.');
+        }
+    }
+
+    /**
+     * Cancela la sesión.
+     */
+    public function cancel(Request $request, TreatmentSession $session)
+    {
+        try {
+            $this->sessionService->cancelSession($session, $request->input('notes'));
+
+            if ($session->appointment) {
+                $session->appointment->update(['status' => AppointmentStatusEnum::CANCELLED]);
+            }
+
+            return back()->with('success', 'Sesión cancelada.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al cancelar la sesión.');
+        }
+    }
+
+    public function store(StoreTreatmentSessionRequest $request)
+    {
+        try {
+            $this->sessionService->createSession($request->validated());
+            return back()->with('success', 'Sesión creada exitosamente.');
+        } catch (\Exception $e) {
+            Log::error("Error al crear sesión: " . $e->getMessage());
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function update(UpdateTreatmentSessionRequest $request, TreatmentSession $session)
+    {
+        try {
+            $this->sessionService->updateSession($session, $request->validated());
+            return back()->with('success', 'Sesión actualizada.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function destroy(TreatmentSession $session)
     {
         try {
-            // No permitir eliminar sesiones completadas
             if ($session->isCompleted()) {
-
-                session()->flash('message', 'No se puede eliminar una sesión completada');
-                session()->flash('type', 'error');
-                return;
+                return back()->with('error', 'No se puede eliminar una sesión completada.');
             }
-
-            // Si es una sesión programada, solo la eliminamos
             $this->sessionService->deleteSession($session);
-
-            session()->flash('message', 'Sesión eliminada exitosamente.');
-            session()->flash('type', 'success');
+            return back()->with('success', 'Sesión eliminada.');
         } catch (\Exception $e) {
-            session()->flash('message', 'Error al eliminar la sesión: ' . $e->getMessage());
-            session()->flash('type', 'error');
+            return back()->with('error', $e->getMessage());
         }
     }
 
-    /**
-     * COMPLETE - PUT /sessions/{session}/complete
-     * Marcar sesión como completada específicamente
-     */
-    public function complete(UpdateTreatmentSessionRequest $request, TreatmentSession $session)
-    {
-        try {
-            $session = TreatmentSession::findOrFail($session->id);
-
-            // El service marca como completada Y incrementa el contador del tratamiento
-            $session = $this->sessionService->completeSession($session, $request->validated());
-
-            session()->flash('message', 'Sesión completada exitosamente.');
-            session()->flash('type', 'success');
-        } catch (\Exception $e) {
-            session()->flash('message', 'Error al actualizar la sesión: ' . $e->getMessage());
-            session()->flash('type', 'error');
-        }
-    }
-
-    /**
-     * CANCEL - PUT /sessions/{session}/cancel
-     * Cancelar sesión específica
-     */
-    public function cancel(Request $request, TreatmentSession $session): JsonResponse
-    {
-        try {
-            $session->update([
-                'status' => 'Cancelada',
-                'notes' => $request->input('notes', $session->notes),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Sesión cancelada exitosamente',
-                'session' => $session->fresh(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al cancelar la sesión: ' . $e->getMessage(),
-                'errors' => ['general' => ['Error interno del servidor']],
-            ], 500);
-        }
-    }
-
-    public function cancelSession(TreatmentSession $session, ?string $reason = null): TreatmentSession
-    {
-        return DB::transaction(function () use ($session, $reason) {
-            if ($session->isCompleted()) {
-                throw new \Exception('No se puede cancelar una sesión completada');
-            }
-
-            $oldStatus = $session->status;
-
-            $data = ['status' => 'canceled'];
-
-            if ($reason) {
-                $data['notes'] = ($session->notes ? $session->notes . "\n\n" : '')
-                    . "Motivo de cancelación: {$reason}";
-            }
-
-            $session->update($data);
-
-            // Si estaba completada, revertir consumo del plan
-            if ($oldStatus === 'completed') {
-                $this->planService->revertSessionConsumption($session);
-            }
-
-            // Actualizar tratamiento
-            $this->updateTreatmentAfterStatusChange($session, $oldStatus, 'canceled');
-
-            return $session->fresh();
-        });
-    }
-
-    /**
-     * API - GET /api/patients/{patient}/sessions/summary
-     * Resumen de sesiones para dashboard
-     */
-    public function summary(Patient $patient)
-    {
-        $sessions = TreatmentSession::where('patient_id', $patient->id);
-
-        $summary = [
-            'total' => $sessions->count(),
-            'scheduled' => $sessions->scheduled()->count(),
-            'completed' => $sessions->completed()->count(),
-            'cancelled' => $sessions->cancelled()->count(),
-            'upcoming' => $sessions->scheduled()
-                ->where('date', '>=', now()->toDateString())
-                ->count(),
-        ];
-
-        // Próxima sesión
-        $nextSession = TreatmentSession::where('patient_id', $patient->id)
-            ->scheduled()
-            ->where('date', '>=', now()->toDateString())
-            ->orderBy('date')
-            ->orderBy('time')
-            ->first();
-
-        return response()->json([
-            'summary' => $summary,
-            'next_session' => $nextSession,
-        ]);
-    }
-
-    /**
-     * API - POST /api/sessions/{session}/duplicate
-     * Duplicar sesión para crear siguiente
-     */
-    public function duplicate(TreatmentSession $session): JsonResponse
-    {
-        try {
-            $newSession = $session->replicate();
-            $newSession->status = 'Programada';
-            $newSession->pain_before = null;
-            $newSession->pain_after = null;
-            $newSession->notes = null;
-            $newSession->homework = null;
-            $newSession->next_goals = null;
-            $newSession->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Sesión duplicada exitosamente',
-                'session' => $newSession,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al duplicar la sesión: ' . $e->getMessage(),
-                'errors' => ['general' => ['Error interno del servidor']],
-            ], 500);
-        }
-    }
-
-    /**
-     * NOTIFY - POST /sessions/{session}/notify
-     * Re-enviar notificación de agendamiento
-     */
     public function notify(TreatmentSession $session)
     {
         try {
             $this->sessionService->notifyPatient($session);
-
-            session()->flash('message', 'Notificación enviada exitosamente.');
-            session()->flash('type', 'success');
+            return back()->with('success', 'Notificación enviada.');
         } catch (\Exception $e) {
-            session()->flash('message', 'Error al enviar la notificación: ' . $e->getMessage());
-            session()->flash('type', 'error');
+            return back()->with('error', $e->getMessage());
         }
+    }
 
-        return back();
+    public function duplicate(TreatmentSession $session)
+    {
+        try {
+            $newSession = $session->replicate(['appointment_id', 'date', 'time', 'status', 'signed_at']);
+            $newSession->status = AppointmentStatusEnum::SCHEDULED;
+            $newSession->date = now()->addWeek()->toDateString();
+            $newSession->save();
+            return back()->with('success', 'Sesión duplicada.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

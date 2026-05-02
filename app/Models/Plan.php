@@ -66,7 +66,7 @@ class Plan extends Model
     public function items(): BelongsToMany
     {
         // 💡 Usando el Pivot Model (PlanItem)
-        return $this->belongsToMany(Item::class, 'plan_item')
+        return $this->belongsToMany(Item::class, 'plan_items')
             ->using(PlanItem::class)
             ->withPivot('max_sessions'); // Puedes acceder a este campo directamente
     }

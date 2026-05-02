@@ -7,10 +7,12 @@ import {
   MessageSquare, 
   AlertTriangle,
   CheckCircle2,
-  Clock
+  Clock,
+  Calendar
 } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import SecondaryButton from "@/components/SecondaryButton";
+import { fmtDate } from "@/utils/utils";
 
 /**
  * Modal Unificado para Acciones de Sesión (Iniciar, Cancelar, Ausente)
@@ -33,8 +35,8 @@ export default function AttendanceActionModal({
       color: "text-brand-primary",
       bg: "bg-brand-secondary/10",
       buttonText: "Comenzar Sesión",
-      route: route("attendances.start", session?.session_id),
-      method: "patch"
+      route: route("treatment-sessions.start", session?.session_id),
+      method: "post"
     },
     cancel: {
       title: "Anular Sesión",
@@ -43,7 +45,7 @@ export default function AttendanceActionModal({
       color: "text-red-600",
       bg: "bg-red-50",
       buttonText: "Confirmar Anulación",
-      route: route("attendances.cancel", session?.session_id),
+      route: route("treatment-sessions.cancel", session?.session_id),
       method: "post"
     },
     absent: {
@@ -53,8 +55,8 @@ export default function AttendanceActionModal({
       color: "text-orange-600",
       bg: "bg-orange-50",
       buttonText: "Confirmar Inasistencia",
-      route: `/attendances/${session?.session_id}/absent`,
-      method: "patch"
+      route: route("treatment-sessions.absent", session?.session_id),
+      method: "post"
     }
   }[action];
 
@@ -76,22 +78,22 @@ export default function AttendanceActionModal({
   return (
     <div className="bg-white flex flex-col h-full animate-in fade-in duration-300">
       {/* HEADER HERO INTERNO */}
-      <div className="p-8 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between shrink-0 relative overflow-hidden">
+      <div className="px-8 py-5 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between shrink-0 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
         <div className="flex items-center gap-4 relative z-10">
-            <div className={`p-3.5 ${config.bg} ${config.color} rounded-2xl shadow-sm transform rotate-3`}>
-                <Icon className="w-6 h-6" />
+            <div className={`p-2.5 ${config.bg} ${config.color} rounded-xl shadow-sm transform rotate-3`}>
+                <Icon className="w-5 h-5" />
             </div>
             <div>
-                <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{config.title}</h2>
+                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{config.title}</h2>
                 <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em]">{session?.patient_full_name}</p>
             </div>
         </div>
       </div>
 
-      <form onSubmit={submit} className="flex-1 p-10 space-y-8 overflow-y-auto custom-scrollbar">
+      <form onSubmit={submit} className="flex-1 p-8 space-y-6 overflow-y-auto custom-scrollbar">
         {/* INFO CARD */}
-        <div className="p-6 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 grid grid-cols-2 gap-6 items-center">
+        <div className="p-5 bg-white border border-gray-100 rounded-[2rem] shadow-xl shadow-gray-500/5 grid grid-cols-2 gap-6 items-center">
             <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-brand-primary opacity-40" />
                 <div>
@@ -141,7 +143,7 @@ export default function AttendanceActionModal({
         </div>
 
         {action === 'absent' && (
-            <div className="p-5 bg-amber-50 border-2 border-amber-100 rounded-2xl flex items-start gap-4">
+            <div className="p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl flex items-start gap-4">
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase tracking-tight">
                     Importante: Al marcar como ausente, la sesión se registrará como no realizada pero mantendrá el vínculo contable si pertenece a un plan.
@@ -151,13 +153,13 @@ export default function AttendanceActionModal({
       </form>
 
       {/* FOOTER FIJO */}
-      <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 shrink-0 rounded-b-[2rem]">
-        <SecondaryButton onClick={onClose} type="button" className="px-10! py-4!">Cerrar</SecondaryButton>
+      <div className="px-8 py-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0 rounded-b-[2rem]">
+        <SecondaryButton onClick={onClose} type="button" className="px-8! py-3!">Cerrar</SecondaryButton>
         <PrimaryButton 
             disabled={processing || (action === 'cancel' && data.notes.length < 10)} 
             type="submit" 
             onClick={submit}
-            className={`px-14! py-4! shadow-xl ${action === 'cancel' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : action === 'absent' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-200' : 'shadow-brand-primary/20'}`}
+            className={`px-10! py-3! shadow-xl ${action === 'cancel' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : action === 'absent' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-200' : 'shadow-brand-primary/20'}`}
         >
             {processing ? 'Procesando...' : config.buttonText}
         </PrimaryButton>

@@ -13,10 +13,12 @@ class PermissionSeeder extends Seeder
         $permissions = [
             // Gestión de Pacientes
             'patients.index', 'patients.create', 'patients.edit', 'patients.delete', 'patients.view',
+            'agendas.index',
+            'availabilities.index', 'availabilities.create', 'availabilities.edit', 'availabilities.delete',
             
             // Gestión Clínica (Kinesiología)
             'doctors.index', 'doctors.create', 'doctors.edit', 'doctors.delete',
-            'attendances.index', 'attendances.manage',
+            'treatment-sessions.index', 'treatment-sessions.manage',
             'session-types.index', 'session-types.manage',
             'treatments.index', 'treatments.manage',
             'sessions.index', 'sessions.manage',
@@ -58,7 +60,9 @@ class PermissionSeeder extends Seeder
                 'patients.index', 'patients.view', 'patients.create', 'patients.edit',
                 'invoices.index', 'invoices.view', 'invoices.pdf',
                 'payments.index', 'payments.process',
-                'attendances.index',
+                'treatment-sessions.index',
+                'agendas.index',
+                'availabilities.index',
                 'treatments.index',
                 'sessions.index',
             ]);

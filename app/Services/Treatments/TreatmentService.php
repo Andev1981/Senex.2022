@@ -105,8 +105,13 @@ class TreatmentService
             // ---------------------------------------------------------
             // PASO 3: CREAR NUEVO (Si no hay activos recientes)
             // ---------------------------------------------------------
-            $description = isset($data['diagnostic_code'])
-                ? "Tratamiento Auto ({$data['diagnostic_code']})"
+            $diagnostic = null;
+            if (isset($data['diagnostic_code'])) {
+                $diagnostic = \App\Models\Diagnostic::find($data['diagnostic_code']);
+            }
+
+            $description = $diagnostic 
+                ? "Tratamiento: {$diagnostic->description} ({$diagnostic->code})"
                 : "Atención automática " . ($data['date'] ?? date('d-m-Y'));
 
             return Treatment::create([

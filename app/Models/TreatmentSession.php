@@ -26,17 +26,21 @@ class TreatmentSession extends Model
         'branch_id',
         'treatment_id',
         'patient_id',
-        'doctor_id',       // Apunta a la tabla 'users'
+        'doctor_id',       // Apunta a la tabla 'doctors'
         'item_id',
         'appointment_id',
+        'room_id',
 
         // --- 2. Logística ---
         'date',
         'time',
-        'status',          // scheduled, in_progress, completed...
+        'status',          // scheduled, checked_in, in_progress, completed...
         'consumes_plan',   // boolean
         'cancellation_note',
         'month_session_number',
+        'checked_in_at',
+        'started_at',
+        'signed_at',
 
         // --- 3. DATOS CLÍNICOS (SOAP) ---
         // [S]ubjective
@@ -103,6 +107,8 @@ class TreatmentSession extends Model
         'is_exento' => 'boolean',
         'dte_generated' => 'boolean',
         'signature_skipped' => 'boolean',
+        'checked_in_at' => 'datetime',
+        'started_at' => 'datetime',
         'signed_at' => 'datetime',
         'status' => AppointmentStatusEnum::class, // 👈 Casting Mágico
         

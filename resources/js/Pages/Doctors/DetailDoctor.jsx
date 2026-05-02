@@ -17,7 +17,8 @@ import {
     ArrowLeft,
     Mail,
     Phone,
-    MapPin
+    MapPin,
+    Clock,
 } from "lucide-react";
 
 // Partials (Podemos reusar componentes existentes o crear nuevos)
@@ -26,15 +27,17 @@ import DoctorSessions from "./Partials/DoctorSessions";
 import DoctorPayrolls from "./Partials/DoctorPayrolls";
 import DoctorPatients from "./Partials/DoctorPatients";
 import DoctorConfig from "./Partials/DoctorConfig";
+import DoctorAvailability from "./Partials/DoctorAvailability";
 
 export default function DetailDoctor(props) {
-    const { doctor, stats, sessions, payrolls, session_types, regions, provinces, communes, branches } = props;
+    const { doctor, stats, sessions, payrolls, session_types, regions, provinces, communes, branches, availabilities, all_availabilities, rooms } = props;
     const [activeTab, setActiveTab] = useState("dashboard");
     const [isModalOpenEdit, setIsModalOpenEdit] = useState(false);
 
     const tabs = [
         { id: "dashboard", label: "Resumen", icon: LayoutDashboard },
         { id: "sessions", label: "Sesiones", icon: Calendar },
+        { id: "availability", label: "Disponibilidad", icon: Clock },
         { id: "payrolls", label: "Liquidaciones", icon: NotebookText },
         { id: "patients", label: "Cartera", icon: Users },
         { id: "config", label: "Tarifas", icon: Settings },
@@ -144,6 +147,7 @@ export default function DetailDoctor(props) {
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {activeTab === "dashboard" && <DoctorDashboard {...props} />}
                             {activeTab === "sessions" && <DoctorSessions {...props} />}
+                            {activeTab === "availability" && <DoctorAvailability {...props} />}
                             {activeTab === "payrolls" && <DoctorPayrolls {...props} />}
                             {activeTab === "patients" && <DoctorPatients {...props} />}
                             {activeTab === "config" && <DoctorConfig {...props} />}

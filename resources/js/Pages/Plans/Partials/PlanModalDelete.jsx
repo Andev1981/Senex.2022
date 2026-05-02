@@ -19,38 +19,49 @@ function PlanModalDelete({ plan, setOpenModalDelete }) {
         onSuccess: () => {
           setOpenModalDelete(false);
           reset();
+          Swal.fire({
+            title: "¡Eliminado!",
+            text: "El plan ha sido removido del sistema.",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
         },
       });
     }
   };
 
   return (
-    <div className="px-4">
-      <h2 className="mb-2 text-xl font-bold text-center text-gray-600 dark:text-gray-100">
-        ¿Eliminar este plan?
-      </h2>
-      <p className="mx-6 text-xs font-medium text-center text-gray-500 dark:text-gray-200">
-        ¿Estás seguro de eliminar este plan? <br /> No puedes deshacer esta
-        acción.
-      </p>
+    <div className="p-8 flex flex-col items-center text-center space-y-6">
+      <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center text-red-500 mb-2">
+        <Trash2 className="w-10 h-10" />
+      </div>
+      
+      <div>
+        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter mb-2">
+            Confirmar Eliminación
+        </h2>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
+            ¿Estás seguro de eliminar el plan <span className="text-red-500 font-black">{plan?.name}</span>? <br />
+            Esta acción es irreversible y podría afectar facturaciones pendientes.
+        </p>
+      </div>
 
-      <div className="flex-row items-center py-4 mx-auto text-center md:justify-between">
-        <div className="space-y-2 sm:space-x-2">
-          <button
+      <div className="flex gap-3 w-full pt-4">
+        <button
             disabled={processing}
             onClick={() => setOpenModalDelete(false)}
-            className="px-3 py-1 font-semibold text-gray-200 bg-gray-500 rounded-full modal-close hover:bg-gray-800 dark:hover:bg-gray-600 hover:text-gray-100 focus:outline-none"
-          >
-            No, Cancelar
-          </button>
-          <button
+            className="flex-1 py-4 font-black uppercase tracking-widest text-[10px] text-gray-400 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"
+        >
+            No, Mantener
+        </button>
+        <button
             disabled={processing}
             onClick={handleDelete}
-            className="px-3 py-1 font-semibold text-gray-200 bg-red-500 rounded-full modal-close dark:bg-gray-100 dark:text-gray-700 hover:bg-red-600 dark:hover:bg-white hover:text-gray-100 dark:hover:text-gray-800 focus:outline-none"
-          >
-            Sí, Eliminar plan!
-          </button>
-        </div>
+            className="flex-1 py-4 font-black uppercase tracking-widest text-[10px] text-white bg-red-600 rounded-2xl shadow-xl shadow-red-600/20 hover:bg-red-700 active:scale-95 transition-all"
+        >
+            {processing ? 'Eliminando...' : 'Sí, Eliminar Plan'}
+        </button>
       </div>
     </div>
   );

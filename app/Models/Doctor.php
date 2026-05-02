@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class Doctor extends Model
 {
-    use HasFactory, HasAddresses;
+    use HasFactory, HasAddresses, Multitenantable;
 
     protected $fillable = [
         'company_id',

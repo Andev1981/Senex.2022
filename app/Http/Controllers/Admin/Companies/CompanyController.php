@@ -67,16 +67,24 @@ class CompanyController extends Controller
 
     public function edit(Company $company)
     {
-        // Cargamos TODA la configuración para la vista de edición
-        $company->load(['dteConfiguration', 'authorizedFolios', 'logo', 'branches.addresses']);
+        // Cargamos TODA la configuración para la vista de edición, incluyendo rooms en branches.
+        // Usamos withoutGlobalScopes para evitar que el filtro de Multitenantable bloquee los datos
+        // si el usuario está editando una empresa distinta a la que tiene en sesión (común en superadmin).
+        $company->load([
+            'dteConfiguration' => fn($q) => $q->withoutGlobalScopes(),
+            'authorizedFolios' => fn($q) => $q->withoutGlobalScopes(),
+            'logo',
+            'branches.addresses',
+            'branches.rooms' => fn($q) => $q->withoutGlobalScopes()
+        ]);
 
         // Cargamos regiones y comunas para el formulario de dirección
         $regions = Region::with('communes')->get();
 
         return Inertia::render('companies/Edit', [
             'company' => $company,
-            'dteConfig' => $company->dteConfiguration,
-            'folios' => $company->authorizedFolios()->orderByDesc('created_at')->get(),
+            'dteConfig' => $company->dteConfiguration, // Ya cargado sin scopes
+            'folios' => $company->authorizedFolios()->withoutGlobalScopes()->orderByDesc('created_at')->get(),
             'logo' => $company->logo,
             'branches' => $company->branches,
             'regions' => $regions

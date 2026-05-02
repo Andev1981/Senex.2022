@@ -28,6 +28,13 @@ class ProductController extends Controller
             ->where('company_id', $companyId)
             ->with(['category', 'productDetail', 'serviceDetail'])
             ->when($request->type, fn($q, $type) => $q->where('type', $type))
+            ->when($request->category_id, function ($query, $categoryId) {
+                // Obtenemos el ID de la categoría y de sus hijas para un filtro inclusivo
+                $categoryIds = \App\Models\Category::where('id', $categoryId)
+                    ->orWhere('parent_id', $categoryId)
+                    ->pluck('id');
+                $query->whereIn('category_id', $categoryIds);
+            })
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -43,6 +50,7 @@ class ProductController extends Controller
 
         $categories = \App\Models\Category::where('company_id', $companyId)
             ->whereNull('parent_id')
+            ->with('children')
             ->get();
 
         return Inertia::render('products/Index', [

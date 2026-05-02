@@ -18,6 +18,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 import TextInput from "@/components/TextInput";
 import InputError from "@/components/InputError";
 import SideModal from "@/components/SideModal";
+import Switch from "@/components/Switch";
 
 export default function Index({ categories }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +29,7 @@ export default function Index({ categories }) {
     setExpandedCats(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const { data, setData, post, put, processing, errors, reset } = useForm({
+  const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
     name: "",
     parent_id: "",
     description: "",
@@ -36,6 +37,7 @@ export default function Index({ categories }) {
   });
 
   const openModal = (cat = null, parentId = null) => {
+    clearErrors();
     if (cat) {
       setSelectedCategory(cat);
       setData({
@@ -46,8 +48,12 @@ export default function Index({ categories }) {
       });
     } else {
       setSelectedCategory(null);
-      reset();
-      if (parentId) setData("parent_id", parentId);
+      setData({
+        name: "",
+        parent_id: parentId || "",
+        description: "",
+        is_active: true
+      });
     }
     setIsModalOpen(true);
   };
@@ -60,6 +66,7 @@ export default function Index({ categories }) {
     method(url, {
       onSuccess: () => {
         setIsModalOpen(false);
+        reset();
         Swal.fire({ title: "¡Éxito!", text: "Categoría guardada", icon: "success", timer: 1500 });
       }
     });
@@ -192,51 +199,64 @@ export default function Index({ categories }) {
                 <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
             </div>
 
-            <form onSubmit={submit} className="p-8 space-y-8 flex-1 overflow-y-auto">
-                <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Nombre de la Categoría</label>
-                    <TextInput 
-                        value={data.name} 
-                        onChange={e => setData("name", e.target.value)} 
-                        required 
-                        className="w-full font-bold uppercase"
-                        placeholder="Ej: Licencias de Software"
-                    />
-                    <InputError message={errors.name} />
+            <form onSubmit={submit} className="flex flex-col h-full overflow-hidden">
+                <div className="p-8 space-y-8 flex-1 overflow-y-auto">
+                    <div className="space-y-1">
+                        <label className="enterprise-label ml-1">Nombre de la Categoría</label>
+                        <TextInput 
+                            value={data.name} 
+                            onChange={e => setData("name", e.target.value)} 
+                            required 
+                            className="w-full font-bold uppercase"
+                            placeholder="Ej: Licencias de Software"
+                        />
+                        <InputError message={errors.name} />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="enterprise-label ml-1">Categoría Padre (Dejar vacío para Raíz)</label>
+                        <select
+                            value={data.parent_id}
+                            onChange={e => setData("parent_id", e.target.value)}
+                            className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                        >
+                            <option value="">-- Sin Padre (Categoría Raíz) --</option>
+                            {categories.filter(c => c.id !== selectedCategory?.id).map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                        </select>
+                        <InputError message={errors.parent_id} />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="enterprise-label ml-1">Descripción Breve</label>
+                        <textarea
+                            value={data.description}
+                            onChange={e => setData("description", e.target.value)}
+                            className="w-full rounded-2xl border-gray-100 py-4 px-5 font-medium text-sm text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                            rows="3"
+                            placeholder="¿Qué incluye esta categoría?"
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-700">Categoría Activa</p>
+                            <p className="text-[9px] text-gray-400 font-bold uppercase">Permitir su uso en el catálogo</p>
+                        </div>
+                        <Switch 
+                            checked={data.is_active} 
+                            onChange={checked => setData("is_active", checked)} 
+                        />
+                    </div>
                 </div>
 
-                <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Categoría Padre (Dejar vacío para Raíz)</label>
-                    <select
-                        value={data.parent_id}
-                        onChange={e => setData("parent_id", e.target.value)}
-                        className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary"
-                    >
-                        <option value="">-- Sin Padre (Categoría Raíz) --</option>
-                        {categories.filter(c => c.id !== selectedCategory?.id).map(c => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                    </select>
-                    <InputError message={errors.parent_id} />
-                </div>
-
-                <div className="space-y-1">
-                    <label className="enterprise-label ml-1">Descripción Breve</label>
-                    <textarea
-                        value={data.description}
-                        onChange={e => setData("description", e.target.value)}
-                        className="w-full rounded-2xl border-gray-100 py-4 px-5 font-medium text-sm text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary"
-                        rows="3"
-                        placeholder="¿Qué incluye esta categoría?"
-                    />
+                <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 shrink-0">
+                    <PrimaryButton type="submit" disabled={processing} className="!px-12 !py-4 shadow-xl shadow-brand-primary/20">
+                        {processing ? 'Guardando...' : 'Guardar Cambios'}
+                    </PrimaryButton>
                 </div>
             </form>
-
-            <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4">
-                <PrimaryButton disabled={processing} className="!px-12 !py-4 shadow-xl shadow-brand-primary/20">
-                    {processing ? 'Guardando...' : 'Guardar Cambios'}
-                </PrimaryButton>
-            </div>
         </div>
       </SideModal>
     </AuthenticatedLayout>

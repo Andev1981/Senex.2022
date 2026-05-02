@@ -49,8 +49,8 @@ class InitialSetupSeeder extends Seeder
             ]
         );
 
-        // 5. Configuración de Sucursales (Solo 2: Sport y Domicilio)
-        $this->command->info('Configurando Sucursales (Sport y Domicilio)...');
+        // 5. Configuración de Sucursal Única (Senex Sport)
+        $this->command->info('Configurando Sucursal Única (Senex Sport)...');
 
         $mainBranch = $company->branches()->where('is_main', true)->first();
         
@@ -63,76 +63,93 @@ class InitialSetupSeeder extends Seeder
                 'is_home_care_only' => false,
                 'active' => true,
             ]);
-            $this->command->info('Sucursal principal: Senex Sport');
+            $this->command->info('Sucursal principal configurada.');
         }
 
-        $secondBranch = Branch::updateOrCreate(
-            ['company_id' => $company->id, 'name' => 'Senex Domicilio'],
-            [
-                'codigo_sucursal_sii' => '2',
-                'email' => 'senex@senex.cl',
-                'phone' => '+56900000000',
-                'is_main' => false,
-                'is_home_care_only' => true,
-                'active' => true,
-            ]
+        // Limpieza de sucursales extra (Aseguramos solo UNA sucursal)
+        $company->branches()->where('id', '!=', $mainBranch->id)->delete();
+
+        // 5.1 Crear Boxes (Rooms)
+        $this->command->info('Creando Boxes para la sucursal...');
+        \App\Models\Room::updateOrCreate(
+            ['branch_id' => $mainBranch->id, 'name' => 'Box 1'],
+            ['company_id' => $company->id, 'capacity' => 2, 'status' => 'active']
         );
-        $this->command->info('Segunda sucursal: Senex Domicilio');
+        \App\Models\Room::updateOrCreate(
+            ['branch_id' => $mainBranch->id, 'name' => 'Box 2'],
+            ['company_id' => $company->id, 'capacity' => 1, 'status' => 'active']
+        );
+        \App\Models\Room::updateOrCreate(
+            ['branch_id' => $mainBranch->id, 'name' => 'Sala de Máquinas'],
+            ['company_id' => $company->id, 'capacity' => 5, 'status' => 'active']
+        );
 
-        // Limpieza de sucursales extra
-        $company->branches()
-            ->whereNotIn('id', [$mainBranch->id, $secondBranch->id])
-            ->delete();
-
-        // 6. Vinculación del Usuario Admin a Senex SPA
-        $this->command->info('Configurando usuarios administrativos...');
+        // 6. Vinculación de Usuarios
+        $this->command->info('Configurando usuarios y profesionales...');
         
         // Superadmin (Juan)
         $user = User::where('email', 'javt1981@gmail.com')->first();
         if ($user) {
             $user->update(['company_id' => $company->id]);
-            $branches = Branch::where('company_id', $company->id)->pluck('id');
-            $user->branches()->sync($branches);
-            $this->command->info('Usuario javt1981@gmail.com vinculado exitosamente.');
+            $user->branches()->sync([$mainBranch->id]);
+            $this->command->info('Usuario javt1981@gmail.com vinculado.');
         }
 
-        // Admin: Mónica Fagres
-        $monica = User::updateOrCreate(
-            ['email' => 'mfagres@gmail.com'],
+        // Crear Kinesiólogos de prueba
+        $kine1 = User::updateOrCreate(
+            ['email' => 'kine1@senex.cl'],
             [
-                'name' => 'Mónica Fagres',
+                'name' => 'Pedro Kinesiologo',
                 'password' => \Illuminate\Support\Facades\Hash::make('senex2026'),
                 'company_id' => $company->id
             ]
         );
-        $monica->assignRole('admin');
-        $monica->branches()->sync([$secondBranch->id]); // Senex Domicilio
-
-        // Admin: Marco Jadue
-        $marco = User::updateOrCreate(
-            ['email' => 'bravitos4j@hotmail.com'],
+        $kine1->assignRole('kine');
+        $kine1->branches()->sync([$mainBranch->id]);
+        
+        $doctor1 = \App\Models\Doctor::updateOrCreate(
+            ['user_id' => $kine1->id],
             [
-                'name' => 'Marco Jadue',
-                'password' => \Illuminate\Support\Facades\Hash::make('senex2026'),
-                'company_id' => $company->id
+                'company_id' => $company->id,
+                'name' => 'Pedro',
+                'last_name' => 'Kinesiologo',
+                'rut' => '11111111-1',
+                'speciality' => 'Deportiva',
+                'is_active' => true
             ]
         );
-        $marco->assignRole('admin');
-        $marco->branches()->sync([$secondBranch->id]); // Senex Domicilio
+        // 🎯 VINCULAR DOCTOR A SUCURSAL (Tabla branch_doctor)
+        $doctor1->branches()->sync([$mainBranch->id => ['status' => 'active', 'mobile_app_access' => true]]);
 
-        // Admin Genérico: Senex Sport
-        $adminSport = User::updateOrCreate(
-            ['email' => 'admin.sport@senex.cl'],
+        // Crear Pacientes de prueba
+        $this->command->info('Creando pacientes de prueba...');
+        \App\Models\Patient::updateOrCreate(
+            ['rut' => '22222222-2'],
             [
-                'name' => 'Administrador Sport',
-                'password' => \Illuminate\Support\Facades\Hash::make('senex2026'),
-                'company_id' => $company->id
+                'company_id' => $company->id,
+                'name' => 'Juan',
+                'last_name' => 'Pérez',
+                'email' => 'juan.perez@email.com',
+                'phone' => '+56911111111',
+                'gender' => 'male',
+                'birth_date' => '1990-05-15'
             ]
         );
-        $adminSport->assignRole('admin');
-        $adminSport->branches()->sync([$mainBranch->id]); // Senex Sport
 
-        $this->command->info('Usuarios administrativos configurados.');
+        \App\Models\Patient::updateOrCreate(
+            ['rut' => '33333333-3'],
+            [
+                'company_id' => $company->id,
+                'name' => 'María',
+                'last_name' => 'González',
+                'email' => 'maria.g@email.com',
+                'phone' => '+56922222222',
+                'gender' => 'female',
+                'birth_date' => '1985-10-20'
+            ]
+        );
+
+        $this->command->info('Usuarios, Kines y Pacientes configurados.');
 
         // 7. Previsiones
         $this->command->info('Cargando previsiones...');

@@ -40,7 +40,7 @@ import { estadoClass, estadoTexto } from "@/helpers/status";
 import SecondaryButton from "@/components/SecondaryButton";
 import PrimaryButton from "@/components/PrimaryButton";
 
-export default function AttendacesTable({
+export default function AttendancesTable({
   atenciones,
   kpis,
   openCreateUpdateSessionModal,
@@ -72,7 +72,7 @@ export default function AttendacesTable({
 
   const applyFilters = () => {
     router.get(
-      route("attendances.index"),
+      route("treatment-sessions.index"),
       { fecha_inicio: fechaInicio, fecha_fin: fechaFin, estado, query },
       { preserveState: true, preserveScroll: true }
     );
@@ -443,7 +443,7 @@ export default function AttendacesTable({
                 Filtrar
               </PrimaryButton>
               <SecondaryButton
-                onClick={() => router.get(route("attendances.index"))}
+                onClick={() => router.get(route("treatment-sessions.index"))}
                 className="py-3! px-6! text-[9px]!"
               >
                 Reiniciar

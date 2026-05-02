@@ -16,7 +16,8 @@ class Appointment extends Model
     'room_id',
     'patient_id',
     'doctor_id',
-    'room_id',
+    'item_id',
+    'modality',
     'start_at',
     'end_at',
     'status',
@@ -28,6 +29,7 @@ class Appointment extends Model
   ];
 
   protected $casts = [
+    'modality' => \App\Enums\ServiceModalityEnum::class,
     'start_at' => 'datetime',
     'end_at' => 'datetime',
     'check_in_at' => 'datetime',
@@ -49,6 +51,11 @@ class Appointment extends Model
   public function room()
   {
     return $this->belongsTo(Room::class);
+  }
+
+  public function item()
+  {
+    return $this->belongsTo(Item::class);
   }
 
   public function treatmentSession()

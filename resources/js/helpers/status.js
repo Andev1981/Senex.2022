@@ -121,6 +121,8 @@ export const statusOptions = [
 
 export const estadoClass = (estado) => {
   switch (estado) {
+    case "checked_in":
+      return "bg-orange-100 text-orange-800";
     case "completed":
       return "bg-green-100 text-green-800";
     case "in_progress":
@@ -140,6 +142,8 @@ export const estadoClass = (estado) => {
 
 export const estadoTexto = (estado) => {
   switch (estado) {
+    case "checked_in":
+      return "En Espera";
     case "completed":
       return "Completada";
     case "in_progress":

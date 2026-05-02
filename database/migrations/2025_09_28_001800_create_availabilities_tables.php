@@ -19,15 +19,22 @@ return new class extends Migration
 
              // 🎯 Seguridad Multiempresa
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->foreignId('branch_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
             
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
 
             // Regla iCal RRULE (sin BYHOUR aquí; usa start/end_time para hora)
             $table->string('rrule', 255); // p.ej. FREQ=WEEKLY;BYDAY=MO,TU,TH
+            $table->string('modality', 20)->default('onsite');
 
             // Franja diaria a la que aplica la regla
             $table->time('start_time');   // 09:00:00
             $table->time('end_time');     // 18:00:00
+
+            // 🍴 Soporte para Colación / Breaks Recurrentes
+            $table->time('lunch_start_time')->nullable();
+            $table->time('lunch_end_time')->nullable();
 
             // Ventana de validez de la regla
             $table->date('valid_from')->nullable(); // null = desde siempre

@@ -76,21 +76,21 @@ export default function SideModal({
                   <div className="flex flex-col h-full bg-white shadow-2xl relative overflow-hidden">
                     {/* 1. HEADER HERO PREMIUM (RENDERIZADO CONDICIONALMENTE) */}
                     {!hideDefaultHeader && (title ? (
-                        <div className="flex items-center justify-between px-10 py-8 border-b border-gray-100 bg-gray-50/50 shrink-0 relative overflow-hidden">
+                        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-gray-50/50 shrink-0 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
                             
-                            <div className="flex items-center gap-5 relative z-10">
+                            <div className="flex items-center gap-4 relative z-10">
                                 {Icon && (
-                                    <div className="p-3 bg-brand-primary text-white rounded-2xl shadow-xl shadow-brand-primary/20 transform rotate-3">
-                                        <Icon className="w-6 h-6" />
+                                    <div className="p-2.5 bg-brand-primary text-white rounded-xl shadow-lg shadow-brand-primary/20 transform rotate-3">
+                                        <Icon className="w-5 h-5" />
                                     </div>
                                 )}
                                 <div>
-                                    <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">
+                                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight leading-none mb-1">
                                         {title}
                                     </h2>
                                     {subtitle && (
-                                        <p className="text-[10px] font-black text-brand-gray uppercase tracking-[0.2em] opacity-60">
+                                        <p className="text-[9px] font-black text-brand-gray uppercase tracking-[0.2em] opacity-60">
                                             {subtitle}
                                         </p>
                                     )}
@@ -99,7 +99,7 @@ export default function SideModal({
 
                             <button
                                 onClick={onClose}
-                                className="p-3 text-gray-400 hover:text-brand-primary hover:bg-white rounded-2xl transition-all active:scale-90 border border-transparent hover:border-gray-100 shadow-sm relative z-10"
+                                className="p-2.5 text-gray-400 hover:text-brand-primary hover:bg-white rounded-xl transition-all active:scale-90 border border-transparent hover:border-gray-100 shadow-sm relative z-10"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -108,20 +108,20 @@ export default function SideModal({
                         /* Botón de cierre discreto si no hay título */
                         <button
                             onClick={onClose}
-                            className="absolute top-6 right-6 z-50 p-3 text-gray-400 hover:text-brand-primary bg-white/80 backdrop-blur rounded-2xl transition-all active:scale-90 border border-gray-100 shadow-xl"
+                            className="absolute top-4 right-4 z-50 p-2.5 text-gray-400 hover:text-brand-primary bg-white/80 backdrop-blur rounded-xl transition-all active:scale-90 border border-gray-100 shadow-xl"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     ))}
 
                     {/* 2. CONTENIDO SCROLLABLE */}
-                    <div className={`flex-1 overflow-y-auto custom-scrollbar ${title ? 'p-10' : 'p-0'}`}>
+                    <div className={`flex-1 flex flex-col min-h-0 ${!hideDefaultHeader && title ? 'p-8 overflow-y-auto custom-scrollbar' : 'p-0 overflow-hidden'}`}>
                       {children}
                     </div>
 
                     {/* 3. FOOTER FIJO (Opcional) */}
                     {footer && (
-                        <div className="p-8 bg-gray-50 border-t border-gray-100 flex justify-end gap-4 shrink-0">
+                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
                             {footer}
                         </div>
                     )}

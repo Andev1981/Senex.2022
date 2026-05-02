@@ -23,6 +23,7 @@ import {
   Package,
   Building2,
   Layers,
+  Clock,
 } from "lucide-react";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import BranchSwitcher from "@/components/BranchSwitcher";
@@ -58,12 +59,14 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
       // BLOQUE: GESTIÓN DE PERSONAS (Dinámico)
       if (isClinical && enabledModules.includes('clinical_management')) {
         const clinicalSubmenu = [
+            { id: "agendas.index", label: "Agenda", icon: Calendar },
+            { id: "availabilities.index", label: "Disponibilidad", icon: Clock },
             { id: "patients.index", label: "Pacientes", icon: Users },
             { id: "doctors.index", label: "Kines", icon: Stethoscope },
-            { id: "attendances.index", label: "Atenciones", icon: List },
+            { id: "treatment-sessions.index", label: "Atenciones", icon: List },
             { id: "products.index", label: "Catálogo", icon: Package },
             { id: "categories.index", label: "Categorías", icon: Layers },
-        ].filter(item => hasPermission(item.id));
+        ].filter(item => hasPermission(item.id) || userIsAdmin || userIsSuperAdmin);
 
         if (clinicalSubmenu.length > 0) {
             items.push({
@@ -91,43 +94,30 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
         }
       }
 
-      // BLOQUE: ADMINISTRACIÓN (Filtrado)
+      // BLOQUE: FINANZAS Y CONVENIOS
       if (enabledModules.includes('finance_admin')) {
-        const adminSubmenu = [];
+        const financeSubmenu = [];
         
-        // Solo salud
+        // Módulos específicos de Salud
         if (isClinical) {
-            if (hasPermission("agreements.index")) adminSubmenu.push({ id: "agreements.index", label: "Convenios", icon: Handshake });
-            if (hasPermission("insurances.index")) adminSubmenu.push({ id: "insurances.index", label: "Aseguradoras", icon: Shield });
+            if (hasPermission("insurances.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "insurances.index", label: "Aseguradoras", icon: Shield });
+            if (hasPermission("plans.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "plans.index", label: "Packs Comerciales", icon: Box });
+            if (hasPermission("agreements.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "agreements.index", label: "Convenios", icon: Handshake });
         }
 
-        // Comunes
-        if (hasPermission("payrolls.index")) adminSubmenu.push({ id: "payrolls.index", label: isClinical ? "Liquidaciones" : "Pagos Honorarios", icon: NotebookText });
-        if (hasPermission("payments.index")) adminSubmenu.push({ id: "payments.index", label: "Caja / POS", icon: DollarSign });
+        // Módulos Comunes
+        if (hasPermission("finance.receivables.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: FileText });
+        if (hasPermission("payments.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "payments.index", label: "Caja / POS", icon: DollarSign });
+        if (hasPermission("payrolls.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "payrolls.index", label: isClinical ? "Liquidaciones" : "Pagos Honorarios", icon: NotebookText });
 
-        if (adminSubmenu.length > 0) {
+        if (financeSubmenu.length > 0) {
             items.push({
-                id: "finance_admin",
-                label: "Administración",
-                icon: Building,
-                submenu: adminSubmenu,
+                id: "finance_management",
+                label: "Finanzas y Convenios",
+                icon: DollarSign,
+                submenu: financeSubmenu,
             });
         }
-      }
-
-      // BLOQUE: LABORATORIO (DESARROLLO) - Solo Superadmin
-      if (userIsSuperAdmin) {
-        items.push({
-            id: "dev_lab",
-            label: "Laboratorio Dev",
-            icon: Shell,
-            submenu: [
-                { id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: DollarSign },
-                { id: "acquisitions.suppliers.index", label: "Proveedores", icon: Building2 },
-                { id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package },
-                { id: "documents", label: "Facturación SII", icon: FileText },
-            ],
-        });
       }
 
       // Solo añadir Configuración si es Superadmin o Admin
@@ -141,6 +131,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
         if (userIsSuperAdmin) {
             configSubmenu.push({ id: "companies.index", label: "Compañias", icon: Building });
             configSubmenu.push({ id: "subscription.index", label: "Mi Suscripción", icon: Shield });
+            configSubmenu.push({ id: "documents", label: "Facturación SII", icon: FileText });
         }
 
         if (configSubmenu.length > 0) {
@@ -151,6 +142,19 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
               submenu: configSubmenu,
             });
         }
+      }
+
+      // BLOQUE: LABORATORIO (DESARROLLO) - Solo Superadmin
+      if (userIsSuperAdmin) {
+        items.push({
+            id: "dev_lab",
+            label: "Laboratorio Dev",
+            icon: Shell,
+            submenu: [
+                { id: "acquisitions.suppliers.index", label: "Proveedores", icon: Building2 },
+                { id: "acquisitions.purchase-orders.index", label: "Adquisiciones", icon: Package },
+            ],
+        });
       }
 
       return items;
@@ -221,9 +225,9 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
   }, [userIsSuperAdmin, props.all_companies, props.available_branches]);
 
   return (
-    <div className="sticky py-4 top-0 z-40 flex flex-col bg-white border-r border-gray-100 shadow-2xl h-dvh shadow-gray-500/5">
+    <div className="flex flex-col border-r border-gray-100 shadow-2xl h-full shadow-gray-500/5">
       {/* Header del sidebar */}
-      <div className="flex items-center justify-between h-16 px-5 border-b border-gray-50 shrink-0 gap-2">
+      <div className="flex items-center justify-between h-16 px-5 border-b border-gray-50 shrink-0 gap-2 pt-4 pb-2">
         {sidebarOpen ? (
           <>
             <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">

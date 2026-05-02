@@ -4,121 +4,92 @@ import { estadoClass, estadoTexto } from "@/helpers/status";
 
 export default function ResumeModal({ sessionData, setShowResumenModal }) {
   return (
-    <div className="p-6 bg-white rounded-xl">
-      <div className="space-y-4">
-        {/* Información del Paciente */}
-        <div className="p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
-          <h4 className="mb-2 text-sm font-bold text-blue-900">Paciente</h4>
-          <p className="text-lg font-bold text-blue-900">
+    <div className="space-y-3">
+      {/* Información del Paciente */}
+        <div className="p-3 border border-blue-100 rounded-2xl bg-blue-50/50">
+          <h4 className="mb-1 text-[10px] font-black text-blue-900 uppercase tracking-widest opacity-60">Paciente</h4>
+          <p className="text-base font-black text-blue-900 uppercase tracking-tight">
             {sessionData?.patient_full_name}
           </p>
-          <p className="text-sm text-blue-700">
-            RUT: {sessionData?.patient_rut}
-          </p>
-          <p className="text-sm text-blue-700">
-            Tel: {sessionData?.patient_phone}
-          </p>
+          <div className="flex gap-3 mt-1">
+            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">
+                RUT: {sessionData?.patient_rut}
+            </p>
+            <p className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">
+                Tel: {sessionData?.patient_phone}
+            </p>
+          </div>
         </div>
 
         {/* Detalles de la Sesión */}
-        <div className="p-4 border-2 border-gray-200 rounded-lg">
-          <h4 className="mb-3 text-sm font-bold text-gray-900">
-            Información de la Sesión
+        <div className="p-4 border border-gray-100 rounded-2xl bg-white shadow-sm">
+          <h4 className="mb-3 text-[10px] font-black text-gray-900 uppercase tracking-widest opacity-60">
+            Detalles Cronológicos
           </h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Fecha:</span>
-              <span className="font-semibold">
+          <div className="space-y-2.5 text-xs font-bold uppercase tracking-tight">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Fecha de Atención:</span>
+              <span className="text-gray-900 font-black">
                 {fmtDate(sessionData?.date)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Hora:</span>
-              <span className="font-semibold">{sessionData?.time}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Hora de Inicio:</span>
+              <span className="text-gray-900 font-black">{sessionData?.time}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Profesional:</span>
-              <span className="font-semibold">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Profesional:</span>
+              <span className="text-gray-900 font-black">
                 {sessionData?.doctor_full_name}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Tipo:</span>
-              <span className="font-semibold capitalize">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Tipo de Servicio:</span>
+              <span className="text-brand-primary font-black capitalize">
                 {sessionData?.name_session_type}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Estado:</span>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Estado:</span>
               <span
-                className={`px-2 py-1 text-xs font-bold rounded-full ${estadoClass(
+                className={`px-2 py-0.5 text-[9px] font-black rounded-lg uppercase tracking-widest border ${estadoClass(
                   sessionData?.status
-                )} text-white`}
+                )}`}
               >
                 {estadoTexto(sessionData?.status)}
               </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Sucursal:</span>
-              <span className="font-semibold">{sessionData?.sucursal}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Sala:</span>
-              <span className="font-semibold">{sessionData?.sala}</span>
             </div>
           </div>
         </div>
 
         {/* Información de Pago */}
-        <div className="p-4 border-2 border-purple-200 rounded-lg bg-purple-50">
-          <h4 className="mb-3 text-sm font-bold text-purple-900">
-            Información de Pago
+        <div className="p-4 border border-purple-100 rounded-2xl bg-purple-50/50">
+          <h4 className="mb-3 text-[10px] font-black text-purple-900 uppercase tracking-widest opacity-60">
+            Resumen Financiero
           </h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-purple-700">Copago:</span>
-              <span className="font-semibold text-purple-900">
-                {fmtCLP(sessionData?.copay_clp)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-purple-700">Total:</span>
-              <span className="font-semibold text-purple-900">
+          <div className="space-y-2.5 text-xs font-bold uppercase tracking-tight">
+            <div className="flex justify-between items-center">
+              <span className="text-purple-700/60">Arancel Pactado:</span>
+              <span className="font-black text-purple-900 font-mono">
                 {fmtCLP(sessionData?.patient_amount_clp)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-purple-700">Pagado:</span>
-              <span className="font-semibold text-purple-900">
+            <div className="flex justify-between items-center">
+              <span className="text-purple-700/60">Total Recaudado:</span>
+              <span className="font-black text-green-600 font-mono">
                 {fmtCLP(sessionData?.total_payment)}
               </span>
             </div>
-            {sessionData?.patient_amount_clp - sessionData?.total_payment >
-              0 && (
-              <div className="flex justify-between pt-2 border-t border-purple-300">
-                <span className="font-bold text-purple-900">Saldo:</span>
-                <span className="font-bold text-purple-900">
-                  {fmtCLP(
-                    sessionData?.patient_amount_clp - sessionData?.total_payment
-                  )}
+            {sessionData?.patient_amount_clp - sessionData?.total_payment > 0 && (
+              <div className="flex justify-between pt-2 border-t border-purple-200 mt-1">
+                <span className="font-black text-red-600 uppercase tracking-widest">Saldo Deudor:</span>
+                <span className="font-black text-red-600 font-mono text-sm">
+                  {fmtCLP(sessionData?.patient_amount_clp - sessionData?.total_payment)}
                 </span>
               </div>
             )}
           </div>
         </div>
-
-        {/* Botones de Acción */}
-        <div className="flex">
-          <button
-            onClick={() => {
-              setShowResumenModal(false);
-            }}
-            className="px-4 py-2 font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

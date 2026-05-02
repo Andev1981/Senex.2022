@@ -5,11 +5,11 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Modal from "@/components/Modal";
 import SideModal from "@/components/SideModal";
 import TablePlans from "./TablePlans";
-import PlanModal from "./Partials/PlanModal";
+import PlanForm from "./Partials/PlanForm";
 import PlanModalDelete from "./Partials/PlanModalDelete";
 import { Box, NotebookText, Plus } from "lucide-react";
 
-export default function Index({ plans, insurance }) {
+export default function Index({ plans, insurance, sessionTypes }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [plan, setPlan] = useState(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
@@ -31,55 +31,55 @@ export default function Index({ plans, insurance }) {
 
   return (
     <AuthenticatedLayout>
-      <Head title="Planes" />
-      <div className="p-4">
-        <div className="flex items-center justify-between p-6 bg-white rounded-lg shadow">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-              <NotebookText className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Planes <span className="font-bold">{insurance?.name}</span>
-              </h1>
-              <p className="text-sm text-gray-600">
-                Gestión de Planes para{" "}
-                <span className="italic">{insurance?.name}</span>
-              </p>
+      <Head title="Packs y Programas Comerciales" />
+      
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Premium */}
+          <div className="bg-white border border-gray-100 shadow-sm rounded-[3rem] p-4 mb-10">
+            <div className="flex flex-col lg:flex-row justify-between items-center gap-6 px-6 py-4">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-brand-primary text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-brand-primary/30">
+                  <Box className="w-8 h-8" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
+                    Packs & Programas
+                  </h1>
+                  <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest mt-1 opacity-70">
+                    Gestión de productos comerciales y paquetes de sesiones
+                  </p>
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleOpenModalNew}
+                className="flex items-center gap-3 px-10 py-5 bg-gray-900 text-white rounded-3xl font-black text-[11px] uppercase tracking-[0.1em] hover:bg-black hover:scale-105 transition-all shadow-xl shadow-gray-200"
+              >
+                <Plus className="w-5 h-5" />
+                Nuevo Pack Comercial
+              </button>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleOpenModalNew}
-              className="flex items-center gap-2 px-6 py-2 font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-500/30"
-            >
-              <Plus className="w-4 h-4" />
-              Nuevo Plan
-            </button>
-          </div>
+
+          <TablePlans
+            plans={plans}
+            handleOpenModalEdit={handleOpenModalEdit}
+            handleOpenModalDelete={handleOpenModalDelete}
+          />
         </div>
-        <TablePlans
-          plans={plans}
-          handleOpenModalEdit={handleOpenModalEdit}
-          handleOpenModalDelete={handleOpenModalDelete}
-        />
       </div>
 
       <SideModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={plan ? "Editar Plan" : "Nuevo Plan"}
-        description={
-          plan
-            ? "Actualizar información del plan: " + insurance?.name
-            : "Crear un nuevo plan: " + insurance?.name
-        }
-        width="3xl"
+        width="4xl"
       >
-        <PlanModal
+        <PlanForm
           plan={plan}
-          setModalOpen={setModalOpen}
+          onClose={() => setModalOpen(false)}
           insurance={insurance}
+          sessionTypes={sessionTypes}
         />
       </SideModal>
 

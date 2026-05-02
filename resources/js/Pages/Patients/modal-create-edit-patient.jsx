@@ -258,7 +258,7 @@ export default function ModalCreateEditPatient({
         }).then((result) => {
           if (result.isConfirmed && newId) {
             // Acción: Crear Atención. Redirigimos al índice de atenciones (o al perfil abriendo el modal si fuera posible, pero ir a atenciones es lo estándar)
-            router.visit(route("attendances.index", { patient_id: newId, action: 'create' }));
+            router.visit(route("treatment-sessions.index", { patient_id: newId, action: 'create' }));
           } else if (result.isDenied && newId) {
             // Acción: Ver Perfil
             router.visit(route("patients.show", newId));

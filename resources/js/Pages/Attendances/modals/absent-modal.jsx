@@ -17,8 +17,8 @@ export default function AbsentModal({
       return;
     }
 
-    router.patch(
-      `/attendances/${sessionData.session_id}/absent`,
+    router.post(
+      route("treatment-sessions.absent", sessionData.session_id),
       { reason: data.session_absent_notes },
       {
         onSuccess: () => {
@@ -28,70 +28,66 @@ export default function AbsentModal({
           setSessionData(false);
         },
         onError: () => {
-          alert.error("❌ Error al marcar ausencia");
+          alert("❌ Error al marcar ausencia");
         },
       }
     );
   };
 
   return (
-    <div className="p-6 bg-white rounded-xl">
-      <h3 className="mb-4 text-xl font-bold text-gray-900">
-        ⚠️ Marcar como Ausente
-      </h3>
-      <p className="mb-4 text-sm text-gray-600">
-        Registra el motivo de ausencia de{" "}
-        <strong>{sessionData?.patient_full_name}</strong>
-      </p>
-
-      <div className="mb-4">
-        <label className="block mb-2 text-sm font-bold text-gray-700">
-          Motivo de Ausencia
-        </label>
-        <select
-          value={data.session_absent_notes}
-          onChange={(e) => setData("session_absent_notes", e.target.value)}
-          className="w-full px-3 py-2 mb-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-        >
-          <option value="">Seleccionar motivo...</option>
-          <option value="no_show">No se presentó</option>
-          <option value="late_cancellation">Cancelación tardía</option>
-          <option value="emergency">Emergencia personal</option>
-          <option value="health_issue">Problema de salud</option>
-          <option value="other">Otro</option>
-        </select>
-
-        {data.session_absent_notes === "other" && (
-          <textarea
-            placeholder="Describe el motivo..."
-            className="w-full p-3 border-2 border-gray-200 rounded-lg resize-none h-20 focus:border-blue-500 focus:outline-none"
-          />
-        )}
-      </div>
-
-      <div className="p-3 mb-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <p className="text-sm text-yellow-800">
-          ⚠️ <strong>Importante:</strong> Si el paciente consume un plan, la
-          sesión NO se devolverá automáticamente.
+    <div className="space-y-6 flex flex-col h-full">
+      <div className="space-y-6">
+        <p className="text-sm font-medium text-gray-600 leading-relaxed">
+            Registre el motivo de inasistencia para <strong>{sessionData?.patient_full_name}</strong>. 
         </p>
+
+        <div className="space-y-3">
+            <label className="enterprise-label ml-1 opacity-60">Motivo de Ausencia</label>
+            <select
+                value={data.session_absent_notes}
+                onChange={(e) => setData("session_absent_notes", e.target.value)}
+                className="w-full px-5 py-4 rounded-2xl border-gray-100 bg-gray-50 font-bold text-sm focus:bg-white focus:ring-brand-primary transition-all"
+            >
+                <option value="">Seleccionar motivo...</option>
+                <option value="no_show">No se presentó</option>
+                <option value="late_cancellation">Cancelación tardía</option>
+                <option value="emergency">Emergencia personal</option>
+                <option value="health_issue">Problema de salud</option>
+                <option value="other">Otro</option>
+            </select>
+
+            {data.session_absent_notes === "other" && (
+                <textarea
+                    placeholder="Describe el motivo..."
+                    className="w-full p-4 rounded-2xl border-gray-100 bg-gray-50 text-sm font-medium focus:bg-white focus:ring-brand-primary transition-all resize-none h-24 shadow-inner"
+                />
+            )}
+        </div>
+
+        <div className="p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl flex items-start gap-4">
+            <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase tracking-tight">
+            ⚠️ <strong>Importante:</strong> Si el paciente consume un plan, la
+            sesión NO se devolverá automáticamente.
+            </p>
+        </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-3 mt-auto pt-6 border-t border-gray-50">
         <button
           onClick={() => {
             setShowAbsentModal(false);
             setSessionData({});
           }}
-          className="flex-1 px-4 py-2 font-semibold text-gray-700 border-2 border-gray-200 rounded-lg hover:bg-gray-50"
+          className="flex-1 px-6 py-3.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 rounded-xl transition-all"
         >
           Cancelar
         </button>
         <button
           onClick={markAbsent}
           disabled={!data.session_absent_notes}
-          className="flex-1 px-4 py-2 font-semibold text-white bg-orange-600 rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="flex-2 px-8 py-3.5 text-[10px] font-black uppercase tracking-widest text-white bg-orange-600 rounded-xl hover:bg-orange-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg shadow-orange-100"
         >
-          ⚠️ Confirmar Ausencia
+          Confirmar Ausencia
         </button>
       </div>
     </div>

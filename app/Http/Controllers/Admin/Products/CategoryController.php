@@ -31,6 +31,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string|max:1000',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $data['company_id'] = session('current_company_id');
@@ -70,8 +71,15 @@ class CategoryController extends Controller
             abort(403);
         }
 
-        if ($category->items()->exists()) {
-            return back()->with('error', 'No puedes eliminar una categoría que tiene productos asociados.');
+        // Verificar si la categoría o cualquiera de sus subcategorías tiene ítems
+        $categoryIds = Category::where('id', $category->id)
+            ->orWhere('parent_id', $category->id)
+            ->pluck('id');
+
+        $hasItems = \App\Models\Item::whereIn('category_id', $categoryIds)->exists();
+
+        if ($hasItems) {
+            return back()->with('error', 'No puedes eliminar esta categoría porque ella o sus subcategorías tienen productos/servicios asociados.');
         }
 
         $category->delete();

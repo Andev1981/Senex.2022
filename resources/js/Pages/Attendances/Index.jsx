@@ -4,7 +4,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SideModal from "@/components/SideModal";
 import Modal from "@/components/Modal";
 import AttendancesHeader from "@/pages/attendances/partials/attendances-header";
-import AttendacesTable from "@/pages/attendances/attendaces-table";
+import AttendancesTable from "@/pages/attendances/attendances-table";
 import Kpis from "@/pages/attendances/partials/kpis";
 import CancelModal from "@/pages/attendances/modals/cancel-modal";
 import StartModal from "@/pages/attendances/modals/start-modal";
@@ -12,6 +12,14 @@ import CompletedModal from "@/pages/attendances/modals/completed-modal";
 import AbsentModal from "@/pages/attendances/modals/absent-modal";
 import DteModal from "@/pages/attendances/modals/dte-modal";
 import ResumeModal from "@/pages/attendances/modals/resume-modal";
+import { 
+  Play, 
+  XCircle, 
+  UserX, 
+  Receipt, 
+  FileText, 
+  Plus 
+} from "lucide-react";
 import CreateUpdateModal from "@/pages/attendances/modals/create-update-modal";
 
 export default function Index({
@@ -37,9 +45,15 @@ export default function Index({
     const searchParams = new URLSearchParams(window.location.search);
     const action = searchParams.get('action');
     const patientId = searchParams.get('patient_id');
+    const doctorId = searchParams.get('doctor_id');
+    const itemId = searchParams.get('item_id');
 
     if (action === 'create' && patientId) {
-      setSessionData({ patient_id: Number(patientId) });
+      setSessionData({ 
+        patient_id: Number(patientId),
+        doctor_id: doctorId ? Number(doctorId) : null,
+        item_id: itemId ? Number(itemId) : null
+      });
       setShowCreateSessionModal(true);
       
       // Limpia la URL para evitar que el modal se vuelva a abrir al recargar
@@ -96,7 +110,7 @@ export default function Index({
         {/* KPIs */}
         <Kpis kpis={kpis} filtros={filtros} />
 
-        <AttendacesTable
+        <AttendancesTable
           atenciones={atenciones}
           filtros={filtros}
           kpis={kpis}
@@ -113,8 +127,10 @@ export default function Index({
         <Modal
           open={showAbsentModal}
           onClose={() => setShowAbsentModal(false)}
-          title={"Modal de Marcar Ausente"}
-          maxWidth="lg" // sm, md, lg, xl, 2xl, 3xl, full
+          title="Marcar como Ausente"
+          subtitle="Registro de inasistencia"
+          icon={UserX}
+          maxWidth="lg"
         >
           <AbsentModal
             sessionData={sessionData}
@@ -127,8 +143,10 @@ export default function Index({
         <Modal
           open={showCancelModal}
           onClose={() => setShowCancelModal(false)}
-          title={"Modal de Cancelación"}
-          maxWidth="xl" // sm, md, lg, xl, 2xl, 3xl, full
+          title="Anular Sesión"
+          subtitle="Motivo de la cancelación"
+          icon={XCircle}
+          maxWidth="lg"
         >
           <CancelModal
             sessionData={sessionData}
@@ -141,8 +159,8 @@ export default function Index({
         <SideModal
           open={showCompletedModal}
           onClose={() => setShowCompletedModal(false)}
-          title={"Modal de Marcar Completado"}
           width="4xl" // sm, md, lg, xl, 2xl, 3xl, full
+          hideDefaultHeader={true}
         >
           <CompletedModal
             sessionData={sessionData}
@@ -173,8 +191,10 @@ export default function Index({
         <Modal
           open={showDTEModal}
           onClose={() => setShowDTEModal(false)}
-          title={"Modal de Emitir DTE"}
-          maxWidth="lg" // sm, md, lg, xl, 2xl, 3xl, full
+          title="Emitir Documento DTE"
+          subtitle="Proceso de facturación SII"
+          icon={Receipt}
+          maxWidth="lg"
         >
           <DteModal
             sessionData={sessionData}
@@ -187,8 +207,10 @@ export default function Index({
         <Modal
           open={showResumenModal}
           onClose={() => setShowResumenModal(false)}
-          title={"Resumen Detallado de Sesión"}
-          maxWidth="lg" // sm, md, lg, xl, 2xl, 3xl, full
+          title="Resumen de Sesión"
+          subtitle="Detalles clínicos y administrativos"
+          icon={FileText}
+          maxWidth="lg"
         >
           <ResumeModal
             sessionData={sessionData}
@@ -197,12 +219,14 @@ export default function Index({
           />
         </Modal>
 
-        {/* Modal Unificado de Crear/Editar Sesión */}
+        {/* Modal de Iniciar Sesión */}
         <Modal
           open={showStartModal}
           onClose={() => setShowStartModal(false)}
-          title={"Modal de Iniciar Sesión"}
-          maxWidth="lg" // sm, md, lg, xl, 2xl, 3xl, full
+          title="Iniciar Sesión"
+          subtitle="Confirmar apertura de registro"
+          icon={Play}
+          maxWidth="lg"
         >
           <StartModal
             sessionData={sessionData}

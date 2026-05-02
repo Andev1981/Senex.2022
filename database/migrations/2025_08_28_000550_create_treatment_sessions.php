@@ -15,18 +15,22 @@ return new class extends Migration {
             $table->foreignId('branch_id')->nullable()->constrained();
             $table->foreignId('treatment_id')->constrained()->cascadeOnDelete();
             $table->foreignId('patient_id')->constrained();
-            $table->foreignId('doctor_id')->constrained('users'); // Kine que atendió hoy
+            $table->foreignId('doctor_id')->constrained('doctors'); // Profesional que atendió
             
-            $table->foreignId('session_type_id')->nullable()->constrained();
+            $table->foreignId('item_id')->nullable()->constrained('items');
             $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
 
             // Logística
             $table->date('date')->index();
             $table->time('time')->nullable();
-            $table->enum('status', ['scheduled','in_progress','completed','cancelled','not_show','confirmed'])->default('scheduled')->index();
+            $table->string('status', 20)->default('scheduled')->index(); // scheduled, checked_in, in_progress, completed, etc.
             $table->boolean('consumes_plan')->default(true);
             $table->unsignedTinyInteger('month_session_number')->default(0)->comment('Número de sesión del mes');
-            $table->unsignedTinyInteger('duration')->default(45)->comment('Tiempo de duracion de,la sesión');
+            $table->unsignedTinyInteger('duration')->default(45)->comment('Tiempo de duracion de la sesión');
+
+            $table->timestamp('checked_in_at')->nullable();
+            $table->timestamp('started_at')->nullable();
 
 
             // -----------------------------------------------------
