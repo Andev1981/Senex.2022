@@ -38,21 +38,15 @@ export default function TablePlans({
     external: "Convenio Externo",
   };
 
-  const institutionTypeLabels = {
-    health_insurer: "Isapre / Fonasa",
-    insurance_company: "Aseguradora",
-    clinic: "Prestador",
-  };
-
   const columns = useMemo(
     () => [
       {
         accessorKey: "name",
-        header: "Identificación del Plan",
+        header: "Nombre del Programa / Pack",
         cell: ({ row }) => (
             <div className="flex items-center gap-4">
               <div className="flex items-center justify-center w-10 h-10 text-xs font-black uppercase border shadow-sm text-brand-primary rounded-xl bg-brand-secondary/10 border-brand-secondary/20 shrink-0">
-                {row.original.name[0]}
+                <Box className="w-5 h-5" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-black text-gray-900 uppercase tracking-tight truncate leading-none mb-1.5">
@@ -68,74 +62,29 @@ export default function TablePlans({
           ),
       },
       {
-        accessorKey: "insurance.name",
-        header: "Institución",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-gray-50 rounded-lg">
-                <Shield className="w-3.5 h-3.5 text-brand-primary opacity-40" />
-            </div>
-            <div className="flex flex-col">
-                <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                {row.original.insurance?.name || "Clínica Senex (Interno)"}
-                </span>
-                {row.original.insurance?.institution_type && (
-                    <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">
-                        {institutionTypeLabels[row.original.insurance.institution_type]}
-                    </span>
-                )}
-            </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "type",
-        header: "Tipo",
-        cell: ({ getValue }) => (
-          <div className="text-center">
-            <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${
-              getValue() === 'internal' 
-              ? 'bg-blue-50 border-blue-100 text-blue-600' 
-              : 'bg-purple-50 border-purple-100 text-purple-600'
-            }`}>
-                {typeLabels[getValue()] || getValue()}
-            </span>
-          </div>
-        ),
-      },
-      {
         id: "parametros",
-        header: "Condiciones",
+        header: "Contenido del Pack",
         cell: ({ row }) => (
             <div className="flex flex-col gap-1">
-                {row.original.type === 'internal' ? (
-                    <>
-                        <div className="flex items-center gap-2 text-[10px] font-black text-gray-600 uppercase">
-                            <Database className="w-3 h-3 text-brand-primary opacity-40" />
-                            {row.original.sessions_included || '-'} Sesiones
-                        </div>
-                        <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 uppercase">
-                            <Clock className="w-3 h-3 opacity-30" />
-                            Vence: {row.original.valid_months ? `${row.original.valid_months} meses` : 'N/A'}
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex items-center gap-2 text-[10px] font-black text-purple-600 uppercase">
-                        <ShieldCheck className="w-3 h-3 opacity-40" />
-                        Cobertura: {row.original.coverage_percentage || '0'}%
-                    </div>
-                )}
+                <div className="flex items-center gap-2 text-[10px] font-black text-gray-600 uppercase">
+                    <Database className="w-3 h-3 text-brand-primary opacity-40" />
+                    {row.original.sessions_included || '-'} Sesiones
+                </div>
+                <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 uppercase">
+                    <Clock className="w-3 h-3 opacity-30" />
+                    Validez: {row.original.valid_months ? `${row.original.valid_months} meses` : 'Indefinida'}
+                </div>
             </div>
         )
       },
       {
         accessorKey: "price",
-        header: "Valor Venta",
+        header: "Precio Venta (Pack)",
         cell: ({ getValue }) => {
           const value = getValue();
           return (
             <div className="text-right">
-                <p className="font-mono text-xs font-black tracking-tighter text-gray-900">
+                <p className="font-mono text-sm font-black tracking-tighter text-brand-primary">
                     {value ? value.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }) : "-"}
                 </p>
             </div>
@@ -144,7 +93,7 @@ export default function TablePlans({
       },
       {
         accessorKey: "is_active",
-        header: "Estado",
+        header: "Disponibilidad",
         cell: ({ getValue }) => {
           const isActive = getValue();
           return (
@@ -152,7 +101,7 @@ export default function TablePlans({
                 <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${
                     isActive ? "bg-green-50 border-green-100 text-green-600" : "bg-red-50 border-red-100 text-red-600"
                 }`}>
-                {isActive ? "Activo" : "Inactivo"}
+                {isActive ? "En Catálogo" : "Fuera de Oferta"}
                 </span>
             </div>
           );
@@ -166,14 +115,14 @@ export default function TablePlans({
             <button
               onClick={() => handleOpenModalEdit(row?.original)}
               className="p-2 transition-all border text-brand-primary bg-brand-secondary/10 border-brand-secondary/20 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
-              title="Editar"
+              title="Editar Programa"
             >
               <Pencil className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleOpenModalDelete(row?.original)}
               className="p-2 text-red-600 transition-all border border-red-100 shadow-sm bg-red-50 rounded-xl hover:bg-red-600 hover:text-white active:scale-90"
-              title="Eliminar"
+              title="Eliminar del Sistema"
             >
               <Trash2 className="w-4 h-4" />
             </button>

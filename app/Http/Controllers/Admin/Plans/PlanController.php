@@ -96,9 +96,11 @@ class PlanController extends Controller
             ]);
         }
         
-        // Fallback si no se provee ni JSON ni insurance, podría devolver todos los planes o una vista genérica.
-        // Por ahora, devolvemos una vista genérica de planes.
-        $allPlans = Plan::with('insurance')->orderBy('name')->get();
+        // Fallback si no se provee ni JSON ni insurance, devolvemos solo PACKS INTERNOS.
+        $allPlans = Plan::with('insurance')
+            ->where('type', 'internal')
+            ->orderBy('name')
+            ->get();
         return Inertia::render('plans/Index', [
             'plans' => $allPlans,
             'insurance' => null

@@ -86,130 +86,109 @@ class EnterpriseMigrationSeeder extends Seeder
         ServiceDetail::create(['item_id' => $itemKine->id, 'duration_minutes' => 60, 'requires_diagnosis' => true]);
 
         // ---------------------------------------------------------------------
-        // 3. LOGICA DE PLANES (AGUAS SEPARADAS)
+        // 3. PILAR A: PACKS & PROGRAMAS (PRODUCTO INTERNO)
         // ---------------------------------------------------------------------
-        $this->command->info('4. Configurando Planes Internos (Packs) y Externos (Aseguradoras)...');
+        $this->command->info('4. Configurando Packs & Programas (Venta Directa)...');
 
-        // A. PLANES INTERNOS (Packs que vende la clínica)
         $pack10 = Plan::create([
             'company_id' => $company->id,
             'name' => 'Pack 10 Sesiones Kinesiología',
             'code' => 'PACK-10-KINE',
-            'type' => 'internal', // 👈 Fuente de verdad: El Plan mismo
-            'price' => 280000,    // Valor total del pack (28k c/u vs 35k particular)
+            'type' => 'internal', 
+            'price' => 280000,    
             'valid_months' => 6,
             'is_active' => true,
-            'description' => 'Pack promocional de 10 sesiones de kinesiología general.'
+            'description' => 'Pack promocional de 10 sesiones.'
         ]);
+        // Vincular el pack al item
+        $pack10->items()->attach($itemKine->id, ['max_sessions' => 10]);
 
-        // B. PLANES EXTERNOS (Identificadores de Isapre)
+        // ---------------------------------------------------------------------
+        // 4. PILAR B: ASEGURADORAS & NIVELES (IDENTIFICADORES)
+        // ---------------------------------------------------------------------
+        $this->command->info('5. Configurando Aseguradoras y Niveles de Cobertura...');
+
         $isapreColmena = Insurance::create([
             'company_id' => $company->id, 'name' => 'ISAPRE COLMENA', 'rut' => '76.123.456-7', 'institution_type' => 'health_insurer', 'is_active' => true
         ]);
 
-        $planColmenaGold = Plan::create([
+        $nivelColmenaGold = Plan::create([
             'company_id' => $company->id,
             'insurance_id' => $isapreColmena->id,
-            'name' => 'Colmena Gold (Tramo A)',
+            'name' => 'Colmena Gold',
             'code' => 'COL-GOLD',
-            'type' => 'external', // 👈 Fuente de verdad: El AgreementRule
-            'price' => 0,         // El precio no vive aquí, vive en el convenio
+            'type' => 'external', 
+            'price' => null, // $0 en tabla plans para externos
             'coverage_percentage' => 80.00,
             'is_active' => true
         ]);
 
         // ---------------------------------------------------------------------
-        // 4. CONVENIOS (TARIFARIOS PARA PLANES EXTERNOS)
+        // 5. PILAR C: TARIFARIO MAESTRO (CONVENIOS REALES)
         // ---------------------------------------------------------------------
-        $this->command->info('5. Definiendo Tarifarios de Convenio...');
+        $this->command->info('6. Definiendo Tarifario Maestro (Fuente de Verdad Isapre)...');
         $agreement = Agreement::create([
             'company_id' => $company->id, 'insurance_id' => $isapreColmena->id,
-            'name' => 'Convenio Colmena 2026', 'is_active' => true, 'start_date' => now()
+            'name' => 'Tarifario Colmena 2026', 'is_active' => true, 'start_date' => now()
         ]);
 
-        // Regla específica: Para el Plan Gold, la Kine cuesta 30k (Pactado), Paciente paga 6k (Copago)
+        // REGLA: [Aseguradora] + [Nivel Gold] + [Servicio Kine] = $30.000 Pactado ($6.000 Copago)
         AgreementRule::create([
             'agreement_id' => $agreement->id,
             'item_id' => $itemKine->id,
-            'plan_id' => $planColmenaGold->id,
-            'gross_price_clp' => 30000,    // Valor pactado con Isapre
-            'patient_share_clp' => 6000,   // Copago real que paga el paciente
+            'plan_id' => $nivelColmenaGold->id,
+            'gross_price_clp' => 30000,
+            'patient_share_clp' => 6000,
             'insurance_share_clp' => 24000,
             'patient_percentage' => 20,
             'insurance_percentage' => 80
         ]);
 
         // ---------------------------------------------------------------------
-        // 5. PACIENTES Y ASIGNACIÓN DE COBERTURAS
+        // 6. PACIENTES CON DIFERENTES ESTRATEGIAS DE PAGO
         // ---------------------------------------------------------------------
-        $this->command->info('6. Poblando Pacientes con diferentes coberturas...');
+        $this->command->info('7. Creando Pacientes con diversas estrategias de pago...');
 
-        // Paciente 1: Tiene un Pack Interno (Prepago)
+        // Caso 1: Paciente con PACK PREPAGADO
         $pPack = Patient::create([
-            'company_id' => $company->id, 'name' => 'Juan (Con Pack)', 'last_name' => 'Pérez',
-            'rut' => ValidRut::generate(), 'email' => 'juan.pack@example.com', 'status' => 'active'
+            'company_id' => $company->id, 'name' => 'Alberto (Pack 10)', 'last_name' => 'Vargas',
+            'rut' => ValidRut::generate(), 'email' => 'vargas@example.com', 'status' => 'active'
         ]);
         PatientPlan::create([
             'patient_id' => $pPack->id, 'plan_id' => $pack10->id, 'company_id' => $company->id, 'branch_id' => $branch->id,
-            'status' => 'active', 'purchased_at' => now(), 'sessions_included' => 10, 'sessions_used' => 2
+            'status' => 'active', 'purchased_at' => now(), 'sessions_included' => 10, 'sessions_used' => 0
         ]);
 
-        // Paciente 2: Tiene Convenio Isapre (Copago)
+        // Caso 2: Paciente con ISAPRE (Copago)
         $pIsapre = Patient::create([
-            'company_id' => $company->id, 'name' => 'María (Isapre Gold)', 'last_name' => 'Guzmán',
-            'rut' => ValidRut::generate(), 'email' => 'maria.isapre@example.com', 'status' => 'active'
+            'company_id' => $company->id, 'name' => 'Lucía (Colmena Gold)', 'last_name' => 'Rivas',
+            'rut' => ValidRut::generate(), 'email' => 'rivas@example.com', 'status' => 'active'
         ]);
         PatientPlan::create([
-            'patient_id' => $pIsapre->id, 'plan_id' => $planColmenaGold->id, 'company_id' => $company->id, 'branch_id' => $branch->id,
+            'patient_id' => $pIsapre->id, 'plan_id' => $nivelColmenaGold->id, 'company_id' => $company->id, 'branch_id' => $branch->id,
             'status' => 'active', 'purchased_at' => now()
         ]);
 
-        // Paciente 3: Particular (Sin Plan)
-        $pParticular = Patient::create([
-            'company_id' => $company->id, 'name' => 'Pedro (Particular)', 'last_name' => 'Soto',
-            'rut' => ValidRut::generate(), 'email' => 'pedro.part@example.com', 'status' => 'active'
+        // Caso 3: Paciente Particular
+        Patient::create([
+            'company_id' => $company->id, 'name' => 'Tomás (Particular)', 'last_name' => 'Díaz',
+            'rut' => ValidRut::generate(), 'email' => 'diaz@example.com', 'status' => 'active'
         ]);
 
         // ---------------------------------------------------------------------
-        // 6. PERSONAL CLÍNICO (KINES)
+        // 7. PERSONAL CLÍNICO
         // ---------------------------------------------------------------------
-        $this->command->info('7. Creando Kinesiólogos y Cuentas de Acceso...');
-        
-        $doctorsData = [
-            ['name' => 'Ricardo', 'last_name' => 'Pérez', 'specialty' => 'Traumatología'],
-            ['name' => 'María Paz', 'last_name' => 'Guzmán', 'specialty' => 'Respiratorio'],
-        ];
-
-        foreach ($doctorsData as $d) {
+        foreach (['Ricardo Pérez', 'María Paz Guzmán'] as $name) {
+            $parts = explode(' ', $name);
             $uKine = User::create([
-                'company_id' => $company->id,
-                'name' => $d['name'] . ' ' . $d['last_name'],
-                'email' => strtolower(Str::ascii($d['name'])) . '.' . strtolower(Str::ascii($d['last_name'])) . '@senex.cl',
-                'password' => Hash::make('password'),
+                'company_id' => $company->id, 'name' => $name, 'email' => strtolower($parts[0]).'@senex.cl', 'password' => Hash::make('password'),
             ]);
             $uKine->assignRole('kine');
             $uKine->branches()->sync([$branch->id]);
 
-            $doctor = Doctor::create([
-                'company_id' => $company->id,
-                'user_id' => $uKine->id,
-                'name' => $d['name'],
-                'last_name' => $d['last_name'],
-                'rut' => ValidRut::generate(),
-                'email' => $uKine->email,
-                'speciality' => $d['specialty'],
-                'is_active' => true
-            ]);
-
-            // Dirección del Kine
-            Address::create([
-                'addressable_id' => $doctor->id,
-                'addressable_type' => Doctor::class,
-                'type' => 'work',
-                'street' => $faker->streetName,
-                'number' => $faker->buildingNumber,
-                'commune_id' => $commune->id,
-                'is_primary' => true
+            Doctor::create([
+                'company_id' => $company->id, 'user_id' => $uKine->id, 'name' => $parts[0], 'last_name' => $parts[1],
+                'rut' => ValidRut::generate(), 'email' => $uKine->email, 'is_active' => true
             ]);
         }
     }
