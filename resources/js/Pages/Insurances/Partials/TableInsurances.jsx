@@ -26,6 +26,7 @@ import {
   ExternalLink,
   Layers,
   ArrowRight,
+  DollarSign
 } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import SecondaryButton from "@/components/SecondaryButton";
@@ -125,34 +126,19 @@ export default function TableInsurances({
         ),
       },
       {
-        id: "planes",
-        header: "Capacidad",
-        cell: ({ row }) => {
-          const count = row.original.plans?.length || 0;
-          return (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-100 w-fit">
-              <Layers className="w-3.5 h-3.5 text-brand-primary opacity-50" />
-              <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">
-                {count} Planes
-              </span>
-            </div>
-          );
-        },
-      },
-      {
         id: "actions",
         header: "Gestión",
         cell: ({ row }) => (
           <div className="flex items-center justify-end gap-1.5">
             <button
               onClick={() => openPlanListModal(row.original)}
-              className="flex items-center gap-2 p-2 px-4 transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
-              title="Ver Planes de Cobertura"
+              className="flex items-center gap-2 p-2 px-6 transition-all border text-brand-primary bg-brand-secondary/5 border-brand-secondary/10 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90 shadow-sm"
+              title="Configurar Tarifario & Niveles"
             >
-              <span className="text-[9px] font-black uppercase tracking-widest">
-                Planes
+                <DollarSign className="w-4 h-4" />
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                Tarifario
               </span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </button>
             <div className="w-px h-6 mx-1 bg-gray-100"></div>
             <button

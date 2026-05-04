@@ -24,6 +24,7 @@ import {
   Building2,
   Layers,
   Clock,
+  Box,
 } from "lucide-react";
 import CompanySwitcher from "@/components/CompanySwitcher";
 import BranchSwitcher from "@/components/BranchSwitcher";
@@ -66,7 +67,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
             { id: "treatment-sessions.index", label: "Atenciones", icon: List },
             { id: "products.index", label: "Catálogo", icon: Package },
             { id: "categories.index", label: "Categorías", icon: Layers },
-        ].filter(item => hasPermission(item.id) || userIsAdmin || userIsSuperAdmin);
+        ].filter(item => hasPermission(item.id) || userIsSuperAdmin); // 👈 Admin debe tener el permiso
 
         if (clinicalSubmenu.length > 0) {
             items.push({
@@ -82,7 +83,7 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
             { id: "patients.index", label: "Clientes", icon: Users },
             { id: "products.index", label: "Catálogo", icon: Package },
             { id: "categories.index", label: "Categorías", icon: Layers },
-        ].filter(item => hasPermission(item.id));
+        ].filter(item => hasPermission(item.id) || userIsSuperAdmin);
 
         if (commercialSubmenu.length > 0) {
             items.push({
@@ -100,15 +101,14 @@ function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
         
         // Módulos específicos de Salud
         if (isClinical) {
-            if (hasPermission("insurances.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "insurances.index", label: "Aseguradoras", icon: Shield });
-            if (hasPermission("plans.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "plans.index", label: "Packs Comerciales", icon: Box });
-            if (hasPermission("agreements.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "agreements.index", label: "Convenios", icon: Handshake });
+            if (hasPermission("insurances.index") || userIsSuperAdmin) financeSubmenu.push({ id: "insurances.index", label: "Aseguradoras", icon: Shield });
+            if (hasPermission("plans.index") || userIsSuperAdmin) financeSubmenu.push({ id: "plans.index", label: "Packs Comerciales", icon: Box });
         }
 
         // Módulos Comunes
-        if (hasPermission("finance.receivables.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: FileText });
-        if (hasPermission("payments.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "payments.index", label: "Caja / POS", icon: DollarSign });
-        if (hasPermission("payrolls.index") || userIsAdmin || userIsSuperAdmin) financeSubmenu.push({ id: "payrolls.index", label: isClinical ? "Liquidaciones" : "Pagos Honorarios", icon: NotebookText });
+        if (hasPermission("finance.receivables.index") || userIsSuperAdmin) financeSubmenu.push({ id: "finance.receivables.index", label: "Cuentas por Cobrar", icon: FileText });
+        if (hasPermission("payments.index") || userIsSuperAdmin) financeSubmenu.push({ id: "payments.index", label: "Caja / POS", icon: DollarSign });
+        if (hasPermission("payrolls.index") || userIsSuperAdmin) financeSubmenu.push({ id: "payrolls.index", label: isClinical ? "Liquidaciones" : "Pagos Honorarios", icon: NotebookText });
 
         if (financeSubmenu.length > 0) {
             items.push({

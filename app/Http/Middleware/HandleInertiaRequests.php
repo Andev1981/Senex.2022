@@ -218,12 +218,15 @@ class HandleInertiaRequests extends Middleware
 
             // --- 4. DETERMINAR SUCURSALES DISPONIBLES ---
             if ($user->isSuperAdmin()) {
-                $allCompanies = Company::select(['id', 'business_name', 'rut'])->get();
+                $allCompanies = Company::withoutGlobalScopes()
+                    ->with('logo')
+                    ->select(['id', 'business_name', 'rut'])
+                    ->get();
                 if ($contextCompanyId) {
                     $availableBranches = Branch::where('company_id', $contextCompanyId)
                         ->select('id', 'name', 'is_home_care_only')->get();
                 }
-                } else {
+            } else {
                 // Usuarios normales: Solo sus sucursales en ESA empresa
                 $availableBranches = $user->branches()
                     ->where('branches.company_id', $contextCompanyId)

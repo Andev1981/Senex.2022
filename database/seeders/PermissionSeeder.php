@@ -35,6 +35,7 @@ class PermissionSeeder extends Seeder
             'branches.index', 'branches.manage',
             'agreements.index', 'agreements.manage',
             'insurances.index', 'insurances.manage',
+            'plans.index', 'plans.manage',
             'acquisitions.suppliers.index', 'acquisitions.purchase-orders.index',
             'products.index', 'categories.index',
             
@@ -63,6 +64,24 @@ class PermissionSeeder extends Seeder
                 'treatment-sessions.index',
                 'agendas.index',
                 'availabilities.index',
+                'treatments.index',
+                'sessions.index',
+                'plans.index',
+                'products.index',
+                'categories.index',
+            ]);
+        }
+
+        // Asignar permisos específicos al rol kine
+        $kine = Role::where('name', 'kine')->first();
+        if ($kine) {
+            $kine->syncPermissions([
+                'agendas.index',
+                'availabilities.index',
+                'patients.index',
+                'patients.view',
+                'treatment-sessions.index',
+                'treatment-sessions.manage',
                 'treatments.index',
                 'sessions.index',
             ]);

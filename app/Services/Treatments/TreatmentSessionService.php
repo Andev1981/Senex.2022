@@ -154,7 +154,6 @@ class TreatmentSessionService
         $session->load('patient');
 
         // 1. JERARQUÍA 1: PACKS INTERNOS (PREPAGO / SESIONES COMPRADAS)
-        // Buscamos un pack interno activo que incluya este ítem
         $pack = $session->patient->activeInternalPacks()
             ->whereHas('plan.items', function($q) use ($session) {
                 $q->where('items.id', $session->item_id);
@@ -163,24 +162,20 @@ class TreatmentSessionService
 
         if ($pack) {
             $this->planService->consumeSessionsFromPlan($pack, $session);
-            // Si es por pack, el copago en esta sesión es $0 (ya fue pagado al comprar el pack)
             $session->update(['patient_amount_clp' => 0]);
             return;
         }
 
-        // 2. JERARQUÍA 2: CONVENIOS EXTERNOS (ISAPRE / FONASA / SEGUROS)
-        // Buscamos si existe una tarifa pactada para el plan del paciente
+        // 2. JERARQUÍA 2: CONVENIOS EXTERNOS (ISAPRE / FONASA)
         $rule = $this->agreementService->getApplicableRule($session->patient_id, $session->item_id);
         
         if ($rule) {
-            // Actualizamos la sesión con el copago real definido en el convenio
-            $session->update(['patient_amount_clp' => $rule->patient_share_clp]);
-            $this->paymentService->createPendingInvoiceForSession($session);
+            // El motor de facturación ahora acepta la regla para dividir deudas
+            $this->paymentService->createPendingInvoiceForSession($session, $rule);
             return;
         }
 
-        // 3. JERARQUÍA 3: PARTICULAR (TARIFA BASE DEL CATÁLOGO)
-        // El patient_amount_clp ya debería tener el Item->price por defecto desde la creación
+        // 3. JERARQUÍA 3: PARTICULAR (TARIFA BASE)
         $this->paymentService->createPendingInvoiceForSession($session);
     }
 

@@ -10,7 +10,6 @@ import PatientCard from "./components/PatientCard";
 import PaymentSummary from "./components/PaymentSummary";
 import ServicesCard from "./components/ServicesCard";
 import PaymentBlockingModal from "./PaymentBlockingModal";
-import PlansCard from "./components/PlansCard";
 import RutInput from "@/components/RutInput";
 
 export default function PosIndex({
@@ -29,6 +28,15 @@ export default function PosIndex({
 
   const isClinical = business_type === "clinical";
   const entityLabel = isClinical ? "Paciente" : "Cliente";
+
+  // --- LÓGICA DE AUTO-SELECCIÓN POR URL ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlPatientId = params.get('patient_id');
+    if (urlPatientId && !data.patient_id) {
+        setData("patient_id", urlPatientId);
+    }
+  }, []);
 
   const [modalState, setModalState] = useState({
     isOpen: false,
@@ -378,11 +386,6 @@ export default function PosIndex({
     ]);
   };
 
-    const handleAddPlan = (plan) => {
-        if (data.services_to_bill.some((s) => s.plan_id === plan.id)) return;
-        setData("services_to_bill", [...data.services_to_bill, plan]);
-    };
-
   const handleUpdateService = (index, field, value) => {
     const newServices = [...data.services_to_bill];
 
@@ -676,7 +679,6 @@ export default function PosIndex({
                     onUpdateService={handleUpdateService}
                     onRemoveService={handleRemoveService}
                 />
-                {isClinical && <PlansCard onAddPlan={handleAddPlan} />}
             </div>
 
           <PaymentSummary

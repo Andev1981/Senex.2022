@@ -1,41 +1,52 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, Users, Shield } from 'lucide-react';
 import ReceivablesTable from './components/ReceivablesTable';
 
 export default function Index({ totalDebt, patientReceivables, insurerReceivables }) {
     return (
         <AuthenticatedLayout>
             <Head title="Cuentas por Cobrar" />
-            <div className="min-h-screen p-6 bg-gray-50/50 space-y-8">
-                {/* HEADER HERO */}
-                <div className="p-8 bg-white border border-gray-100 shadow-sm rounded-xl">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-14 h-14 bg-brand-primary rounded-2xl">
-                            <DollarSign className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-black text-gray-900">Cuentas por Cobrar</h1>
-                            <p className="enterprise-label text-brand-gray">Deuda Total: ${totalDebt.toLocaleString('es-CL')}</p>
+            <div className="min-h-screen p-8 bg-gray-50/50 space-y-12">
+                {/* HEADER PREMIUM */}
+                <div className="bg-white border border-gray-100 shadow-sm rounded-[3rem] p-4">
+                    <div className="flex flex-col lg:flex-row justify-between items-center gap-6 px-6 py-4">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-brand-primary text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-brand-primary/30 transform rotate-3">
+                                <DollarSign className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Cuentas por Cobrar</h1>
+                                <div className="flex items-center gap-3 mt-1">
+                                    <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest opacity-70">
+                                        Deuda Total Consolidada:
+                                    </span>
+                                    <span className="text-sm font-black text-brand-primary font-mono bg-brand-secondary/10 px-3 py-0.5 rounded-lg border border-brand-secondary/20">
+                                        ${totalDebt.toLocaleString('es-CL')}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* PACIENTES */}
-                <div className="bg-white border border-gray-100 shadow-sm rounded-xl">
-                    <div className="p-6 border-b border-gray-100">
-                        <h2 className="text-xl font-black text-gray-900">Copagos de Pacientes</h2>
-                    </div>
-                    <ReceivablesTable receivables={patientReceivables} />
-                </div>
+                <div className="grid grid-cols-1 gap-12 max-w-7xl mx-auto">
+                    {/* SECCIÓN PACIENTES */}
+                    <ReceivablesTable 
+                        receivables={patientReceivables} 
+                        title="Copagos de Pacientes"
+                        subtitle="Cobros directos en Recepción / Caja"
+                        icon={Users}
+                    />
 
-                {/* ASEGURADORAS */}
-                <div className="bg-white border border-gray-100 shadow-sm rounded-xl">
-                    <div className="p-6 border-b border-gray-100">
-                        <h2 className="text-xl font-black text-gray-900">Cobranza a Aseguradoras</h2>
-                    </div>
-                    <ReceivablesTable receivables={insurerReceivables} />
+                    {/* SECCIÓN ASEGURADORAS */}
+                    <ReceivablesTable 
+                        receivables={insurerReceivables} 
+                        title="Cobranza a Aseguradoras"
+                        subtitle="Bonificaciones pendientes (Isapres / Fonasa / Seguros)"
+                        icon={Shield}
+                    />
                 </div>
             </div>
         </AuthenticatedLayout>

@@ -1,7 +1,6 @@
 import React from "react";
 import { Calculator, CheckCircle2, Plus } from "lucide-react";
 import ServiceItem from "./ServiceItem";
-import PlanItem from "./PlanItem";
 import {fmtDate} from "@/utils/utils";
 
 export default function ServicesCard({
@@ -87,25 +86,17 @@ export default function ServicesCard({
         )}
 
         {servicesToBill.map((item, index) => (
-          item.is_plan ? (
-            <PlanItem
-              key={`plan-${item.plan_id}`}
-              item={item}
-              onRemove={() => onRemoveService(index)}
-            />
-          ) : (
-            <ServiceItem
-              key={`service-${index}`}
-              item={item}
-              index={index}
-              items={items} // Enviamos items
-              doctors={doctors}
-              patientExtras={patientExtras}
-              onUpdate={onUpdateService}
-              onRemove={onRemoveService}
-              business_type={business_type}
-            />
-          )
+          <ServiceItem
+            key={`service-${index}`}
+            item={item}
+            index={index}
+            items={items} // Enviamos items
+            doctors={doctors}
+            patientExtras={patientExtras}
+            onUpdate={onUpdateService}
+            onRemove={onRemoveService}
+            business_type={business_type}
+          />
         ))}
 
         <button

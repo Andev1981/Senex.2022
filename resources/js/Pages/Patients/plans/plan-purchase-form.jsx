@@ -9,8 +9,8 @@ import axios from 'axios';
 import { Loader2, Layers } from 'lucide-react';
 
 const PlanPurchaseForm = ({ patient, onClose }) => {
-  const { auth } = usePage().props;
-  const currentBranchId = auth.user.active_branch_id;
+  const { props } = usePage();
+  const currentBranchId = props.current_branch_id || props.auth.user.active_branch_id;
   
   const [availablePlans, setAvailablePlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
@@ -20,8 +20,8 @@ const PlanPurchaseForm = ({ patient, onClose }) => {
     patient_id: patient.id,
     plan_id: '',
     payment_details: {
-      branch_id: currentBranchId,
-      payment_method: 'cash', // Default a efectivo
+      branch_id: currentBranchId, // 👈 Aseguramos que se inicie con el ID correcto
+      payment_method: 'cash', 
       payment_date: new Date().toISOString().slice(0, 10),
       transaction_reference: '',
     },
@@ -69,7 +69,7 @@ const PlanPurchaseForm = ({ patient, onClose }) => {
     : undefined;
 
   return (
-    <form onSubmit={submit} className="mt-6 space-y-8">
+    <form onSubmit={submit} className="space-y-8">
       {errorPlans && <div className="text-red-600 text-sm mb-4">{errorPlans}</div>}
 
       {/* SECCIÓN 1: Selección de Plan */}
@@ -139,50 +139,55 @@ const PlanPurchaseForm = ({ patient, onClose }) => {
       {/* SECCIÓN 2: Detalles del Plan Seleccionado */}
       <Transition
         show={!!selectedPlan}
+        as="div"
         enter="transition ease-in-out duration-300"
         enterFrom="opacity-0 -translate-y-4"
         enterTo="opacity-100 translate-y-0"
+        leave="transition ease-in-out duration-200"
+        leaveFrom="opacity-100 translate-y-0"
+        leaveTo="opacity-0 -translate-y-4"
       >
-        {selectedPlan && (
-          <div className="p-6 border border-blue-100 rounded-[1.5rem] bg-blue-50/30 space-y-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
-                <Layers className="w-5 h-5" />
-              </div>
-              <h4 className="text-sm font-black text-blue-900 uppercase tracking-tight">Resumen del Plan</h4>
+        <div className="p-6 border border-blue-100 rounded-[1.5rem] bg-blue-50/30 space-y-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
+              <Layers className="w-5 h-5" />
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Procedencia</span>
-                  <p className="font-bold text-gray-800">{selectedPlan.insurance_name}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Valor Total</span>
-                  <p className="font-black text-brand-primary text-lg">CLP {selectedPlan.price?.toLocaleString('es-CL')}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Sesiones</span>
-                  <p className="font-bold text-gray-800">{selectedPlan.total_sessions || 'Ilimitadas'}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Vigencia</span>
-                  <p className="font-bold text-gray-800">{selectedPlan.valid_months} meses</p>
-                </div>
-                <div className="col-span-full space-y-1">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Cobertura</span>
-                  <p className="font-medium text-gray-700 text-sm bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
-                    {selectedPlan.session_types || 'No especificado'}
-                  </p>
-                </div>
-                {selectedPlan.description && (
-                  <div className="col-span-full text-xs text-gray-500 italic bg-blue-50/50 p-3 rounded-xl border border-blue-50">
-                    "{selectedPlan.description}"
-                  </div>
-                )}
-            </div>
+            <h4 className="text-sm font-black text-blue-900 uppercase tracking-tight">Resumen del Plan</h4>
           </div>
-        )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Procedencia</span>
+                <p className="font-bold text-gray-800">{selectedPlan?.insurance_name || 'Clínica'}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Valor Total</span>
+                <p className="font-black text-brand-primary text-lg">
+                  CLP {selectedPlan?.price ? Number(selectedPlan.price).toLocaleString('es-CL') : '0'}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Sesiones</span>
+                <p className="font-bold text-gray-800">{selectedPlan?.total_sessions || 'Ilimitadas'}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Vigencia</span>
+                <p className="font-bold text-gray-800">{selectedPlan?.valid_months} meses</p>
+              </div>
+              <div className="col-span-full space-y-1">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Cobertura</span>
+                <p className="font-medium text-gray-700 text-sm bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
+                  {selectedPlan?.session_types || 'No especificado'}
+                </p>
+              </div>
+              {selectedPlan?.description && (
+                <div className="col-span-full text-xs text-gray-500 italic bg-blue-50/50 p-3 rounded-xl border border-blue-50">
+                  "{selectedPlan.description}"
+                </div>
+              )}
+          </div>
+        </div>
       </Transition>
 
       {/* SECCIÓN 3: Detalles del Pago */}
@@ -203,6 +208,7 @@ const PlanPurchaseForm = ({ patient, onClose }) => {
                 { value: 'transfer', label: 'Transferencia Bancaria' },
                 { value: 'webpay', label: 'Webpay (Pago Online)' },
                 { value: 'payment_link', label: 'Generar Link de Pago (WhatsApp/Mail)' },
+                { value: 'postpaid', label: 'Cobro Posterior (Generar Deuda)' },
               ]}
             />
             <InputError message={errors['payment_details.payment_method']} className="mt-2" />
@@ -255,6 +261,7 @@ const PlanPurchaseForm = ({ patient, onClose }) => {
 
         <Transition
           show={recentlySuccessful}
+          as="div"
           enter="transition ease-in-out duration-300"
           enterFrom="opacity-0"
           leave="transition ease-in-out duration-300"

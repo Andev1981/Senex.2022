@@ -255,6 +255,7 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     // Finanzas / Cuentas por Cobrar
     Route::prefix('finance')->name('finance.')->group(function () {
         Route::get('receivables', [ReceivablesController::class, 'index'])->name('receivables.index');
+        Route::post('receivables/{receivable}/settle', [ReceivablesController::class, 'settle'])->name('receivables.settle');
     });
 
     // Catálogo Unificado (Productos y Servicios)
@@ -273,8 +274,10 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     Route::put('rooms/{room}', [\App\Http\Controllers\Admin\Branches\RoomController::class, 'update'])->name('rooms.update');
     Route::delete('rooms/{room}', [\App\Http\Controllers\Admin\Branches\RoomController::class, 'destroy'])->name('rooms.destroy');    Route::resource('doctors', DoctorAdminController::class)->names('doctors');
     Route::resource('plans', PlanController::class)->names('plans');
+    Route::post('patient-plans', [\App\Http\Controllers\Admin\Plans\PatientPlanController::class, 'store'])->name('patient-plans.store');
     Route::resource('insurances', InsuranceController::class)->names('insurances');
     Route::resource('agreements', AgreementController::class)->names('agreements');
+    Route::post('agreement-rules/upsert', [AgreementRuleController::class, 'upsert'])->name('agreement.rules.upsert');
     Route::resource('agreement-rules', AgreementRuleController::class)->names('agreement.rules');
     Route::get('informes', [ReportsController::class, 'index'])->name('informes');
 

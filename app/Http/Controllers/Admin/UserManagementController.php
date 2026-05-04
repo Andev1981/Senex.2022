@@ -68,7 +68,7 @@ class UserManagementController extends Controller
             'branches' => 'array',
         ]);
 
-        DB::transaction(function () use ($request, $isSuperAdmin, $currentUser) {
+        $user = DB::transaction(function () use ($request, $isSuperAdmin, $currentUser) {
             $companyId = $isSuperAdmin ? $request->company_id : $currentUser->company_id;
             
             $user = User::create([
@@ -96,9 +96,18 @@ class UserManagementController extends Controller
                     ->pluck('id');
                 $user->branches()->sync($validBranches);
             }
+
+            return $user;
         });
 
-        return back()->with('success', 'Usuario creado correctamente.');
+        // 🎯 Enviar Notificación de Bienvenida
+        try {
+            $user->notify(new \App\Notifications\UserWelcomeNotification($user, $request->password));
+        } catch (\Exception $e) {
+            \Log::warning("No se pudo enviar email de bienvenida a {$user->email}: " . $e->getMessage());
+        }
+
+        return back()->with('success', 'Usuario creado correctamente y notificado por email.');
     }
 
     public function update(Request $request, User $user)

@@ -42,35 +42,33 @@ export default function Modal({
   }[maxWidth];
 
   return (
-    <Transition show={!!open} leave="duration-200">
-      <Dialog onClose={onClose} className="relative z-50">
+    <Transition show={!!open} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
         {/* Backdrop con desenfoque */}
         <TransitionChild
-          as={Fragment}
+          as="div"
           enter="ease-out duration-300"
           enterFrom="opacity-0"
           enterTo="opacity-100"
           leave="ease-in duration-200"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-        </TransitionChild>
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+        />
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-full p-4 md:p-6">
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
             <TransitionChild
-              as={Fragment}
+              as="div"
               enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95 translate-y-4"
-              enterTo="opacity-100 scale-100 translate-y-0"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
               leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100 translate-y-0"
-              leaveTo="opacity-0 scale-95 translate-y-4"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              className={`relative transform transition-all w-full ${maxWidthClass}`}
             >
-              <DialogPanel
-                className={`w-full transform overflow-hidden rounded-[2.5rem] bg-white shadow-2xl transition-all flex flex-col max-h-[90vh] ${maxWidthClass}`}
-              >
+              <DialogPanel className="relative overflow-hidden rounded-[2.5rem] bg-white text-left shadow-2xl flex flex-col max-h-[90vh] w-full">
                 {/* 1. HEADER HERO (Solo si hay título) */}
                 {title ? (
                     <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-gray-50/50 shrink-0 relative overflow-hidden">

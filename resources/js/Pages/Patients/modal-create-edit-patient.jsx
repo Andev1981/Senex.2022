@@ -250,15 +250,15 @@ export default function ModalCreateEditPatient({
           icon: "success",
           showDenyButton: true,
           showCancelButton: true,
-          confirmButtonText: "➕ Crear Atención",
+          confirmButtonText: "📅 Agendar Cita",
           denyButtonText: `👁️ Ver Perfil`,
           cancelButtonText: "Cerrar",
-          confirmButtonColor: "#10b981", // Verde para crear atención
+          confirmButtonColor: "#10b981", // Verde para agendar
           denyButtonColor: "#3292b3",    // Azul corporativo para ver perfil
         }).then((result) => {
           if (result.isConfirmed && newId) {
-            // Acción: Crear Atención. Redirigimos al índice de atenciones (o al perfil abriendo el modal si fuera posible, pero ir a atenciones es lo estándar)
-            router.visit(route("treatment-sessions.index", { patient_id: newId, action: 'create' }));
+            // Acción: Agendar Cita. Redirigimos a la agenda con el paciente precargado
+            router.visit(route("agendas.index", { patient_id: newId, action: 'create' }));
           } else if (result.isDenied && newId) {
             // Acción: Ver Perfil
             router.visit(route("patients.show", newId));
@@ -379,58 +379,65 @@ export default function ModalCreateEditPatient({
             </div>
           </div>
 
-          {/* BLOQUE UBICACIÓN */}
-          {(data.is_home_care || !isClinical) && (
-            <div className="p-8 bg-blue-50/30 border border-blue-100 rounded-[2.5rem] space-y-8 animate-in slide-in-from-top-4 duration-500">
-              <h3 className="enterprise-label !text-blue-700 flex items-center gap-2">
-                <MapPin className="w-4 h-4" /> Localización & Dirección
-              </h3>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div className="space-y-1">
-                  <EnterpriseSelect 
-                    label="Región" 
-                    value={data.region_id} 
-                    onChange={(val) => setData((d) => ({ ...d, region_id: val, province_id: "", commune_id: "" }))} 
-                    options={regions.map(r => ({ value: r.id.toString(), label: r.name }))} 
-                    placeholder="-- Seleccionar --" 
-                  />
-                  <InputError message={errors.region_id} />
-                </div>
-                <div className="space-y-1">
-                  <EnterpriseSelect 
-                    label="Provincia" 
-                    value={data.province_id} 
-                    onChange={(val) => setData((d) => ({ ...d, province_id: val, commune_id: "" }))} 
-                    options={filteredProvinces.map(p => ({ value: p.id.toString(), label: p.name }))} 
-                    disabled={!data.region_id} 
-                    placeholder="-- Seleccionar --" 
-                  />
-                  <InputError message={errors.province_id} />
-                </div>
-                <div className="space-y-1">
-                  <EnterpriseSelect 
-                    label="Comuna" 
-                    value={data.commune_id} 
-                    onChange={(val) => setData("commune_id", val)} 
-                    options={filteredCommunes.map(c => ({ value: c.id.toString(), label: c.name }))} 
-                    disabled={!data.province_id} 
-                    placeholder="-- Seleccionar --" 
-                  />
-                  <InputError message={errors.commune_id} />
-                </div>
-                <div className="space-y-1 md:col-span-2">
-                  <label className="ml-1 enterprise-label opacity-60">Calle / Avenida</label>
-                  <TextInput value={data.street} onChange={(e) => setData("street", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" placeholder="Ej: Av. Libertador Bernardo O'Higgins" />
-                  <InputError message={errors.street} />
-                </div>
-                <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">Número / Depto</label>
-                  <TextInput value={data.number} onChange={(e) => setData("number", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" placeholder="Ej: 1234, Depto 501" />
-                  <InputError message={errors.number} />
-                </div>
+          {/* BLOQUE UBICACIÓN (Siempre Visible) */}
+          <div className="p-8 bg-blue-50/30 border border-blue-100 rounded-[2.5rem] space-y-8 animate-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center justify-between">
+                <h3 className="enterprise-label !text-blue-700 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" /> Localización & Dirección
+                </h3>
+                {isClinical && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-blue-100 shadow-sm">
+                        <span className="text-[10px] font-black uppercase text-blue-400">¿Atención a Domicilio?</span>
+                        <Switch checked={data.is_home_care} onChange={(e) => setData("is_home_care", e.target.checked)} />
+                    </div>
+                )}
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="space-y-1">
+                <EnterpriseSelect 
+                  label="Región" 
+                  value={data.region_id} 
+                  onChange={(val) => setData((d) => ({ ...d, region_id: val, province_id: "", commune_id: "" }))} 
+                  options={regions.map(r => ({ value: r.id.toString(), label: r.name }))} 
+                  placeholder="-- Seleccionar --" 
+                />
+                <InputError message={errors.region_id} />
+              </div>
+              <div className="space-y-1">
+                <EnterpriseSelect 
+                  label="Provincia" 
+                  value={data.province_id} 
+                  onChange={(val) => setData((d) => ({ ...d, province_id: val, commune_id: "" }))} 
+                  options={filteredProvinces.map(p => ({ value: p.id.toString(), label: p.name }))} 
+                  disabled={!data.region_id} 
+                  placeholder="-- Seleccionar --" 
+                />
+                <InputError message={errors.province_id} />
+              </div>
+              <div className="space-y-1">
+                <EnterpriseSelect 
+                  label="Comuna" 
+                  value={data.commune_id} 
+                  onChange={(val) => setData("commune_id", val)} 
+                  options={filteredCommunes.map(c => ({ value: c.id.toString(), label: c.name }))} 
+                  disabled={!data.province_id} 
+                  placeholder="-- Seleccionar --" 
+                />
+                <InputError message={errors.commune_id} />
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="ml-1 enterprise-label opacity-60">Calle / Avenida</label>
+                <TextInput value={data.street} onChange={(e) => setData("street", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" placeholder="Ej: Av. Providencia" required={data.is_home_care} />
+                <InputError message={errors.street} />
+              </div>
+              <div className="space-y-1">
+                <label className="ml-1 enterprise-label opacity-60">Número / Depto</label>
+                <TextInput value={data.number} onChange={(e) => setData("number", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" placeholder="Ej: 1234" required={data.is_home_care} />
+                <InputError message={errors.number} />
               </div>
             </div>
-          )}
+          </div>
 
           {/* BLOQUE 2: CONTACTO & OCUPACIÓN */}
           <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-8 relative overflow-hidden">

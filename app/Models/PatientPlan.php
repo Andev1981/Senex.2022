@@ -59,6 +59,11 @@ class PatientPlan extends Model
         return $this->belongsTo(Payment::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function consumptions()
     {
         return $this->hasMany(PlanSessionConsumption::class);

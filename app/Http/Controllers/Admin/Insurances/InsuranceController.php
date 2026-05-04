@@ -42,8 +42,10 @@ class InsuranceController extends Controller
     {
         $currentCompanyId = session('current_company_id');
 
-        // Traemos las aseguradoras con sus planes para mostrarlas en la tabla/modales.
-        $insurances = Insurance::where('company_id', $currentCompanyId)->with('plans')->get();
+        // Traemos las aseguradoras con sus planes y el convenio activo con sus reglas
+        $insurances = Insurance::where('company_id', $currentCompanyId)
+            ->with(['plans', 'activeAgreement.rules.item', 'activeAgreement.rules.plan'])
+            ->get();
 
         $sessionTypes = Item::services()->where('company_id', $currentCompanyId)->get(['id', 'name', 'price']);
 
@@ -67,13 +69,28 @@ class InsuranceController extends Controller
         ]);
 
         try {
-            Insurance::create($validated);
-            session()->flash('message', '✅ Aseguradora creada exitosamente.');
+            \DB::beginTransaction();
+            $validated['company_id'] = session('current_company_id');
+            $insurance = Insurance::create($validated);
+
+            // AUTOMATIZACIÓN PROFESIONAL: Crear convenio maestro al nacer la aseguradora
+            \App\Models\Agreement::create([
+                'company_id' => $insurance->company_id,
+                'insurance_id' => $insurance->id,
+                'name' => "Tarifario Maestro - {$insurance->name}",
+                'is_active' => true,
+                'start_date' => now(),
+            ]);
+
+            \DB::commit();
+            session()->flash('message', '✅ Aseguradora y Tarifario creados.');
             session()->flash('type', 'success');
         } catch (\Exception $e) {
-            session()->flash('message', '❌ Error al crear aseguradora: ' . $e->getMessage());
+            \DB::rollBack();
+            session()->flash('message', '❌ Error: ' . $e->getMessage());
             session()->flash('type', 'error');
         }
+        return back();
     }
 
     public function update(Request $request, Insurance $insurance)

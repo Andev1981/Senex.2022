@@ -85,6 +85,11 @@ class Patient extends Authenticatable
         return $this->belongsTo(User::class);
     }
 
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     // Indica la relación M:N con Company
     public function companies(): BelongsToMany
     {

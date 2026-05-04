@@ -27,7 +27,7 @@ export default function SideModal({
   icon: Icon,
   footer,
   width = "md",
-  hideDefaultHeader = false, // Nueva prop, por defecto false
+  hideDefaultHeader = false, 
 }) {
   const widthClass = {
     sm: "max-w-sm",
@@ -43,38 +43,36 @@ export default function SideModal({
   }[width];
 
   return (
-    <Transition show={!!open} leave="duration-200">
-      <Dialog onClose={onClose} className="relative z-50">
+    <Transition show={!!open} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
         {/* Backdrop con desenfoque */}
         <TransitionChild
-          as={Fragment}
+          as="div"
           enter="ease-out duration-300"
           enterFrom="opacity-0"
           enterTo="opacity-100"
           leave="ease-in duration-200"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-        </TransitionChild>
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+        />
 
         <div className="fixed inset-0 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
             <div className="fixed inset-y-0 right-0 flex max-w-full pl-10 pointer-events-none">
               <TransitionChild
-                as={Fragment}
+                as="div"
                 enter="transform transition ease-in-out duration-300"
                 enterFrom="translate-x-full"
                 enterTo="translate-x-0"
                 leave="transform transition ease-in-out duration-200"
                 leaveFrom="translate-x-0"
                 leaveTo="translate-x-full"
+                className={`pointer-events-auto w-screen ${widthClass}`}
               >
-                <DialogPanel
-                  className={`pointer-events-auto w-screen ${widthClass}`}
-                >
+                <DialogPanel className="h-full">
                   <div className="flex flex-col h-full bg-white shadow-2xl relative overflow-hidden">
-                    {/* 1. HEADER HERO PREMIUM (RENDERIZADO CONDICIONALMENTE) */}
+                    {/* 1. HEADER HERO PREMIUM */}
                     {!hideDefaultHeader && (title ? (
                         <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-gray-50/50 shrink-0 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>

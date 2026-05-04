@@ -18,8 +18,8 @@ return new class extends Migration
                 ->cascadeOnDelete()
                 ->comment('FK al tarifario maestro.');
 
-            $table->foreignId('session_type_id')
-                ->constrained('session_types') // Asume que tienes una tabla 'services'
+            $table->foreignId('item_id')
+                ->constrained('items')
                 ->cascadeOnDelete()
                 ->comment('FK al servicio o prestación de salud.');
 
@@ -45,7 +45,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Índice para búsqueda rápida: dado un tarifario y un servicio, dame la regla.
-            $table->unique(['agreement_id', 'session_type_id', 'plan_id']);
+            $table->unique(['agreement_id', 'item_id', 'plan_id']);
         });
     }
 

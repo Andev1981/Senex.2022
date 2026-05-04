@@ -7,6 +7,7 @@ use App\Http\Requests\StorePlanRequest;
 use App\Http\Requests\UpdatePlanRequest;
 use App\Models\Insurance;
 use App\Models\Plan;
+use App\Models\Item;
 use App\Services\Plans\PlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -61,9 +62,12 @@ class PlanController extends Controller
             return response()->json(['plans' => $plans]);
         }
 
+        $companyId = session('current_company_id') ?? auth()->user()->company_id;
+        $sessionTypes = Item::services()->where('company_id', $companyId)->get(['id', 'name', 'price']);
+
         // Lógica original para la vista Inertia
         if ($insurance) {
-            $plans = Plan::with('insurance')
+            $plans = Plan::with(['insurance', 'items'])
                 ->where('insurance_id', $insurance->id)
                 ->orderBy('name')
                 ->get()
@@ -87,23 +91,50 @@ class PlanController extends Controller
                         'end_date' => $plan->end_date,
                         'description' => $plan->description,
                         'is_active' => $plan->is_active,
+                        'items' => $plan->items, // 👈 IMPORTANTE: Enviar los ítems vinculados
                     ];
                 });
 
             return Inertia::render('plans/Index', [
                 'plans' => $plans,
-                'insurance' => $insurance
+                'insurance' => $insurance,
+                'sessionTypes' => $sessionTypes
             ]);
         }
         
         // Fallback si no se provee ni JSON ni insurance, devolvemos solo PACKS INTERNOS.
-        $allPlans = Plan::with('insurance')
+        $allPlans = Plan::with(['insurance', 'items'])
             ->where('type', 'internal')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'code' => $plan->code,
+                    'insurance_id' => $plan->insurance_id,
+                    'insurance' => [ 
+                        'id' => $plan->insurance->id ?? null,
+                        'name' => $plan->insurance->name ?? 'Particular', 
+                        'institution_type' => $plan->insurance->institution_type ?? null,
+                    ],
+                    'coverage_percentage' => $plan->coverage_percentage,
+                    'type' => $plan->type,
+                    'total_sessions' => $plan->total_sessions,
+                    'price' => $plan->price,
+                    'valid_months' => $plan->valid_months,
+                    'start_date' => $plan->start_date,
+                    'end_date' => $plan->end_date,
+                    'description' => $plan->description,
+                    'is_active' => $plan->is_active,
+                    'items' => $plan->items, 
+                ];
+            });
+
         return Inertia::render('plans/Index', [
             'plans' => $allPlans,
-            'insurance' => null
+            'insurance' => null,
+            'sessionTypes' => $sessionTypes
         ]);
     }
 

@@ -33,4 +33,18 @@ class ReceivablesController extends Controller
             'allReceivables' => $allReceivables
         ]);
     }
+
+    /**
+     * Marca un receivable como liquidado/pagado.
+     */
+    public function settle(Request $request, Receivable $receivable)
+    {
+        $receivable->update([
+            'status' => 'settled',
+            'settled_at' => now(),
+            'notes' => $receivable->notes . "\n[Liquidado manualmente vía Cuentas por Cobrar]"
+        ]);
+
+        return back()->with('success', 'Cobro registrado exitosamente.');
+    }
 }

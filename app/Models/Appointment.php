@@ -38,6 +38,16 @@ class Appointment extends Model
     'meta' => 'array',
   ];
 
+  public function company()
+  {
+    return $this->belongsTo(Company::class);
+  }
+
+  public function branch()
+  {
+    return $this->belongsTo(Branch::class);
+  }
+
   public function patient()
   {
     return $this->belongsTo(Patient::class);

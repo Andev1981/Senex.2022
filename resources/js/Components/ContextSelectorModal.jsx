@@ -96,8 +96,14 @@ export default function ContextSelectorModal({ isOpen, onClose }) {
                     }`}
                   >
                     <div className="flex items-center gap-4 text-left">
-                      <div className={`p-3 rounded-2xl transition-all duration-500 ${isViewing ? 'bg-brand-primary text-white scale-110 shadow-lg' : 'bg-white border border-gray-100 group-hover:bg-gray-50'}`}>
-                        <Building2 className="w-5 h-5" />
+                      <div className={`p-1 rounded-2xl transition-all duration-500 overflow-hidden ${isViewing ? 'bg-brand-primary shadow-lg scale-110' : 'bg-white border border-gray-100 group-hover:bg-gray-50'}`}>
+                        {company.logo_url ? (
+                            <img src={company.logo_url} alt="Logo" className="w-9 h-9 object-contain bg-white rounded-xl p-0.5" />
+                        ) : (
+                            <div className={`w-9 h-9 flex items-center justify-center ${isViewing ? 'text-white' : 'text-brand-primary'}`}>
+                                <Building2 className="w-5 h-5" />
+                            </div>
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p className="font-black uppercase text-xs tracking-tight truncate">{company.business_name}</p>

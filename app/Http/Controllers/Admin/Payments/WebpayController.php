@@ -44,7 +44,7 @@ class WebpayController extends Controller
      */
     public function portalPagosIndex()
     {
-        return Inertia::render('paymentsPatients/PortalPago');
+        return Inertia::render('payments-patients/PortalPago');
     }
 
     /**
@@ -99,7 +99,7 @@ class WebpayController extends Controller
         // Guardar RUT en sesión para el pago
         session(['portal_rut' => $request->rut]);
 
-        return Inertia::render('paymentsPatients/PortalPagoDeudas', [
+        return Inertia::render('payments-patients/PortalPagoDeudas', [
             'patient' => [
                 'id' => $patient->id,
                 'name' => $patient->name,
@@ -160,7 +160,7 @@ class WebpayController extends Controller
 
 
         // 4. Renderizar DIRECTO la vista de deudas con los datos precargados
-        return Inertia::render('paymentsPatients/PortalPagoDeudas', [
+        return Inertia::render('payments-patients/PortalPagoDeudas', [
             'patient' => [
                 'id' => $patient->id,
                 'name' => $patient->name,

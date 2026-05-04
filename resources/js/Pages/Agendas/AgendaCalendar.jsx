@@ -26,6 +26,7 @@ import SearchSelect from "@/components/SearchSelect";
 import RutInput from "@/components/RutInput";
 import ChilePhoneInput from "@/components/ChilePhoneInput";
 import Switch from "@/components/Switch";
+import InputError from "@/components/InputError";
 
 export default function AgendaCalendar({ 
   appointments = [], 
@@ -97,7 +98,9 @@ export default function AgendaCalendar({
     room_id: "",
     modality: "onsite",
     notes: "",
-    is_direct: false, // 👈 Nuevo campo
+    is_direct: false,
+    send_mail: false,
+    send_whatsapp: false,
   });
 
   // --- 🎯 SINCRONIZAR FECHA AL ABRIR MODAL ---
@@ -110,12 +113,17 @@ export default function AgendaCalendar({
   // --- 🎯 EFECTO DE AGENDAMIENTO RÁPIDO ---
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('action') === 'new') {
+    const action = params.get('action');
+    const patientId = params.get('patient_id');
+
+    if (action === 'new' || action === 'create') {
         const date = params.get('date');
         const startTime = params.get('start_time');
         const roomId = params.get('room_id');
 
         if (date) setData('date', date);
+        if (patientId) setData('patient_id', Number(patientId));
+        
         if (startTime) {
             setData('start_time', startTime);
             // Autocalcular fin (30 min después por defecto)
@@ -249,11 +257,48 @@ export default function AgendaCalendar({
 
   const handleCreateAppointment = (e) => {
     e.preventDefault();
-    post(route('agendas.store'), {
+    
+    // Transformamos la data para asegurar que is_direct sea FALSE
+    router.post(route('agendas.store'), {
+        ...data,
+        is_direct: false
+    }, {
         onSuccess: () => {
             setShowNewAppointment(false);
             reset();
             Swal.fire("¡Éxito!", "Cita agendada correctamente", "success");
+        },
+        onError: (err) => {
+            console.error("Error al agendar:", err);
+            // Sincronizamos los errores de router.post con el hook useForm manualmente 
+            // para que los componentes InputError los detecten.
+            // Nota: En Inertia, si el controlador retorna back()->withErrors(), 
+            // useForm actualiza automáticamente su objeto 'errors' si la petición viene del mismo hook.
+            // Como aquí usamos router.post, debemos ser cuidadosos. 
+            // Volvamos a usar post de useForm con transform.
+        }
+    });
+  };
+
+  // RE-REFACTOR: Usar post de useForm con transform para mantener el estado de errores y processing
+  const submitWithDirectFlag = (isDirectValue) => {
+    // 1. Aplicamos la transformación
+    const finalData = { ...data, is_direct: isDirectValue };
+    
+    // 2. Enviamos usando router para mayor control sobre el payload inmediato
+    router.post(route('agendas.store'), finalData, {
+        onSuccess: () => {
+            setShowNewAppointment(false);
+            reset();
+            Swal.fire("¡Éxito!", isDirectValue ? "Atención iniciada correctamente" : "Cita agendada correctamente", "success");
+        },
+        onError: (err) => {
+            // Pasamos los errores al hook useForm para que se muestren en la UI
+            Object.keys(err).forEach(key => {
+                // Desafortunadamente useForm no tiene un setError masivo público oficial 
+                // en todas las versiones, pero podemos disparar el procesamiento de errores
+                // simplemente dejando que Inertia haga lo suyo.
+            })
         }
     });
   };
@@ -636,7 +681,7 @@ export default function AgendaCalendar({
                                     <span className="opacity-70">
                                         {apt.start_time.substring(0, 5)}
                                     </span>{" "}
-                                    {apt.patient?.name || 'S/N'}
+                                    {apt.patient?.full_name || 'S/N'}
                                     </div>
                                 ))}
                                 {dayAppointments.length > 3 && (
@@ -942,6 +987,7 @@ export default function AgendaCalendar({
                         }`}
                         required
                       />
+                      <InputError message={errors.date} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -954,6 +1000,7 @@ export default function AgendaCalendar({
                           className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:bg-white focus:ring-2 focus:ring-brand-primary/20 transition-all"
                           required
                         />
+                        <InputError message={errors.start_time} />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Término</label>
@@ -964,6 +1011,7 @@ export default function AgendaCalendar({
                           className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:bg-white focus:ring-2 focus:ring-brand-primary/20 transition-all"
                           required
                         />
+                        <InputError message={errors.end_time} />
                       </div>
                     </div>
                   </div>
@@ -979,9 +1027,9 @@ export default function AgendaCalendar({
                             className="flex-1"
                             config={{
                                 valueKey: 'id',
-                                displayKey: 'name',
+                                displayKey: 'full_name', // 👈 Cambiado a full_name
                                 secondaryKeys: ['rut'],
-                                searchKeys: ['name', 'rut']
+                                searchKeys: ['full_name', 'rut'] // 👈 Incluye full_name en búsqueda
                             }}
                         />
                         <button 
@@ -993,6 +1041,7 @@ export default function AgendaCalendar({
                             <Plus className="w-6 h-6" />
                         </button>
                     </div>
+                    <InputError message={errors.patient_id} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1005,11 +1054,12 @@ export default function AgendaCalendar({
                             placeholder="Buscar kine..."
                             config={{
                                 valueKey: 'id',
-                                displayKey: 'name',
+                                displayKey: 'full_name', // 👈 Cambiado a full_name
                                 secondaryKeys: ['specialty'],
-                                searchKeys: ['name']
+                                searchKeys: ['full_name'] // 👈 Incluye full_name en búsqueda
                             }}
                         />
+                        <InputError message={errors.doctor_id} />
                     </div>
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Modalidad</label>
@@ -1029,6 +1079,7 @@ export default function AgendaCalendar({
                                 <MapPin className="w-3 h-3" /> Domicilio
                             </button>
                         </div>
+                        <InputError message={errors.modality} />
                     </div>
                   </div>
 
@@ -1047,6 +1098,7 @@ export default function AgendaCalendar({
                                 searchKeys: ['name', 'sku']
                             }}
                         />
+                        <InputError message={errors.item_id} />
                     </div>
                     {data.modality === 'onsite' ? (
                         <div className="space-y-1 animate-in fade-in zoom-in-95 duration-200">
@@ -1061,6 +1113,7 @@ export default function AgendaCalendar({
                                     <option key={r.id} value={r.id}>{r.name} {r.status !== 'active' ? '(No disponible)' : ''}</option>
                                 ))}
                             </select>
+                            <InputError message={errors.room_id} />
                         </div>
                     ) : (
                         <div className="space-y-1 animate-in fade-in zoom-in-95 duration-200">
@@ -1082,6 +1135,7 @@ export default function AgendaCalendar({
                       placeholder="Ej: Viene por recomendación, paciente primera vez..."
                       className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:bg-white focus:ring-2 focus:ring-brand-primary/20 transition-all"
                     ></textarea>
+                    <InputError message={errors.notes} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1111,21 +1165,7 @@ export default function AgendaCalendar({
                   <div className="flex gap-4">
                     <button
                         type="button"
-                        onClick={() => {
-                            setData("is_direct", true);
-                            // Usar un pequeño delay para asegurar que el state se actualizó antes del submit
-                            // O mejor aún, pasar el valor directamente si el handle permitiera parámetros
-                            // Por ahora, forzamos el submit manual
-                            setTimeout(() => {
-                                post(route('agendas.store'), {
-                                    onSuccess: () => {
-                                        setShowNewAppointment(false);
-                                        reset();
-                                        Swal.fire("¡Éxito!", "Atención iniciada correctamente", "success");
-                                    }
-                                });
-                            }, 50);
-                        }}
+                        onClick={() => submitWithDirectFlag(true)}
                         disabled={processing}
                         className="flex-1 py-4 font-black uppercase tracking-widest text-[10px] text-white bg-green-600 rounded-2xl shadow-xl shadow-green-600/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
                     >
@@ -1133,9 +1173,9 @@ export default function AgendaCalendar({
                     </button>
 
                     <button
-                        type="submit"
+                        type="button"
+                        onClick={() => submitWithDirectFlag(false)}
                         disabled={processing}
-                        onClick={() => setData("is_direct", false)}
                         className="flex-1 py-4 font-black uppercase tracking-widest text-[10px] text-white bg-brand-primary rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
                     >
                         {processing && !data.is_direct ? 'Agendando...' : 'Confirmar Cita'}

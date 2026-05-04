@@ -51,8 +51,8 @@ function InsuranceFormModal({ insurance, onClose }) {
   };
 
   return (
-    <div className="bg-white">
-      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+    <div className="bg-white flex flex-col h-full min-h-0">
+      <form onSubmit={handleSubmit} className="flex flex-col h-full min-h-0">
         {/* HEADER HERO */}
         <div className="p-8 bg-gray-50/50 border-b border-gray-100 rounded-t-[2rem] flex items-center justify-between gap-6 shrink-0">
           <div className="flex items-center gap-4">
@@ -84,7 +84,8 @@ function InsuranceFormModal({ insurance, onClose }) {
           )}
         </div>
 
-        <div className="p-10 space-y-10">
+        {/* CUERPO SCROLLABLE */}
+        <div className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar">
           {/* BLOQUE 1: IDENTIDAD FISCAL */}
           <div className="space-y-6">
             <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">

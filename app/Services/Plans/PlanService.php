@@ -25,24 +25,35 @@ class PlanService
         DB::beginTransaction();
 
         try {
+            Log::info('PlanService: Iniciando creación de plan con contenido', ['data' => $data]);
+
             // A. PREPARAR DATOS PARA EL PLAN MAESTRO
             $planData = collect($data)->except(['content'])->toArray();
 
             // B. CREAR EL PLAN MAESTRO
-            $plan = Plan::create(array_merge($planData));
+            $plan = Plan::create($planData);
             
+            Log::info('PlanService: Plan maestro creado', ['id' => $plan->id, 'type' => $plan->type]);
+
             // C. ADJUNTAR EL CONTENIDO (SOLO SI ES INTERNO)
             if ($plan->type === 'internal' && isset($data['content'])) {
                 
+                Log::info('PlanService: Procesando contenido interno para sync', ['content' => $data['content']]);
+
                 // Mapeamos el array para el método sync de Eloquent
                 $contentToSync = collect($data['content'])->mapWithKeys(function ($item) {
+                    if (empty($item['session_type_id'])) return [];
                     return [
                         $item['session_type_id'] => ['max_sessions' => $item['max_sessions']]
                     ];
                 })->toArray();
                 
+                Log::info('PlanService: Mapeo de sync generado', ['sync_data' => $contentToSync]);
+
                 // Usamos sync para adjuntar/actualizar los datos en la tabla pivote
-                $plan->items()->sync($contentToSync);
+                $results = $plan->items()->sync($contentToSync);
+                
+                Log::info('PlanService: Resultado de sync items', ['results' => $results]);
             }
 
             DB::commit();
@@ -50,7 +61,10 @@ class PlanService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Relanzar la excepción para que el controlador pueda manejar la respuesta HTTP
+            Log::error('PlanService: Fallo crítico al crear plan', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             throw new \Exception('Error al crear el Plan y su contenido: ' . $e->getMessage());
         }
     }
@@ -63,6 +77,8 @@ class PlanService
         DB::beginTransaction();
 
         try {
+            Log::info('PlanService: Iniciando actualización de plan', ['id' => $plan->id, 'data' => $data]);
+
             // A. PREPARAR DATOS
             $planData = collect($data)->except(['content'])->toArray();
 
@@ -71,13 +87,21 @@ class PlanService
             
             // C. SINCRONIZAR CONTENIDO (SOLO SI ES INTERNO)
             if ($plan->type === 'internal' && isset($data['content'])) {
+                
+                Log::info('PlanService: Procesando contenido para update sync', ['content' => $data['content']]);
+
                 $contentToSync = collect($data['content'])->mapWithKeys(function ($item) {
+                    if (empty($item['session_type_id'])) return [];
                     return [
                         $item['session_type_id'] => ['max_sessions' => $item['max_sessions']]
                     ];
                 })->toArray();
                 
-                $plan->items()->sync($contentToSync);
+                Log::info('PlanService: Mapeo de update sync generado', ['sync_data' => $contentToSync]);
+
+                $results = $plan->items()->sync($contentToSync);
+
+                Log::info('PlanService: Resultado de update sync items', ['results' => $results]);
             }
 
             DB::commit();
@@ -85,6 +109,10 @@ class PlanService
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('PlanService: Fallo crítico al actualizar plan', [
+                'id' => $plan->id,
+                'error' => $e->getMessage()
+            ]);
             throw new \Exception('Error al actualizar el Plan: ' . $e->getMessage());
         }
     }
@@ -95,7 +123,7 @@ class PlanService
     public function purchasePlan(int $patientId, int $planId, ?int $paymentId = null): PatientPlan
     {
         return DB::transaction(function () use ($patientId, $planId, $paymentId) {
-            $plan = Plan::findOrFail($planId);
+            $plan = Plan::with('items')->findOrFail($planId);
 
             if (!$plan->is_active) {
                 throw new \Exception('El plan no está disponible');
@@ -107,23 +135,30 @@ class PlanService
                 $expiryDate = now()->addMonths($plan->valid_months);
             }
 
+            // Calcular total de sesiones sumando los items (si es interno)
+            $totalSessions = null;
+            if ($plan->type === 'internal') {
+                $totalSessions = $plan->items->sum('pivot.max_sessions');
+            }
+
             $patientPlan = PatientPlan::create([
+                'company_id' => $plan->company_id,
                 'patient_id' => $patientId,
                 'plan_id' => $planId,
                 'payment_id' => $paymentId,
                 'purchased_at' => now(),
+                'start_date' => now(),
                 'expiry_date' => $expiryDate,
-                'sessions_included' => $plan->total_sessions,
+                'sessions_included' => $totalSessions,
                 'sessions_used' => 0,
                 'status' => 'active',
             ]);
 
-            Log::info('Plan comprado', [
+            Log::info('Plan suscrito exitosamente', [
                 'patient_plan_id' => $patientPlan->id,
                 'patient_id' => $patientId,
                 'plan_id' => $planId,
-                'sessions_included' => $plan->total_sessions,
-                'expiry_date' => $expiryDate,
+                'sessions_included' => $totalSessions,
             ]);
 
             return $patientPlan;

@@ -76,6 +76,7 @@ export default function Index({ plans, insurance, sessionTypes }) {
         width="4xl"
       >
         <PlanForm
+          key={plan?.id || 'new'}
           plan={plan}
           onClose={() => setModalOpen(false)}
           insurance={insurance}

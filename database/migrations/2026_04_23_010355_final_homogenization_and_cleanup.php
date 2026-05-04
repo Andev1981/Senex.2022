@@ -31,57 +31,19 @@ return new class extends Migration
         });
 
         // 2. Actualizar tablas que dependen de session_type_id
-        // Nota: Recreamos las FKs de base que el script de limpieza borró para seguridad
-        
-        // Agreement Rules
-        if (Schema::hasTable('agreement_rules')) {
-            Schema::table('agreement_rules', function (Blueprint $table) {
-                if (Schema::hasColumn('agreement_rules', 'session_type_id')) {
-                    $table->dropForeign(['session_type_id']);
-                    $table->dropColumn('session_type_id');
-                }
-                $table->foreignId('item_id')->nullable()->constrained('items')->onDelete('cascade');
-                // Recrear FKs borradas por el script
-                if (!Schema::hasColumn('agreement_rules', 'agreement_id')) {
-                    $table->foreign('agreement_id')->references('id')->on('agreements')->onDelete('cascade');
-                }
-            });
-        }
+        // Nota: Las columnas item_id ya están en las migraciones maestras.
+        // Aquí solo nos aseguramos de limpiar residuos si quedaran.
 
         // Treatment Sessions
         if (Schema::hasTable('treatment_sessions')) {
             Schema::table('treatment_sessions', function (Blueprint $table) {
-                if (Schema::hasColumn('treatment_sessions', 'session_type_id')) {
-                    $table->dropForeign(['session_type_id']);
-                    $table->dropColumn('session_type_id');
-                }
-                
-                // Asegurar FKs críticas si no están
-                // (Si ya existen como columnas pero sin FK, constrained fallaría si ya hay FK real)
-                if (!Schema::hasColumn('treatment_sessions', 'item_id')) {
-                    $table->foreignId('item_id')->nullable()->constrained('items')->onDelete('cascade');
-                }
-
-                // Firma Digital y Validación de Atención
+                // Firma Digital y Validación de Atención (Si no están en la maestra)
                 if (!Schema::hasColumn('treatment_sessions', 'signature_path')) {
                     $table->string('signature_path')->nullable();
                     $table->boolean('signature_skipped')->default(false);
                     $table->string('signature_skip_reason')->nullable();
                     $table->timestamp('signed_at')->nullable();
                     $table->string('signature_gps_coords')->nullable();
-                }
-            });
-        }
-
-        // Treatments
-        if (Schema::hasTable('treatments')) {
-            Schema::table('treatments', function (Blueprint $table) {
-                if (Schema::hasColumn('treatments', 'session_type_id')) {
-                    $table->dropForeign(['session_type_id']);
-                    $table->dropColumn('session_type_id');
-                }
-                if (!Schema::hasColumn('treatments', 'item_id')) {
-                    $table->foreignId('item_id')->nullable()->constrained('items')->onDelete('cascade');
                 }
             });
         }

@@ -32,11 +32,15 @@ class Insurance extends Model
         return $this->hasMany(Plan::class);
     }
 
-    // Relación 1:M con Convenios (Una aseguradora puede tener varios acuerdos tarifarios)
+    // Relación 1:M con Convenios
     public function agreements()
     {
-        // La FK 'insurance_id' está en la tabla 'agreements'
         return $this->hasMany(Agreement::class);
+    }
+
+    public function activeAgreement()
+    {
+        return $this->hasOne(Agreement::class)->where('is_active', true);
     }
 
     // Relación N:M con Pacientes (Muchos pacientes usan esta aseguradora)

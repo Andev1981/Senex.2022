@@ -15,23 +15,24 @@ import {
   Box,
   Shield
 } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
 import PrimaryButton from "@/components/PrimaryButton";
 import SecondaryButton from "@/components/SecondaryButton";
 import Switch from "@/components/Switch";
 import TextInput from "@/components/TextInput";
 import EnterpriseSelect from "@/components/EnterpriseSelect";
 import InputPesoChileno from "@/components/InputPesoChileno";
+import InputError from "@/components/InputError";
 import Swal from "sweetalert2";
 
-export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
+// Generador de ID fuera del componente para evitar problemas de hoisting/referencia
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
+export default function PlanForm({ plan, insurance, sessionTypes = [], onClose }) {
   const isEdit = !!plan;
   const { props } = usePage();
   const currentCompanyId = props.current_company_id;
   
-  // LÓGICA ESTRICTA: 
-  // 1. Si NO hay insurance -> Es un Pack Interno de la clínica (Venta directa)
-  // 2. Si HAY insurance -> Es un Plan Externo de Previsión (Identificador de cobertura)
+  // LÓGICA ESTRICTA: Pack Interno vs Nivel de Cobertura
   const isInternal = !insurance; 
 
   const { data, setData, post, put, processing, errors, clearErrors, reset } = useForm({
@@ -39,7 +40,7 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
     company_id: currentCompanyId,
     name: plan?.name || "",
     code: plan?.code || "",
-    type: isInternal ? "internal" : "external", // Forzado por contexto
+    type: isInternal ? "internal" : "external",
     insurance_id: insurance?.id || plan?.insurance_id || null,
     billing_type: plan?.billing_type || (isInternal ? "prepaid" : "postpaid"),
     insurance_policy_type: plan?.insurance_policy_type || "complementary",
@@ -53,31 +54,53 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
     description: plan?.description || "",
     coverage_percentage: plan?.coverage_percentage || "",
     content: plan?.items?.map((item) => ({
-      id: uuidv4(),
+      id: generateId(),
       session_type_id: item.id.toString(),
-      max_sessions: item.pivot.max_sessions,
+      max_sessions: item.pivot?.max_sessions || 1,
     })) || [],
   });
 
   const [showInitialFeeInput, setShowInitialFeeInput] = useState(data.initial_fee > 0);
-  const [filteredSessionTypes, setFilteredSessionTypes] = useState(sessionTypes || []);
+  const [filteredSessionTypes, setFilteredSessionTypes] = useState([]);
 
+  // Sincronizar tipos de sesión disponibles
   useEffect(() => {
-    if (sessionTypes) {
-        const selectedIds = data.content.map(item => item.session_type_id).filter(id => id !== "");
+    if (Array.isArray(sessionTypes)) {
+        const selectedIds = data.content.map(item => item.session_type_id.toString()).filter(id => id !== "");
         setFilteredSessionTypes(sessionTypes.filter(s => !selectedIds.includes(s.id.toString())));
     }
   }, [data.content, sessionTypes]);
 
   const addContentItem = () => {
-    setData("content", [...data.content, { id: uuidv4(), session_type_id: "", max_sessions: 1 }]);
+    if (!sessionTypes || sessionTypes.length === 0) {
+        Swal.fire({
+            title: 'Catálogo Vacío',
+            text: 'No hay servicios registrados para añadir al pack.',
+            icon: 'warning'
+        });
+        return;
+    }
+
+    setData("content", [
+        ...data.content, 
+        { id: generateId(), session_type_id: "", max_sessions: 1 }
+    ]);
     clearErrors("content");
   };
 
+  // Autocompletar primer item si es nuevo pack interno
+  useEffect(() => {
+    if (isInternal && !isEdit && data.content.length === 0 && sessionTypes?.length > 0) {
+        addContentItem();
+    }
+  }, [sessionTypes]);
+
   const updateContentItem = (index, field, value) => {
-    const newContent = [...data.content];
-    newContent[index][field] = value;
-    setData("content", newContent);
+    setData(prevData => {
+        const newContent = [...prevData.content];
+        newContent[index] = { ...newContent[index], [field]: value };
+        return { ...prevData, content: newContent };
+    });
   };
 
   const handleSubmit = (e) => {
@@ -122,7 +145,7 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
                 </div>
             </div>
             {isEdit && (
-                <div className={`px-3 py-1 rounded-lg border flex items-center gap-2 ${data.is_active ? 'bg-green-50 border-green-100 text-green-600' : 'bg-red-50 border-red-100 text-red-600'}`}>
+                <div className={`px-3 py-1 rounded-lg border flex items-center gap-3 ${data.is_active ? 'bg-green-50 border-green-100 text-green-600' : 'bg-red-50 border-red-100 text-red-600'}`}>
                     <CheckCircle2 className="w-3 h-3" />
                     <span className="text-[8px] font-black uppercase tracking-widest">{data.is_active ? 'Vigente' : 'Inactivo'}</span>
                 </div>
@@ -143,15 +166,15 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
                         label="Origen del Plan"
                         value={data.type}
                         onChange={(val) => setData("type", val)}
-                        disabled={isExternalInsurance || isEdit}
+                        disabled={true} 
                         options={[
                             { value: 'external', label: 'Externo (Isapre / Fonasa)' },
                             { value: 'internal', label: 'Interno (Clínica / Pack)' },
                         ]}
                     />
-                    {isExternalInsurance && (
+                    {!isInternal && (
                       <p className="text-[9px] text-brand-primary font-bold mt-1 ml-1 uppercase italic">
-                        * Restringido a Externo por tipo de institución
+                        * Definido como Externo por contexto de aseguradora
                       </p>
                     )}
                 </div>
@@ -206,7 +229,7 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
             </div>
           </div>
 
-          {/* SECCIÓN 3: PARÁMETROS ECONÓMICOS (SÓLO INTERNOS O COBERTURA EXTERNA) */}
+          {/* SECCIÓN 3: PARÁMETROS ECONÓMICOS */}
           {data.type === "internal" ? (
             <div className="p-8 bg-brand-primary/5 border border-brand-primary/10 rounded-[2.5rem] space-y-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-3xl"></div>
@@ -217,10 +240,12 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
                     <div className="space-y-1">
                         <label className="enterprise-label !text-[8px] ml-1">Valor del Pack (CLP)</label>
                         <InputPesoChileno price={data.price} onChange={e => setData("price", e.target.value)} className="!rounded-xl !py-3 !px-4 font-black text-sm bg-white" />
+                        <InputError message={errors.price} />
                     </div>
                     <div className="space-y-1">
                         <label className="enterprise-label !text-[8px] ml-1">Vigencia (Meses)</label>
                         <input type="number" value={data.valid_months} onChange={e => setData("valid_months", e.target.value)} className="w-full px-4 py-3 text-sm font-black bg-white border-gray-100 rounded-xl focus:ring-brand-primary shadow-sm outline-none" />
+                        <InputError message={errors.valid_months} />
                     </div>
                     <div className="space-y-1">
                         <label className="enterprise-label !text-[8px] ml-1">Matrícula / Inicio</label>
@@ -237,22 +262,25 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
             <div className="p-8 bg-purple-50/50 border border-purple-100 rounded-[2.5rem] space-y-4">
                 <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest leading-relaxed flex items-start gap-2">
                     <Shield className="w-4 h-4 shrink-0" />
-                    <span>💡 Los precios para convenios externos se definen en el <span className="font-black underline">Gestor de Convenios</span>. Este registro sirve para identificar la cobertura del paciente.</span>
+                    <span>💡 Estás configurando un **Nivel de Cobertura**. Los precios y copagos se definen exclusivamente en el <span className="font-black underline uppercase">Tarifario de Convenio</span> de esta aseguradora.</span>
                 </p>
-                <div className="space-y-2">
-                    <label className="enterprise-label !text-purple-700 !text-[8px] ml-1">Porcentaje de Cobertura Estimada</label>
-                    <TextInput type="number" step="0.01" name="coverage_percentage" value={data.coverage_percentage} onChange={e => setData("coverage_percentage", e.target.value)} placeholder="70.00" className="!bg-white !rounded-xl" />
-                </div>
             </div>
           )}
 
-          {/* SECCIÓN 4: CONTENIDO DEL PAQUETE */}
-          {data.type === "internal" && data.billing_type === "prepaid" && (
+          {/* SECCIÓN 4: CONTENIDO DEL PAQUETE (SÓLO INTERNOS) */}
+          {data.type === "internal" && (
             <div className="space-y-6">
                 <div className="flex items-center justify-between ml-1">
-                    <h3 className="enterprise-label !text-brand-primary !mb-0 flex items-center gap-2">
-                        <Database className="w-3.5 h-3.5" /> Servicios Incluidos en el Pack
-                    </h3>
+                    <div className="flex items-center gap-4">
+                        <h3 className="enterprise-label !text-brand-primary !mb-0 flex items-center gap-2">
+                            <Database className="w-3.5 h-3.5" /> Servicios Incluidos
+                        </h3>
+                        {sessionTypes.length === 0 && (
+                            <span className="text-[8px] font-black bg-red-50 text-red-500 px-2 py-1 rounded border border-red-100 uppercase tracking-widest animate-pulse">
+                                Catálogo Vacío
+                            </span>
+                        )}
+                    </div>
                     <button type="button" onClick={addContentItem} className="flex items-center gap-2 text-[9px] font-black text-brand-primary uppercase tracking-widest bg-brand-secondary/10 px-4 py-2 rounded-xl hover:bg-brand-primary hover:text-white transition-all">
                         <Plus className="w-3.5 h-3.5" /> Añadir Prestación
                     </button>
@@ -267,17 +295,15 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
                                     value={item.session_type_id}
                                     onChange={(val) => updateContentItem(index, "session_type_id", val)}
                                     options={[
-                                        ...filteredSessionTypes.map(s => ({ value: s.id.toString(), label: s.name })),
-                                        ...(item.session_type_id && !filteredSessionTypes.find(s => s.id.toString() === item.session_type_id) 
-                                            ? [{ value: item.session_type_id, label: sessionTypes.find(s => s.id.toString() === item.session_type_id)?.name }] 
-                                            : [])
+                                        ...(Array.isArray(sessionTypes) ? sessionTypes.map(s => ({ value: s.id.toString(), label: s.name })) : [])
                                     ]}
-                                    placeholder="Seleccione..."
+                                    placeholder="Seleccione un servicio..."
+                                    error={errors[`content.${index}.session_type_id`]}
                                 />
                             </div>
                             <div className="space-y-1 md:col-span-1">
                                 <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest text-center block leading-none mb-2">Cant.</label>
-                                <input type="number" value={item.max_sessions} onChange={e => updateContentItem(index, "max_sessions", e.target.value)} className="w-full rounded-xl border-gray-50 bg-gray-50/50 py-2.5 px-2 text-center text-xs font-black outline-none" />
+                                <input type="number" value={item.max_sessions} onChange={e => updateContentItem(index, "max_sessions", parseInt(e.target.value) || 0)} className="w-full rounded-xl border-gray-50 bg-gray-50/50 py-2.5 px-2 text-center text-xs font-black outline-none" />
                             </div>
                             <div className="flex justify-center pb-1 md:col-span-1">
                                 <button type="button" onClick={() => setData("content", data.content.filter(i => i.id !== item.id))} className="p-2 text-gray-300 transition-all rounded-lg hover:text-red-500 hover:bg-red-50">
@@ -293,6 +319,7 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
                         </div>
                     )}
                 </div>
+                <InputError message={errors.content} />
             </div>
           )}
 
@@ -302,6 +329,7 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
                 <div className="space-y-1">
                     <label className="ml-1 enterprise-label opacity-60">Nombre Comercial del Plan</label>
                     <TextInput value={data.name} onChange={e => setData("name", e.target.value)} required className="w-full !rounded-2xl !py-4 font-black uppercase text-sm" placeholder="EJ: PACK 10 SESIONES KINESIOLOGÍA" />
+                    <InputError message={errors.name} />
                 </div>
                 <div className="space-y-1">
                     <label className="ml-1 enterprise-label opacity-60">Descripción / Glosa Interna</label>
@@ -315,6 +343,7 @@ export default function PlanForm({ plan, insurance, sessionTypes, onClose }) {
                         <Hash className="absolute w-4 h-4 -translate-y-1/2 left-4 top-1/2 text-brand-gray opacity-40" />
                         <input type="text" value={data.code} onChange={e => setData("code", e.target.value.toUpperCase())} className="w-full py-4 pl-12 pr-4 font-mono text-sm font-black transition-all border-gray-100 shadow-inner rounded-2xl bg-gray-50 focus:bg-white focus:ring-brand-primary outline-none" placeholder="PLN-001" />
                     </div>
+                    <InputError message={errors.code} />
                 </div>
                 <div className="flex items-center justify-between p-6 bg-white border border-gray-100 shadow-sm rounded-3xl">
                     <div className="flex items-center gap-3">

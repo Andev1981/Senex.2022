@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Head, router } from "@inertiajs/react";
 import { Plus, BrickWallShield } from "lucide-react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
@@ -17,6 +17,12 @@ const InsuranceIndex = ({ insurances, sessionTypes, user }) => {
 
   // 2. Estado para el Modal de Tarifario & Coberturas
   const [isTariffModalOpen, setIsTariffModalOpen] = useState(false);
+
+  // --- LÓGICA REACTIVA: Sincronizar el modal con la data fresca de Inertia ---
+  const currentInsurance = useMemo(() => {
+    if (!editingInsurance) return null;
+    return insurances.find(i => i.id === editingInsurance.id) || editingInsurance;
+  }, [insurances, editingInsurance]);
 
   // Funciones para el Modal de Edición de Aseguradora
   const openFormModal = (insurance = null) => {
@@ -85,8 +91,8 @@ const InsuranceIndex = ({ insurances, sessionTypes, user }) => {
         width="6xl"
       >
         <InsuranceTariff
-          insurance={editingInsurance}
-          plans={editingInsurance?.plans || []}
+          insurance={currentInsurance}
+          plans={currentInsurance?.plans || []}
           sessionTypes={sessionTypes}
           onClose={closeTariffModal}
         />

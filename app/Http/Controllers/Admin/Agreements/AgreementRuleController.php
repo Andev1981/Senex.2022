@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAgreementRuleRequest;
 use App\Http\Requests\UpdateAgreementRuleRequest;
 use App\Models\AgreementRule;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -14,33 +15,57 @@ class AgreementRuleController extends Controller
 
 
     /**
-     * Almacena un nuevo AgreementRule.
+     * Crea o actualiza una regla de convenio desde el tarifario integrado.
      */
-    // 💡 Usamos el FormRequest para la validación
-    public function store(StoreAgreementRuleRequest $request)
+    public function upsert(Request $request)
     {
-        $validated = $request->validated();
+        $validated = $request->validate([
+            'agreement_id' => 'required|exists:agreements,id',
+            'item_id' => 'required|exists:items,id',
+            'plan_id' => 'nullable|exists:plans,id',
+            'gross_price_clp' => 'required|integer|min:0',
+            'patient_share_clp' => 'required|integer|min:0',
+        ]);
 
         try {
-            // Creamos el AgreementRule
             DB::beginTransaction();
 
-            // Creamos el AgreementRule directamente con los datos validados
-            $item = AgreementRule::create($validated);
+            $insuranceShare = max(0, $validated['gross_price_clp'] - $validated['patient_share_clp']);
+            
+            // Determinar porcentajes para auditoría
+            $patientPercentage = $validated['gross_price_clp'] > 0 
+                ? round(($validated['patient_share_clp'] / $validated['gross_price_clp']) * 100, 2)
+                : 0;
+
+            $rule = AgreementRule::updateOrCreate(
+                [
+                    'agreement_id' => $validated['agreement_id'],
+                    'item_id' => $validated['item_id'],
+                    'plan_id' => $validated['plan_id'] ?: null,
+                ],
+                [
+                    'gross_price_clp' => $validated['gross_price_clp'],
+                    'patient_share_clp' => $validated['patient_share_clp'],
+                    'insurance_share_clp' => $insuranceShare,
+                    'patient_percentage' => $patientPercentage,
+                    'insurance_percentage' => 100 - $patientPercentage,
+                ]
+            );
 
             DB::commit();
 
-            // Retornamos el item creado o un JSON simple para el modal
-            session()->flash('message', 'Pago registrado y boleta enviada al SII.');
-            session()->flash('type', 'success');
-            return back();
+            return response()->json([
+                'success' => true,
+                'message' => 'Tarifa actualizada.',
+                'rule' => $rule->load(['item', 'plan'])
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("AgreementRuleController falló store: " . $e->getMessage());
-            session()->flash('message', 'Pago registrado y boleta enviada al SII.');
-            session()->flash('type', 'error');
-            // Esto debería ser capturado por el FormRequest o Inertia automáticamente
-            return back();
+            Log::error("Error en upsert de AgreementRule: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo guardar la regla.'
+            ], 500);
         }
     }
 

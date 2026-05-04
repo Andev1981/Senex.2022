@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->foreignId('doctor_id')->nullable()->constrained()->nullOnDelete(); // Kine responsable
             
             // Configuración
-            $table->foreignId('session_type_id')->constrained(); // Tipo por defecto
+            $table->foreignId('item_id')->constrained('items'); // Tipo por defecto
             $table->foreignId('plan_id')->nullable()->constrained();
 
             // ------------------------------------------------
