@@ -56,10 +56,6 @@
                     </li>
                 </ul>
 
-                <div class="button-container">
-                    <a href="{{ url('/') }}" class="button">Acceder a mi Ficha</a>
-                </div>
-
                 <p class="message">
                     Estamos comprometidos con tu bienestar y listos para acompañarte en tu recuperación.
                 </p>

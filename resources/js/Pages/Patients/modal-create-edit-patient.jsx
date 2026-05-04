@@ -82,20 +82,20 @@ export default function ModalCreateEditPatient({
     prefers_mail: patient?.prefers_mail ?? true,
     prefers_sms: patient?.prefers_sms ?? false,
     require_tutor: !!patient?.require_tutor,
-    send_welcome_notification: true, // Nueva bandera independiente
+    send_welcome_notification: false, // Por defecto no enviar hasta que el usuario decida
     guardian_name: patient?.contact?.name || "",
     guardian_relationship: patient?.contact?.relationship || "",
     guardian_phone: patient?.contact?.phone || "",
     guardian_email: patient?.contact?.email || "",
     guardian_rut: patient?.contact?.rut || "",
-    // Campos de dirección
+    // Campos de dirección (Defaults: Las Condes, Santiago, RM)
     is_home_care: isHomeCareOnlyBranch || !!patient?.address,
     street: patient?.address?.street || "",
     number: patient?.address?.number || "",
     details: patient?.address?.details || "",
-    region_id: (patient?.address?.region_id || patient?.address?.commune?.province?.region_id || "").toString(),
-    province_id: (patient?.address?.province_id || patient?.address?.commune?.province_id || "").toString(),
-    commune_id: (patient?.address?.commune_id || "").toString(),
+    region_id: (patient?.address?.region_id || patient?.address?.commune?.province?.region_id || "13").toString(),
+    province_id: (patient?.address?.province_id || patient?.address?.commune?.province_id || "2401").toString(),
+    commune_id: (patient?.address?.commune_id || "13114").toString(),
   });
 
   // Lógica para forzar is_home_care si la sucursal es solo domicilio

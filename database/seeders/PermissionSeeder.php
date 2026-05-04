@@ -10,6 +10,12 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Crear Roles Base si no existen
+        Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'kine', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'patient', 'guard_name' => 'web']);
+
         $permissions = [
             // Gestión de Pacientes
             'patients.index', 'patients.create', 'patients.edit', 'patients.delete', 'patients.view',
