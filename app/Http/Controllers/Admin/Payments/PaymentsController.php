@@ -84,6 +84,9 @@ class PaymentsController extends Controller
 
         $patients = $patients->concat($corporateClients);
 
+        $regions = \Illuminate\Support\Facades\Cache::remember('geo_regions', 86400, fn() => \App\Models\Region::get(['id', 'name']));
+        $communes = \Illuminate\Support\Facades\Cache::remember('geo_communes', 86400, fn() => \App\Models\Commune::get(['id', 'name', 'region_id']));
+
         return Inertia::render('billing-checkout/index', [
             'insurances' => $insurances,
             'plans' => $plans,
@@ -91,8 +94,15 @@ class PaymentsController extends Controller
             'patients' => $patients,
             'isClinical' => $isClinical,
             'doctors' => $doctors,
+            'regions' => $regions,
+            'communes' => $communes,
             'paymentMethods' => \App\Enums\PaymentMethodEnum::options(),
-            'agreements' => \App\Models\Agreement::where('company_id', $currentCompanyId)->where('is_active', true)->get(['id', 'name']),
+            'agreements' => \App\Models\Agreement::where('company_id', $currentCompanyId)
+                ->where('is_active', true)
+                ->with(['rules' => function($q) {
+                    $q->select('id', 'agreement_id', 'item_id', 'plan_id', 'patient_share_clp', 'insurance_share_clp', 'patient_percentage');
+                }])
+                ->get(['id', 'name', 'insurance_id']),
             'business_type' => $businessType
         ]);
     }
@@ -119,11 +129,35 @@ class PaymentsController extends Controller
             $invoiceService = app(\App\Services\Invoices\InvoiceService::class);
 
             return DB::transaction(function() use ($validated, $paymentService, $invoiceService) {
-                // 1. Registrar el Pago
+                // 1. Registrar el Pago (Recaudación)
                 $payment = $paymentService->registerLocalPayment($validated);
 
                 // 2. Si hay servicios a facturar (flujo POS)
                 if (!empty($validated['services_to_bill'])) {
+                    
+                    // 🎯 DETECTAR SI ES COMPRA DE PACK (PLAN)
+                    // En Senex, los Packs no emiten boleta inmediata para permitir reembolsos por sesión
+                    $plans = collect($validated['services_to_bill'])->filter(fn($s) => ($s['sellable_type'] ?? '') === 'Plan' || ($s['type'] ?? '') === 'plan');
+                    
+                    if ($plans->isNotEmpty()) {
+                        foreach ($plans as $p) {
+                            $planId = $p['id'] ?? $p['sellable_id'];
+                            app(\App\Services\Plans\PlanService::class)->purchasePlan($payment->patient_id, $planId, $payment->id);
+                        }
+
+                        // Si SOLO hay planes, retornamos éxito sin Invoice (DTE diferido)
+                        if ($plans->count() === count($validated['services_to_bill'])) {
+                            return response()->json([
+                                'status' => 'success',
+                                'success' => true,
+                                'payment_id' => $payment->id,
+                                'url' => route('payments.success', $payment->uuid),
+                                'message' => 'Pack activado exitosamente. Las boletas se generarán por cada atención.'
+                            ]);
+                        }
+                    }
+
+                    // Flujo estándar para ítems normales (Boleta inmediata)
                     $invoice = $invoiceService->processInvoice($payment, $validated, $validated['is_pos'] ?? false);
                     
                     return response()->json([

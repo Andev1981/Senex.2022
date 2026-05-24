@@ -22,20 +22,20 @@ class PayrollService
         ->get();
 
       $totalSessions = $sessions->count();
-      $totalPatientAmount = 0;
-      $totalDoctorAmount = 0; // Lo que realmente gana el doctor
-      $totalClinicAmount = 0; // La retención
+      $totalGrossAmount = 0; // Lo que paga el paciente/aseguradora
+      $totalPayableToDoctor = 0; // Lo que gana el doctor
+      $totalClinicCommission = 0; // Lo que retiene la clínica
 
       foreach ($sessions as $s) {
-          $pAmount = $s->patient_amount_clp ?? 0;
-          $dAmount = $s->doctor_amount_clp ?? 0;
+          $pAmount = (float)($s->patient_amount_clp ?? 0);
+          $dAmount = (float)($s->doctor_amount_clp ?? 0);
           
-          // La retención es la diferencia
+          // La comisión de la clínica es la diferencia
           $cAmount = $pAmount - $dAmount;
 
-          $totalPatientAmount += $pAmount;
-          $totalDoctorAmount += $dAmount;
-          $totalClinicAmount += $cAmount;
+          $totalGrossAmount += $pAmount;
+          $totalPayableToDoctor += $dAmount;
+          $totalClinicCommission += $cAmount;
       }
 
       return [
@@ -43,9 +43,9 @@ class PayrollService
           'period_start' => $fromDate,
           'period_end' => $toDate,
           'total_sessions' => $totalSessions,
-          'total_patient_amount_clp' => $totalPatientAmount,
-          'total_commission_amount_clp' => $totalClinicAmount, // Retención Clínica
-          'total_payable_clp' => $totalDoctorAmount, // Lo que se le paga al doctor
+          'total_patient_amount_clp' => $totalGrossAmount,
+          'total_commission_amount_clp' => $totalClinicCommission, // Retención Clínica
+          'total_payable_clp' => $totalPayableToDoctor, // Pago al Profesional
       ];
   }
 
@@ -54,6 +54,7 @@ class PayrollService
     return DB::transaction(function () use ($doctorId, $fromDate, $toDate) {
       
       $sessions = TreatmentSession::query()
+        ->with(['diagnostic', 'item.category', 'item.serviceDetail'])
         ->where('doctor_id', $doctorId)
         ->whereBetween('date', [Carbon::parse($fromDate)->startOfDay(), Carbon::parse($toDate)->endOfDay()])
         ->where('status', AppointmentStatusEnum::COMPLETED->value)
@@ -81,6 +82,10 @@ class PayrollService
           $doctorAmount  = $s->doctor_amount_clp ?? 0;
           $clinicRetention = $patientAmount - $doctorAmount;
 
+          // Cálculo del PESO (Fase 3)
+          $maxSimultaneous = $s->item?->serviceDetail?->max_simultaneous_patients ?? 1;
+          $weight = ($maxSimultaneous == 1) ? 3 : 1;
+
           PayrollDetail::query()->create([
                 // 1. Identificadores Básicos
                 'payroll_id'           => $payroll->id,
@@ -93,9 +98,15 @@ class PayrollService
                 // 3. Datos Clínicos
                 'patient_id'           => $s->patient_id,
                 'doctor_id'            => $s->doctor_id,
-                'item_id'      => $s->item_id,
-                'service_date'         => $s->date, // Asumiendo que 'date' es la fecha de la sesión
-                'attended'             => ($s->status === 'completed' || $s->status === 'attended') ? 1 : 0,
+                'item_id'              => $s->item_id,
+                'service_date'         => $s->date, 
+                'attended'             => ($s->status === AppointmentStatusEnum::COMPLETED) ? 1 : 0,
+
+                // 3.1 Transparencia Clínica (Fase 3)
+                'diagnostic_code'      => $s->diagnostic?->code,
+                'diagnostic_name'      => $s->diagnostic?->name,
+                'service_category'     => $s->item?->category?->name,
+                'weight'               => $weight,
 
                 // 4. Montos Financieros
                 // Lo que pagó el paciente
@@ -119,7 +130,11 @@ class PayrollService
                 'rate_percentage'      => ($patientAmount > 0) ? round(($doctorAmount / $patientAmount) * 100, 2) : 0,
 
                 // 6. Auditoría
-                'calc_context'         => json_encode(['origin' => 'auto_generated_from_session']),
+                'calc_context'         => json_encode([
+                  'origin' => 'auto_generated_from_session',
+                  'weight_applied' => $weight,
+                  'max_simultaneous' => $maxSimultaneous
+                ]),
                 'notes'                => null,
             ]);
           

@@ -95,6 +95,31 @@ class UserManagementController extends Controller
                     ->whereIn('id', $request->branches)
                     ->pluck('id');
                 $user->branches()->sync($validBranches);
+
+                // 🎯 Si es Kine, crear/sincronizar perfil de Doctor
+                if ($user->hasRole('kine')) {
+                    $doctor = \App\Models\Doctor::updateOrCreate(
+                        ['user_id' => $user->id],
+                        [
+                            'company_id' => $companyId,
+                            'name' => $user->name,
+                            'email' => $user->email,
+                        ]
+                    );
+
+                    $doctorBranches = [];
+                    foreach ($validBranches as $bId) {
+                        $doctorBranches[$bId] = [
+                            'status' => 'active',
+                            'mobile_app_access' => true,
+                            'can_create_sessions' => $request->boolean('can_create_sessions', true),
+                            'can_view_sessions' => $request->boolean('can_view_sessions', true),
+                            'can_manage_schedule' => $request->boolean('can_manage_schedule', true),
+                            'status_changed_at' => now(),
+                        ];
+                    }
+                    $doctor->branches()->sync($doctorBranches);
+                }
             }
 
             return $user;
@@ -123,28 +148,36 @@ class UserManagementController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8',
             'company_id' => $isSuperAdmin ? 'required|exists:companies,id' : 'nullable',
             'roles' => 'required|array',
             'branches' => 'array',
+            'is_active' => 'boolean',
         ]);
 
         DB::transaction(function () use ($request, $user, $isSuperAdmin, $currentUser) {
             $companyId = $isSuperAdmin ? ($request->company_id ?? $user->company_id) : $user->company_id;
 
-            $user->update([
+            $updateData = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'company_id' => $companyId,
-            ]);
+            ];
 
-            if ($request->password) {
-                $user->update(['password' => Hash::make($request->password)]);
+            if ($request->has('is_active')) {
+                $updateData['is_active'] = $request->is_active;
             }
+
+            if ($request->filled('password')) {
+                $updateData['password'] = Hash::make($request->password);
+            }
+
+            $user->update($updateData);
 
             $roles = $request->roles;
             if (!$isSuperAdmin) {
                 $roles = array_diff($roles, ['superadmin']);
-                // Si el usuario ya era superadmin (no debería pasar si el admin no lo ve, pero por seguridad)
+                // Si el usuario ya era superadmin
                 if ($user->hasRole('superadmin')) {
                     $roles[] = 'superadmin';
                 }
@@ -159,8 +192,26 @@ class UserManagementController extends Controller
             if ($request->has('branches')) {
                 $validBranches = Branch::where('company_id', $companyId)
                     ->whereIn('id', $request->branches)
-                    ->pluck('id');
+                    ->pluck('id')
+                    ->toArray();
+                
                 $user->branches()->sync($validBranches);
+
+                // 🎯 Si es Kine, sincronizar también el perfil de Doctor
+                if ($user->hasRole('kine') && $user->doctor) {
+                    $doctorBranches = [];
+                    foreach ($validBranches as $bId) {
+                        $doctorBranches[$bId] = [
+                            'status' => 'active',
+                            'mobile_app_access' => true,
+                            'can_create_sessions' => $request->boolean('can_create_sessions', true),
+                            'can_view_sessions' => $request->boolean('can_view_sessions', true),
+                            'can_manage_schedule' => $request->boolean('can_manage_schedule', true),
+                            'status_changed_at' => now(),
+                        ];
+                    }
+                    $user->doctor->branches()->sync($doctorBranches);
+                }
             }
         });
 

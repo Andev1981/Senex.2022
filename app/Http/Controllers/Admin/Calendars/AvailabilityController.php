@@ -55,9 +55,25 @@ class AvailabilityController extends Controller
             'rooms' => Room::where('branch_id', $branchId)->where('status', 'active')->get(),
             'branches' => Branch::where('company_id', $companyId)->get(),
             'filters' => [
-                'date' => $date
+                'date' => $date,
+                'active_branch_id' => $branchId
             ]
         ]);
+    }
+
+    public function updateBranchSchedule(Request $request, Branch $branch)
+    {
+        if ($branch->company_id !== (int)session('current_company_id')) abort(403);
+
+        $validated = $request->validate([
+            'schedule' => 'required|array',
+            'schedule.*.open' => 'nullable|string',
+            'schedule.*.close' => 'nullable|string',
+        ]);
+
+        $branch->update(['schedule' => $validated['schedule']]);
+
+        return back()->with('success', 'Horario de la clínica actualizado.');
     }
 
     public function storeException(Request $request)
@@ -65,9 +81,12 @@ class AvailabilityController extends Controller
         $validated = $request->validate([
             'doctor_id' => 'required|exists:doctors,id',
             'date' => 'required|date',
-            'action' => 'required|in:cancel,override',
-            'override_start_time' => 'nullable|required_if:action,override',
-            'override_end_time' => 'nullable|required_if:action,override',
+            'end_date' => 'nullable|date|after_or_equal:date',
+            'action' => 'required|in:cancel,override,open',
+            'override_start_time' => 'nullable|required_if:action,override,open',
+            'override_end_time' => 'nullable|required_if:action,override,open',
+            'room_id' => 'nullable|exists:rooms,id',
+            'modality' => 'nullable|string|in:onsite,home,online',
             'reason' => 'nullable|string|max:255',
         ]);
 
@@ -90,7 +109,11 @@ class AvailabilityController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:date',
+            'start_time' => 'nullable',
+            'end_time' => 'nullable|required_with:start_time',
             'branch_id' => 'nullable|exists:branches,id',
+            'room_id' => 'nullable|exists:rooms,id',
             'is_recurring' => 'boolean',
         ]);
 
@@ -98,7 +121,7 @@ class AvailabilityController extends Controller
 
         Holiday::create($validated);
 
-        return back()->with('success', 'Día no laboral registrado.');
+        return back()->with('success', 'Evento/Cierre registrado.');
     }
 
     public function destroyHoliday(Holiday $holiday)
@@ -129,7 +152,7 @@ class AvailabilityController extends Controller
             'doctor_id' => 'required|exists:doctors,id',
             'branch_id' => 'required|exists:branches,id',
             'room_id' => 'nullable|exists:rooms,id',
-            'modality' => 'required|in:onsite,home',
+            'modality' => 'required|in:onsite,home,online',
             'rrule' => 'required|string',
             'start_time' => 'required',
             'end_time' => 'required',
@@ -159,7 +182,7 @@ class AvailabilityController extends Controller
 
         $validated = $request->validate([
             'room_id' => 'nullable|exists:rooms,id',
-            'modality' => 'required|in:onsite,home',
+            'modality' => 'required|in:onsite,home,online',
             'rrule' => 'required|string',
             'start_time' => 'required',
             'end_time' => 'required',

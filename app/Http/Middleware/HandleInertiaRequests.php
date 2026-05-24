@@ -224,13 +224,13 @@ class HandleInertiaRequests extends Middleware
                     ->get();
                 if ($contextCompanyId) {
                     $availableBranches = Branch::where('company_id', $contextCompanyId)
-                        ->select('id', 'name', 'is_home_care_only')->get();
+                        ->select('id', 'name', 'allows_onsite', 'allows_home')->get();
                 }
             } else {
                 // Usuarios normales: Solo sus sucursales en ESA empresa
                 $availableBranches = $user->branches()
                     ->where('branches.company_id', $contextCompanyId)
-                    ->select('branches.id', 'branches.name', 'branches.is_home_care_only')->get();
+                    ->select('branches.id', 'branches.name', 'branches.allows_onsite', 'branches.allows_home')->get();
                 }
             // --- 5. DETERMINAR SUCURSAL ACTIVA (Solo lectura) ---
             $activeBranchId = $request->session()->get('active_branch_id');
@@ -250,12 +250,18 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        $doctorBranch = null;
+        if ($user && $user->hasRole('kine') && $user->doctor) {
+            $doctorBranch = $user->doctor->getBranchAttribute();
+        }
+
         return [
             'auth' => [
                 'user' => $user?->only('id', 'name', 'email'),
                 'guard' => 'web',
                 'roles' => fn() => $user?->getRoleNames() ?? [],
                 'permissions' => fn() => $user?->getAllPermissions()->pluck('name') ?? [],
+                'doctor_branch' => $doctorBranch,
             ],
             'current_company' => $currentCompany ? $currentCompany->toArray() : null,
             'all_companies' => $allCompanies,

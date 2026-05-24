@@ -53,10 +53,13 @@ class ProductController extends Controller
             ->with('children')
             ->get();
 
+        $activeBranch = \App\Models\Branch::find(session('active_branch_id'));
+
         return Inertia::render('products/Index', [
             'items' => $items,
             'categories' => $categories,
             'filters'  => $request->only(['search', 'category_id', 'type']),
+            'active_branch' => $activeBranch
         ]);
     }
 
@@ -94,8 +97,22 @@ class ProductController extends Controller
                     'duration_minutes'              => $validated['duration_minutes'] ?? 45,
                     'requires_diagnosis'            => $validated['requires_diagnosis'] ?? false,
                     'requires_referral'             => $validated['requires_referral'] ?? false,
+                    'commission_type'               => $validated['commission_type'] ?? 'fixed_amount',
                     'default_doctor_commission_clp' => $validated['default_doctor_commission_clp'] ?? 0,
+                    'default_doctor_commission_own_clp' => $validated['default_doctor_commission_own_clp'] ?? $validated['default_doctor_commission_clp'] ?? 0,
+                    'default_doctor_commission_assigned_clp' => $validated['default_doctor_commission_assigned_clp'] ?? $validated['default_doctor_commission_clp'] ?? 0,
+                    'default_doctor_commission_percentage' => $validated['default_doctor_commission_percentage'] ?? 0,
+                    'default_doctor_commission_own_percentage' => $validated['default_doctor_commission_own_percentage'] ?? $validated['default_doctor_commission_percentage'] ?? 0,
+                    'default_doctor_commission_assigned_percentage' => $validated['default_doctor_commission_assigned_percentage'] ?? $validated['default_doctor_commission_percentage'] ?? 0,
                     'specialty'                     => $validated['specialty'] ?? null,
+                    'billing_code'                  => $validated['billing_code'] ?? null,
+                    'agenda_color'                  => $validated['agenda_color'] ?? '#3b82f6',
+                    'patient_instructions'          => $validated['patient_instructions'] ?? null,
+                    'allows_onsite'                 => $validated['allows_onsite'] ?? true,
+                    'allows_online'                 => $validated['allows_online'] ?? false,
+                    'allows_home'                   => $validated['allows_home'] ?? false,
+                    'max_simultaneous_patients'     => $validated['max_simultaneous_patients'] ?? 3,
+                    'requires_consent'              => $validated['requires_consent'] ?? false,
                 ]);
             }
 
@@ -137,8 +154,22 @@ class ProductController extends Controller
                         'duration_minutes'              => $validated['duration_minutes'] ?? 45,
                         'requires_diagnosis'            => $validated['requires_diagnosis'] ?? false,
                         'requires_referral'             => $validated['requires_referral'] ?? false,
+                        'commission_type'               => $validated['commission_type'] ?? 'fixed_amount',
                         'default_doctor_commission_clp' => $validated['default_doctor_commission_clp'] ?? 0,
+                        'default_doctor_commission_own_clp' => $validated['default_doctor_commission_own_clp'] ?? $validated['default_doctor_commission_clp'] ?? 0,
+                        'default_doctor_commission_assigned_clp' => $validated['default_doctor_commission_assigned_clp'] ?? $validated['default_doctor_commission_clp'] ?? 0,
+                        'default_doctor_commission_percentage' => $validated['default_doctor_commission_percentage'] ?? 0,
+                        'default_doctor_commission_own_percentage' => $validated['default_doctor_commission_own_percentage'] ?? $validated['default_doctor_commission_percentage'] ?? 0,
+                        'default_doctor_commission_assigned_percentage' => $validated['default_doctor_commission_assigned_percentage'] ?? $validated['default_doctor_commission_percentage'] ?? 0,
                         'specialty'                     => $validated['specialty'] ?? null,
+                        'billing_code'                  => $validated['billing_code'] ?? null,
+                        'agenda_color'                  => $validated['agenda_color'] ?? '#3b82f6',
+                        'patient_instructions'          => $validated['patient_instructions'] ?? null,
+                        'allows_onsite'                 => $validated['allows_onsite'] ?? true,
+                        'allows_online'                 => $validated['allows_online'] ?? false,
+                        'allows_home'                   => $validated['allows_home'] ?? false,
+                        'max_simultaneous_patients'     => $validated['max_simultaneous_patients'] ?? 3,
+                        'requires_consent'              => $validated['requires_consent'] ?? false,
                     ]
                 );
             }

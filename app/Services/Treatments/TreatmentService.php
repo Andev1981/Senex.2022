@@ -418,7 +418,7 @@ class TreatmentService
             }
         }
 
-        return $treatment->current_phase; // Mantener actual si no se puede determinar
+        return $treatment->current_phase?->value; // Mantener actual si no se puede determinar
     }
 
     /**
@@ -426,13 +426,13 @@ class TreatmentService
      */
     private function determineStatus(Treatment $treatment, array $sessionStats, array $dates): ?string
     {
-        // No cambiar si está suspendido o inactivo manualmente
+        // No cambiar si esta suspendido o inactivo manualmente
         if (in_array($treatment->status, [TreatmentStatusEnum::CANCELLED, TreatmentStatusEnum::COMPLETED])) {
             return null;
         }
         /* 'Evaluation','InProgress','Cancelled','Paused','Completed' */
 
-        // Si no es indefinido y alcanzó el total de sesiones
+        // Si no es indefinido y alcanzo el total de sesiones
         if (
             !$treatment->is_indefinite &&
             $treatment->total_sessions &&

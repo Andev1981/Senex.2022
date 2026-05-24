@@ -10,7 +10,6 @@ use App\Models\DoctorCommissionRate;
 use App\Models\Patient;
 use App\Models\Address;
 use App\Models\Commune;
-use App\Models\Province;
 use App\Models\Region;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,24 +60,24 @@ class DoctorAdminController extends Controller
             ->where('a.addressable_type', 'Doctor')
             ->groupBy('a.addressable_id');
 
-        $doctors = Doctor::query()
+        $doctorsQuery = Doctor::query()
             ->where('doctors.company_id', $currentCompanyId)
             ->leftJoin('users', 'users.id', '=', 'doctors.user_id')
             ->leftJoinSub($addrPick, 'addr_pick', function ($join) {
                 $join->on('addr_pick.addressable_id', '=', 'doctors.id');
             })
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
-            ->leftJoin('communes', 'addr.commune_id', '=', 'communes.id')
-            // Join con branch_doctor para obtener estatus en la sucursal actual (si hay una seleccionada)
-            ->leftJoin('branch_doctor', function($join) use ($activeBranchId) {
+            ->leftJoin('communes', 'addr.commune_id', '=', 'communes.id');
+
+        // Join con branch_doctor solo si hay una sucursal activa, para evitar duplicados en la vista global
+        if ($activeBranchId) {
+            $doctorsQuery->leftJoin('branch_doctor', function ($join) use ($activeBranchId) {
                 $join->on('branch_doctor.doctor_id', '=', 'doctors.id')
-                    ->when($activeBranchId, fn($q) => $q->where('branch_doctor.branch_id', '=', $activeBranchId));
-            })
-            ->when($activeBranchId, function ($query) use ($activeBranchId) {
-                $query->whereHas('branches', function ($q) use ($activeBranchId) {
-                    $q->where('branches.id', $activeBranchId);
-                });
-            })
+                    ->where('branch_doctor.branch_id', '=', $activeBranchId);
+            });
+        }
+
+        $doctors = $doctorsQuery
             ->select([
                 'doctors.*',
                 'users.email as user_email', 
@@ -88,7 +87,6 @@ class DoctorAdminController extends Controller
                 'addr.details',
                 'addr.commune_id',
                 'addr.region_id',
-                'addr.province_id',
                 'addr.id as address_id',
                 'branch_doctor.status as branch_status',
                 'branch_doctor.mobile_app_access',
@@ -110,17 +108,17 @@ class DoctorAdminController extends Controller
 
         // 3. Obtener datos geográficos
         $regions = Region::orderBy('name')->get(['id', 'name'])->map(fn($r) => ['value' => (string)$r->id, 'label' => $r->name]);
-        $provinces = Province::orderBy('name')->get(['id', 'name', 'region_id'])->map(fn($p) => ['value' => (string)$p->id, 'label' => $p->name, 'region_id' => (string)$p->region_id]);
-        $communes = Commune::orderBy('name')->get(['id', 'name', 'province_id'])->map(fn($c) => ['value' => (string)$c->id, 'label' => $c->name, 'province_id' => (string)$c->province_id]);
+        $communes = Commune::orderBy('name')->get(['id', 'name', 'region_id'])->map(fn($c) => ['value' => (string)$c->id, 'label' => $c->name, 'region_id' => (string)$c->region_id]);
         
         // 4. Determinar Sucursales Disponibles
-        if ($user->isSuperAdmin()) {
+        // Un Administrador de empresa debe poder ver TODAS las sucursales de su empresa para asignar profesionales
+        if ($user->hasRole(['superadmin', 'admin'])) {
             $availableBranches = Branch::where('company_id', $currentCompanyId)
-                ->select(['id', 'name'])->get();
+                ->select(['id', 'name', 'allows_onsite', 'allows_home', 'allows_online'])->get();
         } else {
             $availableBranches = $user->branches()
                 ->where('branches.company_id', $currentCompanyId)
-                ->select(['branches.id', 'branches.name'])->get();
+                ->select(['branches.id', 'branches.name', 'allows_onsite', 'allows_home', 'allows_online'])->get();
         }
 
         // 5. Disponibilidad y Salas Globales para la empresa actual
@@ -134,7 +132,6 @@ class DoctorAdminController extends Controller
             'doctors'   => $doctors,
             'items'     => $items,
             'regions'   => $regions,
-            'provinces' => $provinces,
             'communes'  => $communes,
             'branches'  => $availableBranches,
             'availabilities' => $availabilities,
@@ -152,7 +149,7 @@ class DoctorAdminController extends Controller
         $currentCompanyId = session('current_company_id');
         
         // 1. Cargar relaciones críticas
-        $doctor->load(['user', 'branches', 'address.commune.province.region', 'commissionRates.item', 'patients']);
+        $doctor->load(['user', 'branches', 'address.commune.region', 'commissionRates.item', 'patients']);
 
         // 2. Estadísticas Financieras (Últimos 6 meses para gráfico)
         $chartData = [];
@@ -177,9 +174,13 @@ class DoctorAdminController extends Controller
             ->whereDoesntHave('payrollDetail')
             ->sum('doctor_amount_clp');
 
+        $lastPayroll = \App\Models\Payroll::where('doctor_id', $doctor->id)
+            ->orderBy('period_end', 'desc')
+            ->first();
+
         $stats = [
             'total_sessions' => $doctor->treatmentSessions()->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)->count(),
-            'month_sessions' => $doctor->treatmentSessions()
+            'sessions_month' => $doctor->treatmentSessions()
                 ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED)
                 ->whereMonth('date', now()->month)
                 ->whereYear('date', now()->year)
@@ -189,35 +190,73 @@ class DoctorAdminController extends Controller
                 ->whereMonth('date', now()->month)
                 ->whereYear('date', now()->year)
                 ->sum('doctor_amount_clp'),
-            'pending_sessions' => $doctor->treatmentSessions()
-                ->where('status', \App\Enums\AppointmentStatusEnum::SCHEDULED)
-                ->where('date', '>=', now()->toDateString())
+            'pending_sessions' => $doctor->appointments()
+                ->whereIn('status', [\App\Enums\AppointmentStatusEnum::SCHEDULED, \App\Enums\AppointmentStatusEnum::CONFIRMED])
+                ->where('start_at', '>=', now())
                 ->count(),
             'chart_data' => $chartData,
             'pending_earnings' => $pendingEarnings,
+            'last_payroll' => $lastPayroll ? [
+                'total_amount' => (int) $lastPayroll->total_payable_clp
+            ] : null,
         ];
 
-        // 4. Últimas 10 sesiones (Formateadas para el frontend)
-        $sessions = $doctor->treatmentSessions()
-            ->with(['patient', 'item'])
+        // 4. Obtener sesiones y citas unificadas (Pasado y Futuro)
+        $pastSessions = $doctor->treatmentSessions()
+            ->with(['patient', 'item', 'payrollDetail'])
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
-            ->limit(10)
+            ->limit(30)
             ->get()
             ->map(function ($s) {
                 return [
-                    'id' => $s->id,
+                    'id' => "session_{$s->id}",
+                    'source' => 'session',
                     'date' => $s->date->toDateString(),
                     'time' => $s->time->format('H:i'),
-                    'status' => $s->status,
-                    'doctor_amount_clp' => $s->doctor_amount_clp,
+                    'status' => $s->status instanceof \App\Enums\AppointmentStatusEnum ? $s->status->value : $s->status,
+                    'doctor_amount_clp' => (int) $s->doctor_amount_clp,
                     'session_type' => ['name' => $s->item->name],
                     'patient' => [
                         'name' => $s->patient->name,
                         'last_name' => $s->patient->last_name,
+                        'full_name' => "{$s->patient->name} {$s->patient->last_name}",
                     ],
+                    'payroll_id' => $s->payrollDetail?->payroll_id,
                 ];
             });
+
+        $upcomingAppointments = $doctor->appointments()
+            ->where('start_at', '>=', now()->startOfDay())
+            ->whereDoesntHave('treatmentSession') // Evitar duplicar las que ya se están atendiendo
+            ->with(['patient', 'item'])
+            ->orderBy('start_at', 'asc')
+            ->limit(20)
+            ->get()
+            ->map(function ($a) {
+                return [
+                    'id' => "appointment_{$a->id}",
+                    'source' => 'appointment',
+                    'date' => $a->start_at->toDateString(),
+                    'time' => $a->start_at->format('H:i'),
+                    'status' => $a->status instanceof \App\Enums\AppointmentStatusEnum ? $a->status->value : $a->status,
+                    'doctor_amount_clp' => 0, 
+                    'session_type' => ['name' => $a->item->name],
+                    'patient' => [
+                        'name' => $a->patient->name,
+                        'last_name' => $a->patient->last_name,
+                        'full_name' => "{$a->patient->name} {$a->patient->last_name}",
+                    ],
+                    'payroll_id' => null,
+                ];
+            });
+
+        // Combinar y ordenar por fecha/hora descendente (más nuevo arriba)
+        $sessions = $pastSessions->concat($upcomingAppointments)
+            ->sortByDesc(function ($item) {
+                return $item['date'] . ' ' . $item['time'];
+            })
+            ->values();
 
         // 5. Liquidaciones (Payrolls)
         $payrolls = \App\Models\Payroll::where('doctor_id', $doctor->id)
@@ -248,26 +287,29 @@ class DoctorAdminController extends Controller
 
         // 8. Datos geográficos
         $regions = Region::orderBy('name')->get(['id', 'name'])->map(fn($r) => ['value' => (string)$r->id, 'label' => $r->name]);
-        $provinces = Province::orderBy('name')->get(['id', 'name', 'region_id'])->map(fn($p) => ['value' => (string)$p->id, 'label' => $p->name, 'region_id' => (string)$p->region_id]);
-        $communes = Commune::orderBy('name')->get(['id', 'name', 'province_id'])->map(fn($c) => ['value' => (string)$c->id, 'label' => $c->name, 'province_id' => (string)$c->province_id]);
+        $communes = Commune::orderBy('name')->get(['id', 'name', 'region_id'])->map(fn($c) => ['value' => (string)$c->id, 'label' => $c->name, 'region_id' => (string)$c->region_id]);
 
         // 9. Sucursales disponibles para edición
         $user = auth()->user();
-        if ($user->isSuperAdmin()) {
+        if ($user->hasRole(['superadmin', 'admin'])) {
             $availableBranches = Branch::where('company_id', $currentCompanyId)
-                ->select(['id', 'name'])->get();
+                ->select(['id', 'name', 'allows_onsite', 'allows_home', 'allows_online'])->get();
         } else {
             $availableBranches = $user->branches()
                 ->where('branches.company_id', $currentCompanyId)
-                ->select(['branches.id', 'branches.name'])->get();
+                ->select(['branches.id', 'branches.name', 'allows_onsite', 'allows_home', 'allows_online'])->get();
         }
 
         $activeBranchId = session('active_branch_id');
         $currentBranchPivot = $doctor->branches->where('id', $activeBranchId)->first()?->pivot;
 
-        // 10. Disponibilidad y Salas
+        // 10. Disponibilidad, Excepciones y Salas
         $availabilities = \App\Models\Availability::where('doctor_id', $doctor->id)
             ->with(['branch', 'room'])
+            ->get();
+
+        $exceptions = \App\Models\AvailabilityException::where('doctor_id', $doctor->id)
+            ->orderBy('date', 'desc')
             ->get();
         
         $allAvailabilities = \App\Models\Availability::where('company_id', $currentCompanyId)
@@ -293,8 +335,7 @@ class DoctorAdminController extends Controller
                 'user' => $doctor->user,
                 'comuna_name' => $doctor->address?->commune?->name,
                 'address' => $doctor->address,
-                'region_id' => $doctor->address?->region_id ?: $doctor->address?->commune?->province?->region_id,
-                'province_id' => $doctor->address?->province_id ?: $doctor->address?->commune?->province_id,
+                'region_id' => $doctor->address?->region_id ?: $doctor->address?->commune?->region_id,
                 'commune_id' => $doctor->address?->commune_id,
                 'street' => $doctor->address?->street,
                 'number' => $doctor->address?->number,
@@ -309,10 +350,10 @@ class DoctorAdminController extends Controller
             'patients' => $allPatients,
             'session_types' => $items,
             'regions' => $regions,
-            'provinces' => $provinces,
             'communes' => $communes,
             'branches' => $availableBranches,
             'availabilities' => $availabilities,
+            'exceptions' => $exceptions,
             'all_availabilities' => $allAvailabilities,
             'rooms' => $allRooms,
         ]);
@@ -324,8 +365,12 @@ class DoctorAdminController extends Controller
             'rules' => 'required|array',
             'rules.*.item_id' => 'required|exists:items,id',
             'rules.*.commission_type' => 'required|in:fixed_amount,percentage',
-            'rules.*.amount_clp' => 'required_if:rules.*.commission_type,fixed_amount|nullable|numeric',
-            'rules.*.commission_percentage' => 'required_if:rules.*.commission_type,percentage|nullable|numeric|min:0|max:100',
+            'rules.*.amount_clp' => 'nullable|numeric',
+            'rules.*.amount_clp_own' => 'nullable|numeric',
+            'rules.*.amount_clp_assigned' => 'nullable|numeric',
+            'rules.*.commission_percentage' => 'nullable|numeric|min:0|max:100',
+            'rules.*.commission_percentage_own' => 'nullable|numeric|min:0|max:100',
+            'rules.*.commission_percentage_assigned' => 'nullable|numeric|min:0|max:100',
         ]);
 
         DB::transaction(function () use ($doctor, $validated) {
@@ -334,10 +379,14 @@ class DoctorAdminController extends Controller
             foreach ($validated['rules'] as $rule) {
                 $doctor->commissionRates()->create([
                     'company_id'      => $doctor->company_id,
-                    'item_id' => $rule['item_id'],
+                    'item_id'         => $rule['item_id'],
                     'commission_type' => $rule['commission_type'],
                     'amount_clp'      => $rule['amount_clp'] ?? 0,
+                    'amount_clp_own'  => $rule['amount_clp_own'] ?? $rule['amount_clp'] ?? 0,
+                    'amount_clp_assigned' => $rule['amount_clp_assigned'] ?? $rule['amount_clp'] ?? 0,
                     'commission_percentage' => $rule['commission_percentage'] ?? 0,
+                    'commission_percentage_own' => $rule['commission_percentage_own'] ?? $rule['commission_percentage'] ?? 0,
+                    'commission_percentage_assigned' => $rule['commission_percentage_assigned'] ?? $rule['commission_percentage'] ?? 0,
                     'is_active'       => true,
                     'effective_from'  => now(),
                 ]);
@@ -350,19 +399,27 @@ class DoctorAdminController extends Controller
     public function assignPatient(Request $request, Doctor $doctor)
     {
         $request->validate([
-            'patient_id' => 'required|exists:patients,id'
+            'patient_id' => 'required|exists:patients,id',
+            'is_own_patient' => 'nullable|boolean'
         ]);
 
-        $doctor->patients()->syncWithoutDetaching([$request->patient_id]);
+        $doctor->patients()->syncWithoutDetaching([
+            $request->patient_id => [
+                'company_id' => $doctor->company_id,
+                'branch_id' => session('active_branch_id'),
+                'is_own_patient' => $request->boolean('is_own_patient'),
+                'started_at' => now(),
+            ]
+        ]);
 
-        return back()->with('success', 'Paciente asignado correctamente.');
+        return response()->json(['success' => true, 'message' => 'Paciente asignado correctamente.']);
     }
 
     public function unassignPatient(Doctor $doctor, Patient $patient)
     {
         $doctor->patients()->detach($patient->id);
 
-        return back()->with('success', 'Paciente desvinculado correctamente.');
+        return response()->json(['success' => true, 'message' => 'Paciente desvinculado correctamente.']);
     }
 
     public function store(Request $request)
@@ -380,7 +437,6 @@ class DoctorAdminController extends Controller
             'branches' => 'nullable|array',
             'branches.*' => 'exists:branches,id',
             'region_id' => 'nullable|exists:regions,id',
-            'province_id' => 'nullable|exists:provinces,id',
             'commune_id' => 'nullable|exists:communes,id',
             'street' => 'nullable|string|max:255',
             'number' => 'nullable|string|max:20',
@@ -449,7 +505,6 @@ class DoctorAdminController extends Controller
                     ['addressable_type' => 'Doctor', 'addressable_id' => $doctor->id],
                     [
                         'region_id' => $validated['region_id'] ?? null,
-                        'province_id' => $validated['province_id'] ?? null,
                         'commune_id' => $validated['commune_id'] ?? null,
                         'street' => $validated['street'] ?? null,
                         'number' => $validated['number'] ?? null,
@@ -478,7 +533,6 @@ class DoctorAdminController extends Controller
             'branches' => 'nullable|array',
             'branches.*' => 'exists:branches,id',
             'region_id' => 'nullable|exists:regions,id',
-            'province_id' => 'nullable|exists:provinces,id',
             'commune_id' => 'nullable|exists:communes,id',
             'street' => 'nullable|string|max:255',
             'number' => 'nullable|string|max:20',
@@ -518,7 +572,6 @@ class DoctorAdminController extends Controller
                     ['addressable_type' => 'Doctor', 'addressable_id' => $doctor->id],
                     [
                         'region_id' => $validated['region_id'] ?? null,
-                        'province_id' => $validated['province_id'] ?? null,
                         'commune_id' => $validated['commune_id'] ?? null,
                         'street' => $validated['street'] ?? null,
                         'number' => $validated['number'] ?? null,
@@ -553,7 +606,6 @@ class DoctorAdminController extends Controller
                     'birth_date' => $doctor->birth_date ? $doctor->birth_date->toDateString() : null,
                     'gender' => $doctor->gender,
                     'region_id' => $doctor->address?->region_id,
-                    'province_id' => $doctor->address?->province_id,
                     'commune_id' => $doctor->address?->commune_id,
                     'street' => $doctor->address?->street,
                     'number' => $doctor->address?->number,

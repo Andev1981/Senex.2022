@@ -98,7 +98,7 @@ class ClientAuthController extends Controller
 
         // Enviar código por email
         try {
-            /*  $patient->notify(new PatientAccessCodeNotification($accessCode)); */
+            $patient->notify(new PatientAccessCodeNotification($accessCode));
 
             Log::info('Código de acceso enviado a paciente', [
                 'patient_id' => $patient->id,

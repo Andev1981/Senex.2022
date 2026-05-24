@@ -89,7 +89,8 @@ class PayrollController extends Controller
         $payroll->load([
             'doctor', 
             'details.patient', 
-            'details.item'
+            'details.item',
+            'details.treatmentSession.diagnostic'
         ]);
         
         return response()->json($payroll);

@@ -154,7 +154,7 @@ class InvoiceService
       $invoice->amount_gross_clp               = (int)($data['final_shares']['amount_gross_clp'] ?? $totalDocumento);
       $invoice->amount_insurance_primary_clp   = (int)($data['final_shares']['amount_insurance_primary_clp'] ?? 0);
       $invoice->amount_insurance_secondary_clp = (int)($data['final_shares']['amount_insurance_secondary_clp'] ?? 0);
-      $invoice->amount_patient_clp             = (int)$payment->amount_clp;
+      $invoice->amount_patient_clp             = (int)($data['final_shares']['amount_patient_clp'] ?? $totalDocumento);
 
       $invoice->issue_date     = now();
       // En Caja/POS siempre se emite Boleta (luego el calculador ajusta a 41 si es exento)
@@ -168,9 +168,10 @@ class InvoiceService
       // ... vincular pago y crear ítems ...
       // Vincular Pago
       \App\Models\PaymentAllocation::create([
+          'company_id' => $invoice->company_id,
           'payment_id' => $payment->id,
           'invoice_id' => $invoice->id,
-          'amount_clp' => $payment->amount_clp,
+          'amount_clp' => $invoice->total_amount_clp,
       ]);
 
       // 4. Crear los ítems vinculados
@@ -272,5 +273,65 @@ class InvoiceService
           ],
       ];
       return $this->processInvoice($payment, $invoiceData);
+  }
+
+  /**
+   * Emite una Boleta Exenta para una sesión consumida de un Pack (Plan).
+   * Se utiliza cuando el Pack se pagó por adelantado y la boleta se difiere a la prestación.
+   */
+  public function issueForPackConsumption(\App\Models\TreatmentSession $session, \App\Models\PatientPlan $pack): Invoice
+  {
+      return DB::transaction(function () use ($session, $pack) {
+          $plan = $pack->plan;
+          
+          // Calcular precio unitario proporcional por sesión
+          $totalPrice = (int)($pack->payment->amount_clp ?? $plan->price);
+          $totalSessions = (int)($pack->sessions_included ?? 1);
+          if ($totalSessions <= 0) $totalSessions = 1;
+          
+          $unitPrice = (int) floor($totalPrice / $totalSessions);
+
+          // Obtener el pago original para vincularlo
+          $payment = $pack->payment;
+          
+          // 🎯 Obtener Diagnóstico del tratamiento asociado para la glosa
+          $diagnosticStr = "";
+          if ($session->treatment && $session->treatment->diagnostic_code) {
+              $diagnosticStr = " | Diagnóstico: " . $session->treatment->diagnostic_code;
+          }
+
+          $invoiceData = [
+              'patient_id' => $session->patient_id,
+              'services_to_bill' => [
+                  [
+                      'name' => "Consumo Pack: {$plan->name} (Sesión #{$session->id})" . $diagnosticStr,
+                      'quantity' => 1,
+                      'unit_price_clp' => $unitPrice,
+                      'unit_patient_clp' => $unitPrice,
+                      'is_exempt' => true,
+                      'sellable_type' => 'Item',
+                      'sellable_id' => $session->item_id,
+                      'treatment_session_id' => $session->id,
+                  ]
+              ],
+              'final_shares' => [
+                  'amount_gross_clp' => $unitPrice,
+                  'amount_insurance_primary_clp' => 0,
+                  'amount_insurance_secondary_clp' => 0,
+                  'discount_clp' => 0,
+              ],
+          ];
+
+          // Emitimos la boleta
+          // Nota: processInvoice ya crea la relación PaymentAllocation básica
+          $invoice = $this->processInvoice($payment, $invoiceData);
+
+          // 🎯 Sincronizar el allocation con la sesión para trazabilidad total
+          \App\Models\PaymentAllocation::where('invoice_id', $invoice->id)
+              ->where('payment_id', $payment->id)
+              ->update(['treatment_session_id' => $session->id]);
+
+          return $invoice;
+      });
   }
 }

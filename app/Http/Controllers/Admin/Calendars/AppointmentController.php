@@ -9,17 +9,22 @@ use App\Models\Patient;
 use App\Models\Item;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Services\AgendaService;
+use App\Services\Treatments\TreatmentSessionService;
 
 class AppointmentController extends Controller
 {
     protected $agendaService;
+    protected $sessionService;
 
-    public function __construct(AgendaService $agendaService)
+    public function __construct(AgendaService $agendaService, TreatmentSessionService $sessionService)
     {
         $this->agendaService = $agendaService;
+        $this->sessionService = $sessionService;
     }
 
     public function index()
@@ -27,7 +32,8 @@ class AppointmentController extends Controller
         $companyId = session('current_company_id');
 
         $appointments = Appointment::where('company_id', $companyId)
-            ->with(['patient', 'doctor', 'item', 'room'])
+            ->where('status', '!=', \App\Enums\AppointmentStatusEnum::CANCELLED)
+            ->with(['patient', 'doctor', 'item.serviceDetail', 'room'])
             ->get()
             ->map(function ($apt) {
                 return [
@@ -35,6 +41,9 @@ class AppointmentController extends Controller
                     'date' => $apt->start_at->format('Y-m-d'),
                     'start_time' => $apt->start_at->format('H:i'),
                     'end_time' => $apt->end_at->format('H:i'),
+                    'patient_id' => $apt->patient_id,
+                    'doctor_id' => $apt->doctor_id,
+                    'room_id' => $apt->room_id,
                     'patient' => $apt->patient,
                     'doctor' => $apt->doctor,
                     'item' => $apt->item,
@@ -45,15 +54,49 @@ class AppointmentController extends Controller
                 ];
             });
 
+        // También traemos sesiones manuales (sin cita) para bloquear disponibilidad real
+        $manualSessions = \App\Models\TreatmentSession::where('company_id', $companyId)
+            ->whereNull('appointment_id')
+            ->whereNotIn('status', [\App\Enums\AppointmentStatusEnum::CANCELLED, \App\Enums\AppointmentStatusEnum::NO_SHOW])
+            ->with(['patient', 'doctor', 'item.serviceDetail', 'room'])
+            ->get()
+            ->map(function ($sess) {
+                return [
+                    'id' => "sess_{$sess->id}",
+                    'date' => $sess->date->format('Y-m-d'),
+                    'start_time' => $sess->time->format('H:i'),
+                    'end_time' => $sess->time->copy()->addMinutes(45)->format('H:i'), // Estimación 45m
+                    'patient_id' => $sess->patient_id,
+                    'doctor_id' => $sess->doctor_id,
+                    'room_id' => $sess->room_id,
+                    'patient' => $sess->patient,
+                    'doctor' => $sess->doctor,
+                    'item' => $sess->item,
+                    'room' => $sess->room,
+                    'status' => $sess->status,
+                    'is_manual_session' => true
+                ];
+            });
+
         return Inertia::render('agendas/AgendaCalendar', [
-            'appointments' => $appointments,
+            'appointments' => $appointments->concat($manualSessions),
+            'currentBranch' => \App\Models\Branch::find(session('active_branch_id')),
             'doctors' => Doctor::where('company_id', $companyId)->where('is_active', true)->get(),
-            'patients' => Patient::where('company_id', $companyId)->get(),
-            'items' => Item::where('company_id', $companyId)->get(),
+            'patients' => Patient::where('company_id', $companyId)->with(['insurance', 'activeTreatments'])->get(),
+            'items' => Item::where('company_id', $companyId)->with('serviceDetail')->get(),
+            'agreements' => \App\Models\Agreement::where('company_id', $companyId)
+                ->where('is_active', true)
+                ->with(['rules' => function($q) {
+                    $q->select('id', 'agreement_id', 'item_id', 'plan_id', 'patient_share_clp', 'insurance_share_clp', 'patient_percentage');
+                }])
+                ->get(['id', 'name', 'insurance_id']),
             'rooms' => Room::where('branch_id', session('active_branch_id'))->get(),
             'availabilities' => \App\Models\Availability::where('company_id', $companyId)->get(),
             'holidays' => \App\Models\Holiday::where('company_id', $companyId)->get(),
-        ]);
+            'exceptions' => \App\Models\AvailabilityException::where('company_id', $companyId)->with('doctor')->get(),
+            'regions' => \Illuminate\Support\Facades\Cache::remember('geo_regions', 86400, fn() => \App\Models\Region::all(['id', 'name'])),
+            'communes' => \Illuminate\Support\Facades\Cache::remember('geo_communes', 86400, fn() => \App\Models\Commune::all(['id', 'name', 'region_id'])),
+            ]);
     }
 
     public function getAvailableSlots(Request $request)
@@ -76,11 +119,20 @@ class AppointmentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'patient_id' => 'required|exists:patients,id',
+            'patient_id' => [
+                'required',
+                'exists:patients,id',
+                function ($attribute, $value, $fail) {
+                    $patient = Patient::find($value);
+                    if ($patient && (empty($patient->rut) || empty($patient->email) || empty($patient->phone))) {
+                        $fail('El perfil del paciente está incompleto (RUT, Email o Teléfono faltante). Por favor actualícelo antes de agendar.');
+                    }
+                }
+            ],
             'doctor_id' => 'required|exists:doctors,id',
             'item_id' => 'required|exists:items,id',
             'room_id' => 'nullable|exists:rooms,id',
-            'modality' => 'required|in:onsite,home',
+            'modality' => 'required|in:onsite,home,online',
             'date' => 'required|date',
             'start_time' => 'required',
             'end_time' => 'required',
@@ -98,10 +150,44 @@ class AppointmentController extends Controller
             return back()->withErrors(['start_time' => 'No se pueden agendar citas en el pasado.']);
         }
 
-        // 2. Validar que el Profesional esté de turno (Shift Check)
+        // 1.5. Validar Modalidad contra Sucursal e Ítem
+        $branch = \App\Models\Branch::find(session('active_branch_id'));
+        $item = Item::with('serviceDetail')->findOrFail($validated['item_id']);
+        
+        $modality = $validated['modality'];
+        if ($branch && !$branch->{"allows_{$modality}"}) {
+            return back()->withErrors(['modality' => 'Esta modalidad no está permitida en la sucursal actual.']);
+        }
+        
+        if ($item->serviceDetail && !$item->serviceDetail->{"allows_{$modality}"}) {
+            return back()->withErrors(['modality' => 'El servicio seleccionado no permite esta modalidad de atención.']);
+        }
+
+        // 1.8 Validar Disponibilidad del Paciente (NUEVA REGLA)
+        $patientStatus = $this->agendaService->isPatientAvailable($validated['patient_id'], $start_at, $end_at);
+        if (!$patientStatus['is_available']) {
+            return back()->withErrors(['patient_id' => $patientStatus['reason']]);
+        }
+
+        // 2. Validar Capacidad (3 sesiones simultáneas y capacidad de Box)
         $doctor = Doctor::findOrFail($validated['doctor_id']);
-        if (!$this->agendaService->isDoctorOnDuty($doctor, $start_at, $end_at)) {
-            return back()->withErrors(['doctor_id' => 'El profesional no tiene turno asignado en este horario o está en colación.']);
+        $room = $validated['room_id'] ? Room::find($validated['room_id']) : null;
+        
+        $capacityStatus = $this->agendaService->getSlotOccupancyStatus(
+            $doctor, 
+            $start_at, 
+            $end_at, 
+            $room, 
+            $validated['modality']
+        );
+
+        if (!$capacityStatus['is_available']) {
+            return back()->withErrors(['doctor_id' => "Capacidad excedida: {$capacityStatus['reason']}"]);
+        }
+
+        // 3. Validar que el Profesional esté de turno (Shift Check)
+        if (!$this->agendaService->isDoctorOnDuty($doctor, $start_at, $end_at, session('active_branch_id'))) {
+            return back()->withErrors(['start_time' => 'El profesional no tiene disponibilidad configurada en este horario o el centro está cerrado.']);
         }
 
         $status = $request->boolean('is_direct') ? \App\Enums\AppointmentStatusEnum::IN_PROGRESS : \App\Enums\AppointmentStatusEnum::SCHEDULED;
@@ -122,9 +208,28 @@ class AppointmentController extends Controller
             'started_at' => $request->boolean('is_direct') ? now() : null,
         ]);
 
+        // 🎯 ASIGNACIÓN AUTOMÁTICA: Vincular paciente al doctor para visibilidad de ficha clínica
+        // Obtenemos si el paciente es propio según la asignación previa o actual
+        $assignment = \App\Models\DoctorPatientAssignment::active()
+            ->where('patient_id', $appointment->patient_id)
+            ->where('doctor_id', $appointment->doctor_id)
+            ->first();
+
+        if (!$assignment) {
+            $assignment = \App\Models\DoctorPatientAssignment::create([
+                'company_id' => $appointment->company_id,
+                'branch_id'  => $appointment->branch_id,
+                'patient_id' => $appointment->patient_id,
+                'doctor_id'  => $appointment->doctor_id,
+                'role'       => 'therapist',
+                'is_own_patient' => false, // Por defecto asignado si no existe previa asignación como propio
+                'started_at' => now(),
+            ]);
+        }
+
         // 3. Si es Atención Directa, crear la Sesión de inmediato
         if ($request->boolean('is_direct')) {
-            \App\Models\TreatmentSession::create([
+            $this->sessionService->createSession([
                 'company_id' => $appointment->company_id,
                 'branch_id' => $appointment->branch_id,
                 'patient_id' => $appointment->patient_id,
@@ -137,6 +242,7 @@ class AppointmentController extends Controller
                 'status' => \App\Enums\AppointmentStatusEnum::IN_PROGRESS,
                 'checked_in_at' => now(),
                 'started_at' => now(),
+                'is_own_patient' => (bool)$assignment->is_own_patient,
             ]);
         }
 
@@ -155,38 +261,74 @@ class AppointmentController extends Controller
         return back()->with('success', $msg);
     }
 
-    public function checkin(Appointment $appointment)
+    public function checkin(Request $request, Appointment $appointment)
     {
         if ($appointment->company_id !== (int)session('current_company_id')) {
             abort(403);
         }
 
+        $doctorId = $request->input('doctor_id', $appointment->doctor_id);
+        $roomId = $request->input('room_id', $appointment->room_id);
+
+        // 🛑 VALIDACIÓN DE DISPONIBILIDAD Y CAPACIDAD (Si cambió el doctor o room)
+        $doctor = Doctor::findOrFail($doctorId);
+        $room = $roomId ? Room::find($roomId) : null;
+
+        if ($doctorId != $appointment->doctor_id) {
+            if (!$this->agendaService->isDoctorOnDuty($doctor, $appointment->start_at, $appointment->end_at, $appointment->branch_id)) {
+                return back()->withErrors(['doctor_id' => 'El profesional seleccionado no tiene disponibilidad configurada en este horario.']);
+            }
+        }
+
+        $capacityStatus = $this->agendaService->getSlotOccupancyStatus(
+            $doctor, 
+            $appointment->start_at, 
+            $appointment->end_at, 
+            $room, 
+            $appointment->modality->value ?? 'onsite'
+        );
+
+        if (!$capacityStatus['is_available']) {
+            return back()->withErrors(['doctor_id' => "Capacidad excedida: {$capacityStatus['reason']}"]);
+        }
+
         // 1. Actualizar Cita
         $appointment->update([
             'status' => \App\Enums\AppointmentStatusEnum::CHECKED_IN,
+            'doctor_id' => $doctorId,
+            'room_id' => $roomId,
             'check_in_at' => now()
         ]);
 
-        // 2. Crear o Buscar Sesión de Tratamiento vinculada
-        // Si la cita ya tiene un tratamiento previo o es parte de uno, lo vinculamos
-        $session = \App\Models\TreatmentSession::updateOrCreate(
-            ['appointment_id' => $appointment->id],
-            [
-                'company_id' => $appointment->company_id,
-                'branch_id' => $appointment->branch_id,
-                'patient_id' => $appointment->patient_id,
-                'doctor_id' => $appointment->doctor_id,
-                'item_id' => $appointment->item_id,
-                'room_id' => $appointment->room_id,
-                'date' => $appointment->start_at->toDateString(),
-                'time' => $appointment->start_at->toTimeString(),
-                'status' => \App\Enums\AppointmentStatusEnum::CHECKED_IN,
-                'checked_in_at' => now(),
-            ]
+        // 2. Asegurar Asignación para el doctor final (por si cambió)
+        \App\Models\DoctorPatientAssignment::updateOrCreate(
+            ['patient_id' => $appointment->patient_id, 'doctor_id' => $doctorId, 'ended_at' => null],
+            ['company_id' => $appointment->company_id, 'branch_id' => $appointment->branch_id]
         );
 
-        // 3. Generar Deuda / Ítem de Cobro (Lógica simplificada por ahora)
-        // Aquí se dispararía el InvoiceService en el futuro
+        // 3. Crear o Buscar Sesión de Tratamiento vinculada
+        $sessionData = [
+            'company_id' => $appointment->company_id,
+            'branch_id' => $appointment->branch_id,
+            'patient_id' => $appointment->patient_id,
+            'doctor_id' => $doctorId,
+            'item_id' => $appointment->item_id,
+            'room_id' => $roomId,
+            'appointment_id' => $appointment->id,
+            'date' => $appointment->start_at->toDateString(),
+            'time' => $appointment->start_at->toTimeString(),
+            'status' => \App\Enums\AppointmentStatusEnum::CHECKED_IN,
+            'checked_in_at' => now(),
+        ];
+
+        // Buscamos si ya existe la sesión
+        $session = \App\Models\TreatmentSession::where('appointment_id', $appointment->id)->first();
+
+        if ($session) {
+            $this->sessionService->updateSession($session, $sessionData);
+        } else {
+            $this->sessionService->createSession($sessionData);
+        }
 
         return back()->with('success', 'Paciente recepcionado. Ya puede pasar a sala de espera.');
     }
@@ -207,5 +349,33 @@ class AppointmentController extends Controller
         });
 
         return back()->with('success', 'Cita anulada.');
+    }
+
+    /**
+     * Marca cita como ausente (No-Show)
+     */
+    public function absent(Appointment $appointment)
+    {
+        if ($appointment->company_id !== (int)session('current_company_id')) {
+            abort(403);
+        }
+
+        DB::transaction(function () use ($appointment) {
+            $appointment->update(['status' => \App\Enums\AppointmentStatusEnum::NO_SHOW]);
+
+            if ($appointment->treatmentSession) {
+                $appointment->treatmentSession->update(['status' => \App\Enums\AppointmentStatusEnum::NO_SHOW]);
+            }
+        });
+
+        return back()->with('success', 'Cita marcada como ausente.');
+    }
+
+    /**
+     * Elimina/Anula una cita (Alias de cancel para el recurso)
+     */
+    public function destroy(Appointment $appointment)
+    {
+        return $this->cancel($appointment);
     }
 }

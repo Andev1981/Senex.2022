@@ -27,7 +27,8 @@ class TreatmentSessionService
         private PaymentService $paymentService,
         private PlanService $planService,
         private TreatmentService $treatmentService,
-        private \App\Services\AgreementService $agreementService
+        private \App\Services\AgreementService $agreementService,
+        private \App\Services\AgendaService $agendaService
     ) {}
 
     public function createSession(array $data): TreatmentSession
@@ -36,7 +37,7 @@ class TreatmentSessionService
             $doctor = Doctor::findOrFail($data['doctor_id']);
 
             if (isset($data['doctor_id']) && isset($data['date']) && isset($data['time'])) {
-                $this->validateDoctorAvailability($data['doctor_id'], $data['date'], $data['time']);
+                $this->validateDoctorAvailability($doctor, $data['date'], $data['time'], $data['room_id'] ?? null);
                 if (isset($data['patient_id'])) {
                     $this->validatePatientAvailability($data['patient_id'], $data['date'], $data['time']);
                 }
@@ -49,15 +50,49 @@ class TreatmentSessionService
 
             $item = Item::findOrFail($itemId);
 
-            // Lógica de Comisión (Simplificada para brevedad, asumiendo que ya funciona)
-            $doctorAmount = (int)($item->serviceDetail?->default_doctor_commission_clp ?? 0);
-            
+            // --- APLICACIÓN DE CONVENIOS (PRICING) ---
+            // Si no viene un monto manual, intentamos aplicar la regla de convenio activa
             if (empty($data['patient_amount_clp']) || (int)$data['patient_amount_clp'] === 0) {
-                $data['patient_amount_clp'] = (int)($item->price ?? 0);
+                $rule = $this->agreementService->getApplicableRule($data['patient_id'], $itemId);
+                if ($rule) {
+                    $data['patient_amount_clp'] = $rule->patient_share_clp;
+                    $data['insurance_share_clp'] = $rule->insurance_share_clp;
+                    $data['patient_amount_gross_clp'] = $rule->gross_price_clp; // Para auditoría
+                } else {
+                    $data['patient_amount_clp'] = (int)($item->price ?? 0);
+                    $data['insurance_share_clp'] = 0;
+                }
             }
 
-            $data['doctor_amount_clp'] = $doctorAmount;
-            $data['clinic_amount_clp'] = $data['patient_amount_clp'] - $doctorAmount;
+            // 🔍 Detetar si el paciente es propio (para comisión)
+            if (!isset($data['is_own_patient'])) {
+                $assignment = \App\Models\DoctorPatientAssignment::active()
+                    ->where('patient_id', $data['patient_id'])
+                    ->where('doctor_id', $data['doctor_id'])
+                    ->first();
+                $data['is_own_patient'] = $assignment ? (bool)$assignment->is_own_patient : false;
+            }
+
+            // Lógica de Comisión
+            // Se usa el servicio CommissionService para mayor precisión si está disponible
+            if (class_exists('\App\Services\CommissionService')) {
+                $commService = app(\App\Services\CommissionService::class);
+                $patientAmount = (float)($data['patient_amount_clp'] ?? $item->price ?? 0);
+                
+                // Creamos un objeto temporal para el cálculo si no existe aún el registro
+                $calc = $commService->computeFor($data['doctor_id'], $itemId, $patientAmount);
+                $data['doctor_amount_clp'] = $calc['doctor_amount_clp'];
+                $data['clinic_amount_clp'] = $calc['clinic_amount_clp'];
+                $data['patient_amount_clp'] = $patientAmount;
+            } else {
+                // Fallback simplificado
+                $doctorAmount = (int)($item->serviceDetail?->default_doctor_commission_clp ?? 0);
+                if (empty($data['patient_amount_clp']) || (int)$data['patient_amount_clp'] === 0) {
+                    $data['patient_amount_clp'] = (int)($item->price ?? 0);
+                }
+                $data['doctor_amount_clp'] = $doctorAmount;
+                $data['clinic_amount_clp'] = $data['patient_amount_clp'] - $doctorAmount;
+            }
 
             $this->assignPatientToDoctor($data['patient_id'], $data['doctor_id'], session('current_company_id'), session('active_branch_id'));
 
@@ -69,7 +104,7 @@ class TreatmentSessionService
             $session = TreatmentSession::create($data);
             $this->resequenceMonthSessions($session->treatment_id, $session->date);
             
-            return $session->fresh();
+            return $session->fresh() ?? $session;
         });
     }
 
@@ -80,26 +115,49 @@ class TreatmentSessionService
             if ($session->treatment_id) {
                 $this->resequenceMonthSessions($session->treatment_id, $session->date);
             }
-            return $session->fresh();
+            return $session->fresh() ?? $session;
         });
     }
 
-    public function completeSession(TreatmentSession $session, array $clinicalData): TreatmentSession
+    public function completeSession(TreatmentSession $session, array $clinicalData = []): TreatmentSession
     {
         return DB::transaction(function () use ($session, $clinicalData) {
             if ($session->isCompleted()) {
-                throw new \Exception('La sesión ya está completada');
+                return $session;
             }
 
-            $clinicalData['status'] = AppointmentStatusEnum::COMPLETED;
-            $clinicalData['signed_at'] = now();
+            Log::info("Finalizando sesion {$session->id}", ['status' => $session->status->value]);
 
-            $session->update($clinicalData);
+            // 1. Mapeo de campos SOAP (Soportar tanto *_notes como nombres directos)
+            $session->subjective = $clinicalData['subjective'] ?? $clinicalData['subjective_notes'] ?? $session->subjective;
+            $session->objective  = $clinicalData['objective']  ?? $clinicalData['objective_notes']  ?? $session->objective;
+            $session->assessment = $clinicalData['assessment'] ?? $clinicalData['assessment_notes'] ?? $session->assessment;
+            $session->plan       = $clinicalData['plan']       ?? $clinicalData['plan_notes']       ?? $session->plan;
 
-            $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
+            // 2. Forzar estado COMPLETED y fecha de firma
+            $session->status = AppointmentStatusEnum::COMPLETED;
+            $session->signed_at = now();
+
+            // 3. Rellenar el resto de campos permitidos
+            $session->fill(collect($clinicalData)->except(['status', 'signed_at', 'subjective', 'objective', 'assessment', 'plan', 'subjective_notes', 'objective_notes', 'assessment_notes', 'plan_notes'])->toArray());
+            $session->save();
+
+            // 4. Promover data si es sesión de evaluación (Foto Inicial)
+            if ($session->item?->serviceDetail?->is_evaluation && $session->treatment) {
+                $session->treatment->update([
+                    'initial_pain_level' => $session->pain_before ?? $session->pain_level,
+                    'initial_pain_map'   => $session->session_pain_map,
+                    'objectives'         => $clinicalData['objectives'] ?? $session->plan, 
+                ]);
+            }
+
+            if ($session->treatment_id) {
+                $this->treatmentService->updateTreatmentCalculatedFields((int) $session->treatment_id);
+            }
+            
             $this->handleSessionPayment($session);
 
-            return $session->fresh();
+            return $session->fresh() ?? $session;
         });
     }
 
@@ -115,14 +173,16 @@ class TreatmentSessionService
                 'cancellation_note' => $reason
             ]);
 
-            $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
+            if ($session->treatment_id) {
+                $this->treatmentService->updateTreatmentCalculatedFields((int) $session->treatment_id);
+            }
 
             // Eliminar factura pendiente si existe
             Invoice::whereHas('items', function($q) use ($session) {
                 $q->where('treatment_session_id', $session->id);
             })->where('payment_status', 'unpaid')->delete();
 
-            return $session->fresh();
+            return $session->fresh() ?? $session;
         });
     }
 
@@ -130,8 +190,10 @@ class TreatmentSessionService
     {
         return DB::transaction(function () use ($session) {
             $session->update(['status' => AppointmentStatusEnum::NO_SHOW]);
-            $this->treatmentService->updateTreatmentCalculatedFields($session->treatment_id);
-            return $session->fresh();
+            if ($session->treatment_id) {
+                $this->treatmentService->updateTreatmentCalculatedFields((int) $session->treatment_id);
+            }
+            return $session->fresh() ?? $session;
         });
     }
 
@@ -151,7 +213,19 @@ class TreatmentSessionService
 
     private function handleSessionPayment(TreatmentSession $session): void
     {
-        $session->load('patient');
+        if (!$session->patient_id) {
+            Log::warning("Sesión {$session->id} sin patient_id al procesar pago.");
+            return;
+        }
+
+        if (!$session->relationLoaded('patient') || !$session->patient) {
+            $session->load('patient');
+        }
+
+        if (!$session->patient) {
+            Log::error("No se pudo cargar el paciente para la sesión {$session->id}");
+            return;
+        }
 
         // 1. JERARQUÍA 1: PACKS INTERNOS (PREPAGO / SESIONES COMPRADAS)
         $pack = $session->patient->activeInternalPacks()
@@ -162,6 +236,15 @@ class TreatmentSessionService
 
         if ($pack) {
             $this->planService->consumeSessionsFromPlan($pack, $session);
+            
+            // 🎯 NUEVO: Generar Boleta Exenta diferida por el consumo de este Pack
+            try {
+                app(\App\Services\Invoices\InvoiceService::class)->issueForPackConsumption($session, $pack);
+                $session->update(['dte_generated' => true]);
+            } catch (\Exception $e) {
+                Log::error("Fallo emisión DTE por consumo de Pack en Sesión {$session->id}: " . $e->getMessage());
+            }
+
             $session->update(['patient_amount_clp' => 0]);
             return;
         }
@@ -212,16 +295,16 @@ class TreatmentSessionService
         $notifiable->notify(new SessionScheduledNotification($session));
     }
 
-    private function validateDoctorAvailability(int $doctorId, $date, $time): void
+    private function validateDoctorAvailability(Doctor $doctor, $date, $time, $roomId = null): void
     {
-        $count = TreatmentSession::where('doctor_id', $doctorId)
-            ->where('date', $date)
-            ->where('time', $time)
-            ->whereNotIn('status', [AppointmentStatusEnum::CANCELLED, AppointmentStatusEnum::NO_SHOW])
-            ->count();
+        $start = Carbon::parse("$date $time");
+        $end = $start->copy()->addMinutes(30); // Duración estándar para validación
+        $room = $roomId ? \App\Models\Room::find($roomId) : null;
 
-        if ($count >= 3) {
-            throw new \Exception('El especialista ya posee el máximo de sesiones simultáneas permitidas (3)');
+        $status = $this->agendaService->getSlotOccupancyStatus($doctor, $start, $end, $room);
+
+        if (!$status['is_available']) {
+            throw new \Exception("Capacidad excedida: {$status['reason']}");
         }
     }
 
@@ -240,9 +323,10 @@ class TreatmentSessionService
 
     private function assignPatientToDoctor($patientId, $doctorId, $companyId, $branchId)
     {
-        DB::table('doctor_patient_assignments')->updateOrInsert(
-            ['patient_id' => $patientId, 'doctor_id' => $doctorId],
-            ['company_id' => $companyId, 'branch_id' => $branchId, 'updated_at' => now(), 'created_at' => now()]
+        \App\Models\DoctorPatientAssignment::updateOrCreate(
+            ['patient_id' => $patientId, 'doctor_id' => $doctorId, 'ended_at' => null],
+            ['company_id' => $companyId, 'branch_id' => $branchId]
         );
     }
 }
+

@@ -26,13 +26,6 @@ class TwilioService
 
         $this->smsFrom = config('services.twilio.sms_from');
         $this->whatsappFrom = config('services.twilio.whatsapp_from');
-
-        Log::error('TwilioService: ', [
-            'SID: ' => $sid,
-            'TOKEN: ' => $token,
-            'SMSFROM: ' => $this->smsFrom,
-            'WHATSAPPFROM: ' => $this->whatsappFrom,
-        ]);
     }
 
     /**

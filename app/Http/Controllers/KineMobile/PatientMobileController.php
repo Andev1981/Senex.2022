@@ -81,22 +81,24 @@ class PatientMobileController extends Controller
     public function show(Patient $patient): Response
     {
         $doctor = Auth::user()->doctor;
+        $doctorBranch = $doctor->getBranchAttribute();
+        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']);
+        $canViewAll = $isClinicalAdmin || ($doctorBranch['can_view_sessions'] ?? true);
 
-        // Verificar que el paciente esté asignado al kine
-        if (!$doctor->patients->contains($patient->id)) {
+        // Verificar acceso al paciente
+        if (!$canViewAll && !$doctor->patients->contains($patient->id)) {
             abort(403, 'No tienes acceso a este paciente');
         }
 
         // Cargar datos del paciente
         $patient->load([
-            'treatments' => function ($q) use ($doctor) {
-                $q->where('doctor_id', $doctor->id)
-                    ->with('item:id,name')
+            'medicalHistory',
+            'treatments' => function ($q) {
+                $q->with('item:id,name')
                     ->latest();
             },
-            'sessions' => function ($q) use ($doctor) {
-                $q->where('doctor_id', $doctor->id)
-                    ->with('item:id,name')
+            'sessions' => function ($q) {
+                $q->with('item:id,name')
                     ->latest()
                     ->limit(20);
             },
@@ -104,6 +106,12 @@ class PatientMobileController extends Controller
                 $q->where('is_primary', true);
             }
         ]);
+
+        $doctorBranch = $doctor->getBranchAttribute();
+        $permissions = [
+            'can_create_sessions' => $doctorBranch['can_create_sessions'] ?? true,
+            'can_view_sessions'   => $doctorBranch['can_view_sessions'] ?? true,
+        ];
 
         return Inertia::render('kine-mobile/patient-detail', [
             'patient' => [
@@ -114,6 +122,7 @@ class PatientMobileController extends Controller
                 'email' => $patient->email,
                 'birth_date' => $patient->birth_date,
                 'gender' => $patient->gender,
+                'medical_history' => $patient->medicalHistory,
                 'emergency_contact' => $patient->contacts->first(),
                 'treatments' => $patient->treatments->map(function ($treatment) {
                     return [
@@ -142,6 +151,7 @@ class PatientMobileController extends Controller
                     ];
                 }),
             ],
+            'permissions' => $permissions,
         ]);
     }
 }

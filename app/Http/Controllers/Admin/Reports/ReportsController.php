@@ -56,14 +56,14 @@ class ReportsController extends Controller
         // 5. Resumen General (Mes Actual)
         $stats = [
             'total_patients' => Patient::where('company_id', $companyId)->count(),
-            'revenue_month' => Payment::where('company_id', $companyId)
+            'total_revenue_month' => Payment::where('company_id', $companyId)
                 ->whereBetween('paid_at', [$startOfMonth, $now])
                 ->where('status', 'completed')
                 ->sum('amount_clp'),
             'invoiced_month' => Invoice::where('company_id', $companyId)
                 ->whereBetween('issue_date', [$startOfMonth, $now])
                 ->sum('total_amount_clp'),
-            'sessions_completed_month' => TreatmentSession::where('company_id', $companyId)
+            'completed_sessions_month' => TreatmentSession::where('company_id', $companyId)
                 ->whereBetween('date', [$startOfMonth, $now])
                 ->where('status', AppointmentStatusEnum::COMPLETED)
                 ->count(),
@@ -83,10 +83,26 @@ class ReportsController extends Controller
         ->get();
 
         return Inertia::render('reports/Index', [
-            'cashFlowData' => $cashFlowData,
+            'revenueData' => $cashFlowData,
             'distributionData' => $distributionData,
+            'roomProfitabilityData' => $this->getRoomProfitabilityData($companyId),
             'dteStats' => $dteStats,
             'stats' => $stats,
         ]);
+    }
+
+    private function getRoomProfitabilityData($companyId)
+    {
+        return TreatmentSession::select(
+            'rooms.name as room_name',
+            DB::raw('count(*) as session_count'),
+            DB::raw('SUM(patient_amount_clp) as total_revenue')
+        )
+        ->join('rooms', 'treatment_sessions.room_id', '=', 'rooms.id')
+        ->where('treatment_sessions.company_id', $companyId)
+        ->where('treatment_sessions.status', AppointmentStatusEnum::COMPLETED)
+        ->whereNotNull('treatment_sessions.room_id')
+        ->groupBy('rooms.name')
+        ->get();
     }
 }

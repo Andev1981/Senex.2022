@@ -13,6 +13,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Traits\NotificationUtils;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class PaymentReminderNotification extends Notification implements ShouldQueue, WhatsAppNotificationInterface
 {
@@ -49,30 +50,32 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
      */
     public function via($notifiable): array
     {
-        // En la interfaz, el switch "Notificaciones del Sistema" controla opt_out_reminders.
-        // Si el switch está APAGADO (false), no enviamos nada.
-        if (!$notifiable->opt_out_reminders) {
+        // El switch "opt_out_reminders" bloquea todo si está en TRUE.
+        if ($notifiable->opt_out_reminders) {
             return [];
         }
 
         $channels = [];
+        
+        // Determinar preferencias (Asumimos TRUE por defecto si no están seteadas)
+        $wantsMail = $notifiable->prefers_mail ?? true;
+        $wantsWhatsapp = $notifiable->prefers_whatsapp ?? true;
+        $wantsSms = $notifiable->prefers_sms ?? false; // SMS desactivado por defecto por costo
 
         // 2. Filtro para Email
-        if ($notifiable->prefers_mail && $notifiable->email) {
+        if ($wantsMail && $notifiable->email) {
             $channels[] = 'mail';
         }
 
-        // 3. Filtro para WhatsApp (Usando tu canal personalizado)
-        if ($notifiable->prefers_whatsapp && $notifiable->phone) {
+        // 3. Filtro para WhatsApp
+        if ($wantsWhatsapp && $notifiable->phone) {
             $channels[] = \App\Channels\TwilioWhatsAppChannel::class;
         }
 
-        // 4. Filtro para SMS (Si lo tienes implementado)
-        if ($notifiable->prefers_sms && $notifiable->phone) {
+        // 4. Filtro para SMS
+        if ($wantsSms && $notifiable->phone) {
             $channels[] = \App\Channels\TwilioSmsChannel::class;
         }
-
-
 
         return $channels;
     }
@@ -91,13 +94,16 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
         $patientRef = $this->getPatientReference($notifiable);
         $montoFormateado = $this->formatCLP($this->totalAmount);
 
+        $instrucciones = $this->treatment_session->item?->serviceDetail?->patient_instructions;
+        $instruccionesStr = $instrucciones ? "\n\n💡 *Instrucciones:* {$instrucciones}" : "";
+
         return [
             'body' => "Hola {$firstName}! 👋\n\n" .
                 "Tienes {$this->itemCount} sesione(s) pendiente(s) de pago en Senex {$patientRef} por un total de *{$montoFormateado}*.\n\n" .
                 "---------------- * -----------------\n" .
                 "Atención: {$sessionType}\n" .
                 "Fecha: {$sessionDate}\n" .
-                "Hora: {$sessionHour}\n\n" .
+                "Hora: {$sessionHour}{$instruccionesStr}\n\n" .
                 "💳 Paga fácil con tu RUT en:\n{$portalUrl}\n\n" .
                 "¿Dudas? Responde a este mensaje.",
             'event_key' => 'payment.reminder'
@@ -111,11 +117,22 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
     {
         $portalUrl = route('portal.pago');
         $firstName = explode(' ', $notifiable->name)[0];
+        
+        $instrucciones = $this->treatment_session->item?->serviceDetail?->patient_instructions;
 
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->subject('Tienes pagos pendientes en KineMobile')
             ->greeting("Hola {$firstName}")
             ->line("Tienes {$this->itemCount} pago(s) pendiente(s) por un total de " . $this->formatCLP($this->totalAmount) . ".")
+            ->line('Detalles de la atención pendiente:')
+            ->line("- **Servicio:** {$this->session_type}")
+            ->line("- **Fecha:** " . Carbon::parse($this->treatment_session['date'])->format('d/m/Y'));
+
+        if ($instrucciones) {
+            $message->line("- **Instrucciones:** {$instrucciones}");
+        }
+
+        return $message
             ->line('Puedes pagar fácilmente desde nuestro portal:')
             ->action('Pagar ahora', $portalUrl)
             ->line('Solo necesitas tu RUT para consultar y pagar.')

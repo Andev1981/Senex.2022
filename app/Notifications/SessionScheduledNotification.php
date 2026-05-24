@@ -23,7 +23,7 @@ class SessionScheduledNotification extends Notification implements ShouldQueue, 
      */
     public function __construct(TreatmentSession $session)
     {
-        $this->session = $session;
+        $this->session = $session->load(['patient', 'doctor', 'item.serviceDetail', 'branch.primaryAddress.commune']);
     }
 
     /**
@@ -73,10 +73,13 @@ class SessionScheduledNotification extends Notification implements ShouldQueue, 
         $isPatient = $notifiable instanceof \App\Models\Patient;
         $patientName = $this->session->patient ? $this->session->patient->name : 'el paciente';
 
+        $instrucciones = $this->session->item?->serviceDetail?->patient_instructions;
+        $instruccionesStr = $instrucciones ? "\n\n💡 *Instrucciones:* {$instrucciones}" : "";
+
         if ($isPatient) {
-            $msg = "Hola {$notifiable->name}, te confirmamos *tu sesión* para el día *{$date}* a las *{$time}*.\n\nTe esperamos.";
+            $msg = "Hola {$notifiable->name}, te confirmamos *tu sesión* para el día *{$date}* a las *{$time}*.\n\n📍 *Lugar:* " . ($this->session->branch->name ?? 'Clínica') . $instruccionesStr . "\n\nTe esperamos.";
         } else {
-            $msg = "Hola {$notifiable->name}, te confirmamos la sesión de *{$patientName}* para el día *{$date}* a las *{$time}*.\n\nLos esperamos.";
+            $msg = "Hola {$notifiable->name}, te confirmamos la sesión de *{$patientName}* para el día *{$date}* a las *{$time}*.\n\n📍 *Lugar:* " . ($this->session->branch->name ?? 'Clínica') . $instruccionesStr . "\n\nLos esperamos.";
         }
 
         return ['body' => "✅ *Hora Agendada*\n\n" . $msg];
@@ -111,11 +114,16 @@ class SessionScheduledNotification extends Notification implements ShouldQueue, 
             $fullAddress = " ({$addr->street} {$addr->number}, " . ($addr->commune->name ?? '') . ")";
         }
 
-        return $mail
-            ->line('📅 Fecha: ' . $date)
+        $mail->line('📅 Fecha: ' . $date)
             ->line('⏰ Hora: ' . $time)
             ->line('👨‍⚕️ Profesional: ' . $doctorName)
-            ->line('📍 Lugar: ' . $branchName . $fullAddress)
+            ->line('📍 Lugar: ' . $branchName . $fullAddress);
+
+        if ($instrucciones) {
+            $mail->line('💡 **Instrucciones importantes:** ' . $instrucciones);
+        }
+
+        return $mail
             ->action('Ver Atenciones', route('patient.login'))
             ->line('¡Nos vemos pronto!');
     }

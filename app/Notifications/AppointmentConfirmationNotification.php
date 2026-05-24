@@ -20,7 +20,7 @@ class AppointmentConfirmationNotification extends Notification implements Should
 
     public function __construct(Appointment $appointment, array $channels = ['mail'])
     {
-        $this->appointment = $appointment->load(['patient', 'doctor', 'item', 'room', 'company']);
+        $this->appointment = $appointment->load(['patient', 'doctor', 'item.serviceDetail', 'room', 'company']);
         $this->channels = $channels;
     }
 
@@ -49,6 +49,9 @@ class AppointmentConfirmationNotification extends Notification implements Should
         $doctor = $this->appointment->doctor->name;
         $servicio = $this->appointment->item->name;
         $sala = $this->appointment->room ? "en la sala " . $this->appointment->room->name : "";
+        
+        $instrucciones = $this->appointment->item?->serviceDetail?->patient_instructions;
+        $instruccionesStr = $instrucciones ? "\n\n💡 *Instrucciones:* {$instrucciones}" : "";
 
         $confirmUrl = \Illuminate\Support\Facades\URL::signedRoute('appointment.confirm', ['appointment' => $this->appointment->id]);
         $cancelUrl = \Illuminate\Support\Facades\URL::signedRoute('appointment.cancel', ['appointment' => $this->appointment->id]);
@@ -61,7 +64,7 @@ class AppointmentConfirmationNotification extends Notification implements Should
                 "⏰ *Hora:* {$hora}\n" .
                 "👨‍⚕️ *Kinesiólogo:* {$doctor}\n" .
                 "🩺 *Servicio:* {$servicio}\n" .
-                "📍 *Lugar:* {$sala}\n\n" .
+                "📍 *Lugar:* {$sala}{$instruccionesStr}\n\n" .
                 "✅ *Confirmar asistencia:* {$confirmUrl}\n" .
                 "❌ *Cancelar cita:* {$cancelUrl}\n" .
                 "💳 *Pagar anticipadamente:* {$paymentUrl}\n\n" .
@@ -76,8 +79,10 @@ class AppointmentConfirmationNotification extends Notification implements Should
         $confirmUrl = \Illuminate\Support\Facades\URL::signedRoute('appointment.confirm', ['appointment' => $this->appointment->id]);
         $cancelUrl = \Illuminate\Support\Facades\URL::signedRoute('appointment.cancel', ['appointment' => $this->appointment->id]);
         $paymentUrl = route('portal.pago.magic', ['rut' => $this->appointment->patient->rut]);
+        
+        $instrucciones = $this->appointment->item?->serviceDetail?->patient_instructions;
 
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->subject("📅 Confirmación de Cita: {$this->appointment->start_at->format('d/m/Y H:i')}")
             ->greeting("Hola {$notifiable->name},")
             ->line("Tu cita en {$clinica} ha sido agendada con éxito.")
@@ -86,7 +91,13 @@ class AppointmentConfirmationNotification extends Notification implements Should
             ->line("- **Hora:** " . $this->appointment->start_at->format('H:i'))
             ->line("- **Profesional:** " . $this->appointment->doctor->name)
             ->line("- **Servicio:** " . $this->appointment->item->name)
-            ->line("- **Sala:** " . ($this->appointment->room->name ?? 'Por confirmar'))
+            ->line("- **Sala:** " . ($this->appointment->room->name ?? 'Por confirmar'));
+
+        if ($instrucciones) {
+            $message->line("- **Instrucciones importantes:** {$instrucciones}");
+        }
+
+        return $message
             ->action('Confirmar Asistencia', $confirmUrl)
             ->line("Si necesitas cancelar, puedes hacerlo aquí: [Cancelar Cita]({$cancelUrl})")
             ->line("También puedes pagar tu sesión de forma anticipada aquí: [Pagar Ahora]({$paymentUrl})")

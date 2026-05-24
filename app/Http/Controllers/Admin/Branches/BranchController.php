@@ -12,18 +12,17 @@ use App\Models\Region;
 
 class BranchController extends Controller
 {
- public function store(Request $request, Company $company)
+    public function store(Request $request, Company $company)
     {
-
-        dd($request->all());
-        
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'codigo_sucursal_sii' => 'required|string|max:50',
             'email' => 'nullable|email',
             'phone' => 'nullable|string|max:30',
+            'allows_onsite' => 'boolean',
+            'allows_home' => 'boolean',
             
-            // Dirección
+            // Dirección Directa
             'street' => 'nullable|string',
             'number' => 'nullable|string',
             'commune_id' => 'nullable|exists:communes,id',
@@ -35,9 +34,11 @@ class BranchController extends Controller
             'codigo_sucursal_sii' => $data['codigo_sucursal_sii'],
             'email' => $data['email'],
             'phone' => $data['phone'],
+            'allows_onsite' => $request->boolean('allows_onsite', true),
+            'allows_home' => $request->boolean('allows_home', true),
         ]);
 
-        // Crear dirección si viene data
+        // Guardar Dirección Polimórfica (Única Fuente de Verdad)
         if (!empty($data['street']) || !empty($data['commune_id'])) {
             $branch->addresses()->create([
                 'street' => $data['street'] ?? '',
@@ -54,15 +55,16 @@ class BranchController extends Controller
 
     public function update(Request $request, Branch $branch)
     {
-       
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'codigo_sucursal_sii' => 'required|string|max:50',
             'email' => 'nullable|email',
             'phone' => 'nullable|string|max:30',
-            'is_main' => 'boolean', // Nuevo campo
+            'is_main' => 'boolean',
+            'allows_onsite' => 'boolean',
+            'allows_home' => 'boolean',
             
-            // Dirección
+            // Datos de Ubicación (para la tabla addresses)
             'street' => 'nullable|string',
             'number' => 'nullable|string',
             'commune_id' => 'nullable|exists:communes,id',
@@ -71,8 +73,9 @@ class BranchController extends Controller
 
         // Lógica de Casa Matriz
         if (isset($data['is_main']) && $data['is_main']) {
-            // Desmarcar todas las otras sucursales
-            $branch->where('id', '!=', $branch->id)->update(['is_main' => false]);
+            Branch::where('company_id', $branch->company_id)
+                ->where('id', '!=', $branch->id)
+                ->update(['is_main' => false]);
             $branch->is_main = true;
         }
 
@@ -81,11 +84,12 @@ class BranchController extends Controller
             'codigo_sucursal_sii' => $data['codigo_sucursal_sii'],
             'email' => $data['email'],
             'phone' => $data['phone'],
-            // Si se marcó como main, se guarda aquí
-            'is_main' => $branch->is_main 
+            'allows_onsite' => $request->boolean('allows_onsite', true),
+            'allows_home' => $request->boolean('allows_home', true),
+            'is_main' => $branch->is_main,
         ]);
 
-        // Actualizar o crear dirección principal
+        // Sincronizar dirección polimórfica
         $branch->addresses()->updateOrCreate(
             ['is_primary' => true],
             [

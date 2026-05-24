@@ -96,7 +96,7 @@ class AuthenticatedSessionController extends Controller
 
             if (!$validBranch) {
                 Auth::logout();
-                session()->flash('error', 'No tienes acceso habilitado en ninguna sucursal activa.');
+                session()->flash('error', 'No tienes acceso habilitado en ninguna sucursal activa o el acceso móvil está restringido.');
                 return route('login');
             }
 

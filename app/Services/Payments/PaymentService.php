@@ -63,12 +63,13 @@ class PaymentService
             }
 
             $payment = Payment::create([
-                'uuid' => (string) Str::uuid(),
                 'user_id' => auth()->id(),
                 'company_id' => $data['company_id'] ?? session('current_company_id'),
                 'branch_id' => $data['branch_id'] ?? session('active_branch_id'),
                 'patient_id' => $numericPatientId,
                 'amount_clp' => $amount_clp,
+                'amount_gross_clp' => $amount_clp,
+                'amount_patient_clp' => $amount_clp,
                 'payment_date' => $data['payment_date'] ?? now(),
                 'payment_method' => $data['payment_details']['payment_method'] ?? $data['payment_method'],
                 'transaction_reference' => $data['transaction_reference'] ?? null,
@@ -100,7 +101,7 @@ class PaymentService
 
         $invoices = Invoice::whereIn('id', $invoiceIds)
             ->where('payment_status', '!=', 'paid')
-            ->orderBy('date', 'asc')
+            ->orderBy('issue_date', 'asc')
             ->get();
 
         foreach ($invoices as $invoice) {
@@ -111,6 +112,8 @@ class PaymentService
 
             // Crear asignación
             PaymentAllocation::create([
+                'company_id' => $payment->company_id,
+                'branch_id' => $payment->branch_id,
                 'payment_id' => $payment->id,
                 'invoice_id' => $invoice->id,
                 'amount_clp' => $amountToPay,
@@ -175,7 +178,6 @@ class PaymentService
 
         // Crear registro de pago en estado pending
         $payment = Payment::create([
-            'uuid' => (string) Str::uuid(),
             'user_id' => $userId,
             'company_id' => $companyId,
             'branch_id' => $branchId,
@@ -354,6 +356,7 @@ class PaymentService
         Receivable::create([
             'company_id' => $companyId,
             'branch_id' => $branchId,
+            'invoice_id' => $invoice->id,
             'patient_id' => $patientPlan->patient_id,
             'amount_clp' => $plan->price,
             'status' => 'pending',
@@ -380,6 +383,8 @@ class PaymentService
                 'user_id' => auth()->id(),
                 'patient_id' => $patientPlan->patient_id,
                 'amount_clp' => $patientPlan->plan->price,
+                'amount_gross_clp' => $patientPlan->plan->price,
+                'amount_patient_clp' => $patientPlan->plan->price,
                 'payment_method' => $paymentDetails['payment_method'],
                 'payment_date' => $paymentDetails['payment_date'] ?? now(),
                 'transaction_reference' => $paymentDetails['transaction_reference'] ?? null,

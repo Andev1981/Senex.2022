@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin\Patients;
 
 use App\Http\Controllers\Controller;
 use App\Models\Commune;
-use App\Models\Province;
 use App\Models\Region;
 use App\Models\Patient;
 use App\Models\Company;
@@ -13,8 +12,6 @@ use App\Models\Diagnostic;
 use App\Models\Item;
 use App\Models\Treatment;
 use App\Models\TreatmentSession;
-use App\Http\Requests\StorePatientRequest;
-use App\Http\Requests\UpdatePatientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -39,8 +36,7 @@ class PatientAdminController extends Controller
             ->leftJoinSub($addrPick, 'addr_pick', fn($j) => $j->on('addr_pick.addressable_id', '=', 'patients.id'))
             ->leftJoin('addresses as addr', 'addr.id', '=', 'addr_pick.addr_id')
             ->leftJoin('communes as c', 'addr.commune_id', '=', 'c.id')
-            ->leftJoin('provinces as p', 'c.province_id', '=', 'p.id')
-            ->leftJoin('regions as r', 'p.region_id', '=', 'r.id')
+            ->leftJoin('regions as r', 'addr.region_id', '=', 'r.id')
             ->when($activeBranchId, function ($q) use ($activeBranchId) {
                 $q->whereHas('branches', function ($bq) use ($activeBranchId) {
                     $bq->where('branches.id', $activeBranchId);
@@ -52,7 +48,7 @@ class PatientAdminController extends Controller
                 'patients.opt_out_reminders', 'patients.prefers_whatsapp', 'patients.prefers_mail', 'patients.prefers_sms', 'patients.require_tutor',
                 DB::raw("CONCAT_WS(' ', patients.name, patients.last_name) as full_name"),
                 DB::raw('addr.id as address_id'), 'addr.street', 'addr.number', 'addr.details',
-                'addr.region_id', 'addr.province_id', 'addr.commune_id',
+                'addr.region_id', 'addr.commune_id',
                 'c.name as comuna_name',
             ]);
 
@@ -88,14 +84,12 @@ class PatientAdminController extends Controller
             ->get();
 
         // Datos geográficos para modales
-        $regions = Cache::remember('geo_regions', 86400, fn() => Region::all(['id', 'name']));
-        $provinces = Cache::remember('geo_provinces', 86400, fn() => Province::all(['id', 'name', 'region_id']));
-        $communes = Cache::remember('geo_communes', 86400, fn() => Commune::all(['id', 'name', 'province_id']));
+        $regions = Cache::remember('geo_regions', 86400, fn() => Region::with('communes')->get(['id', 'name']));
+        $communes = Cache::remember('geo_communes', 86400, fn() => Commune::all(['id', 'name', 'region_id']));
 
         return Inertia::render('patients/index-patients', [
             'patients' => $patients,
             'regions' => $regions,
-            'provinces' => $provinces,
             'communes' => $communes,
             'business_type' => $businessType,
             'doctors' => $isClinical ? Doctor::all(['id', 'name', 'last_name']) : [],
@@ -112,7 +106,8 @@ class PatientAdminController extends Controller
         $isClinical = $businessType === 'clinical';
 
         $patient = Patient::with([
-            'address.commune.province.region',
+            'medicalHistory',
+            'address.commune.region',
             'insurances.plans',
             'activePlans.plan',
             'vitalSigns',
@@ -143,8 +138,7 @@ class PatientAdminController extends Controller
 
         // Datos maestros para modales y edición
         $regions = Cache::remember('geo_regions', 86400, fn() => Region::all(['id', 'name']));
-        $provinces = Cache::remember('geo_provinces', 86400, fn() => Province::all(['id', 'name', 'region_id']));
-        $communes = Cache::remember('geo_communes', 86400, fn() => Commune::all(['id', 'name', 'province_id']));
+        $communes = Cache::remember('geo_communes', 86400, fn() => Commune::all(['id', 'name', 'region_id']));
 
         return Inertia::render('patients/detail-patient', [
             'patient' => $patient,
@@ -153,7 +147,6 @@ class PatientAdminController extends Controller
             'diagnostics' => $isClinical ? Diagnostic::all(['code', 'description']) : [],
             'session_types' => $isClinical ? Item::all(['id', 'name']) : [],
             'regions' => $regions,
-            'provinces' => $provinces,
             'communes' => $communes,
             'history' => $history,
             'treatments' => $allTreatments,
@@ -204,7 +197,6 @@ class PatientAdminController extends Controller
                             'street' => $request->street,
                             'number' => $request->number,
                             'commune_id' => $request->commune_id,
-                            'province_id' => $request->province_id,
                             'region_id' => $request->region_id,
                             'details' => $request->details,
                             'is_primary' => true,
@@ -277,6 +269,23 @@ class PatientAdminController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Interceptar RUT genérico para generar/mantener el formato temporal único
+        if ($request->has('rut')) {
+            $cleanRut = \App\Rules\ValidRut::clean($request->rut);
+            if ($cleanRut === '66666666-6') {
+                $patientModel = Patient::findOrFail($id);
+                $rawOriginalRut = $patientModel->getRawOriginal('rut');
+                if ($rawOriginalRut && str_starts_with($rawOriginalRut, '66666666-6-TEMP-')) {
+                    $cleanRut = $rawOriginalRut;
+                } else {
+                    do {
+                        $cleanRut = '66666666-6-TEMP-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                    } while (\App\Models\Patient::withoutGlobalScopes()->where('rut', $cleanRut)->exists());
+                }
+            }
+            $request->merge(['rut' => $cleanRut]);
+        }
+
         // Validación manual para bypass de error de resolución de clase
         $updateRequest = app(\App\Http\Requests\UpdatePatientRequest::class);
         $data = $request->validate($updateRequest->rules(), $updateRequest->messages());
@@ -294,7 +303,6 @@ class PatientAdminController extends Controller
                         'street' => $request->street,
                         'number' => $request->number,
                         'commune_id' => $request->commune_id,
-                        'province_id' => $request->province_id,
                         'region_id' => $request->region_id,
                         'details' => $request->details,
                         'is_primary' => true,
@@ -335,13 +343,27 @@ class PatientAdminController extends Controller
                 ]);
             }
 
-            // Actualizar Grupo Sanguíneo (Medical History)
-            if ($request->filled('blood_type')) {
-                $patient->condition()->updateOrCreate(
-                    ['patient_id' => $patient->id],
-                    ['blood_type' => $request->blood_type]
-                );
-            }
+            // Actualizar o crear MedicalHistory (Antecedentes)
+            $historyData = [
+                'blood_type'         => $request->blood_type,
+                'handedness'         => $request->handedness,
+                'pathologies'        => $request->pathologies,
+                'surgeries'          => $request->surgeries,
+                'fractures'          => $request->fractures,
+                'medications'        => $request->medications,
+                'family_history'     => $request->family_history,
+                'has_pacemaker'      => $request->boolean('has_pacemaker'),
+                'has_metal_implants' => $request->boolean('has_metal_implants'),
+                'is_pregnant'        => $request->boolean('is_pregnant'),
+                'cancer_history'     => $request->boolean('cancer_history'),
+                'company_id'         => $patient->company_id,
+                'recorded_by_user_id' => auth()->id(),
+            ];
+
+            $patient->medicalHistory()->updateOrCreate(
+                ['patient_id' => $patient->id],
+                $historyData
+            );
 
             return back()
                 ->with('message', 'Datos actualizados correctamente')
@@ -361,11 +383,30 @@ class PatientAdminController extends Controller
 
     public function quickStore(Request $request)
     {
+        $cleanRut = \App\Rules\ValidRut::clean($request->rut);
+        if ($cleanRut === '66666666-6') {
+            do {
+                $cleanRut = '66666666-6-TEMP-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            } while (\App\Models\Patient::withoutGlobalScopes()->where('rut', $cleanRut)->exists());
+            $request->merge(['rut' => $cleanRut]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'rut' => 'nullable|string',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'rut' => ['required', 'string', new \App\Rules\ValidRut],
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:255',
+            'birth_date' => 'nullable|date',
+            'require_tutor' => 'boolean',
+            'tutor_name' => 'required_if:require_tutor,true|nullable|string|max:255',
+            'tutor_phone' => 'required_if:require_tutor,true|nullable|string|max:255',
+            'tutor_email' => 'required_if:require_tutor,true|nullable|email|max:255',
+            'tutor_relationship' => 'required_if:require_tutor,true|nullable|string|max:255',
+            'street' => 'required|string|max:255',
+            'number' => 'required|string|max:255',
+            'commune_id' => 'required|exists:communes,id',
+            'region_id' => 'required|exists:regions,id',
         ]);
 
         try {
@@ -373,20 +414,20 @@ class PatientAdminController extends Controller
                 $currentCompanyId = session('current_company_id');
                 $activeBranchId = session('active_branch_id');
                 
-                $rut = $request->rut ? \App\Rules\ValidRut::clean($request->rut) : null;
+                $rut = \App\Rules\ValidRut::clean($request->rut);
 
                 // 1. Verificar si ya existe el paciente por RUT
-                $patient = null;
-                if ($rut) {
-                    $patient = Patient::withoutGlobalScopes()
+                $patient = Patient::withoutGlobalScopes()
                         ->where('rut', $rut)
                         ->first();
-                }
 
                 $basicData = [
                     'name' => $request->name,
-                    'email' => $request->email ?: null,
-                    'phone' => $request->phone ?: null,
+                    'last_name' => $request->last_name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'birth_date' => $request->birth_date,
+                    'require_tutor' => $request->require_tutor ?? false,
                 ];
 
                 if (!$patient) {
@@ -398,18 +439,54 @@ class PatientAdminController extends Controller
                     
                     $patient = Patient::create($data);
                 } else {
-                    // Si existe, aseguramos que pertenezca a la empresa actual y actualizamos datos básicos si vienen
+                    // Si existe, aseguramos que pertenezca a la empresa actual y actualizamos datos básicos
                     $patient->company_id = $currentCompanyId;
-                    $patient->fill(array_filter($basicData));
+                    $patient->fill($basicData);
                     $patient->save();
                 }
 
-                // 2. Vincular a la sucursal actual si no está vinculado
+                // 2. Dirección
+                $patient->primaryAddress()->updateOrCreate(
+                    ['addressable_id' => $patient->id, 'addressable_type' => 'Patient'],
+                    [
+                        'company_id' => $currentCompanyId,
+                        'street' => $request->street,
+                        'number' => $request->number,
+                        'commune_id' => $request->commune_id,
+                        'region_id' => $request->region_id,
+                        'is_primary' => true,
+                    ]
+                );
+
+                // 3. Tutor / Contacto de Emergencia si aplica
+                if ($request->require_tutor && $request->tutor_name) {
+                    $patient->contacts()->updateOrCreate(
+                        ['patient_id' => $patient->id, 'is_primary' => true],
+                        [
+                            'company_id' => $currentCompanyId,
+                            'name' => $request->tutor_name,
+                            'phone' => $request->tutor_phone,
+                            'email' => $request->tutor_email,
+                            'relationship' => $request->tutor_relationship ?? 'Tutor/Responsable',
+                            'type' => 'guardian',
+                            'is_active' => true
+                        ]
+                    );
+                }
+
+                // 4. Vincular a la sucursal actual
                 if ($activeBranchId && method_exists($patient, 'branches') && !$patient->branches()->where('branches.id', $activeBranchId)->exists()) {
                     $patient->branches()->attach($activeBranchId, ['status' => 'active']);
                 }
 
-                return back()->with('success', "Paciente {$patient->name} registrado correctamente.");
+                if ($request->wantsJson()) {
+                    return response()->json($patient);
+                }
+
+                return back()->with('success', "Paciente {$patient->name} registrado correctamente.")
+                    ->with('message', "Paciente {$patient->name} registrado correctamente.")
+                    ->with('type', 'success')
+                    ->with('patient_id', $patient->id);
             });
 
         } catch (\Exception $e) {
