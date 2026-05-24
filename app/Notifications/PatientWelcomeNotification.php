@@ -2,17 +2,14 @@
 
 namespace App\Notifications;
 
-use App\Channels\TwilioSmsChannel;
-use App\Channels\TwilioWhatsAppChannel;
+use App\Channels\OpenWAChannel;
 use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\Patient;
-use App\Models\TreatmentSession;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Traits\NotificationUtils;
-use Illuminate\Support\Facades\Log;
 
 class PatientWelcomeNotification extends Notification implements ShouldQueue, WhatsAppNotificationInterface
 {
@@ -46,18 +43,10 @@ class PatientWelcomeNotification extends Notification implements ShouldQueue, Wh
             $activeChannels[] = 'mail';
         }
 
-        // 2. Filtro para WhatsApp
+        // 2. Filtro para WhatsApp (OpenWA)
         if (in_array('whatsapp', $targetChannels) && $notifiable->phone) {
-            $activeChannels[] = TwilioWhatsAppChannel::class;
+            $activeChannels[] = OpenWAChannel::class;
         }
-
-        \Log::info('PatientWelcomeNotification: Ejecutando via()', [
-            'patient_id' => $notifiable->id,
-            'target_channels' => $targetChannels,
-            'final_channels' => $activeChannels,
-            'email' => $notifiable->email,
-            'phone' => $notifiable->phone
-        ]);
 
         return $activeChannels;
     }
@@ -98,17 +87,5 @@ class PatientWelcomeNotification extends Notification implements ShouldQueue, Wh
                 'patient' => $this->patient,
                 'company' => $this->patient->company
             ]);
-    }
-
-    /**
-     * Get the SMS representation.
-     */
-    public function toSms($notifiable): array
-    {
-        $portalUrl = route('portal.pago');
-
-        return [
-            'body' => "KineMobile: Tienes pagos pendientes por " . $this->formatCLP($this->totalAmount) . ". Paga fácil en: {$portalUrl}",
-        ];
     }
 }

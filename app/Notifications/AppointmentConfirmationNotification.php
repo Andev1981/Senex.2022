@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Channels\TwilioWhatsAppChannel;
+use App\Channels\OpenWAChannel;
 use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\Appointment;
 use Illuminate\Bus\Queueable;
@@ -34,7 +34,7 @@ class AppointmentConfirmationNotification extends Notification implements Should
         }
 
         if (in_array('whatsapp', $targetChannels) && $notifiable->phone) {
-            $activeChannels[] = TwilioWhatsAppChannel::class;
+            $activeChannels[] = OpenWAChannel::class;
         }
 
         return $activeChannels;
@@ -98,9 +98,12 @@ class AppointmentConfirmationNotification extends Notification implements Should
         }
 
         return $message
-            ->action('Confirmar Asistencia', $confirmUrl)
-            ->line("Si necesitas cancelar, puedes hacerlo aquí: [Cancelar Cita]({$cancelUrl})")
-            ->line("También puedes pagar tu sesión de forma anticipada aquí: [Pagar Ahora]({$paymentUrl})")
-            ->line('¡Gracias por confiar en nosotros!');
+            ->line('Por favor, confirma tu asistencia:')
+            ->action('Confirmar Cita', $confirmUrl)
+            ->line('Si no puedes asistir, por favor cancela tu hora:')
+            ->line($cancelUrl)
+            ->line('También puedes pagar anticipadamente aquí:')
+            ->line($paymentUrl)
+            ->salutation('¡Te esperamos!');
     }
 }

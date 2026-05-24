@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Channels\TwilioWhatsAppChannel;
+use App\Channels\OpenWAChannel;
 use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\TreatmentSession;
 use Illuminate\Bus\Queueable;
@@ -10,7 +10,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class SessionScheduledNotification extends Notification implements ShouldQueue, WhatsAppNotificationInterface
 {
@@ -33,31 +32,15 @@ class SessionScheduledNotification extends Notification implements ShouldQueue, 
      */
     public function via($notifiable): array
     {
-        $channels = [];
+        $channels = ['mail'];
 
-        // Determinar preferencias (Si no tiene la propiedad, asumimos TRUE por defecto, ej: Tutor)
-        $wantsMail = $notifiable->prefers_mail ?? true;
+        // Determinar preferencias
         $wantsWhatsapp = $notifiable->prefers_whatsapp ?? true;
 
-        // Preferencia Email
-        if ($wantsMail && $notifiable->email) {
-            $channels[] = 'mail';
-        }
-
-        // Preferencia WhatsApp
+        // Preferencia WhatsApp (OpenWA)
         if ($wantsWhatsapp && $notifiable->phone) {
-            $channels[] = TwilioWhatsAppChannel::class;
+            $channels[] = OpenWAChannel::class;
         }
-
-        Log::info('SessionScheduledNotification::via Check', [
-            'recipient_id' => $notifiable->id,
-            'type' => class_basename($notifiable),
-            'wants_mail' => $wantsMail,
-            'has_email' => !empty($notifiable->email),
-            'wants_whatsapp' => $wantsWhatsapp,
-            'has_phone' => !empty($notifiable->phone),
-            'channels_selected' => $channels
-        ]);
 
         return $channels;
     }
@@ -127,6 +110,4 @@ class SessionScheduledNotification extends Notification implements ShouldQueue, 
             ->action('Ver Atenciones', route('patient.login'))
             ->line('¡Nos vemos pronto!');
     }
-
-    
 }

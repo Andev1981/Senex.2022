@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Channels\TwilioWhatsAppChannel;
+use App\Channels\OpenWAChannel;
 use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\PatientPlan;
 use Illuminate\Bus\Queueable;
@@ -23,7 +23,7 @@ class PlanPurchasedNotification extends Notification implements WhatsAppNotifica
 
     public function via($notifiable): array
     {
-        return ['mail', TwilioWhatsAppChannel::class];
+        return ['mail', OpenWAChannel::class];
     }
 
     public function toMail($notifiable): MailMessage

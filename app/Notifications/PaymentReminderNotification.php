@@ -2,8 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Channels\TwilioSmsChannel;
-use App\Channels\TwilioWhatsAppChannel;
+use App\Channels\OpenWAChannel;
 use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\Patient;
 use App\Models\TreatmentSession;
@@ -12,7 +11,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Traits\NotificationUtils;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class PaymentReminderNotification extends Notification implements ShouldQueue, WhatsAppNotificationInterface
@@ -55,29 +53,23 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
             return [];
         }
 
-        $channels = [];
+        $activeChannels = [];
         
         // Determinar preferencias (Asumimos TRUE por defecto si no están seteadas)
         $wantsMail = $notifiable->prefers_mail ?? true;
         $wantsWhatsapp = $notifiable->prefers_whatsapp ?? true;
-        $wantsSms = $notifiable->prefers_sms ?? false; // SMS desactivado por defecto por costo
 
-        // 2. Filtro para Email
+        // 1. Filtro para Email
         if ($wantsMail && $notifiable->email) {
-            $channels[] = 'mail';
+            $activeChannels[] = 'mail';
         }
 
-        // 3. Filtro para WhatsApp
+        // 2. Filtro para WhatsApp (OpenWA)
         if ($wantsWhatsapp && $notifiable->phone) {
-            $channels[] = \App\Channels\TwilioWhatsAppChannel::class;
+            $activeChannels[] = OpenWAChannel::class;
         }
 
-        // 4. Filtro para SMS
-        if ($wantsSms && $notifiable->phone) {
-            $channels[] = \App\Channels\TwilioSmsChannel::class;
-        }
-
-        return $channels;
+        return $activeChannels;
     }
 
     /**
@@ -86,7 +78,6 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
     public function toTwilioWhatsAppChannel($notifiable): array
     {
         $portalUrl = route('portal.pago');
-        $firstName = explode(' ', $notifiable->name)[0];
         $sessionType = $this->session_type;
         $sessionDate = $this->treatment_session['date'];
         $sessionHour = $this->treatment_session['time'];
@@ -116,7 +107,7 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
     public function toMail($notifiable): MailMessage
     {
         $portalUrl = route('portal.pago');
-        $firstName = explode(' ', $notifiable->name)[0];
+        $firstName = $this->getFirstName($this->getRecipientName($notifiable));
         
         $instrucciones = $this->treatment_session->item?->serviceDetail?->patient_instructions;
 
@@ -137,17 +128,5 @@ class PaymentReminderNotification extends Notification implements ShouldQueue, W
             ->action('Pagar ahora', $portalUrl)
             ->line('Solo necesitas tu RUT para consultar y pagar.')
             ->salutation('Saludos, KineMobile');
-    }
-
-    /**
-     * Get the SMS representation.
-     */
-    public function toSms($notifiable): array
-    {
-        $portalUrl = route('portal.pago');
-
-        return [
-            'body' => "KineMobile: Tienes pagos pendientes por " . $this->formatCLP($this->totalAmount) . ". Paga fácil en: {$portalUrl}",
-        ];
     }
 }

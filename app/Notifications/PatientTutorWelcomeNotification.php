@@ -2,8 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Channels\TwilioSmsChannel;
-use App\Channels\TwilioWhatsAppChannel;
+use App\Channels\OpenWAChannel;
 use App\Contracts\WhatsAppNotificationInterface;
 use App\Models\Patient;
 use App\Models\PatientContact;
@@ -29,11 +28,7 @@ class PatientTutorWelcomeNotification extends Notification implements ShouldQueu
     public function via($notifiable): array
     {
         // En este caso el $notifiable es el PatientContact (el tutor)
-        $channels = ['mail'];
-        if (config('services.twilio.whatsapp_from')) {
-            $channels[] = TwilioWhatsAppChannel::class;
-        }
-        return $channels;
+        return ['mail', OpenWAChannel::class];
     }
 
     /**
