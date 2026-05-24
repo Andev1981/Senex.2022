@@ -45,11 +45,16 @@ export default function StatsBadge({
   label,
   value,
   color = "gray",
+  onClick,
 }) {
   const theme = colorClasses[color] || colorClasses.gray;
   
   return (
-    <div className={`w-full py-3 px-1 rounded-[24px] border border-transparent transition-all ${theme.bg}`}>
+    <button 
+      onClick={onClick}
+      disabled={!onClick}
+      className={`w-full py-3 px-1 rounded-[24px] border border-transparent transition-all active:scale-95 ${theme.bg} ${!onClick ? 'cursor-default' : 'cursor-pointer'}`}
+    >
       <div className="flex flex-col items-center gap-1 text-center">
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center bg-white shadow-sm mb-0.5`}>
             <Icon className={`w-3.5 h-3.5 ${theme.icon}`} />
@@ -61,6 +66,6 @@ export default function StatsBadge({
           {value}
         </span>
       </div>
-    </div>
+    </button>
   );
 }

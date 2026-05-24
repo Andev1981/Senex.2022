@@ -36,11 +36,13 @@ import {
   Plus,
   Trash2,
   Pencil,
+  Ban,
   X
 } from "lucide-react";
 import axios from "axios";
 import Modal from "@/components/Modal";
 import ChilePhoneInput from "@/components/ChilePhoneInput";
+import Switch from "@/components/Switch";
 import TextInput from "@/components/TextInput";
 import InputError from "@/components/InputError";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -153,6 +155,37 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
       });
   };
 
+  const quickBlockRoom = (room) => {
+    Swal.fire({
+        title: `Bloqueo Rápido: ${room.name}`,
+        text: 'Indica el motivo del bloqueo temporal del box',
+        input: 'text',
+        inputPlaceholder: 'Ej: Falla de aire acondicionado, limpieza...',
+        showCancelButton: true,
+        confirmButtonText: 'Bloquear Box',
+        confirmButtonColor: '#ef4444',
+        borderRadius: '1.5rem',
+        preConfirm: (reason) => {
+            if (!reason) {
+                Swal.showValidationMessage('El motivo es obligatorio');
+                return false;
+            }
+            router.post(route('availabilities.holidays.store'), {
+                name: `BLOQUEO: ${reason}`,
+                date: new Date().toISOString().split('T')[0],
+                branch_id: room.branch_id,
+                room_id: room.id,
+                start_time: '00:00',
+                end_time: '23:59',
+                is_recurring: false
+            }, {
+                preserveScroll: true,
+                onSuccess: () => Swal.fire('¡Bloqueado!', 'El box ha sido bloqueado para hoy.', 'success')
+            });
+        }
+    });
+  };
+
   // Ayudante para obtener la sucursal activa actualizada desde los props
   const currentBranchWithRooms = useMemo(() => {
       return branches.find(b => b.id === activeBranchForRooms?.id);
@@ -177,6 +210,8 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
       number: "",
       region_id: "",
       commune_id: "",
+      allows_onsite: true,
+      allows_home: true,
       is_main: false,
       company_id: company?.id || null,
   });
@@ -192,6 +227,8 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
           number: "",
           region_id: "",
           commune_id: "",
+          allows_onsite: true,
+          allows_home: true,
           is_main: false,
           company_id: company?.id || null,
       });
@@ -203,6 +240,7 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
       setEditingBranch(branch);
       clearBranchErrors();
       
+      // Extraer dirección desde la relación polimórfica (primaryAddress o la primera)
       const address = branch.addresses && branch.addresses.length > 0 
         ? branch.addresses.find(a => a.is_primary) || branch.addresses[0] 
         : null;
@@ -216,6 +254,8 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
           number: address?.number || "",
           region_id: address?.region_id || "",
           commune_id: address?.commune_id || "",
+          allows_onsite: Boolean(branch.allows_onsite),
+          allows_home: Boolean(branch.allows_home),
           is_main: Boolean(branch.is_main),
           company_id: company?.id || null,
       });
@@ -231,13 +271,15 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                   setIsBranchModalOpen(false);
                   resetBranch();
                   setEditingBranch(null);
+                  Swal.fire("¡Éxito!", "Sucursal actualizada", "success");
               }
           });
       } else {
-          storeBranch(route('branches.store'), {
+          storeBranch(route('companies.branches.store', [company.id]), {
               onSuccess: () => {
                   setIsBranchModalOpen(false);
                   resetBranch();
+                  Swal.fire("¡Éxito!", "Sucursal creada", "success");
               }
           });
       }
@@ -245,7 +287,8 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
 
   const availableCommunes = useMemo(() => {
       if (!branchData.region_id) return [];
-      const region = regions.find(r => r.id == branchData.region_id);
+      // Aseguramos comparación numérica si los IDs vienen como strings desde el select
+      const region = regions.find(r => String(r.id) === String(branchData.region_id));
       return region ? region.communes : [];
   }, [branchData.region_id, regions]);
 
@@ -322,7 +365,10 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
   const submitCompany = (e) => {
     e.preventDefault();
     updateCompany(route("companies.update", company.id), {
-      onSuccess: () => setIsCorpModalOpen(false),
+      onSuccess: () => {
+          setIsCorpModalOpen(false);
+          Swal.fire("¡Éxito!", "Datos corporativos actualizados", "success");
+      },
     });
   };
 
@@ -553,9 +599,37 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                         <InputError message={branchErrors.codigo_sucursal_sii} />
                     </div>
                 </div>
+
+                {/* MODALIDADES DE ATENCIÓN */}
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-3xl space-y-4">
+                    <h3 className="text-[10px] font-black uppercase text-gray-400 tracking-widest px-1">Configuración de Atención</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-700">Atención Clínica</p>
+                                <p className="text-[8px] text-gray-400 font-bold uppercase">Presencial en box</p>
+                            </div>
+                            <Switch 
+                                checked={branchData.allows_onsite} 
+                                onChange={e => setBranchData("allows_onsite", e.target.checked)} 
+                            />
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-700">Domicilio</p>
+                                <p className="text-[8px] text-gray-400 font-bold uppercase">Visitas a terreno</p>
+                            </div>
+                            <Switch 
+                                checked={branchData.allows_home} 
+                                onChange={e => setBranchData("allows_home", e.target.checked)} 
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-1">
-                        <label className="enterprise-label">Email</label>
+                        <label className="enterprise-label">Email de la Sede</label>
                         <TextInput type="email" value={branchData.email} onChange={(e) => setBranchData("email", e.target.value)} />
                     </div>
                     <div className="space-y-1">
@@ -563,6 +637,55 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                         <ChilePhoneInput value={branchData.phone} onChange={(val) => setBranchData("phone", val)} />
                     </div>
                 </div>
+
+                {/* DIRECCIÓN */}
+                <div className="space-y-4 pt-4 border-t border-gray-100">
+                    <h3 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Dirección Física</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                            <label className="enterprise-label">Región</label>
+                            <select 
+                                value={branchData.region_id} 
+                                onChange={(e) => setBranchData("region_id", e.target.value)}
+                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:bg-white focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                            >
+                                <option value="">Seleccione Región</option>
+                                {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="enterprise-label">Comuna</label>
+                            <select 
+                                value={branchData.commune_id} 
+                                onChange={(e) => setBranchData("commune_id", e.target.value)}
+                                disabled={!branchData.region_id}
+                                className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm focus:bg-white focus:ring-2 focus:ring-brand-primary/20 transition-all disabled:opacity-50"
+                            >
+                                <option value="">Seleccione Comuna</option>
+                                {availableCommunes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-6">
+                        <div className="col-span-2 space-y-1">
+                            <label className="enterprise-label">Calle</label>
+                            <TextInput value={branchData.street} onChange={(e) => setBranchData("street", e.target.value)} placeholder="Ej: Av. Providencia" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="enterprise-label">N°</label>
+                            <TextInput value={branchData.number} onChange={(e) => setBranchData("number", e.target.value)} placeholder="123" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 py-4">
+                    <Switch 
+                        checked={branchData.is_main} 
+                        onChange={e => setBranchData("is_main", e.target.checked)} 
+                    />
+                    <label className="text-[10px] font-black uppercase text-gray-600">Marcar como Casa Matriz (SII)</label>
+                </div>
+
                 <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
                     <PrimaryButton disabled={branchProcessing} type="submit">{branchProcessing ? "Guardando..." : "Confirmar"}</PrimaryButton>
                 </div>
@@ -571,13 +694,103 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
 
         <Modal open={isCorpModalOpen} onClose={() => setIsCorpModalOpen(false)} title="Datos Corporativos" maxWidth="2xl">
           <form onSubmit={submitCompany} className="p-10 space-y-8">
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-1"><label className="enterprise-label">RUT</label><TextInput value={companyData.rut} onChange={(e) => setCompanyData("rut", e.target.value)} onBlur={handleRutBlur} /></div>
-              <div className="space-y-1"><label className="enterprise-label">Razón Social</label><TextInput value={companyData.business_name} onChange={(e) => setCompanyData("business_name", e.target.value)} /></div>
+            <div className="flex justify-center mb-8">
+                <div className="relative group">
+                    <div className="w-24 h-24 rounded-3xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden transition-all group-hover:border-brand-primary/50">
+                        {logoPreview ? <img src={logoPreview} className="object-contain w-full h-full" alt="Preview" /> : <ImageIcon className="w-8 h-8 text-gray-300" />}
+                    </div>
+                    <label className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl shadow-lg border border-gray-100 cursor-pointer hover:text-brand-primary transition-all">
+                        <UploadCloud className="w-4 h-4" />
+                        <input type="file" className="hidden" onChange={handleLogoChange} accept="image/*" />
+                    </label>
+                </div>
             </div>
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-100"><PrimaryButton disabled={companyProcessing} type="submit">Guardar</PrimaryButton></div>
+
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-1">
+                  <label className="enterprise-label">RUT</label>
+                  <TextInput value={companyData.rut} onChange={(e) => setCompanyData("rut", e.target.value)} onBlur={handleRutBlur} />
+                  <InputError message={companyErrors.rut} />
+              </div>
+              <div className="space-y-1">
+                  <label className="enterprise-label">Razón Social</label>
+                  <TextInput value={companyData.business_name} onChange={(e) => setCompanyData("business_name", e.target.value)} />
+                  <InputError message={companyErrors.business_name} />
+              </div>
+              <div className="space-y-1">
+                  <label className="enterprise-label">Giro (SII)</label>
+                  <TextInput value={companyData.giro} onChange={(e) => setCompanyData("giro", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                  <label className="enterprise-label">Email Corporativo</label>
+                  <TextInput type="email" value={companyData.email} onChange={(e) => setCompanyData("email", e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                  <label className="enterprise-label">Teléfono</label>
+                  <ChilePhoneInput value={companyData.phone} onChange={(val) => setCompanyData("phone", val)} />
+              </div>
+              <div className="space-y-1">
+                  <label className="enterprise-label">Tipo de Negocio</label>
+                  <EnterpriseSelect 
+                    value={companyData.business_type} 
+                    onChange={val => setCompanyData("business_type", val)} 
+                    options={[
+                        { label: "Clínica / Salud", value: "clinical" },
+                        { label: "Servicios Generales", value: "service" },
+                        { label: "Retail / Venta", value: "retail" },
+                    ]}
+                  />
+              </div>
+            </div>
+            <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
+                <PrimaryButton disabled={companyProcessing} type="submit">Guardar Cambios</PrimaryButton>
+            </div>
           </form>
         </Modal>
+
+        {/* TABLA CAF */}
+        <div className="p-10 bg-white border border-gray-100 shadow-xl rounded-[3rem]">
+          <header className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 text-brand-primary bg-brand-primary/5 rounded-2xl"><Layers className="w-6 h-6" /></div>
+              <div>
+                <h2 className="text-xl font-black text-gray-900 uppercase">Folios Autorizados (CAF)</h2>
+                <p className="text-[10px] font-black text-brand-gray uppercase tracking-widest opacity-60">Control de timbraje electrónico</p>
+              </div>
+            </div>
+            <CafUploader companyId={company.id} onSuccess={() => router.reload()} />
+          </header>
+
+          <div className="overflow-hidden border border-gray-100 rounded-3xl">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-gray-50/50">
+                {cafTable.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th key={header.id} className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-100">
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {cafTable.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50/50 transition-colors">
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-6">
+            <TablePagination table={cafTable} />
+          </div>
+        </div>
 
         <Modal open={isDteModalOpen} onClose={() => setIsDteModalOpen(false)} title="Motor DTE" maxWidth="2xl">
           <DteConfigurationForm company={company} dteConfig={dteConfig} onSuccess={() => setIsDteModalOpen(false)} />
@@ -672,6 +885,13 @@ export default function Edit({ company, dteConfig, folios, logo, branches = [], 
                                         </div>
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button 
+                                            onClick={() => quickBlockRoom(room)} 
+                                            className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                            title="Bloqueo Rápido (Emergencia)"
+                                        >
+                                            <Ban className="w-4 h-4" />
+                                        </button>
                                         <button onClick={() => openEditRoomModal(room)} className="p-2.5 text-gray-300 hover:text-brand-primary hover:bg-brand-primary/5 rounded-xl transition-all"><Pencil className="w-4 h-4" /></button>
                                         <button onClick={() => deleteRoom(room.id)} className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
                                     </div>

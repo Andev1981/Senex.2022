@@ -30,7 +30,7 @@ import DoctorConfig from "./Partials/DoctorConfig";
 import DoctorAvailability from "./Partials/DoctorAvailability";
 
 export default function DetailDoctor(props) {
-    const { doctor, stats, sessions, payrolls, session_types, regions, provinces, communes, branches, availabilities, all_availabilities, rooms } = props;
+    const { doctor, stats, sessions, payrolls, session_types, regions, communes, branches, availabilities, all_availabilities, rooms } = props;
     const [activeTab, setActiveTab] = useState("dashboard");
     const [isModalOpenEdit, setIsModalOpenEdit] = useState(false);
 
@@ -167,7 +167,6 @@ export default function DetailDoctor(props) {
                     doctor={doctor}
                     setIsModalOpenDetail={() => setIsModalOpenEdit(false)}
                     regions={regions}
-                    provinces={provinces}
                     communes={communes}
                     branches={branches}
                 />

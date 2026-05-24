@@ -9,27 +9,64 @@ import {
   XCircle,
   Calendar,
   ChevronRight,
+  Edit3,
+  Activity,
 } from "lucide-react";
 import { router } from "@inertiajs/react";
 
 const statusConfig = {
   scheduled: {
-    color: "bg-white",
+    bg: "bg-white",
+    border: "border-slate-100",
     icon: Clock,
-    badgeColor: "bg-blue-50 text-blue-600",
+    iconBg: "bg-slate-50",
+    iconColor: "text-slate-400",
+    badge: "bg-blue-50 text-blue-600",
     label: "Programada",
+    actionLabel: "Atender",
+    actionBg: "bg-brand-primary",
+  },
+  checked_in: {
+    bg: "bg-emerald-50/30",
+    border: "border-emerald-100",
+    icon: User,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    badge: "bg-emerald-100 text-emerald-700",
+    label: "Llegó",
+    actionLabel: "Iniciar Ahora",
+    actionBg: "bg-emerald-600",
+  },
+  in_progress: {
+    bg: "bg-amber-50/50",
+    border: "border-amber-200",
+    icon: Activity,
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    badge: "bg-amber-100 text-amber-700",
+    label: "En Curso",
+    actionLabel: "Continuar",
+    actionBg: "bg-amber-600",
   },
   completed: {
-    color: "bg-white",
+    bg: "bg-slate-50/50",
+    border: "border-slate-100",
     icon: CheckCircle2,
-    badgeColor: "bg-green-50 text-green-600",
-    label: "Completada",
+    iconBg: "bg-slate-100",
+    iconColor: "text-slate-400",
+    badge: "bg-slate-200 text-slate-600",
+    label: "Finalizada",
+    actionLabel: null,
   },
   cancelled: {
-    color: "bg-white",
+    bg: "bg-red-50/30",
+    border: "border-red-100",
     icon: XCircle,
-    badgeColor: "bg-red-50 text-red-600",
-    label: "Cancelada",
+    iconBg: "bg-red-50",
+    iconColor: "text-red-400",
+    badge: "bg-red-100 text-red-600",
+    label: "Anulada",
+    actionLabel: null,
   },
 };
 
@@ -39,7 +76,7 @@ export default function SessionCard({
   onCancel,
   showDate = true,
 }) {
-  const status = session.status?.toLowerCase() || "scheduled";
+  const status = session.status?.toLowerCase();
   const config = statusConfig[status] || statusConfig["scheduled"];
   const StatusIcon = config.icon;
 
@@ -51,74 +88,86 @@ export default function SessionCard({
   };
 
   const handleViewDetail = () => {
+    if (status === 'in_progress' || status === 'checked_in') {
+        router.visit(route("kine.sessions.form", session.id));
+        return;
+    }
     router.visit(route("kine.sessions.show", session.id));
   };
 
   return (
     <div
-      className="p-5 bg-white border border-slate-100 rounded-[32px] shadow-sm active:scale-[0.98] transition-all cursor-pointer group"
+      className={`p-6 ${config.bg} border-2 ${config.border} rounded-[2rem] shadow-sm active:scale-[0.98] transition-all cursor-pointer group hover:shadow-xl hover:shadow-slate-200/50`}
       onClick={handleViewDetail}
     >
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors">
-                <User className="w-5 h-5" />
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 ${config.iconBg} rounded-2xl flex items-center justify-center ${config.iconColor} transition-colors shadow-inner`}>
+                <StatusIcon className="w-6 h-6" />
             </div>
             <div>
-                <h4 className="font-black text-slate-900 leading-none tracking-tight">{session.patient_name}</h4>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
+                <div className="flex items-center gap-2">
+                    <h4 className="font-black text-slate-900 leading-tight tracking-tight text-base">{session.patient_name}</h4>
+                    {session.has_active_treatments && (
+                        <div className="w-2 h-2 bg-brand-primary rounded-full animate-pulse" title="Tratamiento activo" />
+                    )}
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                     {session.session_type}
                 </p>
             </div>
         </div>
-        <span className={`px-2.5 py-1 text-[8px] font-black uppercase tracking-widest rounded-full ${config.badgeColor}`}>
+        <span className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl shadow-sm ${config.badge}`}>
             {config.label}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-xl">
-              <Calendar className="w-3 h-3 text-brand-primary" />
-              <span className="text-[11px] font-bold text-slate-600">{session.date}</span>
-          </div>
-          <div className="flex items-center gap-2 bg-slate-50/50 p-2 rounded-xl">
-              <Clock className="w-3 h-3 text-brand-primary" />
-              <span className="text-[11px] font-bold text-slate-600">{session.time}</span>
-          </div>
-      </div>
-
-      {session.diagnosis && session.diagnosis !== "Sin diagnóstico" && (
-          <div className="mb-4 px-3 py-2 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
-              <p className="text-[9px] font-black text-brand-primary uppercase tracking-widest mb-0.5">Diagnóstico</p>
-              <p className="text-xs font-bold text-slate-700 truncate">{session.diagnosis}</p>
+      {session.diagnosis && session.diagnosis !== "Sin diagnóstico" && session.diagnosis !== "Agenda Programada" && (
+          <div className="mb-6 p-4 bg-white/60 rounded-2xl border border-slate-100 shadow-inner">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Diagnóstico</p>
+              <p className="text-xs font-bold text-slate-600 leading-relaxed italic">"{session.diagnosis}"</p>
           </div>
       )}
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-          <div>
-              {session.earnings ? (
-                  <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Mi Comisión</span>
-                      <span className="text-sm font-black text-slate-900 tracking-tight">
-                          ${session.earnings.toLocaleString('es-CL')}
-                      </span>
+      <div className="flex items-center justify-between pt-5 border-t border-slate-100/50">
+          <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Horario</span>
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                      <Clock className="w-3 h-3 opacity-40" />
+                      <span className="text-xs font-black tracking-tight">{session.time}</span>
                   </div>
-              ) : (
-                  <span className="text-[10px] font-bold text-slate-300 italic">Ver detalles</span>
-              )}
+              </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
                 {session.patient_phone && (
                     <button
                     onClick={handleCallPatient}
-                    className="w-10 h-10 flex items-center justify-center bg-teal-50 text-teal-600 rounded-2xl active:scale-90 transition-all hover:bg-teal-100 shadow-sm shadow-teal-100"
+                    className="w-12 h-12 flex items-center justify-center bg-white border border-slate-100 text-teal-600 rounded-2xl active:scale-90 transition-all hover:shadow-lg shadow-sm"
                     >
-                        <Phone className="w-4 h-4" />
+                        <Phone className="w-5 h-5" />
                     </button>
                 )}
-                <div className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-2xl group-hover:bg-brand-primary group-hover:text-white transition-all shadow-sm">
-                    <ChevronRight className="w-4 h-4" />
-                </div>
+                
+                {config.actionLabel && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onComplete && onComplete(session);
+                        }}
+                        className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] text-white shadow-xl active:scale-95 transition-all ${config.actionBg} shadow-${config.actionBg.split('-')[1]}-500/20`}
+                    >
+                        {config.actionLabel}
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                )}
+
+                {!config.actionLabel && (
+                    <div className="w-12 h-12 flex items-center justify-center bg-slate-100 text-slate-400 rounded-2xl">
+                        <ChevronRight className="w-5 h-5" />
+                    </div>
+                )}
           </div>
       </div>
     </div>

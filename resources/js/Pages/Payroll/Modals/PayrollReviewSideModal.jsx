@@ -194,27 +194,32 @@ export default function PayrollReviewSideModal({ show, onClose, payrollId }) {
                                 <thead className="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-wider">
                                     <tr>
                                         <th className="px-6 py-3">Fecha</th>
-                                        <th className="px-6 py-3">Paciente</th>
-                                        <th className="px-6 py-3">Tipo</th>
-                                        <th className="px-6 py-3 text-right">Valor Paciente</th>
-                                        <th className="px-6 py-3 text-right">Comisión</th>
-                                        <th className="px-6 py-3 text-right">Subtotal</th>
+                                        <th className="px-6 py-3">Paciente / Diagnóstico</th>
+                                        <th className="px-6 py-3">Servicio</th>
+                                        <th className="px-6 py-3 text-right">Valor Total</th>
+                                        <th className="px-6 py-3 text-right">Comisión Clínica</th>
+                                        <th className="px-6 py-3 text-right">Pago Profesional</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50 text-xs text-gray-600">
                                     {payroll.details?.map((detail) => (
                                         <tr key={detail.id} className="hover:bg-brand-primary/5 transition-colors">
                                             <td className="px-6 py-3 font-medium">{formatDate(detail.service_date)}</td>
-                                            <td className="px-6 py-3 font-bold text-gray-900">{detail.patient?.full_name || 'N/A'}</td>
+                                            <td className="px-6 py-3">
+                                                <div className="font-bold text-gray-900">{detail.patient?.full_name || 'N/A'}</div>
+                                                <div className="text-[9px] text-brand-primary uppercase font-medium truncate max-w-[150px]">
+                                                    {detail.treatment_session?.diagnostic?.name || 'Sin Diagnóstico'}
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-3">
                                                 <span className="px-2 py-1 bg-gray-100 rounded text-[9px] font-bold uppercase text-gray-500">
-                                                    {detail.session_type?.name || 'Consulta'}
+                                                    {detail.item?.name || 'Consulta'}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-3 text-right font-mono text-gray-900">
+                                            <td className="px-6 py-3 text-right font-mono text-gray-500">
                                                 {formatCurrency(detail.patient_amount_clp)}
                                             </td>
-                                            <td className="px-6 py-3 text-right font-mono text-red-500">
+                                            <td className="px-6 py-3 text-right font-mono text-red-400">
                                                 - {formatCurrency(detail.commission_amount_clp)}
                                             </td>
                                             <td className="px-6 py-3 text-right font-mono font-bold text-brand-primary bg-brand-primary/5">

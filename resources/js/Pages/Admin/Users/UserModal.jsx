@@ -17,6 +17,9 @@ export default function UserModal({ user, roles, companies, branches, permission
     roles: user?.roles?.map(r => r.name) || [],
     permissions: user?.permissions?.map(p => p.name) || [], // Permisos directos
     branches: user?.branches?.map(b => b.id) || [],
+    can_create_sessions: user?.doctor?.branch?.can_create_sessions ?? true,
+    can_view_sessions: user?.doctor?.branch?.can_view_sessions ?? true,
+    can_manage_schedule: user?.doctor?.branch?.can_manage_schedule ?? true,
   });
 
   useEffect(() => {
@@ -29,6 +32,9 @@ export default function UserModal({ user, roles, companies, branches, permission
         roles: user.roles?.map(r => r.name) || [],
         permissions: user.permissions?.map(p => p.name) || [],
         branches: user.branches?.map(b => b.id) || [],
+        can_create_sessions: user.doctor?.branch?.can_create_sessions ?? true,
+        can_view_sessions: user.doctor?.branch?.can_view_sessions ?? true,
+        can_manage_schedule: user.doctor?.branch?.can_manage_schedule ?? true,
       });
     } else {
         reset();
@@ -230,6 +236,52 @@ export default function UserModal({ user, roles, companies, branches, permission
           ))}
         </div>
       </div>
+
+      {/* Permisos Clínicos (Solo si es Kine) */}
+      {data.roles.includes("kine") && (
+        <div className="pt-6 border-t border-gray-100">
+          <h3 className="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-brand-primary mb-4">
+            <Shield className="w-3.5 h-3.5" /> Permisos Clínicos (Especialista)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <label className="flex items-center p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl cursor-pointer hover:bg-brand-primary/10 transition-all group">
+              <Checkbox
+                checked={data.can_create_sessions}
+                onChange={(e) => setData("can_create_sessions", e.target.checked)}
+                className="rounded-lg border-gray-300 text-brand-primary focus:ring-brand-primary"
+              />
+              <div className="ml-3 flex flex-col">
+                <span className="text-[10px] font-black text-brand-primary uppercase leading-none">Crear/Editar Sesiones</span>
+                <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Acceso a Ficha Clínica</span>
+              </div>
+            </label>
+
+            <label className="flex items-center p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl cursor-pointer hover:bg-brand-primary/10 transition-all group">
+              <Checkbox
+                checked={data.can_view_sessions}
+                onChange={(e) => setData("can_view_sessions", e.target.checked)}
+                className="rounded-lg border-gray-300 text-brand-primary focus:ring-brand-primary"
+              />
+              <div className="ml-3 flex flex-col">
+                <span className="text-[10px] font-black text-brand-primary uppercase leading-none">Ver Historial Clínico</span>
+                <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Acceso a Evoluciones</span>
+              </div>
+            </label>
+
+            <label className="flex items-center p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-xl cursor-pointer hover:bg-brand-primary/10 transition-all group">
+              <Checkbox
+                checked={data.can_manage_schedule}
+                onChange={(e) => setData("can_manage_schedule", e.target.checked)}
+                className="rounded-lg border-gray-300 text-brand-primary focus:ring-brand-primary"
+              />
+              <div className="ml-3 flex flex-col">
+                <span className="text-[10px] font-black text-brand-primary uppercase leading-none">Gestionar Horario</span>
+                <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Disponibilidad y Bloqueos</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-50">
         <SecondaryButton onClick={onClose} type="button" className="px-8 py-3 rounded-xl uppercase text-[10px] font-black tracking-widest">

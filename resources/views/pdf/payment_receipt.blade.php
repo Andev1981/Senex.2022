@@ -218,7 +218,9 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php $hasDetail = false; @endphp
                     @foreach($payment->allocations as $alloc)
+                        @php $hasDetail = true; @endphp
                         @if($alloc->invoice)
                             @foreach($alloc->invoice->items as $item)
                             <tr>
@@ -251,6 +253,26 @@
                             </tr>
                         @endif
                     @endforeach
+
+                    {{-- 🎯 NUEVO: Mostrar planes comprados directamente si no hay allocations aún --}}
+                    @if(!$hasDetail && $payment->patient_id)
+                        @php
+                            $plans = \App\Models\PatientPlan::where('payment_id', $payment->id)->with('plan')->get();
+                        @endphp
+                        @foreach($plans as $pp)
+                            <tr>
+                                <td>
+                                    <div class="item-name">COMPRA DE PACK: {{ $pp->plan->name }}</div>
+                                    <div class="item-details">
+                                        {{ $pp->sessions_included }} sesiones incluidas. 
+                                        Las boletas tributarias se emitirán al momento de cada atención.
+                                    </div>
+                                </td>
+                                <td style="text-align: center; font-weight: 700;">1</td>
+                                <td class="amount">${{ number_format($payment->amount_clp, 0, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
 

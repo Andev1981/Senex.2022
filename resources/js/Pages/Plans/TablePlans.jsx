@@ -6,8 +6,9 @@ import {
   getPaginationRowModel,
   getFilteredRowModel,
   flexRender,
+
 } from "@tanstack/react-table";
-import { ChevronDown, ChevronUp, Pencil, Trash2, Search,Box, Shield, ShieldCheck, Database,Clock  } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Trash2, Search,Box, Shield, ShieldCheck, Database,Clock   ,NotebookText } from "lucide-react";
 import PrimaryButton from "@/components/PrimaryButton";
 import TablePagination from "@/components/TablePagination";
 

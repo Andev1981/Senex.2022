@@ -1,54 +1,77 @@
-import React from "react";
+import React, { useEffect, useState, lazy, Suspense } from "react";
 import { router, usePage } from "@inertiajs/react";
-import { Home, Users, Calendar, User, LogOut, Plus, Wallet, Stethoscope } from "lucide-react";
+import { Home, Users, Calendar, Clock, User, LogOut, Plus, Wallet, Stethoscope, ClipboardList, CheckCircle, AlertCircle, X } from "lucide-react";
+
+const DevToolbar = lazy(() => import("@/components/DevToolbar"));
 
 export default function KineLayout({ children }) {
-  const { url } = usePage();
-  const { auth } = usePage().props;
+  const { url, props } = usePage();
+  const { auth, flash, env } = props;
   const user = auth?.user;
+  const roles = auth?.roles || [];
+  const doctorBranch = auth?.doctor_branch ?? {};
+  const userIsSuperAdmin = roles.includes("superadmin");
+  const userIsKine = roles.includes("kine");
+  const canManageSchedule = doctorBranch?.can_manage_schedule !== false;
+  const [showToast, setShowToast] = useState(false);
+  const [toastData, setToastData] = useState({ message: '', type: 'success' });
+
+  const showDevToolbar = env === 'local' || userIsSuperAdmin || userIsKine;
+
+  useEffect(() => {
+    if (flash.success || flash.error || flash.message) {
+        setToastData({
+            message: flash.success || flash.error || flash.message,
+            type: flash.error ? 'error' : 'success'
+        });
+        setShowToast(true);
+        const timer = setTimeout(() => setShowToast(false), 5000);
+        return () => clearTimeout(timer);
+    }
+  }, [flash]);
 
   // Limpiamos la URL de query strings para el match
   const currentPath = (url || "").split('?')[0];
 
   const navItems = [
-    { 
-        icon: Home, 
-        label: "Inicio", 
-        route: "kine.dashboard", 
-        active: currentPath === "/kine/dashboard" 
-    },
-    { 
-        icon: Users, 
-        label: "Pacientes", 
-        route: "kine.my-patients", 
-        active: currentPath.startsWith("/kine/my-patients") || currentPath.startsWith("/kine/patient")
-    },
-    { 
-        icon: null, 
-        isAction: true,
-        canShow: auth.permissions?.includes('sessions.create') || user?.roles?.includes('superadmin') || user?.roles?.includes('admin')
-    }, 
-    { 
-        icon: Calendar, 
-        label: "Agenda", 
-        route: "kine.my-sessions", 
-        active: currentPath.startsWith("/kine/my-sessions") || currentPath.startsWith("/kine/sessions")
-    },
-    { 
-        icon: Wallet, 
-        label: "Pagos", 
-        route: "kine.my-wallet", 
-        active: currentPath.startsWith("/kine/my-wallet") || currentPath.startsWith("/kine/wallet")
-    },
-  ];
+    { icon: Home,          label: "Inicio",     route: "kine.dashboard",        active: currentPath === "/kine/dashboard" },
+    { icon: Users,         label: "Pacientes",  route: "kine.my-patients",      active: currentPath.startsWith("/kine/my-patients") || currentPath.startsWith("/kine/patient") },
+    { icon: Clock,         label: "Horario",    route: "kine.my-schedule",      active: currentPath.startsWith("/kine/my-schedule") },
+    { icon: ClipboardList, label: "Atenciones", route: "kine.pending-sessions", active: currentPath.startsWith("/kine/pending-sessions") },
+    { icon: Wallet,        label: "Pagos",      route: "kine.my-wallet",        active: currentPath.startsWith("/kine/my-wallet") || currentPath.startsWith("/kine/wallet") },
+  ].filter(item => {
+    if (item.route === "kine.my-schedule") {
+        return canManageSchedule;
+    }
+    return true;
+  });
 
   const handleLogout = () => {
     if (confirm("¿Cerrar sesión?")) router.post(route("logout"));
   };
 
   return (
-    <div className="relative min-h-screen bg-[#FDFDFD] flex flex-col font-sans antialiased text-slate-900">
+    <div className={`relative min-h-screen bg-[#FDFDFD] flex flex-col font-sans antialiased text-slate-900`}>
       
+      {showDevToolbar && (
+        <Suspense fallback={null}>
+          <DevToolbar />
+        </Suspense>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-20 left-4 right-4 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className={`p-4 rounded-[24px] shadow-2xl flex items-center gap-3 border ${toastData.type === 'error' ? 'bg-red-50 border-red-100 text-red-800' : 'bg-white border-slate-100 text-slate-800'}`}>
+                {toastData.type === 'error' ? <AlertCircle className="w-5 h-5 text-red-500" /> : <CheckCircle className="w-5 h-5 text-brand-primary" />}
+                <p className="text-xs font-black uppercase tracking-tight flex-1">{toastData.message}</p>
+                <button onClick={() => setShowToast(false)} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+                    <X className="w-4 h-4 text-slate-400" />
+                </button>
+            </div>
+        </div>
+      )}
+
       {/* APP HEADER - Estilo Soft & Pro */}
       <header className="sticky top-0 z-[60] bg-brand-primary/30 backdrop-blur-xl border-b border-brand-primary/10 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -83,29 +106,15 @@ export default function KineLayout({ children }) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pb-28">
+      <main className="flex-1 pb-28 lg:pb-10 max-w-5xl mx-auto w-full">
         {children}
       </main>
 
       {/* BOTTOM NAVIGATION - Estilo Premium Nativo */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t border-slate-100 px-2 pb-5 pt-1">
-        <div className="flex justify-between items-center max-w-md mx-auto relative px-4">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-t border-slate-100 px-2 pb-5 pt-1 lg:hidden">
+        <div className="flex justify-around items-center max-w-md mx-auto relative px-4">
           
           {navItems.map((item, idx) => {
-            if (item.isAction) {
-                if (!item.canShow) return <div key="action-spacer" className="w-10"></div>;
-                return (
-                    <div key="action-btn" className="relative -top-6">
-                        <button
-                            onClick={() => router.visit(route("kine.sessions.create"))}
-                            className="w-14 h-14 bg-brand-primary text-white rounded-full shadow-[0_10px_25px_rgba(var(--brand-primary-rgb),0.4)] flex items-center justify-center border-4 border-white active:scale-90 transition-all"
-                        >
-                            <Plus className="w-8 h-8 stroke-[3px]" />
-                        </button>
-                    </div>
-                );
-            }
-
             const Icon = item.icon;
             return (
               <button

@@ -79,10 +79,10 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 20%">Fecha / Hora</th>
-                <th style="width: 40%">Paciente</th>
-                <th style="width: 20%">Prestación</th>
-                <!-- Se eliminó Valor Base -->
+                <th style="width: 15%">Fecha</th>
+                <th style="width: 30%">Paciente / Diagnóstico</th>
+                <th style="width: 25%">Prestación / Categoría</th>
+                <th class="text-center" style="width: 10%">Peso</th>
                 <th class="text-right" style="width: 20%">Honorario</th>
             </tr>
         </thead>
@@ -97,12 +97,21 @@
                 </td>
                 <td>
                     <div style="font-weight: 600;">{{ $detail->patient->full_name ?? 'Paciente Eliminado' }}</div>
-                    <div class="subtle">{{ $detail->patient->rut ?? '' }}</div>
+                    @if($detail->diagnostic_code)
+                        <div class="subtle">Diag: [{{ $detail->diagnostic_code }}] {{ $detail->diagnostic_name }}</div>
+                    @else
+                        <div class="subtle">{{ $detail->patient->rut ?? '' }}</div>
+                    @endif
                 </td>
                 <td>
-                    {{ $detail->sessionType->name ?? 'Consulta' }}
+                    <div style="font-weight: 600;">{{ $detail->sessionType->name ?? 'Consulta' }}</div>
+                    <div class="subtle">{{ $detail->service_category ?? 'General' }}</div>
                 </td>
-                <!-- Se eliminó celda de Valor Base -->
+                <td class="text-center">
+                    <span class="subtle" title="{{ $detail->weight == 3 ? 'Individual' : 'Grupal' }}">
+                        {{ $detail->weight }} pts
+                    </span>
+                </td>
                 <td class="text-right font-mono" style="font-weight: bold;">
                     ${{ number_format($detail->subtotal_clp, 0, ',', '.') }}
                 </td>

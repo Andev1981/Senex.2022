@@ -3,14 +3,14 @@ import { Head, useForm, usePage, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { LogOut, Monitor, User } from "lucide-react";
+import { LogOut, Monitor, User, UserPlus } from "lucide-react";
 
 // --- IMPORTACIÓN DE COMPONENTES LOCALES ---
 import PatientCard from "./components/PatientCard";
 import PaymentSummary from "./components/PaymentSummary";
 import ServicesCard from "./components/ServicesCard";
 import PaymentBlockingModal from "./PaymentBlockingModal";
-import RutInput from "@/components/RutInput";
+import QuickPatientModal from "@/components/clinical/QuickPatientModal";
 
 export default function PosIndex({
   patients = [],
@@ -20,7 +20,9 @@ export default function PosIndex({
   paymentMethods = [],
   agreements = [],
   doctors = [],
-  business_type = "clinical"
+  business_type = "clinical",
+  regions = [],
+  communes = []
 }) {
   const { auth } = usePage().props;
   const userIsCajero = auth.roles.includes("cajero");
@@ -54,14 +56,6 @@ export default function PosIndex({
   const [patientExtras, setPatientExtras] = useState({
     debts: [],
     active_plans: [],
-  });
-
-  const [quickPatient, setQuickPatient] = useState({
-    rut: "",
-    name: "",
-    last_name: "",
-    email: "",
-    phone: "",
   });
 
   const { data, setData, errors } = useForm({
@@ -407,49 +401,6 @@ export default function PosIndex({
     setData("services_to_bill", newServices);
   };
 
-  const handleQuickPatientSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(
-        route("patients.quick_store"),
-        quickPatient
-      );
-
-      // Mapeamos la respuesta para que coincida con el formato de SearchSelect
-      const newPatient = {
-        ...response.data,
-        id: `person_${response.data.id}`,
-        db_id: response.data.id,
-        full_name: `${response.data.name} ${response.data.last_name}`,
-        label: `👤 ${response.data.name} ${response.data.last_name} (${response.data.rut})`,
-        type: 'person'
-      };
-
-      setLocalPatients((prev) => [...prev, newPatient]);
-      setData("patient_id", newPatient.id);
-      setIsPatientModalOpen(false);
-      setQuickPatient({
-        rut: "",
-        name: "",
-        last_name: "",
-        email: "",
-        phone: "",
-      });
-      Swal.fire({
-        icon: "success",
-        title: `${entityLabel} creado`,
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: `No se pudo crear el ${entityLabel.toLowerCase()}.`,
-      });
-    }
-  };
-
   const handleAbortTransaction = async () => {
     setModalState((prev) => ({ ...prev, isOpen: false }));
     try {
@@ -678,6 +629,8 @@ export default function PosIndex({
                     onAddService={handleAddService}
                     onUpdateService={handleUpdateService}
                     onRemoveService={handleRemoveService}
+                    agreements={agreements}
+                    coverageDetails={data.coverage_details}
                 />
             </div>
 
@@ -705,110 +658,38 @@ export default function PosIndex({
         </form>
       </div>
 
-      {isPatientModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-md p-4">
-          <div className="w-full max-w-lg bg-white shadow-2xl rounded-[2.5rem] overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="bg-brand-primary p-8 flex justify-between items-center relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-              <h3 className="font-black text-white uppercase tracking-widest text-sm relative z-10">Registro Rápido de {entityLabel}</h3>
-              <button
-                onClick={() => setIsPatientModalOpen(false)}
-                className="text-white/80 hover:text-white transition-colors relative z-10 bg-white/10 p-2 rounded-xl"
-              >
-                ✕
-              </button>
-            </div>
-            <form onSubmit={handleQuickPatientSubmit} className="p-10 space-y-6">
-              <div className="space-y-1">
-                <label className="enterprise-label ml-1">
-                  RUT / DNI
-                </label>
-                <RutInput
-                  value={quickPatient.rut}
-                  onChange={(val) => setQuickPatient({ ...quickPatient, rut: val })}
-                  required
-                  className="w-full"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <label className="enterprise-label ml-1">
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Juan"
-                    className="w-full border-gray-100 rounded-2xl py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all"
-                    value={quickPatient.name}
-                    onChange={(e) =>
-                      setQuickPatient({ ...quickPatient, name: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="enterprise-label ml-1">
-                    Apellido
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Pérez"
-                    className="w-full border-gray-100 rounded-2xl py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all"
-                    value={quickPatient.last_name}
-                    onChange={(e) =>
-                      setQuickPatient({
-                        ...quickPatient,
-                        last_name: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="enterprise-label ml-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="juan.perez@ejemplo.com"
-                  className="w-full border-gray-100 rounded-2xl py-4 px-5 font-bold text-gray-700 focus:ring-brand-primary transition-all"
-                  value={quickPatient.email}
-                  onChange={(e) =>
-                    setQuickPatient({ ...quickPatient, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="enterprise-label ml-1">
-                  Teléfono
-                </label>
-                <ChilePhoneInput
-                  value={quickPatient.phone}
-                  onChange={(val) => setQuickPatient({ ...quickPatient, phone: val })}
-                  className="w-full"
-                />
-              </div>
-              <div className="pt-4 flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setIsPatientModalOpen(false)}
-                  className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-brand-gray hover:bg-gray-50 rounded-2xl transition-all border-2 border-transparent"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-4 bg-brand-primary text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:brightness-110 transition-all shadow-lg shadow-brand-primary/20 active:scale-95"
-                >
-                  Guardar {entityLabel}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <QuickPatientModal 
+        isOpen={isPatientModalOpen} 
+        onClose={() => setIsPatientModalOpen(false)}
+        regions={regions}
+        communes={communes}
+        onSuccess={(newPatient) => {
+            // newPatient ahora viene como objeto completo desde el backend
+            if (newPatient) {
+                // Formatear para que coincida con el SearchSelect
+                const formattedPatient = {
+                    ...newPatient,
+                    id: `person_${newPatient.id}`,
+                    db_id: newPatient.id,
+                    full_name: `${newPatient.name} ${newPatient.last_name}`,
+                    label: `👤 ${newPatient.name} ${newPatient.last_name} (${newPatient.rut})`,
+                    type: 'person'
+                };
+
+                // Actualizar lista local y selección
+                setLocalPatients(prev => [...prev, formattedPatient]);
+                setData("patient_id", formattedPatient.id);
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Paciente Creado",
+                    text: "La ficha ha sido generada y seleccionada exitosamente.",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        }}
+      />
 
       <PaymentBlockingModal
         isOpen={modalState.isOpen}

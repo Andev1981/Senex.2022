@@ -32,7 +32,7 @@ import SideModal from "@/components/SideModal";
 import ProductModal from "./Partials/ProductModal";
 import Swal from "sweetalert2";
 
-export default function Index({ items, categories, filters }) {
+export default function Index({ items, categories, filters, active_branch }) {
   const [activeTab, setActiveTab] = useState(filters.type || "product");
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
   const [selectedCategory, setSelectedCategory] = useState(filters.category_id || "");
@@ -390,6 +390,7 @@ export default function Index({ items, categories, filters }) {
             product={selectedProduct}
             categories={categories}
             initialType={activeTab}
+            activeBranch={active_branch}
         />
       </SideModal>
 

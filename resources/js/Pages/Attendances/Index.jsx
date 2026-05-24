@@ -41,25 +41,44 @@ export default function Index({
   const [sessionData, setSessionData] = useState({});
 
   useEffect(() => {
-    // Revisa si viene por redirección directa para crear atención
+    // Revisa si viene por redirección directa para crear o editar atención
     const searchParams = new URLSearchParams(window.location.search);
     const action = searchParams.get('action');
     const patientId = searchParams.get('patient_id');
     const doctorId = searchParams.get('doctor_id');
     const itemId = searchParams.get('item_id');
+    const appointmentId = searchParams.get('appointment_id');
 
-    if (action === 'create' && patientId) {
+    if (appointmentId) {
+      // Si viene con appointment_id, buscamos la sesión correspondiente en el prop 'atenciones'
+      const existingSession = atenciones.find(a => a.appointment_id === Number(appointmentId));
+      if (existingSession) {
+        setSessionData(existingSession);
+        setShowCreateSessionModal(true);
+      } else if (action === 'create' && patientId) {
+        // Si no existe pero es acción de crear, preparamos datos básicos
+        setSessionData({ 
+          patient_id: Number(patientId),
+          doctor_id: doctorId ? Number(doctorId) : null,
+          item_id: itemId ? Number(itemId) : null,
+          appointment_id: Number(appointmentId)
+        });
+        setShowCreateSessionModal(true);
+      }
+    } else if (action === 'create' && patientId) {
       setSessionData({ 
         patient_id: Number(patientId),
         doctor_id: doctorId ? Number(doctorId) : null,
         item_id: itemId ? Number(itemId) : null
       });
       setShowCreateSessionModal(true);
-      
-      // Limpia la URL para evitar que el modal se vuelva a abrir al recargar
-      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+
+    // Limpia la URL para evitar que el modal se vuelva a abrir al recargar
+    if (searchParams.has('action') || searchParams.has('appointment_id')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [atenciones]);
 
   // Acciones sobre sesiones
   const openStartModal = (session) => {
@@ -106,6 +125,7 @@ export default function Index({
         {/* Header */}
         <AttendancesHeader
           openCreateUpdateSessionModal={openCreateUpdateSessionModal}
+          totalSessions={atenciones.length}
         />
         {/* KPIs */}
         <Kpis kpis={kpis} filtros={filtros} />
@@ -173,7 +193,7 @@ export default function Index({
         <SideModal
           open={showCreateSessionModal}
           onClose={() => setShowCreateSessionModal(false)}
-          width="full" // sm, md, lg, xl, 2xl, 3xl, full
+          width="5xl" // sm, md, lg, xl, 2xl, 3xl, 4xl, 5xl, full
           hideDefaultHeader={true}
         >
           <CreateUpdateModal

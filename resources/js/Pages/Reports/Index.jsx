@@ -28,7 +28,7 @@ import {
 
 const COLORS = ['#3292b3', '#79d0ec', '#858793', '#1e293b', '#64748b'];
 
-export default function Index({ revenueData, distributionData, stats }) {
+export default function Index({ revenueData, distributionData, roomProfitabilityData, stats }) {
     return (
         <AuthenticatedLayout>
             <Head title="Centro de Inteligencia de Datos" />
@@ -164,6 +164,43 @@ export default function Index({ revenueData, distributionData, stats }) {
                                 </div>
                             ))}
                         </div>
+                    </div>
+                </div>
+
+                {/* ROOM PROFITABILITY SECTION */}
+                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 className="enterprise-label !text-gray-900">Rentabilidad por Sala (Box)</h3>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase">Rendimiento financiero por espacio físico</p>
+                        </div>
+                        <div className="p-3 bg-slate-50 rounded-2xl">
+                            <Calendar className="w-5 h-5 text-slate-400" />
+                        </div>
+                    </div>
+                    <div className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={roomProfitabilityData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis 
+                                    dataKey="room_name" 
+                                    axisLine={false} 
+                                    tickLine={false} 
+                                    tick={{fontSize: 10, fontWeight: 900, fill: '#858793'}}
+                                />
+                                <YAxis 
+                                    axisLine={false} 
+                                    tickLine={false} 
+                                    tick={{fontSize: 10, fontWeight: 900, fill: '#858793'}}
+                                    tickFormatter={(val) => `$${val/1000}k`}
+                                />
+                                <Tooltip 
+                                    cursor={{fill: '#f8fafc'}}
+                                    contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                                />
+                                <Bar dataKey="total_revenue" fill="#3292b3" radius={[10, 10, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
             </div>

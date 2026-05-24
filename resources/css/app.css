@@ -356,6 +356,19 @@ label,
     @apply bg-background text-foreground;
   }
 
+  /* Global Cursor Pointer Fix */
+  button, 
+  a, 
+  select,
+  option,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  .cursor-pointer,
+  .clickable-card {
+    cursor: pointer !important;
+  }
+
   input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="image"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
   select,
   textarea {

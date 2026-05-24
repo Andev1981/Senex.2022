@@ -15,6 +15,7 @@ export default function AuthenticatedLayout({ header, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const userIsSuperAdmin = roles.includes("superadmin");
   const userIsAdmin = roles.includes("admin");
+  const userIsKine = roles.includes("kine");
   const userIsCajero = roles.includes("cajero");
 
   const { flash, env } = usePage().props;
@@ -54,12 +55,12 @@ export default function AuthenticatedLayout({ header, children }) {
 
   return (
     <>
-      {(env === 'local' || userIsSuperAdmin) && (
+      {(env === 'local' || userIsSuperAdmin || userIsKine) && (
         <Suspense fallback={null}>
           <DevToolbar />
         </Suspense>
       )}
-      <div className={`flex w-full overflow-hidden min-h-dvh bg-gray-50/50 ${(env === 'local' || userIsSuperAdmin) ? 'pt-8' : ''}`}>
+      <div className={`flex w-full overflow-hidden min-h-dvh bg-gray-50/50}`}>
       {/* Banner de Advertencia */}
             {!isOnline && (
                 <div className="bg-red-600 text-white text-center py-2 sticky top-0 z-50 animate-pulse">

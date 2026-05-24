@@ -16,7 +16,11 @@ export default function DoctorConfig({ doctor, session_types }) {
     const { data, setData, post, processing, reset } = useForm({
         session_type_id: null,
         percentage: 0,
+        commission_percentage_own: 0,
+        commission_percentage_assigned: 0,
         fixed_amount_clp: 0,
+        amount_clp_own: 0,
+        amount_clp_assigned: 0,
         commission_type: 'fixed_amount'
     });
 
@@ -31,17 +35,27 @@ export default function DoctorConfig({ doctor, session_types }) {
             const basePrice = Number(st.base_price_clp) || 0;
             const globalDefaultComm = Number(st.default_doctor_commission_clp) || 0;
 
-            let finalComm = globalDefaultComm; // Por defecto es el global
+            let commOwn = globalDefaultComm;
+            let commAssigned = globalDefaultComm;
+
             if (customRate) {
-                finalComm = customRate.commission_type === 'fixed_amount' 
-                    ? Number(customRate.amount_clp) 
-                    : Math.round(basePrice * (Number(customRate.commission_percentage || 0) / 100));
+                if (customRate.commission_type === 'fixed_amount') {
+                    commOwn = Number(customRate.amount_clp_own) || Number(customRate.amount_clp) || 0;
+                    commAssigned = Number(customRate.amount_clp_assigned) || Number(customRate.amount_clp) || 0;
+                } else {
+                    const pOwn = customRate.commission_percentage_own ?? customRate.commission_percentage ?? 0;
+                    const pAssigned = customRate.commission_percentage_assigned ?? customRate.commission_percentage ?? 0;
+                    
+                    commOwn = Math.round(basePrice * (Number(pOwn) / 100));
+                    commAssigned = Math.round(basePrice * (Number(pAssigned) / 100));
+                }
             }
 
             return {
                 ...st,
                 is_custom: !!customRate,
-                commission_clp: finalComm,
+                comm_own_clp: commOwn,
+                comm_assigned_clp: commAssigned,
                 custom_data: customRate
             };
         });
@@ -56,7 +70,11 @@ export default function DoctorConfig({ doctor, session_types }) {
         setData({
             session_type_id: rate.id,
             percentage: Number(rate.custom_data?.commission_percentage) || 0,
+            commission_percentage_own: Number(rate.custom_data?.commission_percentage_own) || Number(rate.custom_data?.commission_percentage) || 0,
+            commission_percentage_assigned: Number(rate.custom_data?.commission_percentage_assigned) || Number(rate.custom_data?.commission_percentage) || 0,
             fixed_amount_clp: Number(rate.custom_data?.amount_clp) || 0,
+            amount_clp_own: Number(rate.custom_data?.amount_clp_own) || Number(rate.custom_data?.amount_clp) || 0,
+            amount_clp_assigned: Number(rate.custom_data?.amount_clp_assigned) || Number(rate.custom_data?.amount_clp) || 0,
             commission_type: rate.custom_data?.commission_type || 'fixed_amount'
         });
         setIsModalOpen(true);
@@ -64,7 +82,22 @@ export default function DoctorConfig({ doctor, session_types }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        const payload = {
+            rules: [{
+                item_id: data.session_type_id,
+                commission_type: data.commission_type,
+                amount_clp: data.fixed_amount_clp,
+                amount_clp_own: data.amount_clp_own,
+                amount_clp_assigned: data.amount_clp_assigned,
+                commission_percentage: data.percentage,
+                commission_percentage_own: data.commission_percentage_own,
+                commission_percentage_assigned: data.commission_percentage_assigned
+            }]
+        };
+
         post(route('doctors.commissions.update', doctor.id), {
+            data: payload,
             onSuccess: () => {
                 setIsModalOpen(false);
                 Swal.fire('¡Éxito!', 'Tarifa configurada correctamente.', 'success');
@@ -107,7 +140,8 @@ export default function DoctorConfig({ doctor, session_types }) {
                             <tr className="bg-white/50 border-b border-gray-100">
                                 <th className="px-6 py-4 text-left text-[9px] font-black text-brand-gray uppercase tracking-widest">Servicio</th>
                                 <th className="px-6 py-4 text-center text-[9px] font-black text-brand-gray uppercase tracking-widest">Origen</th>
-                                <th className="px-6 py-4 text-right text-[9px] font-black text-brand-gray uppercase tracking-widest">Pago Profesional</th>
+                                <th className="px-6 py-4 text-right text-[9px] font-black text-brand-gray uppercase tracking-widest">Pago Propio</th>
+                                <th className="px-6 py-4 text-right text-[9px] font-black text-brand-gray uppercase tracking-widest">Pago Asignado</th>
                                 <th className="px-6 py-4 text-right text-[9px] font-black text-brand-gray uppercase tracking-widest">Acciones</th>
                             </tr>
                         </thead>
@@ -126,7 +160,12 @@ export default function DoctorConfig({ doctor, session_types }) {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <span className={`text-xs font-bold font-mono ${rate.is_custom ? 'text-brand-primary' : 'text-gray-600'}`}>
-                                            {formatMoney(rate.commission_clp)}
+                                            {formatMoney(rate.comm_own_clp)}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <span className={`text-xs font-bold font-mono ${rate.is_custom ? 'text-brand-primary' : 'text-gray-600'}`}>
+                                            {formatMoney(rate.comm_assigned_clp)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
@@ -210,41 +249,83 @@ export default function DoctorConfig({ doctor, session_types }) {
 
                     <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-6">
                         <div className="space-y-4">
-                            <div className={`space-y-2 transition-all ${data.commission_type === 'fixed_amount' ? 'opacity-100 scale-100' : 'opacity-40 grayscale pointer-events-none'}`}>
-                                <label className="enterprise-label ml-1">Monto en Pesos ($)</label>
-                                <InputPesoChileno 
-                                    price={data.fixed_amount_clp}
-                                    onChange={(e) => setData('fixed_amount_clp', e.target.value)}
-                                    className="w-full !rounded-2xl !py-4 !px-5 font-black text-lg bg-white"
-                                />
+                            <div className={`space-y-4 transition-all ${data.commission_type === 'fixed_amount' ? 'opacity-100 scale-100' : 'opacity-40 grayscale pointer-events-none'}`}>
+                                <div className="space-y-2">
+                                    <label className="enterprise-label ml-1">Monto Paciente Propio ($)</label>
+                                    <InputPesoChileno 
+                                        price={data.amount_clp_own}
+                                        onChange={(e) => {
+                                            const valStr = String(e.target.value).replace(/[^0-9]/g, "");
+                                            const priceLimit = String(selectedRate?.base_price_clp || 0).replace(/[^0-9]/g, "").length;
+                                            if (valStr.length <= priceLimit) setData('amount_clp_own', e.target.value);
+                                        }}
+                                        className="w-full !rounded-2xl !py-4 !px-5 font-black text-lg bg-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="enterprise-label ml-1">Monto Paciente Asignado ($)</label>
+                                    <InputPesoChileno 
+                                        price={data.amount_clp_assigned}
+                                        onChange={(e) => {
+                                            const valStr = String(e.target.value).replace(/[^0-9]/g, "");
+                                            const priceLimit = String(selectedRate?.base_price_clp || 0).replace(/[^0-9]/g, "").length;
+                                            if (valStr.length <= priceLimit) setData('amount_clp_assigned', e.target.value);
+                                        }}
+                                        className="w-full !rounded-2xl !py-4 !px-5 font-black text-lg bg-white"
+                                    />
+                                </div>
                             </div>
 
-                            <div className={`space-y-2 transition-all ${data.commission_type === 'percentage' ? 'opacity-100 scale-100' : 'opacity-40 grayscale pointer-events-none'}`}>
-                                <label className="enterprise-label ml-1">Porcentaje de Comisión (%)</label>
-                                <div className="relative">
-                                    <TextInputNumber 
-                                        value={data.percentage}
-                                        onChange={(e) => setData('percentage', e.target.value)}
-                                        className="w-full !rounded-2xl !py-4 !pl-5 !pr-12 font-black text-lg bg-white"
-                                        placeholder="0"
-                                        min={0}
-                                        max={100}
-                                    />
-                                    <Percent className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                            <div className={`space-y-4 transition-all ${data.commission_type === 'percentage' ? 'opacity-100 scale-100' : 'opacity-40 grayscale pointer-events-none'}`}>
+                                <div className="space-y-2">
+                                    <label className="enterprise-label ml-1">Comisión Paciente Propio (%)</label>
+                                    <div className="relative">
+                                        <TextInputNumber 
+                                            value={data.commission_percentage_own}
+                                            onChange={(e) => {
+                                                const valStr = String(e.target.value);
+                                                const val = parseFloat(e.target.value);
+                                                if ((valStr.length <= 3 && val <= 100) || e.target.value === "") setData('commission_percentage_own', e.target.value);
+                                            }}
+                                            className="w-full !rounded-2xl !py-4 !pl-5 !pr-12 font-black text-lg bg-white"
+                                            placeholder="0"
+                                            min={0}
+                                            max={100}
+                                        />
+                                        <Percent className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="enterprise-label ml-1">Comisión Paciente Asignado (%)</label>
+                                    <div className="relative">
+                                        <TextInputNumber 
+                                            value={data.commission_percentage_assigned}
+                                            onChange={(e) => {
+                                                const valStr = String(e.target.value);
+                                                const val = parseFloat(e.target.value);
+                                                if ((valStr.length <= 3 && val <= 100) || e.target.value === "") setData('commission_percentage_assigned', e.target.value);
+                                            }}
+                                            className="w-full !rounded-2xl !py-4 !pl-5 !pr-12 font-black text-lg bg-white"
+                                            placeholder="0"
+                                            min={0}
+                                            max={100}
+                                        />
+                                        <Percent className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="pt-6 border-t border-gray-50">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Resultado Estimado</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Resultado Estimado (Máximo)</p>
                         <div className="p-6 bg-brand-primary text-white rounded-3xl flex justify-between items-center shadow-xl shadow-brand-primary/20">
                             <div>
-                                <p className="text-[10px] font-black uppercase opacity-60 tracking-widest">El profesional recibirá</p>
+                                <p className="text-[10px] font-black uppercase opacity-60 tracking-widest">El profesional recibirá hasta</p>
                                 <p className="text-2xl font-black font-mono tracking-tighter">
                                     {data.commission_type === 'fixed_amount' 
                                         ? formatMoney(data.fixed_amount_clp) 
-                                        : formatMoney(Math.round((Number(selectedRate?.base_price_clp) || 0) * (data.percentage / 100)))
+                                        : formatMoney(Math.round((Number(selectedRate?.base_price_clp) || 0) * (Math.max(data.commission_percentage_own, data.commission_percentage_assigned) / 100)))
                                     }
                                 </p>
                             </div>

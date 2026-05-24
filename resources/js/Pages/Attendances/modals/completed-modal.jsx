@@ -181,19 +181,101 @@ export default function CompletedModal({
             </div>
         </div>
 
-        {/* NOTAS FINALES */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-                <label className="enterprise-label text-brand-primary! flex items-center gap-2 ml-1">
-                    <MessageSquare className="w-4 h-4" /> Evolución de la Sesión
-                </label>
-                <textarea value={sessionData.notes || ""} onChange={e => setSessionData({...sessionData, notes: e.target.value})} rows="4" className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" placeholder="Hallazgos clínicos relevantes..." />
+        {/* PROTOCOLO SOAP (ESTRUCTURADO) */}
+        <div className="space-y-6">
+            <h3 className="enterprise-label text-brand-primary! flex items-center gap-2 ml-1">
+                <ClipboardList className="w-4 h-4" /> Protocolo SOAP
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* [S]ubjetivo */}
+                <div className="space-y-3">
+                    <label className="flex items-center gap-2 ml-1">
+                        <span className="flex items-center justify-center w-6 h-6 bg-brand-primary text-white text-[10px] font-black rounded-lg shadow-sm">S</span>
+                        <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">Subjetivo (Relato del paciente)</span>
+                    </label>
+                    <textarea 
+                        value={sessionData.subjective || ""} 
+                        onChange={e => setSessionData({...sessionData, subjective: e.target.value})} 
+                        rows="3" 
+                        className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" 
+                        placeholder="Sensaciones, síntomas reportados, nivel de dolor percibido..." 
+                    />
+                </div>
+
+                {/* [O]bjetivo */}
+                <div className="space-y-3">
+                    <label className="flex items-center gap-2 ml-1">
+                        <span className="flex items-center justify-center w-6 h-6 bg-brand-primary text-white text-[10px] font-black rounded-lg shadow-sm">O</span>
+                        <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">Objetivo (Hallazgos físicos)</span>
+                    </label>
+                    <textarea 
+                        value={sessionData.objective || ""} 
+                        onChange={e => setSessionData({...sessionData, objective: e.target.value})} 
+                        rows="3" 
+                        className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" 
+                        placeholder="Rango de movimiento, fuerza, tests ortopédicos, palpación..." 
+                    />
+                </div>
+
+                {/* [A]preciación */}
+                <div className="space-y-3">
+                    <label className="flex items-center gap-2 ml-1">
+                        <span className="flex items-center justify-center w-6 h-6 bg-brand-primary text-white text-[10px] font-black rounded-lg shadow-sm">A</span>
+                        <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">Apreciación (Juicio clínico)</span>
+                    </label>
+                    <textarea 
+                        value={sessionData.assessment || ""} 
+                        onChange={e => setSessionData({...sessionData, assessment: e.target.value})} 
+                        rows="3" 
+                        className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" 
+                        placeholder="Interpretación de los hallazgos, evolución respecto a la sesión anterior..." 
+                    />
+                </div>
+
+                {/* [P]lan */}
+                <div className="space-y-3">
+                    <label className="flex items-center gap-2 ml-1">
+                        <span className="flex items-center justify-center w-6 h-6 bg-brand-primary text-white text-[10px] font-black rounded-lg shadow-sm">P</span>
+                        <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">Plan de Tratamiento</span>
+                    </label>
+                    <textarea 
+                        value={sessionData.plan || ""} 
+                        onChange={e => setSessionData({...sessionData, plan: e.target.value})} 
+                        rows="3" 
+                        className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" 
+                        placeholder="Objetivos para la próxima sesión, ajustes en la frecuencia..." 
+                    />
+                </div>
             </div>
-            <div className="space-y-3">
-                <label className="enterprise-label text-brand-primary! flex items-center gap-2 ml-1">
-                    <Home className="w-4 h-4" /> Tareas & Indicaciones
-                </label>
-                <textarea value={sessionData.homework || ""} onChange={e => setSessionData({...sessionData, homework: e.target.value})} rows="4" className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" placeholder="Ejercicios para realizar en el hogar..." />
+        </div>
+
+        {/* INDICACIONES PARA EL HOGAR */}
+        <div className="space-y-6">
+            <h3 className="enterprise-label text-brand-primary! flex items-center gap-2 ml-1">
+                <Home className="w-4 h-4" /> Indicaciones Post-Sesión
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-brand-gray uppercase tracking-widest ml-1">Tareas & Terapia en el Hogar</label>
+                    <textarea 
+                        value={sessionData.homework || ""} 
+                        onChange={e => setSessionData({...sessionData, homework: e.target.value})} 
+                        rows="3" 
+                        className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" 
+                        placeholder="Ejercicios específicos, aplicación de frío/calor, reposo..." 
+                    />
+                </div>
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-brand-gray uppercase tracking-widest ml-1">Observaciones Generales</label>
+                    <textarea 
+                        value={sessionData.notes || ""} 
+                        onChange={e => setSessionData({...sessionData, notes: e.target.value})} 
+                        rows="3" 
+                        className="w-full rounded-[1.5rem] border-gray-100 bg-gray-50/50 py-4 px-5 text-sm font-medium focus:bg-white focus:ring-brand-primary shadow-inner resize-none" 
+                        placeholder="Notas administrativas o comentarios adicionales..." 
+                    />
+                </div>
             </div>
         </div>
       </div>

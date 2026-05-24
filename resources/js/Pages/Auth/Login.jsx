@@ -36,11 +36,11 @@ export default function Login({ status, canResetPassword, dev_users = [] }) {
   };
 
   const handleQuickLogin = (email) => {
-    // Para desarrollo asumimos password 'senex2026' segun el WorkshopFlowSeeder
+    // Para desarrollo asumimos password 'Senex2026#' segun el SpecificUsersSeeder
     setData((prev) => ({
       ...prev,
       email: email,
-      password: "senex2026",
+      password: "Senex2026#",
       remember: true
     }));
     

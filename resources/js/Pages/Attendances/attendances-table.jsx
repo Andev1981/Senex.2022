@@ -36,9 +36,36 @@ import {
 } from "lucide-react";
 import { router, usePage } from "@inertiajs/react";
 import { fmtCLP, fmtDate, fmtTime } from "@/utils/utils";
-import { estadoClass, estadoTexto } from "@/helpers/status";
 import SecondaryButton from "@/components/SecondaryButton";
 import PrimaryButton from "@/components/PrimaryButton";
+
+const getStatusConfig = (status) => {
+    switch (status?.toLowerCase()) {
+        case 'scheduled':
+        case 'programada':
+            return { label: 'Programada', class: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-400' };
+        case 'confirmed':
+        case 'confirmada':
+            return { label: 'Confirmada', class: 'bg-indigo-50 text-indigo-700 border-indigo-100', dot: 'bg-brand-primary' };
+        case 'checked_in':
+        case 'llegó':
+            return { label: 'En Espera', class: 'bg-orange-50 text-orange-700 border-orange-100', dot: 'bg-orange-400' };
+        case 'in_progress':
+        case 'en box':
+            return { label: 'En Curso', class: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500' };
+        case 'completed':
+        case 'realizada':
+            return { label: 'Completada', class: 'bg-green-50 text-green-700 border-green-100', dot: 'bg-green-500' };
+        case 'cancelled':
+        case 'anulada':
+            return { label: 'Anulada', class: 'bg-red-50 text-red-700 border-red-100', dot: 'bg-red-500' };
+        case 'not_show':
+        case 'no asistió':
+            return { label: 'Ausente', class: 'bg-gray-100 text-gray-600 border-gray-200', dot: 'bg-gray-400' };
+        default:
+            return { label: status, class: 'bg-gray-50 text-gray-600 border-gray-100', dot: 'bg-gray-300' };
+    }
+};
 
 export default function AttendancesTable({
   atenciones,
@@ -151,10 +178,14 @@ export default function AttendancesTable({
                 <span className="text-[9px] font-black text-brand-primary uppercase tracking-widest">
                   {row.original.name_session_type}
                 </span>
-                <div className="w-1 h-1 bg-gray-200 rounded-full"></div>
-                <span className="font-mono text-[10px] font-bold text-gray-400">
-                  #{row.original.month_session_number}
-                </span>
+                {row.original.month_session_number && (
+                  <>
+                    <div className="w-1 h-1 bg-gray-200 rounded-full"></div>
+                    <span className="font-mono text-[10px] font-bold text-gray-400">
+                      #{row.original.month_session_number}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -193,17 +224,19 @@ export default function AttendancesTable({
       {
         accessorKey: "status",
         header: "Estatus",
-        cell: ({ getValue }) => (
-          <div className="text-center">
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${estadoClass(
-                getValue()
-              )}`}
-            >
-              {estadoTexto(getValue())}
-            </span>
-          </div>
-        ),
+        cell: ({ getValue }) => {
+          const config = getStatusConfig(getValue());
+          return (
+            <div className="text-center">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-[0.2em] shadow-sm border ${config.class}`}
+              >
+                <div className={`w-1 h-1 rounded-full ${config.dot}`}></div>
+                {config.label}
+              </span>
+            </div>
+          );
+        },
       },
       {
         id: "pago",
@@ -236,58 +269,96 @@ export default function AttendancesTable({
         cell: ({ row }) => {
           const a = row.original;
           return (
-            <div className="flex items-center justify-end gap-1.5">
+            <div className="flex items-center justify-end gap-2">
               {/* Acciones de Flujo */}
-              {a.status === "scheduled" && (
-                <>
+              {(a.status === "scheduled" || a.status === "confirmed" || a.status === "checked_in") && (
+                <div className="flex items-center gap-1.5 p-1 bg-gray-50 border border-gray-100 rounded-2xl">
                   <button
-                    onClick={() => openStartModal(a)}
-                    className="p-2 text-blue-600 transition-all border border-blue-100 shadow-sm bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white active:scale-90"
-                    title="Iniciar"
+                    onClick={() => {
+                        if (a.session_id) {
+                            openStartModal(a);
+                        } else {
+                            openCreateUpdateSessionModal(a);
+                        }
+                    }}
+                    className="p-2 text-blue-600 transition-all bg-white border border-blue-50 shadow-sm rounded-xl hover:bg-blue-600 hover:text-white active:scale-95 group"
+                    title="Iniciar Atención"
                   >
-                    <Play className="w-4 h-4 fill-current" />
+                    <Play className="w-3.5 h-3.5 fill-current" />
                   </button>
+                  {(a.status === "scheduled" || a.status === "confirmed") && (
+                    <button
+                        onClick={() => {
+                            if (a.session_id) {
+                                openAbsentModal(a);
+                            } else {
+                                if (confirm("¿Marcar cita como ausente?")) {
+                                    router.post(route("agendas.absent", a.appointment_id));
+                                }
+                            }
+                        }}
+                        className="p-2 text-orange-600 transition-all bg-white border border-orange-50 shadow-sm rounded-xl hover:bg-orange-600 hover:text-white active:scale-95"
+                        title="Marcar Ausente"
+                    >
+                        <UserX className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <button
-                    onClick={() => openAbsentModal(a)}
-                    className="p-2 text-orange-600 transition-all border border-orange-100 shadow-sm bg-orange-50 rounded-xl hover:bg-orange-600 hover:text-white active:scale-90"
-                    title="Marcar Ausente"
+                    onClick={() => {
+                        if (a.session_id) {
+                            openCancelModal(a);
+                        } else {
+                            if (confirm("¿Anular cita programada?")) {
+                                router.delete(route("agendas.destroy", a.appointment_id));
+                            }
+                        }
+                    }}
+                    className="p-2 text-red-600 transition-all bg-white border border-red-50 shadow-sm rounded-xl hover:bg-red-600 hover:text-white active:scale-95"
+                    title="Anular Sesión"
                   >
-                    <UserX className="w-4 h-4" />
+                    <XCircle className="w-3.5 h-3.5" />
                   </button>
-                  <button
-                    onClick={() => openCancelModal(a)}
-                    className="p-2 text-red-600 transition-all border border-red-100 shadow-sm bg-red-50 rounded-xl hover:bg-red-600 hover:text-white active:scale-90"
-                    title="Cancelar"
-                  >
-                    <XCircle className="w-4 h-4" />
-                  </button>
-                </>
+                </div>
               )}
+              
               {a.status === "in_progress" && (
-                <button
-                  onClick={() => openCompletedModal(a)}
-                  className="p-2 text-green-600 transition-all border border-green-100 shadow-sm bg-green-50 rounded-xl hover:bg-green-600 hover:text-white active:scale-90"
-                  title="Finalizar"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1.5 p-1 bg-indigo-50/30 border border-indigo-100/50 rounded-2xl">
+                  <button
+                    onClick={() => {
+                      if (confirm("¿Mover al paciente a Sala de Máquinas?")) {
+                        router.post(route("sessions.move-to-room", a.session_id), { room_id: 3 });
+                      }
+                    }}
+                    className="p-2 text-indigo-600 transition-all bg-white border border-indigo-100 shadow-sm rounded-xl hover:bg-indigo-600 hover:text-white active:scale-90"
+                    title="Pasar a Gimnasio"
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => openCompletedModal(a)}
+                    className="p-2 text-green-600 transition-all bg-white border border-green-100 shadow-sm rounded-xl hover:bg-green-600 hover:text-white active:scale-90"
+                    title="Finalizar Atención"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               )}
 
               {/* Auditoría / DTE - SOLO SUPERADMIN */}
               {userIsSuperAdmin && a.status === "completed" && (
-                <>
+                <div className="flex items-center gap-1.5 p-1 bg-purple-50/30 border border-purple-100/50 rounded-2xl">
                   {!a.dte_generated ? (
                     <button
                       onClick={() => openDTEModal(a)}
                       disabled={a.is_locked && a.billing_info?.dte_status === 'pending'}
-                      className={`p-2 transition-all border shadow-sm rounded-xl active:scale-90 ${
+                      className={`p-2 transition-all bg-white border shadow-sm rounded-xl active:scale-90 ${
                         a.is_locked && a.billing_info?.dte_status === 'pending'
-                          ? "text-gray-400 border-gray-100 bg-gray-50 cursor-not-allowed"
-                          : "text-purple-600 border-purple-100 bg-purple-50 hover:bg-purple-600 hover:text-white"
+                          ? "text-gray-400 border-gray-100 cursor-not-allowed"
+                          : "text-purple-600 border-purple-100 hover:bg-purple-600 hover:text-white"
                       }`}
                       title={a.is_locked && a.billing_info?.dte_status === 'pending' ? "DTE en proceso..." : "Emitir DTE"}
                     >
-                      <Receipt className="w-4 h-4" />
+                      <Receipt className="w-3.5 h-3.5" />
                     </button>
                   ) : (
                     a.billing_info?.folio && (
@@ -295,35 +366,34 @@ export default function AttendancesTable({
                       href={route("dte.lookup", a.billing_info.folio)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 text-teal-600 transition-all border border-teal-100 shadow-sm bg-teal-50 rounded-xl hover:bg-teal-600 hover:text-white active:scale-90"
+                      className="p-2 text-teal-600 transition-all bg-white border border-teal-100 shadow-sm rounded-xl hover:bg-teal-600 hover:text-white active:scale-90"
                       title={`Ver DTE #${a.billing_info.folio}`}
                     >
-                      <Receipt className="w-4 h-4" />
+                      <Receipt className="w-3.5 h-3.5" />
                     </a>
                     )
                   )}
-                </>
+                </div>
               )}
 
-              {/* Menú Maestro */}
-              <button
-                onClick={() => openResumenModal(a)}
-                className="p-2 text-gray-400 transition-all border border-gray-100 bg-gray-50 rounded-xl hover:bg-gray-900 hover:text-white active:scale-90"
-                title="Resumen"
-              >
-                <FileText className="w-4 h-4" />
-              </button>
+              {/* Menú Maestro & Edición */}
+              <div className="flex items-center gap-1.5 p-1 bg-gray-50 border border-gray-100 rounded-2xl ml-1">
+                <button
+                  onClick={() => openResumenModal(a)}
+                  className="p-2 text-gray-400 transition-all bg-white border border-gray-100 shadow-sm rounded-xl hover:bg-gray-900 hover:text-white active:scale-90"
+                  title="Ver Resumen Clínico"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                </button>
 
-              <div className="w-px h-6 mx-1 bg-gray-100"></div>
-
-              {/* Edición Principal */}
-              <button
-                onClick={() => openCreateUpdateSessionModal(a)}
-                className="p-2 transition-all border text-brand-primary bg-brand-secondary/10 border-brand-secondary/20 rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
-                title="Editar Parámetros"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </button>
+                <button
+                  onClick={() => openCreateUpdateSessionModal(a)}
+                  className="p-2 transition-all bg-white border text-brand-primary border-brand-secondary/20 shadow-sm rounded-xl hover:bg-brand-primary hover:text-white active:scale-90"
+                  title="Editar Parámetros de Sesión"
+                >
+                  <MoreVertical className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           );
         },
@@ -430,9 +500,11 @@ export default function AttendancesTable({
             >
               <option value="all">Todos los Estados</option>
               <option value="scheduled">Programada</option>
+              <option value="confirmed">Confirmada</option>
+              <option value="checked_in">En Espera (Recepción)</option>
               <option value="in_progress">En Curso</option>
               <option value="completed">Completada</option>
-              <option value="absent">Ausente</option>
+              <option value="not_show">Ausente</option>
             </select>
 
             <div className="flex gap-2 ml-auto">

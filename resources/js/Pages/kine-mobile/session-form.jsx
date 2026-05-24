@@ -1,5 +1,5 @@
-// resources/js/pages/KineMobile/SessionForm.jsx
-import React, { useState, useEffect } from "react";
+// resources/js/pages/kine-mobile/session-form.jsx
+import React, { useState, useEffect, useMemo } from "react";
 import { Head, router } from "@inertiajs/react";
 import {
   ArrowLeft,
@@ -8,281 +8,843 @@ import {
   User,
   FileText,
   Save,
-  Trash2,
   Search,
   Stethoscope,
-  DollarSign,
-  Percent,
   Activity,
-  TrendingUp,
-  TrendingDown,
   Clipboard,
   Target,
-  Home,
   CheckCircle,
+  Eye,
+  Zap,
+  BookOpen,
+  Info,
+  DollarSign,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  History,
+  RotateCcw,
+  MoveUp,
+  MoveDiagonal,
+  Dumbbell,
+  Ruler,
+  MapPin,
+  ShieldCheck,
+  Smartphone,
+  X
 } from "lucide-react";
 import KineLayout from "@/Layouts/KineLayout";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import moment from "moment";
-import SignatureCanvas from "@/Components/SignatureCanvas";
+import SignatureCanvas from "@/components/SignatureCanvas";
+import { fmtCLP } from "@/utils/utils";
+import PainMapCard from "@/components/Body/PainMapCard";
+import EnterpriseSelect from "@/components/EnterpriseSelect";
+import TextInput from "@/components/TextInput";
+import Switch from "@/components/Switch";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import Swal from "sweetalert2";
+
+const ROMGauge = ({ label, value, onChange, min = 0, max = 180, icon: Icon, colorClass = "text-amber-500", bgClass = "bg-amber-50" }) => {
+    const percentage = ((value - min) / (max - min)) * 100;
+    
+    return (
+        <div className={`p-5 bg-white rounded-[32px] border border-slate-100 shadow-sm transition-all active:bg-slate-50`}>
+            <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 ${bgClass} rounded-xl`}>
+                        <Icon className={`w-4 h-4 ${colorClass}`} />
+                    </div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+                </div>
+                <div className={`px-3 py-1 ${bgClass} rounded-full`}>
+                    <span className={`text-sm font-black ${colorClass}`}>{value}°</span>
+                </div>
+            </div>
+            
+            <div className="relative h-12 flex items-center">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                            className={`h-full transition-all duration-500 rounded-full ${colorClass.replace('text', 'bg')}`}
+                            style={{ width: `${percentage}%` }}
+                        />
+                    </div>
+                </div>
+                <input 
+                    type="range" min={min} max={max} 
+                    value={value} 
+                    onChange={(e) => onChange(parseInt(e.target.value))} 
+                    className="absolute inset-0 w-full h-12 opacity-0 cursor-pointer z-10" 
+                />
+                <div 
+                    className={`absolute w-6 h-6 bg-white border-4 rounded-full shadow-md z-0 pointer-events-none transition-all duration-500 ${colorClass.replace('text', 'border')}`}
+                    style={{ left: `calc(${percentage}% - 12px)` }}
+                />
+            </div>
+            <div className="flex justify-between mt-1 px-1">
+                <span className="text-[8px] font-bold text-slate-300">{min}°</span>
+                <span className="text-[8px] font-bold text-slate-300">{max}°</span>
+            </div>
+        </div>
+    );
+};
 
 export default function SessionForm({
   session = null,
   patients = [],
-  sessionTypes = [],
+  items = [],
   treatments = [],
   doctor,
-  availableTechniques = [],
-  availableExercises = [],
+  previousSession = null,
+  appointment = null,
+  permissions = { can_create_sessions: true, can_view_sessions: true }
 }) {
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const isEditMode = !!session;
-  const canEdit = !isEditMode || session.status === "Programada";
+  const currentStatus = (session?.status || "scheduled")?.toLowerCase();
+  
+  // No puede editar si la sesión ya está completada O si no tiene permiso de creación
+  const canEdit = permissions.can_create_sessions && (!isEditMode || ["scheduled", "in_progress", "checked_in", "programada"].includes(currentStatus));
+  
   const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
 
-  // Estado del formulario
+  // Estado del formulario siguiendo estructura SOAP
   const [formData, setFormData] = useState({
     treatment_id: session?.treatment_id || "",
-    month_session_number: session?.month_session_number || "",
     date: session?.date
       ? moment.utc(session.date).format("YYYY-MM-DD")
       : moment.utc(Date.now()).format("YYYY-MM-DD"),
-    time: session?.time ? moment(session.time, "HH:mm:ss").format("HH:mm") : "",
+    time: session?.time ? moment(session.time, "HH:mm:ss").format("HH:mm") : moment().format("HH:mm"),
     duration: session?.duration || 60,
-    status: session?.status || "scheduled",
+    status: session?.status || (appointment ? "checked_in" : "scheduled"),
     doctor_id: doctor?.id || session?.doctor_id || "",
-    patient_id: session?.patient_id || "",
-    item_id: session?.item_id || "",
+    patient_id: session?.patient_id || appointment?.patient_id || "",
+    item_id: session?.item_id || appointment?.item_id || "",
 
+    // S - Subjetivo
     pain_before: session?.pain_before || 0,
+    subjective: session?.subjective || "",
+
+    // O - Objetivo (Biometría y ROM)
+    evaluation_data: session?.evaluation_data || { rom: {} },
+    objective: session?.objective || "",
+    
+    // A - Evaluación (Pain After)
     pain_after: session?.pain_after || 0,
+    assessment: session?.assessment || "",
 
-    rom_flexion_before: session?.rom_flexion_before || 0,
-    rom_flexion_after: session?.rom_flexion_after || 0,
-    rom_abduction_before: session?.rom_abduction_before || 0,
-    rom_abduction_after: session?.rom_abduction_after || 0,
-    rom_rotation_before: session?.rom_rotation_before || 0,
-    rom_rotation_after: session?.rom_rotation_after || 0,
-
-    techniques: session?.techniques || [],
-    exercises: session?.exercises || [],
-
-    notes: session?.notes || "",
+    // P - Plan
+    activities_data: session?.activities_data || { techniques: [], exercises: [] },
+    plan: session?.plan || "",
     homework: session?.homework || "",
     next_goals: session?.next_goals || "",
+    objectives: session?.treatment?.objectives || "", // Línea Base
 
-    patient_amount_clp: session?.patient_amount_clp || 0,
-    doctor_amount_clp: session?.doctor_amount_clp || 0,
+    // Pain Map & Localization
+    session_pain_map: session?.session_pain_map || [],
+    body_part: session?.body_part || "",
+    laterality: session?.laterality || "",
+    informed_consent_confirmed: !!session?.informed_consent_confirmed,
   });
 
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchPatient, setSearchPatient] = useState(session?.patient?.name || "");
-  const [showPatientList, setShowPatientList] = useState(false);
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState("subjetivo");
+  const [newRomName, setNewRomName] = useState("");
+  const [techniqueInput, setTechniqueInput] = useState("");
+  const [exerciseInput, setExerciseInput] = useState("");
 
-  const selectedSessionType = sessionTypes.find(st => st.id === parseInt(formData.item_id));
+  const handleAddRomMetric = () => {
+    if (!newRomName.trim()) return;
+    const currentRom = formData.evaluation_data.rom || {};
+    if (currentRom[newRomName]) return; 
 
-  useEffect(() => {
-    if (selectedSessionType && !isEditMode) {
-      setFormData(prev => ({
+    setFormData(prev => ({
         ...prev,
-        patient_amount_clp: selectedSessionType.price,
-        duration: selectedSessionType.duration || 60,
-      }));
+        evaluation_data: {
+            ...prev.evaluation_data,
+            rom: { ...currentRom, [newRomName]: { before: 0, after: 0 } }
+        }
+    }));
+    setNewRomName(""); 
+  };
+
+  const handleDeleteRomMetric = (romName) => {
+    const currentRom = { ...formData.evaluation_data.rom };
+    delete currentRom[romName];
+    setFormData(prev => ({
+        ...prev,
+        evaluation_data: { ...prev.evaluation_data, rom: currentRom }
+    }));
+  };
+
+  const handleRomChange = (romName, moment, value) => {
+    const currentRom = formData.evaluation_data.rom || {};
+    setFormData(prev => ({
+      ...prev,
+      evaluation_data: {
+        ...prev.evaluation_data,
+        rom: {
+          ...currentRom,
+          [romName]: { ...currentRom[romName], [moment]: parseInt(value) || 0 },
+        },
+      },
+    }));
+  };
+
+  const handleActivityChange = (category, item, action) => {
+    const currentList = formData.activities_data[category] || [];
+    const newList = action === "add"
+        ? [...new Set([...currentList, item])]
+        : currentList.filter((i) => i !== item);
+    setFormData(prev => ({
+      ...prev,
+      activities_data: {
+        ...prev.activities_data,
+        [category]: newList,
+      },
+    }));
+  };
+
+  const tabs = [
+    { id: "subjetivo", label: "Relato", icon: User, color: "text-blue-500" },
+    { id: "objetivo", label: "Biometría", icon: Ruler, color: "text-amber-500" },
+    { id: "plan", label: "Ejecución", icon: Dumbbell, color: "text-green-500" },
+    { id: "analisis", label: "Cierre", icon: Target, color: "text-teal-500" },
+  ];
+
+  const handleNextTab = () => {
+    const currentIndex = tabs.findIndex(t => t.id === activeTab);
+    if (currentIndex < tabs.length - 1) {
+        setActiveTab(tabs[currentIndex + 1].id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        handleFinishSession();
     }
-  }, [formData.item_id]);
-
-  const filteredPatients = !isEditMode
-    ? patients.filter(p => p.name.toLowerCase().includes(searchPatient.toLowerCase()) || (p.rut && p.rut.includes(searchPatient)))
-    : [];
-
-  const patientTreatments = formData.patient_id
-    ? treatments.filter(t => t.patient_id === parseInt(formData.patient_id))
-    : [];
-
-  const handleSelectPatient = (patient) => {
-    setFormData({ ...formData, patient_id: patient.id, treatment_id: "", item_id: "" });
-    setSearchPatient(patient.name);
-    setShowPatientList(false);
   };
 
   const handleFinishSession = () => {
-    if (!isFormValid()) {
-      alert("Por favor completa los datos básicos antes de finalizar.");
-      return;
+    console.log("Iniciando cierre de sesión...");
+    if (!formData.informed_consent_confirmed) {
+        Swal.fire({
+            title: "Atención",
+            text: "Debe confirmar el consentimiento informado antes de finalizar.",
+            icon: "warning",
+            confirmButtonColor: "#1e293b"
+        });
+        return;
     }
-    setShowSignatureModal(true);
-  };
-
-  const onSaveSignature = (signatureBase64) => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => sendCompletion(signatureBase64, false, `${pos.coords.latitude},${pos.coords.longitude}`),
-        () => sendCompletion(signatureBase64, false, null)
-      );
-    } else {
-      sendCompletion(signatureBase64, false, null);
-    }
-  };
-
-  const onSkipSignature = () => {
-    const reason = prompt("Motivo de omisión:", "Paciente de confianza");
-    if (reason !== null) sendCompletion(null, true, null, reason);
+    
+    // Finalizamos directamente omitiendo firma en este flujo rápido
+    sendCompletion(null, true, null, "Omisión por flujo operativo");
   };
 
   const sendCompletion = (signatureBase64, skipped, coords, skipReason = "") => {
+    const sessionId = session?.id;
+    if (!sessionId) {
+        Swal.fire("Error", "No se puede finalizar una sesión sin ID.", "error");
+        return;
+    }
+
     setIsSubmitting(true);
-    router.post(route("kine.sessions.complete", session.id), {
+    
+    const payload = {
       ...formData,
       signature_skipped: skipped,
       signature_base64: signatureBase64,
       gps_coords: coords,
       skip_reason: skipReason,
-    }, {
-      onSuccess: () => router.visit(route("kine.dashboard")),
-      onError: (err) => { setErrors(err); setIsSubmitting(false); setShowSignatureModal(false); },
-      onFinish: () => setIsSubmitting(false)
+    };
+
+    router.post(route("kine.sessions.complete", sessionId), payload, {
+      onSuccess: () => {
+          Swal.fire({ title: "¡Sesión Finalizada!", icon: "success", toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+          router.visit(route("kine.dashboard"));
+      },
+      onFinish: () => setIsSubmitting(false),
+      onError: (err) => {
+          console.error("Error al finalizar sesión:", err);
+          Swal.fire("Error", "No se pudo cerrar la sesión. Revise los datos e intente nuevamente.", "error");
+      }
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const sessionId = session?.id;
+    if (!sessionId) return;
+
     setIsSubmitting(true);
-    const url = isEditMode ? route("sessions.update", session.id) : route("sessions.store");
-    router[isEditMode ? "put" : "post"](url, formData, {
-      onSuccess: () => router.visit(isEditMode ? route("kine.dashboard") : route("kine.dashboard")),
-      onError: (err) => { setErrors(err); setIsSubmitting(false); },
+    
+    router.put(route("kine.sessions.update-notes", sessionId), formData, {
+      onSuccess: () => {
+          Swal.fire({ title: "Borrador Guardado", icon: "success", toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+          router.visit(route("kine.dashboard"));
+      },
       onFinish: () => setIsSubmitting(false)
     });
   };
 
-  const isFormValid = () => formData.patient_id && formData.treatment_id && formData.item_id && formData.date && formData.time;
+  const patientName = useMemo(() => {
+    if (session?.patient) return session.patient.name;
+    const p = patients.find(p => p.id === formData.patient_id);
+    return p ? `${p.name} ${p.last_name}` : "Paciente";
+  }, [session, patients, formData.patient_id]);
 
-  const tabs = [
-    { id: "basic", label: "Básico", icon: Calendar },
-    { id: "clinical", label: "Clínico", icon: Activity },
-    { id: "notes", label: "Notas", icon: FileText },
-  ];
+  const PageContent = (
+    <div className={`min-h-screen ${isDesktop ? 'bg-gray-50/50' : 'bg-white pb-40'}`}>
+        <Head title={`Ficha SOAP - ${patientName}`} />
+        
+        {/* Header Hero */}
+        <div className={`sticky top-0 z-20 bg-white border-b shadow-sm ${isDesktop ? 'px-8 py-6' : 'px-6 py-4'}`}>
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <div className="flex items-center gap-4">
+                <button onClick={() => window.history.back()} className="p-2.5 bg-slate-50 text-slate-400 rounded-2xl hover:bg-slate-100 transition-colors">
+                    <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div>
+                    <h1 className={`${isDesktop ? 'text-2xl' : 'text-sm'} font-black text-slate-900 uppercase tracking-tight`}>Registro SOAP</h1>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{patientName}</p>
+                </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+                {isDesktop && (
+                    <div className="hidden lg:flex items-center gap-6 px-6 py-2 bg-slate-50 rounded-2xl border border-slate-100 mr-4">
+                        <div className="text-right border-r border-slate-200 pr-6">
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Estado</p>
+                            <p className="text-[10px] font-black text-brand-primary uppercase">{formData.status}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Especialista</p>
+                            <p className="text-[10px] font-black text-slate-700 uppercase">{doctor.name}</p>
+                        </div>
+                    </div>
+                )}
+                <button 
+                    onClick={() => setShowDetails(!showDetails)}
+                    className={`p-2.5 rounded-xl transition-all ${showDetails ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'bg-slate-50 text-slate-400'}`}
+                >
+                    {showDetails ? <ChevronUp className="w-5 h-5" /> : <Info className="w-5 h-5" />}
+                </button>
+            </div>
+          </div>
 
-  return (
-    <KineLayout>
-      <Head title={isEditMode ? "Editar Sesión" : "Nueva Sesión"} />
-      <div className="min-h-screen pb-24 bg-gray-50">
-        <div className="sticky top-0 z-10 bg-white border-b shadow-sm">
-          <div className="px-4 py-4 flex items-center gap-3">
-            <button onClick={() => window.history.back()} className="p-2 text-gray-600 rounded-lg hover:bg-gray-100">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-lg font-bold flex-1">{isEditMode ? "Sesión" : "Nueva Sesión"}</h1>
-          </div>
-          <div className="flex border-t">
-            {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 ${activeTab === tab.id ? "text-teal-600 border-b-2 border-teal-600 bg-teal-50" : "text-gray-600"}`}>
-                <tab.icon className="w-4 h-4" /> {tab.label}
-              </button>
-            ))}
-          </div>
+          {/* Información Detallada del Tratamiento (Colapsable) */}
+          {showDetails && (
+              <div className="max-w-7xl mx-auto mt-4 px-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 animate-in slide-in-from-top duration-300">
+                      <div className="md:col-span-2 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-start gap-4">
+                          <div className="p-3 bg-brand-primary/10 rounded-2xl">
+                              <Stethoscope className="w-5 h-5 text-brand-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Plan Maestro / Diagnóstico</p>
+                              <p className="text-sm font-black text-slate-700 leading-tight">{session?.treatment?.diagnosis || 'Ingreso por Agenda / Sin diagnóstico previo'}</p>
+                          </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100">
+                            <Activity className="w-4 h-4 text-brand-primary opacity-50" />
+                            <div>
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Servicio</p>
+                                <p className="text-[10px] font-bold text-slate-600 truncate">{session?.session_type_name || 'Kinesiología'}</p>
+                            </div>
+                        </div>
+                        {formData.status === 'in_progress' && (
+                             <button
+                                type="button"
+                                className="w-full py-3 px-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all group"
+                            >
+                                <Dumbbell className="w-4 h-4 text-indigo-500 group-hover:animate-bounce" />
+                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Liberar Box</span>
+                            </button>
+                        )}
+                      </div>
+                  </div>
+              </div>
+          )}
+          
+          {/* Tabs Navigation (Solo visible en Mobile) */}
+          {!isDesktop && (
+            <div className="flex px-2 overflow-x-auto no-scrollbar bg-white border-t border-slate-50 mt-4">
+                {tabs.map(tab => (
+                <button 
+                    key={tab.id} 
+                    onClick={() => setActiveTab(tab.id)} 
+                    className={`flex-1 min-w-[80px] py-4 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1.5 transition-all border-b-2 ${activeTab === tab.id ? `text-slate-900 border-brand-primary bg-slate-50 shadow-inner` : "text-slate-400 border-transparent"}`}
+                >
+                    <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? tab.color : 'text-slate-300'}`} /> 
+                    {tab.label}
+                </button>
+                ))}
+            </div>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} className="px-4 py-4 space-y-4">
-          {activeTab === "basic" && (
-            <div className="space-y-4">
-              {!isEditMode ? (
-                <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Paciente</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="text" value={searchPatient} onChange={(e) => { setSearchPatient(e.target.value); setShowPatientList(true); }} placeholder="Buscar paciente..." className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg" />
-                  </div>
-                  {showPatientList && searchPatient && (
-                    <div className="mt-2 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                      {filteredPatients.map(p => (
-                        <button key={p.id} type="button" onClick={() => handleSelectPatient(p)} className="w-full px-4 py-3 text-left hover:bg-teal-50 border-b last:border-0">{p.name}</button>
-                      ))}
+        <form onSubmit={handleSubmit} className={`max-w-7xl mx-auto ${isDesktop ? 'p-8' : 'p-6 pb-32'}`}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {/* === COLUMNA IZQUIERDA: CAMPOS SOAP === */}
+                <div className="lg:col-span-7 space-y-8">
+                    {isDesktop ? (
+                        /* Vista Desktop: Todos los campos visibles o en acordeones premium */
+                        <div className="space-y-10">
+                            {/* [S] SUBJETIVO */}
+                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-8 animate-in fade-in slide-in-from-left duration-500">
+                                <div className="flex items-center gap-4 mb-2">
+                                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center shadow-inner"><User className="w-6 h-6"/></div>
+                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[S] Relato Subjetivo</h2>
+                                </div>
+                                <div className="space-y-6">
+                                    <textarea 
+                                        value={formData.subjective} 
+                                        onChange={(e) => setFormData({...formData, subjective: e.target.value})} 
+                                        placeholder="¿Cómo se siente hoy? ¿Hubo cambios desde la última sesión?" 
+                                        className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all shadow-inner min-h-[200px]" 
+                                    />
+
+                                    {session?.item?.service_detail?.is_evaluation && (
+                                        <div className="p-8 bg-brand-primary/5 rounded-[2rem] border border-brand-primary/10 animate-in zoom-in-95 duration-500">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="p-2 bg-brand-primary text-white rounded-xl shadow-lg shadow-brand-primary/20">
+                                                    <Target className="w-4 h-4" />
+                                                </div>
+                                                <h3 className="text-sm font-black text-brand-primary uppercase tracking-widest">Objetivos de Línea Base</h3>
+                                            </div>
+                                            <textarea 
+                                                value={formData.objectives} 
+                                                onChange={(e) => setFormData({...formData, objectives: e.target.value})} 
+                                                placeholder="Defina los objetivos a largo plazo para este tratamiento (ej: Recuperar marcha, ROM 100%, etc)..." 
+                                                className="w-full bg-white border-transparent rounded-2xl p-6 text-sm font-bold shadow-sm focus:ring-brand-primary/20 transition-all" 
+                                                rows={4} 
+                                            />
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-3">Nota: Esta información se anclará como la "Foto Inicial" del tratamiento.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                            {/* [O] OBJETIVO - BIOMETRÍA Y ROM */}
+                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-10 animate-in fade-in slide-in-from-left duration-700">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner"><Ruler className="w-6 h-6"/></div>
+                                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[O] Biometría & ROM</h2>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            value={newRomName} 
+                                            onChange={(e) => setNewRomName(e.target.value)} 
+                                            className="px-4 py-2 text-xs font-bold border-slate-100 bg-slate-50 rounded-xl focus:bg-white transition-all shadow-inner w-64" 
+                                            placeholder="Nueva medición (ej: Flexión Hombro)..." 
+                                        />
+                                        <button type="button" onClick={handleAddRomMetric} className="bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95">+ Añadir</button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {Object.entries(formData.evaluation_data.rom || {}).map(([name, vals]) => (
+                                        <div key={name} className="relative group">
+                                            <ROMGauge 
+                                                label={name} 
+                                                value={vals.before || 0} 
+                                                onChange={(val) => handleRomChange(name, 'before', val)} 
+                                                icon={MoveUp} 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => handleDeleteRomMetric(name)}
+                                                className="absolute -top-2 -right-2 p-1.5 bg-white text-red-400 border border-red-50 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {Object.keys(formData.evaluation_data.rom || {}).length === 0 && (
+                                        <div className="col-span-full py-12 text-center bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-100">
+                                            <Ruler className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sin mediciones ROM registradas</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="enterprise-label opacity-60 ml-2">Hallazgos Físicos & Palpación</label>
+                                    <textarea 
+                                        value={formData.objective} 
+                                        onChange={(e) => setFormData({...formData, objective: e.target.value})} 
+                                        placeholder="Descripción detallada del examen físico..." 
+                                        className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-amber-500/5 focus:bg-white transition-all shadow-inner min-h-[150px]" 
+                                    />
+                                </div>
+                            </section>
+
+                            {/* [P] PLAN DE TRABAJO */}
+                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-10 animate-in fade-in slide-in-from-left duration-1000">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-inner"><Dumbbell className="w-6 h-6"/></div>
+                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[P] Ejecución & Plan</h2>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-8">
+                                    {/* Técnicas / Procedimientos */}
+                                    <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <Activity className="w-5 h-5 text-green-600" />
+                                            <h3 className="text-sm font-black text-green-800 uppercase tracking-widest">Procedimientos</h3>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                value={techniqueInput} 
+                                                onChange={(e) => setTechniqueInput(e.target.value)} 
+                                                onKeyDown={(e) => { if(e.key==='Enter'){ e.preventDefault(); handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }}}
+                                                className="flex-1 px-5 py-3 text-xs font-bold border-white bg-white rounded-xl focus:ring-green-200 transition-all shadow-sm" 
+                                                placeholder="Ej: TENS, Masaje..." 
+                                            />
+                                            <button type="button" onClick={() => { handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }} className="p-3 bg-green-600 text-white rounded-xl shadow-lg shadow-green-200 active:scale-90 transition-all"><Plus className="w-5 h-5"/></button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.activities_data.techniques?.map((t, i) => (
+                                                <span key={i} className="bg-white text-green-700 text-[10px] px-4 py-2 rounded-xl border border-green-100 flex items-center gap-2 font-black shadow-sm uppercase tracking-wider group hover:bg-green-50 transition-colors">
+                                                    {t} <button type="button" onClick={() => handleActivityChange('techniques', t, 'remove')} className="p-0.5 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500"><X className="w-3 h-3"/></button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Ejercicios */}
+                                    <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <Zap className="w-5 h-5 text-blue-600" />
+                                            <h3 className="text-sm font-black text-blue-800 uppercase tracking-widest">Ejercicios Realizados</h3>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                value={exerciseInput} 
+                                                onChange={(e) => setExerciseInput(e.target.value)} 
+                                                onKeyDown={(e) => { if(e.key==='Enter'){ e.preventDefault(); handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }}}
+                                                className="flex-1 px-5 py-3 text-xs font-bold border-white bg-white rounded-xl focus:ring-blue-200 transition-all shadow-sm" 
+                                                placeholder="Ej: Sentadillas, Elástico..." 
+                                            />
+                                            <button type="button" onClick={() => { handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }} className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 active:scale-90 transition-all"><Plus className="w-5 h-5"/></button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.activities_data.exercises?.map((t, i) => (
+                                                <span key={i} className="bg-white text-blue-700 text-[10px] px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-2 font-black shadow-sm uppercase tracking-wider group hover:bg-blue-50 transition-colors">
+                                                    {t} <button type="button" onClick={() => handleActivityChange('exercises', t, 'remove')} className="p-0.5 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500"><X className="w-3 h-3"/></button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="enterprise-label opacity-60 ml-2">Indicaciones para el Hogar</label>
+                                    <textarea value={formData.plan} onChange={(e) => setFormData({...formData, plan: e.target.value})} rows={6} className="w-full bg-slate-50 border-none rounded-3xl p-8 text-sm font-medium shadow-inner focus:bg-white focus:ring-green-500/5 transition-all" placeholder="Ej: Realizar 3 series de 10 repeticiones diariamente..."/>
+                                </div>
+                            </section>
+
+                            {/* [A] EVALUACION */}
+                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-8 animate-in fade-in slide-in-from-left duration-1000">
+                                <div className="flex items-center gap-4 mb-2">
+                                    <div className="w-12 h-12 bg-teal-50 text-teal-500 rounded-2xl flex items-center justify-center shadow-inner"><Target className="w-6 h-6"/></div>
+                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[A] Interpretación Clínica</h2>
+                                </div>
+                                <textarea value={formData.assessment} onChange={(e) => setFormData({...formData, assessment: e.target.value})} rows={6} className="w-full bg-slate-50 border-none rounded-3xl p-8 text-sm font-medium shadow-inner focus:bg-white focus:ring-teal-500/5 transition-all" placeholder="Juicio profesional sobre la evolución del paciente..."/>
+                            </section>
+                        </div>
+                    ) : (
+                        /* Vista Mobile: Sistema de Tabs Unificado */
+                        <div className="space-y-6">
+                             {activeTab === "subjetivo" && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                    {/* MAPA CORPORAL INTEGRADO */}
+                                    <PainMapCard
+                                        points={formData.session_pain_map}
+                                        painBefore={formData.pain_before}
+                                        painAfter={formData.pain_after}
+                                        bodyPart={formData.body_part} 
+                                        laterality={formData.laterality} 
+                                        isLocked={!canEdit} 
+                                        title="Mapa de Dolor"
+                                        onPointsChange={(val) => setFormData(prev => ({ ...prev, session_pain_map: val }))}
+                                        onPainBeforeChange={(val) => setFormData(prev => ({ ...prev, pain_before: val }))}
+                                        onPainAfterChange={(val) => setFormData(prev => ({ ...prev, pain_after: val }))}
+                                        onBodyPartChange={(val) => setFormData(prev => ({ ...prev, body_part: val }))} 
+                                        onLateralityChange={(val) => setFormData(prev => ({ ...prev, laterality: val }))} 
+                                    />
+
+                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Relato del Paciente</label>
+                                        <textarea 
+                                            value={formData.subjective} 
+                                            onChange={(e) => setFormData({...formData, subjective: e.target.value})} 
+                                            placeholder="¿Cómo se siente hoy?..." 
+                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all shadow-inner" 
+                                            rows={8} 
+                                        />
+                                    </div>
+
+                                    {session?.item?.service_detail?.is_evaluation && (
+                                        <div className="p-8 bg-brand-primary/5 rounded-[32px] border border-brand-primary/10">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <Target className="w-5 h-5 text-brand-primary" />
+                                                <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Objetivos Línea Base</span>
+                                            </div>
+                                            <textarea 
+                                                value={formData.objectives} 
+                                                onChange={(e) => setFormData({...formData, objectives: e.target.value})} 
+                                                placeholder="Defina metas a largo plazo..." 
+                                                className="w-full bg-white border-transparent rounded-2xl p-5 text-sm font-bold shadow-sm focus:ring-brand-primary/20 transition-all" 
+                                                rows={5} 
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === "objetivo" && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rangos Articulares (ROM)</h3>
+                                            <button type="button" onClick={() => {
+                                                Swal.fire({
+                                                    title: 'Nueva Medición',
+                                                    input: 'text',
+                                                    inputPlaceholder: 'Ej: Flexión Cadera...',
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Añadir',
+                                                    confirmButtonColor: '#4f46e5'
+                                                }).then(res => {
+                                                    if(res.isConfirmed && res.value) {
+                                                        const name = res.value;
+                                                        const currentRom = formData.evaluation_data.rom || {};
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            evaluation_data: {
+                                                                ...prev.evaluation_data,
+                                                                rom: { ...currentRom, [name]: { before: 0, after: 0 } }
+                                                            }
+                                                        }));
+                                                    }
+                                                });
+                                            }} className="text-[10px] font-black text-brand-primary uppercase tracking-widest border border-brand-primary/20 px-3 py-1.5 rounded-xl hover:bg-brand-primary/5">+ Añadir</button>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {Object.entries(formData.evaluation_data.rom || {}).map(([name, vals]) => (
+                                                <ROMGauge 
+                                                    key={name}
+                                                    label={name} 
+                                                    value={vals.before || 0} 
+                                                    onChange={(val) => handleRomChange(name, 'before', val)} 
+                                                    icon={Ruler} 
+                                                />
+                                            ))}
+                                            {Object.keys(formData.evaluation_data.rom || {}).length === 0 && (
+                                                <div className="py-12 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+                                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Sin mediciones ROM</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Hallazgos Físicos</label>
+                                        <textarea 
+                                            value={formData.objective} 
+                                            onChange={(e) => setFormData({...formData, objective: e.target.value})} 
+                                            placeholder="Descripción del examen físico..." 
+                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
+                                            rows={6} 
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === "plan" && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                    {/* Técnicas en Mobile */}
+                                    <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 space-y-4">
+                                        <h3 className="text-[10px] font-black text-green-700 uppercase tracking-widest flex gap-2"><Activity className="w-3 h-3"/> Procedimientos</h3>
+                                        <div className="flex gap-2">
+                                            <input type="text" value={techniqueInput} onChange={(e) => setTechniqueInput(e.target.value)} className="flex-1 px-4 py-3 text-xs font-bold bg-white rounded-xl border-none shadow-sm" placeholder="TENS, Ultrasonido..." />
+                                            <button type="button" onClick={() => { handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }} className="p-3 bg-green-600 text-white rounded-xl shadow-lg active:scale-90"><Plus className="w-4 h-4"/></button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.activities_data.techniques?.map((t, i) => (
+                                                <span key={i} className="bg-white text-green-700 text-[10px] px-3 py-1.5 rounded-xl border border-green-100 flex items-center gap-2 font-black shadow-sm uppercase">
+                                                    {t} <X className="ml-2 w-3 h-3 text-slate-300 inline cursor-pointer" onClick={() => handleActivityChange('techniques', t, 'remove')} />
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Ejercicios en Mobile */}
+                                    <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 space-y-4">
+                                        <h3 className="text-[10px] font-black text-blue-700 uppercase tracking-widest flex gap-2"><Dumbbell className="w-3 h-3"/> Ejercicios</h3>
+                                        <div className="flex gap-2">
+                                            <input type="text" value={exerciseInput} onChange={(e) => setExerciseInput(e.target.value)} className="flex-1 px-4 py-3 text-xs font-bold bg-white rounded-xl border-none shadow-sm" placeholder="Sentadillas, Pesas..." />
+                                            <button type="button" onClick={() => { handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }} className="p-3 bg-blue-600 text-white rounded-xl shadow-lg active:scale-90"><Plus className="w-4 h-4"/></button>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.activities_data.exercises?.map((t, i) => (
+                                                <span key={i} className="bg-white text-blue-700 text-[10px] px-3 py-1.5 rounded-xl border border-blue-100 flex items-center gap-2 font-black shadow-sm uppercase">
+                                                    {t} <X className="ml-2 w-3 h-3 text-slate-300 inline cursor-pointer" onClick={() => handleActivityChange('exercises', t, 'remove')} />
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Tareas Hogar</label>
+                                        <textarea 
+                                            value={formData.plan} 
+                                            onChange={(e) => setFormData({...formData, plan: e.target.value})} 
+                                            placeholder="Indicaciones para el paciente..." 
+                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
+                                            rows={6} 
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === "analisis" && (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Interpretación Clínica</label>
+                                        <textarea 
+                                            value={formData.assessment} 
+                                            onChange={(e) => setFormData({...formData, assessment: e.target.value})} 
+                                            placeholder="Juicio profesional..." 
+                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
+                                            rows={8} 
+                                        />
+                                    </div>
+
+                                    {/* CONSENTIMIENTO INFORMADO */}
+                                    <div className={`p-8 rounded-[32px] border transition-all ${formData.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 shadow-lg shadow-orange-100'}`}>
+                                        <div className="flex items-center justify-between gap-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${formData.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                    <ShieldCheck className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Legal</p>
+                                                    <p className="text-[10px] font-bold text-slate-500 uppercase">Consentimiento</p>
+                                                </div>
+                                            </div>
+                                            <Switch 
+                                                checked={formData.informed_consent_confirmed} 
+                                                onChange={(e) => setFormData(p => ({...p, informed_consent_confirmed: e.target.checked}))} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* === COLUMNA DERECHA: PAIN MAP & CONTEXTO (Solo Desktop) === */}
+                {isDesktop && (
+                    <div className="lg:col-span-5 space-y-8">
+                        <div className="sticky top-32 space-y-8">
+                            
+                            {/* MAPA CORPORAL INTEGRADO (Estructura Admin) */}
+                            <PainMapCard
+                                points={formData.session_pain_map}
+                                painBefore={formData.pain_before}
+                                painAfter={formData.pain_after}
+                                bodyPart={formData.body_part} 
+                                laterality={formData.laterality} 
+                                isLocked={!canEdit} 
+                                title="Localización de Dolor"
+                                onPointsChange={(val) => setFormData(prev => ({ ...prev, session_pain_map: val }))}
+                                onPainBeforeChange={(val) => setFormData(prev => ({ ...prev, pain_before: val }))}
+                                onPainAfterChange={(val) => setFormData(prev => ({ ...prev, pain_after: val }))}
+                                onBodyPartChange={(val) => setFormData(prev => ({ ...prev, body_part: val }))} 
+                                onLateralityChange={(val) => setFormData(prev => ({ ...prev, laterality: val }))} 
+                            />
+
+                            {/* CONSENTIMIENTO INFORMADO */}
+                            <div className={`p-8 rounded-[2.5rem] border transition-all ${formData.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 shadow-lg shadow-orange-100'}`}>
+                                <div className="flex items-center justify-between gap-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${formData.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                            <ShieldCheck className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Consentimiento</p>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase">Validación legal de atención</p>
+                                        </div>
+                                    </div>
+                                    <Switch 
+                                        checked={formData.informed_consent_confirmed} 
+                                        onChange={(e) => setFormData(p => ({...p, informed_consent_confirmed: e.target.checked}))} 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* ACCIONES FINALES (Solo Desktop) */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <button 
+                                    type="submit" 
+                                    disabled={isSubmitting} 
+                                    className="flex items-center justify-center gap-3 bg-slate-900 text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:bg-black transition-all shadow-xl active:scale-95"
+                                >
+                                    <Save className="w-5 h-5" /> GUARDAR BORRADOR
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={handleFinishSession} 
+                                    disabled={isSubmitting} 
+                                    className="flex items-center justify-center gap-3 bg-brand-primary text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:brightness-110 transition-all shadow-xl shadow-brand-primary/20 active:scale-95"
+                                >
+                                    <CheckCircle className="w-5 h-5" /> FINALIZAR ATENCIÓN
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="p-4 bg-gray-100 rounded-xl border border-gray-200">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Paciente</label>
-                  <p className="font-bold text-gray-900">{session.patient?.name}</p>
-                </div>
-              )}
-
-              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Tratamiento / Servicio</label>
-                <select value={formData.treatment_id} onChange={(e) => setFormData({...formData, treatment_id: e.target.value})} className="w-full py-3 border-gray-200 rounded-lg mb-3">
-                  <option value="">Seleccionar tratamiento...</option>
-                  {patientTreatments.map(t => <option key={t.id} value={t.id}>{t.diagnosis || t.session_type_name}</option>)}
-                </select>
-                <select value={formData.item_id} onChange={(e) => setFormData({...formData, item_id: e.target.value})} className="w-full py-3 border-gray-200 rounded-lg">
-                  <option value="">Seleccionar servicio...</option>
-                  {sessionTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Fecha</label>
-                  <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full border-0 p-0 focus:ring-0 font-bold" />
-                </div>
-                <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Hora</label>
-                  <input type="time" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} className="w-full border-0 p-0 focus:ring-0 font-bold" />
-                </div>
-              </div>
+                )}
             </div>
-          )}
 
-          {activeTab === "clinical" && (
-            <div className="space-y-4">
-              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><Activity className="w-4 h-4 text-red-500" /> Dolor (EVA 0-10)</h3>
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-gray-500 mb-2"><span>INICIAL</span> <span className="text-teal-600">{formData.pain_before}</span></div>
-                    <input type="range" min="0" max="10" value={formData.pain_before} onChange={(e) => setFormData({...formData, pain_before: e.target.value})} className="w-full accent-teal-600" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs font-bold text-gray-500 mb-2"><span>FINAL</span> <span className="text-teal-600">{formData.pain_after}</span></div>
-                    <input type="range" min="0" max="10" value={formData.pain_after} onChange={(e) => setFormData({...formData, pain_after: e.target.value})} className="w-full accent-teal-600" />
-                  </div>
+            {/* BARRA DE ACCIÓN FLOTANTE (Solo Mobile) */}
+            {!isDesktop && (
+                <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-xl border-t border-slate-100 flex gap-3 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+                    <button 
+                        type="button" 
+                        onClick={handleNextTab} 
+                        disabled={isSubmitting} 
+                        className="flex-[3] bg-brand-primary text-white font-black uppercase text-xs tracking-[0.2em] py-6 rounded-[32px] shadow-2xl shadow-brand-primary/40 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                    >
+                        {activeTab === 'analisis' ? <CheckCircle className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+                        {activeTab === 'analisis' ? 'FINALIZAR' : 'SIGUIENTE PASO'}
+                    </button>
+                    <button 
+                        type="submit" 
+                        disabled={isSubmitting} 
+                        title="Guardar Borrador"
+                        className="w-20 bg-slate-900 text-white font-black uppercase text-[10px] tracking-widest py-6 rounded-[32px] flex items-center justify-center active:scale-95 transition-all"
+                    >
+                        {isSubmitting ? "..." : <Save className="w-6 h-6" />}
+                    </button>
                 </div>
-              </div>
-              <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-                 <h3 className="font-bold text-gray-900 mb-4">Técnicas y Ejercicios</h3>
-                 <textarea value={formData.techniques.join(", ")} onChange={(e) => setFormData({...formData, techniques: e.target.value.split(",").map(t => t.trim())})} placeholder="Técnicas (separadas por coma)" className="w-full border-gray-200 rounded-lg mb-3" rows={2} />
-                 <textarea value={formData.exercises.join(", ")} onChange={(e) => setFormData({...formData, exercises: e.target.value.split(",").map(t => t.trim())})} placeholder="Ejercicios (separados por coma)" className="w-full border-gray-200 rounded-lg" rows={2} />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "notes" && (
-            <div className="space-y-4">
-              <textarea value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} placeholder="Evolución de la sesión..." className="w-full border-gray-200 rounded-xl p-4" rows={6} />
-              <textarea value={formData.homework} onChange={(e) => setFormData({...formData, homework: e.target.value})} placeholder="Tareas para el hogar..." className="w-full border-gray-200 rounded-xl p-4" rows={3} />
-            </div>
-          )}
-
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-3 z-20">
-            {isEditMode && canEdit && (
-              <button type="button" onClick={handleFinishSession} disabled={isSubmitting} className="flex-1 bg-teal-600 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                <CheckCircle className="w-5 h-5" /> Finalizar y Firmar
-              </button>
             )}
-            <button type="submit" disabled={isSubmitting} className={`${isEditMode ? 'w-20 bg-gray-100 text-gray-600' : 'flex-1 bg-blue-600 text-white'} font-bold py-4 rounded-xl flex items-center justify-center`}>
-              <Save className="w-5 h-5" /> {!isEditMode && " Guardar"}
-            </button>
-          </div>
         </form>
+    </div>
+  );
 
-        {showSignatureModal && (
-          <SignatureCanvas
-            onSave={onSaveSignature}
-            onCancel={() => setShowSignatureModal(false)}
-            onSkip={onSkipSignature}
-          />
-        )}
-      </div>
-    </KineLayout>
+  return isDesktop ? (
+    <AuthenticatedLayout>{PageContent}</AuthenticatedLayout>
+  ) : (
+    <KineLayout>{PageContent}</KineLayout>
   );
 }

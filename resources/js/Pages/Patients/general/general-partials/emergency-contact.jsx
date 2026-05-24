@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AlertCircle, Edit } from "lucide-react";
 import ResourceFormModal from "@/components/ResourceFormModal";
 import { t } from "@/constants/translations";
+import { RELATIONSHIP_OPTIONS } from "@/constants/relationshipOptions";
 
 export default function EmergencyContact({ patient, contact }) {
   const [openContactModal, setOpenContactModal] = useState(false);
@@ -28,40 +29,7 @@ export default function EmergencyContact({ patient, contact }) {
         name: "contact_relationship",
         label: "Parentesco",
         type: "select",
-        options: [
-          { value: "madre", label: "Madre" },
-          { value: "padre", label: "Padre" },
-          { value: "hijo", label: "Hijo" },
-          { value: "hija", label: "Hija" },
-          { value: "hermano", label: "Hermano" },
-          { value: "hermana", label: "Hermana" },
-          { value: "abuelo", label: "Abuelo" },
-          { value: "abuela", label: "Abuela" },
-          { value: "nieto", label: "Nieto" },
-          { value: "nieta", label: "Nieta" },
-          { value: "tio", label: "Tío" },
-          { value: "tia", label: "Tía" },
-          { value: "sobrino", label: "Sobrino" },
-          { value: "sobrina", label: "Sobrina" },
-          { value: "primo", label: "Primo" },
-          { value: "prima", label: "Prima" },
-          { value: "conyuge", label: "Cónyuge" },
-          { value: "pareja", label: "Pareja / Conviviente" },
-          { value: "cuñado", label: "Cuñado" },
-          { value: "cuñada", label: "Cuñada" },
-          { value: "suegro", label: "Suegro" },
-          { value: "suegra", label: "Suegra" },
-          { value: "yerno", label: "Yerno" },
-          { value: "nuera", label: "Nuera" },
-          { value: "tutor", label: "Tutor / Apoderado" },
-          { value: "amigo", label: "Amigo" },
-          { value: "amiga", label: "Amiga" },
-          { value: "vecino", label: "Vecino" },
-          { value: "vecina", label: "Vecina" },
-          { value: "cuidador", label: "Cuidador" },
-          { value: "cuidadora", label: "Cuidadora" },
-          { value: "otro", label: "Otro" },
-        ],
+        options: RELATIONSHIP_OPTIONS,
       },
       {
         name: "patient_id",

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import EnterpriseSelect from "@/components/EnterpriseSelect";
 import { Trash2, Minus, Plus, Stethoscope } from "lucide-react";
 
@@ -11,9 +11,46 @@ export default function ServiceItem({
   onUpdate,
   onRemove,
   business_type = "clinical",
+  agreements = [],
+  coverageDetails = {},
 }) {
   const isClinical = business_type === "clinical";
   const isItemEmpty = !item.item_id;
+  const planId = coverageDetails?.plan_id;
+
+  // --- LÓGICA DE TARIFAS DE CONVENIO PARA EL SELECTOR ---
+  const itemOptions = useMemo(() => {
+    return items.map((st) => {
+      let agreementLabel = "";
+      if (isClinical && planId) {
+        let rule = null;
+        if (Array.isArray(agreements)) {
+          agreements.forEach((ag) => {
+            const rulesList = ag.rules || ag.agreement_rules || [];
+            
+            // 1. Intentar encontrar regla específica para el Plan
+            const r = rulesList.find((i) => i.plan_id == planId && i.item_id == st.id);
+            if (r) {
+                rule = r;
+            } else {
+                // 2. Si no hay por plan, buscar regla general (plan_id null) del convenio
+                const gr = rulesList.find((i) => !i.plan_id && i.item_id == st.id);
+                if (gr) rule = gr;
+            }
+          });
+        }
+
+        if (rule) {
+          const copay = rule.patient_share_clp;
+          agreementLabel = ` ➜ Conv: $${copay.toLocaleString("es-CL")}`;
+        }
+      }
+      return {
+        value: st.id,
+        label: `${st.name} [$${st.price.toLocaleString("es-CL")}]${agreementLabel}`,
+      };
+    });
+  }, [items, agreements, planId, isClinical]);
 
   // Helpers para cambio de cantidad tipo Stepper
   const handleDecrement = () => {
@@ -65,7 +102,7 @@ export default function ServiceItem({
                 label={isClinical ? "Prestación" : "Ítem / Servicio"}
                 value={item.item_id}
                 onChange={(val) => onUpdate(index, "item_id", val)}
-                options={items.map((st) => ({ value: st.id, label: st.name }))}
+                options={itemOptions}
                 placeholder={`Seleccionar ${isClinical ? 'prestación' : 'item'}...`}
                 className="bg-gray-50"
               />

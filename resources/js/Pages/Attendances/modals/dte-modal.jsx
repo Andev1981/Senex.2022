@@ -73,8 +73,8 @@ export default function DteModal({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50/50">
+    <div className="space-y-6 flex flex-col h-full">
+      <div className="p-6 border-2 border-gray-100 rounded-2xl bg-gray-50/50 flex-1 overflow-y-auto custom-scrollbar">
         <div className="space-y-4 text-sm">
           <div className="grid grid-cols-2 gap-4 mb-4">
             <button

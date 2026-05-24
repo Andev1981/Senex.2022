@@ -34,7 +34,24 @@ import {
 export default function Dashboard({ dte_stats }) {
   const user = usePage().props.auth.user;
   const { hasPermission } = usePermission();
-  const [selectedPeriod, setSelectedPeriod] = useState("hoy");
+  const [selectedPeriod, setSelectedPeriod] = useState(dte_stats?.period || "hoy");
+
+  const handlePeriodChange = (e) => {
+    const newPeriod = e.target.value;
+    setSelectedPeriod(newPeriod);
+    router.get(route("dashboard"), { period: newPeriod }, { 
+      preserveState: true,
+      preserveScroll: true,
+      only: ['dte_stats']
+    });
+  };
+
+  const periodLabel = {
+    hoy: "del Día",
+    semana: "de la Semana",
+    mes: "del Mes",
+    año: "del Año"
+  }[selectedPeriod];
 
   const COLORS = [
     "#3b82f6",
@@ -103,7 +120,7 @@ export default function Dashboard({ dte_stats }) {
             <div className="flex items-center gap-3">
               <select
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
+                onChange={handlePeriodChange}
                 className="px-6 py-3 text-xs font-bold tracking-widest text-gray-600 uppercase transition-all border-gray-100 cursor-pointer rounded-2xl focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/5 bg-gray-50/50"
               >
                 <option value="hoy">Hoy</option>
@@ -128,7 +145,7 @@ export default function Dashboard({ dte_stats }) {
                 {stats.pacientesChange}%
               </span>
             </div>
-            <p className="enterprise-label opacity-60">Pacientes Atendidos</p>
+            <p className="enterprise-label opacity-60">Pacientes Atendidos {periodLabel}</p>
             <div className="flex items-baseline gap-2">
               <p className="text-4xl font-black leading-none tracking-tighter text-gray-900">
                 {stats.pacientesHoy}
@@ -150,13 +167,13 @@ export default function Dashboard({ dte_stats }) {
                 {stats.sesionesChange}%
               </span>
             </div>
-            <p className="enterprise-label opacity-60">Sesiones del Mes</p>
+            <p className="enterprise-label opacity-60">Sesiones {periodLabel}</p>
             <div className="flex items-baseline gap-2">
               <p className="text-4xl font-black leading-none tracking-tighter text-gray-900">
                 {stats.sesionesHoy}
               </p>
               <span className="text-[10px] font-black text-brand-gray uppercase tracking-widest">
-                / {stats.sesionesTotal} plan.
+                / {stats.sesionesTotal} mes
               </span>
             </div>
           </div>
@@ -173,7 +190,7 @@ export default function Dashboard({ dte_stats }) {
               </span>
             </div>
             <p className="enterprise-label opacity-60 text-brand-primary">
-              Recaudación Total
+              Recaudación {periodLabel}
             </p>
             <div className="flex items-baseline gap-2">
               <p className="font-mono text-4xl font-black leading-none tracking-tighter text-brand-primary">

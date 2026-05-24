@@ -12,6 +12,8 @@ import Switch from "@/components/Switch";
 import Checkbox from "@/components/Checkbox";
 import EnterpriseSelect from "@/components/EnterpriseSelect";
 import moment from "moment";
+import SearchSelect from "@/Components/SearchSelect";
+import { RELATIONSHIP_OPTIONS } from "@/constants/relationshipOptions";
 import {
   Building2,
   UserPlus,
@@ -39,14 +41,13 @@ export default function ModalCreateEditPatient({
   setOpenModalPatient,
   communes = [],
   regions = [],
-  provinces = [],
   business_type = "clinical",
 }) {
   const isClinical = business_type === "clinical";
   const entityLabel = isClinical ? "Paciente" : "Cliente";
 
   const { current_branch } = usePage().props;
-  const isHomeCareOnlyBranch = !!current_branch?.is_home_care_only;
+  const isHomeCareOnlyBranch = current_branch && !current_branch.allows_onsite;
 
   const [isExistingInSystem, setIsExistingInSystem] = useState(false);
   const addPatient = usePatientStore((state) => state.addPatient);
@@ -93,8 +94,7 @@ export default function ModalCreateEditPatient({
     street: patient?.address?.street || "",
     number: patient?.address?.number || "",
     details: patient?.address?.details || "",
-    region_id: (patient?.address?.region_id || patient?.address?.commune?.province?.region_id || "13").toString(),
-    province_id: (patient?.address?.province_id || patient?.address?.commune?.province_id || "2401").toString(),
+    region_id: (patient?.address?.region_id || "13").toString(),
     commune_id: (patient?.address?.commune_id || "13114").toString(),
   });
 
@@ -105,15 +105,10 @@ export default function ModalCreateEditPatient({
     }
   }, [isHomeCareOnlyBranch, isClinical]);
 
-  // Filtrado dinámico de provincias y comunas (Aseguramos que data.X sea string para comparar)
-  const filteredProvinces = useMemo(
-    () => provinces.filter((p) => p.region_id.toString() === data.region_id.toString()),
-    [data.region_id, provinces]
-  );
-
+  // Filtrado dinámico de comunas (Aseguramos que data.X sea string para comparar)
   const filteredCommunes = useMemo(
-    () => communes.filter((c) => c.province_id.toString() === data.province_id.toString()),
-    [data.province_id, communes]
+    () => communes.filter((c) => String(c.region_id) === String(data.region_id)),
+    [data.region_id, communes]
   );
 
   // Sincronizar datos cuando cambia el paciente seleccionado (Edición)
@@ -122,8 +117,7 @@ export default function ModalCreateEditPatient({
       const contact = patient.contacts?.find(c => c.is_primary) || patient.contacts?.[0] || patient.contact;
       const addr = patient.address;
       
-      const regionId = (addr?.region_id || addr?.commune?.province?.region_id || "").toString();
-      const provinceId = (addr?.province_id || addr?.commune?.province_id || "").toString();
+      const regionId = (addr?.region_id || "").toString();
       const communeId = (addr?.commune_id || "").toString();
 
       setData({
@@ -157,7 +151,6 @@ export default function ModalCreateEditPatient({
         number: addr?.number || "",
         details: addr?.details || "",
         region_id: regionId,
-        province_id: provinceId,
         commune_id: communeId,
       });
       setIsExistingInSystem(true);
@@ -272,21 +265,11 @@ export default function ModalCreateEditPatient({
     });
   };
 
-  const relationshipOptions = [
-    { value: "madre", label: "Madre" },
-    { value: "padre", label: "Padre" },
-    { value: "hijo", label: "Hijo" },
-    { value: "hija", label: "Hija" },
-    { value: "hermano", label: "Hermano" },
-    { value: "hermana", label: "Hermana" },
-    { value: "tutor", label: "Tutor / Apoderado" },
-    { value: "conyuge", label: "Cónyuge" },
-    { value: "otro", label: "Otro" },
-  ];
+  const relationshipOptions = RELATIONSHIP_OPTIONS;
 
   return (
     <div className="flex flex-col h-full duration-500 bg-white animate-in fade-in">
-      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      <form onSubmit={handleSubmit} className="flex flex-col min-h-full">
         {/* HEADER HERO */}
         <div className="p-8 bg-gray-50/50 border-b border-gray-100 rounded-t-[2.5rem] flex items-start justify-between gap-6 shrink-0 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-2xl"></div>
@@ -322,7 +305,7 @@ export default function ModalCreateEditPatient({
           </div>
         </div>
 
-        <div className="flex-1 p-10 space-y-10 overflow-y-auto custom-scrollbar">
+        <div className="p-10 space-y-10">
           {/* BLOQUE 1: IDENTIDAD */}
           <div className="space-y-6">
             <div className="flex items-center justify-between ml-1">
@@ -393,40 +376,29 @@ export default function ModalCreateEditPatient({
                 )}
             </div>
             
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-1">
-                <EnterpriseSelect 
+                <SearchSelect 
                   label="Región" 
                   value={data.region_id} 
-                  onChange={(val) => setData((d) => ({ ...d, region_id: val, province_id: "", commune_id: "" }))} 
+                  onChange={(val) => setData((d) => ({ ...d, region_id: val, commune_id: "" }))} 
                   options={regions.map(r => ({ value: r.id.toString(), label: r.name }))} 
-                  placeholder="-- Seleccionar --" 
+                  placeholder="-- Seleccionar Región --" 
+                  error={errors.region_id}
                 />
-                <InputError message={errors.region_id} />
               </div>
               <div className="space-y-1">
-                <EnterpriseSelect 
-                  label="Provincia" 
-                  value={data.province_id} 
-                  onChange={(val) => setData((d) => ({ ...d, province_id: val, commune_id: "" }))} 
-                  options={filteredProvinces.map(p => ({ value: p.id.toString(), label: p.name }))} 
-                  disabled={!data.region_id} 
-                  placeholder="-- Seleccionar --" 
-                />
-                <InputError message={errors.province_id} />
-              </div>
-              <div className="space-y-1">
-                <EnterpriseSelect 
+                <SearchSelect 
                   label="Comuna" 
                   value={data.commune_id} 
                   onChange={(val) => setData("commune_id", val)} 
                   options={filteredCommunes.map(c => ({ value: c.id.toString(), label: c.name }))} 
-                  disabled={!data.province_id} 
-                  placeholder="-- Seleccionar --" 
+                  disabled={!data.region_id} 
+                  placeholder="-- Seleccionar Comuna --" 
+                  error={errors.commune_id}
                 />
-                <InputError message={errors.commune_id} />
               </div>
-              <div className="space-y-1 md:col-span-2">
+              <div className="space-y-1">
                 <label className="ml-1 enterprise-label opacity-60">Calle / Avenida</label>
                 <TextInput value={data.street} onChange={(e) => setData("street", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" placeholder="Ej: Av. Providencia" required={data.is_home_care} />
                 <InputError message={errors.street} />
@@ -472,14 +444,19 @@ export default function ModalCreateEditPatient({
               </h3>
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 <div className="space-y-1">
-                  <label className="ml-1 enterprise-label opacity-60">RUT del Responsable</label>
-                  <RutInput value={data.guardian_rut} onChange={(v) => setData("guardian_rut", v)} className="w-full !rounded-2xl !py-1 font-black bg-white" />
-                  <InputError message={errors.guardian_rut} />
-                </div>
-                <div className="space-y-1">
                   <label className="ml-1 enterprise-label opacity-60">Nombre Completo</label>
                   <TextInput value={data.guardian_name} onChange={(e) => setData("guardian_name", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" />
                   <InputError message={errors.guardian_name} />
+                </div>
+                <div className="space-y-1">
+                  <SearchSelect
+                    label={`Parentesco con el ${entityLabel}`}
+                    value={data.guardian_relationship}
+                    onChange={(val) => setData("guardian_relationship", val)}
+                    options={relationshipOptions}
+                    placeholder="-- Seleccione Parentesco --"
+                    error={errors.guardian_relationship}
+                  />
                 </div>
                 <div className="space-y-1">
                   <label className="ml-1 enterprise-label opacity-60">WhatsApp de Cobro</label>
@@ -490,10 +467,6 @@ export default function ModalCreateEditPatient({
                   <label className="ml-1 enterprise-label opacity-60">Email para Facturación</label>
                   <TextInput type="email" value={data.guardian_email} onChange={(e) => setData("guardian_email", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white shadow-sm" />
                   <InputError message={errors.guardian_email} />
-                </div>
-                <div className="space-y-1 md:col-span-2">
-                  <EnterpriseSelect label={`Parentesco con el ${entityLabel}`} value={data.guardian_relationship} onChange={(val) => setData("guardian_relationship", val)} options={relationshipOptions} placeholder="-- Seleccionar Vínculo --" />
-                  <InputError message={errors.guardian_relationship} />
                 </div>
               </div>
             </div>

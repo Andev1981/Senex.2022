@@ -113,8 +113,10 @@ export default function SideModal({
                     ))}
 
                     {/* 2. CONTENIDO SCROLLABLE */}
-                    <div className={`flex-1 flex flex-col min-h-0 ${!hideDefaultHeader && title ? 'p-8 overflow-y-auto custom-scrollbar' : 'p-0 overflow-hidden'}`}>
-                      {children}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <div className={!hideDefaultHeader && title ? 'p-8' : 'p-0'}>
+                            {children}
+                        </div>
                     </div>
 
                     {/* 3. FOOTER FIJO (Opcional) */}

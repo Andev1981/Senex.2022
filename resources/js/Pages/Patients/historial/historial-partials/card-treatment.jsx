@@ -272,54 +272,60 @@ export default function CardTreatment({ treatment, handleTreatmentModal }) {
       </div>
 
       {/* Footer: Progreso de Sesiones */}
-      <div className="relative z-10 p-6 border border-gray-100 bg-gray-50 rounded-3xl">
-        {!isIndef && (total > 0 || done > 0) ? (
-          <div className="space-y-4">
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div className="md:col-span-4 p-6 border border-gray-100 bg-gray-50 rounded-3xl">
+            {!isIndef && (total > 0 || done > 0) ? (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 font-black bg-white border border-gray-200 shadow-sm rounded-xl text-brand-primary">
+                    {done}
+                    </div>
+                    <div>
+                    <p className="text-xs font-black tracking-tight text-gray-900 uppercase">
+                        Avance
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Total: {total}
+                    </p>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <p className="font-mono text-sm font-black text-brand-primary">
+                    {progress}%
+                    </p>
+                </div>
+                </div>
+                <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-gray-100 p-0.5 shadow-inner">
+                <div
+                    className="h-full bg-brand-primary rounded-full transition-all duration-1000 ease-out"
+                    style={{ width: `${progress}%` }}
+                />
+                </div>
+            </div>
+            ) : isIndef ? (
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 font-black bg-white border border-gray-200 shadow-sm rounded-xl text-brand-primary">
-                  {done}
+                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 font-black text-purple-600 bg-white border border-gray-200 shadow-sm rounded-xl">
+                    {done}
                 </div>
-                <div>
-                  <p className="text-xs font-black tracking-tight text-gray-900 uppercase">
-                    Registro de Avance
-                  </p>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                    Total sesiones: {total}
-                  </p>
+                <p className="text-xs font-black tracking-tight text-gray-900 uppercase">
+                    Sesiones Realizadas
+                </p>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="font-mono text-sm font-black text-brand-primary">
-                  {progress}%
-                </p>
-                <p className="text-[8px] font-black text-brand-gray uppercase tracking-[0.2em]">
-                  Completado
-                </p>
-              </div>
             </div>
-            <div className="h-3 w-full bg-white rounded-full overflow-hidden border border-gray-200 p-0.5 shadow-inner">
-              <div
-                className="h-full bg-brand-primary rounded-full shadow-[0_0_10px_rgba(50,146,179,0.2)] transition-all duration-1000 ease-out"
-                style={{ width: `${progress}%` }}
-              />
+            ) : null}
+        </div>
+
+        <div className="md:col-span-8 p-6 border border-brand-primary/10 bg-brand-secondary/5 rounded-3xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                <ClipboardList className="w-8 h-8 text-brand-primary" />
             </div>
-          </div>
-        ) : isIndef ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 font-black text-purple-600 bg-white border border-gray-200 shadow-sm rounded-xl">
-                {done}
-              </div>
-              <p className="text-xs font-black tracking-tight text-gray-900 uppercase">
-                Sesiones Realizadas Históricas
-              </p>
-            </div>
-            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg border border-purple-100">
-              Plan Abierto
-            </span>
-          </div>
-        ) : null}
+            <p className="enterprise-label !text-brand-primary mb-2">Última Evolución (A)</p>
+            <p className="text-xs font-medium text-gray-600 line-clamp-3 italic">
+                {treatment.sessions?.filter(s => s.status === 'completed')?.sort((a,b) => new Date(b.date) - new Date(a.date))[0]?.assessment || "Sin registros de evolución reciente."}
+            </p>
+        </div>
       </div>
 
       {treatment?.outcome && (

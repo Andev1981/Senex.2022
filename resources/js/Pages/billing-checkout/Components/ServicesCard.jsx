@@ -13,6 +13,8 @@ export default function ServicesCard({
   onUpdateService,
   onRemoveService,
   business_type = "clinical",
+  agreements = [],
+  coverageDetails = {},
 }) {
   const isClinical = business_type === "clinical";
 
@@ -96,6 +98,8 @@ export default function ServicesCard({
             onUpdate={onUpdateService}
             onRemove={onRemoveService}
             business_type={business_type}
+            agreements={agreements}
+            coverageDetails={coverageDetails}
           />
         ))}
 

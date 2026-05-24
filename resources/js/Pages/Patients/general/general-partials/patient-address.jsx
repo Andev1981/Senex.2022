@@ -7,7 +7,6 @@ export default function PatientAddress({
   patient,
   communes,
   regions,
-  provinces,
   address,
 }) {
   const [openAddressModal, setOpenAddressModal] = useState(false);
@@ -23,28 +22,15 @@ export default function PatientAddress({
         placeholder: "Seleccione Región",
       },
       {
-        name: "province_id",
-        label: "Provincia",
-        type: "select",
-        dependsOn: ["region_id"],
-        options: (form) =>
-          provinces
-            .filter((p) => p.region_id === form.region_id)
-            .map((p) => ({ value: p.id, label: p.name })),
-        disabled: (form) => !form.region_id,
-        parse: (raw) => (raw ? Number(raw) : null),
-        placeholder: "Seleccione Provincia",
-      },
-      {
         name: "commune_id",
         label: "Comuna",
         type: "select",
-        dependsOn: ["province_id"],
+        dependsOn: ["region_id"],
         options: (form) =>
           communes
-            .filter((c) => c.province_id === form.province_id)
+            .filter((c) => c.region_id === form.region_id)
             .map((c) => ({ value: c.id, label: c.name })),
-        disabled: (form) => !form.province_id,
+        disabled: (form) => !form.region_id,
         parse: (raw) => (raw ? Number(raw) : null),
         placeholder: "Seleccione Comuna",
       },
@@ -68,7 +54,7 @@ export default function PatientAddress({
         type: "hidden",
       },
     ],
-    [regions, provinces, communes]
+    [regions, communes]
   );
 
   return (
@@ -91,17 +77,11 @@ export default function PatientAddress({
       </h2>
 
       <div className="p-6 border-2 border-gray-50 rounded-3xl bg-gray-50/30 relative z-10">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-1">
             <p className="enterprise-label !text-[8px] opacity-60">Región</p>
             <p className="text-sm font-black text-gray-700 uppercase tracking-tight">
               {address?.region?.name || 'No especificada'}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="enterprise-label !text-[8px] opacity-60">Provincia</p>
-            <p className="text-sm font-black text-gray-700 uppercase tracking-tight">
-              {address?.province?.name || 'No especificada'}
             </p>
           </div>
           <div className="space-y-1">
@@ -123,7 +103,7 @@ export default function PatientAddress({
             </p>
           </div>
           {address?.details && (
-            <div className="col-span-3 space-y-1 pt-4 border-t border-gray-100">
+            <div className="col-span-2 space-y-1 pt-4 border-t border-gray-100">
                 <p className="enterprise-label !text-[8px] opacity-60">Observaciones de Entrega / Acceso</p>
                 <p className="text-xs font-bold text-gray-500 uppercase italic">
                 {address?.details}
@@ -149,15 +129,14 @@ export default function PatientAddress({
           birth_date: patient.birth_date,
           phone: patient.phone,
           patient_id: patient.id,
-          region_id: address?.commune?.province?.region_id ?? null,
-          province_id: address?.commune?.province_id ?? null,
+          region_id: address?.region_id ?? address?.commune?.region_id ?? null,
           commune_id: address?.commune_id ?? null,
           street: address?.street ?? "",
           number: address?.number ?? "",
           details: address?.details ?? "",
         }}
         afterSubmitReloadOnly={["address", "patient"]}
-        columns={3}
+        columns={2}
         maxWidth={"3xl"}
         key={`addr-${address?.id ?? "new"}`}
       />

@@ -208,25 +208,66 @@ export default function Index({ categories }) {
                             onChange={e => setData("name", e.target.value)} 
                             required 
                             className="w-full font-bold uppercase"
-                            placeholder="Ej: Licencias de Software"
+                            placeholder="Ej: Kinesiología Traumatológica"
                         />
                         <InputError message={errors.name} />
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="enterprise-label ml-1">Categoría Padre (Dejar vacío para Raíz)</label>
-                        <select
-                            value={data.parent_id}
-                            onChange={e => setData("parent_id", e.target.value)}
-                            className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary"
-                        >
-                            <option value="">-- Sin Padre (Categoría Raíz) --</option>
-                            {categories.filter(c => c.id !== selectedCategory?.id).map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </select>
-                        <InputError message={errors.parent_id} />
-                    </div>
+                    {/* 1. CASO: CREANDO NUEVA CATEGORÍA RAÍZ (Desde el botón superior) */}
+                    {!selectedCategory && !data.parent_id && (
+                        <div className="p-4 bg-gray-50 border border-gray-100 rounded-2xl">
+                            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-2">
+                                <Plus className="w-3 h-3" /> Categoría Principal
+                            </p>
+                            <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
+                                Esta categoría se creará en el nivel superior del catálogo.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* 2. CASO: CREANDO SUBCATEGORÍA (Desde el botón '+' en una fila) */}
+                    {!selectedCategory && data.parent_id && (
+                        <div className="space-y-1 animate-in fade-in duration-300">
+                            <label className="enterprise-label ml-1">Dependencia (Padre)</label>
+                            <div className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-400 bg-gray-50 flex items-center gap-3 cursor-not-allowed">
+                                <Layers className="w-4 h-4 text-brand-primary/40" />
+                                {categories.find(c => c.id == data.parent_id)?.name || "Categoría Padre"}
+                            </div>
+                            <p className="text-[9px] text-brand-primary font-bold uppercase ml-1 italic">
+                                * Creando subcategoría dentro de {categories.find(c => c.id == data.parent_id)?.name}.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* 3. CASO: EDITANDO CATEGORÍA SIN HIJOS (Permite moverla) */}
+                    {selectedCategory && (!selectedCategory.children || selectedCategory.children.length === 0) && (
+                        <div className="space-y-1 animate-in fade-in duration-300">
+                            <label className="enterprise-label ml-1">Mover a Categoría Padre (Opcional)</label>
+                            <select
+                                value={data.parent_id}
+                                onChange={e => setData("parent_id", e.target.value)}
+                                className="w-full rounded-2xl border-gray-100 py-4 px-5 font-bold text-gray-700 bg-gray-50 focus:bg-white focus:ring-brand-primary"
+                            >
+                                <option value="">-- Sin Padre (Categoría Raíz) --</option>
+                                {categories.filter(c => c.id !== selectedCategory?.id).map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                            <InputError message={errors.parent_id} />
+                        </div>
+                    )}
+
+                    {/* 4. CASO: EDITANDO CATEGORÍA QUE YA ES PADRE (Bloqueado) */}
+                    {selectedCategory && selectedCategory.children && selectedCategory.children.length > 0 && (
+                        <div className="p-4 bg-brand-primary/5 border border-brand-primary/10 rounded-2xl">
+                            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest flex items-center gap-2">
+                                <AlertCircle className="w-3 h-3" /> Categoría Principal
+                            </p>
+                            <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
+                                Esta categoría tiene {selectedCategory.children.length} subcategorías asociadas y no puede ser movida.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="space-y-1">
                         <label className="enterprise-label ml-1">Descripción Breve</label>
@@ -244,10 +285,11 @@ export default function Index({ categories }) {
                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-700">Categoría Activa</p>
                             <p className="text-[9px] text-gray-400 font-bold uppercase">Permitir su uso en el catálogo</p>
                         </div>
-                        <Switch 
-                            checked={data.is_active} 
-                            onChange={checked => setData("is_active", checked)} 
+                        <Switch
+                            checked={data.is_active}
+                            onChange={e => setData("is_active", e.target.checked)}
                         />
+
                     </div>
                 </div>
 

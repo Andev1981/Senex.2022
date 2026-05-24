@@ -6,6 +6,8 @@ export default function PainMapCard({
     // Datos (Props)
     points = [],
     painLevel = 0,
+    painBefore = null,
+    painAfter = null,
     bodyPart = "",
     laterality = "",
     isLocked = false,
@@ -13,6 +15,8 @@ export default function PainMapCard({
     // Funciones (Callbacks)
     onPointsChange,
     onPainLevelChange,
+    onPainBeforeChange,
+    onPainAfterChange,
     onBodyPartChange,
     onLateralityChange,
     onBodyPartClick, // Para abrir el modal de manos
@@ -21,7 +25,7 @@ export default function PainMapCard({
     title = "Mapa Corporal"
 }) {
     return (
-        <div className="bg-white border-2 border-brand-secondary/20 rounded-[2.5rem] p-6 shadow-md h-full">
+        <div className="bg-white border-2 border-brand-secondary/20 rounded-[2.5rem] p-6 shadow-md h-full overflow-hidden">
             
             {/* Header de la Tarjeta */}
             <div className="flex justify-between items-center mb-6">
@@ -42,45 +46,63 @@ export default function PainMapCard({
             </div>
 
             {/* Selector Visual (BodySelector) */}
-            <div className="bg-gray-50/50 rounded-[2rem] border border-gray-100 shadow-inner flex justify-center mb-8 relative overflow-hidden min-h-[380px]">
+            <div className="bg-gray-50/50 rounded-[2rem] border border-gray-100 shadow-inner flex justify-center mb-8 relative overflow-hidden min-h-[350px]">
                 <BodySelector
                     initialData={points}
                     onChange={onPointsChange}
                     onPartClick={onBodyPartClick} 
                     mode={isLocked ? "read" : "edit"}
                 />
-                {/* 
-                {!isLocked && (
-                    <div className="absolute bottom-4 right-4">
-                        <span className="text-[9px] text-brand-primary/80 font-bold uppercase tracking-widest bg-white/90 backdrop-blur px-3 py-1.5 rounded-xl shadow-sm border border-brand-primary/10">
-                            Click en manos para detalle
-                        </span>
-                    </div>
-                )}
-                */}
             </div>
 
             <div className="space-y-6">
-                {/* Escala EVA */}
-                <div className="p-5 bg-gray-50/30 rounded-2xl border border-gray-100">
-                    <div className="flex justify-between mb-4">
-                        <label className="enterprise-label opacity-60">Nivel de Dolor (EVA)</label>
-                        <span className={`font-black text-2xl font-mono ${painLevel > 7 ? 'text-red-500' : 'text-brand-primary'}`}>
-                            {painLevel || 0} <span className="text-sm text-gray-300">/10</span>
-                        </span>
+                {/* Escala EVA - SOPORTE PARA ANTES/DESPUÉS O SIMPLE */}
+                {painBefore !== null && painAfter !== null ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="p-4 bg-blue-50/30 rounded-2xl border border-blue-100">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-[10px] font-black uppercase text-blue-600">Dolor Inicial</label>
+                                <span className="font-mono font-black text-blue-700">{painBefore}</span>
+                            </div>
+                            <input
+                                type="range" min="0" max="10"
+                                value={painBefore || 0}
+                                onChange={(e) => onPainBeforeChange(parseInt(e.target.value))}
+                                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                disabled={isLocked}
+                            />
+                        </div>
+                        <div className="p-4 bg-green-50/30 rounded-2xl border border-green-100">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-[10px] font-black uppercase text-green-600">Dolor Final</label>
+                                <span className="font-mono font-black text-green-700">{painAfter}</span>
+                            </div>
+                            <input
+                                type="range" min="0" max="10"
+                                value={painAfter || 0}
+                                onChange={(e) => onPainAfterChange(parseInt(e.target.value))}
+                                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                disabled={isLocked}
+                            />
+                        </div>
                     </div>
-                    <input
-                        type="range" min="0" max="10"
-                        value={painLevel || 0}
-                        onChange={(e) => onPainLevelChange(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
-                        disabled={isLocked}
-                    />
-                     <div className="flex justify-between text-[9px] text-gray-400 font-bold uppercase mt-2 tracking-widest">
-                        <span>Sin Dolor</span>
-                        <span>Dolor Máximo</span>
+                ) : (
+                    <div className="p-5 bg-gray-50/30 rounded-2xl border border-gray-100">
+                        <div className="flex justify-between mb-4">
+                            <label className="enterprise-label opacity-60">Nivel de Dolor (EVA)</label>
+                            <span className={`font-black text-2xl font-mono ${painLevel > 7 ? 'text-red-500' : 'text-brand-primary'}`}>
+                                {painLevel || 0} <span className="text-sm text-gray-300">/10</span>
+                            </span>
+                        </div>
+                        <input
+                            type="range" min="0" max="10"
+                            value={painLevel || 0}
+                            onChange={(e) => onPainLevelChange(parseInt(e.target.value))}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                            disabled={isLocked}
+                        />
                     </div>
-                </div>
+                )}
 
                 {/* Inputs de Texto (Zona y Lado) */}
                 <div className="grid grid-cols-2 gap-4">

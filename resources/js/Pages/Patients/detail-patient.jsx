@@ -14,7 +14,7 @@ const IndexGeneral = lazy(() => import("./general/index-general"));
 const IndexHistorial = lazy(() => import("./historial/index-historial"));
 const IndexTreatments = lazy(() => import("./treatments/index-treatments"));
 const IndexPayments = lazy(() => import("./payments/index-payments"));
-const PatientDashboard = lazy(() => import("./dashboard/patient-dashboard"));
+const PatientDashboard = lazy(() => import("./dashboard/patient-dashboard-content"));
 const IndexPlans = lazy(() => import("./plans/index")); // Importar el nuevo componente IndexPlans
 
 function useSyncedTab(defaultTab = "dashboard") {
@@ -41,7 +41,6 @@ export default function DetailPatient(props) {
     session_types, 
     communes, 
     regions, 
-    provinces, 
     diagnostics, 
     history, 
     treatments, 
@@ -161,7 +160,6 @@ export default function DetailPatient(props) {
           setOpenModalPatient={setShowEditPatientModal}
           communes={communes}
           regions={regions}
-          provinces={provinces}
         />
       </SideModal>
     </AuthenticatedLayout>

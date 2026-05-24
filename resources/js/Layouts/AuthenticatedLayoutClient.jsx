@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePage } from "@inertiajs/react";
-import Nav from "./Partials/Nav";
+import NavClient from "./Partials/NavClient";
 
 export default function AuthenticatedLayoutClient({ header, children }) {
   const user = usePage().props.auth.user;
@@ -9,23 +9,18 @@ export default function AuthenticatedLayoutClient({ header, children }) {
 
   useEffect(() => {
     if (flash?.message) {
-      toast[flash.type || "info"](flash.message);
+      // toast[flash.type || "info"](flash.message);
     }
   }, [flash]);
 
   return (
     <div
-      className="min-h-screen p-4 bg-center bg-no-repeat bg-cover"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1)), url('./../assets/img/bg.png')`,
-      }}
+      className="min-h-screen bg-gray-50/50"
     >
-      <Nav
+      <NavClient
         user={user}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
       />
-      <main className="h-auto pt-10">{children}</main>
+      <main className="h-auto">{children}</main>
     </div>
   );
 }

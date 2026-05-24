@@ -15,6 +15,7 @@ import {
   HeartPulse,
   Computer,
   List,
+  ClipboardList,
   Shell,
   DollarSign,
   MapPin,
@@ -34,40 +35,48 @@ import { usePermission } from "@/hooks/usePermission";
 
 function Side({ sidebarOpen, setSidebarOpen, userIsSuperAdmin, userIsAdmin }) {
   const { props } = usePage();
-  const { current_company, current_branch } = props;
+  const { auth, current_company, current_branch } = props;
+  const roles = auth?.roles || [];
+  const userIsKine = roles.includes("kine");
+
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
   const { hasPermission } = usePermission();
-  // Trae la URL actual para reaccionar a cambios de ruta
   const { url } = usePage();
 
-  // Define tus items con los IDs como NOMBRES DE RUTA de Ziggy
   const menuItems = useMemo(
     () => {
       const businessType = current_company?.business_type || 'clinical';
       const isClinical = businessType === 'clinical';
-      const isService = businessType === 'service';
-      const isRetail = businessType === 'retail';
 
-      // Módulos habilitados (Prioridad Sucursal > Empresa)
       const enabledModules = current_branch?.enabled_modules 
         || current_company?.enabled_modules 
-        || ['clinical_management', 'commercial_management', 'finance_admin', 'system_config']; // Por defecto todos si es null para no romper nada actual
+        || ['clinical_management', 'commercial_management', 'finance_admin', 'system_config'];
 
-      const items = [
-        { id: "dashboard", label: "Dashboard", icon: Home },
-      ];
+      const items = [];
 
-      // BLOQUE: GESTIÓN DE PERSONAS (Dinámico)
+      // Si es Kinesiologo, usamos una navegación 100% personalizada e idéntica a la móvil
+      if (userIsKine) {
+        items.push({ id: "kine.dashboard", label: "Inicio", icon: Home });
+        items.push({ id: "kine.my-patients", label: "Mis Pacientes", icon: Users });
+        items.push({ id: "kine.my-schedule", label: "Mi Horario", icon: Clock });
+        items.push({ id: "kine.pending-sessions", label: "Atenciones", icon: ClipboardList });
+        items.push({ id: "kine.my-wallet", label: "Mis Pagos", icon: DollarSign });
+        return items;
+      }
+
+      items.push({ id: "dashboard", label: "Dashboard", icon: Home });
+
+      // BLOQUE: GESTIÓN DE PERSONAS (Solo para Admin/Superadmin)
       if (isClinical && enabledModules.includes('clinical_management')) {
         const clinicalSubmenu = [
-            { id: "agendas.index", label: "Agenda", icon: Calendar },
+            { id: "agendas.index", label: "Agenda General", icon: Calendar },
             { id: "availabilities.index", label: "Disponibilidad", icon: Clock },
             { id: "patients.index", label: "Pacientes", icon: Users },
             { id: "doctors.index", label: "Kines", icon: Stethoscope },
             { id: "treatment-sessions.index", label: "Atenciones", icon: List },
             { id: "products.index", label: "Catálogo", icon: Package },
             { id: "categories.index", label: "Categorías", icon: Layers },
-        ].filter(item => hasPermission(item.id) || userIsSuperAdmin); // 👈 Admin debe tener el permiso
+        ].filter(item => hasPermission(item.id) || userIsSuperAdmin);
 
         if (clinicalSubmenu.length > 0) {
             items.push({

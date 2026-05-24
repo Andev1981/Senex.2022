@@ -37,7 +37,6 @@ import Swal from "sweetalert2";
 
 export default function DoctorDetailModal({
   doctor,
-  provinces = [],
   regions = [],
   communes = [],
   branches = [],
@@ -66,7 +65,6 @@ export default function DoctorDetailModal({
     status_reason: doctor?.branch_status_reason || "",
     is_active: doctor ? !!doctor.is_active : true, // Estado Global
     commune_id: doctor?.commune_id ? String(doctor.commune_id) : (!doctor?.id ? "13114" : ""),
-    province_id: doctor?.province_id ? String(doctor.province_id) : (!doctor?.id ? "2401" : ""),
     region_id: doctor?.region_id ? String(doctor.region_id) : (!doctor?.id ? "13" : ""),
     street: doctor?.street || "",
     number: doctor?.number || "",
@@ -75,11 +73,21 @@ export default function DoctorDetailModal({
     license_number: doctor?.license_number || "",
   });
 
+  const initialBranchId = branches.length > 0 ? branches[0].id : "";
+  const initialBranch = branches.find(b => b.id == initialBranchId);
+  let initialModality = "onsite";
+  if (initialBranch) {
+      if (initialBranch.allows_onsite) initialModality = "onsite";
+      else if (initialBranch.allows_home) initialModality = "home";
+      else if (initialBranch.allows_online) initialModality = "online";
+  }
+
   // --- FORMULARIO DISPONIBILIDAD ---
   const avForm = useForm({
     doctor_id: doctor?.id || "",
-    branch_id: branches.length === 1 ? branches[0].id : "",
+    branch_id: initialBranchId,
     room_id: "",
+    modality: initialModality,
     rrule: "",
     start_time: "09:00",
     end_time: "18:00",
@@ -97,6 +105,27 @@ export default function DoctorDetailModal({
     { label: "Sáb", value: "SA" },
     { label: "Dom", value: "SU" },
   ];
+
+  const modalityOptions = useMemo(() => {
+    if (!avForm.data.branch_id) return [];
+    const branch = branches.find(b => b.id == avForm.data.branch_id);
+    if (!branch) return [];
+
+    const options = [];
+    if (branch.allows_onsite) options.push({ label: "En Clínica (Box)", value: "onsite" });
+    if (branch.allows_home) options.push({ label: "A Domicilio", value: "home" });
+    if (branch.allows_online) options.push({ label: "Online / Telemedicina", value: "online" });
+    return options;
+  }, [branches, avForm.data.branch_id]);
+
+  useEffect(() => {
+    if (modalityOptions.length > 0) {
+        const currentValid = modalityOptions.some(o => o.value === avForm.data.modality);
+        if (!currentValid) {
+            avForm.setData("modality", modalityOptions[0].value);
+        }
+    }
+  }, [modalityOptions]);
 
   const toggleDay = (day) => {
     const newDays = avForm.data.days.includes(day)
@@ -138,15 +167,10 @@ export default function DoctorDetailModal({
     });
   };
 
-  const filteredProvinces = useMemo(() => {
-    if (!data.region_id) return [];
-    return provinces.filter(p => p.region_id == data.region_id);
-  }, [provinces, data.region_id]);
-
   const filteredCommunes = useMemo(() => {
-    if (!data.province_id) return [];
-    return communes.filter(c => c.province_id == data.province_id);
-  }, [communes, data.province_id]);
+    if (!data.region_id) return [];
+    return communes.filter(c => c.region_id == data.region_id);
+  }, [communes, data.region_id]);
 
   const roomOptions = useMemo(() => {
     if (!avForm.data.branch_id) return [];
@@ -171,7 +195,6 @@ export default function DoctorDetailModal({
           speciality: d.speciality || data.speciality,
           gender: d.gender || data.gender, 
           commune_id: d.commune_id ? String(d.commune_id) : data.commune_id, 
-          province_id: d.province_id ? String(d.province_id) : data.province_id, 
           region_id: d.region_id ? String(d.region_id) : data.region_id,
           street: d.street || data.street, 
           number: d.number || data.number, 
@@ -384,28 +407,16 @@ export default function DoctorDetailModal({
                     <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
                         <MapPin className="w-4 h-4" /> Localización & Dirección
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1">
                             <EnterpriseSelect
                                 label="Región"
                                 value={data.region_id}
                                 onChange={(val) => { 
-                                    setData({ ...data, region_id: val, province_id: "", commune_id: "" });
+                                    setData({ ...data, region_id: val, commune_id: "" });
                                 }}
                                 options={regions}
                                 disabled={isExistingInSystem}
-                                placeholder="-- Seleccionar --"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <EnterpriseSelect
-                                label="Provincia"
-                                value={data.province_id}
-                                onChange={(val) => { 
-                                    setData({ ...data, province_id: val, commune_id: "" });
-                                }}
-                                options={filteredProvinces}
-                                disabled={!data.region_id || isExistingInSystem}
                                 placeholder="-- Seleccionar --"
                             />
                         </div>
@@ -415,11 +426,11 @@ export default function DoctorDetailModal({
                                 value={data.commune_id}
                                 onChange={(val) => setData({ ...data, commune_id: val })}
                                 options={filteredCommunes}
-                                disabled={!data.province_id || isExistingInSystem}
+                                disabled={!data.region_id || isExistingInSystem}
                                 placeholder="-- Seleccionar --"
                             />
                         </div>
-                        <div className="md:col-span-2 space-y-1">
+                        <div className="md:col-span-1 space-y-1">
                             <label className="enterprise-label ml-1">Calle / Avenida</label>
                             <TextInput value={data.street} onChange={e => setData("street", e.target.value)} className="w-full !rounded-xl !py-3 font-bold" disabled={isExistingInSystem} />
                         </div>
@@ -446,7 +457,7 @@ export default function DoctorDetailModal({
                         <Plus className="w-5 h-5 text-brand-primary" /> Definir Nueva Jornada
                     </h3>
                     <form onSubmit={submitAv} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <EnterpriseSelect 
                                 label="Sucursal de Atención" 
                                 icon={Building} 
@@ -456,14 +467,29 @@ export default function DoctorDetailModal({
                                 required 
                             />
                             <EnterpriseSelect 
-                                label="Box / Sala Asignada" 
-                                icon={Layers} 
-                                value={avForm.data.room_id} 
-                                onChange={v => avForm.setData("room_id", v)} 
-                                options={roomOptions} 
-                                placeholder="Cualquier Box Disponible" 
-                                disabled={!avForm.data.branch_id} 
+                                label="Modalidad" 
+                                icon={Smartphone} 
+                                value={avForm.data.modality} 
+                                onChange={v => avForm.setData("modality", v)} 
+                                options={modalityOptions} 
+                                required 
                             />
+                            <div className="space-y-1">
+                                <EnterpriseSelect 
+                                    label="Box / Sala Preferente" 
+                                    icon={Layers} 
+                                    value={avForm.data.room_id} 
+                                    onChange={v => avForm.setData("room_id", v)} 
+                                    options={roomOptions} 
+                                    placeholder={avForm.data.modality === 'onsite' ? "Libre de Box (Supervisión Múltiple)" : "No aplica (Remoto)"}
+                                    disabled={!avForm.data.branch_id || avForm.data.modality !== 'onsite'} 
+                                />
+                                {avForm.data.modality === 'onsite' && !avForm.data.room_id && (
+                                    <p className="text-[8px] text-brand-primary font-black uppercase tracking-tight ml-1 animate-pulse">
+                                        ✨ Modo Libre: Podrás supervisar hasta 3 pacientes en distintos boxes.
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
                         <div className="space-y-3">
@@ -548,4 +574,4 @@ export default function DoctorDetailModal({
       </div>
     </div>
   );
-  }
+}

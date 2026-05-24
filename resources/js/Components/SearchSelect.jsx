@@ -10,13 +10,19 @@ const SearchSelect = ({
   error,
   className = "",
   config = { valueKey: 'value', displayKey: 'label', secondaryKeys: [], searchKeys: ['label'] },
-  renderOption
+  renderOption,
+  disabled = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef(null);
 
-  const { valueKey, displayKey, secondaryKeys, searchKeys } = config;
+  const { 
+    valueKey = 'value', 
+    displayKey = 'label', 
+    secondaryKeys = [], 
+    searchKeys = ['label'] 
+  } = config || {};
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm) {
@@ -24,8 +30,8 @@ const SearchSelect = ({
     }
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
     return options.filter(option =>
-      searchKeys.some(key =>
-        String(option[key]).toLowerCase().includes(lowerCaseSearchTerm)
+      (searchKeys || []).some(key =>
+        String(option[key] || '').toLowerCase().includes(lowerCaseSearchTerm)
       )
     );
   }, [options, searchTerm, searchKeys]);
@@ -74,9 +80,10 @@ const SearchSelect = ({
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => !disabled && setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full pl-12 pr-10 py-4 rounded-2xl border-gray-100 bg-gray-100 font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none"
+          disabled={disabled}
+          className={`w-full pl-12 pr-10 py-4 rounded-2xl border-gray-100 bg-gray-100 font-black text-sm focus:bg-white focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary shadow-inner transition-all outline-none ${disabled ? 'opacity-50 cursor-not-allowed select-none' : ''}`}
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3">
           {value && (
@@ -91,7 +98,7 @@ const SearchSelect = ({
           <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
         </div>
       </div>
-      {isOpen && (
+      {isOpen && !disabled && (
         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto custom-scrollbar animate-in fade-in slide-in-from-top-2">
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option, idx) => (

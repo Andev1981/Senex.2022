@@ -10,7 +10,6 @@ import usePatientStore from "@/Stores/usePatientStore";
 export default function IndexPatients({
   patients,
   communes,
-  provinces,
   regions,
   user,
   business_type = 'clinical'
@@ -147,7 +146,6 @@ export default function IndexPatients({
           setOpenModalPatient={setOpenPatientModal}
           communes={communes}
           regions={regions}
-          provinces={provinces}
           business_type={business_type}
         />
       </SideModal>

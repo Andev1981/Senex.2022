@@ -16,7 +16,8 @@ import {
   Calendar,
   Timer,
   MapPin,
-  FileText // Nuevo icono para la orden
+  FileText,
+  ShieldCheck
 } from "lucide-react";
 import SearchSelect from "@/components/SearchSelect";
 import PainMapCard from "@/components/Body/PainMapCard";
@@ -102,7 +103,9 @@ export default function SessionFormModal({
     initial_pain_map: sessionData?.session_pain_map || [],
 
     // SOAP
-    pain_level: sessionData?.pain_level || 0,
+    pain_before: sessionData?.pain_before || sessionData?.pain_level || 0,
+    pain_after: sessionData?.pain_after || 0,
+    informed_consent_confirmed: !!sessionData?.informed_consent_confirmed,
     subjective: sessionData?.subjective || "",
     objective: sessionData?.objective || "",
     assessment: sessionData?.assessment || "",
@@ -209,9 +212,20 @@ export default function SessionFormModal({
     setIsHandModalOpen(false);
   };
 
+  const isClinicalTabLocked = useMemo(() => {
+    if (data.status === 'scheduled') return true;
+    return false;
+  }, [data.status]);
+
   const isFieldEditable = (fieldType) => {
     if (!isEditing) return true;
     if (currentStatus === "cancelled" || currentStatus === "missed") return false;
+    
+    // Si la sesión está programada, solo permitimos editar campos administrativos
+    if (currentStatus === "scheduled") {
+        return fieldType === "admin";
+    }
+
     if (currentStatus === "attended") return fieldType === "clinical"; 
     return true;
   };
@@ -423,13 +437,32 @@ export default function SessionFormModal({
                                 className="rounded-2xl!"
                             />
                         ) : (
-                            <div className="flex items-center justify-between py-2 px-6 bg-gray-50/50 rounded-2xl border border-gray-100 shadow-inner">
-                                <div>
-                                    <p className="text-sm font-black text-gray-800 uppercase tracking-wide">{selectedPatientFinal.full_name || `${selectedPatientFinal.name} ${selectedPatientFinal.last_name}`}</p>
-                                    <p className="text-[11px] font-black uppercase tracking-wide mt-1 text-gray-400">{selectedPatientFinal.rut}</p>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between py-2 px-6 bg-gray-50/50 rounded-2xl border border-gray-100 shadow-inner">
+                                    <div>
+                                        <p className="text-sm font-black text-gray-800 uppercase tracking-wide">{selectedPatientFinal.full_name || `${selectedPatientFinal.name} ${selectedPatientFinal.last_name}`}</p>
+                                        <p className="text-[11px] font-black uppercase tracking-wide mt-1 text-gray-400">{selectedPatientFinal.rut}</p>
+                                    </div>
+                                    {!preselectedPatient && !isEditing && (
+                                        <button type="button" onClick={() => setData("patient_id", "")} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
+                                    )}
                                 </div>
-                                {!preselectedPatient && !isEditing && (
-                                    <button type="button" onClick={() => setData("patient_id", "")} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><X className="w-5 h-5"/></button>
+
+                                {/* Alerta de Tratamiento Activo en Modal de Inicio */}
+                                {selectedPatientFinal?.active_treatments?.length > 0 && (
+                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-start gap-3 animate-in fade-in">
+                                        <Activity className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-indigo-700 uppercase tracking-widest leading-tight mb-1">
+                                                Paciente con Tratamiento en Curso
+                                            </p>
+                                            <ul className="text-[9px] font-bold text-indigo-600/80 list-disc list-inside">
+                                                {selectedPatientFinal.active_treatments.map(t => (
+                                                    <li key={t.id}>{t.description || 'Kinesiología'}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -787,27 +820,30 @@ export default function SessionFormModal({
 
                 {/* === COLUMNA DERECHA (5/12) === */}
                 <div className="lg:col-span-5 space-y-6">
-                    <div className="sticky top-0">
+                    <div className="sticky top-0 space-y-6">
                         <PainMapCard
                             points={data.session_pain_map}
                             painLevel={data.pain_level}
+                            painBefore={data.pain_before}
+                            painAfter={data.pain_after}
                             bodyPart={data.body_part} 
                             laterality={data.laterality} 
                             isLocked={!isFieldEditable("clinical")} 
-                            title="Evolución Actual"
+                            title="Evolución de Dolor"
                             onPointsChange={(val) => {
                                 setData(prev => ({ 
                                     ...prev, 
                                     session_pain_map: val,
-                                    // Si estamos creando un tratamiento nuevo, sincronizar el mapa inicial
                                     initial_pain_map: !prev.treatment_id ? val : prev.initial_pain_map
                                 }));
                             }}
+                            onPainBeforeChange={(val) => setData("pain_before", val)}
+                            onPainAfterChange={(val) => setData("pain_after", val)}
                             onPainLevelChange={(val) => {
                                 setData(prev => ({ 
                                     ...prev, 
                                     pain_level: val,
-                                    // Si estamos creando un tratamiento nuevo, sincronizar el nivel inicial
+                                    pain_before: val, // Sync for legacy
                                     initial_pain_level: !prev.treatment_id ? val : prev.initial_pain_level
                                 }));
                             }}
@@ -815,6 +851,27 @@ export default function SessionFormModal({
                             onLateralityChange={(val) => setData("laterality", val)} 
                             onBodyPartClick={handleBodyPartClick}
                         />
+
+                        {/* CONSENTIMIENTO INFORMADO */}
+                        <div className={`p-6 rounded-[2rem] border transition-all ${data.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-xl ${data.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                        <ShieldCheck className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-gray-900 tracking-widest">Consentimiento Informado</p>
+                                        <p className="text-[8px] font-bold text-gray-500 uppercase">Validación legal de la atención</p>
+                                    </div>
+                                </div>
+                                <Switch 
+                                    checked={data.informed_consent_confirmed} 
+                                    onChange={(e) => setData("informed_consent_confirmed", e.target.checked)} 
+                                    disabled={!isFieldEditable("clinical")}
+                                />
+                            </div>
+                            {errors.informed_consent_confirmed && <p className="text-[9px] text-red-500 font-bold mt-2 uppercase">{errors.informed_consent_confirmed}</p>}
+                        </div>
                     </div>
                 </div>
 

@@ -19,7 +19,10 @@ import {
     CalendarOff,
     Settings2,
     CalendarCheck,
-    History
+    History,
+    Smartphone,
+    Ban,
+    Save,
 } from "lucide-react";
 import SearchSelect from "@/components/SearchSelect";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -39,6 +42,16 @@ const dayLabels = {
     "SU": "Dom"
 };
 
+const fullDayLabels = {
+    "MO": "Lunes",
+    "TU": "Martes",
+    "WE": "Miércoles",
+    "TH": "Jueves",
+    "FR": "Viernes",
+    "SA": "Sábado",
+    "SU": "Domingo"
+};
+
 export default function Availability({ 
     availabilities = [], 
     exceptions = [], 
@@ -49,7 +62,7 @@ export default function Availability({
     branches = [],
     filters = {}
 }) {
-    const [activeTab, setActiveTab] = useState("horarios"); // horarios, excepciones, feriados, carga
+    const [activeTab, setActiveTab] = useState("horarios"); // horarios, excepciones, feriados, sucursal
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAvailability, setEditingAvailability] = useState(null);
     const [selectedDate, setSelectedDate] = useState(filters.date || new Date().toISOString().split('T')[0]);
@@ -63,12 +76,22 @@ export default function Availability({
         });
     };
 
+    const initialBranchId = filters.active_branch_id || (branches.length > 0 ? branches[0].id : "");
+    const activeBranch = branches.find(b => b.id == initialBranchId);
+    
+    let initialModality = "onsite";
+    if (activeBranch) {
+        if (activeBranch.allows_onsite) initialModality = "onsite";
+        else if (activeBranch.allows_home) initialModality = "home";
+        else if (activeBranch.allows_online) initialModality = "online";
+    }
+
     // --- FORMULARIO DISPONIBILIDAD (RECURRENTE) ---
     const avForm = useForm({
         doctor_id: "",
-        branch_id: "",
+        branch_id: initialBranchId,
         room_id: "",
-        modality: "onsite",
+        modality: initialModality,
         rrule: "",
         start_time: "09:00",
         end_time: "18:00",
@@ -115,9 +138,12 @@ export default function Availability({
     const exForm = useForm({
         doctor_id: "",
         date: new Date().toISOString().split('T')[0],
+        end_date: "",
         action: "cancel",
         override_start_time: "",
         override_end_time: "",
+        room_id: "",
+        modality: "",
         reason: "",
     });
 
@@ -125,8 +151,25 @@ export default function Availability({
     const holForm = useForm({
         name: "",
         date: new Date().toISOString().split('T')[0],
+        end_date: "",
+        start_time: "",
+        end_time: "",
         branch_id: "",
+        room_id: "",
         is_recurring: false,
+    });
+
+    // --- FORMULARIO HORARIO SUCURSAL ---
+    const branchForm = useForm({
+        schedule: activeBranch?.schedule || {
+            "MO": { open: "08:00", close: "20:00" },
+            "TU": { open: "08:00", close: "20:00" },
+            "WE": { open: "08:00", close: "20:00" },
+            "TH": { open: "08:00", close: "20:00" },
+            "FR": { open: "08:00", close: "20:00" },
+            "SA": { open: "09:00", close: "14:00" },
+            "SU": { open: "", close: "" },
+        }
     });
 
     const daysOfWeek = [
@@ -195,6 +238,15 @@ export default function Availability({
         });
     };
 
+    const submitBranchSchedule = (e) => {
+        e.preventDefault();
+        branchForm.put(route('branches.schedule.update', activeBranch.id), {
+            onSuccess: () => {
+                Swal.fire({ title: "Horario Clínica Actualizado", icon: "success", toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+            }
+        });
+    };
+
     const deleteItem = (type, id) => {
         Swal.fire({
             title: '¿Confirmar eliminación?',
@@ -216,10 +268,24 @@ export default function Availability({
     const branchOptions = useMemo(() => branches.map(b => ({ label: b.name, value: b.id })), [branches]);
     const doctorOptions = useMemo(() => doctors.map(d => ({ label: d.name, value: d.id })), [doctors]);
     
-    const roomOptions = useMemo(() => {
+    // roomOptions para avForm
+    const roomOptionsAv = useMemo(() => {
         if (!avForm.data.branch_id) return [];
         return rooms.filter(r => r.branch_id == avForm.data.branch_id).map(r => ({ label: r.name, value: r.id }));
     }, [rooms, avForm.data.branch_id]);
+
+    // roomOptions para holForm
+    const roomOptionsHol = useMemo(() => {
+        if (!holForm.data.branch_id) return [];
+        return rooms.filter(r => r.branch_id == holForm.data.branch_id).map(r => ({ label: r.name, value: r.id }));
+    }, [rooms, holForm.data.branch_id]);
+
+    // roomOptions para exForm (Usa la sucursal activa por defecto)
+    const roomOptionsEx = useMemo(() => {
+        const bId = initialBranchId;
+        if (!bId) return [];
+        return rooms.filter(r => r.branch_id == bId).map(r => ({ label: r.name, value: r.id }));
+    }, [rooms, initialBranchId]);
 
     return (
         <AuthenticatedLayout>
@@ -237,26 +303,28 @@ export default function Availability({
                                 <div>
                                     <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Gestión de Tiempos</h1>
                                     <div className="flex items-center gap-4 mt-1">
-                                        <button onClick={() => setActiveTab("horarios")} className={`text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'horarios' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-600'}`}>Horarios Base</button>
-                                        <button onClick={() => setActiveTab("carga")} className={`text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'carga' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-600'}`}>Carga de Boxes</button>
+                                        <button onClick={() => setActiveTab("horarios")} className={`text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'horarios' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-600'}`}>Horarios Kine</button>
                                         <button onClick={() => setActiveTab("excepciones")} className={`text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'excepciones' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-600'}`}>Excepciones</button>
                                         <button onClick={() => setActiveTab("feriados")} className={`text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'feriados' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-600'}`}>Feriados / Cierres</button>
+                                        <button onClick={() => setActiveTab("sucursal")} className={`text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'sucursal' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-600'}`}>Horario Clínica</button>
                                     </div>
                                 </div>
                             </div>
-                            <button 
-                                onClick={() => {
-                                    setEditingAvailability(null);
-                                    avForm.reset();
-                                    exForm.reset();
-                                    holForm.reset();
-                                    setIsModalOpen(true);
-                                }} 
-                                className="flex items-center gap-3 px-10 py-5 bg-gray-900 text-white rounded-3xl font-black text-[11px] uppercase tracking-[0.1em] hover:bg-black hover:scale-105 transition-all shadow-xl shadow-gray-200"
-                            >
-                                <Plus className="w-5 h-5" />
-                                {activeTab === 'horarios' ? 'Definir Horario' : activeTab === 'excepciones' ? 'Añadir Excepción' : 'Añadir Feriado'}
-                            </button>
+                            {activeTab !== 'sucursal' && (
+                                <button 
+                                    onClick={() => {
+                                        setEditingAvailability(null);
+                                        avForm.reset();
+                                        exForm.reset();
+                                        holForm.reset();
+                                        setIsModalOpen(true);
+                                    }} 
+                                    className="flex items-center gap-3 px-10 py-5 bg-gray-900 text-white rounded-3xl font-black text-[11px] uppercase tracking-[0.1em] hover:bg-black hover:scale-105 transition-all shadow-xl shadow-gray-200"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    {activeTab === 'horarios' ? 'Definir Horario' : activeTab === 'excepciones' ? 'Añadir Excepción' : 'Añadir Feriado'}
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -296,113 +364,78 @@ export default function Availability({
                             </div>
                         )}
 
-                        {activeTab === 'carga' && (
-                            <div className="space-y-8 animate-in fade-in duration-500">
-                                {/* Filtro de Fecha para Carga */}
-                                <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-gray-50 rounded-xl"><CalendarIcon className="w-5 h-5 text-gray-400" /></div>
-                                        <div>
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Visualizando Día</p>
-                                            <TextInput type="date" value={selectedDate} onChange={e => handleDateChange(e.target.value)} className="!border-none !p-0 !bg-transparent font-black uppercase text-sm" />
+                        {activeTab === 'sucursal' && (
+                            <div className="max-w-4xl">
+                                <div className="bg-white border border-gray-100 rounded-[3rem] p-10 shadow-sm relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-8 opacity-5"><Building className="w-32 h-32" /></div>
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <div className="w-12 h-12 bg-brand-primary/10 text-brand-primary rounded-2xl flex items-center justify-center"><Building className="w-6 h-6" /></div>
+                                            <div>
+                                                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Horario de Operación</h2>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Límites físicos de la sucursal: {activeBranch?.name}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-green-100"><div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Disponible</div>
-                                        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-red-100"><div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div> Saturado</div>
-                                    </div>
-                                </div>
 
-                                {/* Rejilla de Boxes */}
-                                {rooms.length === 0 ? (
-                                    <EmptyState icon={Layers} title="No hay boxes activos en esta sucursal" />
-                                ) : (
-                                    <div className="overflow-x-auto pb-6">
-                                        <div className="min-w-[1000px] grid grid-cols-1 gap-4">
-                                            <div className="flex gap-4">
-                                                <div className="w-24 shrink-0"></div> {/* Espacio para horas */}
-                                                {rooms.map(room => (
-                                                    <div key={room.id} className="flex-1 min-w-[200px] bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
-                                                        <p className="text-xs font-black text-gray-900 uppercase tracking-tight">{room.name}</p>
-                                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Capacidad: {room.capacity} pac.</p>
+                                        <form onSubmit={submitBranchSchedule} className="space-y-6">
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {daysOfWeek.map(day => (
+                                                    <div key={day.value} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-gray-100 group hover:bg-white hover:shadow-xl transition-all duration-300">
+                                                        <div className="w-32">
+                                                            <p className="text-sm font-black text-gray-900 uppercase tracking-tight">{day.label}</p>
+                                                            <p className={`text-[8px] font-black uppercase tracking-widest ${branchForm.data.schedule[day.value]?.open ? 'text-green-500' : 'text-red-400'}`}>
+                                                                {branchForm.data.schedule[day.value]?.open ? 'Abierto' : 'Cerrado'}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Apertura</label>
+                                                                <TextInput 
+                                                                    type="time" 
+                                                                    className="!bg-white !py-2 !px-4 !text-xs !rounded-xl"
+                                                                    value={branchForm.data.schedule[day.value]?.open || ""} 
+                                                                    onChange={e => branchForm.setData("schedule", {
+                                                                        ...branchForm.data.schedule,
+                                                                        [day.value]: { ...branchForm.data.schedule[day.value], open: e.target.value }
+                                                                    })}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Cierre</label>
+                                                                <TextInput 
+                                                                    type="time" 
+                                                                    className="!bg-white !py-2 !px-4 !text-xs !rounded-xl"
+                                                                    value={branchForm.data.schedule[day.value]?.close || ""} 
+                                                                    onChange={e => branchForm.setData("schedule", {
+                                                                        ...branchForm.data.schedule,
+                                                                        [day.value]: { ...branchForm.data.schedule[day.value], close: e.target.value }
+                                                                    })}
+                                                                />
+                                                            </div>
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => branchForm.setData("schedule", {
+                                                                    ...branchForm.data.schedule,
+                                                                    [day.value]: { open: "", close: "" }
+                                                                })}
+                                                                className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
-                                            
-                                            {/* Filas de Tiempo (08:00 a 20:00) */}
-                                            {Array.from({ length: 25 }, (_, i) => {
-                                                const hour = Math.floor(i / 2) + 8;
-                                                const minutes = (i % 2) * 30;
-                                                const time = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-                                                
-                                                return (
-                                                    <div key={time} className="flex gap-4 group">
-                                                        <div className="w-24 shrink-0 flex items-center justify-center">
-                                                            <span className="text-[10px] font-black text-gray-400 group-hover:text-brand-primary transition-colors">{time}</span>
-                                                        </div>
-                                                        {rooms.map(room => {
-                                                            const occupancy = appointments.filter(apt => {
-                                                                const aptStart = apt.start_time || apt.start_at.substring(11, 16);
-                                                                const aptEnd = apt.end_time || apt.end_at.substring(11, 16);
-                                                                return apt.room_id === room.id && time >= aptStart && time < aptEnd;
-                                                            });
 
-                                                            const isFull = occupancy.length >= room.capacity;
-                                                            const percent = (occupancy.length / room.capacity) * 100;
-
-                                                            const handleQuickBook = () => {
-                                                                if (isFull) return;
-                                                                router.get(route('agendas.index'), {
-                                                                    date: selectedDate,
-                                                                    start_time: time,
-                                                                    room_id: room.id,
-                                                                    action: 'new'
-                                                                });
-                                                            };
-
-                                                            return (
-                                                                <div 
-                                                                    key={`${room.id}-${time}`} 
-                                                                    onClick={handleQuickBook}
-                                                                    className={`flex-1 min-w-[200px] h-12 rounded-2xl border transition-all flex flex-col justify-center px-4 relative overflow-hidden cursor-pointer ${
-                                                                        occupancy.length > 0 
-                                                                            ? (isFull ? 'bg-red-50 border-red-100 cursor-not-allowed' : 'bg-green-50 border-green-100 hover:shadow-lg hover:brightness-95') 
-                                                                            : 'bg-white border-gray-50 border-dashed hover:border-brand-primary/30 hover:bg-brand-primary/5 hover:scale-[1.02]'
-                                                                    }`}
-                                                                >
-                                                                    {occupancy.length > 0 ? (
-                                                                        <>
-                                                                            <div className="flex items-center justify-between relative z-10">
-                                                                                <div className="flex -space-x-2">
-                                                                                    {Array.from(new Set(occupancy.map(o => o.doctor?.id))).map((docId, idx) => {
-                                                                                        const doc = occupancy.find(o => o.doctor?.id === docId)?.doctor;
-                                                                                        return (
-                                                                                            <div key={docId} title={doc?.name} className="w-6 h-6 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-[10px] font-black text-brand-primary shadow-sm">
-                                                                                                {doc?.name[0]}
-                                                                                            </div>
-                                                                                        );
-                                                                                    })}
-                                                                                </div>
-                                                                                <span className={`text-[9px] font-black ${isFull ? 'text-red-600' : 'text-green-600'}`}>
-                                                                                    {occupancy.length}/{room.capacity}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="absolute bottom-0 left-0 h-1 bg-current opacity-20" style={{ width: `${percent}%` }}></div>
-                                                                        </>
-                                                                    ) : (
-                                                                        <div className="flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                                                            <Plus className="w-4 h-4 text-brand-primary/40" />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                                            <div className="flex justify-end pt-6">
+                                                <PrimaryButton disabled={branchForm.processing} className="!px-12 !py-4 shadow-xl shadow-brand-primary/20">
+                                                    <Save className="w-4 h-4 mr-2" />
+                                                    {branchForm.processing ? 'Guardando...' : 'Guardar Horario General'}
+                                                </PrimaryButton>
+                                            </div>
+                                        </form>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -417,9 +450,9 @@ export default function Availability({
                     width="xl"
                 >
                     <div className="flex-1 flex flex-col min-h-0">
-                        {activeTab === 'horarios' && <HorarioForm form={avForm} onSubmit={submitAv} editing={editingAvailability} doctorOptions={doctorOptions} branchOptions={branchOptions} roomOptions={roomOptions} daysOfWeek={daysOfWeek} toggleDay={toggleDay} onCancel={() => { setIsModalOpen(false); setEditingAvailability(null); }} availabilities={availabilities} />}
-                        {activeTab === 'excepciones' && <ExceptionForm form={exForm} onSubmit={submitException} doctorOptions={doctorOptions} onCancel={() => setIsModalOpen(false)} />}
-                        {activeTab === 'feriados' && <HolidayForm form={holForm} onSubmit={submitHoliday} branchOptions={branchOptions} onCancel={() => setIsModalOpen(false)} />}
+                        {activeTab === 'horarios' && <HorarioForm form={avForm} onSubmit={submitAv} editing={editingAvailability} doctorOptions={doctorOptions} branchOptions={branchOptions} branches={branches} roomOptions={roomOptionsAv} daysOfWeek={daysOfWeek} toggleDay={toggleDay} onCancel={() => { setIsModalOpen(false); setEditingAvailability(null); }} availabilities={availabilities} />}
+                        {activeTab === 'excepciones' && <ExceptionForm form={exForm} onSubmit={submitException} doctorOptions={doctorOptions} branchOptions={branchOptions} roomOptions={roomOptionsEx} onCancel={() => setIsModalOpen(false)} />}
+                        {activeTab === 'feriados' && <HolidayForm form={holForm} onSubmit={submitHoliday} branchOptions={branchOptions} roomOptions={roomOptionsHol} onCancel={() => setIsModalOpen(false)} />}
                     </div>
                 </SideModal>
             </div>
@@ -452,7 +485,7 @@ const AvailabilityCard = ({ av, onEdit, onDelete }) => (
             </div>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                 <button onClick={onEdit} className="p-2.5 text-gray-300 hover:text-brand-primary hover:bg-brand-primary/5 rounded-xl transition-all"><Pencil className="w-4 h-4" /></button>
-                <button onClick={onDelete} className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+                <button onDelete={onDelete} className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
             </div>
         </div>
         <div className="space-y-3 mb-6">
@@ -483,19 +516,32 @@ const AvailabilityCard = ({ av, onEdit, onDelete }) => (
 
 const ExceptionCard = ({ ex, onDelete }) => (
     <div className="bg-white border border-red-50 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl transition-all group overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-4"><AlertTriangle className="w-5 h-5 text-red-100" /></div>
+        <div className="absolute top-0 right-0 p-4">
+            {ex.action === 'open' ? <CalendarCheck className="w-5 h-5 text-green-100" /> : <AlertTriangle className="w-5 h-5 text-red-100" />}
+        </div>
         <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-500 border border-red-100"><CalendarOff className="w-6 h-6" /></div>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${ex.action === 'open' ? 'bg-green-50 text-green-500 border-green-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
+                    {ex.action === 'open' ? <CalendarCheck className="w-6 h-6" /> : <CalendarOff className="w-6 h-6" />}
+                </div>
                 <div>
                     <p className="text-sm font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{ex.doctor?.name}</p>
-                    <p className="text-[9px] font-black text-red-400 uppercase tracking-widest">{ex.action === 'cancel' ? 'Turno Cancelado' : 'Turno Modificado'}</p>
+                    <p className={`text-[9px] font-black uppercase tracking-widest ${ex.action === 'open' ? 'text-green-500' : 'text-red-400'}`}>
+                        {ex.action === 'open' ? 'Apertura Especial' : (ex.action === 'cancel' ? 'Turno Cancelado' : 'Turno Modificado')}
+                    </p>
                 </div>
             </div>
             <button onClick={onDelete} className="p-2.5 text-gray-300 hover:text-red-500 rounded-xl transition-all opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
         </div>
-        <div className="p-4 bg-red-50/50 rounded-2xl border border-red-100/50 mb-4">
-            <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">{new Date(ex.date).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <div className={`p-4 rounded-2xl border mb-4 ${ex.action === 'open' ? 'bg-green-50/50 border-green-100/50' : 'bg-red-50/50 border-red-100/50'}`}>
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${ex.action === 'open' ? 'text-green-600' : 'text-red-600'}`}>
+                {new Date(ex.date).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+            {ex.action === 'open' && (
+                <p className="text-[10px] font-black text-green-700 uppercase tracking-tight mb-1">
+                    {ex.override_start_time.substring(0, 5)} — {ex.override_end_time.substring(0, 5)}
+                </p>
+            )}
             {ex.reason && <p className="text-[10px] font-bold text-gray-500 uppercase italic">"{ex.reason}"</p>}
         </div>
     </div>
@@ -523,7 +569,7 @@ const HolidayCard = ({ hol, onDelete }) => (
 
 // --- FORMULARIOS ---
 
-const HorarioForm = ({ form, onSubmit, editing, doctorOptions, branchOptions, roomOptions, daysOfWeek, toggleDay, onCancel, availabilities = [] }) => {
+const HorarioForm = ({ form, onSubmit, editing, doctorOptions, branchOptions, branches = [], roomOptions, daysOfWeek, toggleDay, onCancel, availabilities = [] }) => {
     // --- 🚨 DETECCIÓN DE CONFLICTOS EN TIEMPO REAL ---
     const conflicts = useMemo(() => {
         if (form.data.modality === 'home' || !form.data.room_id || form.data.days.length === 0) return [];
@@ -550,6 +596,20 @@ const HorarioForm = ({ form, onSubmit, editing, doctorOptions, branchOptions, ro
         });
     }, [form.data.modality, form.data.room_id, form.data.days, form.data.start_time, form.data.end_time, availabilities, editing]);
 
+    React.useEffect(() => {
+        const branch = branches.find(b => b.id == form.data.branch_id);
+        if (branch) {
+            const validModalities = [];
+            if (branch.allows_onsite) validModalities.push('onsite');
+            if (branch.allows_home) validModalities.push('home');
+            if (branch.allows_online) validModalities.push('online');
+            
+            if (!validModalities.includes(form.data.modality) && validModalities.length > 0) {
+                form.setData("modality", validModalities[0]);
+            }
+        }
+    }, [form.data.branch_id]);
+
     return (
         <form onSubmit={onSubmit} className="flex flex-col h-full">
             <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
@@ -570,35 +630,65 @@ const HorarioForm = ({ form, onSubmit, editing, doctorOptions, branchOptions, ro
                     <EnterpriseSelect options={doctorOptions} value={form.data.doctor_id} onChange={val => form.setData("doctor_id", val)} placeholder="Seleccionar profesional..." icon={User} required />
                     <InputError message={form.errors.doctor_id} />
                 </div>
+                
                 <div className="grid grid-cols-2 gap-6">
-                    <EnterpriseSelect label="Sucursal" icon={Building} value={form.data.branch_id} onChange={val => form.setData(prev => ({ ...prev, branch_id: val, room_id: "" }))} options={branchOptions} required />
                     <div className="space-y-3">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Modalidad de Atención</label>
-                        <div className="flex bg-gray-50 p-1 rounded-2xl gap-1">
-                            <button 
-                                type="button" 
-                                onClick={() => form.setData("modality", "onsite")}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${form.data.modality === 'onsite' ? "bg-white text-brand-primary shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                            >
-                                <Building className="w-3 h-3" /> En Clínica
-                            </button>
-                            <button 
-                                type="button" 
-                                onClick={() => form.setData("modality", "home")}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${form.data.modality === 'home' ? "bg-white text-brand-primary shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                            >
-                                <MapPin className="w-3 h-3" /> Domicilio
-                            </button>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sucursal</label>
+                        <div className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm text-gray-500 cursor-not-allowed flex items-center gap-3">
+                            <Building className="w-4 h-4 text-brand-primary" />
+                            {branches.find(b => b.id == form.data.branch_id)?.name || "Sucursal Actual"}
                         </div>
                     </div>
+                    {(() => {
+                        const branch = branches.find(b => b.id == form.data.branch_id);
+                        const modalities = [];
+                        if (branch?.allows_onsite) modalities.push({ label: 'Atención en Clínica', value: 'onsite' });
+                        if (branch?.allows_home) modalities.push({ label: 'Atención a Domicilio', value: 'home' });
+                        if (branch?.allows_online) modalities.push({ label: 'Telemedicina / Online', value: 'online' });
+
+                        if (modalities.length > 1) {
+                            return (
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Modalidad de Atención</label>
+                                    <EnterpriseSelect 
+                                        options={modalities} 
+                                        value={form.data.modality} 
+                                        onChange={val => form.setData("modality", val)} 
+                                        icon={Smartphone} 
+                                        required 
+                                    />
+                                </div>
+                            );
+                        }
+                        
+                        return (
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Modalidad</label>
+                                <div className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm text-gray-500 cursor-not-allowed flex items-center gap-3">
+                                    <Building className="w-4 h-4 text-brand-primary" />
+                                    {modalities[0]?.label || "Atención en Clínica"}
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
 
-                {form.data.modality === 'onsite' && (
                     <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Box / Sala Asignada</label>
-                        <EnterpriseSelect icon={Layers} value={form.data.room_id} onChange={val => form.setData("room_id", val)} options={roomOptions} placeholder="Seleccionar Box..." disabled={!form.data.branch_id} required />
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Box / Sala Preferente</label>
+                        <EnterpriseSelect 
+                            icon={Layers} 
+                            value={form.data.room_id} 
+                            onChange={val => form.setData("room_id", val)} 
+                            options={roomOptions} 
+                            placeholder={form.data.modality === 'onsite' ? "Libre de Box (Supervisión Múltiple)" : "No aplica (Remoto)"} 
+                            disabled={!form.data.branch_id || form.data.modality !== 'onsite'} 
+                        />
+                        {form.data.modality === 'onsite' && !form.data.room_id && (
+                            <p className="text-[8px] text-brand-primary font-black uppercase tracking-tight ml-1 animate-pulse">
+                                ✨ Modo Libre: Podrás supervisar hasta 3 pacientes en distintos boxes.
+                            </p>
+                        )}
                     </div>
-                )}
                 <div className="space-y-4">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Días de Atención Semanal</label>
                     <div className="grid grid-cols-4 gap-2">
@@ -646,34 +736,133 @@ const HorarioForm = ({ form, onSubmit, editing, doctorOptions, branchOptions, ro
     );
 };
 
-const ExceptionForm = ({ form, onSubmit, doctorOptions, onCancel }) => (
+const ExceptionForm = ({ form, onSubmit, doctorOptions, branchOptions, roomOptions, onCancel }) => (
     <form onSubmit={onSubmit} className="flex flex-col h-full">
         <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
             <EnterpriseSelect label="Kinesiólogo" options={doctorOptions} value={form.data.doctor_id} onChange={val => form.setData("doctor_id", val)} icon={User} required />
-            <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase ml-1">Fecha</label><TextInput type="date" value={form.data.date} onChange={e => form.setData("date", e.target.value)} required /></div>
-                <EnterpriseSelect label="Acción" value={form.data.action} onChange={val => form.setData("action", val)} options={[{ label: "Cancelar Turno", value: "cancel" }, { label: "Modificar Horas", value: "override" }]} required />
+            
+            <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-4">
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Periodo de la Excepción</p>
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Fecha Inicio</label>
+                        <TextInput type="date" value={form.data.date} onChange={e => form.setData("date", e.target.value)} required />
+                    </div>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Fecha Término (Opcional)</label>
+                        <TextInput type="date" value={form.data.end_date} onChange={e => form.setData("end_date", e.target.value)} />
+                    </div>
+                </div>
             </div>
-            {form.data.action === 'override' && (
-                <div className="grid grid-cols-2 gap-6 p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
-                    <div className="space-y-1"><label className="text-[8px] font-black text-blue-600 uppercase ml-1">Nuevo Inicio</label><TextInput type="time" value={form.data.override_start_time} onChange={e => form.setData("override_start_time", e.target.value)} /></div>
-                    <div className="space-y-1"><label className="text-[8px] font-black text-blue-600 uppercase ml-1">Nuevo Término</label><TextInput type="time" value={form.data.override_end_time} onChange={e => form.setData("override_end_time", e.target.value)} /></div>
+
+            <div className="grid grid-cols-1 gap-6">
+                <EnterpriseSelect 
+                    label="Tipo de Acción" 
+                    value={form.data.action} 
+                    onChange={val => {
+                        form.setData("action", val);
+                        if (val === 'open') {
+                            form.setData(prev => ({ ...prev, override_start_time: "09:00", override_end_time: "14:00" }));
+                        }
+                    }} 
+                    options={[
+                        { label: "Bloqueo Total (Día Completo)", value: "cancel" }, 
+                        { label: "Bloqueo Parcial (Rango de Horas)", value: "override" },
+                        { label: "Apertura Especial (Día No Laboral)", value: "open" }
+                    ]} 
+                    required 
+                />
+            </div>
+
+            {(form.data.action === 'override' || form.data.action === 'open') && (
+                <div className={`grid grid-cols-2 gap-6 p-6 rounded-[2rem] border ${form.data.action === 'open' ? 'bg-green-50 border-green-100' : 'bg-blue-50 border-blue-100'}`}>
+                    <div className="space-y-1">
+                        <label className={`text-[8px] font-black uppercase ml-1 ${form.data.action === 'open' ? 'text-green-600' : 'text-blue-600'}`}>Hora Inicio</label>
+                        <TextInput type="time" value={form.data.override_start_time} onChange={e => form.setData("override_start_time", e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                        <label className={`text-[8px] font-black uppercase ml-1 ${form.data.action === 'open' ? 'text-green-600' : 'text-blue-600'}`}>Hora Término</label>
+                        <TextInput type="time" value={form.data.override_end_time} onChange={e => form.setData("override_end_time", e.target.value)} />
+                    </div>
                 </div>
             )}
+
+            {form.data.action === 'open' && (
+                <div className="space-y-6 p-6 bg-gray-50 rounded-[2rem] border border-gray-100 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Box / Sala (Opcional)</label>
+                        <EnterpriseSelect 
+                            icon={Layers} 
+                            value={form.data.room_id} 
+                            onChange={val => form.setData("room_id", val)} 
+                            options={roomOptions} 
+                            placeholder="Libertad de Box (Supervisión)" 
+                        />
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase ml-1">Motivo (Interno)</label><TextInput value={form.data.reason} onChange={e => form.setData("reason", e.target.value)} placeholder="Ej: Médico, Vacaciones, Capacitación..." /></div>
         </div>
-        <FormFooter processing={form.processing} onCancel={onCancel} confirmText="Registrar Excepción" />
+        <FormFooter processing={form.processing} onCancel={onCancel} confirmText="Registrar" />
     </form>
 );
 
-const HolidayForm = ({ form, onSubmit, branchOptions, onCancel }) => (
+const HolidayForm = ({ form, onSubmit, branchOptions, roomOptions, onCancel }) => (
     <form onSubmit={onSubmit} className="flex flex-col h-full">
         <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-            <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase ml-1">Nombre del Evento / Feriado</label><TextInput value={form.data.name} onChange={e => form.setData("name", e.target.value)} placeholder="Ej: Navidad, Fiestas Patrias, Aniversario..." required /></div>
-            <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase ml-1">Fecha</label><TextInput type="date" value={form.data.date} onChange={e => form.setData("date", e.target.value)} required /></div>
+            <div className="space-y-3"><label className="text-[10px] font-black text-gray-400 uppercase ml-1">Nombre del Evento / Cierre</label><TextInput value={form.data.name} onChange={e => form.setData("name", e.target.value)} placeholder="Ej: Navidad, Vacaciones Invierno, Capacitación..." required /></div>
+            
+            <div className="p-6 bg-amber-50/30 rounded-[2rem] border border-amber-100/50 space-y-4">
+                <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest ml-1">Rango de Fechas (Opcional para un solo día)</p>
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Inicio</label>
+                        <TextInput type="date" value={form.data.date} onChange={e => form.setData("date", e.target.value)} required />
+                    </div>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Término</label>
+                        <TextInput type="date" value={form.data.end_date} onChange={e => form.setData("end_date", e.target.value)} />
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-4">
+                <div className="flex justify-between items-center">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 text-xs">Cierre Parcial (Por Horas)</p>
+                    {(form.data.start_time || form.data.end_time) && (
+                        <button type="button" onClick={() => form.setData({ ...form.data, start_time: "", end_time: "" })} className="text-[8px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors">Limpiar Horas</button>
+                    )}
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Desde las</label>
+                        <TextInput type="time" value={form.data.start_time} onChange={e => form.setData("start_time", e.target.value)} />
+                    </div>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Hasta las</label>
+                        <TextInput type="time" value={form.data.end_time} onChange={e => form.setData("end_time", e.target.value)} />
+                    </div>
+                </div>
+                <p className="text-[9px] text-gray-400 italic px-1">Si dejas las horas vacías, el cierre será por el día completo.</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
                 <EnterpriseSelect label="Sucursal Afectada" value={form.data.branch_id} onChange={val => form.setData("branch_id", val)} options={[{ label: "Toda la Empresa", value: "" }, ...branchOptions]} icon={Building} />
             </div>
+
+            <div className="grid grid-cols-1 gap-6">
+                <EnterpriseSelect 
+                    label="Box Específico (Opcional)" 
+                    value={form.data.room_id} 
+                    onChange={val => form.setData("room_id", val)} 
+                    options={[{ label: "Toda la Sucursal", value: "" }, ...roomOptions]} 
+                    icon={Layers} 
+                    disabled={!form.data.branch_id}
+                />
+                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest ml-1">Si seleccionas un box, solo ese espacio quedará inhabilitado.</p>
+            </div>
+
             <div className="flex items-center gap-4 p-5 bg-gray-50 rounded-[2rem] border border-gray-100">
                 <input type="checkbox" checked={form.data.is_recurring} onChange={e => form.setData("is_recurring", e.target.checked)} className="w-5 h-5 rounded-lg border-gray-300 text-brand-primary focus:ring-brand-primary" />
                 <div>

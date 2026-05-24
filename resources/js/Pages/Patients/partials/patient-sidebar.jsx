@@ -6,7 +6,11 @@ import {
     Stethoscope,   
     CreditCard,
     Edit2,
-    Package // Importar el nuevo icono
+    Package, // Importar el nuevo icono
+    Zap,
+    Bone,
+    Baby,
+    AlertCircle
 } from 'lucide-react';
 
 export default function PatientSidebar({ activeTab, setActiveTab, handleEditPatient, patient }) {
@@ -19,6 +23,8 @@ export default function PatientSidebar({ activeTab, setActiveTab, handleEditPati
         { id: "plans", label: "Planes", icon: Package }, // Nuevo item para planes
         { id: "payments", label: "Cuentas", icon: CreditCard },
     ];
+
+    const history = patient.medical_history || {};
 
     return (
         <aside className="h-full bg-white border-r border-gray-100 flex flex-col overflow-hidden">
@@ -57,6 +63,35 @@ export default function PatientSidebar({ activeTab, setActiveTab, handleEditPati
                         </div>
                     </div>
                 </div>
+
+                {/* ALERTAS CLÍNICAS (RED FLAGS) */}
+                {(history.has_pacemaker || history.has_metal_implants || history.is_pregnant || history.cancer_history) && (
+                    <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-2xl space-y-3 animate-in fade-in zoom-in-95 duration-500">
+                        <p className="text-[8px] font-black text-red-600 uppercase tracking-[0.2em] text-center mb-2">Alertas de Seguridad</p>
+                        <div className="flex justify-center gap-3">
+                            {history.has_pacemaker && (
+                                <div title="MARCAPASOS" className="w-8 h-8 bg-white text-red-600 rounded-lg flex items-center justify-center shadow-sm border border-red-100 animate-pulse">
+                                    <Zap className="w-4 h-4" />
+                                </div>
+                            )}
+                            {history.has_metal_implants && (
+                                <div title="IMPLANTES METÁLICOS" className="w-8 h-8 bg-white text-orange-600 rounded-lg flex items-center justify-center shadow-sm border border-orange-100">
+                                    <Bone className="w-4 h-4" />
+                                </div>
+                            )}
+                            {history.is_pregnant && (
+                                <div title="EMBARAZO" className="w-8 h-8 bg-white text-purple-600 rounded-lg flex items-center justify-center shadow-sm border border-purple-100">
+                                    <Baby className="w-4 h-4" />
+                                </div>
+                            )}
+                            {history.cancer_history && (
+                                <div title="CÁNCER" className="w-8 h-8 bg-white text-amber-600 rounded-lg flex items-center justify-center shadow-sm border border-amber-100">
+                                    <AlertCircle className="w-4 h-4" />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* --- NAVEGACIÓN (Menú Moderno) --- */}
