@@ -28,6 +28,12 @@ return [
         'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'),
     ],
 
+    'openwa' => [
+        'url' => env('OPENWA_URL', 'http://localhost:2785'),
+        'key' => env('OPENWA_API_KEY'),
+        'session_id' => env('OPENWA_SESSION_ID', 'main'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Webpay (Transbank)
