@@ -37,7 +37,10 @@
 ### 4. Database Policy (Immutable Migrations)
 - **NO Incremental Migrations:** Edit the original migration file.
 - **Workflow:** `php artisan migrate:fresh --seed`.
-- **Localization:** RUT formatting via `RutInput`. Territory IDs (Region/Commune) as `String`.
+- **Localization:** RUT formatting via `RutInput`. Territory IDs (Region/Commune) as `unsignedBigInteger` foreign keys.
+- **Geographic Defaults:** Default Region (13) and Commune (13114) for fast clinical data entry (Provinces removed).
+- **Branch Strategy:** Branches store physical address directly and define allowed modalities (onsite, home, online).
+- **Specialist Capacity:** Strictly 3 simultaneous sessions per specialist. Box selection is optional to allow "Freedom of Boxes" supervision.
 
 ## 📍 CURRENT PROJECT STATUS (Context for AI)
 - **Refactored:** Multi-business user management is active.
@@ -47,5 +50,14 @@
 
 ## ⚡ RULES OF ENGAGEMENT
 1. **Cause -> Solution:** For every bug report.
-2. **Double-Check Props:** Ensure backend `Inertia::render` matches frontend prop definitions.
-3. **No Redundant Comments:** Code must be self-explanatory.
+2. **Empirical Validation Protocol (EVP):** Every code change MUST be followed by a verification command (`git diff`, `grep`, or `artisan test`). Do NOT report a task as "Done" without displaying the proof of change.
+3. **Memory Management Protocol:**
+    - **GEMINI.md:** Source of behavioral truth and architectural rules.
+    - **MEMORY.md:** Live index of pending tasks and current project state.
+    - **HISTORY.md:** Immutable audit trail. Update only AFTER successful EVP verification.
+4. **Full-Stack Vertical Slice:** Every adjustment MUST be implemented across the entire flow: DB Schema -> Eloquent Models -> Backend Logic/Services -> Validation Rules -> Frontend UI (Inertia/React).
+5. **Double-Check Props:** Ensure backend `Inertia::render` matches frontend prop definitions.
+6. **No Redundant Comments:** Code must be self-explanatory.
+7. **Sucursal-Based Modalities:** Modality selections (Presencial/onsite, Online/online, Domicilio/home) must strictly respect active Branch settings (`allows_onsite`, `allows_online`, `allows_home`). If only one modality is active, hide the others globally in all selector views.
+8. **Spanish Localization & Helpers:** Never expose English status values (e.g. `scheduled`, `checked_in`, `in_progress`, `completed`, `cancelled`, `no_show`) or modality names (`onsite`, `online`, `home`) to the end-user. Always translate using existing helpers (e.g. `getStatusLabel` or custom dictionaries) or local mappings.
+9. **Commit & Traceability Protocol:** Perform a commit after every logical change. Each commit MUST be documented in `HISTORY.md` with its short ID (`git rev-parse --short HEAD`) and a brief description. To avoid "RPC failed" or large push errors, push frequently in small batches. If a push fails, use `git push origin <commit_hash>:2025` to push up to a specific commit.

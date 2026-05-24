@@ -164,6 +164,37 @@ use App\Http\Controllers\{
   UserController,
 };
 
+
+//Reoptimized class loader:
+Route::get('/optimize', function () {
+    $optimize = Artisan::call('optimize');
+    $routeCache = Artisan::call('route:cache');
+    $routeCache = Artisan::call('route:clear');
+    $viewClear = Artisan::call('view:clear');
+    $configCache = Artisan::call('config:cache');
+    return '<h1>Reoptimized class loader</h1>';
+  });
+
+
+  //Clear Config cache:
+  Route::get('/system-up', function () {
+    $exitCode = Artisan::call('up');
+    return '<h1>Clear Config cleared</h1>';
+  });
+
+  //Clear Config cache:
+  Route::get('/system-down', function () {
+    $exitCode = Artisan::call('down');
+    return '<h1>Clear Config cleared</h1>';
+  });
+
+
+  //Linkear imagenes:
+  Route::get('/storage-link', function () {
+    $exitCode = Artisan::call('storage:link');
+    return '<h1>Storage Link</h1>';
+  });
+  
 /* Auth */
 require __DIR__ . '/auth.php';
 
@@ -230,6 +261,7 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     Route::resource('treatments', TreatmentAdminController::class)->names('treatments');
     Route::resource('sessions', TreatmentSessionController::class)->names('sessions');
     Route::post('/sessions/{session}/notify', [TreatmentSessionController::class, 'notify'])->name('sessions.notify');
+    Route::post('/sessions/{session}/move-to-room', [TreatmentSessionController::class, 'moveToRoom'])->name('sessions.move-to-room');
     Route::post('/sessions/{session}/duplicate', [TreatmentSessionController::class, 'duplicate'])->name('sessions.duplicate');
 
     // Finanzas e Invoices
@@ -265,6 +297,7 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     // Otros Módulos Maestros
     Route::resource('companies', CompanyController::class);
     Route::resource('branches', BranchController::class);
+    Route::put('branches/{branch}/schedule', [\App\Http\Controllers\Admin\Calendars\AvailabilityController::class, 'updateBranchSchedule'])->name('branches.schedule.update');
     Route::resource('availabilities', \App\Http\Controllers\Admin\Calendars\AvailabilityController::class);
     Route::post('availabilities/exceptions', [\App\Http\Controllers\Admin\Calendars\AvailabilityController::class, 'storeException'])->name('availabilities.exceptions.store');
     Route::delete('availabilities/exceptions/{exception}', [\App\Http\Controllers\Admin\Calendars\AvailabilityController::class, 'destroyException'])->name('availabilities.exceptions.destroy');
@@ -289,12 +322,14 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
   });
 
     // ÁREA COMPARTIDA (Admin, Superadmin y Cajero)
-    Route::middleware(['role:admin|superadmin|cajero'])->group(function () {
+    Route::middleware(['role:admin|superadmin|cajero|kine'])->group(function () {
     Route::get('agendas/available-slots', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'getAvailableSlots'])->name('agendas.available-slots');
     Route::get('agendas', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'index'])->name('agendas.index');
     Route::post('agendas', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'store'])->name('agendas.store');
     Route::post('agendas/{appointment}/checkin', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'checkin'])->name('agendas.checkin');
+    Route::post('agendas/{appointment}/absent', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'absent'])->name('agendas.absent');
     Route::post('agendas/{appointment}/cancel', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'cancel'])->name('agendas.cancel');
+    Route::delete('agendas/{appointment}', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'destroy'])->name('agendas.destroy');
     
     Route::get('patients', [PatientAdminController::class, 'index'])->name('patients.index');
     Route::get('patients/{patient}', [PatientAdminController::class, 'show'])->name('patients.show');
@@ -314,15 +349,17 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
   // ÁREA DEL KINESIÓLOGO (Accesible por Kine, Admin y Superadmin)
   Route::middleware(['role:kine|admin|superadmin'])->prefix('kine')->name('kine.')->group(function () {
       Route::get('/dashboard', [DashboardMobileController::class, 'index'])->name('dashboard');
+      Route::get('/pending-sessions', [DashboardMobileController::class, 'pendingSessions'])->name('pending-sessions');
       Route::post('/dashboard/refresh', [DashboardMobileController::class, 'refreshKpis'])->name('dashboard.refresh');
       
       // Rutas de Atención Móvil
       Route::get('/sessions/create', [SessionMobileController::class, 'showForm'])->name('sessions.create');
       Route::get('/sessions/form/{id?}', [SessionMobileController::class, 'showForm'])->name('sessions.form');
-      Route::get('/sessions/{session}', [SessionMobileController::class, 'show'])->name('sessions.show');
-      Route::post('/sessions/{session}/complete', [SessionMobileController::class, 'completeSession'])->name('sessions.complete');
-      Route::post('/sessions/{session}/cancel', [SessionMobileController::class, 'cancelSession'])->name('sessions.cancel');
-      Route::put('/sessions/{session}/notes', [SessionMobileController::class, 'updateNotes'])->name('sessions.update-notes');
+      Route::get('/sessions/{id}', [SessionMobileController::class, 'show'])->name('sessions.show');
+      Route::post('/sessions/{id}/start', [SessionMobileController::class, 'startSession'])->name('sessions.start');
+      Route::post('/sessions/{id}/complete', [SessionMobileController::class, 'completeSession'])->name('sessions.complete');
+      Route::post('/sessions/{id}/cancel', [SessionMobileController::class, 'cancelSession'])->name('sessions.cancel');
+      Route::put('/sessions/{id}/notes', [SessionMobileController::class, 'updateNotes'])->name('sessions.update-notes');
 
       // Gestión de Pacientes y Sesiones
       Route::get('/my-patients', [PatientMobileController::class, 'index'])->name('my-patients'); 
@@ -332,6 +369,12 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
       // Perfil y Finanzas
       Route::get('/my-profile', [ProfileMobileController::class, 'index'])->name('my-profile');
       Route::get('/my-wallet', [ProfileMobileController::class, 'wallet'])->name('my-wallet');
+      Route::get('/my-schedule', [\App\Http\Controllers\KineMobile\ScheduleMobileController::class, 'index'])->name('my-schedule');
+      Route::post('/my-schedule/availability', [\App\Http\Controllers\KineMobile\ScheduleMobileController::class, 'storeAvailability'])->name('my-schedule.availability.store');
+      Route::delete('/my-schedule/availability/{availability}', [\App\Http\Controllers\KineMobile\ScheduleMobileController::class, 'destroyAvailability'])->name('my-schedule.availability.destroy');
+      Route::post('/my-schedule/exception', [\App\Http\Controllers\KineMobile\ScheduleMobileController::class, 'storeException'])->name('my-schedule.exception.store');
+      Route::delete('/my-schedule/exception/{exception}', [\App\Http\Controllers\KineMobile\ScheduleMobileController::class, 'destroyException'])->name('my-schedule.exception.destroy');
+      Route::get('/my-schedule-new', [\App\Http\Controllers\KineMobile\ScheduleMobileController::class, 'testIndex'])->name('my-schedule-new');
       Route::post('/my-profile/update', [ProfileMobileController::class, 'update'])->name('profile.update');
       Route::post('/my-profile/password', [ProfileMobileController::class, 'updatePassword'])->name('profile.password');
   });

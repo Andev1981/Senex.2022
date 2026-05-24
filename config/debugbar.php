@@ -171,7 +171,7 @@ return [
         'config'          => false, // Display config settings
         'cache'           => false, // Display cache events
         'models'          => true,  // Display models
-        'livewire'        => true,  // Display Livewire (when available)
+        'livewire'        => false, // Display Livewire (when available)
     ],
 
     /*

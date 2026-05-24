@@ -1,4 +1,13 @@
 # Senex — Plataforma Kinesiológica SaaS
+# gemini --agent codebase_investigator --context ./GEMINI.md
+
+# $contexto = Get-Content ./GEMINI.md -Raw
+# gemini "Instrucciones de sistema: $contexto. Ahora, actúa como el agente codebase_investigator."
+
+## Agent Profile: Codebase Investigator
+- **Mode**: Deep Analysis & Context Retrieval.
+- **Primary Task**: Scan files for cross-references, identify service providers, and map Inertia/React data flows.
+- **Rules**: Always verify if a change in a Controller affects the Multitenancy Trait or the Global Scopes defined in the project.
 
 ## 🚀 Stack Técnico
 
