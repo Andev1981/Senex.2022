@@ -82,8 +82,6 @@ class PermissionSeeder extends Seeder
         $kine = Role::where('name', 'kine')->first();
         if ($kine) {
             $kine->syncPermissions([
-                'agendas.index',
-                'availabilities.index',
                 'patients.index',
                 'patients.view',
                 'treatment-sessions.index',

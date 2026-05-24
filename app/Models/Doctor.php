@@ -52,7 +52,7 @@ class Doctor extends Model
     public function branches()
     {
         return $this->belongsToMany(Branch::class, 'branch_doctor')
-            ->withPivot(['status', 'mobile_app_access', 'status_reason', 'status_changed_at'])
+            ->withPivot(['status', 'mobile_app_access', 'can_create_sessions', 'can_view_sessions', 'can_manage_schedule', 'status_reason', 'status_changed_at'])
             ->withTimestamps();
     }
 
@@ -65,10 +65,11 @@ class Doctor extends Model
     {
         return $this->belongsToMany(Patient::class, 'doctor_patient_assignments')
             ->withPivot([
-                'company_id',   // <--- CRÍTICO: Para que funcione tu controller
-                'branch_id',    // <--- CRÍTICO: Para que funcione tu controller
-                'role',         // 'therapist', 'primary', etc.
+                'company_id',
+                'branch_id',
+                'role',
                 'is_primary',
+                'is_own_patient',
                 'started_at',
                 'ended_at'
             ])
@@ -78,6 +79,11 @@ class Doctor extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(TreatmentSession::class);
+    }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
     }
 
     public function treatmentSessions(): HasMany
@@ -179,9 +185,7 @@ class Doctor extends Model
     public function age(): Attribute
     {
         return Attribute::make(
-            get: fn() => trim(
-                $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
-            ),
+            get: fn() => $this->birth_date ? $this->birth_date->diffInYears(Carbon::now()) : null,
         );
     }
 
@@ -189,24 +193,16 @@ class Doctor extends Model
     protected function fullAddress(): Attribute
     {
         return Attribute::make(
-            // El Closure para el GETTER (lectura)
-            get: fn() => trim(
-                // 1. Acceso a la Calle: Usa Nullsafe en la relación ($this->address?->street)
-                //    y la coalescencia de null (??) para asegurar una cadena vacía.
-                ($this->address?->street ?? '')
-
-                    // 2. Acceso al Número: Nullsafe en la relación
-                    . ' ' . ($this->address?->number ?? '')
-
-                    // 3. Acceso a la Comuna: Nullsafe en la relación (address) Y en la sub-relación (commune)
-                    . ' ' . ($this->address?->commune?->name ?? '')
-
-                    // 4. Acceso a la Provincia: Nullsafe en ambas relaciones
-                    . ' ' . ($this->address?->province?->name ?? '')
-
-                    // 5. Acceso a la Región: Nullsafe en ambas relaciones
-                    . ' ' . ($this->address?->region?->name ?? '')
-            ),
+            get: function() {
+                if (!$this->address) return '';
+                
+                return trim(
+                    ($this->address->street ?? '') . ' ' . 
+                    ($this->address->number ?? '') . ' ' . 
+                    ($this->address->commune?->name ?? '') . ' ' . 
+                    ($this->address->region?->name ?? '')
+                );
+            }
         );
     }
 
@@ -233,17 +229,20 @@ class Doctor extends Model
 
         if (!$activeBranchId) return null;
 
+        // Buscamos la sucursal específica con sus datos de la tabla pivote
         $branch = $this->branches()
             ->where('branches.id', $activeBranchId)
-            ->withPivot(['id', 'status', 'mobile_app_access', 'status_reason', 'status_changed_at'])->first();
+            ->first();
 
-        if (!$branch) return null;
+        if (!$branch || !$branch->pivot) return null;
 
-        // Retornamos un objeto limpio con los datos de la pivot a primer nivel si quieres
         return [
-            'id' => $branch->pivot->id,
+            'id' => $branch->pivot->id ?? null,
             'status' => $branch->pivot->status,
             'mobile_app_access' => (bool) $branch->pivot->mobile_app_access,
+            'can_create_sessions' => (bool) ($branch->pivot->can_create_sessions ?? true),
+            'can_view_sessions' => (bool) ($branch->pivot->can_view_sessions ?? true),
+            'can_manage_schedule' => (bool) ($branch->pivot->can_manage_schedule ?? true),
             'status_reason' => $branch->pivot->status_reason,
             'status_changed_at' => $branch->pivot->status_changed_at,
         ];

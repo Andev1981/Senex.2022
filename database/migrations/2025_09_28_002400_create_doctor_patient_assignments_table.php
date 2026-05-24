@@ -25,6 +25,7 @@ return new class extends Migration
             // Metadata útil
             $t->enum('role', ['primary', 'therapist', 'consulting', 'assistant'])->default('therapist')->index();
             $t->boolean('is_primary')->default(false)->index();
+            $t->boolean('is_own_patient')->default(false)->index();
             $t->date('started_at')->nullable();
             $t->date('ended_at')->nullable(); // si se desasigna
 

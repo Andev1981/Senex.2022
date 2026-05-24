@@ -15,15 +15,14 @@ return new class extends Migration {
       $table->string('phone', 30)->nullable();
       $table->string('email')->nullable();
       
-      // Ubicación Directa
-      $table->foreignId('region_id')->nullable()->constrained();
-      $table->foreignId('province_id')->nullable()->constrained();
-      $table->foreignId('commune_id')->nullable()->constrained();
-      $table->string('street')->nullable();
-      $table->string('number')->nullable();
-
       $table->boolean('is_main')->default(false)->comment('Indica si es la Casa Matriz');
-      $table->boolean('is_home_care_only')->default(false)->comment('Atención exclusiva a domicilio');
+      $table->boolean('allows_onsite')->default(true)->comment('Permite atención en clínica');
+      $table->boolean('allows_home')->default(true)->comment('Permite atención a domicilio');
+      $table->boolean('allows_online')->default(true)->comment('Permite atención online');
+      
+      // 🕒 Horario de Operación de la Sucursal
+      $table->json('schedule')->nullable();
+
       $table->boolean('active')->default(true)->index();
       $table->json('enabled_modules')->nullable();
       $table->timestamps();

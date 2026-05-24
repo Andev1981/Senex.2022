@@ -61,7 +61,7 @@ return new class extends Migration
                 $table->boolean('requires_referral')->default(false);
                 $table->decimal('default_doctor_commission_clp', 12, 2)->nullable();
                 $table->string('specialty')->nullable()->index(); // Ej: Kinesiología, Nutrición
-                
+                $table->boolean('is_evaluation')->default(false)->comment('Si es una sesión de ingreso/línea base');
                 $table->timestamps();
             });
         }

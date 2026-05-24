@@ -23,6 +23,9 @@ class ValidRut implements ValidationRule
     private function is_valid($rut): bool
     {
         $rut = self::clean($rut);
+        if ($rut && str_starts_with($rut, '66666666-6-TEMP-')) {
+            return true;
+        }
         if (!$rut || strpos($rut, '-') === false) return false;
 
         $parts = explode('-', $rut);
@@ -73,6 +76,9 @@ class ValidRut implements ValidationRule
     public static function clean($rut): string
     {
         if (!$rut) return "";
+        if (is_string($rut) && str_starts_with($rut, '66666666-6-TEMP-')) {
+            return $rut;
+        }
         $rut = preg_replace('/[^0-9Kk]/', '', (string)$rut);
         if (strlen($rut) < 2) return $rut;
         

@@ -31,6 +31,7 @@ return new class extends Migration
             $table->json('fractures')->nullable()->comment('Historial de fracturas');
             $table->json('allergies')->nullable()->comment('Lista de alergias');
             $table->json('medications')->nullable()->comment('Fármacos actuales');
+            $table->json('family_history')->nullable()->comment('Antecedentes mórbidos familiares');
 
             // 4. Banderas Rojas (Seguridad para Kine)
             $table->boolean('has_pacemaker')->default(false);

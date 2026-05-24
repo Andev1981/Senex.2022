@@ -23,6 +23,10 @@ class PayrollDetail extends Model
     'item_id',
     'service_date',
     'attended',
+    'diagnostic_code',
+    'diagnostic_name',
+    'service_category',
+    'weight',
     'patient_amount_clp',
     'commission_base_clp',
     'commission_amount_clp',
@@ -36,12 +40,14 @@ class PayrollDetail extends Model
   ];
 
   protected $casts = [
-    'patient_amount_clp' => 'decimal:2',
-    'commission_base_clp' => 'decimal:2',
-    'commission_amount_clp'  => 'decimal:2',
-    'adjustment_amount_clp' => 'decimal:2', // si guardas % aplicado
-    'subtotal_clp'  => 'decimal:2',
-    'rate_amount_clp'  => 'decimal:2',
+    'attended' => 'boolean',
+    'weight' => 'integer',
+    'patient_amount_clp' => 'integer',
+    'commission_base_clp' => 'integer',
+    'commission_amount_clp'  => 'integer',
+    'adjustment_amount_clp' => 'integer',
+    'subtotal_clp'  => 'integer',
+    'rate_amount_clp'  => 'integer',
     'rate_percentage'  => 'decimal:2',
     'calc_context'  => 'array',
     'notes'  => 'string',
@@ -81,6 +87,14 @@ class PayrollDetail extends Model
 
     public function item(): BelongsTo
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(Item::class, 'item_id');
+    }
+
+    /**
+     * Alias para item (usado en vistas PDF y frontend heredado)
+     */
+    public function sessionType(): BelongsTo
+    {
+        return $this->item();
     }
 }

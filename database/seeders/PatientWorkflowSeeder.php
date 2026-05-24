@@ -17,7 +17,7 @@ class PatientWorkflowSeeder extends Seeder
     public function run(): void
     {
         $company = Company::where('rut', '76765699-8')->first();
-        $sportBranch = $company->branches()->where('name', 'Senex Sport')->first();
+        $sportBranch = $company->branches()->where('name', 'Chesterton')->first();
         $doctorSport = Doctor::where('email', 'kine.sport@senex.cl')->first();
         $itemClinic = Item::where('sku', 'KINE-CLINIC')->first();
 

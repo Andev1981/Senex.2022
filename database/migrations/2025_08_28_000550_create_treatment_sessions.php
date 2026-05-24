@@ -21,6 +21,10 @@ return new class extends Migration {
             $table->foreignId('appointment_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
 
+            // Diagnóstico CIE-10 (Transparencia Clínica Fase 3)
+            $table->string('diagnostic_code', 10)->nullable()->index();
+            $table->foreign('diagnostic_code')->references('code')->on('diagnostics')->nullOnDelete();
+
             // Logística
             $table->date('date')->index();
             $table->time('time')->nullable();
@@ -43,6 +47,8 @@ return new class extends Migration {
 
             // [O]bjective
             $table->text('objective')->nullable()->comment('O: Texto libre de procedimientos');
+            $table->string('body_part', 100)->nullable();
+            $table->string('laterality', 50)->nullable();
             $table->json('evaluation_data')->nullable()->comment('Mediciones: ROM, Fuerza');
             $table->json('session_pain_map')->nullable()->comment('Si el dolor cambió de lugar hoy');
             $table->json('activities_data')->nullable()->comment('Ejercicios realizados hoy');
@@ -92,8 +98,10 @@ return new class extends Migration {
             $table->string('signature_skip_reason')->nullable();
             $table->timestamp('signed_at')->nullable();
             $table->string('signature_gps_coords')->nullable();
+            $table->boolean('informed_consent_confirmed')->default(false)->comment('Confirmación legal de consentimiento');
 
             $table->json('meta')->nullable();
+            $table->boolean('is_own_patient')->default(false);
             
             $table->timestamps();
             $table->softDeletes();

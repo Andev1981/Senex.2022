@@ -80,11 +80,11 @@ class EnterpriseMigrationSeeder extends Seeder
             ]
         );
 
-        // UNICA SUCURSAL: Chesterton 7595
+        // UNICA SUCURSAL: Chesterton
         $branch = Branch::updateOrCreate(
-            ['company_id' => $company->id, 'name' => 'Chesterton 7595'],
+            ['company_id' => $company->id, 'name' => 'Chesterton'],
             [
-                'codigo_sucursal_sii' => '1', 
+                'codigo_sucursal_sii' => '0', 
                 'active' => true, 
                 'is_main' => true,
                 'email' => 'chesterton@senex.cl',

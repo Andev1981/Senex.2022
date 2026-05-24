@@ -16,19 +16,19 @@ class AvailabilityException extends Model
         'company_id',
         'doctor_id',
         'date',
-        'start_at',
-        'end_at',
+        'end_date',
         'action',
         'override_start_time',
         'override_end_time',
+        'room_id',
+        'modality',
         'reason',
         'meta',
     ];
 
     protected $casts = [
         'date' => 'date',
-        'start_at' => 'datetime',
-        'end_at' => 'datetime',
+        'end_date' => 'date',
         'meta' => 'array',
     ];
 

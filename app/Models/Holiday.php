@@ -14,12 +14,16 @@ class Holiday extends Model
         'company_id',
         'branch_id',
         'date',
+        'end_date',
+        'start_time',
+        'end_time',
         'name',
         'is_recurring',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'end_date' => 'date',
         'is_recurring' => 'boolean',
     ];
 

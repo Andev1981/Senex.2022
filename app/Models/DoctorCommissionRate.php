@@ -18,7 +18,11 @@ class DoctorCommissionRate extends Model
         'session_type_id',
         'commission_type',
         'amount_clp',
+        'amount_clp_own',
+        'amount_clp_assigned',
         'commission_percentage',
+        'commission_percentage_own',
+        'commission_percentage_assigned',
         'effective_from',
         'effective_until',
         'is_active',
@@ -27,6 +31,8 @@ class DoctorCommissionRate extends Model
 
     protected $casts = [
         'amount_clp' => 'integer',
+        'amount_clp_own' => 'integer',
+        'amount_clp_assigned' => 'integer',
         'effective_from'   => 'date',
         'effective_until'  => 'date',
         'is_active'        => 'boolean',
@@ -80,14 +86,19 @@ class DoctorCommissionRate extends Model
     }
 
     // Métodos de cálculo
-    public function calculateCommission($basePrice)
+    public function calculateCommission($basePrice, $isOwnPatient = false)
     {
         switch ($this->commission_type) {
             case 'percentage':
-                return ($basePrice * $this->commission_percentage) / 100;
+                $percentage = $isOwnPatient 
+                    ? ($this->commission_percentage_own ?? $this->commission_percentage)
+                    : ($this->commission_percentage_assigned ?? $this->commission_percentage);
+                return ($basePrice * $percentage) / 100;
 
             case 'fixed_amount':
-                return $this->amount_clp;
+                return $isOwnPatient
+                    ? ($this->amount_clp_own ?? $this->amount_clp)
+                    : ($this->amount_clp_assigned ?? $this->amount_clp);
 
             default:
                 return 0;

@@ -16,8 +16,20 @@ class UpdatePatientRequest extends FormRequest
     protected function prepareForValidation()
     {
         if ($this->has('rut')) {
+            $cleanRut = \App\Rules\ValidRut::clean($this->rut);
+            if ($cleanRut === '66666666-6') {
+                $patient = $this->route('patient');
+                $patientModel = $patient instanceof \App\Models\Patient ? $patient : \App\Models\Patient::find($patient);
+                if ($patientModel && str_starts_with($patientModel->getRawOriginal('rut') ?? '', '66666666-6-TEMP-')) {
+                    $cleanRut = $patientModel->getRawOriginal('rut');
+                } else {
+                    do {
+                        $cleanRut = '66666666-6-TEMP-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                    } while (\App\Models\Patient::withoutGlobalScopes()->where('rut', $cleanRut)->exists());
+                }
+            }
             $this->merge([
-                'rut' => \App\Rules\ValidRut::clean($this->rut),
+                'rut' => $cleanRut,
             ]);
         }
     }
@@ -36,16 +48,16 @@ class UpdatePatientRequest extends FormRequest
         $activeBranchId = session('active_branch_id');
         $isHomeCareOnly = false;
         if ($activeBranchId) {
-            $isHomeCareOnly = \App\Models\Branch::where('id', $activeBranchId)
-                ->where('is_home_care_only', true)
-                ->exists();
+            $branch = \App\Models\Branch::find($activeBranchId);
+            $isHomeCareOnly = $branch && !$branch->allows_onsite;
         }
 
         return [
             // Paciente
-            'name'              => ['required', 'string', 'max:255'],
-            'last_name'         => ['required', 'string', 'max:255'],
+            'name'              => ['sometimes', 'required', 'string', 'max:255'],
+            'last_name'         => ['sometimes', 'required', 'string', 'max:255'],
             'rut' => [
+                'sometimes',
                 'required',
                 'string',
                 'max:20',
@@ -65,7 +77,7 @@ class UpdatePatientRequest extends FormRequest
             ],
             'phone'             => ['nullable', 'string', 'max:30'],
 
-            'birth_date'        => ['required', 'date', 'before:today'],
+            'birth_date'        => ['sometimes', 'required', 'date', 'before:today'],
             'gender'            => ['nullable', 'string', 'max:10'],
             'occupation'        => ['nullable', 'string', 'max:255'],
             'marital_status'    => ['nullable', 'string', 'max:50'],
@@ -83,13 +95,25 @@ class UpdatePatientRequest extends FormRequest
             'notes'             => ['nullable', 'string', 'max:1000'],
 
             // Dirección
-            'street'            => [$isHomeCareOnly ? 'required' : 'nullable', 'string', 'max:255'],
-            'number'            => [$isHomeCareOnly ? 'required' : 'nullable', 'string', 'max:50'],
+            'street'            => [$isHomeCareOnly ? 'sometimes|required' : 'nullable', 'string', 'max:255'],
+            'number'            => [$isHomeCareOnly ? 'sometimes|required' : 'nullable', 'string', 'max:50'],
             'details'           => ['nullable', 'string', 'max:500'],
 
             'region_id'         => ['nullable', 'integer', 'exists:regions,id'],
-            'province_id'       => ['nullable', 'integer', 'exists:provinces,id'],
-            'commune_id'        => [$isHomeCareOnly ? 'required' : 'nullable', 'integer', 'exists:communes,id'],
+            'commune_id'        => [$isHomeCareOnly ? 'sometimes|required' : 'nullable', 'integer', 'exists:communes,id'],
+
+            // Antecedentes Clínicos (Medical History)
+            'blood_type'        => ['nullable', 'string', 'max:10'],
+            'handedness'        => ['nullable', 'string', 'max:20'],
+            'pathologies'       => ['nullable', 'array'],
+            'surgeries'         => ['nullable', 'array'],
+            'fractures'         => ['nullable', 'array'],
+            'medications'       => ['nullable', 'array'],
+            'family_history'    => ['nullable', 'array'],
+            'has_pacemaker'     => ['sometimes', 'boolean'],
+            'has_metal_implants'=> ['sometimes', 'boolean'],
+            'is_pregnant'       => ['sometimes', 'boolean'],
+            'cancer_history'    => ['sometimes', 'boolean'],
         ];
     }
 
@@ -131,7 +155,6 @@ class UpdatePatientRequest extends FormRequest
             'number'            => 'número',
             'details'           => 'detalles',
             'region_id'         => 'región',
-            'province_id'       => 'provincia',
             'commune_id'        => 'comuna',
         ];
     }

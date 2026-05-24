@@ -18,6 +18,7 @@ class DoctorPatientAssignment extends Model
         'doctor_id',
         'patient_id',
         'role',
+        'is_own_patient',
         'started_at',
         'ended_at',
         'notes',
@@ -25,9 +26,10 @@ class DoctorPatientAssignment extends Model
     ];
 
     protected $casts = [
-        'started_at' => 'date',
-        'ended_at'   => 'date',
-        'meta'       => 'array',
+        'started_at'   => 'date',
+        'ended_at'     => 'date',
+        'is_own_patient' => 'boolean',
+        'meta'         => 'array',
     ];
 
     public function doctor()

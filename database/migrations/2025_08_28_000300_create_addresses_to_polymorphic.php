@@ -28,7 +28,6 @@ return new class extends Migration {
             $table->string('number')->nullable();
 
             $table->foreignId('commune_id')->nullable()->constrained('communes')->nullOnDelete();
-            $table->foreignId('province_id')->nullable()->constrained('provinces')->nullOnDelete();
             $table->foreignId('region_id')->nullable()->constrained('regions')->nullOnDelete();
             $table->string('details')->nullable();
             $table->string('country')->nullable();

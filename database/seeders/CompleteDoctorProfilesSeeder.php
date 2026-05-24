@@ -16,8 +16,8 @@ class CompleteDoctorProfilesSeeder extends Seeder
         $company = Company::where('rut', '76765699-8')->first();
         if (!$company) return;
 
-        $sportBranch = $company->branches()->where('name', 'Senex Sport')->first();
-        $homeBranch = $company->branches()->where('name', 'Senex Domicilio')->first();
+        $sportBranch = $company->branches()->where('name', 'Chesterton')->first();
+        $homeBranch = $sportBranch;
 
         // 1. Kine Sport Specialist
         $uSport = User::where('email', 'kine.sport@senex.cl')->first();

@@ -56,61 +56,41 @@ class CleanSystemSeeder extends Seeder
         // 3. Crear Sucursal Única (Requerida por el sistema)
         $branch = Branch::create([
             'company_id' => $company->id,
-            'name' => 'Casa Matriz',
-            'codigo_sucursal_sii' => '1',
+            'name' => 'Chesterton',
+            'codigo_sucursal_sii' => '0',
             'is_main' => true,
             'active' => true,
-            'email' => 'senex@senex.cl',
+            'email' => 'chesterton@senex.cl',
         ]);
 
-        $this->command->info('Empresa Senex y Casa Matriz creadas.');
+        $this->command->info('Empresa Senex y sucursal Chesterton creadas.');
 
-        // 4. Configurar Usuarios Administrativos
+        // 4. Configurar Usuarios Administrativos (Minimalista: 1 Superadmin, 1 Admin)
         $admins = [
             [
-                'name' => 'Superadmin',
+                'name' => 'Juan Andrés (Superadmin)',
                 'email' => 'javt1981@gmail.com',
-                'password' => 'senex2026'
+                'password' => 'senex2026',
+                'role' => 'superadmin'
             ],
             [
-                'name' => 'Mónica Fagres',
+                'name' => 'Mónica Fagres (Admin)',
                 'email' => 'mfagres@gmail.com',
-                'password' => 'senex2026'
-            ],
-            [
-                'name' => 'Marco Jadue',
-                'email' => 'bravitos4j@hotmail.com',
-                'password' => 'senex2026'
-            ],
-            [
-                'name' => 'Administrador Sport',
-                'email' => 'admin.sport@senex.cl',
-                'password' => 'senex2026'
+                'password' => 'senex2026',
+                'role' => 'admin'
             ]
         ];
 
-        // Asegurar roles
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $superAdminRole = Role::firstOrCreate(['name' => 'superadmin']);
-
         foreach ($admins as $adminData) {
-            // Limpiar usuario si existía fuera de las tablas truncadas (opcional)
-            User::where('email', $adminData['email'])->delete();
-
             $user = User::create([
                 'company_id' => $company->id,
                 'name' => $adminData['name'],
                 'email' => $adminData['email'],
                 'password' => Hash::make($adminData['password']),
+                'is_active' => true,
             ]);
 
-            // Asignar roles y sucursal
-            if ($adminData['email'] === 'javt1981@gmail.com') {
-                $user->assignRole($superAdminRole);
-            } else {
-                $user->assignRole($adminRole);
-            }
-
+            $user->assignRole($adminData['role']);
             $user->branches()->sync([$branch->id]);
         }
 

@@ -29,10 +29,9 @@ class InitialSetupSeeder extends Seeder
         // 3. Geografía y Datos Base
         $this->call([
             RegionsTableSeeder::class,
-            ProvincesTableSeeder::class,
             CommunesTableSeeder::class,
             DiagnosticSeeder::class,
-            SaaSPlanSeeder::class,
+            // SaaSPlanSeeder::class, // Omitido por solicitud del usuario
         ]);
 
         // 4. Empresa Principal (Senex SPA)
@@ -49,22 +48,47 @@ class InitialSetupSeeder extends Seeder
             ]
         );
 
-        // 5. Configuración de Sucursal Única (Senex Sport)
-        $this->command->info('Configurando Sucursal Única (Senex Sport)...');
+        // 5. Configuración de Sucursal Única (Chesterton)
+        $this->command->info('Configurando Sucursal Única (Chesterton)...');
 
         $mainBranch = $company->branches()->where('is_main', true)->first();
         
-        if ($mainBranch) {
-            $mainBranch->update([
-                'name' => 'Senex Sport',
-                'codigo_sucursal_sii' => '3',
-                'email' => 'senexsport@senex.cl',
+        $defaultSchedule = [
+            'MO' => ['open' => '08:00', 'close' => '20:00'],
+            'TU' => ['open' => '08:00', 'close' => '20:00'],
+            'WE' => ['open' => '08:00', 'close' => '20:00'],
+            'TH' => ['open' => '08:00', 'close' => '20:00'],
+            'FR' => ['open' => '08:00', 'close' => '20:00'],
+            'SA' => ['open' => '09:00', 'close' => '14:00'],
+            // SU: Domingo cerrado por defecto
+        ];
+
+        if (!$mainBranch) {
+            $mainBranch = $company->branches()->create([
+                'name' => 'Chesterton',
+                'codigo_sucursal_sii' => '0',
                 'is_main' => true,
-                'is_home_care_only' => false,
                 'active' => true,
+                'email' => 'chesterton@senex.cl',
+                'allows_onsite' => true,
+                'allows_home' => false,
+                'allows_online' => false,
+                'schedule' => $defaultSchedule,
             ]);
-            $this->command->info('Sucursal principal configurada.');
+        } else {
+            $mainBranch->update([
+                'name' => 'Chesterton',
+                'codigo_sucursal_sii' => '0',
+                'email' => 'chesterton@senex.cl',
+                'is_main' => true,
+                'allows_onsite' => true,
+                'allows_home' => false,
+                'allows_online' => false,
+                'active' => true,
+                'schedule' => $defaultSchedule,
+            ]);
         }
+        $this->command->info('Sucursal principal Chesterton configurada.');
 
         // Limpieza de sucursales extra (Aseguramos solo UNA sucursal)
         $company->branches()->where('id', '!=', $mainBranch->id)->delete();
@@ -84,8 +108,15 @@ class InitialSetupSeeder extends Seeder
             ['company_id' => $company->id, 'capacity' => 5, 'status' => 'active']
         );
 
-        // 6. Vinculación de Usuarios
-        $this->command->info('Configurando usuarios y profesionales...');
+        // 5.2 Cargar Categorías y Catálogo (Servicios y Productos)
+        $this->command->info('Cargando catálogo de servicios y productos...');
+        $this->call([
+            CategorizationProtocolSeeder::class,
+            MedicalItemsProtocolSeeder::class
+        ]);
+
+        // 6. Vinculación de Usuarios (Superadmin y Usuarios Específicos)
+        $this->command->info('Configurando usuarios operativos...');
         
         // Superadmin (Juan)
         $user = User::where('email', 'javt1981@gmail.com')->first();
@@ -95,65 +126,17 @@ class InitialSetupSeeder extends Seeder
             $this->command->info('Usuario javt1981@gmail.com vinculado.');
         }
 
-        // Crear Kinesiólogos de prueba
-        $kine1 = User::updateOrCreate(
-            ['email' => 'kine1@senex.cl'],
-            [
-                'name' => 'Pedro Kinesiologo',
-                'password' => \Illuminate\Support\Facades\Hash::make('senex2026'),
-                'company_id' => $company->id
-            ]
-        );
-        $kine1->assignRole('kine');
-        $kine1->branches()->sync([$mainBranch->id]);
-        
-        $doctor1 = \App\Models\Doctor::updateOrCreate(
-            ['user_id' => $kine1->id],
-            [
-                'company_id' => $company->id,
-                'name' => 'Pedro',
-                'last_name' => 'Kinesiologo',
-                'rut' => '11111111-1',
-                'speciality' => 'Deportiva',
-                'is_active' => true
-            ]
-        );
-        // 🎯 VINCULAR DOCTOR A SUCURSAL (Tabla branch_doctor)
-        $doctor1->branches()->sync([$mainBranch->id => ['status' => 'active', 'mobile_app_access' => true]]);
+        // Cargar Usuarios Específicos (Admin Jorge y Kines)
+        $this->call(SpecificUsersSeeder::class);
 
-        // Crear Pacientes de prueba
-        $this->command->info('Creando pacientes de prueba...');
-        \App\Models\Patient::updateOrCreate(
-            ['rut' => '22222222-2'],
-            [
-                'company_id' => $company->id,
-                'name' => 'Juan',
-                'last_name' => 'Pérez',
-                'email' => 'juan.perez@email.com',
-                'phone' => '+56911111111',
-                'gender' => 'male',
-                'birth_date' => '1990-05-15'
-            ]
-        );
-
-        \App\Models\Patient::updateOrCreate(
-            ['rut' => '33333333-3'],
-            [
-                'company_id' => $company->id,
-                'name' => 'María',
-                'last_name' => 'González',
-                'email' => 'maria.g@email.com',
-                'phone' => '+56922222222',
-                'gender' => 'female',
-                'birth_date' => '1985-10-20'
-            ]
-        );
-
-        $this->command->info('Usuarios, Kines y Pacientes configurados.');
+        $this->command->info('Usuarios configurados.');
 
         // 7. Previsiones
         $this->command->info('Cargando previsiones...');
         $this->call(InsuranceSeeder::class, false, ['company' => $company]);
+
+        $this->command->info('Cargando disponibilidades por defecto...');
+        $this->call(DefaultAvailabilitySeeder::class);
 
         $this->command->info('¡Proceso completado con exito!');
     }

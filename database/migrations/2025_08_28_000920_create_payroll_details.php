@@ -26,11 +26,17 @@ return new class extends Migration {
       $t->foreignId('treatment_session_id')->nullable()->constrained()->nullOnDelete();
       $t->foreignId('patient_id')->nullable()->constrained()->nullOnDelete();
       $t->foreignId('doctor_id')->constrained('users')->cascadeOnDelete();
-      $t->foreignId('session_type_id')->nullable()->constrained()->nullOnDelete();
+      $t->foreignId('item_id')->nullable()->constrained()->nullOnDelete();
 
       // Fechas y estado del servicio
       $t->date('service_date')->nullable();
       $t->boolean('attended')->default(true);
+
+      // Transparencia Clínica (Nuevos campos Fase 3)
+      $t->string('diagnostic_code', 20)->nullable();
+      $t->string('diagnostic_name')->nullable();
+      $t->string('service_category')->nullable();
+      $t->integer('weight')->default(3)->comment('Peso operativo: 3 (Individual), 1 (Grupal)');
 
       // Montos en CLP
       $t->unsignedBigInteger('patient_amount_clp')->default(0);    // cobrado al paciente/base
@@ -49,7 +55,7 @@ return new class extends Migration {
       $t->timestamps();
 
       $t->index(['payroll_id', 'doctor_id']);
-      $t->index(['service_date', 'session_type_id']);
+      $t->index(['service_date', 'item_id']);
     });
   }
 

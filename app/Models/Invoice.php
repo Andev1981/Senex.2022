@@ -49,6 +49,7 @@ class Invoice extends Model
     'amount_insurance_primary_clp',  // Aporte Isapre/Fonasa
     'amount_insurance_secondary_clp', // Aporte Seguro Complementario
     'amount_patient_clp',            // Lo que efectivamente sale del bolsillo del paciente
+    'paid_amount_clp',               // Monto total efectivamente pagado
 
     // --- DATOS SII / DTE ---
     'dte_type',           // 33, 34, 39, 41, 61
@@ -72,6 +73,16 @@ class Invoice extends Model
     'transaction_date' => 'date',
     'payment_status' => FinanceStatusEnum::class,
     'dte_status' => DteStatusEnum::class,
+    'net_amount_clp' => 'integer',
+    'exempt_amount_clp' => 'integer',
+    'vat_amount_clp' => 'integer',
+    'total_amount_clp' => 'integer',
+    'amount_gross_clp' => 'integer',
+    'amount_insurance_primary_clp' => 'integer',
+    'amount_insurance_secondary_clp' => 'integer',
+    'amount_patient_clp' => 'integer',
+    'paid_amount_clp' => 'integer',
+    'global_discount_clp' => 'integer',
   ];
 
   // ===== Relaciones =====

@@ -193,6 +193,16 @@ class Patient extends Authenticatable
         return $this->hasMany(Treatment::class);
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function activeTreatments(): HasMany
+    {
+        return $this->hasMany(Treatment::class)->whereIn('status', ['evaluation', 'in_progress']);
+    }
+
     public function treatmentSessions(): HasMany
     {
         return $this->hasMany(TreatmentSession::class, 'patient_id', 'id');
@@ -223,6 +233,11 @@ class Patient extends Authenticatable
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function primaryContact(): HasOne
@@ -299,6 +314,18 @@ class Patient extends Authenticatable
         );
     }
 
+    protected function rut(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if ($value && str_starts_with($value, '66666666-6-TEMP-')) {
+                    return '66.666.666-6';
+                }
+                return $value;
+            }
+        );
+    }
+
     /* public function paymentLink(): Attribute
     {
         return Attribute::make(
@@ -328,11 +355,22 @@ class Patient extends Authenticatable
         );
     }
 
+    protected function isWildcard(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $rawRut = $this->getRawOriginal('rut');
+                return $rawRut && (str_starts_with($rawRut, '66666666-6-TEMP-') || $rawRut === '66666666-6');
+            }
+        );
+    }
+
 
     protected $appends = [
         'age',
         'full_name',
         'payment_status',
         'bmi',
+        'is_wildcard',
     ];
 }

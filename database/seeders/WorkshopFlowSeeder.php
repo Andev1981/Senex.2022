@@ -28,8 +28,8 @@ class WorkshopFlowSeeder extends Seeder
             return;
         }
 
-        $sportBranch = $company->branches()->where('name', 'Senex Sport')->first();
-        $homeBranch = $company->branches()->where('name', 'Senex Domicilio')->first();
+        $sportBranch = $company->branches()->where('name', 'Chesterton')->first();
+        $homeBranch = $sportBranch; // Unificamos a la única sucursal Chesterton
 
         // 1. Categorías
         $catClinica = Category::updateOrCreate(

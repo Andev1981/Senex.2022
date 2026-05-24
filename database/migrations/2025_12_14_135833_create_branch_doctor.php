@@ -18,7 +18,10 @@ return new class extends Migration
             
             $table->enum('status', ['active', 'suspended', 'cancelled'])->default('active');
             $table->boolean('mobile_app_access')->default(true);
-            $table->text('status_reason')->nullable();      // motivo del último cambio
+            $table->boolean('can_create_sessions')->default(true);
+            $table->boolean('can_view_sessions')->default(true);
+            $table->boolean('can_manage_schedule')->default(true);
+            $table->text('status_reason')->nullable();
             $table->timestamp('status_changed_at')->nullable();
 
             $table->timestamps();

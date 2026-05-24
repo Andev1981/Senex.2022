@@ -31,6 +31,17 @@ class InvoiceItem extends Model
     'is_exento',
   ];
 
+  protected $casts = [
+    'quantity' => 'integer',
+    'unit_price_clp' => 'integer',
+    'unit_insurance_primary_clp' => 'integer',
+    'unit_insurance_secondary_clp' => 'integer',
+    'unit_patient_clp' => 'integer',
+    'total_gross_clp' => 'integer',
+    'total_patient_clp' => 'integer',
+    'is_exento' => 'boolean',
+  ];
+
   public function sellable()
   {
     // Esto permite que el ítem sea un "TreatmentSession" O un "Product"

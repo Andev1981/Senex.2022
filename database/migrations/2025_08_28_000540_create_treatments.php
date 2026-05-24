@@ -46,7 +46,7 @@ return new class extends Migration {
             // 3. ESTADO Y EVOLUCIÓN
             // ------------------------------------------------
             $table->enum('status', ['evaluation', 'in_progress', 'cancelled', 'paused', 'completed'])->default('evaluation')->index();
-            $table->enum('current_phase', ['evaluation', 'acute', 'subacute', 'rehab', 'discharge'])->default('evaluation');
+            $table->enum('current_phase', ['evaluation', 'acute_symptomatic', 'functional_restoration', 'discharge'])->default('evaluation');
             
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

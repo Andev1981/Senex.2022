@@ -17,8 +17,14 @@ class StorePatientRequest extends FormRequest
     protected function prepareForValidation()
     {
         if ($this->has('rut')) {
+            $cleanRut = \App\Rules\ValidRut::clean($this->rut);
+            if ($cleanRut === '66666666-6') {
+                do {
+                    $cleanRut = '66666666-6-TEMP-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                } while (\App\Models\Patient::withoutGlobalScopes()->where('rut', $cleanRut)->exists());
+            }
             $this->merge([
-                'rut' => \App\Rules\ValidRut::clean($this->rut),
+                'rut' => $cleanRut,
             ]);
         }
 
@@ -39,9 +45,8 @@ class StorePatientRequest extends FormRequest
         $activeBranchId = session('active_branch_id');
         $isHomeCareOnly = false;
         if ($activeBranchId) {
-            $isHomeCareOnly = \App\Models\Branch::where('id', $activeBranchId)
-                ->where('is_home_care_only', true)
-                ->exists();
+            $branch = \App\Models\Branch::find($activeBranchId);
+            $isHomeCareOnly = $branch && !$branch->allows_onsite;
         }
 
         return [

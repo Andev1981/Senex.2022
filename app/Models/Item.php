@@ -26,7 +26,7 @@ class Item extends Model
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
+        'price' => 'integer',
         'is_exempt' => 'boolean',
         'is_active' => 'boolean',
     ];

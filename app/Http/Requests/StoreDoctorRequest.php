@@ -47,7 +47,6 @@ class StoreDoctorRequest extends FormRequest
             'details'           => ['nullable', 'string', 'max:500'],
 
             'region_id'         => ['required', 'integer', 'exists:regions,id'],
-            'province_id'       => ['required', 'integer', 'exists:provinces,id'],
             'commune_id'        => ['required', 'integer', 'exists:communes,id'],
         ];
     }
@@ -101,10 +100,6 @@ class StoreDoctorRequest extends FormRequest
             'region_id.integer'          => 'La región seleccionada no es válida.',
             'region_id.exists'           => 'La región seleccionada no existe.',
 
-            'province_id.required'       => 'La provincia es obligatoria.',
-            'province_id.integer'        => 'La provincia seleccionada no es válida.',
-            'province_id.exists'         => 'La provincia seleccionada no existe.',
-
             'commune_id.required'        => 'La comuna es obligatoria.',
             'commune_id.integer'         => 'La comuna seleccionada no es válida.',
             'commune_id.exists'          => 'La comuna seleccionada no existe.',
@@ -130,7 +125,6 @@ class StoreDoctorRequest extends FormRequest
             'number'            => 'número',
             'details'           => 'detalles',
             'region_id'         => 'región',
-            'province_id'       => 'provincia',
             'commune_id'        => 'comuna',
         ];
     }

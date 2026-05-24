@@ -8,10 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Payment extends Model
 {
     use HasFactory, Multitenantable;
+
+    protected static function booted()
+    {
+        static::creating(function ($payment) {
+            if (empty($payment->uuid)) {
+                $payment->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     protected $guarded = [
         'id'

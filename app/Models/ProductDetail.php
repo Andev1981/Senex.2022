@@ -19,7 +19,7 @@ class ProductDetail extends Model
     ];
 
     protected $casts = [
-        'cost_price' => 'decimal:2',
+        'cost_price' => 'integer',
         'manage_stock' => 'boolean',
         'stock' => 'integer',
         'critical_stock' => 'integer',

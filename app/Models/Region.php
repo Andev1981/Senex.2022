@@ -12,13 +12,8 @@ class Region extends Model
     public $incrementing = false;
     protected $keyType = 'int';
     protected $fillable = ['id', 'code', 'name', 'roman'];
-    public function provinces()
-    {
-        return $this->hasMany(Province::class);
-    }
-
     public function communes()
     {
-        return $this->hasManyThrough(Commune::class, Province::class);
+        return $this->hasMany(Commune::class);
     }
 }

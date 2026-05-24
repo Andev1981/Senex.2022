@@ -11,11 +11,29 @@ class Branch extends Model
 {
   use HasAddresses;
 
-  protected $fillable = ['company_id', 'codigo_sucursal_sii','is_main','name', 'rut', 'phone', 'email', 'is_main', 'active', 'enabled_modules'];
+  protected $fillable = [
+    'company_id', 
+    'codigo_sucursal_sii',
+    'is_main',
+    'name', 
+    'rut', 
+    'phone', 
+    'email', 
+    'active', 
+    'enabled_modules', 
+    'allows_onsite', 
+    'allows_home',
+    'allows_online',
+    'schedule'
+  ];
 
   protected $casts = [
     'active' => 'boolean',
     'is_main' => 'boolean',
+    'allows_onsite' => 'boolean',
+    'allows_home' => 'boolean',
+    'allows_online' => 'boolean',
+    'schedule' => 'array',
     'enabled_modules' => 'array',
   ];
 

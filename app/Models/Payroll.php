@@ -34,10 +34,10 @@ class Payroll extends Model
   protected $casts = [
     'period_start'         => 'date',
     'period_end'           => 'date',
-    'total_patient_amount_clp' => 'decimal:2',
-    'total_commission_amount_clp'  => 'decimal:2',
-    'total_adjustments_clp'  => 'decimal:2',
-    'total_payable_clp'  => 'decimal:2',
+    'total_patient_amount_clp' => 'integer',
+    'total_commission_amount_clp'  => 'integer',
+    'total_adjustments_clp'  => 'integer',
+    'total_payable_clp'  => 'integer',
     'paid_at'              => 'datetime',
   ];
 
@@ -72,11 +72,15 @@ class Payroll extends Model
 
   public function recalcTotals(): void
   {
-    $this->total_sessions       = (int) $this->details()->count();
-    $this->total_patient_amount_clp = (float) $this->details()->sum('patient_amount_clp');
-    $this->total_commission_amount_clp  = (float) $this->details()->sum('commission_amount_clp');
-    $this->total_adjustments_clp  = (float) $this->details()->sum('adjustment_amount_clp');
-    $this->total_payable_clp  = (float) ($this->total_patient_amount_clp - $this->total_commission_amount_clp - $this->total_adjustments_clp);
+    $this->total_sessions = (int) $this->details()->count();
+    $this->total_patient_amount_clp = (int) $this->details()->sum('patient_amount_clp');
+    $this->total_commission_amount_clp = (int) $this->details()->sum('commission_amount_clp');
+    $this->total_adjustments_clp = (int) $this->details()->sum('adjustment_amount_clp');
+    
+    // El total a pagar es la suma de los subtotales individuales de cada detalle menos los ajustes globales si los hubiera
+    // En este sistema, el subtotal_clp de PayrollDetail ya es lo que recibe el doctor por esa sesión.
+    $this->total_payable_clp = (int) ($this->details()->sum('subtotal_clp') - $this->total_adjustments_clp);
+    
     $this->save();
   }
 }

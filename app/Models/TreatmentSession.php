@@ -30,6 +30,7 @@ class TreatmentSession extends Model
         'item_id',
         'appointment_id',
         'room_id',
+        'diagnostic_code',
 
         // --- 2. Logística ---
         'date',
@@ -53,8 +54,8 @@ class TreatmentSession extends Model
         'session_pain_map',// JSON: Coordenadas del dolor HOY
         'activities_data', // JSON: Ejercicios realizados
         'attachments',     // JSON: Fotos/Docs
-        'body_part',       // Nueva adición para consistencia
-        'laterality',      // Nueva adición para consistencia
+        'body_part',       // Nueva adicion para consistencia
+        'laterality',      // Nueva adicion para consistencia
 
         // [A]ssessment
         'assessment',
@@ -85,12 +86,13 @@ class TreatmentSession extends Model
         'is_exento',        // boolean
         'dte_generated',    // boolean
 
-        // --- 5. Firma y Validación ---
+        // --- 5. Firma y Validacion ---
         'signature_path',
         'signature_skipped',
         'signature_skip_reason',
         'signed_at',
         'signature_gps_coords',
+        'informed_consent_confirmed',
 
         // --- 6. Extras ---
         'meta',             // JSON
@@ -106,7 +108,9 @@ class TreatmentSession extends Model
         'consumes_plan' => 'boolean',
         'is_exento' => 'boolean',
         'dte_generated' => 'boolean',
+        'is_own_patient' => 'boolean',
         'signature_skipped' => 'boolean',
+        'informed_consent_confirmed' => 'boolean',
         'checked_in_at' => 'datetime',
         'started_at' => 'datetime',
         'signed_at' => 'datetime',
@@ -158,6 +162,11 @@ class TreatmentSession extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function diagnostic(): BelongsTo
+    {
+        return $this->belongsTo(Diagnostic::class, 'diagnostic_code', 'code');
     }
 
     public function appointment(): BelongsTo
@@ -270,7 +279,7 @@ class TreatmentSession extends Model
     {
         // 1. Buscamos si hay un trato especial con este doctor
         $specialRate = DoctorCommissionRate::where('doctor_id', $this->doctor_id)
-            ->where('item_id', $this->item_id)
+            ->where('session_type_id', $this->item_id) // Match schema: session_type_id points to items.id
             ->first();
 
         if ($specialRate) {

@@ -30,6 +30,7 @@ class Appointment extends Model
 
   protected $casts = [
     'modality' => \App\Enums\ServiceModalityEnum::class,
+    'status' => \App\Enums\AppointmentStatusEnum::class,
     'start_at' => 'datetime',
     'end_at' => 'datetime',
     'check_in_at' => 'datetime',

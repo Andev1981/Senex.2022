@@ -24,9 +24,8 @@ class StoreAddressRequest extends FormRequest
     public function rules()
     {
         return [
-            'region_id'   => ['required', 'exists:regions,id'],
-            'province_id' => ['required', 'exists:provinces,id'],
-            'commune_id'  => ['required', 'exists:communes,id'],
+            'region_id' => ['required', 'exists:regions,id'],
+            'commune_id' => ['required', 'exists:communes,id'],
             'street'      => ['required', 'string', 'max:255'],
             'number'      => ['required'],
             'details'     => ['nullable', 'string'],

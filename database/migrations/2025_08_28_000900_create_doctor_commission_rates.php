@@ -26,6 +26,8 @@ return new class extends Migration {
       // Si 'fixed_amount' => CLP; si 'percentage' => usa 'percentage'
       $t->unsignedBigInteger('amount_clp')->default(0);
       $t->decimal('commission_percentage', 5, 2)->nullable(); // 0–100.00
+      $t->decimal('commission_percentage_own', 5, 2)->nullable(); // % si el paciente es "propio"
+      $t->decimal('commission_percentage_assigned', 5, 2)->nullable(); // % si el paciente es "asignado"
 
       // --- NUEVO: ¿Aplica recargos globales? ---
       // Si es TRUE, el sistema buscará en 'commission_surcharges' si corresponde sumar plata extra.

@@ -35,6 +35,7 @@ return new class extends Migration
       $table->bigInteger('amount_insurance_primary_clp')->default(0)->comment('Aporte Fonasa/Isapre');
       $table->bigInteger('amount_insurance_secondary_clp')->default(0)->comment('Aporte Seguro Complementario');
       $table->bigInteger('amount_patient_clp')->default(0)->comment('Lo que efectivamente pagó el paciente');
+      $table->bigInteger('paid_amount_clp')->default(0)->comment('Monto total efectivamente pagado');
 
       $table->string('dte_status')->default('pending')->comment('pending, accepted, rejected, error, etc.');
       $table->unsignedSmallInteger('dte_type')->nullable()->comment('33, 34, 39, 41, 61');

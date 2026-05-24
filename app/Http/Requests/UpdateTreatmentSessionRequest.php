@@ -156,8 +156,8 @@ class UpdateTreatmentSessionRequest extends FormRequest
                 $validator->errors()->add('status', 'No se puede cambiar el estado de una sesión que ya ha sido completada.');
             }
             
-            // 2. Si la sesión está completada, restringir edición de campos logísticos a no-superadmins
-            if (($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED || $session->status->value === 'completed') && !$this->user()->hasRole('superadmin')) {
+            // 2. Si la sesión está completada, restringir edición de campos logísticos y CLÍNICOS (SOAP)
+            if ($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED || $session->status->value === 'completed') {
                 $protectedFields = [
                     'treatment_id', 
                     'item_id', 
@@ -165,15 +165,37 @@ class UpdateTreatmentSessionRequest extends FormRequest
                     'doctor_id', 
                     'date', 
                     'time', 
-                    'consumes_plan'
+                    'consumes_plan',
+                    'subjective',
+                    'objective',
+                    'assessment',
+                    'plan',
+                    'pain_before',
+                    'pain_after',
+                    'techniques',
+                    'exercises',
                 ];
 
-                foreach ($protectedFields as $field) {
-                    if ($this->has($field) && $this->input($field) != $session->{$field}) {
-                         // Ignorar si son fechas/horas virtualmente iguales
-                         if (in_array($field, ['date', 'time'])) continue;
+                $isSuperAdmin = $this->user()->hasRole('superadmin');
 
-                        $validator->errors()->add($field, "No se puede modificar '{$field}' en una sesión ya completada.");
+                foreach ($protectedFields as $field) {
+                    if ($this->has($field)) {
+                        $newValue = $this->input($field);
+                        $oldValue = $session->{$field};
+
+                        // Comparación especial para arrays (techniques, exercises)
+                        if (is_array($newValue) && is_array($oldValue)) {
+                            if (json_encode($newValue) === json_encode($oldValue)) continue;
+                        } elseif ($newValue == $oldValue) {
+                            continue;
+                        }
+
+                        // Permitir a superadmin cambiar logística, pero NADIE cambia lo clínico (SOAP)
+                        $isClinicalField = in_array($field, ['subjective', 'objective', 'assessment', 'plan', 'pain_before', 'pain_after', 'techniques', 'exercises']);
+                        
+                        if ($isClinicalField || !$isSuperAdmin) {
+                            $validator->errors()->add($field, "No se puede modificar '{$field}' en una sesión ya completada (Protocolo de Persistencia SOAP).");
+                        }
                     }
                 }
             }

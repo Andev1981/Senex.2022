@@ -32,23 +32,6 @@ class InsuranceSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
-
-            // Create some plans for each insurance
-            for ($i = 0; $i < 3; $i++) {
-                Plan::updateOrCreate(
-                    [
-                        'company_id' => $company->id,
-                        'insurance_id' => $insurance->id,
-                        'code' => $insurance->id . '-P' . ($i + 1),
-                    ],
-                    [
-                        'name' => 'Plan ' . ($i + 1),
-                        'price' => 10000,
-                        'coverage_percentage' => 80,
-                        'is_active' => true,
-                    ]
-                );
-            }
         }
     }
 }

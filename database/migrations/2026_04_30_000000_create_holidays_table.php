@@ -13,11 +13,15 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
             $table->date('date');
+            $table->date('end_date')->nullable(); // Rangos de vacaciones
+            $table->time('start_time')->nullable(); // Cierre parcial
+            $table->time('end_time')->nullable();   // Cierre parcial
             $table->string('name');
             $table->boolean('is_recurring')->default(false);
             $table->timestamps();
 
-            $table->unique(['company_id', 'branch_id', 'date']);
+            // Quitamos el único de fecha para permitir múltiples bloqueos parciales o rangos
+            $table->index(['company_id', 'branch_id', 'date', 'end_date']);
         });
     }
 

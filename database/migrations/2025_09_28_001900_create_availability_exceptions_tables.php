@@ -21,24 +21,25 @@ return new class extends Migration
 
             $table->foreignId('doctor_id')->constrained()->cascadeOnDelete();
 
-            // rango afectado (fecha/hora si quieres granularidad fina)
-            $table->date('date')->nullable(); // opción simple: un día
-            $table->dateTime('start_at')->nullable();
-            $table->dateTime('end_at')->nullable();
+            $table->date('date'); // Fecha inicio
+            $table->date('end_date')->nullable(); // Fecha fin (para rangos/vacaciones)
+            
+            // tipo: 'cancel', 'override', 'open'
+            $table->enum('action', ['cancel', 'override', 'open'])->default('cancel');
 
-            // tipo: 'cancel', 'override' (podrías agregar una franja alternativa)
-            $table->enum('action', ['cancel', 'override'])->default('cancel');
-
-            // si 'override', puedes opcionalmente definir nueva franja
+            // para bloqueos parciales (horas), overrides de horario o aperturas especiales
             $table->time('override_start_time')->nullable();
             $table->time('override_end_time')->nullable();
+
+            // Opcionales para 'open' (Permite libertad de boxes si es null)
+            $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('modality', 20)->nullable(); 
 
             $table->string('reason')->nullable();
             $table->json('meta')->nullable();
             $table->timestamps();
 
-            $table->index(['doctor_id', 'date']);
-            $table->index(['start_at', 'end_at']);
+            $table->index(['doctor_id', 'date', 'end_date']);
         });
     }
 

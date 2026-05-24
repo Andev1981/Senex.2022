@@ -19,7 +19,6 @@ class Address extends Model
         'street',
         'number',
         'commune_id',
-        'province_id',
         'region_id',
         'details',
         'country',
@@ -39,11 +38,6 @@ class Address extends Model
     public function commune()
     {
         return $this->belongsTo(Commune::class);
-    }
-
-    public function province()
-    {
-        return $this->belongsTo(Province::class);
     }
 
     public function region()
