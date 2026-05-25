@@ -1,5 +1,14 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Expose Check-In and Cancel Buttons to Authorized Specialists
+- **Action:** Allowed specialists with special permissions/roles to see the "Realizar Check-in" and "Anular Cita" buttons in the mobile calendar detail modal even if their branch has creation locked.
+- **Changes:**
+  - **Mobile Dashboard:** Updated `dashboard.jsx` to dynamically evaluate `canCreate` and `canView` by checking Spatie permissions `treatment-sessions.manage` / `sessions.manage` or admin roles, overriding the branch restriction `can_create_sessions !== false`.
+  - **Mobile Calendar View:** Updated `my-schedule-new.jsx` to perform the same Spatie permission/role evaluation for `canCreate` and `canView`.
+- **Commits:**
+  - `aeaf0b7f` - feat(mobile-soap): bypass branch can_create_sessions block in mobile dashboard for users with special permissions
+- **EVP Verification:** Verified with `git diff` that `canCreate` is correctly overridden to `true` for authorized specialists, enabling the buttons inside `AppointmentDetailModal`.
+
 ## 📌 [2026-05-25] Fix Patient Check-In Capacity Check and Add Error Display
 - **Action:** Fixed the logical error during patient check-in where the appointment being checked in was counted towards the capacity check, and added error rendering in the frontend modal.
 - **Changes:**
