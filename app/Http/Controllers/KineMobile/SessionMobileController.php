@@ -662,8 +662,12 @@ class SessionMobileController extends Controller
                 }
             }
 
-            // 3. Finalizar mediante el Servicio (Maneja estados COMPLETED, pagos, etc.)
-            $this->sessionService->completeSession($session, $clinicalData);
+            // 3. Finalizar mediante el Servicio (Maneja estados COMPLETED, pagos, etc.) o actualización directa si ya está completada
+            if ($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED) {
+                $session->update($clinicalData);
+            } else {
+                $this->sessionService->completeSession($session, $clinicalData);
+            }
 
             if ($session->appointment) {
                 $session->appointment->update(['status' => \App\Enums\AppointmentStatusEnum::COMPLETED]);
