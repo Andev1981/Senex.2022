@@ -179,7 +179,7 @@ class DashboardMobileController extends Controller
     }
 
     /**
-     * Listado de sesiones pendientes de cierre
+     * Listado de la Bitácora de Atenciones (Historial Reciente)
      */
     public function pendingSessions(): Response
     {
@@ -206,23 +206,6 @@ class DashboardMobileController extends Controller
             ];
         };
 
-        $pendingQuery = TreatmentSession::with(['patient', 'treatment', 'item'])
-            ->whereIn('status', [
-                \App\Enums\AppointmentStatusEnum::IN_PROGRESS, 
-                \App\Enums\AppointmentStatusEnum::CHECKED_IN,
-                \App\Enums\AppointmentStatusEnum::SCHEDULED
-            ]);
-
-        if ($canViewAll && $activeBranchId) {
-            $pendingQuery->where('branch_id', $activeBranchId);
-        } else {
-            $pendingQuery->where('doctor_id', $doctor->id);
-        }
-
-        $pendingClosure = $pendingQuery->orderBy('date', 'desc')
-            ->get()
-            ->map($mapSession);
-
         // Historial de atenciones completadas recientes (últimas 30)
         $completedQuery = TreatmentSession::with(['patient', 'treatment', 'item'])
             ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED);
@@ -240,7 +223,6 @@ class DashboardMobileController extends Controller
             ->map($mapSession);
 
         return Inertia::render('kine-mobile/pending-sessions', [
-            'pendingSessions' => $pendingClosure,
             'recentSessions'  => $recentSessions,
         ]);
     }
