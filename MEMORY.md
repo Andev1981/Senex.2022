@@ -12,7 +12,7 @@
   - **SOAP Pendings Filter:** Restrained the home screen SOAP pending closure banner to display **only today's sessions** (`whereDate('date', $today)`), preventing historical noise.
   - **SOAP Completion UX Optimization:** Solved draft-saving confusion by removing the floating floppy-disk button on mobile and creating a single, full-width primary navigation bar that dynamically turns **Emerald Green (`bg-emerald-600`)** and reads **"FINALIZAR Y CERRAR ATENCIÓN"** on the last step.
   - **Simplificación Clínica & Bitácora (Mobile):** 
-    - SOAP simplificado de un solo paso configurable vía toggle `showFullSOAP` con selector de dolor interactivo 0-10 HSL.
+    - SOAP simplificado de un solo paso por defecto al cargar (toggle `showFullSOAP` inicializado en `false`) con selector de dolor interactivo 0-10 HSL y consentimiento informado autoconfirmado automáticamente para evitar bloqueos de validación.
     - Menú "Atenciones" reconvertido en Bitácora unificada de historial de atenciones realizadas recientes de forma directa y limpia, descartando pestañas redundantes de cierres pendientes.
     - Dashboard limpio sin carrusel de cierres SOAP ni KPI de cierre redundantes, grilla adaptada a 4 columnas simétricas.
     - Listado de "Mis Pacientes" optimizado con botones de filtro interactivo superior (Hoy, Activos, Todos) sin recortar pacientes del backend, inyectando el flag `has_appointment_today` para badges visuales.

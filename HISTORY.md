@@ -1,5 +1,15 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] SOAP Simplificado y Consentimiento Automático por Defecto
+- **Action:** Set the mobile SOAP form `showFullSOAP` toggle to false by default upon load, and automated the informed consent approval state to prevent validation roadblocks.
+- **Changes:**
+  - **Mobile SOAP Form (`session-form.jsx`):**
+    - Initialized the collapsible `showFullSOAP` switch to `false` by default on screen load, forcing the simplified single-page clinical progression form as the standard view.
+    - Set the initial form state for `informed_consent_confirmed` to `true` by default, fully automating the consent check to prevent validation blocks when saving or finalizing sessions in the quick view.
+- **Commits:**
+  - `5adc9238` - feat(mobile): disable showFullSOAP by default upon load and auto-approve informed consent to prevent roadblocks
+- **EVP Verification:** Verified clean asset compilation via Vite (`npm run build` completed in 25.20s). Tested consent default value structure.
+
 ## 📌 [2026-05-25] Botones Duales y Flexibilidad de Cierre Clínico desde Calendario
 - **Action:** Upgraded the `AppointmentDetailModal.jsx` block to support two separate options ("Ver Atención" and "Ver Ficha Clínica") for completed clinical sessions, and bypassed the date lock constraint exclusively for kinesiólogos, allowing immediate clinical attendance.
 - **Changes:**
