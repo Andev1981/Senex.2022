@@ -9,11 +9,11 @@
   - Standalone POS flow active (restricted via `RedirectCajero` middleware).
   - Queued notifications enabled for system stability.
   - DevLab hidden section active for SII Real Issuance and Accounts Payable.
-  - **New Feature:** Added premium horizontal weekly and monthly scroll view on mobile, dimmed non-working inactive days, bypassed check-in with a direct "Atender Paciente" green button for kines, introduced a horizontal upcoming appointments carrusel at the top of "Mis Pacientes", and replaced the invasive collapsible SOAP session details with a clean React Info Modal on mobile.
+  - **New Feature:** Removed weekly view, made inactive month calendar days ultra-compact (min-h-[50px]) on mobile, bypassed check-in with a direct "Atender Paciente" green button for kines, introduced a horizontal upcoming appointments carrusel at the top of "Mis Pacientes", and replaced the invasive collapsible SOAP session details with a clean React Info Modal on mobile.
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Redesigned weekly and monthly agenda grids with horizontal swipe scroll support, created a direct clinical attention flow skipping check-in, built the upcoming appointments header scroll for patient files, and refactored the SOAP header into an overlay modal on mobile.
+- **Status:** Completed. Removed weekly view, made inactive month calendar days ultra-compact (min-h-[50px]) on mobile, bypassed check-in for direct clinical SOAP forms, added upcoming appointments carousel on My Patients, and refactored SOAP header info into overlay modal.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.

@@ -250,14 +250,14 @@
   - **Protocol Updates:** Registered dynamic sucursal-based modalities and Spanish localization rules as core architectural constraints under the rules of engagement in [GEMINI.md](file:///C:/laragon/www/senex2025Latest/GEMINI.md).
 - **EVP Verification:** Initiated `npm run build` asset compilation for complete syntactical and bundle verification.
 
-## 📌 [2026-05-25] Mobile UX Improvements: Week horizontal scroll, Check-in skip, Upcoming carousel & SOAP modal
-- **Action (Commit `ce8989e5`):** Optimized agenda weekly/monthly mobile views with fluid horizontal scroll and inactive day dimming, bypassed check-in for direct clinical SOAP forms, added an upcoming patient slider to "Mis Pacientes", and converted the collapsible SOAP session details into a clean popup modal.
+## 📌 [2026-05-25] Mobile UX Improvements: Inactive compact days, Week removal, Check-in skip, Upcoming carousel & SOAP modal
+- **Action (Commits `ce8989e5`, `56d261c9`):** Optimized agenda monthly mobile views with inactive day compression, completely removed weekly view, bypassed check-in for direct clinical SOAP forms, added an upcoming patient slider to "Mis Pacientes", and converted the collapsible SOAP session details into a clean popup modal.
 - **Changes:**
-  - **Agenda Mobile Scroll & Dimming:** Wrapped weekly (`week`) and monthly (`month`) views in `dashboard.jsx` inside a horizontally scrollable container (`overflow-x-auto`) with fixed minimum widths (`850px` for week, `1050px` for month) on mobile, letting users swipe smoothly. Configured inactive days (no availability and no appointments) to visually dim (`opacity-45 bg-slate-100/40`) and disable clicks, keeping active schedules clear. Set the default initial view mode on mobile to "day".
+  - **Agenda Mobile Compression & Week Removal:** Removed the weekly view mode option entirely from `dashboard.jsx`, keeping only "MES" and "DÍA". Configured the Month view to fit the mobile screen without scroll. Formatted inactive Month view days (no availability and 0 appointments) on mobile to be ultra-compact (`min-h-[50px] p-1 bg-slate-50/50 opacity-40`) displaying only the day number and "Libre" vertically, which reduces the visual grid footprint by over 60%.
   - **Direct Clinical Attention (Skip Check-in):** Injected `isKine={true}` to `AppointmentDetailModal.jsx` and updated routes inside `SessionMobileController.php@startSession` to include `AppointmentStatusEnum::CONFIRMED`. On the day of attention, the check-in modal is bypassed and the kine is presented with a direct green **"Atender Paciente"** button that starts the SOAP session and redirects them immediately to the clinical form.
   - **Upcoming Appointments carousel:** Refactored `PatientMobileController.php@index` to query the authenticated doctor's top 5 upcoming appointments (`upcomingAppointments`) starting from today, and render them in a horizontally scrollable strip at the top of the "Mis Pacientes" view, connecting directly to the patient's full clinical history.
   - **SOAP Info Modal Overlay:** Replaced the invasive collapsible details section inside `session-form.jsx` on mobile with a clean `Info` icon that opens a custom, beautifully formatted React Modal overlay containing all diagnosis and plan details, keeping the screen compact and focused.
-- **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 26.02s without any syntax warnings or bundling errors.
+- **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 23.16s without any syntax warnings or bundling errors.
 
 
 
