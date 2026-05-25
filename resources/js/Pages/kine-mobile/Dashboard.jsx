@@ -428,7 +428,7 @@ export default function Dashboard({
       <div className="p-4 mb-6 bg-white border border-slate-100 rounded-[28px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Toggle de Vistas */}
         <div className="flex gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl w-full md:w-auto">
-          {[{ id: 'month', label: 'MES' }, { id: 'week', label: 'SEMANA' }, { id: 'day', label: 'DÍA' }].map(m => (
+          {[{ id: 'month', label: 'MES' }, { id: 'day', label: 'DÍA' }].map(m => (
             <button 
               key={m.id} 
               onClick={() => {
@@ -522,8 +522,7 @@ export default function Dashboard({
       {/* VISTAS DEL CALENDARIO */}
       <div className="w-full">
         {viewMode === "month" && (
-          <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
-            <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm min-w-[1050px] lg:min-w-0">
+          <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
             <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
               {dayNames.map(d => (
                 <div key={d} className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">{d}</div>
@@ -535,6 +534,24 @@ export default function Dashboard({
                 const appts = getAppointmentsForDate(day.date);
                 const isClosed = !st.isOpen && !st.isHoliday;
                 const isPast = isDatePast(day.date) && !isToday(day.date);
+                const isInactiveDay = isClosed && appts.length === 0;
+
+                if (isInactiveDay) {
+                  return (
+                    <div
+                      key={idx}
+                      className={`min-h-[50px] lg:min-h-[140px] p-1 bg-slate-50/50 border-b border-r border-slate-100 select-none pointer-events-none flex flex-col items-center justify-center`}
+                    >
+                      <span className="text-[10px] font-black text-slate-300">
+                        {day.date.getDate()}
+                      </span>
+                      <span className="text-[7px] font-black text-slate-300/60 uppercase tracking-tighter mt-0.5">
+                        Libre
+                      </span>
+                    </div>
+                  );
+                }
+
                 return (
                   <div 
                     key={idx} 
@@ -609,95 +626,8 @@ export default function Dashboard({
               })}
             </div>
           </div>
-          </div>
         )}
 
-        {viewMode === "week" && (
-          <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
-            <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm min-w-[850px] lg:min-w-0">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/20 flex justify-between items-center">
-              <h3 className="text-xs font-black text-slate-900 uppercase">Vista Semanal</h3>
-              <button 
-                onClick={() => { setIsDateLocked(false); setShowNewAppointment(true); }} 
-                className="px-5 py-3 bg-brand-primary text-white text-[10px] font-black uppercase rounded-2xl shadow-lg hover:brightness-110 flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" /> Reservar esta Semana
-              </button>
-            </div>
-            <div className="grid grid-cols-8 border-b border-slate-100 bg-slate-50/50">
-              <div className="p-3"></div>
-              {getWeekDays(selectedDate).map((d, i) => {
-                const dayStats = getDayCapacityStats(d);
-                const isInactiveDay = !dayStats.isOpen && dayStats.appointmentsCount === 0;
-                return (
-                  <div 
-                    key={i} 
-                    className={`p-4 text-center border-l border-slate-100 transition-all ${
-                      isInactiveDay ? "opacity-45 bg-slate-100/40" : ""
-                    }`}
-                  >
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{dayNames[(d.getDay()+6)%7]}</div>
-                    <div className={`text-lg font-black mt-1 ${isToday(d) ? "text-brand-primary" : "text-slate-900"}`}>{d.getDate()}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="grid grid-cols-8">
-              {hours.map(h => (
-                <React.Fragment key={h}>
-                  <div className="p-4 text-[9px] font-black text-right text-slate-400 border-b border-slate-100 uppercase">{h}:00</div>
-                  {getWeekDays(selectedDate).map((d, di) => {
-                    const appts = filteredAppointments.filter(a => a.date === formatLocalDate(d) && parseInt(a.start_time.split(":")[0]) === h);
-                    const dayStats = getDayCapacityStats(d);
-                    const canSchedule = !isDatePast(d) && dayStats.isOpen;
-                    const isInactiveDay = !dayStats.isOpen && dayStats.appointmentsCount === 0;
-                    return (
-                      <div 
-                        key={di} 
-                        onClick={() => { 
-                          if (canSchedule) { 
-                            setSelectedDate(d); 
-                            setIsDateLocked(true); 
-                            setShowNewAppointment(true); 
-                          } 
-                        }} 
-                        className={`min-h-[90px] p-1.5 border-b border-l border-slate-100 transition-all relative group ${
-                          isInactiveDay 
-                            ? "opacity-35 bg-slate-100/50 select-none pointer-events-none" 
-                            : canSchedule 
-                            ? "hover:bg-brand-primary/5 cursor-pointer bg-white" 
-                            : "bg-slate-50/50 cursor-not-allowed"
-                        }`}
-                      >
-                        {canSchedule && (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Plus className="w-4 h-4 text-brand-primary/30" />
-                          </div>
-                        )}
-                        {appts.map(a => (
-                          <div 
-                            key={a.id} 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              setSelectedAppointment(a); 
-                            }} 
-                            className={`p-2 rounded-xl text-[8px] font-black uppercase mb-1.5 truncate shadow-sm transition-all hover:scale-95 ${getStatusStyles(a.status)}`}
-                          >
-                            <div className="flex justify-between items-center gap-1">
-                              <span className="truncate">{a.patient?.name || 'S/N'}</span>
-                              <span className="font-bold shrink-0">{a.start_time.substring(0, 5)}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-          </div>
-        )}
 
         {viewMode === "day" && (
           <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
