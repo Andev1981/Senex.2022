@@ -807,21 +807,21 @@ export default function SessionForm({
                             </div>
 
                             {/* ACCIONES FINALES (Solo Desktop) */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <button 
-                                    type="submit" 
-                                    disabled={isSubmitting} 
-                                    className="flex items-center justify-center gap-3 bg-slate-900 text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:bg-black transition-all shadow-xl active:scale-95"
-                                >
-                                    <Save className="w-5 h-5" /> GUARDAR BORRADOR
-                                </button>
+                            <div className="flex flex-col md:flex-row gap-4 w-full">
                                 <button 
                                     type="button" 
                                     onClick={handleFinishSession} 
                                     disabled={isSubmitting} 
-                                    className="flex items-center justify-center gap-3 bg-brand-primary text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:brightness-110 transition-all shadow-xl shadow-brand-primary/20 active:scale-95"
+                                    className="flex-1 md:flex-[3] flex items-center justify-center gap-3 bg-emerald-600 text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-95"
                                 >
-                                    <CheckCircle className="w-5 h-5" /> FINALIZAR ATENCIÓN
+                                    <CheckCircle className="w-5 h-5" /> FINALIZAR Y CERRAR ATENCIÓN
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={isSubmitting} 
+                                    className="w-full md:w-1/3 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-650 border border-slate-200/60 font-black uppercase text-xs py-5 rounded-[2rem] transition-all active:scale-95"
+                                >
+                                    <Save className="w-5 h-5" /> GUARDAR BORRADOR
                                 </button>
                             </div>
                         </div>
@@ -831,23 +831,26 @@ export default function SessionForm({
 
             {/* BARRA DE ACCIÓN FLOTANTE (Solo Mobile) */}
             {!isDesktop && (
-                <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-xl border-t border-slate-100 flex gap-3 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+                <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-xl border-t border-slate-100 flex flex-col gap-3.5 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
                     <button 
                         type="button" 
                         onClick={handleNextTab} 
                         disabled={isSubmitting} 
-                        className="flex-[3] bg-brand-primary text-white font-black uppercase text-xs tracking-[0.2em] py-6 rounded-[32px] shadow-2xl shadow-brand-primary/40 flex items-center justify-center gap-3 active:scale-95 transition-all"
+                        className={`w-full text-white font-black uppercase text-xs tracking-[0.2em] py-6 rounded-[32px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all duration-300 ${
+                            activeTab === 'analisis' 
+                                ? 'bg-emerald-600 shadow-emerald-600/35 hover:bg-emerald-700' 
+                                : 'bg-brand-primary shadow-brand-primary/40 hover:brightness-110'
+                        }`}
                     >
                         {activeTab === 'analisis' ? <CheckCircle className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-                        {activeTab === 'analisis' ? 'FINALIZAR' : 'SIGUIENTE PASO'}
+                        {activeTab === 'analisis' ? 'FINALIZAR Y CERRAR ATENCIÓN' : 'SIGUIENTE PASO'}
                     </button>
                     <button 
                         type="submit" 
                         disabled={isSubmitting} 
-                        title="Guardar Borrador"
-                        className="w-20 bg-slate-900 text-white font-black uppercase text-[10px] tracking-widest py-6 rounded-[32px] flex items-center justify-center active:scale-95 transition-all"
+                        className="w-full text-slate-500 hover:text-slate-800 font-black uppercase text-[9px] tracking-widest py-2.5 flex items-center justify-center gap-2 transition-all active:scale-95"
                     >
-                        {isSubmitting ? "..." : <Save className="w-6 h-6" />}
+                        <Save className="w-4 h-4 text-slate-400" /> Guardar Borrador Temporal
                     </button>
                 </div>
             )}

@@ -59,8 +59,9 @@ class DashboardMobileController extends Controller
         $doctorBranch = $doctor->getBranchAttribute();
         $canViewAll = (bool)($doctorBranch['can_view_sessions'] ?? true);
 
-        // 3. Fichas Pendientes de Cierre (Iniciadas hoy o antes pero no completadas)
+        // 3. Fichas Pendientes de Cierre de HOY (Iniciadas hoy pero no completadas)
         $pendingQuery = TreatmentSession::with(['patient.activeTreatments.diagnostic', 'item'])
+            ->whereDate('date', $today)
             ->whereIn('status', [\App\Enums\AppointmentStatusEnum::IN_PROGRESS, \App\Enums\AppointmentStatusEnum::CHECKED_IN]);
 
         if ($canViewAll && $activeBranchId) {
