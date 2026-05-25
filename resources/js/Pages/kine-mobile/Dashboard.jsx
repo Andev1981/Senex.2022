@@ -79,8 +79,15 @@ export default function Dashboard({
   const { props: pageProps } = usePage();
   const auth = pageProps?.auth ?? {};
   const doctorBranch = auth?.doctor_branch ?? {};
-  const canCreate = doctorBranch?.can_create_sessions !== false;
-  const canView = doctorBranch?.can_view_sessions !== false;
+  const userPermissions = auth?.permissions ?? [];
+  const userRoles = auth?.roles ?? [];
+  const hasSpecialPermission = userRoles.includes("superadmin") || 
+                               userRoles.includes("admin") || 
+                               userPermissions.includes("treatment-sessions.manage") || 
+                               userPermissions.includes("sessions.manage");
+                               
+  const canCreate = (doctorBranch?.can_create_sessions !== false) || hasSpecialPermission;
+  const canView = (doctorBranch?.can_view_sessions !== false) || hasSpecialPermission;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("month"); // month, week, day
   const [selectedDate, setSelectedDate] = useState(new Date());
