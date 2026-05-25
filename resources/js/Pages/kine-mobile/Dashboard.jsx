@@ -527,6 +527,7 @@ export default function Dashboard({
                 const st = getDayCapacityStats(day.date);
                 const appts = getAppointmentsForDate(day.date);
                 const isClosed = !st.isOpen && !st.isHoliday;
+                const isPast = isDatePast(day.date) && !isToday(day.date);
                 return (
                   <div 
                     key={idx} 
@@ -535,7 +536,15 @@ export default function Dashboard({
                       setSelectedDate(day.date); 
                       setViewMode("day"); 
                     }} 
-                    className={`min-h-[140px] p-3 border-b border-r border-slate-100 cursor-pointer transition-all relative group ${!day.isCurrentMonth ? "opacity-30 bg-slate-50/50" : "bg-white"} ${isToday(day.date) ? "bg-brand-primary/5" : ""} ${(st.isHoliday || isClosed) && appts.length === 0 ? "cursor-not-allowed" : "hover:bg-slate-50/30"}`}
+                    className={`min-h-[140px] p-3 border-b border-r border-slate-100 cursor-pointer transition-all relative group ${
+                      !day.isCurrentMonth 
+                        ? "opacity-30 bg-slate-50/50" 
+                        : isToday(day.date)
+                        ? "bg-brand-primary/[0.02] ring-2 ring-brand-primary/20 shadow-md shadow-brand-primary/5 z-10 scale-[1.01]"
+                        : isPast
+                        ? "bg-slate-50/70 text-slate-400"
+                        : "bg-white"
+                    } ${(st.isHoliday || isClosed) && appts.length === 0 ? "cursor-not-allowed" : "hover:bg-slate-50/30"}`}
                   >
                     {(st.isHoliday || isClosed) && (
                       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000, #000 10px, transparent 10px, transparent 20px)' }}></div>
@@ -570,9 +579,18 @@ export default function Dashboard({
                         </div>
                       )}
                       {appts.slice(0, 3).map(a => (
-                        <div key={a.id} className="text-[8px] font-black uppercase p-1.5 rounded-lg bg-white border border-slate-100 shadow-sm truncate text-slate-700 flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full ${a.status === 'completed' ? 'bg-slate-400' : 'bg-brand-primary'}`}></div>
-                          {a.patient?.name || 'Paciente'}
+                        <div 
+                          key={a.id} 
+                          className={`text-[8px] font-black uppercase p-1.5 rounded-lg shadow-sm truncate flex items-center gap-1.5 border transition-all duration-300 hover:scale-95 ${getStatusStyles(a.status)}`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            a.status === 'completed' ? 'bg-gray-400' :
+                            a.status === 'cancelled' ? 'bg-red-400' :
+                            a.status === 'in_progress' ? 'bg-purple-400' :
+                            a.status === 'checked_in' ? 'bg-orange-400' :
+                            a.status === 'confirmed' ? 'bg-emerald-400' : 'bg-blue-400'
+                          }`}></div>
+                          <span className="truncate">{a.patient?.name || 'Paciente'}</span>
                         </div>
                       ))}
                       {appts.length > 3 && (

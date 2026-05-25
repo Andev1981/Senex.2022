@@ -27,6 +27,10 @@ export default function AppointmentDetailModal({ isOpen, onClose, appointment, o
     }
   };
 
+  const d = new Date();
+  const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const isAptToday = appointment.date === todayStr;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-[2rem] shadow-2xl max-w-xl w-full flex flex-col overflow-hidden">
@@ -80,15 +84,27 @@ export default function AppointmentDetailModal({ isOpen, onClose, appointment, o
         <div className="p-8 bg-gray-50 border-t flex flex-wrap gap-3">
           {['scheduled', 'confirmed'].includes(appointment.status) && canCreate && (
             <>
-              <button onClick={handleCancel} className="flex-1 min-w-[140px] py-4 bg-white text-red-600 font-black uppercase text-[10px] rounded-2xl hover:bg-red-50 border border-red-200 shadow-sm transition-all active:scale-95">Anular Cita</button>
-              <button onClick={onCheckIn} className="flex-1 min-w-[140px] py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all">Realizar Check-in</button>
+              <button onClick={handleCancel} className="flex-1 min-w-[140px] py-4 bg-white text-red-600 font-black uppercase text-[10px] rounded-2xl hover:bg-red-50 border border-red-200 shadow-sm transition-all active:scale-95 animate-in fade-in">Anular Cita</button>
+              {isAptToday ? (
+                <button onClick={onCheckIn} className="flex-1 min-w-[140px] py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all animate-in fade-in">Realizar Check-in</button>
+              ) : (
+                <div className="flex-1 min-w-[140px] flex flex-col gap-1 animate-in fade-in">
+                  <button 
+                    disabled 
+                    className="w-full py-4 bg-slate-100 text-slate-400 font-black uppercase text-[10px] rounded-2xl cursor-not-allowed border border-slate-200"
+                  >
+                    Realizar Check-in
+                  </button>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase text-center mt-1">Se habilita el día de la atención</span>
+                </div>
+              )}
             </>
           )}
           {appointment.status === 'checked_in' && (
-            <button onClick={handleStartSession} className="flex-1 min-w-[140px] py-4 bg-emerald-600 text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all">Comenzar Atención</button>
+            <button onClick={handleStartSession} className="flex-1 min-w-[140px] py-4 bg-emerald-600 text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all animate-in fade-in">Comenzar Atención</button>
           )}
           {['completed', 'realizada'].includes(String(appointment.status).toLowerCase()) && appointment.treatment_session_id && (
-            <button onClick={handleViewSession} className="flex-1 min-w-[140px] py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all">Ver Ficha Clínica</button>
+            <button onClick={handleViewSession} className="flex-1 min-w-[140px] py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all animate-in fade-in">Ver Ficha Clínica</button>
           )}
           <button onClick={onClose} className="w-full py-3 bg-gray-200/50 text-gray-500 font-black uppercase text-[9px] rounded-xl hover:bg-gray-200 transition-colors mt-2">Cerrar Detalle</button>
         </div>

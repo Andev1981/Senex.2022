@@ -209,8 +209,21 @@ export default function AgendaCalendar({
                     {getDaysInMonth(currentDate).map((day, idx) => {
                     const st = getDayCapacityStats(day.date), appts = getAppointmentsForDate(day.date);
                     const isClosed = !st.isOpen && !st.isHoliday;
+                    const isPast = isDatePast(day.date) && !isToday(day.date);
                     return (
-                      <div key={idx} onClick={() => { if (st.isHoliday || (isClosed && appts.length === 0)) return; setSelectedDate(day.date); setViewMode("day"); }} className={`min-h-[140px] p-3 border-b border-r cursor-pointer transition-all relative group ${!day.isCurrentMonth ? "opacity-30 bg-gray-50/50" : "bg-white"} ${isToday(day.date) ? "bg-brand-primary/5" : ""} ${(st.isHoliday || isClosed) && appts.length === 0 ? "cursor-not-allowed" : "hover:bg-gray-50/50"}`}>
+                      <div 
+                        key={idx} 
+                        onClick={() => { if (st.isHoliday || (isClosed && appts.length === 0)) return; setSelectedDate(day.date); setViewMode("day"); }} 
+                        className={`min-h-[140px] p-3 border-b border-r cursor-pointer transition-all relative group ${
+                          !day.isCurrentMonth 
+                            ? "opacity-30 bg-gray-50/50" 
+                            : isToday(day.date)
+                            ? "bg-brand-primary/[0.02] ring-2 ring-brand-primary/20 shadow-md shadow-brand-primary/5 z-10 scale-[1.01]"
+                            : isPast
+                            ? "bg-gray-50/60 text-gray-400"
+                            : "bg-white"
+                        } ${(st.isHoliday || isClosed) && appts.length === 0 ? "cursor-not-allowed" : "hover:bg-gray-50/50"}`}
+                      >
                         {(st.isHoliday || isClosed) && (<div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000, #000 10px, transparent 10px, transparent 20px)' }}></div>)}
                         <div className="flex justify-between items-start mb-2 relative z-10"><span className={`text-xs font-black w-7 h-7 flex items-center justify-center rounded-lg transition-all ${isToday(day.date) ? "bg-brand-primary text-white shadow-lg" : "text-gray-900"} ${st.isHoliday ? "text-red-500 font-bold" : ""}`}>{day.date.getDate()}</span>
                             {day.isCurrentMonth && !isDatePast(day.date) && st.isOpen && (<button onClick={(e) => { e.stopPropagation(); setSelectedDate(day.date); setIsDateLocked(true); setShowNewAppointment(true); }} className="p-1.5 bg-brand-primary text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-md active:scale-90"><Plus className="w-3.5 h-3.5" /></button>)}
