@@ -13,7 +13,7 @@
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Solved active patients count mismatch in "Mis Pacientes" by loading `in_progress`, `evaluation`, and `completed` treatments, with a gorgeous premium adaptive slate-gray card layout for completed treatments and blue-indigo layout for evaluation treatments.
+- **Status:** Completed. Fixed session time formatting in patient-detail view by casting Carbon instances to a clean `H:i` string (e.g. `12:30`) instead of serialized raw ISO 8601 strings.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.

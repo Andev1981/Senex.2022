@@ -1,5 +1,13 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Format Session Time to H:i in Patient Detail History
+- **Action:** Fixed a date/time representation bug in the "Historial de atenciones" section of the mobile `patient-detail` view where the session time was outputted as a raw ISO 8601 string (e.g. `2026-05-25T12:30:00.000000Z`) instead of a clean, readable hour-minute format.
+- **Changes:**
+  - **Controllers (Backend):** Updated `PatientMobileController.php@show` (recent_sessions mapping) and `ClientDashboardController.php@show` (unified history mapping) to format the `time` attribute (which is cast to a `datetime` object) using `->format('H:i')` before serializing it to JSON.
+- **Commits:**
+  - `006b8a41` - fix(mobile): format session time as H:i instead of ISO timestamp in patient-detail
+- **EVP Verification:** Checked that both modified controllers compile correctly and that `$session->time` values are returned formatted as clean string hours (e.g. `12:30`) matching the existing formats in `SessionMobileController.php` and `DashboardMobileController.php`.
+
 ## 📌 [2026-05-25] Show Completed and Evaluation Treatments in My Patients List
 - **Action:** Solved the issue where patients with completed treatments disappeared from the kinesiologist's "Mis Pacientes" view, by including completed and evaluation treatments in the patient query and mapping their statuses to the UI.
 - **Changes:**
