@@ -14,6 +14,12 @@ export default function AppointmentDetailModal({ isOpen, onClose, appointment, o
     }
   };
 
+  const handleStartSession = () => {
+    router.post(route('kine.sessions.start', appointment.id), {}, {
+      onSuccess: () => onClose(),
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-[2rem] shadow-2xl max-w-xl w-full flex flex-col overflow-hidden">
@@ -70,6 +76,9 @@ export default function AppointmentDetailModal({ isOpen, onClose, appointment, o
               <button onClick={handleCancel} className="flex-1 min-w-[140px] py-4 bg-white text-red-600 font-black uppercase text-[10px] rounded-2xl hover:bg-red-50 border border-red-200 shadow-sm transition-all active:scale-95">Anular Cita</button>
               <button onClick={onCheckIn} className="flex-1 min-w-[140px] py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all">Realizar Check-in</button>
             </>
+          )}
+          {appointment.status === 'checked_in' && (
+            <button onClick={handleStartSession} className="flex-1 min-w-[140px] py-4 bg-emerald-600 text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all">Comenzar Atención</button>
           )}
           <button onClick={onClose} className="w-full py-3 bg-gray-200/50 text-gray-500 font-black uppercase text-[9px] rounded-xl hover:bg-gray-200 transition-colors mt-2">Cerrar Detalle</button>
         </div>
