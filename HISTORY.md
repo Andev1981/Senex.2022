@@ -267,3 +267,12 @@
   - **Desktop Week Grid (`isDesktop`)**: Retained the high-fidelity hourly 8-column week calendar grid (`grid-cols-8`) on desktop viewports, with inactive columns dimmed.
   - **Month View Omission**: Omitted the `"month"` view option entirely from the selector tab list, navigation controls, dynamic calculations, and JSX render trees, resolving the prior UX requirements.
 - **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 32.09s with zero errors or warnings, and verified Git stage traceability.
+
+## 📌 [2026-05-25] SOAP Closure Optimization: Today's Pendings & Clear Finalization Button
+- **Action (Commit `ea7a68b4`):** Restrained the main dashboard alert banner to only show today's sessions pending SOAP closure, and completely redesigned the SOAP form final action buttons on desktop and mobile to avoid draft-saving confusion.
+- **Changes:**
+  - **Today's Pendings Filter:** Updated the `$pendingQuery` in [DashboardMobileController.php](file:///C:/laragon/www/senex2025Latest/app/Http/Controllers/KineMobile/DashboardMobileController.php) with a `whereDate('date', $today)` constraint. This cleans the home screen from redundant past pending closures, which are already managed separately.
+  - **Dynamic Emerald Mobile Close Bar:** Replaced the side-by-side action buttons inside the mobile sticky container of [session-form.jsx](file:///C:/laragon/www/senex2025Latest/resources/js/Pages/kine-mobile/session-form.jsx) with a single, full-width brand primary button that dynamically turns **vibrant Emerald Green (`bg-emerald-600`)** on the final "Cierre" step and reads **"FINALIZAR Y CERRAR ATENCIÓN"** (with check icon), signaling a definitive closure.
+  - **Desubstantiated Draft Option:** Relocated the draft save action to a secondary, grey text-link below the primary button with the label `"Guardar Borrador Temporal"`, explaining its temporary nature and removing the floppy disk button confusion.
+  - **Asymmetric Desktop Form Buttons:** Replaced the grid-cols-2 action buttons in desktop viewports with a flex layout: the completion action takes `flex-[3]` and is highlighted in Emerald Green, while the draft action is demoted to a narrow soft slate-100 button (`w-1/3`), prioritizing definitive SOAP closures.
+- **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 29.93s with zero errors or warnings, and verified Git stage traceability.
