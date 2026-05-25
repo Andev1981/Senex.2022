@@ -1,5 +1,15 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Premium Calendar Styling and Same-Day Check-in Lock
+- **Action:** Implemented high-end UI calendar design tokens for the kinesiologist month calendar grid (desktop and mobile) and locked the patient check-in button to be enabled strictly on the appointment date.
+- **Changes:**
+  - **Month Calendar Cells:** Styled days before today in a faint, muted gray (`bg-slate-50/70` / `bg-gray-50/60`). Highlighted today's cell with an active brand tint, a soft border ring, and a premium shadow popout (`bg-brand-primary/[0.02] ring-2 ring-brand-primary/20 shadow-md shadow-brand-primary/5 z-10 scale-[1.01]`).
+  - **Session Badges:** Embedded status-specific HSL color tokens to session items inside month grid cells utilizing `getStatusStyles`.
+  - **Check-In Validation:** Updated the `AppointmentDetailModal.jsx` to dynamically evaluate if an appointment is scheduled for today. If not, the check-in button is disabled and displays a clean hint: `"Se habilita el día de la atención"`.
+- **Commits:**
+  - `6e31bd22` - feat(calendar): style past days, highlight today cell with shadow, show session status colors, and lock check-in to today only
+- **EVP Verification:** Verified clean compilations for both mobile and desktop calendar views (`npm run build` completed in 25.10s with zero errors).
+
 ## 📌 [2026-05-25] Format Session Time to H:i in Patient Detail History
 - **Action:** Fixed a date/time representation bug in the "Historial de atenciones" section of the mobile `patient-detail` view where the session time was outputted as a raw ISO 8601 string (e.g. `2026-05-25T12:30:00.000000Z`) instead of a clean, readable hour-minute format.
 - **Changes:**

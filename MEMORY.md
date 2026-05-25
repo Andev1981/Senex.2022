@@ -13,7 +13,7 @@
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Fixed session time formatting in patient-detail view by casting Carbon instances to a clean `H:i` string (e.g. `12:30`) instead of serialized raw ISO 8601 strings.
+- **Status:** Completed. Integrated premium monthly grid designs (faint gray past days, highlighted shadow for today, session status colors) across both mobile and desktop agendas. Restructured check-in flow to allow check-ins exclusively on the scheduled appointment date, presenting a clean disabled hint otherwise.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.
