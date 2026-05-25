@@ -1,12 +1,14 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
 ## 📌 [2026-05-25] Resolve Patient Check-In Capacity Deadlock and Box Normalization
-- **Action:** Fixed the capacity check deadlock on check-in. Bypassed redundant capacity checks inside `TreatmentSessionService::createSession` for already scheduled appointments. Allowed room-only changes during check-in without checking/blocking doctor capacity. Normalized empty room/box selection strings to proper SQL null values.
+- **Action:** Fixed the capacity check deadlock on check-in. Bypassed redundant capacity checks inside `TreatmentSessionService::createSession` for already scheduled appointments. Allowed room-only changes during check-in without checking/blocking doctor capacity. Normalized empty room/box selection strings to proper SQL null values. Added a "Comenzar Atención" action button directly in the appointment detail modal when the patient has arrived (`checked_in`).
 - **Changes:**
   - **Agenda Service:** Added a `$validateDoctor` parameter (default `true`) to `getSlotOccupancyStatus`. If false, skips doctor weight validation, making box-only re-assignments fully independent of doctor capacity slots.
   - **Treatment Session Service:** Added `'bypass_availability_check'` to the payload array inside `createSession` to conditionally skip doctor and patient availability checks.
   - **Appointment Controller:** Wrapped the checkin method in a robust `try-catch` block returning user-friendly validation errors. Normalized empty room IDs to `null`. Passed `$checkDoctorCapacity` to `getSlotOccupancyStatus` so that if the doctor is not changed, the doctor's concurrent capacity check is skipped. Passed `bypass_availability_check => true` to `createSession`.
+  - **Appointment Detail Modal:** Added `handleStartSession` helper and rendered a premium, vibrant **"Comenzar Atención"** (emerald/green) button when `appointment.status` is `'checked_in'` (Llegó), redirecting to the clinical SOAP form.
 - **Commits:**
+  - `8f4da312` - feat: allow starting session from appointment detail modal when patient has checked in
   - `a3178b93` - fix: resolve doctor checkin capacity deadlock when box is unselected or changed
 - **EVP Verification:** Created a PHP simulation script `scratch_test.php` that mock-executed a check-in for an appointment with a concurrent weight-3 evaluation slot under a null-room selection. Verified that the check-in completes successfully, the treatment session is created, and the database status updates to `checked_in` correctly.
 
