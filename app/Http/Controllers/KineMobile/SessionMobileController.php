@@ -342,7 +342,12 @@ class SessionMobileController extends Controller
             $canCreateAll = $isClinicalAdmin || ($doctorBranch['can_create_sessions'] ?? true);
             
             // 1. Intentar como Cita (Appointment)
-            $appointmentQuery = \App\Models\Appointment::whereIn('status', [\App\Enums\AppointmentStatusEnum::SCHEDULED, \App\Enums\AppointmentStatusEnum::CHECKED_IN, \App\Enums\AppointmentStatusEnum::IN_PROGRESS]);
+            $appointmentQuery = \App\Models\Appointment::whereIn('status', [
+                \App\Enums\AppointmentStatusEnum::SCHEDULED,
+                \App\Enums\AppointmentStatusEnum::CONFIRMED,
+                \App\Enums\AppointmentStatusEnum::CHECKED_IN,
+                \App\Enums\AppointmentStatusEnum::IN_PROGRESS
+            ]);
             
             if (!$canCreateAll) {
                 $appointmentQuery->where('doctor_id', $doctor->id);

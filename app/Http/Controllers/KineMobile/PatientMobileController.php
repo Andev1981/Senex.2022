@@ -74,10 +74,35 @@ class PatientMobileController extends Controller
             ];
         });
 
+        $upcomingAppointments = \App\Models\Appointment::where('doctor_id', $doctor->id)
+            ->where('start_at', '>=', now())
+            ->whereIn('status', [
+                \App\Enums\AppointmentStatusEnum::SCHEDULED,
+                \App\Enums\AppointmentStatusEnum::CONFIRMED,
+                \App\Enums\AppointmentStatusEnum::CHECKED_IN,
+                \App\Enums\AppointmentStatusEnum::IN_PROGRESS
+            ])
+            ->with(['patient', 'item'])
+            ->orderBy('start_at', 'asc')
+            ->limit(5)
+            ->get()
+            ->map(function ($apt) {
+                return [
+                    'id' => $apt->id,
+                    'patient_name' => $apt->patient->full_name,
+                    'patient_id' => $apt->patient_id,
+                    'date' => $apt->start_at->toDateString(),
+                    'time' => $apt->start_at->format('H:i'),
+                    'status' => $apt->status instanceof \App\Enums\AppointmentStatusEnum ? $apt->status->value : $apt->status,
+                    'service_name' => $apt->item?->name ?? 'Servicio',
+                ];
+            });
+
         return Inertia::render('kine-mobile/my-patients', [
             'patients' => $patients,
             'search' => $search,
             'totalPatients' => $patients->count(),
+            'upcomingAppointments' => $upcomingAppointments,
         ]);
     }
 

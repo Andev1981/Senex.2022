@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 import { X, Clock, Activity, Layers, User, MoreVertical } from 'lucide-react';
 import { getStatusLabel } from '@/helpers/agenda';
 
-export default function AppointmentDetailModal({ isOpen, onClose, appointment, onCheckIn, canCreate = true }) {
+export default function AppointmentDetailModal({ isOpen, onClose, appointment, onCheckIn, canCreate = true, isKine = false }) {
   if (!isOpen || !appointment) return null;
 
   const handleCancel = () => {
@@ -85,18 +85,34 @@ export default function AppointmentDetailModal({ isOpen, onClose, appointment, o
           {['scheduled', 'confirmed'].includes(appointment.status) && canCreate && (
             <>
               <button onClick={handleCancel} className="flex-1 min-w-[140px] py-4 bg-white text-red-600 font-black uppercase text-[10px] rounded-2xl hover:bg-red-50 border border-red-200 shadow-sm transition-all active:scale-95 animate-in fade-in">Anular Cita</button>
-              {isAptToday ? (
-                <button onClick={onCheckIn} className="flex-1 min-w-[140px] py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all animate-in fade-in">Realizar Check-in</button>
+              {isKine ? (
+                isAptToday ? (
+                  <button onClick={handleStartSession} className="flex-1 min-w-[140px] py-4 bg-emerald-600 text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-emerald-600/20 hover:brightness-110 active:scale-95 transition-all animate-in fade-in">Atender Paciente</button>
+                ) : (
+                  <div className="flex-1 min-w-[140px] flex flex-col gap-1 animate-in fade-in">
+                    <button 
+                      disabled 
+                      className="w-full py-4 bg-slate-100 text-slate-400 font-black uppercase text-[10px] rounded-2xl cursor-not-allowed border border-slate-200"
+                    >
+                      Atender Paciente
+                    </button>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase text-center mt-1">Se habilita el día de la atención</span>
+                  </div>
+                )
               ) : (
-                <div className="flex-1 min-w-[140px] flex flex-col gap-1 animate-in fade-in">
-                  <button 
-                    disabled 
-                    className="w-full py-4 bg-slate-100 text-slate-400 font-black uppercase text-[10px] rounded-2xl cursor-not-allowed border border-slate-200"
-                  >
-                    Realizar Check-in
-                  </button>
-                  <span className="text-[8px] font-bold text-slate-400 uppercase text-center mt-1">Se habilita el día de la atención</span>
-                </div>
+                isAptToday ? (
+                  <button onClick={onCheckIn} className="flex-1 min-w-[140px] py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl shadow-brand-primary/20 hover:brightness-110 active:scale-95 transition-all animate-in fade-in">Realizar Check-in</button>
+                ) : (
+                  <div className="flex-1 min-w-[140px] flex flex-col gap-1 animate-in fade-in">
+                    <button 
+                      disabled 
+                      className="w-full py-4 bg-slate-100 text-slate-400 font-black uppercase text-[10px] rounded-2xl cursor-not-allowed border border-slate-200"
+                    >
+                      Realizar Check-in
+                    </button>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase text-center mt-1">Se habilita el día de la atención</span>
+                  </div>
+                )
               )}
             </>
           )}

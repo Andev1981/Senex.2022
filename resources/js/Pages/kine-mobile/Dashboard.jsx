@@ -1,5 +1,5 @@
 // resources/js/pages/kine-mobile/dashboard.jsx
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
   Calendar,
@@ -98,6 +98,12 @@ export default function Dashboard({
   const [isDateLocked, setIsDateLocked] = useState(false);
   const [localPatients, setLocalPatients] = useState(patients);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (isDesktop === false) {
+      setViewMode("day");
+    }
+  }, [isDesktop]);
 
   const handlePatientCreated = (newPatient) => {
     if (newPatient) {
@@ -516,7 +522,8 @@ export default function Dashboard({
       {/* VISTAS DEL CALENDARIO */}
       <div className="w-full">
         {viewMode === "month" && (
-          <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
+          <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm min-w-[1050px] lg:min-w-0">
             <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
               {dayNames.map(d => (
                 <div key={d} className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">{d}</div>
@@ -602,10 +609,12 @@ export default function Dashboard({
               })}
             </div>
           </div>
+          </div>
         )}
 
         {viewMode === "week" && (
-          <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
+          <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
+            <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm min-w-[850px] lg:min-w-0">
             <div className="p-6 border-b border-slate-100 bg-slate-50/20 flex justify-between items-center">
               <h3 className="text-xs font-black text-slate-900 uppercase">Vista Semanal</h3>
               <button 
@@ -617,12 +626,21 @@ export default function Dashboard({
             </div>
             <div className="grid grid-cols-8 border-b border-slate-100 bg-slate-50/50">
               <div className="p-3"></div>
-              {getWeekDays(selectedDate).map((d, i) => (
-                <div key={i} className="p-4 text-center border-l border-slate-100">
-                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{dayNames[(d.getDay()+6)%7]}</div>
-                  <div className={`text-lg font-black mt-1 ${isToday(d) ? "text-brand-primary" : "text-slate-900"}`}>{d.getDate()}</div>
-                </div>
-              ))}
+              {getWeekDays(selectedDate).map((d, i) => {
+                const dayStats = getDayCapacityStats(d);
+                const isInactiveDay = !dayStats.isOpen && dayStats.appointmentsCount === 0;
+                return (
+                  <div 
+                    key={i} 
+                    className={`p-4 text-center border-l border-slate-100 transition-all ${
+                      isInactiveDay ? "opacity-45 bg-slate-100/40" : ""
+                    }`}
+                  >
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{dayNames[(d.getDay()+6)%7]}</div>
+                    <div className={`text-lg font-black mt-1 ${isToday(d) ? "text-brand-primary" : "text-slate-900"}`}>{d.getDate()}</div>
+                  </div>
+                );
+              })}
             </div>
             <div className="grid grid-cols-8">
               {hours.map(h => (
@@ -632,6 +650,7 @@ export default function Dashboard({
                     const appts = filteredAppointments.filter(a => a.date === formatLocalDate(d) && parseInt(a.start_time.split(":")[0]) === h);
                     const dayStats = getDayCapacityStats(d);
                     const canSchedule = !isDatePast(d) && dayStats.isOpen;
+                    const isInactiveDay = !dayStats.isOpen && dayStats.appointmentsCount === 0;
                     return (
                       <div 
                         key={di} 
@@ -642,7 +661,13 @@ export default function Dashboard({
                             setShowNewAppointment(true); 
                           } 
                         }} 
-                        className={`min-h-[90px] p-1.5 border-b border-l border-slate-100 transition-all relative group ${canSchedule ? 'hover:bg-brand-primary/5 cursor-pointer bg-white' : 'bg-slate-50/50 cursor-not-allowed'}`}
+                        className={`min-h-[90px] p-1.5 border-b border-l border-slate-100 transition-all relative group ${
+                          isInactiveDay 
+                            ? "opacity-35 bg-slate-100/50 select-none pointer-events-none" 
+                            : canSchedule 
+                            ? "hover:bg-brand-primary/5 cursor-pointer bg-white" 
+                            : "bg-slate-50/50 cursor-not-allowed"
+                        }`}
                       >
                         {canSchedule && (
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -670,6 +695,7 @@ export default function Dashboard({
                 </React.Fragment>
               ))}
             </div>
+          </div>
           </div>
         )}
 
@@ -768,6 +794,7 @@ export default function Dashboard({
         onClose={() => setSelectedAppointment(null)}
         onCheckIn={() => setShowCheckInModal(true)}
         canCreate={canCreate}
+        isKine={true}
       />
 
       <CheckInModal

@@ -111,6 +111,7 @@ export default function SessionForm({
   
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Estado del formulario siguiendo estructura SOAP
   const [formData, setFormData] = useState({
@@ -325,16 +326,26 @@ export default function SessionForm({
                     </div>
                 )}
                 <button 
-                    onClick={() => setShowDetails(!showDetails)}
-                    className={`p-2.5 rounded-xl transition-all ${showDetails ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'bg-slate-50 text-slate-400'}`}
+                    onClick={() => {
+                        if (isDesktop) {
+                            setShowDetails(!showDetails);
+                        } else {
+                            setShowDetailsModal(true);
+                        }
+                    }}
+                    className={`p-2.5 rounded-xl transition-all ${
+                        (isDesktop && showDetails) || (!isDesktop && showDetailsModal)
+                            ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' 
+                            : 'bg-slate-50 text-slate-400'
+                    }`}
                 >
-                    {showDetails ? <ChevronUp className="w-5 h-5" /> : <Info className="w-5 h-5" />}
+                    {isDesktop && showDetails ? <ChevronUp className="w-5 h-5" /> : <Info className="w-5 h-5" />}
                 </button>
             </div>
           </div>
 
           {/* Información Detallada del Tratamiento (Colapsable) */}
-          {showDetails && (
+          {showDetails && isDesktop && (
               <div className="max-w-7xl mx-auto mt-4 px-2">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 animate-in slide-in-from-top duration-300">
                       <div className="md:col-span-2 p-5 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-start gap-4">
@@ -841,6 +852,82 @@ export default function SessionForm({
                 </div>
             )}
         </form>
+
+        {/* Modal de Información del Tratamiento en Mobile */}
+        {showDetailsModal && !isDesktop && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in">
+                <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full flex flex-col overflow-hidden max-h-[90vh]">
+                    {/* Modal Header */}
+                    <div className="p-6 border-b flex justify-between items-start bg-slate-50/50">
+                        <div>
+                            <span className="text-[9px] font-black uppercase text-brand-primary tracking-widest">Información de la Sesión</span>
+                            <h2 className="text-sm font-black uppercase tracking-tight text-slate-800 mt-1">{patientName}</h2>
+                        </div>
+                        <button onClick={() => setShowDetailsModal(false)} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                    
+                    {/* Modal Body */}
+                    <div className="p-6 space-y-6 overflow-y-auto">
+                        {/* Section 1: Plan / Diagnóstico */}
+                        <div className="p-5 bg-slate-50 rounded-[20px] border border-slate-100 flex items-start gap-4">
+                            <div className="p-3 bg-brand-primary/10 rounded-xl text-brand-primary shrink-0">
+                                <Stethoscope className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Plan Maestro / Diagnóstico</p>
+                                <p className="text-xs font-bold text-slate-700 leading-tight">
+                                    {session?.treatment?.diagnosis || 'Ingreso por Agenda / Sin diagnóstico previo'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Section 2: Details Grid */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-slate-50 rounded-[20px] border border-slate-100">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Servicio</p>
+                                <p className="text-xs font-bold text-slate-700 truncate">{session?.session_type_name || 'Kinesiología'}</p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-[20px] border border-slate-100">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha</p>
+                                <p className="text-xs font-bold text-slate-700 truncate">{session?.date || 'N/A'}</p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-[20px] border border-slate-100">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Hora</p>
+                                <p className="text-xs font-bold text-slate-700 truncate">{session?.time || 'N/A'}</p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-[20px] border border-slate-100">
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Estado</p>
+                                <p className="text-xs font-black text-brand-primary uppercase">{estadoTexto(formData.status)}</p>
+                            </div>
+                        </div>
+
+                        {/* Section 3: Action Button */}
+                        {formData.status === 'in_progress' && (
+                            <button
+                                type="button"
+                                className="w-full py-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all group text-[10px] font-black text-indigo-600 uppercase tracking-widest"
+                            >
+                                <Dumbbell className="w-4 h-4 text-indigo-500 group-hover:animate-bounce" />
+                                Liberar Box
+                            </button>
+                        )}
+                    </div>
+                    
+                    {/* Modal Footer */}
+                    <div className="p-4 bg-slate-50 border-t flex justify-end">
+                        <button 
+                            type="button"
+                            onClick={() => setShowDetailsModal(false)}
+                            className="px-6 py-3 bg-brand-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all"
+                        >
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   );
 
