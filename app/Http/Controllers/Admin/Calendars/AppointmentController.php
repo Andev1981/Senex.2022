@@ -33,7 +33,7 @@ class AppointmentController extends Controller
 
         $appointments = Appointment::where('company_id', $companyId)
             ->where('status', '!=', \App\Enums\AppointmentStatusEnum::CANCELLED)
-            ->with(['patient', 'doctor', 'item.serviceDetail', 'room'])
+            ->with(['patient', 'doctor', 'item.serviceDetail', 'room', 'treatmentSession'])
             ->get()
             ->map(function ($apt) {
                 return [
@@ -51,6 +51,7 @@ class AppointmentController extends Controller
                     'modality' => $apt->modality?->value ?? 'onsite',
                     'status' => $apt->status,
                     'notes' => $apt->notes,
+                    'treatment_session_id' => $apt->treatmentSession?->id,
                 ];
             });
 

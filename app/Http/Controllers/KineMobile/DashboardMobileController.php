@@ -98,7 +98,7 @@ class DashboardMobileController extends Controller
         $appointments = \App\Models\Appointment::where('company_id', $companyId)
             ->where('branch_id', $activeBranchId)
             ->where('status', '!=', \App\Enums\AppointmentStatusEnum::CANCELLED)
-            ->with(['patient', 'doctor', 'item.serviceDetail', 'room'])
+            ->with(['patient', 'doctor', 'item.serviceDetail', 'room', 'treatmentSession'])
             ->get()
             ->map(function ($apt) {
                 return [
@@ -116,6 +116,7 @@ class DashboardMobileController extends Controller
                     'modality' => $apt->modality?->value ?? 'onsite',
                     'status' => $apt->status,
                     'notes' => $apt->notes,
+                    'treatment_session_id' => $apt->treatmentSession?->id,
                 ];
             });
 
