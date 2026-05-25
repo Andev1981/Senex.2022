@@ -1,5 +1,15 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Allow Completed Session Editing via Special Permissions
+- **Action:** Allowed users with special permissions/roles (superadmin, admin, or Spatie permissions `treatment-sessions.manage` / `sessions.manage`) to edit and re-complete completed sessions.
+- **Changes:**
+  - **Backend Controller:** Updated `SessionMobileController.php` methods `showForm`, `show`, `updateNotes`, and `completeSession` to inject and respect the `can_edit_completed_sessions` permission.
+  - **Frontend Form:** Updated `session-form.jsx` to receive `can_edit_completed_sessions` and allow editing (updating form `canEdit` state) if true.
+  - **Frontend Detail:** Updated `session-detail.jsx` to render the "Editar Ficha" button on completed sessions if `can_edit_completed_sessions` is true.
+- **Commits:**
+  - `20060d4a` - feat(mobile-soap): allow editing completed sessions for users with special permissions
+- **EVP Verification:** Verified clean diff, syntactical correctness, and Spatie permission checks compatibility.
+
 ## 📌 [2026-05-24] Transition to Open Source WhatsApp Gateway (OpenWA)
 - **Action:** Successfully replaced the paid Twilio WhatsApp API with the free, self-hosted OpenWA gateway.
 - **Changes:**

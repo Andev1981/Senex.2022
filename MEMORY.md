@@ -13,7 +13,7 @@
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Enforced SOAP persistence in the mobile workflow. Patched `SessionMobileController.php` to prevent modifications to completed clinical sessions, ensuring that SOAP notes and status transitions remain immutable post-completion across both Admin and Mobile platforms.
+- **Status:** Completed. Refactored the mobile clinical workflow to support session editing and completion bypasses for users with special permissions (superadmin, admin, or Spatie permissions `treatment-sessions.manage` and `sessions.manage`), fully aligning Mobile and Desktop rules.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.
