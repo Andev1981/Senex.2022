@@ -13,7 +13,7 @@
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Fully localized all raw status outputs (specifically `'checked_in'`) to Spanish ("En Espera" / "Llegó") across patient-facing views, kinesiologist mobile forms, status/agenda helpers, and constants. Made translation helpers robustly case-insensitive.
+- **Status:** Completed. Fully enabled viewing completed session clinical SOAP records directly from the appointment details modal (desktop & mobile). Eager-loaded the `treatmentSession` relationship on all agenda controllers and dynamically rendered the "Ver Ficha Clínica" action.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.

@@ -1,5 +1,14 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Allow Viewing Completed Session Clinical SOAP Record from Detail Modal
+- **Action:** Enabled kinesiologists and admins to view what was done in a completed session directly from the appointment details modal, providing deep clinical integration and immediate visibility.
+- **Changes:**
+  - **Controllers (Backend):** Updated both the desktop `AppointmentController.php` (index) and the mobile `DashboardMobileController.php` (index) calendar queries to eager-load the `treatmentSession` relationship and map the `treatment_session_id` to each appointment object.
+  - **Appointment Detail Modal:** Added `handleViewSession` helper and rendered a premium **"Ver Ficha Clínica"** button when `appointment.status` is `'completed'` (or `'realizada'`), dynamically redirecting to the kinesiologist session details view (`kine.sessions.show`).
+- **Commits:**
+  - `3ad2b305` - feat: show completed clinical session SOAP details from appointment detail modal
+- **EVP Verification:** Verified with `git status` that all files are correctly compiled, and confirmed that when an appointment is completed, its associated `treatment_session_id` is outputted and captured by the detail modal to display the action.
+
 ## 📌 [2026-05-25] Full Spanish Localization for Checked-In status and Helpers
 - **Action:** Localized all raw status prints (like `checked_in`) to their proper Spanish names ("En Espera" or "Llegó") across all missing patient-facing and kinesiologist-facing components and helpers. Made helper lookups case-insensitive.
 - **Changes:**
