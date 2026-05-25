@@ -43,6 +43,7 @@ import PainMapCard from "@/components/Body/PainMapCard";
 import EnterpriseSelect from "@/components/EnterpriseSelect";
 import TextInput from "@/components/TextInput";
 import Switch from "@/components/Switch";
+import { estadoTexto } from "@/helpers/status";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import Swal from "sweetalert2";
 
@@ -315,7 +316,7 @@ export default function SessionForm({
                     <div className="hidden lg:flex items-center gap-6 px-6 py-2 bg-slate-50 rounded-2xl border border-slate-100 mr-4">
                         <div className="text-right border-r border-slate-200 pr-6">
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Estado</p>
-                            <p className="text-[10px] font-black text-brand-primary uppercase">{formData.status}</p>
+                            <p className="text-[10px] font-black text-brand-primary uppercase">{estadoTexto(formData.status)}</p>
                         </div>
                         <div className="text-right">
                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Especialista</p>

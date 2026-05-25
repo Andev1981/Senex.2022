@@ -6,8 +6,12 @@ export const sessionStatuses = {
     label: "Programada 📅",
     className: "bg-blue-50 text-blue-700 border border-blue-300",
   },
+  checked_in: {
+    label: "En Espera 🕒",
+    className: "bg-orange-50 text-orange-700 border border-orange-300",
+  },
   in_progress: {
-    label: "En Progreso ▶️",
+    label: "En Curso ▶️",
     className: "bg-green-50 text-green-700 border border-green-300",
   },
   completed: {
@@ -19,6 +23,14 @@ export const sessionStatuses = {
     className: "bg-yellow-50 text-yellow-700 border border-yellow-300",
   },
   not_attend: {
+    label: "Ausente 🚶",
+    className: "bg-red-50 text-red-700 border border-red-300",
+  },
+  not_show: {
+    label: "Ausente 🚶",
+    className: "bg-red-50 text-red-700 border border-red-300",
+  },
+  no_show: {
     label: "Ausente 🚶",
     className: "bg-red-50 text-red-700 border border-red-300",
   },

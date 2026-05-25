@@ -19,9 +19,13 @@ export const translations = {
   },
   sessionStatus: {
     scheduled: "Programada",
+    checked_in: "En Espera",
+    in_progress: "En Curso",
     completed: "Completada",
     canceled: "Cancelada",
     not_attend: "No Asistió",
+    not_show: "No Asistió",
+    no_show: "No Asistió",
   },
   paymentStatus: {
     pending: "Pendiente",

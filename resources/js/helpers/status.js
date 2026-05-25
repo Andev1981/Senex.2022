@@ -120,7 +120,8 @@ export const statusOptions = [
 ];
 
 export const estadoClass = (estado) => {
-  switch (estado) {
+  if (!estado) return "bg-gray-100 text-gray-800";
+  switch (String(estado).toLowerCase()) {
     case "checked_in":
       return "bg-orange-100 text-orange-800";
     case "completed":
@@ -132,6 +133,7 @@ export const estadoClass = (estado) => {
     case "cancelled":
       return "bg-gray-100 text-gray-800";
     case "not_show":
+    case "no_show":
       return "bg-red-100 text-red-800";
     case "confirmed":
       return "bg-yellow-100 text-yellow-800";
@@ -141,7 +143,8 @@ export const estadoClass = (estado) => {
 };
 
 export const estadoTexto = (estado) => {
-  switch (estado) {
+  if (!estado) return "";
+  switch (String(estado).toLowerCase()) {
     case "checked_in":
       return "En Espera";
     case "completed":
@@ -153,6 +156,7 @@ export const estadoTexto = (estado) => {
     case "cancelled":
       return "Cancelada";
     case "not_show":
+    case "no_show":
       return "Ausente";
     case "confirmed":
       return "Confirmado";

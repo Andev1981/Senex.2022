@@ -1,4 +1,5 @@
 import { Copy, Edit } from "lucide-react";
+import { estadoTexto } from "@/helpers/status";
 
 export default function SessionCard({
   session,
@@ -33,7 +34,7 @@ export default function SessionCard({
                   : "bg-blue-100 text-blue-700"
               }`}
             >
-              {session?.status}
+              {estadoTexto(session?.status)}
             </span>
             <p
               className="text-gray-500 cursor-pointer"

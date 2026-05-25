@@ -1,5 +1,6 @@
 import { useForm } from "@inertiajs/react";
 import { Copy, Edit } from "lucide-react";
+import { estadoTexto } from "@/helpers/status";
 import { useEffect } from "react";
 
 export default function SessionModalDelete({
@@ -65,7 +66,7 @@ export default function SessionModalDelete({
                   : "bg-blue-100 text-blue-700"
               }`}
             >
-              {session?.status}
+              {estadoTexto(session?.status)}
             </span>
           </div>
           <p className="text-sm text-gray-600">{session?.doctor?.name}</p>

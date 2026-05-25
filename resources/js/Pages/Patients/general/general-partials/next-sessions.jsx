@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowRightIcon, Calendar, Edit, Timer } from "lucide-react";
+import { estadoTexto } from "@/helpers/status";
 
 export default function NextSessions({ patient }) {
   return (
@@ -28,7 +29,7 @@ export default function NextSessions({ patient }) {
                 <p className="text-sm text-gray-600">{apt.kinesiologist}</p>
               </div>
               <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded">
-                {apt.status}
+                {estadoTexto(apt.status)}
               </span>
             </div>
             <p className="flex items-center gap-1 text-sm text-gray-600">

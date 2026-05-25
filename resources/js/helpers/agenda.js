@@ -38,8 +38,19 @@ export const getNextHourTimes = () => {
 };
 
 export const getStatusLabel = (status) => {
-    const labels = { 'scheduled': 'Programada', 'confirmed': 'Confirmada', 'checked_in': 'Llegó', 'in_progress': 'Atención', 'completed': 'Hecha', 'cancelled': 'Anulada', 'not_show': 'Ausente' };
-    return labels[status] || status;
+    if (!status) return "";
+    const cleanStatus = String(status).toLowerCase();
+    const labels = { 
+        'scheduled': 'Programada', 
+        'confirmed': 'Confirmada', 
+        'checked_in': 'Llegó', 
+        'in_progress': 'Atención', 
+        'completed': 'Hecha', 
+        'cancelled': 'Anulada', 
+        'not_show': 'Ausente',
+        'no_show': 'Ausente' 
+    };
+    return labels[cleanStatus] || status;
 };
 
 export const getDaysInMonth = (date) => {
