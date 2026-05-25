@@ -13,7 +13,7 @@
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Refactored the mobile clinical workflow to support session editing and completion bypasses for users with special permissions (superadmin, admin, or Spatie permissions `treatment-sessions.manage` and `sessions.manage`), fully aligning Mobile and Desktop rules.
+- **Status:** Completed. Resolved check-in capacity deadlocks caused by unselected rooms or room-only updates. Made availability checks conditional and bypassed redundant checks on scheduled appointment check-ins. Added transactional try-catch blocks and normalized empty inputs to null.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.
