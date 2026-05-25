@@ -1,5 +1,13 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Conditionally Check Capacity on Patient Check-In
+- **Action:** Only run the strict doctor and room capacity validation check if the doctor or room is modified during check-in, avoiding artificial deadlock blocks for already scheduled appointments.
+- **Changes:**
+  - **Appointment Controller:** Updated the `checkin` method in `AppointmentController.php` to define `$checkDoctorCapacity` and `$checkRoomCapacity`, conditionally executing `getSlotOccupancyStatus` only when changes to either professional or box are detected.
+- **Commits:**
+  - `08861e38` - feat(checkin): validate doctor/room capacity conditionally only if they change during checkin
+- **EVP Verification:** Verified with `git diff` that no capacity blocks are run for standard direct check-ins where doctor and box remain unchanged.
+
 ## 📌 [2026-05-25] Expose Check-In and Cancel Buttons to Authorized Specialists
 - **Action:** Allowed specialists with special permissions/roles to see the "Realizar Check-in" and "Anular Cita" buttons in the mobile calendar detail modal even if their branch has creation locked.
 - **Changes:**
