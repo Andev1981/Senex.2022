@@ -259,6 +259,11 @@
   - **SOAP Info Modal Overlay:** Replaced the invasive collapsible details section inside `session-form.jsx` on mobile with a clean `Info` icon that opens a custom, beautifully formatted React Modal overlay containing all diagnosis and plan details, keeping the screen compact and focused.
 - **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 23.16s without any syntax warnings or bundling errors.
 
-
-
-
+## 📌 [2026-05-25] Agenda Weekly View Optimization, Mobile Week List & Month View Removal
+- **Action (Commit `195ca3d3`):** Restored and optimized the Week View as the default centerpiece of the kinesiologist agenda, designed a custom Vertical Week List for mobile views, and completely omitted the Month View to save space.
+- **Changes:**
+  - **Week View Restoration as Default:** Replaced `"month"` with `"week"` as the default `viewMode` in [Dashboard.jsx](file:///C:/laragon/www/senex2025Latest/resources/js/Pages/kine-mobile/Dashboard.jsx) and removed the day-view forcing logic.
+  - **Mobile Vertical Week List (`!isDesktop`)**: Designed a custom weekly list mapping the 7 days of the current week. If a day is inactive (no availability and no appointments), it is rendered as a clean, grey one-line banner of only `min-h-[44px]`, saving over 70% of vertical screen height. Active days are rendered as beautiful white cards containing patient appointments stacked chronologically with statuses and tap-to-attend shortcuts.
+  - **Desktop Week Grid (`isDesktop`)**: Retained the high-fidelity hourly 8-column week calendar grid (`grid-cols-8`) on desktop viewports, with inactive columns dimmed.
+  - **Month View Omission**: Omitted the `"month"` view option entirely from the selector tab list, navigation controls, dynamic calculations, and JSX render trees, resolving the prior UX requirements.
+- **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 32.09s with zero errors or warnings, and verified Git stage traceability.
