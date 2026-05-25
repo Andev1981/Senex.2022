@@ -13,7 +13,7 @@
   - **SOAP Completion UX Optimization:** Solved draft-saving confusion by removing the floating floppy-disk button on mobile and creating a single, full-width primary navigation bar that dynamically turns **Emerald Green (`bg-emerald-600`)** and reads **"FINALIZAR Y CERRAR ATENCIÓN"** on the last step.
   - **Simplificación Clínica & Bitácora (Mobile):** 
     - SOAP simplificado de un solo paso configurable vía toggle `showFullSOAP` con selector de dolor interactivo 0-10 HSL.
-    - Menú "Atenciones" reconvertido en Bitácora con pestañas no-bloqueantes de historial ("Por Cerrar" y "Historial Reciente"), permitiendo continuar borradores o ver/editar registros clínicos anteriores.
+    - Menú "Atenciones" reconvertido en Bitácora unificada de historial de atenciones realizadas recientes de forma directa y limpia, descartando pestañas redundantes de cierres pendientes.
     - Dashboard limpio sin carrusel de cierres SOAP ni KPI de cierre redundantes, grilla adaptada a 4 columnas simétricas.
     - Listado de "Mis Pacientes" optimizado con botones de filtro interactivo superior (Hoy, Activos, Todos) sin recortar pacientes del backend, inyectando el flag `has_appointment_today` para badges visuales.
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.

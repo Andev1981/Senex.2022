@@ -1,5 +1,14 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Remoción de Cierres Pendientes y Bitácora Unificada
+- **Action:** Removed "Por Cerrar" pending closure concepts entirely from the mobile Clinical Bitácora, transforming it into a single clean recent history log matching the new simplified SOAP constraints.
+- **Changes:**
+  - **Bitácora Log (`pending-sessions.jsx`):** Removed the tab selector and the "Por Cerrar" state, rendering a single, unified premium grid listing recent completed clinical sessions.
+  - **Controllers (`DashboardMobileController.php`):** Omitted the pending closures database query and output payloads, ensuring only completed recent sessions are retrieved.
+- **Commits:**
+  - `3e697698` - fix(mobile): remove pending closures from bitacora log, show completed history only
+- **EVP Verification:** Verified asset compilation via Vite (`npm run build` completed in 27.77s) and local routing integrity.
+
 ## 📌 [2026-05-25] Cierre Clínico Simplificado, Bitácora Interactiva y Rediseño Dashboard KPI
 - **Action:** Overhauled the mobile clinical session closure UX, transformed the "Atenciones" view into an interactive clinical log (Bitácora), cleaned up the mobile dashboard KPI grid, and optimized the kinesiologist patient list layout with dynamic daily filters.
 - **Changes:**
