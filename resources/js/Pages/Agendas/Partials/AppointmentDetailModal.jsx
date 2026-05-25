@@ -21,8 +21,8 @@ export default function AppointmentDetailModal({ isOpen, onClose, appointment, o
   };
 
   const handleViewSession = () => {
-    if (appointment.treatment_session_id) {
-      router.visit(route('kine.sessions.show', appointment.treatment_session_id));
+    if (appointment.patient_id) {
+      router.visit(route('kine.patient.show', appointment.patient_id));
       onClose();
     }
   };
