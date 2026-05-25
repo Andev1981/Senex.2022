@@ -30,6 +30,15 @@ export default function CheckInModal({ isOpen, onClose, onSuccess, appointment, 
           showConfirmButton: false,
           timer: 4000
         });
+      },
+      onError: (errors) => {
+        const errorMsg = errors.doctor_id || errors.room_id || "Ocurrió un error al procesar la llegada.";
+        Swal.fire({
+          title: "Error de Recepción",
+          text: errorMsg,
+          icon: "error",
+          confirmButtonColor: "#4f46e5"
+        });
       }
     });
   };

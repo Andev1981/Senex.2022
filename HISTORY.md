@@ -1,5 +1,15 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Fix Patient Check-In Capacity Check and Add Error Display
+- **Action:** Fixed the logical error during patient check-in where the appointment being checked in was counted towards the capacity check, and added error rendering in the frontend modal.
+- **Changes:**
+  - **Check-In Modal:** Updated `CheckInModal.jsx` to intercept and display backend validation errors (e.g. "Capacidad excedida...") to the user via a SweetAlert2 pop-up.
+  - **Agenda Service:** Added an optional `$excludeAppointmentId` parameter to `getSlotOccupancyStatus` in `AgendaService.php`, ensuring that the current appointment is excluded from the doctor and room capacity checks.
+  - **Appointment Controller:** Updated the `checkin` method in `AppointmentController.php` to pass `$appointment->id` to `getSlotOccupancyStatus` so it is properly bypassed.
+- **Commits:**
+  - `6a2c7c89` - feat(checkin): exclude current appointment from capacity check and render validation errors on mobile checkin
+- **EVP Verification:** Verified with `git diff` that no other scheduling flows are affected, and that check-in validation errors are properly outputted.
+
 ## 📌 [2026-05-25] Allow Completed Session Editing via Special Permissions
 - **Action:** Allowed users with special permissions/roles (superadmin, admin, or Spatie permissions `treatment-sessions.manage` / `sessions.manage`) to edit and re-complete completed sessions.
 - **Changes:**
