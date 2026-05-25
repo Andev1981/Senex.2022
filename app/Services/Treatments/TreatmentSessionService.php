@@ -36,8 +36,10 @@ class TreatmentSessionService
         return DB::transaction(function () use ($data) {
             $doctor = Doctor::findOrFail($data['doctor_id']);
 
-            if (isset($data['doctor_id']) && isset($data['date']) && isset($data['time'])) {
-                $this->validateDoctorAvailability($doctor, $data['date'], $data['time'], $data['room_id'] ?? null);
+            $bypass = $data['bypass_availability_check'] ?? false;
+
+            if (!$bypass && isset($data['doctor_id']) && isset($data['date']) && isset($data['time'])) {
+                $this->validateDoctorAvailability($doctor, $data['date'], $data['time'], $data['room_id'] ?? null, $data['appointment_id'] ?? null);
                 if (isset($data['patient_id'])) {
                     $this->validatePatientAvailability($data['patient_id'], $data['date'], $data['time']);
                 }
@@ -295,13 +297,13 @@ class TreatmentSessionService
         $notifiable->notify(new SessionScheduledNotification($session));
     }
 
-    private function validateDoctorAvailability(Doctor $doctor, $date, $time, $roomId = null): void
+    private function validateDoctorAvailability(Doctor $doctor, $date, $time, $roomId = null, ?int $excludeAppointmentId = null): void
     {
         $start = Carbon::parse("$date $time");
         $end = $start->copy()->addMinutes(30); // Duración estándar para validación
         $room = $roomId ? \App\Models\Room::find($roomId) : null;
 
-        $status = $this->agendaService->getSlotOccupancyStatus($doctor, $start, $end, $room);
+        $status = $this->agendaService->getSlotOccupancyStatus($doctor, $start, $end, $room, 'onsite', $excludeAppointmentId);
 
         if (!$status['is_available']) {
             throw new \Exception("Capacidad excedida: {$status['reason']}");

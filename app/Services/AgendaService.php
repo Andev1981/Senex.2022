@@ -386,7 +386,7 @@ class AgendaService
     /**
      * Calcula el estado de ocupación de un slot.
      */
-    public function getSlotOccupancyStatus(Doctor $doctor, Carbon $start, Carbon $end, ?Room $room, string $modality = 'onsite', ?int $excludeAppointmentId = null): array
+    public function getSlotOccupancyStatus(Doctor $doctor, Carbon $start, Carbon $end, ?Room $room, string $modality = 'onsite', ?int $excludeAppointmentId = null, bool $validateDoctor = true): array
     {
         $doctorMaxCapacity = 3; 
 
@@ -427,7 +427,7 @@ class AgendaService
         // peso no se evalúa aquí porque getSlotOccupancyStatus no recibe el item_id nuevo.
         // Se asume que en el controller se valida si la suma sobrepasa, pero al menos
         // no bloqueamos si el doctor tiene capacidad (ej. totalWeight < 3)
-        if ($totalWeight >= $doctorMaxCapacity) {
+        if ($validateDoctor && $totalWeight >= $doctorMaxCapacity) {
             return [
                 'is_available' => false, 
                 'reason' => 'Doctor a máxima capacidad operativa',

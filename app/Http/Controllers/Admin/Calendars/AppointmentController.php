@@ -270,75 +270,86 @@ class AppointmentController extends Controller
         $doctorId = $request->input('doctor_id', $appointment->doctor_id);
         $roomId = $request->input('room_id', $appointment->room_id);
 
-        // 🛑 VALIDACIÓN DE DISPONIBILIDAD Y CAPACIDAD (Si cambió el doctor o room)
-        $doctor = Doctor::findOrFail($doctorId);
-        $room = $roomId ? Room::find($roomId) : null;
+        try {
+            // 🛑 VALIDACIÓN DE DISPONIBILIDAD Y CAPACIDAD (Si cambió el doctor o room)
+            $doctor = Doctor::findOrFail($doctorId);
+            $room = $roomId ? Room::find($roomId) : null;
 
-        if ($doctorId != $appointment->doctor_id) {
-            if (!$this->agendaService->isDoctorOnDuty($doctor, $appointment->start_at, $appointment->end_at, $appointment->branch_id)) {
-                return back()->withErrors(['doctor_id' => 'El profesional seleccionado no tiene disponibilidad configurada en este horario.']);
+            if ($doctorId != $appointment->doctor_id) {
+                if (!$this->agendaService->isDoctorOnDuty($doctor, $appointment->start_at, $appointment->end_at, $appointment->branch_id)) {
+                    return back()->withErrors(['doctor_id' => 'El profesional seleccionado no tiene disponibilidad configurada en este horario.']);
+                }
             }
-        }
 
-        // Solo comprobar capacidad si el profesional o la sala cambiaron
-        $checkDoctorCapacity = ($doctorId != $appointment->doctor_id);
-        $checkRoomCapacity = ($roomId != $appointment->room_id);
+            // Solo comprobar capacidad si el profesional o la sala cambiaron (normalizando vacíos a null)
+            $checkDoctorCapacity = ($doctorId != $appointment->doctor_id);
+            $checkRoomCapacity = (($roomId ?: null) != $appointment->room_id);
 
-        if ($checkDoctorCapacity || $checkRoomCapacity) {
-            $capacityStatus = $this->agendaService->getSlotOccupancyStatus(
-                $doctor, 
-                $appointment->start_at, 
-                $appointment->end_at, 
-                $room, 
-                $appointment->modality->value ?? 'onsite',
-                $appointment->id
-            );
+            if ($checkDoctorCapacity || $checkRoomCapacity) {
+                $capacityStatus = $this->agendaService->getSlotOccupancyStatus(
+                    $doctor, 
+                    $appointment->start_at, 
+                    $appointment->end_at, 
+                    $room, 
+                    $appointment->modality->value ?? 'onsite',
+                    $appointment->id,
+                    $checkDoctorCapacity // Solo validar capacidad de doctor si el doctor cambió
+                );
 
-            if (!$capacityStatus['is_available']) {
-                $errorField = (!$checkDoctorCapacity && $checkRoomCapacity) ? 'room_id' : 'doctor_id';
-                return back()->withErrors([$errorField => "Capacidad excedida: {$capacityStatus['reason']}"]);
+                if (!$capacityStatus['is_available']) {
+                    $errorField = (!$checkDoctorCapacity && $checkRoomCapacity) ? 'room_id' : 'doctor_id';
+                    return back()->withErrors([$errorField => "Capacidad excedida: {$capacityStatus['reason']}"]);
+                }
             }
+
+            return DB::transaction(function () use ($appointment, $doctorId, $roomId) {
+                // 1. Actualizar Cita
+                $appointment->update([
+                    'status' => \App\Enums\AppointmentStatusEnum::CHECKED_IN,
+                    'doctor_id' => $doctorId,
+                    'room_id' => $roomId ?: null,
+                    'check_in_at' => now()
+                ]);
+
+                // 2. Asegurar Asignación para el doctor final (por si cambió)
+                \App\Models\DoctorPatientAssignment::updateOrCreate(
+                    ['patient_id' => $appointment->patient_id, 'doctor_id' => $doctorId, 'ended_at' => null],
+                    ['company_id' => $appointment->company_id, 'branch_id' => $appointment->branch_id]
+                );
+
+                // 3. Crear o Buscar Sesión de Tratamiento vinculada
+                $sessionData = [
+                    'company_id' => $appointment->company_id,
+                    'branch_id' => $appointment->branch_id,
+                    'patient_id' => $appointment->patient_id,
+                    'doctor_id' => $doctorId,
+                    'item_id' => $appointment->item_id,
+                    'room_id' => $roomId ?: null,
+                    'appointment_id' => $appointment->id,
+                    'date' => $appointment->start_at->toDateString(),
+                    'time' => $appointment->start_at->toTimeString(),
+                    'status' => \App\Enums\AppointmentStatusEnum::CHECKED_IN,
+                    'checked_in_at' => now(),
+                    'bypass_availability_check' => true, // Evitar validaciones redundantes de capacidad
+                ];
+
+                // Buscamos si ya existe la sesión
+                $session = \App\Models\TreatmentSession::where('appointment_id', $appointment->id)->first();
+
+                if ($session) {
+                    $this->sessionService->updateSession($session, $sessionData);
+                } else {
+                    $this->sessionService->createSession($sessionData);
+                }
+
+                return back()->with('success', 'Paciente recepcionado. Ya puede pasar a sala de espera.');
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Error durante check-in de cita {$appointment->id}: " . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            return back()->withErrors(['doctor_id' => 'Error de Recepción: ' . $e->getMessage()]);
         }
-
-        // 1. Actualizar Cita
-        $appointment->update([
-            'status' => \App\Enums\AppointmentStatusEnum::CHECKED_IN,
-            'doctor_id' => $doctorId,
-            'room_id' => $roomId,
-            'check_in_at' => now()
-        ]);
-
-        // 2. Asegurar Asignación para el doctor final (por si cambió)
-        \App\Models\DoctorPatientAssignment::updateOrCreate(
-            ['patient_id' => $appointment->patient_id, 'doctor_id' => $doctorId, 'ended_at' => null],
-            ['company_id' => $appointment->company_id, 'branch_id' => $appointment->branch_id]
-        );
-
-        // 3. Crear o Buscar Sesión de Tratamiento vinculada
-        $sessionData = [
-            'company_id' => $appointment->company_id,
-            'branch_id' => $appointment->branch_id,
-            'patient_id' => $appointment->patient_id,
-            'doctor_id' => $doctorId,
-            'item_id' => $appointment->item_id,
-            'room_id' => $roomId,
-            'appointment_id' => $appointment->id,
-            'date' => $appointment->start_at->toDateString(),
-            'time' => $appointment->start_at->toTimeString(),
-            'status' => \App\Enums\AppointmentStatusEnum::CHECKED_IN,
-            'checked_in_at' => now(),
-        ];
-
-        // Buscamos si ya existe la sesión
-        $session = \App\Models\TreatmentSession::where('appointment_id', $appointment->id)->first();
-
-        if ($session) {
-            $this->sessionService->updateSession($session, $sessionData);
-        } else {
-            $this->sessionService->createSession($sessionData);
-        }
-
-        return back()->with('success', 'Paciente recepcionado. Ya puede pasar a sala de espera.');
     }
 
     public function cancel(Appointment $appointment)
