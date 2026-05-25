@@ -276,3 +276,11 @@
   - **Desubstantiated Draft Option:** Relocated the draft save action to a secondary, grey text-link below the primary button with the label `"Guardar Borrador Temporal"`, explaining its temporary nature and removing the floppy disk button confusion.
   - **Asymmetric Desktop Form Buttons:** Replaced the grid-cols-2 action buttons in desktop viewports with a flex layout: the completion action takes `flex-[3]` and is highlighted in Emerald Green, while the draft action is demoted to a narrow soft slate-100 button (`w-1/3`), prioritizing definitive SOAP closures.
 - **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 29.93s with zero errors or warnings, and verified Git stage traceability.
+
+## 📌 [2026-05-25] Dashboard UX Polishing: Super Small KPI Pills, Service Filter & Patient Carousel Omission
+- **Action (Commit `749a681f`):** Polished the dashboard home and patients screen by removing the upcoming patient slider, omitting the service filter select dropdown, and redesigning the dynamic KPI stats cards into highly compact, responsive pill badges.
+- **Changes:**
+  - **Patient Carousel Omission:** Removed the `Próximas Citas` horizontal carousel block completely from [my-patients.jsx](file:///C:/laragon/www/senex2025Latest/resources/js/Pages/kine-mobile/my-patients.jsx) to focus the view solely on the search and alphabetical list, avoiding misleading shortcuts.
+  - **Service Dropdown Filter Removal:** Omitted the "Servicio:" select dropdown completely from [Dashboard.jsx](file:///C:/laragon/www/senex2025Latest/resources/js/Pages/kine-mobile/Dashboard.jsx) and removed all associated `selectedItemId` filter properties and state references to keep the navigation bar compact.
+  - **Super Small KPI Pills:** Redesigned the 5 large dynamic KPI cards into ultra-thin, sleek, responsive pill buttons (`grid grid-cols-2 sm:grid-cols-5 gap-2.5`) with integrated inline metrics, tiny icons, and dynamic status-filtering capabilities. The "Cierres SOAP" pill dynamically spans 2 columns on mobile for perfect symmetrical styling.
+- **EVP Verification:** Succeeded in compiling full production assets with `npm run build` in 27.02s with zero errors or warnings, and verified Git stage traceability.
