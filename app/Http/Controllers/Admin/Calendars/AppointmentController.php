@@ -280,17 +280,24 @@ class AppointmentController extends Controller
             }
         }
 
-        $capacityStatus = $this->agendaService->getSlotOccupancyStatus(
-            $doctor, 
-            $appointment->start_at, 
-            $appointment->end_at, 
-            $room, 
-            $appointment->modality->value ?? 'onsite',
-            $appointment->id
-        );
+        // Solo comprobar capacidad si el profesional o la sala cambiaron
+        $checkDoctorCapacity = ($doctorId != $appointment->doctor_id);
+        $checkRoomCapacity = ($roomId != $appointment->room_id);
 
-        if (!$capacityStatus['is_available']) {
-            return back()->withErrors(['doctor_id' => "Capacidad excedida: {$capacityStatus['reason']}"]);
+        if ($checkDoctorCapacity || $checkRoomCapacity) {
+            $capacityStatus = $this->agendaService->getSlotOccupancyStatus(
+                $doctor, 
+                $appointment->start_at, 
+                $appointment->end_at, 
+                $room, 
+                $appointment->modality->value ?? 'onsite',
+                $appointment->id
+            );
+
+            if (!$capacityStatus['is_available']) {
+                $errorField = (!$checkDoctorCapacity && $checkRoomCapacity) ? 'room_id' : 'doctor_id';
+                return back()->withErrors([$errorField => "Capacidad excedida: {$capacityStatus['reason']}"]);
+            }
         }
 
         // 1. Actualizar Cita
