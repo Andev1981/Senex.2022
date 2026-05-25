@@ -4,10 +4,12 @@
 - **Action:** Allowed users with special permissions/roles (superadmin, admin, or Spatie permissions `treatment-sessions.manage` / `sessions.manage`) to edit and re-complete completed sessions.
 - **Changes:**
   - **Backend Controller:** Updated `SessionMobileController.php` methods `showForm`, `show`, `updateNotes`, and `completeSession` to inject and respect the `can_edit_completed_sessions` permission.
+  - **Bypass early-return:** Handled direct updates via `$session->update()` in `SessionMobileController.php@completeSession` if the session is already completed, preventing the standard service's early-return from discarding updates.
   - **Frontend Form:** Updated `session-form.jsx` to receive `can_edit_completed_sessions` and allow editing (updating form `canEdit` state) if true.
   - **Frontend Detail:** Updated `session-detail.jsx` to render the "Editar Ficha" button on completed sessions if `can_edit_completed_sessions` is true.
 - **Commits:**
   - `20060d4a` - feat(mobile-soap): allow editing completed sessions for users with special permissions
+  - `f1fb816f` - feat(mobile-soap): bypass service early return when finalizing completed session with special permissions
 - **EVP Verification:** Verified clean diff, syntactical correctness, and Spatie permission checks compatibility.
 
 ## 📌 [2026-05-24] Transition to Open Source WhatsApp Gateway (OpenWA)
