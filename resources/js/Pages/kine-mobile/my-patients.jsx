@@ -128,50 +128,7 @@ export default function MyPatients({ patients, search, totalPatients, upcomingAp
                 </div>
             </div>
 
-            {/* ── Próximas Citas Carousel ── */}
-            {upcomingAppointments.length > 0 && (
-                <div className={`${isDesktop ? "mb-8" : "px-5 mb-6"}`}>
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-teal-600 animate-pulse" /> Próximas Citas Programadas
-                    </h3>
-                    <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
-                        {upcomingAppointments.map((apt) => (
-                            <div 
-                                key={apt.id} 
-                                onClick={() => router.visit(route("kine.patient.show", apt.patient_id))}
-                                className="flex-shrink-0 w-64 p-4 bg-white border border-slate-100 rounded-[24px] shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group active:scale-[0.98]"
-                            >
-                                <div>
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-[8px] font-black text-teal-600 bg-teal-50 px-2 py-1 rounded-lg uppercase tracking-wider">
-                                            {apt.time}
-                                        </span>
-                                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider ${
-                                            apt.status === 'checked_in' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
-                                            apt.status === 'in_progress' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
-                                            'bg-blue-50 text-blue-600 border border-blue-100'
-                                        }`}>
-                                            {apt.status === 'checked_in' ? 'Llegó' : apt.status === 'in_progress' ? 'En box' : 'Programada'}
-                                        </span>
-                                    </div>
-                                    <h4 className="text-xs font-black text-slate-800 uppercase truncate mb-0.5 group-hover:text-teal-600 transition-colors">
-                                        {apt.patient_name}
-                                    </h4>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase truncate">
-                                        {apt.service_name}
-                                    </p>
-                                </div>
-                                <div className="mt-3 flex items-center justify-between border-t border-slate-50 pt-2 text-[9px] font-bold text-slate-400 uppercase">
-                                    <span>{apt.date}</span>
-                                    <span className="text-teal-600 font-black flex items-center gap-0.5 group-hover:underline">
-                                        Ficha <ChevronRight className="w-3.5 h-3.5 text-teal-600 transition-transform group-hover:translate-x-0.5" />
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+
 
             {/* ── KPI Strip ── */}
             <div className={`${isDesktop ? "mb-8" : "px-5 mb-5"}`}>

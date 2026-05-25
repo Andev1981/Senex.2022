@@ -110,7 +110,6 @@ export default function Dashboard({
   const soapAlertRef = useRef(null);
 
   // --- 🔍 FILTROS DINÁMICOS ---
-  const [selectedItemId, setSelectedItemId] = useState("todos"); // Filtro por Servicio
   const [statusFilter, setStatusFilter] = useState("todos"); // Filtro por KPI de Estatus ("todos", "completed", "pending", "in_box")
 
   // --- 📅 DETERMINAR ATENCIONES SEGÚN RANGO VISIBLE DEL CALENDARIO ---
@@ -148,16 +147,11 @@ export default function Dashboard({
     return "Hoy";
   }, [viewMode]);
 
-  // --- 🎯 FILTRAR CITAS VISIBLES EN EL CALENDARIO (Servicio + KPI Estatus) ---
+  // --- 🎯 FILTRAR CITAS VISIBLES EN EL CALENDARIO (KPI Estatus) ---
   const filteredAppointments = useMemo(() => {
     let filtered = appointments.filter(apt => apt.doctor_id === doctor.id);
     
-    // 1. Filtrar por tipo de servicio
-    if (selectedItemId !== "todos") {
-      filtered = filtered.filter(apt => apt.item_id === Number(selectedItemId));
-    }
-
-    // 2. Filtrar por estatus clínico (KPI clickeable)
+    // Filtrar por estatus clínico (KPI clickeable)
     if (statusFilter === "completed") {
       filtered = filtered.filter(apt => apt.status === "completed");
     } else if (statusFilter === "pending") {
@@ -167,7 +161,7 @@ export default function Dashboard({
     }
 
     return filtered;
-  }, [appointments, doctor.id, selectedItemId, statusFilter]);
+  }, [appointments, doctor.id, statusFilter]);
 
   const getAppointmentsForDate = (date) => {
     return getAppointmentsForDateHelper(date, filteredAppointments);
@@ -322,107 +316,96 @@ export default function Dashboard({
       )}
 
       {/* --- 📊 INTERACTIVE DYNAMIC KPI GRID --- */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-6">
         {/* KPI Total */}
         <button
           onClick={() => handleKpiClick("todos")}
-          className={`p-5 rounded-[32px] border text-left flex items-center gap-4 transition-all active:scale-95 shadow-sm ${
+          className={`px-3.5 py-3 rounded-2xl border text-left flex items-center justify-between transition-all active:scale-95 shadow-sm ${
             statusFilter === "todos"
-              ? "bg-slate-900 border-slate-900 text-white ring-4 ring-slate-100"
-              : "bg-white border-slate-100 text-slate-800 hover:bg-slate-50/55"
+              ? "bg-slate-900 border-slate-900 text-white"
+              : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50/50"
           }`}
         >
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${statusFilter === "todos" ? "bg-white/10 text-white" : "bg-slate-50 text-slate-600"}`}>
-            <Calendar className="w-5 h-5"/>
+          <div className="flex items-center gap-2 min-w-0">
+            <Calendar className="w-3.5 h-3.5 shrink-0 opacity-70" />
+            <span className="text-[9px] font-black uppercase tracking-wider truncate">Total</span>
           </div>
-          <div>
-            <p className={`text-[8px] font-black uppercase tracking-wider ${statusFilter === "todos" ? "text-slate-300" : "text-slate-400"}`}>Total {rangeLabel}</p>
-            <p className="text-2xl font-black mt-0.5">{dynamicKpis.total}</p>
-          </div>
+          <span className="text-xs font-black ml-2 shrink-0">{dynamicKpis.total}</span>
         </button>
 
         {/* KPI Finalizadas */}
         <button
           onClick={() => handleKpiClick("completed")}
-          className={`p-5 rounded-[32px] border text-left flex items-center gap-4 transition-all active:scale-95 shadow-sm ${
+          className={`px-3.5 py-3 rounded-2xl border text-left flex items-center justify-between transition-all active:scale-95 shadow-sm ${
             statusFilter === "completed"
-              ? "bg-emerald-600 border-emerald-600 text-white ring-4 ring-emerald-50"
-              : "bg-white border-slate-100 text-slate-800 hover:bg-slate-50/55"
+              ? "bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-600/10"
+              : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50/50"
           }`}
         >
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${statusFilter === "completed" ? "bg-white/10 text-white" : "bg-emerald-50 text-emerald-600"}`}>
-            <CheckCircle className="w-5 h-5"/>
+          <div className="flex items-center gap-2 min-w-0">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0 opacity-80" />
+            <span className="text-[9px] font-black uppercase tracking-wider truncate">Hechas</span>
           </div>
-          <div>
-            <p className={`text-[8px] font-black uppercase tracking-wider ${statusFilter === "completed" ? "text-emerald-100" : "text-slate-400"}`}>Hechas {rangeLabel}</p>
-            <p className="text-2xl font-black mt-0.5">{dynamicKpis.completed}</p>
-          </div>
+          <span className="text-xs font-black ml-2 shrink-0">{dynamicKpis.completed}</span>
         </button>
 
         {/* KPI Por Llegar / Pendientes */}
         <button
           onClick={() => handleKpiClick("pending")}
-          className={`p-5 rounded-[32px] border text-left flex items-center gap-4 transition-all active:scale-95 shadow-sm ${
+          className={`px-3.5 py-3 rounded-2xl border text-left flex items-center justify-between transition-all active:scale-95 shadow-sm ${
             statusFilter === "pending"
-              ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-50"
-              : "bg-white border-slate-100 text-slate-800 hover:bg-slate-50/55"
+              ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/10"
+              : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50/50"
           }`}
         >
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${statusFilter === "pending" ? "bg-white/10 text-white" : "bg-blue-50 text-blue-600"}`}>
-            <Clock className="w-5 h-5"/>
+          <div className="flex items-center gap-2 min-w-0">
+            <Clock className="w-3.5 h-3.5 shrink-0 opacity-80" />
+            <span className="text-[9px] font-black uppercase tracking-wider truncate">Por Llegar</span>
           </div>
-          <div>
-            <p className={`text-[8px] font-black uppercase tracking-wider ${statusFilter === "pending" ? "text-blue-100" : "text-slate-400"}`}>Por Llegar {rangeLabel}</p>
-            <p className="text-2xl font-black mt-0.5">{dynamicKpis.pending}</p>
-          </div>
+          <span className="text-xs font-black ml-2 shrink-0">{dynamicKpis.pending}</span>
         </button>
 
         {/* KPI En Box / Espera */}
         <button
           onClick={() => handleKpiClick("in_box")}
-          className={`p-5 rounded-[32px] border text-left flex items-center gap-4 transition-all active:scale-95 shadow-sm ${
+          className={`px-3.5 py-3 rounded-2xl border text-left flex items-center justify-between transition-all active:scale-95 shadow-sm ${
             statusFilter === "in_box"
-              ? "bg-purple-600 border-purple-600 text-white ring-4 ring-purple-50"
-              : "bg-white border-slate-100 text-slate-800 hover:bg-slate-50/55"
+              ? "bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-600/10"
+              : "bg-white border-slate-100 text-slate-750 hover:bg-slate-50/50"
           }`}
         >
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${statusFilter === "in_box" ? "bg-white/10 text-white" : "bg-purple-50 text-purple-600"}`}>
-            <Activity className="w-5 h-5"/>
+          <div className="flex items-center gap-2 min-w-0">
+            <Activity className="w-3.5 h-3.5 shrink-0 opacity-80" />
+            <span className="text-[9px] font-black uppercase tracking-wider truncate">En Espera</span>
           </div>
-          <div>
-            <p className={`text-[8px] font-black uppercase tracking-wider ${statusFilter === "in_box" ? "text-purple-100" : "text-slate-400"}`}>En Espera {rangeLabel}</p>
-            <p className="text-2xl font-black mt-0.5">{dynamicKpis.inBox}</p>
-          </div>
+          <span className="text-xs font-black ml-2 shrink-0">{dynamicKpis.inBox}</span>
         </button>
 
-        {/* KPI Cierres SOAP (Global) */}
+        {/* KPI Cierres SOAP */}
         <button
           onClick={() => handleKpiClick("soapPending")}
-          className="p-5 bg-white border border-slate-100 rounded-[32px] text-left flex items-center gap-4 transition-all hover:bg-slate-50/55 active:scale-95 shadow-sm"
+          className={`px-3.5 py-3 rounded-2xl border text-left flex items-center justify-between transition-all active:scale-95 shadow-sm col-span-2 sm:col-span-1 bg-white border-slate-100 text-slate-700 hover:bg-slate-50/50`}
         >
-          <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center">
-            <AlertCircle className="w-5 h-5"/>
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-500" />
+            <span className="text-[9px] font-black uppercase tracking-wider truncate">Cierres SOAP</span>
           </div>
-          <div>
-            <p className="text-[8px] font-black uppercase tracking-wider text-slate-400">Cierres SOAP</p>
-            <p className="text-2xl font-black mt-0.5 text-red-600">{dynamicKpis.soapPending}</p>
-          </div>
+          <span className="text-xs font-black ml-2 shrink-0 text-red-600">{dynamicKpis.soapPending}</span>
         </button>
       </div>
 
-      {/* --- 🛠️ CONTROLES Y FILTROS --- */}
-      <div className="p-4 mb-6 bg-white border border-slate-100 rounded-[28px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* --- 🛠️ CONTROLES Y NAVEGACIÓN --- */}
+      <div className="p-3 mb-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Toggle de Vistas */}
-        <div className="flex gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl w-full md:w-auto">
+        <div className="flex gap-1.5 p-1 bg-slate-50 border border-slate-100 rounded-xl w-full sm:w-auto">
           {[{ id: 'week', label: 'SEMANA' }, { id: 'day', label: 'DÍA' }].map(m => (
             <button 
               key={m.id} 
               onClick={() => {
                 setViewMode(m.id);
-                // Al cambiar la vista, reseteamos el filtro de estatus para evitar visualizaciones vacías erróneas
                 setStatusFilter("todos");
               }} 
-              className={`flex-1 md:flex-none px-5 py-2.5 rounded-lg font-black text-[10px] uppercase transition-all duration-300 ${viewMode === m.id ? "bg-white text-brand-primary shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+              className={`flex-1 sm:flex-none px-4 py-2 rounded-lg font-black text-[9px] uppercase tracking-wider transition-all duration-300 ${viewMode === m.id ? "bg-white text-brand-primary shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
             >
               {m.label}
             </button>
@@ -430,17 +413,17 @@ export default function Dashboard({
         </div>
 
         {/* Selector de Navegación */}
-        <div className="flex items-center justify-between md:justify-center gap-4 w-full md:w-auto">
+        <div className="flex items-center justify-between sm:justify-center gap-4 w-full sm:w-auto">
           <button 
             onClick={() => { 
               if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()-7))); 
               else setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()-1))); 
             }} 
-            className="p-2 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all"
+            className="p-1.5 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all"
           >
-            <ChevronLeft className="w-5 h-5 text-slate-600" />
+            <ChevronLeft className="w-4.5 h-4.5 text-slate-600" />
           </button>
-          <h2 className="text-xs font-black uppercase tracking-widest min-w-[200px] text-center text-slate-800">
+          <h2 className="text-[10px] font-black uppercase tracking-widest min-w-[200px] text-center text-slate-800">
             {viewMode === "week" ? (() => {
               const weekDays = getWeekDays(selectedDate);
               const startDay = weekDays[0];
@@ -457,50 +440,25 @@ export default function Dashboard({
               if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()+7))); 
               else setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()+1))); 
             }} 
-            className="p-2 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all"
+            className="p-1.5 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all"
           >
-            <ChevronRight className="w-5 h-5 text-slate-600" />
+            <ChevronRight className="w-4.5 h-4.5 text-slate-600" />
           </button>
-        </div>
-
-        {/* Filtro Dinámico por Servicio */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0">Servicio:</span>
-          <select
-            value={selectedItemId}
-            onChange={e => setSelectedItemId(e.target.value)}
-            className="w-full md:w-[200px] px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-[10px] text-slate-700 uppercase shadow-inner focus:outline-none focus:border-brand-primary transition-all"
-          >
-            <option value="todos">Todos los Servicios</option>
-            {items.map(it => (
-              <option key={it.id} value={it.id}>{it.name}</option>
-            ))}
-          </select>
         </div>
       </div>
 
       {/* --- 🏷️ ACTIVE FILTERS ALERTS (PILLS) --- */}
-      {(selectedItemId !== "todos" || statusFilter !== "todos") && (
+      {statusFilter !== "todos" && (
         <div className="mb-6 flex flex-wrap gap-2 animate-in fade-in duration-300">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center">Filtros Activos:</span>
-            {selectedItemId !== "todos" && (
-                <span className="px-3 py-1.5 bg-slate-100 border border-slate-200 text-slate-700 text-[8px] font-black uppercase rounded-lg flex items-center gap-1.5">
-                    Servicio: {items.find(i => i.id === Number(selectedItemId))?.name}
-                    <button onClick={() => setSelectedItemId("todos")} className="p-0.5 hover:bg-slate-200 rounded-md transition-colors">
-                        <X className="w-3 h-3 text-slate-400" />
-                    </button>
-                </span>
-            )}
-            {statusFilter !== "todos" && (
-                <span className="px-3 py-1.5 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[8px] font-black uppercase rounded-lg flex items-center gap-1.5">
-                    Estatus: {statusFilter === 'completed' ? 'Finalizadas' : statusFilter === 'pending' ? 'Por Llegar' : 'En Espera'}
-                    <button onClick={() => setStatusFilter("todos")} className="p-0.5 hover:bg-brand-primary/20 rounded-md transition-colors">
-                        <X className="w-3 h-3 text-brand-primary" />
-                    </button>
-                </span>
-            )}
+            <span className="px-3 py-1.5 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[8px] font-black uppercase rounded-lg flex items-center gap-1.5">
+                Estatus: {statusFilter === 'completed' ? 'Finalizadas' : statusFilter === 'pending' ? 'Por Llegar' : 'En Espera'}
+                <button onClick={() => setStatusFilter("todos")} className="p-0.5 hover:bg-brand-primary/20 rounded-md transition-colors">
+                    <X className="w-3 h-3 text-brand-primary" />
+                </button>
+            </span>
             <button 
-                onClick={() => { setSelectedItemId("todos"); setStatusFilter("todos"); }} 
+                onClick={() => setStatusFilter("todos")} 
                 className="px-3 py-1.5 text-red-600 hover:bg-red-50 text-[8px] font-black uppercase rounded-lg flex items-center gap-1"
             >
                 <FilterX className="w-3.5 h-3.5" /> Limpiar Todo
