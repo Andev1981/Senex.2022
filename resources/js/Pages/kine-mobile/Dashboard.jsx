@@ -89,7 +89,7 @@ export default function Dashboard({
   const canCreate = (doctorBranch?.can_create_sessions !== false) || hasSpecialPermission;
   const canView = (doctorBranch?.can_view_sessions !== false) || hasSpecialPermission;
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState("month"); // month, week, day
+  const [viewMode, setViewMode] = useState("week"); // week, day
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showNewAppointment, setShowNewAppointment] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -98,12 +98,6 @@ export default function Dashboard({
   const [isDateLocked, setIsDateLocked] = useState(false);
   const [localPatients, setLocalPatients] = useState(patients);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    if (isDesktop === false) {
-      setViewMode("day");
-    }
-  }, [isDesktop]);
 
   const handlePatientCreated = (newPatient) => {
     if (newPatient) {
@@ -124,14 +118,7 @@ export default function Dashboard({
     // Filtrar citas únicamente de este kinesiólogo (excluyendo canceladas si se prefiere)
     const myAppts = appointments.filter(apt => apt.doctor_id === doctor.id);
 
-    if (viewMode === "month") {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      return myAppts.filter(apt => {
-        const aptDate = new Date(apt.date + 'T00:00:00');
-        return aptDate.getFullYear() === year && aptDate.getMonth() === month;
-      });
-    } else if (viewMode === "week") {
+    if (viewMode === "week") {
       const weekDays = getWeekDays(selectedDate);
       const startStr = formatLocalDate(weekDays[0]);
       const endStr = formatLocalDate(weekDays[6]);
@@ -141,7 +128,7 @@ export default function Dashboard({
       const dayStr = formatLocalDate(selectedDate);
       return myAppts.filter(apt => apt.date === dayStr);
     }
-  }, [appointments, doctor.id, viewMode, currentDate, selectedDate]);
+  }, [appointments, doctor.id, viewMode, selectedDate]);
 
   // --- 📊 CALCULAR KPIs DINÁMICOS EN BASE AL RANGO VISIBLE ---
   const dynamicKpis = useMemo(() => {
@@ -157,7 +144,6 @@ export default function Dashboard({
 
   // Etiqueta dinámica de rango temporal para los KPIs
   const rangeLabel = useMemo(() => {
-    if (viewMode === "month") return "Mes";
     if (viewMode === "week") return "Sem.";
     return "Hoy";
   }, [viewMode]);
@@ -428,7 +414,7 @@ export default function Dashboard({
       <div className="p-4 mb-6 bg-white border border-slate-100 rounded-[28px] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Toggle de Vistas */}
         <div className="flex gap-2 p-1 bg-slate-50 border border-slate-100 rounded-xl w-full md:w-auto">
-          {[{ id: 'month', label: 'MES' }, { id: 'day', label: 'DÍA' }].map(m => (
+          {[{ id: 'week', label: 'SEMANA' }, { id: 'day', label: 'DÍA' }].map(m => (
             <button 
               key={m.id} 
               onClick={() => {
@@ -443,12 +429,11 @@ export default function Dashboard({
           ))}
         </div>
 
-        {/* Selector de Mes / Navegación */}
+        {/* Selector de Navegación */}
         <div className="flex items-center justify-between md:justify-center gap-4 w-full md:w-auto">
           <button 
             onClick={() => { 
-              if (viewMode === "month") setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth()-1))); 
-              else if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()-7))); 
+              if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()-7))); 
               else setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()-1))); 
             }} 
             className="p-2 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all"
@@ -456,16 +441,20 @@ export default function Dashboard({
             <ChevronLeft className="w-5 h-5 text-slate-600" />
           </button>
           <h2 className="text-xs font-black uppercase tracking-widest min-w-[200px] text-center text-slate-800">
-            {viewMode === "month" 
-              ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}` 
-              : viewMode === "week" 
-                ? `Semana ${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]}` 
-                : `${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]}`}
+            {viewMode === "week" ? (() => {
+              const weekDays = getWeekDays(selectedDate);
+              const startDay = weekDays[0];
+              const endDay = weekDays[6];
+              if (startDay.getMonth() === endDay.getMonth()) {
+                return `Semana del ${startDay.getDate()} al ${endDay.getDate()} de ${monthNames[startDay.getMonth()]}`;
+              } else {
+                return `Semana del ${startDay.getDate()} de ${monthNames[startDay.getMonth()]} al ${endDay.getDate()} de ${monthNames[endDay.getMonth()]}`;
+              }
+            })() : `${selectedDate.getDate()} de ${monthNames[selectedDate.getMonth()]}`}
           </h2>
           <button 
             onClick={() => { 
-              if (viewMode === "month") setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth()+1))); 
-              else if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()+7))); 
+              if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()+7))); 
               else setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()+1))); 
             }} 
             className="p-2 hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-xl transition-all"
@@ -521,111 +510,196 @@ export default function Dashboard({
 
       {/* VISTAS DEL CALENDARIO */}
       <div className="w-full">
-        {viewMode === "month" && (
-          <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
-            <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
-              {dayNames.map(d => (
-                <div key={d} className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-wider">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7">
-              {getDaysInMonth(currentDate).map((day, idx) => {
-                const st = getDayCapacityStats(day.date);
-                const appts = getAppointmentsForDate(day.date);
-                const isClosed = !st.isOpen && !st.isHoliday;
-                const isPast = isDatePast(day.date) && !isToday(day.date);
-                const isInactiveDay = isClosed && appts.length === 0;
+        {viewMode === "week" && (
+          isDesktop ? (
+            <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-slate-100 bg-slate-50/20 flex justify-between items-center">
+                <h3 className="text-sm font-black text-slate-900 uppercase">Vista Semanal</h3>
+                <button
+                  onClick={() => {
+                    setIsDateLocked(false);
+                    setShowNewAppointment(true);
+                  }}
+                  className="px-6 py-3 bg-brand-primary text-white text-[10px] font-black uppercase rounded-2xl shadow-lg hover:brightness-110 flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" /> Agendar en esta semana
+                </button>
+              </div>
+              <div className="grid grid-cols-8 border-b border-slate-100 bg-slate-50/50">
+                <div className="p-3"></div>
+                {getWeekDays(selectedDate).map((d, i) => (
+                  <div key={i} className="p-4 text-center border-l border-slate-100">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                      {dayNames[(d.getDay() + 6) % 7]}
+                    </div>
+                    <div className={`text-xl font-black mt-1 ${isToday(d) ? "text-brand-primary" : "text-slate-900"}`}>
+                      {d.getDate()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-8">
+                {hours.map(h => (
+                  <React.Fragment key={h}>
+                    <div className="p-4 text-[10px] font-black text-right text-slate-400 border-b border-slate-100 uppercase">{h}:00</div>
+                    {getWeekDays(selectedDate).map((d, di) => {
+                      const dayAppts = getAppointmentsForDate(d).filter(a => parseInt(a.start_time.split(":")[0]) === h);
+                      const dayStats = getDayCapacityStats(d);
+                      const canSchedule = dayAppts.length === 0 && !isDatePast(d) && dayStats.isOpen;
+                      const isClosed = !dayStats.isOpen && dayAppts.length === 0;
 
-                if (isInactiveDay) {
+                      return (
+                        <div
+                          key={di}
+                          onClick={() => {
+                            if (canSchedule) {
+                              setSelectedDate(d);
+                              setIsDateLocked(true);
+                              setShowNewAppointment(true);
+                            }
+                          }}
+                          className={`min-h-[80px] p-2 border-b border-l border-slate-100 transition-all relative group ${
+                            isClosed
+                              ? "bg-slate-50/40 opacity-60 cursor-not-allowed"
+                              : canSchedule
+                              ? "hover:bg-brand-primary/[0.02] cursor-pointer bg-white"
+                              : "bg-white"
+                          }`}
+                        >
+                          {canSchedule && (
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Plus className="w-4 h-4 text-brand-primary/20" />
+                            </div>
+                          )}
+                          {dayAppts.map(a => (
+                            <div
+                              key={a.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedAppointment(a);
+                              }}
+                              className={`p-2.5 rounded-xl text-[8px] font-black uppercase mb-1 truncate shadow-sm hover:brightness-95 transition-all cursor-pointer flex items-center gap-1.5 ${getStatusStyles(a.status)}`}
+                            >
+                              <div className={`w-1.5 h-1.5 rounded-full ${
+                                a.status === 'completed' ? 'bg-gray-400' :
+                                a.status === 'cancelled' ? 'bg-red-400' :
+                                a.status === 'in_progress' ? 'bg-purple-400' :
+                                a.status === 'checked_in' ? 'bg-orange-400' :
+                                a.status === 'confirmed' ? 'bg-emerald-400' : 'bg-blue-400'
+                              } flex-shrink-0`}></div>
+                              <span className="truncate">{a.patient?.full_name || a.patient_name || 'Paciente'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Mobile Vertical Week List */
+            <div className="space-y-4">
+              {getWeekDays(selectedDate).map((d, di) => {
+                const dayAppts = getAppointmentsForDate(d).filter(a => a.status !== 'cancelled');
+                const dayStats = getDayCapacityStats(d);
+                const isInactive = !dayStats.isOpen && dayAppts.length === 0;
+                const isTodayDay = isToday(d);
+
+                if (isInactive) {
                   return (
                     <div
-                      key={idx}
-                      className={`min-h-[50px] lg:min-h-[140px] p-1 bg-slate-50/50 border-b border-r border-slate-100 select-none pointer-events-none flex flex-col items-center justify-center`}
+                      key={di}
+                      className="min-h-[44px] flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl opacity-60 shadow-sm transition-all"
                     >
-                      <span className="text-[10px] font-black text-slate-300">
-                        {day.date.getDate()}
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {dayNames[(d.getDay() + 6) % 7]} {d.getDate()}
                       </span>
-                      <span className="text-[7px] font-black text-slate-300/60 uppercase tracking-tighter mt-0.5">
-                        Libre
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Coffee className="w-3.5 h-3.5 text-slate-350" /> Sin Atención
                       </span>
                     </div>
                   );
                 }
 
                 return (
-                  <div 
-                    key={idx} 
-                    onClick={() => { 
-                      if (st.isHoliday || (isClosed && appts.length === 0)) return; 
-                      setSelectedDate(day.date); 
-                      setViewMode("day"); 
-                    }} 
-                    className={`min-h-[140px] p-3 border-b border-r border-slate-100 cursor-pointer transition-all relative group ${
-                      !day.isCurrentMonth 
-                        ? "opacity-30 bg-slate-50/50" 
-                        : isToday(day.date)
-                        ? "bg-brand-primary/[0.02] ring-2 ring-brand-primary/20 shadow-md shadow-brand-primary/5 z-10 scale-[1.01]"
-                        : isPast
-                        ? "bg-slate-50/70 text-slate-400"
-                        : "bg-white"
-                    } ${(st.isHoliday || isClosed) && appts.length === 0 ? "cursor-not-allowed" : "hover:bg-slate-50/30"}`}
+                  <div
+                    key={di}
+                    className={`p-4 bg-white border ${
+                      isTodayDay ? "border-brand-primary ring-1 ring-brand-primary/10 shadow-md shadow-brand-primary/5" : "border-slate-100 shadow-sm"
+                    } rounded-3xl space-y-3 transition-all`}
                   >
-                    {(st.isHoliday || isClosed) && (
-                      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000, #000 10px, transparent 10px, transparent 20px)' }}></div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-black uppercase tracking-wider ${isTodayDay ? "text-brand-primary" : "text-slate-800"}`}>
+                          {dayNames[(d.getDay() + 6) % 7]} {d.getDate()}
+                        </span>
+                        {isTodayDay && (
+                          <span className="px-2.5 py-0.5 bg-brand-primary/10 text-brand-primary text-[7px] font-black uppercase tracking-wider rounded-md">
+                            Hoy
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">
+                          {dayAppts.length === 1 ? "1 Cita" : `${dayAppts.length} Citas`}
+                        </span>
+                        {dayStats.isOpen && !isDatePast(d) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDate(d);
+                              setIsDateLocked(true);
+                              setShowNewAppointment(true);
+                            }}
+                            className="p-1.5 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-white rounded-lg transition-all shadow-sm active:scale-95"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {dayAppts.length === 0 ? (
+                      <div className="py-5 text-center border border-dashed border-slate-100 rounded-2xl bg-slate-50/20">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-wider">Sin citas programadas</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {dayAppts
+                          .sort((a, b) => a.start_time.localeCompare(b.start_time))
+                          .map(apt => (
+                            <div
+                              key={apt.id}
+                              onClick={() => setSelectedAppointment(apt)}
+                              className="flex items-center justify-between p-3.5 bg-slate-50/30 hover:bg-slate-50 border border-slate-100/70 hover:border-brand-primary/20 rounded-2xl transition-all cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="text-left shrink-0">
+                                  <span className="text-[9px] font-black text-slate-800 block">{apt.start_time.substring(0, 5)}</span>
+                                  <span className="text-[7px] font-bold text-slate-400 block">{apt.end_time.substring(0, 5)}</span>
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-black text-slate-700 block truncate uppercase">{apt.patient?.full_name || apt.patient_name || "Paciente"}</span>
+                                  <span className="text-[7.5px] font-bold text-slate-400 block truncate uppercase mt-0.5">{apt.item?.name || "Servicio"}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[7px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ${getStatusStyles(apt.status)}`}>
+                                  {getStatusLabel(apt.status)}
+                                </span>
+                                <ChevronRightIcon className="w-3.5 h-3.5 text-slate-350 group-hover:text-brand-primary transition-colors shrink-0" />
+                              </div>
+                            </div>
+                          ))}
+                      </div>
                     )}
-                    <div className="flex justify-between items-start mb-2 relative z-10">
-                      <span className={`text-[10px] font-black w-7 h-7 flex items-center justify-center rounded-lg transition-all ${isToday(day.date) ? "bg-brand-primary text-white shadow-lg" : "text-slate-800"} ${st.isHoliday ? "text-red-500 font-bold" : ""}`}>
-                        {day.date.getDate()}
-                      </span>
-                      {day.isCurrentMonth && !isDatePast(day.date) && st.isOpen && (
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setSelectedDate(day.date); 
-                            setIsDateLocked(true); 
-                            setShowNewAppointment(true); 
-                          }} 
-                          className="p-1.5 bg-brand-primary text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-md active:scale-95"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="space-y-1 relative z-10">
-                      {st.isHoliday && (
-                        <div className="py-1 px-2 rounded-lg bg-red-50 border border-red-100 mb-1">
-                          <p className="text-[8px] font-black text-red-600 uppercase truncate" title={st.holidayName}>🎉 {st.holidayName}</p>
-                        </div>
-                      )}
-                      {isClosed && appts.length === 0 && (
-                        <div className="py-1 px-2 rounded-lg bg-slate-100 border border-slate-200">
-                          <p className="text-[8px] font-black text-slate-400 uppercase">🚫 Libre</p>
-                        </div>
-                      )}
-                      {appts.slice(0, 3).map(a => (
-                        <div 
-                          key={a.id} 
-                          className={`text-[8px] font-black uppercase p-1.5 rounded-lg shadow-sm truncate flex items-center gap-1.5 border transition-all duration-300 hover:scale-95 ${getStatusStyles(a.status)}`}
-                        >
-                          <div className={`w-1.5 h-1.5 rounded-full ${
-                            a.status === 'completed' ? 'bg-gray-400' :
-                            a.status === 'cancelled' ? 'bg-red-400' :
-                            a.status === 'in_progress' ? 'bg-purple-400' :
-                            a.status === 'checked_in' ? 'bg-orange-400' :
-                            a.status === 'confirmed' ? 'bg-emerald-400' : 'bg-blue-400'
-                          }`}></div>
-                          <span className="truncate">{a.patient?.name || 'Paciente'}</span>
-                        </div>
-                      ))}
-                      {appts.length > 3 && (
-                        <p className="text-[8px] font-black text-slate-400 uppercase text-center mt-1">+{appts.length - 3} más</p>
-                      )}
-                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+          )
         )}
 
 
