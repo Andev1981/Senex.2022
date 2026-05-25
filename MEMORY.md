@@ -10,16 +10,16 @@
   - Queued notifications enabled for system stability.
   - **Agenda Interface:** Omitted Month View entirely. Implemented **Week View as default** with high-fidelity week grid on desktop and an ultra-compact **Vertical Week List** on mobile (where inactive days without availability/citas are reduced to a thin `min-h-[44px]` gray banner).
   - **SOAP Pendings Filter:** Restrained the home screen SOAP pending closure banner to display **only today's sessions** (`whereDate('date', $today)`), preventing historical noise.
-  - **SOAP Completion UX Optimization:** Solved draft-saving confusion by removing the floating floppy-disk button on mobile and creating a single, full-width primary navigation bar that dynamically turns **Emerald Green (`bg-emerald-600`)** and reads **"FINALIZAR Y CERRAR ATENCIÓN"** on the last step. Moved draft-saving to a secondary, grey text-link below it labeled "Guardar Borrador Temporal". Restructured desktop buttons to an unequal flex layout (flex-3 Emerald Close button vs 1/3 Soft Slate Draft button).
-  - **Dashboard UX Polishing:**
-    - Redesigned the 5 dynamic KPI status buttons into highly compact, sleek, responsive pill buttons (`grid grid-cols-2 sm:grid-cols-5 gap-2.5`) with integrated inline metrics and tiny icons. The "Cierres SOAP" pill dynamically spans 2 columns on mobile.
-    - Omitted the "Servicio:" select dropdown filter completely from the home panel for cleaner navigation.
-    - Removed the horizontal upcoming patient slider from "Mis Pacientes" (`my-patients.jsx`) to avoid misleading shortcuts and keep the layout focused.
-  - **Clinical Workflows:** Bypassed check-in with a direct "Atender Paciente" green button for kines, introduced a horizontal upcoming appointments carousel at the top of "Mis Pacientes", and replaced the invasive collapsible SOAP session details with a clean React Info Modal on mobile.
+  - **SOAP Completion UX Optimization:** Solved draft-saving confusion by removing the floating floppy-disk button on mobile and creating a single, full-width primary navigation bar that dynamically turns **Emerald Green (`bg-emerald-600`)** and reads **"FINALIZAR Y CERRAR ATENCIÓN"** on the last step.
+  - **Simplificación Clínica & Bitácora (Mobile):** 
+    - SOAP simplificado de un solo paso configurable vía toggle `showFullSOAP` con selector de dolor interactivo 0-10 HSL.
+    - Menú "Atenciones" reconvertido en Bitácora con pestañas no-bloqueantes de historial ("Por Cerrar" y "Historial Reciente"), permitiendo continuar borradores o ver/editar registros clínicos anteriores.
+    - Dashboard limpio sin carrusel de cierres SOAP ni KPI de cierre redundantes, grilla adaptada a 4 columnas simétricas.
+    - Listado de "Mis Pacientes" optimizado con botones de filtro interactivo superior (Hoy, Activos, Todos) sin recortar pacientes del backend, inyectando el flag `has_appointment_today` para badges visuales.
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Optimized weekly view (mobile vertical list with compressed inactive days, desktop 8-column hourly grid), removed monthly calendar view option entirely, filtered home SOAP alerts to today only, optimized SOAP closure actions to resolve draft vs completed confusion on mobile and desktop, polished dashboard UX with super small KPI stats pills, removed redundant service select filter, removed upcoming appointments carousel from patients view, bypassed check-in for direct clinical SOAP forms, and refactored SOAP header info into overlay modal.
+- **Status:** Completed. All mobile SOAP flow simplification, Bitácora implementation, KPI cleanup, and dynamic patient list filters deployed, compiled, and verified via EVP.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.

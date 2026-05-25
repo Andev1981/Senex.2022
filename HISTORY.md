@@ -1,5 +1,17 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Cierre Clínico Simplificado, Bitácora Interactiva y Rediseño Dashboard KPI
+- **Action:** Overhauled the mobile clinical session closure UX, transformed the "Atenciones" view into an interactive clinical log (Bitácora), cleaned up the mobile dashboard KPI grid, and optimized the kinesiologist patient list layout with dynamic daily filters.
+- **Changes:**
+  - **SOAP Session Form:** Integrated a collapsible `showFullSOAP` toggle to switch between a quick single-page form (EVA 0-10, progress, observations, consent) and the exhaustive multi-step SOAP layout. Designed an interactive 0-10 HSL pain scale buttons block (`PainSelector.jsx`).
+  - **Bitácora Log:** Repurposed the empty "Atenciones" view (`pending-sessions.jsx`) into an interactive log with non-reloading tabs ("Por Cerrar" to finish drafts, "Historial" to view/edit completed records).
+  - **Mobile Dashboard:** Removed the pending closure alert carousel and KPI block, refactored the main KPI grid to 4 clean responsive columns, and centered key stats.
+  - **Patient List:** Cleaned up the static footer stats in "Mis Pacientes" (`my-patients.jsx`) and added a premium interactive top filter bar (Hoy, Activos, Todos). Ensured all assigned patients are loaded from the backend, injecting `has_appointment_today` for immediate frontend badge rendering and filter state.
+  - **Controllers:** Expanded `PatientMobileController.php` to calculate and return `has_appointment_today` based on scheduled appointments, and `DashboardMobileController.php` to fetch the recent 30 completed sessions for the Historial log.
+- **Commits:**
+  - `ba7061c9` - feat(mobile): simplified clinical SOAP flow, clean dashboard metrics, bitacora log, and optimized patient lists
+- **EVP Verification:** Successfully compiled and synchronized the React assets using Vite (`npm run build` completed without warnings). Verified proper frontend routing, localized status handling, and multitenancy integrity.
+
 ## 📌 [2026-05-25] Premium Calendar Styling and Same-Day Check-in Lock
 - **Action:** Implemented high-end UI calendar design tokens for the kinesiologist month calendar grid (desktop and mobile) and locked the patient check-in button to be enabled strictly on the appointment date.
 - **Changes:**
