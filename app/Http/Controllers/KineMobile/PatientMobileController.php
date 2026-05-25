@@ -150,7 +150,7 @@ class PatientMobileController extends Controller
                     return [
                         'id' => $session->id,
                         'date' => $session->date,
-                        'time' => $session->time,
+                        'time' => $session->time ? $session->time->format('H:i') : null,
                         'session_type' => $session->item->name,
                         'status' => $session->status,
                         'notes' => $session->notes,

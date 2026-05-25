@@ -38,7 +38,7 @@ class ClientDashboardController extends Controller
                 'type' => 'session',
                 'id' => $session->id,
                 'date' => $session->date ? $session->date->format('Y-m-d') : null,
-                'time' => $session->time,
+                'time' => $session->time ? $session->time->format('H:i') : null,
                 'title' => $session->item->name ?? 'Sesión Médica',
                 'subtitle' => "Atendido por " . ($session->doctor->full_name ?? 'Especialista'),
                 'status' => $session->status instanceof \UnitEnum ? $session->status->value : $session->status,
