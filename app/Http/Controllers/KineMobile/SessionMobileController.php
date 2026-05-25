@@ -30,7 +30,7 @@ class SessionMobileController extends Controller
         $doctor = Doctor::where('user_id', $user->id)->firstOrFail();
 
         $doctorBranch = $doctor->getBranchAttribute();
-        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']);
+        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']) || auth()->user()->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
         
         $canCreate = $isClinicalAdmin || ($doctorBranch['can_create_sessions'] ?? true);
         $canView   = $isClinicalAdmin || ($doctorBranch['can_view_sessions'] ?? true);
@@ -211,7 +211,7 @@ class SessionMobileController extends Controller
         $doctor = Doctor::where('user_id', $user->id)->firstOrFail();
 
         $doctorBranch = $doctor->getBranchAttribute();
-        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']);
+        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']) || auth()->user()->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
         if (!$isClinicalAdmin && !($doctorBranch['can_view_sessions'] ?? true)) {
             abort(403, 'No tienes permiso para ver el detalle de las sesiones.');
         }
@@ -333,7 +333,7 @@ class SessionMobileController extends Controller
         $doctor = Doctor::where('user_id', $user->id)->firstOrFail();
 
         $doctorBranch = $doctor->getBranchAttribute();
-        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']);
+        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']) || auth()->user()->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
         if (!$isClinicalAdmin && !($doctorBranch['can_create_sessions'] ?? true)) {
             abort(403, 'No tienes permiso para realizar esta acción clínica.');
         }
@@ -428,7 +428,7 @@ class SessionMobileController extends Controller
         $doctor = Doctor::where('user_id', $user->id)->firstOrFail();
 
         $doctorBranch = $doctor->getBranchAttribute();
-        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']);
+        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']) || auth()->user()->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
         if (!$isClinicalAdmin && !($doctorBranch['can_create_sessions'] ?? true)) {
             abort(403, 'No tienes permiso para realizar esta acción clínica en esta sucursal.');
         }
@@ -480,7 +480,7 @@ class SessionMobileController extends Controller
         $doctor = Doctor::where('user_id', $user->id)->firstOrFail();
 
         $doctorBranch = $doctor->getBranchAttribute();
-        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']);
+        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']) || auth()->user()->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
         if (!$isClinicalAdmin && !($doctorBranch['can_create_sessions'] ?? true)) {
             abort(403, 'No tienes permiso para actualizar notas de la sesión.');
         }
@@ -564,7 +564,7 @@ class SessionMobileController extends Controller
         $doctor = Doctor::where('user_id', $user->id)->firstOrFail();
 
         $doctorBranch = $doctor->getBranchAttribute();
-        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']);
+        $isClinicalAdmin = auth()->user()->hasRole(['superadmin', 'admin']) || auth()->user()->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
         if (!$isClinicalAdmin && !($doctorBranch['can_create_sessions'] ?? true)) {
             abort(403, 'No tienes permiso para realizar esta acción clínica en esta sucursal.');
         }
