@@ -169,7 +169,7 @@ export default function SessionDetail({ session, permissions = {} }) {
                         <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Registro SOAP</h3>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Evolución estructurada de la sesión</p>
                     </div>
-                    {['scheduled', 'in_progress', 'checked_in'].includes(session.status) && canCreate && (
+                    {((['scheduled', 'in_progress', 'checked_in'].includes(session.status)) || (session.status === 'completed' && permissions.can_edit_completed_sessions)) && canCreate && (
                         <button onClick={() => router.visit(route('kine.sessions.form', session.id))} className="flex items-center gap-3 px-6 py-3 bg-brand-primary text-white rounded-2xl shadow-xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all">
                             <Edit3 className="w-4 h-4" /> Editar Ficha
                         </button>

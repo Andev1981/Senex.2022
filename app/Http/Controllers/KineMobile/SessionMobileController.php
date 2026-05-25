@@ -135,6 +135,7 @@ class SessionMobileController extends Controller
             'permissions' => [
                 'can_create_sessions' => $canCreate,
                 'can_view_sessions' => $canView,
+                'can_edit_completed_sessions' => $isClinicalAdmin || $user->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']),
             ],
             'session' => $session ? [
                 'id' => $session->id,
@@ -218,6 +219,7 @@ class SessionMobileController extends Controller
         $permissions = [
             'can_create_sessions' => $isClinicalAdmin || ($doctorBranch['can_create_sessions'] ?? true),
             'can_view_sessions'   => $isClinicalAdmin || ($doctorBranch['can_view_sessions'] ?? true),
+            'can_edit_completed_sessions' => $isClinicalAdmin || $user->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']),
         ];
 
         // 1. Intentar buscar como Sesión de Tratamiento (sin restringir por doctor_id, pero asegurando acceso al paciente)
@@ -492,8 +494,10 @@ class SessionMobileController extends Controller
         $session = $sessionQuery->find($id);
 
         if ($session) {
-            // 🛡️ PROTOCOLO DE PERSISTENCIA SOAP: Bloquear edición si ya está completada
-            if ($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED) {
+            // 🛡️ PROTOCOLO DE PERSISTENCIA SOAP: Bloquear edición si ya está completada (a menos que tenga permisos especiales)
+            $hasSpecialPermission = $isClinicalAdmin || $user->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
+
+            if ($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED && !$hasSpecialPermission) {
                 return back()->with('error', 'No se pueden modificar las notas de una sesión ya completada.');
             }
 
@@ -567,8 +571,10 @@ class SessionMobileController extends Controller
 
         $session = TreatmentSession::findOrFail($id);
         
-        // 🛡️ PROTOCOLO DE PERSISTENCIA SOAP: Si la sesión ya está completada, no permitir re-completar ni modificar datos clínicos
-        if ($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED) {
+        // 🛡️ PROTOCOLO DE PERSISTENCIA SOAP: Si la sesión ya está completada, no permitir re-completar ni modificar datos clínicos (a menos que tenga permisos especiales)
+        $hasSpecialPermission = $isClinicalAdmin || $user->hasAnyPermission(['treatment-sessions.manage', 'sessions.manage']);
+
+        if ($session->status === \App\Enums\AppointmentStatusEnum::COMPLETED && !$hasSpecialPermission) {
             return redirect()->route('kine.dashboard')->with('error', 'Esta sesión ya fue completada y sus registros son inmutables.');
         }
 

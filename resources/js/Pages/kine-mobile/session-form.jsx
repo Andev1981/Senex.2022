@@ -31,7 +31,8 @@ import {
   MapPin,
   ShieldCheck,
   Smartphone,
-  X
+  X,
+  Plus
 } from "lucide-react";
 import KineLayout from "@/Layouts/KineLayout";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
@@ -98,14 +99,14 @@ export default function SessionForm({
   doctor,
   previousSession = null,
   appointment = null,
-  permissions = { can_create_sessions: true, can_view_sessions: true }
+  permissions = { can_create_sessions: true, can_view_sessions: true, can_edit_completed_sessions: false }
 }) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const isEditMode = !!session;
   const currentStatus = (session?.status || "scheduled")?.toLowerCase();
   
-  // No puede editar si la sesión ya está completada O si no tiene permiso de creación
-  const canEdit = permissions.can_create_sessions && (!isEditMode || ["scheduled", "in_progress", "checked_in", "programada"].includes(currentStatus));
+  // No puede editar si la sesión ya está completada O si no tiene permiso de creación (a menos que tenga permisos especiales)
+  const canEdit = permissions.can_create_sessions && (!isEditMode || ["scheduled", "in_progress", "checked_in", "programada"].includes(currentStatus) || permissions.can_edit_completed_sessions);
   
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
