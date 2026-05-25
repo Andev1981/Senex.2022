@@ -132,15 +132,17 @@ export default function SessionDetail({ session, permissions = {} }) {
               </div>
 
               {/* Mapa Corporal (Solo lectura) */}
-              <PainMapCard
-                  points={session.session_pain_map || []}
-                  painBefore={session.pain_before}
-                  painAfter={session.pain_after}
-                  bodyPart={session.body_part} 
-                  laterality={session.laterality} 
-                  isLocked={true} 
-                  title="Localización Registrada"
-              />
+              {session.session_pain_map && session.session_pain_map.length > 0 && (
+                  <PainMapCard
+                      points={session.session_pain_map || []}
+                      painBefore={session.pain_before}
+                      painAfter={session.pain_after}
+                      bodyPart={session.body_part} 
+                      laterality={session.laterality} 
+                      isLocked={true} 
+                      title="Localización Registrada"
+                  />
+              )}
 
               {session.informed_consent_confirmed && (
                   <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-[2.5rem] flex items-center gap-4">
@@ -156,45 +158,138 @@ export default function SessionDetail({ session, permissions = {} }) {
           {/* Columna Derecha: Evolución Clínica */}
           <div className="lg:col-span-8 space-y-8">
               {/* Rangos de Movimiento (ROM) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <ROMDisplay label="Flexión" before={session.rom_flexion_before} after={session.rom_flexion_after} icon={MoveUp} />
-                  <ROMDisplay label="Abducción" before={session.rom_abduction_before} after={session.rom_abduction_after} icon={MoveDiagonal} />
-                  <ROMDisplay label="Rotación" before={session.rom_rotation_before} after={session.rom_rotation_after} icon={RotateCcw} />
-              </div>
+              {!!(
+                  session.rom_flexion_before || session.rom_flexion_after ||
+                  session.rom_abduction_before || session.rom_abduction_after ||
+                  session.rom_rotation_before || session.rom_rotation_after
+              ) && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
+                      <ROMDisplay label="Flexión" before={session.rom_flexion_before} after={session.rom_flexion_after} icon={MoveUp} />
+                      <ROMDisplay label="Abducción" before={session.rom_abduction_before} after={session.rom_abduction_after} icon={MoveDiagonal} />
+                      <ROMDisplay label="Rotación" before={session.rom_rotation_before} after={session.rom_rotation_after} icon={RotateCcw} />
+                  </div>
+              )}
 
-              {/* SOAP Details */}
-              <div className="p-10 bg-white border border-slate-100 rounded-[3.5rem] shadow-sm">
-                <div className="flex items-center justify-between mb-12">
-                    <div>
-                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Registro SOAP</h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Evolución estructurada de la sesión</p>
-                    </div>
-                    {((['scheduled', 'in_progress', 'checked_in'].includes(session.status)) || (session.status === 'completed' && permissions.can_edit_completed_sessions)) && canCreate && (
-                        <button onClick={() => router.visit(route('kine.sessions.form', session.id))} className="flex items-center gap-3 px-6 py-3 bg-brand-primary text-white rounded-2xl shadow-xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all">
-                            <Edit3 className="w-4 h-4" /> Editar Ficha
-                        </button>
-                    )}
-                </div>
+              {/* Activos Clínicos Realizados (Técnicas y Ejercicios) */}
+              {!!(
+                  (session.activities_data?.techniques?.length || 0) > 0 ||
+                  (session.activities_data?.exercises?.length || 0) > 0
+              ) && (
+                  <div className="p-8 bg-white border border-slate-100 rounded-[3rem] shadow-sm space-y-6 animate-in fade-in duration-300">
+                      <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2 flex items-center gap-2">
+                          <Activity className="w-4 h-4 text-brand-primary" /> Activos Clínicos Realizados
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {(session.activities_data?.techniques?.length || 0) > 0 && (
+                              <div className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100/50 space-y-3">
+                                  <h4 className="text-[10px] font-black text-green-600 uppercase tracking-widest flex items-center gap-2">
+                                      Procedimientos / Técnicas
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                      {session.activities_data.techniques.map((tech, idx) => (
+                                          <span key={idx} className="bg-white text-green-700 text-[10px] px-3.5 py-1.5 rounded-xl border border-green-100 font-bold uppercase tracking-wider shadow-sm">
+                                              {tech}
+                                          </span>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+                          {(session.activities_data?.exercises?.length || 0) > 0 && (
+                              <div className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100/50 space-y-3">
+                                  <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                                      Ejercicios Ejecutados
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                      {session.activities_data.exercises.map((ex, idx) => (
+                                          <span key={idx} className="bg-white text-blue-700 text-[10px] px-3.5 py-1.5 rounded-xl border border-blue-100 font-bold uppercase tracking-wider shadow-sm">
+                                              {ex}
+                                          </span>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+                      </div>
+                  </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-3"><div className="w-8 h-8 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center font-black text-xs">S</div><p className="text-[11px] font-black text-blue-500 uppercase tracking-[0.2em]">Subjetivo</p></div>
-                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.subjective || '---'}"</p></div>
-                    </div>
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-3"><div className="w-8 h-8 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center font-black text-xs">O</div><p className="text-[11px] font-black text-amber-500 uppercase tracking-[0.2em]">Objetivo</p></div>
-                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.objective || '---'}"</p></div>
-                    </div>
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-3"><div className="w-8 h-8 bg-red-50 text-red-500 rounded-xl flex items-center justify-center font-black text-xs">A</div><p className="text-[11px] font-black text-red-500 uppercase tracking-[0.2em]">Apreciación</p></div>
-                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.assessment || '---'}"</p></div>
-                    </div>
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-3"><div className="w-8 h-8 bg-teal-50 text-teal-500 rounded-xl flex items-center justify-center font-black text-xs">P</div><p className="text-[11px] font-black text-teal-500 uppercase tracking-[0.2em]">Plan</p></div>
-                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.plan || '---'}"</p></div>
-                    </div>
-                </div>
-              </div>
+              {/* SOAP Details / Indicaciones Consolidada */}
+              {!(
+                  soapData.subjective?.trim() ||
+                  soapData.objective?.trim() ||
+                  soapData.assessment?.trim()
+              ) ? (
+                  <div className="p-10 bg-white border border-slate-100 rounded-[3.5rem] shadow-sm space-y-8 animate-in fade-in duration-300">
+                      <div className="flex items-center justify-between mb-2 flex-wrap gap-4">
+                          <div>
+                              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Observaciones & Evolución</h3>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Evolución clínica simplificada de la atención</p>
+                          </div>
+                          {((['scheduled', 'in_progress', 'checked_in'].includes(session.status)) || (session.status === 'completed' && permissions.can_edit_completed_sessions)) && canCreate && (
+                              <button onClick={() => router.visit(route('kine.sessions.form', session.id))} className="flex items-center gap-3 px-6 py-3 bg-brand-primary text-white rounded-2xl shadow-xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all shrink-0">
+                                  <Edit3 className="w-4 h-4" /> Editar Ficha
+                              </button>
+                          )}
+                      </div>
+
+                      <div className="space-y-6">
+                          {soapData.plan && (
+                              <div className="space-y-2">
+                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Plan & Avance del Paciente</h4>
+                                  <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100">
+                                      <p className="text-sm font-bold text-slate-650 leading-relaxed italic">"{soapData.plan}"</p>
+                                  </div>
+                              </div>
+                          )}
+                          {session.notes && session.notes !== soapData.plan && (
+                              <div className="space-y-2">
+                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Notas Clínicas / Observaciones</h4>
+                                  <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100">
+                                      <p className="text-sm font-bold text-slate-650 leading-relaxed italic">"{session.notes}"</p>
+                                  </div>
+                              </div>
+                          )}
+                          {!soapData.plan && !session.notes && (
+                              <div className="py-12 text-center bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-100">
+                                  <FileText className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sin observaciones ni evolución registradas</p>
+                              </div>
+                          )}
+                      </div>
+                  </div>
+              ) : (
+                  <div className="p-10 bg-white border border-slate-100 rounded-[3.5rem] shadow-sm animate-in fade-in duration-300">
+                      <div className="flex items-center justify-between mb-12 flex-wrap gap-4">
+                          <div>
+                              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Registro SOAP</h3>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Evolución estructurada de la sesión</p>
+                          </div>
+                          {((['scheduled', 'in_progress', 'checked_in'].includes(session.status)) || (session.status === 'completed' && permissions.can_edit_completed_sessions)) && canCreate && (
+                              <button onClick={() => router.visit(route('kine.sessions.form', session.id))} className="flex items-center gap-3 px-6 py-3 bg-brand-primary text-white rounded-2xl shadow-xl font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all shrink-0">
+                                  <Edit3 className="w-4 h-4" /> Editar Ficha
+                              </button>
+                          )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                          <div className="space-y-3">
+                              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center font-black text-xs">S</div><p className="text-[11px] font-black text-blue-500 uppercase tracking-[0.2em]">Subjetivo</p></div>
+                              <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.subjective || '---'}"</p></div>
+                          </div>
+                          <div className="space-y-3">
+                              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center font-black text-xs">O</div><p className="text-[11px] font-black text-amber-500 uppercase tracking-[0.2em]">Objetivo</p></div>
+                              <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.objective || '---'}"</p></div>
+                          </div>
+                          <div className="space-y-3">
+                              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-red-50 text-red-500 rounded-xl flex items-center justify-center font-black text-xs">A</div><p className="text-[11px] font-black text-red-500 uppercase tracking-[0.2em]">Apreciación</p></div>
+                              <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.assessment || '---'}"</p></div>
+                          </div>
+                          <div className="space-y-3">
+                              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-teal-50 text-teal-500 rounded-xl flex items-center justify-center font-black text-xs">P</div><p className="text-[11px] font-black text-teal-500 uppercase tracking-[0.2em]">Plan</p></div>
+                              <div className="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 min-h-[100px]"><p className="text-sm font-bold text-slate-600 italic">"{soapData.plan || '---'}"</p></div>
+                          </div>
+                      </div>
+                  </div>
+              )}
 
               {/* EVA Visual */}
               {session.pain_before !== undefined && (
