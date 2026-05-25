@@ -1,5 +1,15 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Botones Duales y Flexibilidad de Cierre Clínico desde Calendario
+- **Action:** Upgraded the `AppointmentDetailModal.jsx` block to support two separate options ("Ver Atención" and "Ver Ficha Clínica") for completed clinical sessions, and bypassed the date lock constraint exclusively for kinesiólogos, allowing immediate clinical attendance.
+- **Changes:**
+  - **Appointment Detail Modal (`AppointmentDetailModal.jsx`):**
+    - Rendered two distinct, parallel buttons under completed sessions (`completed`/`realizada`): **"Ver Atención"** (to load the editable/viewable SOAP form via `kine.sessions.form`) and **"Ver Ficha Clínica"** (to display the structured SOAP detail via `kine.sessions.show`).
+    - Bypassed the daily check-in date lock (`isAptToday`) for kinesiólogos, allowing them to attend any non-terminal appointment (`scheduled`, `confirmed`, `checked_in`, `in_progress`) immediately to prevent administrative roadblocks on past-due appointments.
+- **Commits:**
+  - `27d335f6` - feat(calendar): support Ver Atención and Ver Ficha Clínica on completed appointments, and allow direct clinical attendance without date lock
+- **EVP Verification:** Verified clean React assets compilation using Vite (`npm run build` completed in 22.39s) and confirmed correct routing.
+
 ## 📌 [2026-05-25] Remoción de Cierres Pendientes y Bitácora Unificada
 - **Action:** Removed "Por Cerrar" pending closure concepts entirely from the mobile Clinical Bitácora, transforming it into a single clean recent history log matching the new simplified SOAP constraints.
 - **Changes:**

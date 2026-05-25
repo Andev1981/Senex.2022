@@ -16,6 +16,9 @@
     - Menú "Atenciones" reconvertido en Bitácora unificada de historial de atenciones realizadas recientes de forma directa y limpia, descartando pestañas redundantes de cierres pendientes.
     - Dashboard limpio sin carrusel de cierres SOAP ni KPI de cierre redundantes, grilla adaptada a 4 columnas simétricas.
     - Listado de "Mis Pacientes" optimizado con botones de filtro interactivo superior (Hoy, Activos, Todos) sin recortar pacientes del backend, inyectando el flag `has_appointment_today` para badges visuales.
+  - **Calendario y Detalles de Cita (Mobile / Desktop):**
+    - Rediseñado el modal `AppointmentDetailModal.jsx` para atenciones completadas, ofreciendo dos botones paralelos: "Ver Atención" (formulario SOAP de sesión) y "Ver Ficha Clínica" (resumen clínico).
+    - Desbloqueado el bloqueo diario (`isAptToday`) para kinesiólogos, permitiéndoles atender cualquier cita no terminal de forma directa y fluida.
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
