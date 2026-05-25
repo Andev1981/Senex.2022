@@ -107,11 +107,18 @@ export default function PatientCard({ patient, onClick }) {
 
                 {/* Name & RUT */}
                 <div className="flex-1 min-w-0">
-                    <h3 className={`font-bold text-slate-900 text-sm leading-tight truncate transition-colors ${
-                        isCompleted ? 'group-hover:text-slate-700' : isEvaluation ? 'group-hover:text-blue-700' : 'group-hover:text-teal-700'
-                    }`}>
-                        {patient.name}
-                    </h3>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <h3 className={`font-bold text-slate-900 text-sm leading-tight truncate transition-colors ${
+                            isCompleted ? 'group-hover:text-slate-700' : isEvaluation ? 'group-hover:text-blue-700' : 'group-hover:text-teal-700'
+                        }`}>
+                            {patient.name}
+                        </h3>
+                        {patient.has_appointment_today && (
+                            <span className="flex-shrink-0 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black rounded-full uppercase tracking-wider">
+                                Hoy
+                            </span>
+                        )}
+                    </div>
                     {patient.rut && (
                         <p className="text-xs text-slate-400 font-medium mt-0.5">{patient.rut}</p>
                     )}

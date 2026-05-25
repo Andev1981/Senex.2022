@@ -223,8 +223,25 @@ class DashboardMobileController extends Controller
             ->get()
             ->map($mapSession);
 
+        // Historial de atenciones completadas recientes (últimas 30)
+        $completedQuery = TreatmentSession::with(['patient', 'treatment', 'item'])
+            ->where('status', \App\Enums\AppointmentStatusEnum::COMPLETED);
+
+        if ($canViewAll && $activeBranchId) {
+            $completedQuery->where('branch_id', $activeBranchId);
+        } else {
+            $completedQuery->where('doctor_id', $doctor->id);
+        }
+
+        $recentSessions = $completedQuery->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->limit(30)
+            ->get()
+            ->map($mapSession);
+
         return Inertia::render('kine-mobile/pending-sessions', [
             'pendingSessions' => $pendingClosure,
+            'recentSessions'  => $recentSessions,
         ]);
     }
 }

@@ -92,6 +92,34 @@ const ROMGauge = ({ label, value, onChange, min = 0, max = 180, icon: Icon, colo
     );
 };
 
+const PainSelector = ({ label, value, onChange, isLocked = false }) => {
+    return (
+        <div className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm space-y-4 flex-1">
+            <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+                <span className="text-xs font-black text-slate-750 uppercase bg-teal-50 px-3 py-1 rounded-full">EVA {value}/10</span>
+            </div>
+            <div className="flex justify-between gap-1 overflow-x-auto no-scrollbar py-1">
+                {[...Array(11).keys()].map((num) => (
+                    <button
+                        key={num}
+                        type="button"
+                        disabled={isLocked}
+                        onClick={() => onChange(num)}
+                        className={`w-8 h-8 rounded-xl text-xs font-black flex items-center justify-center flex-shrink-0 transition-all ${
+                            value === num
+                                ? 'bg-teal-600 text-white shadow-md shadow-teal-600/10'
+                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100 disabled:opacity-50'
+                        }`}
+                    >
+                        {num}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 export default function SessionForm({
   session = null,
   patients = [],
@@ -125,6 +153,7 @@ export default function SessionForm({
     doctor_id: doctor?.id || session?.doctor_id || "",
     patient_id: session?.patient_id || appointment?.patient_id || "",
     item_id: session?.item_id || appointment?.item_id || "",
+    notes: session?.notes || "",
 
     // S - Subjetivo
     pain_before: session?.pain_before || 0,
@@ -152,6 +181,26 @@ export default function SessionForm({
     informed_consent_confirmed: !!session?.informed_consent_confirmed,
   });
 
+  const hasClinicalData = () => {
+      if (!session) return false;
+      const romCount = Object.keys(session.evaluation_data?.rom || {}).length;
+      const techniquesCount = session.activities_data?.techniques?.length || 0;
+      const exercisesCount = session.activities_data?.exercises?.length || 0;
+      const painMapCount = session.session_pain_map?.length || 0;
+      return !!(
+          session.subjective?.trim() ||
+          session.objective?.trim() ||
+          romCount > 0 ||
+          techniquesCount > 0 ||
+          exercisesCount > 0 ||
+          painMapCount > 0 ||
+          session.plan?.trim() ||
+          session.homework?.trim() ||
+          session.next_goals?.trim()
+      );
+  };
+
+  const [showFullSOAP, setShowFullSOAP] = useState(hasClinicalData());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("subjetivo");
   const [newRomName, setNewRomName] = useState("");
@@ -380,8 +429,8 @@ export default function SessionForm({
               </div>
           )}
           
-          {/* Tabs Navigation (Solo visible en Mobile) */}
-          {!isDesktop && (
+          {/* Tabs Navigation (Solo visible en Mobile con SOAP Completo) */}
+          {!isDesktop && showFullSOAP && (
             <div className="flex px-2 overflow-x-auto no-scrollbar bg-white border-t border-slate-50 mt-4">
                 {tabs.map(tab => (
                 <button 
@@ -398,456 +447,583 @@ export default function SessionForm({
         </div>
 
         <form onSubmit={handleSubmit} className={`max-w-7xl mx-auto ${isDesktop ? 'p-8' : 'p-6 pb-32'}`}>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                {/* === COLUMNA IZQUIERDA: CAMPOS SOAP === */}
-                <div className="lg:col-span-7 space-y-8">
-                    {isDesktop ? (
-                        /* Vista Desktop: Todos los campos visibles o en acordeones premium */
-                        <div className="space-y-10">
-                            {/* [S] SUBJETIVO */}
-                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-8 animate-in fade-in slide-in-from-left duration-500">
-                                <div className="flex items-center gap-4 mb-2">
-                                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center shadow-inner"><User className="w-6 h-6"/></div>
-                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[S] Relato Subjetivo</h2>
-                                </div>
-                                <div className="space-y-6">
-                                    <textarea 
-                                        value={formData.subjective} 
-                                        onChange={(e) => setFormData({...formData, subjective: e.target.value})} 
-                                        placeholder="¿Cómo se siente hoy? ¿Hubo cambios desde la última sesión?" 
-                                        className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all shadow-inner min-h-[200px]" 
-                                    />
+            {/* Toggle Switch para alternar entre SOAP Simplificado y Completo */}
+            <div className="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-3 bg-indigo-50 text-indigo-650 rounded-2xl shadow-inner shrink-0">
+                        <Stethoscope className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">¿Registrar análisis clínico completo (SOAP)?</h3>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Active para registrar relato subjetivo, biometría ROM, procedimientos y ejercicios</p>
+                    </div>
+                </div>
+                <Switch 
+                    checked={showFullSOAP} 
+                    onChange={(e) => setShowFullSOAP(e.target.checked)} 
+                    disabled={!canEdit}
+                />
+            </div>
 
-                                    {session?.item?.service_detail?.is_evaluation && (
-                                        <div className="p-8 bg-brand-primary/5 rounded-[2rem] border border-brand-primary/10 animate-in zoom-in-95 duration-500">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="p-2 bg-brand-primary text-white rounded-xl shadow-lg shadow-brand-primary/20">
-                                                    <Target className="w-4 h-4" />
-                                                </div>
-                                                <h3 className="text-sm font-black text-brand-primary uppercase tracking-widest">Objetivos de Línea Base</h3>
-                                            </div>
-                                            <textarea 
-                                                value={formData.objectives} 
-                                                onChange={(e) => setFormData({...formData, objectives: e.target.value})} 
-                                                placeholder="Defina los objetivos a largo plazo para este tratamiento (ej: Recuperar marcha, ROM 100%, etc)..." 
-                                                className="w-full bg-white border-transparent rounded-2xl p-6 text-sm font-bold shadow-sm focus:ring-brand-primary/20 transition-all" 
-                                                rows={4} 
-                                            />
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-3">Nota: Esta información se anclará como la "Foto Inicial" del tratamiento.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </section>
-
-                            {/* [O] OBJETIVO - BIOMETRÍA Y ROM */}
-                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-10 animate-in fade-in slide-in-from-left duration-700">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner"><Ruler className="w-6 h-6"/></div>
-                                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[O] Biometría & ROM</h2>
+            {showFullSOAP ? (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
+                    
+                    {/* === COLUMNA IZQUIERDA: CAMPOS SOAP === */}
+                    <div className="lg:col-span-7 space-y-8">
+                        {isDesktop ? (
+                            /* Vista Desktop: Todos los campos visibles o en acordeones premium */
+                            <div className="space-y-10">
+                                {/* [S] SUBJETIVO */}
+                                <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-8 animate-in fade-in slide-in-from-left duration-500">
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center shadow-inner"><User className="w-6 h-6"/></div>
+                                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[S] Relato Subjetivo</h2>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <input 
-                                            type="text" 
-                                            value={newRomName} 
-                                            onChange={(e) => setNewRomName(e.target.value)} 
-                                            className="px-4 py-2 text-xs font-bold border-slate-100 bg-slate-50 rounded-xl focus:bg-white transition-all shadow-inner w-64" 
-                                            placeholder="Nueva medición (ej: Flexión Hombro)..." 
-                                        />
-                                        <button type="button" onClick={handleAddRomMetric} className="bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95">+ Añadir</button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {Object.entries(formData.evaluation_data.rom || {}).map(([name, vals]) => (
-                                        <div key={name} className="relative group">
-                                            <ROMGauge 
-                                                label={name} 
-                                                value={vals.before || 0} 
-                                                onChange={(val) => handleRomChange(name, 'before', val)} 
-                                                icon={MoveUp} 
-                                            />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => handleDeleteRomMetric(name)}
-                                                className="absolute -top-2 -right-2 p-1.5 bg-white text-red-400 border border-red-50 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
-                                            >
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {Object.keys(formData.evaluation_data.rom || {}).length === 0 && (
-                                        <div className="col-span-full py-12 text-center bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-100">
-                                            <Ruler className="w-8 h-8 text-slate-200 mx-auto mb-3" />
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sin mediciones ROM registradas</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-4">
-                                    <label className="enterprise-label opacity-60 ml-2">Hallazgos Físicos & Palpación</label>
-                                    <textarea 
-                                        value={formData.objective} 
-                                        onChange={(e) => setFormData({...formData, objective: e.target.value})} 
-                                        placeholder="Descripción detallada del examen físico..." 
-                                        className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-amber-500/5 focus:bg-white transition-all shadow-inner min-h-[150px]" 
-                                    />
-                                </div>
-                            </section>
-
-                            {/* [P] PLAN DE TRABAJO */}
-                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-10 animate-in fade-in slide-in-from-left duration-1000">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-inner"><Dumbbell className="w-6 h-6"/></div>
-                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[P] Ejecución & Plan</h2>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-8">
-                                    {/* Técnicas / Procedimientos */}
-                                    <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner space-y-6">
-                                        <div className="flex items-center gap-3">
-                                            <Activity className="w-5 h-5 text-green-600" />
-                                            <h3 className="text-sm font-black text-green-800 uppercase tracking-widest">Procedimientos</h3>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input 
-                                                type="text" 
-                                                value={techniqueInput} 
-                                                onChange={(e) => setTechniqueInput(e.target.value)} 
-                                                onKeyDown={(e) => { if(e.key==='Enter'){ e.preventDefault(); handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }}}
-                                                className="flex-1 px-5 py-3 text-xs font-bold border-white bg-white rounded-xl focus:ring-green-200 transition-all shadow-sm" 
-                                                placeholder="Ej: TENS, Masaje..." 
-                                            />
-                                            <button type="button" onClick={() => { handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }} className="p-3 bg-green-600 text-white rounded-xl shadow-lg shadow-green-200 active:scale-90 transition-all"><Plus className="w-5 h-5"/></button>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {formData.activities_data.techniques?.map((t, i) => (
-                                                <span key={i} className="bg-white text-green-700 text-[10px] px-4 py-2 rounded-xl border border-green-100 flex items-center gap-2 font-black shadow-sm uppercase tracking-wider group hover:bg-green-50 transition-colors">
-                                                    {t} <button type="button" onClick={() => handleActivityChange('techniques', t, 'remove')} className="p-0.5 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500"><X className="w-3 h-3"/></button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Ejercicios */}
-                                    <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner space-y-6">
-                                        <div className="flex items-center gap-3">
-                                            <Zap className="w-5 h-5 text-blue-600" />
-                                            <h3 className="text-sm font-black text-blue-800 uppercase tracking-widest">Ejercicios Realizados</h3>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input 
-                                                type="text" 
-                                                value={exerciseInput} 
-                                                onChange={(e) => setExerciseInput(e.target.value)} 
-                                                onKeyDown={(e) => { if(e.key==='Enter'){ e.preventDefault(); handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }}}
-                                                className="flex-1 px-5 py-3 text-xs font-bold border-white bg-white rounded-xl focus:ring-blue-200 transition-all shadow-sm" 
-                                                placeholder="Ej: Sentadillas, Elástico..." 
-                                            />
-                                            <button type="button" onClick={() => { handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }} className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 active:scale-90 transition-all"><Plus className="w-5 h-5"/></button>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {formData.activities_data.exercises?.map((t, i) => (
-                                                <span key={i} className="bg-white text-blue-700 text-[10px] px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-2 font-black shadow-sm uppercase tracking-wider group hover:bg-blue-50 transition-colors">
-                                                    {t} <button type="button" onClick={() => handleActivityChange('exercises', t, 'remove')} className="p-0.5 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500"><X className="w-3 h-3"/></button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <label className="enterprise-label opacity-60 ml-2">Indicaciones para el Hogar</label>
-                                    <textarea value={formData.plan} onChange={(e) => setFormData({...formData, plan: e.target.value})} rows={6} className="w-full bg-slate-50 border-none rounded-3xl p-8 text-sm font-medium shadow-inner focus:bg-white focus:ring-green-500/5 transition-all" placeholder="Ej: Realizar 3 series de 10 repeticiones diariamente..."/>
-                                </div>
-                            </section>
-
-                            {/* [A] EVALUACION */}
-                            <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-8 animate-in fade-in slide-in-from-left duration-1000">
-                                <div className="flex items-center gap-4 mb-2">
-                                    <div className="w-12 h-12 bg-teal-50 text-teal-500 rounded-2xl flex items-center justify-center shadow-inner"><Target className="w-6 h-6"/></div>
-                                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[A] Interpretación Clínica</h2>
-                                </div>
-                                <textarea value={formData.assessment} onChange={(e) => setFormData({...formData, assessment: e.target.value})} rows={6} className="w-full bg-slate-50 border-none rounded-3xl p-8 text-sm font-medium shadow-inner focus:bg-white focus:ring-teal-500/5 transition-all" placeholder="Juicio profesional sobre la evolución del paciente..."/>
-                            </section>
-                        </div>
-                    ) : (
-                        /* Vista Mobile: Sistema de Tabs Unificado */
-                        <div className="space-y-6">
-                             {activeTab === "subjetivo" && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                    {/* MAPA CORPORAL INTEGRADO */}
-                                    <PainMapCard
-                                        points={formData.session_pain_map}
-                                        painBefore={formData.pain_before}
-                                        painAfter={formData.pain_after}
-                                        bodyPart={formData.body_part} 
-                                        laterality={formData.laterality} 
-                                        isLocked={!canEdit} 
-                                        title="Mapa de Dolor"
-                                        onPointsChange={(val) => setFormData(prev => ({ ...prev, session_pain_map: val }))}
-                                        onPainBeforeChange={(val) => setFormData(prev => ({ ...prev, pain_before: val }))}
-                                        onPainAfterChange={(val) => setFormData(prev => ({ ...prev, pain_after: val }))}
-                                        onBodyPartChange={(val) => setFormData(prev => ({ ...prev, body_part: val }))} 
-                                        onLateralityChange={(val) => setFormData(prev => ({ ...prev, laterality: val }))} 
-                                    />
-
-                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Relato del Paciente</label>
+                                    <div className="space-y-6">
                                         <textarea 
                                             value={formData.subjective} 
                                             onChange={(e) => setFormData({...formData, subjective: e.target.value})} 
-                                            placeholder="¿Cómo se siente hoy?..." 
-                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all shadow-inner" 
-                                            rows={8} 
+                                            disabled={!canEdit}
+                                            placeholder="¿Cómo se siente hoy? ¿Hubo cambios desde la última sesión?" 
+                                            className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all shadow-inner min-h-[200px]" 
                                         />
+
+                                        {session?.item?.service_detail?.is_evaluation && (
+                                            <div className="p-8 bg-brand-primary/5 rounded-[2rem] border border-brand-primary/10 animate-in zoom-in-95 duration-500">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="p-2 bg-brand-primary text-white rounded-xl shadow-lg shadow-brand-primary/20">
+                                                        <Target className="w-4 h-4" />
+                                                    </div>
+                                                    <h3 className="text-sm font-black text-brand-primary uppercase tracking-widest">Objetivos de Línea Base</h3>
+                                                </div>
+                                                <textarea 
+                                                    value={formData.objectives} 
+                                                    onChange={(e) => setFormData({...formData, objectives: e.target.value})} 
+                                                    disabled={!canEdit}
+                                                    placeholder="Defina los objetivos a largo plazo para este tratamiento (ej: Recuperar marcha, ROM 100%, etc)..." 
+                                                    className="w-full bg-white border-transparent rounded-2xl p-6 text-sm font-bold shadow-sm focus:ring-brand-primary/20 transition-all" 
+                                                    rows={4} 
+                                                />
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase mt-3">Nota: Esta información se anclará como la "Foto Inicial" del tratamiento.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+
+                                {/* [O] OBJETIVO - BIOMETRÍA Y ROM */}
+                                <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-10 animate-in fade-in slide-in-from-left duration-700">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner"><Ruler className="w-6 h-6"/></div>
+                                            <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[O] Biometría & ROM</h2>
+                                        </div>
+                                        {canEdit && (
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    type="text" 
+                                                    value={newRomName} 
+                                                    onChange={(e) => setNewRomName(e.target.value)} 
+                                                    className="px-4 py-2 text-xs font-bold border-slate-100 bg-slate-50 rounded-xl focus:bg-white transition-all shadow-inner w-64" 
+                                                    placeholder="Nueva medición (ej: Flexión Hombro)..." 
+                                                />
+                                                <button type="button" onClick={handleAddRomMetric} className="bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95">+ Añadir</button>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {session?.item?.service_detail?.is_evaluation && (
-                                        <div className="p-8 bg-brand-primary/5 rounded-[32px] border border-brand-primary/10">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <Target className="w-5 h-5 text-brand-primary" />
-                                                <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Objetivos Línea Base</span>
-                                            </div>
-                                            <textarea 
-                                                value={formData.objectives} 
-                                                onChange={(e) => setFormData({...formData, objectives: e.target.value})} 
-                                                placeholder="Defina metas a largo plazo..." 
-                                                className="w-full bg-white border-transparent rounded-2xl p-5 text-sm font-bold shadow-sm focus:ring-brand-primary/20 transition-all" 
-                                                rows={5} 
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === "objetivo" && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rangos Articulares (ROM)</h3>
-                                            <button type="button" onClick={() => {
-                                                Swal.fire({
-                                                    title: 'Nueva Medición',
-                                                    input: 'text',
-                                                    inputPlaceholder: 'Ej: Flexión Cadera...',
-                                                    showCancelButton: true,
-                                                    confirmButtonText: 'Añadir',
-                                                    confirmButtonColor: '#4f46e5'
-                                                }).then(res => {
-                                                    if(res.isConfirmed && res.value) {
-                                                        const name = res.value;
-                                                        const currentRom = formData.evaluation_data.rom || {};
-                                                        setFormData(prev => ({
-                                                            ...prev,
-                                                            evaluation_data: {
-                                                                ...prev.evaluation_data,
-                                                                rom: { ...currentRom, [name]: { before: 0, after: 0 } }
-                                                            }
-                                                        }));
-                                                    }
-                                                });
-                                            }} className="text-[10px] font-black text-brand-primary uppercase tracking-widest border border-brand-primary/20 px-3 py-1.5 rounded-xl hover:bg-brand-primary/5">+ Añadir</button>
-                                        </div>
-                                        
-                                        <div className="grid grid-cols-1 gap-4">
-                                            {Object.entries(formData.evaluation_data.rom || {}).map(([name, vals]) => (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {Object.entries(formData.evaluation_data.rom || {}).map(([name, vals]) => (
+                                            <div key={name} className="relative group">
                                                 <ROMGauge 
-                                                    key={name}
                                                     label={name} 
                                                     value={vals.before || 0} 
                                                     onChange={(val) => handleRomChange(name, 'before', val)} 
-                                                    icon={Ruler} 
+                                                    icon={MoveUp} 
                                                 />
-                                            ))}
-                                            {Object.keys(formData.evaluation_data.rom || {}).length === 0 && (
-                                                <div className="py-12 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
-                                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Sin mediciones ROM</p>
-                                                </div>
-                                            )}
-                                        </div>
+                                                {canEdit && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => handleDeleteRomMetric(name)}
+                                                        className="absolute -top-2 -right-2 p-1.5 bg-white text-red-400 border border-red-50 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {Object.keys(formData.evaluation_data.rom || {}).length === 0 && (
+                                            <div className="col-span-full py-12 text-center bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-100">
+                                                <Ruler className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sin mediciones ROM registradas</p>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Hallazgos Físicos</label>
+                                    <div className="space-y-4">
+                                        <label className="enterprise-label opacity-60 ml-2">Hallazgos Físicos & Palpación</label>
                                         <textarea 
                                             value={formData.objective} 
                                             onChange={(e) => setFormData({...formData, objective: e.target.value})} 
-                                            placeholder="Descripción del examen físico..." 
-                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
-                                            rows={6} 
+                                            disabled={!canEdit}
+                                            placeholder="Descripción detallada del examen físico..." 
+                                            className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-amber-500/5 focus:bg-white transition-all shadow-inner min-h-[150px]" 
                                         />
                                     </div>
-                                </div>
-                            )}
+                                </section>
 
-                            {activeTab === "plan" && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                    {/* Técnicas en Mobile */}
-                                    <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 space-y-4">
-                                        <h3 className="text-[10px] font-black text-green-700 uppercase tracking-widest flex gap-2"><Activity className="w-3 h-3"/> Procedimientos</h3>
-                                        <div className="flex gap-2">
-                                            <input type="text" value={techniqueInput} onChange={(e) => setTechniqueInput(e.target.value)} className="flex-1 px-4 py-3 text-xs font-bold bg-white rounded-xl border-none shadow-sm" placeholder="TENS, Ultrasonido..." />
-                                            <button type="button" onClick={() => { handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }} className="p-3 bg-green-600 text-white rounded-xl shadow-lg active:scale-90"><Plus className="w-4 h-4"/></button>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {formData.activities_data.techniques?.map((t, i) => (
-                                                <span key={i} className="bg-white text-green-700 text-[10px] px-3 py-1.5 rounded-xl border border-green-100 flex items-center gap-2 font-black shadow-sm uppercase">
-                                                    {t} <X className="ml-2 w-3 h-3 text-slate-300 inline cursor-pointer" onClick={() => handleActivityChange('techniques', t, 'remove')} />
-                                                </span>
-                                            ))}
-                                        </div>
+                                {/* [P] PLAN DE TRABAJO */}
+                                <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-10 animate-in fade-in slide-in-from-left duration-1000">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center shadow-inner"><Dumbbell className="w-6 h-6"/></div>
+                                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[P] Ejecución & Plan</h2>
                                     </div>
 
-                                    {/* Ejercicios en Mobile */}
-                                    <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 space-y-4">
-                                        <h3 className="text-[10px] font-black text-blue-700 uppercase tracking-widest flex gap-2"><Dumbbell className="w-3 h-3"/> Ejercicios</h3>
-                                        <div className="flex gap-2">
-                                            <input type="text" value={exerciseInput} onChange={(e) => setExerciseInput(e.target.value)} className="flex-1 px-4 py-3 text-xs font-bold bg-white rounded-xl border-none shadow-sm" placeholder="Sentadillas, Pesas..." />
-                                            <button type="button" onClick={() => { handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }} className="p-3 bg-blue-600 text-white rounded-xl shadow-lg active:scale-90"><Plus className="w-4 h-4"/></button>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {formData.activities_data.exercises?.map((t, i) => (
-                                                <span key={i} className="bg-white text-blue-700 text-[10px] px-3 py-1.5 rounded-xl border border-blue-100 flex items-center gap-2 font-black shadow-sm uppercase">
-                                                    {t} <X className="ml-2 w-3 h-3 text-slate-300 inline cursor-pointer" onClick={() => handleActivityChange('exercises', t, 'remove')} />
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Tareas Hogar</label>
-                                        <textarea 
-                                            value={formData.plan} 
-                                            onChange={(e) => setFormData({...formData, plan: e.target.value})} 
-                                            placeholder="Indicaciones para el paciente..." 
-                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
-                                            rows={6} 
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === "analisis" && (
-                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                                    <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Interpretación Clínica</label>
-                                        <textarea 
-                                            value={formData.assessment} 
-                                            onChange={(e) => setFormData({...formData, assessment: e.target.value})} 
-                                            placeholder="Juicio profesional..." 
-                                            className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
-                                            rows={8} 
-                                        />
-                                    </div>
-
-                                    {/* CONSENTIMIENTO INFORMADO */}
-                                    <div className={`p-8 rounded-[32px] border transition-all ${formData.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 shadow-lg shadow-orange-100'}`}>
-                                        <div className="flex items-center justify-between gap-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${formData.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                                                    <ShieldCheck className="w-6 h-6" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Legal</p>
-                                                    <p className="text-[10px] font-bold text-slate-500 uppercase">Consentimiento</p>
-                                                </div>
+                                    <div className="grid grid-cols-2 gap-8">
+                                        {/* Técnicas / Procedimientos */}
+                                        <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner space-y-6">
+                                            <div className="flex items-center gap-3">
+                                                <Activity className="w-5 h-5 text-green-600" />
+                                                <h3 className="text-sm font-black text-green-800 uppercase tracking-widest">Procedimientos</h3>
                                             </div>
-                                            <Switch 
-                                                checked={formData.informed_consent_confirmed} 
-                                                onChange={(e) => setFormData(p => ({...p, informed_consent_confirmed: e.target.checked}))} 
+                                            {canEdit && (
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        value={techniqueInput} 
+                                                        onChange={(e) => setTechniqueInput(e.target.value)} 
+                                                        onKeyDown={(e) => { if(e.key==='Enter'){ e.preventDefault(); handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }}}
+                                                        className="flex-1 px-5 py-3 text-xs font-bold border-white bg-white rounded-xl focus:ring-green-200 transition-all shadow-sm" 
+                                                        placeholder="Ej: TENS, Masaje..." 
+                                                    />
+                                                    <button type="button" onClick={() => { handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }} className="p-3 bg-green-600 text-white rounded-xl shadow-lg shadow-green-200 active:scale-90 transition-all"><Plus className="w-5 h-5"/></button>
+                                                </div>
+                                            )}
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.activities_data.techniques?.map((t, i) => (
+                                                    <span key={i} className="bg-white text-green-700 text-[10px] px-4 py-2 rounded-xl border border-green-100 flex items-center gap-2 font-black shadow-sm uppercase tracking-wider group hover:bg-green-50 transition-colors">
+                                                        {t} {canEdit && <button type="button" onClick={() => handleActivityChange('techniques', t, 'remove')} className="p-0.5 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500"><X className="w-3 h-3"/></button>}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Ejercicios */}
+                                        <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner space-y-6">
+                                            <div className="flex items-center gap-3">
+                                                <Zap className="w-5 h-5 text-blue-600" />
+                                                <h3 className="text-sm font-black text-blue-800 uppercase tracking-widest">Ejercicios Realizados</h3>
+                                            </div>
+                                            {canEdit && (
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        value={exerciseInput} 
+                                                        onChange={(e) => setExerciseInput(e.target.value)} 
+                                                        onKeyDown={(e) => { if(e.key==='Enter'){ e.preventDefault(); handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }}}
+                                                        className="flex-1 px-5 py-3 text-xs font-bold border-white bg-white rounded-xl focus:ring-blue-200 transition-all shadow-sm" 
+                                                        placeholder="Ej: Sentadillas, Elástico..." 
+                                                    />
+                                                    <button type="button" onClick={() => { handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }} className="p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 active:scale-90 transition-all"><Plus className="w-5 h-5"/></button>
+                                                </div>
+                                            )}
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.activities_data.exercises?.map((t, i) => (
+                                                    <span key={i} className="bg-white text-blue-700 text-[10px] px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-2 font-black shadow-sm uppercase tracking-wider group hover:bg-blue-50 transition-colors">
+                                                        {t} {canEdit && <button type="button" onClick={() => handleActivityChange('exercises', t, 'remove')} className="p-0.5 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500"><X className="w-3 h-3"/></button>}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <label className="enterprise-label opacity-60 ml-2">Indicaciones para el Hogar</label>
+                                        <textarea value={formData.plan} onChange={(e) => setFormData({...formData, plan: e.target.value})} disabled={!canEdit} rows={6} className="w-full bg-slate-50 border-none rounded-3xl p-8 text-sm font-medium shadow-inner focus:bg-white focus:ring-green-500/5 transition-all" placeholder="Ej: Realizar 3 series de 10 repeticiones diariamente..."/>
+                                    </div>
+                                </section>
+
+                                {/* [A] EVALUACION */}
+                                <section className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 space-y-8 animate-in fade-in slide-in-from-left duration-1000">
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <div className="w-12 h-12 bg-teal-50 text-teal-500 rounded-2xl flex items-center justify-center shadow-inner"><Target className="w-6 h-6"/></div>
+                                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter">[A] Interpretación Clínica</h2>
+                                    </div>
+                                    <textarea value={formData.assessment} onChange={(e) => setFormData({...formData, assessment: e.target.value})} disabled={!canEdit} rows={6} className="w-full bg-slate-50 border-none rounded-3xl p-8 text-sm font-medium shadow-inner focus:bg-white focus:ring-teal-500/5 transition-all" placeholder="Juicio profesional sobre la evolución del paciente..."/>
+                                </section>
+                            </div>
+                        ) : (
+                            /* Vista Mobile: Sistema de Tabs Unificado */
+                            <div className="space-y-6">
+                                 {activeTab === "subjetivo" && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                        {/* MAPA CORPORAL INTEGRADO */}
+                                        <PainMapCard
+                                            points={formData.session_pain_map}
+                                            painBefore={formData.pain_before}
+                                            painAfter={formData.pain_after}
+                                            bodyPart={formData.body_part} 
+                                            laterality={formData.laterality} 
+                                            isLocked={!canEdit} 
+                                            title="Mapa de Dolor"
+                                            onPointsChange={(val) => setFormData(prev => ({ ...prev, session_pain_map: val }))}
+                                            onPainBeforeChange={(val) => setFormData(prev => ({ ...prev, pain_before: val }))}
+                                            onPainAfterChange={(val) => setFormData(prev => ({ ...prev, pain_after: val }))}
+                                            onBodyPartChange={(val) => setFormData(prev => ({ ...prev, body_part: val }))} 
+                                            onLateralityChange={(val) => setFormData(prev => ({ ...prev, laterality: val }))} 
+                                        />
+
+                                        <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Relato del Paciente</label>
+                                            <textarea 
+                                                value={formData.subjective} 
+                                                onChange={(e) => setFormData({...formData, subjective: e.target.value})} 
+                                                disabled={!canEdit}
+                                                placeholder="¿Cómo se siente hoy?..." 
+                                                className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all shadow-inner" 
+                                                rows={8} 
+                                            />
+                                        </div>
+
+                                        {session?.item?.service_detail?.is_evaluation && (
+                                            <div className="p-8 bg-brand-primary/5 rounded-[32px] border border-brand-primary/10">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <Target className="w-5 h-5 text-brand-primary" />
+                                                    <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Objetivos Línea Base</span>
+                                                </div>
+                                                <textarea 
+                                                    value={formData.objectives} 
+                                                    onChange={(e) => setFormData({...formData, objectives: e.target.value})} 
+                                                    disabled={!canEdit}
+                                                    placeholder="Defina metas a largo plazo..." 
+                                                    className="w-full bg-white border-transparent rounded-2xl p-5 text-sm font-bold shadow-sm focus:ring-brand-primary/20 transition-all" 
+                                                    rows={5} 
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {activeTab === "objetivo" && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                        <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rangos Articulares (ROM)</h3>
+                                                {canEdit && (
+                                                    <button type="button" onClick={() => {
+                                                        Swal.fire({
+                                                            title: 'Nueva Medición',
+                                                            input: 'text',
+                                                            inputPlaceholder: 'Ej: Flexión Cadera...',
+                                                            showCancelButton: true,
+                                                            confirmButtonText: 'Añadir',
+                                                            confirmButtonColor: '#4f46e5'
+                                                        }).then(res => {
+                                                            if(res.isConfirmed && res.value) {
+                                                                const name = res.value;
+                                                                const currentRom = formData.evaluation_data.rom || {};
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    evaluation_data: {
+                                                                        ...prev.evaluation_data,
+                                                                        rom: { ...currentRom, [name]: { before: 0, after: 0 } }
+                                                                    }
+                                                                }));
+                                                            }
+                                                        });
+                                                    }} className="text-[10px] font-black text-brand-primary uppercase tracking-widest border border-brand-primary/20 px-3 py-1.5 rounded-xl hover:bg-brand-primary/5">+ Añadir</button>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {Object.entries(formData.evaluation_data.rom || {}).map(([name, vals]) => (
+                                                    <ROMGauge 
+                                                        key={name}
+                                                        label={name} 
+                                                        value={vals.before || 0} 
+                                                        onChange={(val) => handleRomChange(name, 'before', val)} 
+                                                        icon={Ruler} 
+                                                    />
+                                                ))}
+                                                {Object.keys(formData.evaluation_data.rom || {}).length === 0 && (
+                                                    <div className="py-12 text-center bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-100">
+                                                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Sin mediciones ROM</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Hallazgos Físicos</label>
+                                            <textarea 
+                                                value={formData.objective} 
+                                                onChange={(e) => setFormData({...formData, objective: e.target.value})} 
+                                                disabled={!canEdit}
+                                                placeholder="Descripción del examen físico..." 
+                                                className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
+                                                rows={6} 
                                             />
                                         </div>
                                     </div>
+                                )}
+
+                                {activeTab === "plan" && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                        {/* Técnicas en Mobile */}
+                                        <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 space-y-4">
+                                            <h3 className="text-[10px] font-black text-green-700 uppercase tracking-widest flex gap-2"><Activity className="w-3 h-3"/> Procedimientos</h3>
+                                            {canEdit && (
+                                                <div className="flex gap-2">
+                                                    <input type="text" value={techniqueInput} onChange={(e) => setTechniqueInput(e.target.value)} className="flex-1 px-4 py-3 text-xs font-bold bg-white rounded-xl border-none shadow-sm" placeholder="TENS, Ultrasonido..." />
+                                                    <button type="button" onClick={() => { handleActivityChange('techniques', techniqueInput, 'add'); setTechniqueInput(''); }} className="p-3 bg-green-600 text-white rounded-xl shadow-lg active:scale-90"><Plus className="w-4 h-4"/></button>
+                                                </div>
+                                            )}
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.activities_data.techniques?.map((t, i) => (
+                                                    <span key={i} className="bg-white text-green-700 text-[10px] px-3 py-1.5 rounded-xl border border-green-100 flex items-center gap-2 font-black shadow-sm uppercase">
+                                                        {t} {canEdit && <X className="ml-2 w-3 h-3 text-slate-300 inline cursor-pointer" onClick={() => handleActivityChange('techniques', t, 'remove')} />}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Ejercicios en Mobile */}
+                                        <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 space-y-4">
+                                            <h3 className="text-[10px] font-black text-blue-700 uppercase tracking-widest flex gap-2"><Dumbbell className="w-3 h-3"/> Ejercicios</h3>
+                                            {canEdit && (
+                                                <div className="flex gap-2">
+                                                    <input type="text" value={exerciseInput} onChange={(e) => setExerciseInput(e.target.value)} className="flex-1 px-4 py-3 text-xs font-bold bg-white rounded-xl border-none shadow-sm" placeholder="Sentadillas, Pesas..." />
+                                                    <button type="button" onClick={() => { handleActivityChange('exercises', exerciseInput, 'add'); setExerciseInput(''); }} className="p-3 bg-blue-600 text-white rounded-xl shadow-lg active:scale-90"><Plus className="w-4 h-4"/></button>
+                                                </div>
+                                            )}
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.activities_data.exercises?.map((t, i) => (
+                                                    <span key={i} className="bg-white text-blue-700 text-[10px] px-3 py-1.5 rounded-xl border border-blue-100 flex items-center gap-2 font-black shadow-sm uppercase">
+                                                        {t} {canEdit && <X className="ml-2 w-3 h-3 text-slate-300 inline cursor-pointer" onClick={() => handleActivityChange('exercises', t, 'remove')} />}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Tareas Hogar</label>
+                                            <textarea 
+                                                value={formData.plan} 
+                                                onChange={(e) => setFormData({...formData, plan: e.target.value})} 
+                                                disabled={!canEdit}
+                                                placeholder="Indicaciones para el paciente..." 
+                                                className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
+                                                rows={6} 
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === "analisis" && (
+                                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+                                        <div className="p-6 bg-white rounded-[32px] border border-slate-100 shadow-sm">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Interpretación Clínica</label>
+                                            <textarea 
+                                                value={formData.assessment} 
+                                                onChange={(e) => setFormData({...formData, assessment: e.target.value})} 
+                                                disabled={!canEdit}
+                                                placeholder="Juicio profesional..." 
+                                                className="w-full bg-slate-50 border-transparent rounded-2xl p-5 text-sm font-bold shadow-inner" 
+                                                rows={8} 
+                                            />
+                                        </div>
+
+                                        {/* CONSENTIMIENTO INFORMADO */}
+                                        <div className={`p-8 rounded-[32px] border transition-all ${formData.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 shadow-lg shadow-orange-100'}`}>
+                                            <div className="flex items-center justify-between gap-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${formData.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                        <ShieldCheck className="w-6 h-6" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Legal</p>
+                                                        <p className="text-[10px] font-bold text-slate-500 uppercase">Consentimiento</p>
+                                                    </div>
+                                                </div>
+                                                <Switch 
+                                                    checked={formData.informed_consent_confirmed} 
+                                                    onChange={(e) => setFormData(p => ({...p, informed_consent_confirmed: e.target.checked}))} 
+                                                    disabled={!canEdit}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* === COLUMNA DERECHA: PAIN MAP & CONTEXTO (Solo Desktop) === */}
+                    {isDesktop && (
+                        <div className="lg:col-span-5 space-y-8">
+                            <div className="sticky top-32 space-y-8">
+                                
+                                {/* MAPA CORPORAL INTEGRADO (Estructura Admin) */}
+                                <PainMapCard
+                                    points={formData.session_pain_map}
+                                    painBefore={formData.pain_before}
+                                    painAfter={formData.pain_after}
+                                    bodyPart={formData.body_part} 
+                                    laterality={formData.laterality} 
+                                    isLocked={!canEdit} 
+                                    title="Localización de Dolor"
+                                    onPointsChange={(val) => setFormData(prev => ({ ...prev, session_pain_map: val }))}
+                                    onPainBeforeChange={(val) => setFormData(prev => ({ ...prev, pain_before: val }))}
+                                    onPainAfterChange={(val) => setFormData(prev => ({ ...prev, pain_after: val }))}
+                                    onBodyPartChange={(val) => setFormData(prev => ({ ...prev, body_part: val }))} 
+                                    onLateralityChange={(val) => setFormData(prev => ({ ...prev, laterality: val }))} 
+                                />
+
+                                {/* CONSENTIMIENTO INFORMADO */}
+                                <div className={`p-8 rounded-[2.5rem] border transition-all ${formData.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 shadow-lg shadow-orange-100'}`}>
+                                    <div className="flex items-center justify-between gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${formData.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                <ShieldCheck className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Consentimiento</p>
+                                                <p className="text-[10px] font-bold text-slate-500 uppercase">Validación legal de atención</p>
+                                            </div>
+                                        </div>
+                                        <Switch 
+                                            checked={formData.informed_consent_confirmed} 
+                                            onChange={(e) => setFormData(p => ({...p, informed_consent_confirmed: e.target.checked}))} 
+                                            disabled={!canEdit}
+                                        />
+                                    </div>
                                 </div>
-                            )}
+
+                                {/* ACCIONES FINALES (Solo Desktop) */}
+                                <div className="flex flex-col md:flex-row gap-4 w-full">
+                                    <button 
+                                        type="button" 
+                                        onClick={handleFinishSession} 
+                                        disabled={isSubmitting || !canEdit} 
+                                        className="flex-1 md:flex-[3] flex items-center justify-center gap-3 bg-emerald-600 text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-95 disabled:opacity-50"
+                                    >
+                                        <CheckCircle className="w-5 h-5" /> FINALIZAR Y CERRAR ATENCIÓN
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        disabled={isSubmitting || !canEdit} 
+                                        className="w-full md:w-1/3 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-650 border border-slate-200/60 font-black uppercase text-xs py-5 rounded-[2rem] transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        <Save className="w-5 h-5" /> GUARDAR BORRADOR
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
+            ) : (
+                /* Vista Simplificada: Carga en pantalla única */
+                <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-300">
+                    <div className="flex flex-col md:flex-row gap-6">
+                        <PainSelector 
+                            label="Dolor al Inicio (EVA)" 
+                            value={formData.pain_before} 
+                            onChange={(val) => setFormData({...formData, pain_before: val})}
+                            isLocked={!canEdit}
+                        />
+                        <PainSelector 
+                            label="Dolor al Final (EVA)" 
+                            value={formData.pain_after} 
+                            onChange={(val) => setFormData({...formData, pain_after: val})}
+                            isLocked={!canEdit}
+                        />
+                    </div>
 
-                {/* === COLUMNA DERECHA: PAIN MAP & CONTEXTO (Solo Desktop) === */}
-                {isDesktop && (
-                    <div className="lg:col-span-5 space-y-8">
-                        <div className="sticky top-32 space-y-8">
-                            
-                            {/* MAPA CORPORAL INTEGRADO (Estructura Admin) */}
-                            <PainMapCard
-                                points={formData.session_pain_map}
-                                painBefore={formData.pain_before}
-                                painAfter={formData.pain_after}
-                                bodyPart={formData.body_part} 
-                                laterality={formData.laterality} 
-                                isLocked={!canEdit} 
-                                title="Localización de Dolor"
-                                onPointsChange={(val) => setFormData(prev => ({ ...prev, session_pain_map: val }))}
-                                onPainBeforeChange={(val) => setFormData(prev => ({ ...prev, pain_before: val }))}
-                                onPainAfterChange={(val) => setFormData(prev => ({ ...prev, pain_after: val }))}
-                                onBodyPartChange={(val) => setFormData(prev => ({ ...prev, body_part: val }))} 
-                                onLateralityChange={(val) => setFormData(prev => ({ ...prev, laterality: val }))} 
-                            />
+                    <div className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Avance / Evolución Clínica</label>
+                        <textarea 
+                            value={formData.assessment} 
+                            onChange={(e) => setFormData({...formData, assessment: e.target.value})} 
+                            disabled={!canEdit}
+                            placeholder="Describa la evolución clínica del paciente, avances detectados o el estado actual de su recuperación..." 
+                            className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-teal-500/5 focus:bg-white transition-all shadow-inner min-h-[160px]" 
+                        />
+                    </div>
 
-                            {/* CONSENTIMIENTO INFORMADO */}
-                            <div className={`p-8 rounded-[2.5rem] border transition-all ${formData.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 shadow-lg shadow-orange-100'}`}>
-                                <div className="flex items-center justify-between gap-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${formData.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                                            <ShieldCheck className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Consentimiento</p>
-                                            <p className="text-[10px] font-bold text-slate-500 uppercase">Validación legal de atención</p>
-                                        </div>
+                    <div className="p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 space-y-3">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Observaciones / Notas Internas</label>
+                        <textarea 
+                            value={formData.notes} 
+                            onChange={(e) => setFormData({...formData, notes: e.target.value})} 
+                            disabled={!canEdit}
+                            placeholder="Comentarios adicionales, notas administrativas u observaciones internas de la sesión..." 
+                            className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-medium focus:ring-4 focus:ring-teal-500/5 focus:bg-white transition-all shadow-inner min-h-[120px]" 
+                        />
+                    </div>
+
+                    {/* Consentimiento en Desktop Simplificado */}
+                    {isDesktop && (
+                        <div className={`p-8 rounded-[2.5rem] border transition-all ${formData.informed_consent_confirmed ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200 shadow-lg shadow-orange-100'}`}>
+                            <div className="flex items-center justify-between gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${formData.informed_consent_confirmed ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                        <ShieldCheck className="w-6 h-6" />
                                     </div>
-                                    <Switch 
-                                        checked={formData.informed_consent_confirmed} 
-                                        onChange={(e) => setFormData(p => ({...p, informed_consent_confirmed: e.target.checked}))} 
-                                    />
+                                    <div>
+                                        <p className="text-xs font-black uppercase text-slate-900 tracking-widest">Consentimiento Informado</p>
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase">Validación legal obligatoria para finalizar la atención</p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            {/* ACCIONES FINALES (Solo Desktop) */}
-                            <div className="flex flex-col md:flex-row gap-4 w-full">
-                                <button 
-                                    type="button" 
-                                    onClick={handleFinishSession} 
-                                    disabled={isSubmitting} 
-                                    className="flex-1 md:flex-[3] flex items-center justify-center gap-3 bg-emerald-600 text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-95"
-                                >
-                                    <CheckCircle className="w-5 h-5" /> FINALIZAR Y CERRAR ATENCIÓN
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    disabled={isSubmitting} 
-                                    className="w-full md:w-1/3 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-650 border border-slate-200/60 font-black uppercase text-xs py-5 rounded-[2rem] transition-all active:scale-95"
-                                >
-                                    <Save className="w-5 h-5" /> GUARDAR BORRADOR
-                                </button>
+                                <Switch 
+                                    checked={formData.informed_consent_confirmed} 
+                                    onChange={(e) => setFormData(p => ({...p, informed_consent_confirmed: e.target.checked}))} 
+                                    disabled={!canEdit}
+                                />
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+
+                    {/* Acciones en Desktop Simplificado */}
+                    {isDesktop && (
+                        <div className="flex flex-col md:flex-row gap-4 w-full pt-4">
+                            <button 
+                                type="button" 
+                                onClick={handleFinishSession} 
+                                disabled={isSubmitting || !canEdit} 
+                                className="flex-1 md:flex-[3] flex items-center justify-center gap-3 bg-emerald-600 text-white font-black uppercase text-xs py-5 rounded-[2rem] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-95 disabled:opacity-50"
+                            >
+                                <CheckCircle className="w-5 h-5" /> FINALIZAR Y CERRAR ATENCIÓN
+                            </button>
+                            <button 
+                                type="submit" 
+                                disabled={isSubmitting || !canEdit} 
+                                className="w-full md:w-1/3 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-650 border border-slate-200/60 font-black uppercase text-xs py-5 rounded-[2rem] transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                <Save className="w-5 h-5" /> GUARDAR BORRADOR
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* BARRA DE ACCIÓN FLOTANTE (Solo Mobile) */}
             {!isDesktop && (
                 <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-xl border-t border-slate-100 flex flex-col gap-3.5 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
                     <button 
                         type="button" 
-                        onClick={handleNextTab} 
-                        disabled={isSubmitting} 
+                        onClick={showFullSOAP ? handleNextTab : handleFinishSession} 
+                        disabled={isSubmitting || !canEdit} 
                         className={`w-full text-white font-black uppercase text-xs tracking-[0.2em] py-6 rounded-[32px] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all duration-300 ${
-                            activeTab === 'analisis' 
-                                ? 'bg-emerald-600 shadow-emerald-600/35 hover:bg-emerald-700' 
+                            (!showFullSOAP || activeTab === 'analisis')
+                                ? 'bg-emerald-600 shadow-emerald-600/35 hover:bg-emerald-700 font-bold text-white' 
                                 : 'bg-brand-primary shadow-brand-primary/40 hover:brightness-110'
                         }`}
                     >
-                        {activeTab === 'analisis' ? <CheckCircle className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
-                        {activeTab === 'analisis' ? 'FINALIZAR Y CERRAR ATENCIÓN' : 'SIGUIENTE PASO'}
+                        {(!showFullSOAP || activeTab === 'analisis') ? <CheckCircle className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+                        {(!showFullSOAP || activeTab === 'analisis') ? 'FINALIZAR Y CERRAR ATENCIÓN' : 'SIGUIENTE PASO'}
                     </button>
                     <button 
                         type="submit" 
-                        disabled={isSubmitting} 
+                        disabled={isSubmitting || !canEdit} 
                         className="w-full text-slate-500 hover:text-slate-800 font-black uppercase text-[9px] tracking-widest py-2.5 flex items-center justify-center gap-2 transition-all active:scale-95"
                     >
                         <Save className="w-4 h-4 text-slate-400" /> Guardar Borrador Temporal

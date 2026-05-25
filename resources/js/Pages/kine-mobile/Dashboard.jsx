@@ -278,45 +278,8 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* --- 🚨 DESTACADO: SESIONES PENDIENTES DE CIERRE SOAP --- */}
-      {pendingClosure.length > 0 && canCreate && (
-        <div ref={soapAlertRef} className="mb-8 p-6 bg-amber-50/70 border border-amber-200/60 rounded-[32px] shadow-sm animate-in slide-in-from-top-4 duration-300">
-          <div className="flex items-center gap-3 text-amber-800 mb-4">
-            <div className="p-2 bg-white border border-amber-200 text-amber-600 rounded-xl shadow-sm">
-                <AlertCircle className="w-6 h-6 text-amber-500 animate-bounce" />
-            </div>
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-tight">Tienes {pendingClosure.length} {pendingClosure.length === 1 ? 'Sesión pendiente' : 'Sesiones pendientes'} de Cierre SOAP</h3>
-              <p className="text-[9px] font-bold text-slate-500 uppercase mt-0.5">Por favor, registra el SOAP e historia clínica para completar la atención</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {pendingClosure.map(sess => (
-              <button
-                key={sess.id}
-                onClick={() => router.visit(route('kine.sessions.form', sess.id))}
-                className="p-4 bg-white hover:bg-amber-50/50 border border-slate-100 hover:border-amber-200 rounded-2xl flex items-center justify-between text-left transition-all active:scale-95 shadow-sm group"
-              >
-                <div className="min-w-0 flex-1">
-                  <span className="text-[7px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md uppercase tracking-wider">
-                    SOAP PENDIENTE
-                  </span>
-                  <h4 className="text-xs font-black text-slate-800 uppercase mt-1 truncate group-hover:text-amber-800 transition-colors">
-                    {sess.patient_name}
-                  </h4>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase mt-0.5 truncate">
-                    {sess.session_type} • {sess.date_human}
-                  </p>
-                </div>
-                <ChevronRightIcon className="w-4 h-4 text-slate-300 group-hover:text-amber-600 transition-all group-hover:translate-x-1 shrink-0" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* --- 📊 INTERACTIVE DYNAMIC KPI GRID --- */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
         {/* KPI Total */}
         <button
           onClick={() => handleKpiClick("todos")}
@@ -381,17 +344,6 @@ export default function Dashboard({
           <span className="text-xs font-black ml-2 shrink-0">{dynamicKpis.inBox}</span>
         </button>
 
-        {/* KPI Cierres SOAP */}
-        <button
-          onClick={() => handleKpiClick("soapPending")}
-          className={`px-3.5 py-3 rounded-2xl border text-left flex items-center justify-between transition-all active:scale-95 shadow-sm col-span-2 sm:col-span-1 bg-white border-slate-100 text-slate-700 hover:bg-slate-50/50`}
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-500" />
-            <span className="text-[9px] font-black uppercase tracking-wider truncate">Cierres SOAP</span>
-          </div>
-          <span className="text-xs font-black ml-2 shrink-0 text-red-600">{dynamicKpis.soapPending}</span>
-        </button>
       </div>
 
       {/* --- 🛠️ CONTROLES Y NAVEGACIÓN --- */}

@@ -10,27 +10,11 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PatientCard from "./Partials/PatientCard";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
-const FILTERS = [
-    { key: "all",      label: "Todos",        icon: Users,        color: "text-slate-600",  bg: "bg-slate-100",       activeBg: "bg-slate-700",    activeText: "text-white" },
-    { key: "active",   label: "Con tratamiento", icon: Activity,  color: "text-teal-600",   bg: "bg-teal-50",         activeBg: "bg-teal-600",     activeText: "text-white" },
-    { key: "inactive", label: "Sin tratamiento", icon: Clock,     color: "text-slate-400",  bg: "bg-slate-50",        activeBg: "bg-slate-500",    activeText: "text-white" },
-    { key: "progress", label: "+50% avance",   icon: TrendingUp,  color: "text-violet-600", bg: "bg-violet-50",       activeBg: "bg-violet-600",   activeText: "text-white" },
-];
-
-function StatPill({ icon: Icon, value, label, color }) {
-    return (
-        <div className="flex flex-col items-center justify-center bg-white rounded-2xl p-3 border border-slate-100 shadow-sm flex-1">
-            <Icon className={`w-4 h-4 mb-1 ${color}`} />
-            <span className="text-lg font-black text-slate-900">{value}</span>
-            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide leading-tight text-center">{label}</span>
-        </div>
-    );
-}
-
 export default function MyPatients({ patients, search, totalPatients, upcomingAppointments = [] }) {
+    const defaultFilter = patients.some(p => p.has_appointment_today) ? "today" : "all";
     const [searchTerm, setSearchTerm]       = useState(search || "");
     const [localSearch, setLocalSearch]     = useState("");
-    const [activeFilter, setActiveFilter]   = useState("all");
+    const [activeFilter, setActiveFilter]   = useState(defaultFilter);
     const isDesktop = useMediaQuery("(min-width: 1024px)");
 
     // Server-side search
@@ -68,33 +52,17 @@ export default function MyPatients({ patients, search, totalPatients, upcomingAp
         }
 
         // Status filter
+        if (activeFilter === "today")    list = list.filter((p) => p.has_appointment_today);
         if (activeFilter === "active")   list = list.filter((p) => p.active_treatment);
-        if (activeFilter === "inactive") list = list.filter((p) => !p.active_treatment);
-        if (activeFilter === "progress") {
-            list = list.filter((p) => {
-                if (!p.active_treatment) return false;
-                const prog = p.active_treatment.progress ?? "";
-                if (prog.includes("∞")) return true;
-                const [done, total] = prog.split("/").map(Number);
-                return total > 0 && done / total >= 0.5;
-            });
-        }
 
         return list;
     }, [patients, localSearch, activeFilter]);
 
     // KPIs
     const kpis = useMemo(() => ({
-        total:    patients.length,
+        today:    patients.filter((p) => p.has_appointment_today).length,
         active:   patients.filter((p) => p.active_treatment).length,
-        inactive: patients.filter((p) => !p.active_treatment).length,
-        progress: patients.filter((p) => {
-            if (!p.active_treatment) return false;
-            const prog = p.active_treatment.progress ?? "";
-            if (prog.includes("∞")) return true;
-            const [done, total] = prog.split("/").map(Number);
-            return total > 0 && done / total >= 0.5;
-        }).length,
+        total:    patients.length,
     }), [patients]);
 
     const filterCounts = {
@@ -133,15 +101,52 @@ export default function MyPatients({ patients, search, totalPatients, upcomingAp
             {/* ── KPI Strip ── */}
             <div className={`${isDesktop ? "mb-8" : "px-5 mb-5"}`}>
                 <div className="flex gap-3">
-                    <StatPill icon={Users}       value={kpis.total}    label="Total"     color="text-slate-500" />
-                    <StatPill icon={Activity}    value={kpis.active}   label="Activos"   color="text-teal-500" />
-                    <StatPill icon={Clock}       value={kpis.inactive} label="Sin tto."  color="text-slate-400" />
-                    <StatPill icon={TrendingUp}  value={kpis.progress} label="+50% av."  color="text-violet-500" />
+                    <button
+                        type="button"
+                        onClick={() => setActiveFilter("today")}
+                        className={`flex flex-col items-center justify-center rounded-2xl p-3 border flex-1 transition-all duration-300 active:scale-95 ${
+                            activeFilter === "today"
+                                ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                                : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50"
+                        }`}
+                    >
+                        <Clock className={`w-4 h-4 mb-1 ${activeFilter === "today" ? "text-white" : "text-blue-500"}`} />
+                        <span className={`text-lg font-black leading-none ${activeFilter === "today" ? "text-white" : "text-slate-900"}`}>{kpis.today}</span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider mt-1 ${activeFilter === "today" ? "text-slate-300" : "text-slate-400"}`}>Hoy</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setActiveFilter("active")}
+                        className={`flex flex-col items-center justify-center rounded-2xl p-3 border flex-1 transition-all duration-300 active:scale-95 ${
+                            activeFilter === "active"
+                                ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                                : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50"
+                        }`}
+                    >
+                        <Activity className={`w-4 h-4 mb-1 ${activeFilter === "active" ? "text-white" : "text-teal-500"}`} />
+                        <span className={`text-lg font-black leading-none ${activeFilter === "active" ? "text-white" : "text-slate-900"}`}>{kpis.active}</span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider mt-1 ${activeFilter === "active" ? "text-slate-300" : "text-slate-400"}`}>Activos</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setActiveFilter("all")}
+                        className={`flex flex-col items-center justify-center rounded-2xl p-3 border flex-1 transition-all duration-300 active:scale-95 ${
+                            activeFilter === "all"
+                                ? "bg-slate-900 border-slate-900 text-white shadow-lg"
+                                : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50"
+                        }`}
+                    >
+                        <Users className={`w-4 h-4 mb-1 ${activeFilter === "all" ? "text-white" : "text-slate-500"}`} />
+                        <span className={`text-lg font-black leading-none ${activeFilter === "all" ? "text-white" : "text-slate-900"}`}>{kpis.total}</span>
+                        <span className={`text-[9px] font-black uppercase tracking-wider mt-1 ${activeFilter === "all" ? "text-slate-300" : "text-slate-400"}`}>Todos</span>
+                    </button>
                 </div>
             </div>
 
             {/* ── Search ── */}
-            <div className={`${isDesktop ? "mb-6 max-w-2xl" : "px-5 mb-4"}`}>
+            <div className={`${isDesktop ? "mb-6 max-w-2xl" : "px-5 mb-6"}`}>
                 <form onSubmit={handleSearch} className="relative group">
                     <Search className="absolute w-4 h-4 text-slate-400 transition-colors group-focus-within:text-teal-600 transform -translate-y-1/2 left-4 top-1/2" />
                     <input
@@ -164,35 +169,6 @@ export default function MyPatients({ patients, search, totalPatients, upcomingAp
                         </button>
                     )}
                 </form>
-            </div>
-
-            {/* ── Filter Pills ── */}
-            <div className={`${isDesktop ? "mb-8" : "px-5 mb-5"}`}>
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                    {FILTERS.map((f) => {
-                        const Icon = f.icon;
-                        const isActive = activeFilter === f.key;
-                        return (
-                            <button
-                                key={f.key}
-                                onClick={() => setActiveFilter(f.key)}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 border ${
-                                    isActive
-                                        ? `${f.activeBg} ${f.activeText} border-transparent shadow-md`
-                                        : `${f.bg} ${f.color} border-slate-100 hover:border-slate-200`
-                                }`}
-                            >
-                                <Icon className="w-3.5 h-3.5" />
-                                {f.label}
-                                <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                                    isActive ? "bg-white/20 text-white" : "bg-white text-slate-500"
-                                }`}>
-                                    {filterCounts[f.key]}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
             </div>
 
             {/* ── Patient Grid ── */}

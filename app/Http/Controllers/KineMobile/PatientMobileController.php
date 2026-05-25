@@ -54,7 +54,20 @@ class PatientMobileController extends Controller
             });
         }
 
-        $patients = $query->orderBy('name')->get()->map(function ($patient) {
+        $today = now()->toDateString();
+        $todayPatientIds = \App\Models\Appointment::where('doctor_id', $doctor->id)
+            ->whereDate('start_at', $today)
+            ->whereIn('status', [
+                \App\Enums\AppointmentStatusEnum::SCHEDULED,
+                \App\Enums\AppointmentStatusEnum::CONFIRMED,
+                \App\Enums\AppointmentStatusEnum::CHECKED_IN,
+                \App\Enums\AppointmentStatusEnum::IN_PROGRESS,
+                \App\Enums\AppointmentStatusEnum::COMPLETED
+            ])
+            ->pluck('patient_id')
+            ->toArray();
+
+        $patients = $query->orderBy('name')->get()->map(function ($patient) use ($todayPatientIds) {
             $activeTreatment = $patient->treatments->first();
 
             return [
@@ -64,6 +77,7 @@ class PatientMobileController extends Controller
                 'rut' => $patient->rut,
                 'total_sessions' => $patient->total_sessions,
                 'completed_sessions' => $patient->completed_sessions,
+                'has_appointment_today' => in_array($patient->id, $todayPatientIds),
                 'active_treatment' => $activeTreatment ? [
                     'id' => $activeTreatment->id,
                     'diagnosis' => $activeTreatment->diagnosis,
