@@ -285,7 +285,8 @@ class AppointmentController extends Controller
             $appointment->start_at, 
             $appointment->end_at, 
             $room, 
-            $appointment->modality->value ?? 'onsite'
+            $appointment->modality->value ?? 'onsite',
+            $appointment->id
         );
 
         if (!$capacityStatus['is_available']) {

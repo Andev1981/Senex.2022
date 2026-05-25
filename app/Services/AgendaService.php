@@ -386,7 +386,7 @@ class AgendaService
     /**
      * Calcula el estado de ocupación de un slot.
      */
-    public function getSlotOccupancyStatus(Doctor $doctor, Carbon $start, Carbon $end, ?Room $room, string $modality = 'onsite'): array
+    public function getSlotOccupancyStatus(Doctor $doctor, Carbon $start, Carbon $end, ?Room $room, string $modality = 'onsite', ?int $excludeAppointmentId = null): array
     {
         $doctorMaxCapacity = 3; 
 
@@ -396,6 +396,7 @@ class AgendaService
                 $q->where('start_at', '<', $end)
                   ->where('end_at', '>', $start);
             })
+            ->when($excludeAppointmentId, fn($q) => $q->where('id', '!=', $excludeAppointmentId))
             ->with('item.serviceDetail')
             ->get();
 
@@ -443,6 +444,7 @@ class AgendaService
                     $q->where('start_at', '<', $end)
                       ->where('end_at', '>', $start);
                 })
+                ->when($excludeAppointmentId, fn($q) => $q->where('id', '!=', $excludeAppointmentId))
                 ->count();
             
             $manualRoomPeople = \App\Models\TreatmentSession::where('room_id', $room->id)
