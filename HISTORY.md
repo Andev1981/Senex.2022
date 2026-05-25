@@ -5,11 +5,13 @@
 - **Changes:**
   - **Backend Controller:** Updated `SessionMobileController.php` methods `showForm`, `show`, `updateNotes`, and `completeSession` to inject and respect the `can_edit_completed_sessions` permission.
   - **Bypass early-return:** Handled direct updates via `$session->update()` in `SessionMobileController.php@completeSession` if the session is already completed, preventing the standard service's early-return from discarding updates.
+  - **Bypass branch restrictions:** Redefined `$isClinicalAdmin` globally across all mobile controller methods to recognize direct Spatie `treatment-sessions.manage` / `sessions.manage` permissions, successfully bypassing the branch's `can_create_sessions => false` 403 blocks.
   - **Frontend Form:** Updated `session-form.jsx` to receive `can_edit_completed_sessions` and allow editing (updating form `canEdit` state) if true.
   - **Frontend Detail:** Updated `session-detail.jsx` to render the "Editar Ficha" button on completed sessions if `can_edit_completed_sessions` is true.
 - **Commits:**
   - `20060d4a` - feat(mobile-soap): allow editing completed sessions for users with special permissions
   - `f1fb816f` - feat(mobile-soap): bypass service early return when finalizing completed session with special permissions
+  - `5b102b42` - feat(mobile-soap): allow users with Spatie manage permissions to act as clinical admin, bypassing branch constraints
 - **EVP Verification:** Verified clean diff, syntactical correctness, and Spatie permission checks compatibility.
 
 ## 📌 [2026-05-24] Transition to Open Source WhatsApp Gateway (OpenWA)
