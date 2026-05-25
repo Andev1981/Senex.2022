@@ -1,5 +1,14 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Show Completed and Evaluation Treatments in My Patients List
+- **Action:** Solved the issue where patients with completed treatments disappeared from the kinesiologist's "Mis Pacientes" view, by including completed and evaluation treatments in the patient query and mapping their statuses to the UI.
+- **Changes:**
+  - **Controllers (Backend):** Updated `PatientMobileController.php@index` to eager-load treatments that are in status `IN_PROGRESS`, `EVALUATION`, or `COMPLETED`, sorted by `latest()` to fetch the most recent treatment first. Included the `'status'` attribute in the mapped `'active_treatment'` array.
+  - **Patient Card Component:** Updated `PatientCard.jsx` to receive `colorClass` inside `ProgressRing`, and dynamically style the card according to the treatment's status: completed treatments are rendered in a sleek, premium slate-gray layout ("Tratamiento Finalizado"), and evaluation treatments in an elegant blue-indigo layout ("En Evaluación").
+- **Commits:**
+  - `665576cb` - feat: show completed and evaluation treatments in my patients list
+- **EVP Verification:** Created a mock query execution test in `scratch_test.php` and verified that Patient 14 (PALOMA) now returns their completed treatment (ID 4) as `'active_treatment'` instead of `null`, keeping them in the kinesiologist's active patient roster. Compiled React assets successfully via `npm run build`.
+
 ## 📌 [2026-05-25] Allow Viewing Completed Session Clinical SOAP Record from Detail Modal
 - **Action:** Enabled kinesiologists and admins to view what was done in a completed session directly from the appointment details modal, providing deep clinical integration and immediate visibility.
 - **Changes:**

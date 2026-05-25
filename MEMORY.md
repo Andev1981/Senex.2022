@@ -13,7 +13,7 @@
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Fully enabled viewing completed session clinical SOAP records directly from the appointment details modal (desktop & mobile). Eager-loaded the `treatmentSession` relationship on all agenda controllers and dynamically rendered the "Ver Ficha Clínica" action.
+- **Status:** Completed. Solved active patients count mismatch in "Mis Pacientes" by loading `in_progress`, `evaluation`, and `completed` treatments, with a gorgeous premium adaptive slate-gray card layout for completed treatments and blue-indigo layout for evaluation treatments.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.
