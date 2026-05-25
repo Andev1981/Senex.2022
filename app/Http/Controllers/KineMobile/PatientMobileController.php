@@ -25,8 +25,13 @@ class PatientMobileController extends Controller
             ->with([
                 'treatments' => function ($q) use ($doctor) {
                     $q->where('treatments.doctor_id', $doctor->id)
-                        ->where('treatments.status', \App\Enums\TreatmentStatusEnum::IN_PROGRESS)
-                        ->with('item:id,name');
+                        ->whereIn('treatments.status', [
+                            \App\Enums\TreatmentStatusEnum::IN_PROGRESS,
+                            \App\Enums\TreatmentStatusEnum::EVALUATION,
+                            \App\Enums\TreatmentStatusEnum::COMPLETED
+                        ])
+                        ->with('item:id,name')
+                        ->latest();
                 }
             ])
             ->withCount([
@@ -63,6 +68,7 @@ class PatientMobileController extends Controller
                     'id' => $activeTreatment->id,
                     'diagnosis' => $activeTreatment->diagnosis,
                     'session_type' => $activeTreatment->item->name,
+                    'status' => $activeTreatment->status->value,
                     'progress' => $activeTreatment->completed_sessions . '/' . ($activeTreatment->total_sessions ?? '∞'),
                 ] : null,
             ];
