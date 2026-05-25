@@ -1,5 +1,16 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Full Spanish Localization for Checked-In status and Helpers
+- **Action:** Localized all raw status prints (like `checked_in`) to their proper Spanish names ("En Espera" or "Llegó") across all missing patient-facing and kinesiologist-facing components and helpers. Made helper lookups case-insensitive.
+- **Changes:**
+  - **Helpers (Status/Agenda):** Made `getStatusLabel`, `estadoClass`, and `estadoTexto` fully case-insensitive (converting to lowercase on input). Added mapping support for `'no_show'`.
+  - **Mobile SOAP Form:** Updated `session-form.jsx` to import and utilize the `estadoTexto` helper instead of outputting the raw `{formData.status}` string.
+  - **Patient Views:** Updated `session-card.jsx`, `session-modal-delete.jsx`, and `next-sessions.jsx` to wrap status outputs in `estadoTexto` helper.
+  - **Constants:** Added `'checked_in'`, `'no_show'`, and `'not_show'` labels and styles to `sessionStatuses.js` and `translations.js` under `sessionStatus`.
+- **Commits:**
+  - `13701c54` - feat: localize status checked_in to En Espera/Llegó in all missing raw outputs and helpers
+- **EVP Verification:** Verified with `git status` that all modified files compile and belong strictly to status translating scopes, fully complying with Rule 8 of `GEMINI.md`.
+
 ## 📌 [2026-05-25] Resolve Patient Check-In Capacity Deadlock and Box Normalization
 - **Action:** Fixed the capacity check deadlock on check-in. Bypassed redundant capacity checks inside `TreatmentSessionService::createSession` for already scheduled appointments. Allowed room-only changes during check-in without checking/blocking doctor capacity. Normalized empty room/box selection strings to proper SQL null values. Added a "Comenzar Atención" action button directly in the appointment detail modal when the patient has arrived (`checked_in`).
 - **Changes:**

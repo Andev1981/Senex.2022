@@ -13,7 +13,7 @@
   - **Security:** Expanded `role:admin|superadmin|cajero|kine` in web routes to allow schedule creation and quick-patient additions from the kine perspective.
 
 ## 📋 ACTIVE TASK
-- **Status:** Completed. Resolved check-in capacity deadlocks caused by unselected rooms or room-only updates. Made availability checks conditional and bypassed redundant checks on scheduled appointment check-ins. Added transactional try-catch blocks and normalized empty inputs to null.
+- **Status:** Completed. Fully localized all raw status outputs (specifically `'checked_in'`) to Spanish ("En Espera" / "Llegó") across patient-facing views, kinesiologist mobile forms, status/agenda helpers, and constants. Made translation helpers robustly case-insensitive.
 
 ## ⏳ PENDING TASK BACKLOG
 - [ ] Auditoría de Liquidaciones (Payroll) y Comisiones.
