@@ -178,7 +178,7 @@ export default function SessionForm({
     session_pain_map: session?.session_pain_map || [],
     body_part: session?.body_part || "",
     laterality: session?.laterality || "",
-    informed_consent_confirmed: !!session?.informed_consent_confirmed,
+    informed_consent_confirmed: true,
   });
 
   const hasClinicalData = () => {
@@ -200,7 +200,7 @@ export default function SessionForm({
       );
   };
 
-  const [showFullSOAP, setShowFullSOAP] = useState(hasClinicalData());
+  const [showFullSOAP, setShowFullSOAP] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("subjetivo");
   const [newRomName, setNewRomName] = useState("");
