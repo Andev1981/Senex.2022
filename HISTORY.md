@@ -1,5 +1,14 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Redirección Homóloga de Ficha Clínica General desde Calendario
+- **Action:** Updated the "Ver Ficha Clínica" action in the `AppointmentDetailModal.jsx` component to redirect to the general patient file history view (`kine.patient.show`) instead of the single session detail, unifying UX behaviors.
+- **Changes:**
+  - **Appointment Detail Modal (`AppointmentDetailModal.jsx`):**
+    - Refactored `handleViewSession` to perform a router visit to `kine.patient.show` using `appointment.patient_id` rather than loading the individual completed treatment session details.
+- **Commits:**
+  - `11b7c800` - feat(calendar): update Ver Ficha Clínica button to redirect to general patient file show view
+- **EVP Verification:** Verified asset compilation via Vite (`npm run build` completed in 24.13s) and validated routing parameter coherence.
+
 ## 📌 [2026-05-25] SOAP Simplificado y Consentimiento Automático por Defecto
 - **Action:** Set the mobile SOAP form `showFullSOAP` toggle to false by default upon load, and automated the informed consent approval state to prevent validation roadblocks.
 - **Changes:**
