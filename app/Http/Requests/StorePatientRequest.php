@@ -73,6 +73,7 @@ class StorePatientRequest extends FormRequest
             'is_home_care' => ['boolean'],
             'street'       => [$isHomeCareOnly ? 'required' : 'required_if:is_home_care,true', 'nullable', 'string', 'max:255'],
             'number'       => [$isHomeCareOnly ? 'required' : 'required_if:is_home_care,true', 'nullable', 'string', 'max:50'],
+            'region_id'    => [$isHomeCareOnly ? 'required' : 'required_if:is_home_care,true', 'nullable', 'exists:regions,id'],
             'commune_id'   => [$isHomeCareOnly ? 'required' : 'required_if:is_home_care,true', 'nullable', 'exists:communes,id'],
 
             // Preferencias y Flags

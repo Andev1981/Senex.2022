@@ -10,7 +10,7 @@ import {
     MapPin,
     Home
 } from "lucide-react";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
 import RutInput from "@/components/RutInput";
 import ChilePhoneInput from "@/components/ChilePhoneInput";
@@ -26,10 +26,16 @@ export default function QuickPatientModal({
     communes = [], 
     onSuccess 
 }) {
+    const { current_branch } = usePage().props;
+    const isHomeCareOnlyBranch = current_branch && !current_branch.allows_onsite;
+    const isOnsiteOnlyBranch = current_branch && !current_branch.allows_home;
+    const isHybridBranch = current_branch?.allows_onsite && current_branch?.allows_home;
+
     const { data, setData, post, processing, reset, errors } = useForm({
         name: "",
         last_name: "",
         rut: "",
+        no_rut: false,
         phone: "",
         email: "",
         birth_date: "",
@@ -41,8 +47,25 @@ export default function QuickPatientModal({
         street: "",
         number: "",
         region_id: "13",
-        commune_id: "13114"
+        commune_id: "13114",
+        is_home_care: isHomeCareOnlyBranch
     });
+
+    // Lógica para forzar is_home_care según capacidades de la sucursal
+    useEffect(() => {
+        if (isHomeCareOnlyBranch) setData("is_home_care", true);
+        else if (isOnsiteOnlyBranch) setData("is_home_care", false);
+    }, [isHomeCareOnlyBranch, isOnsiteOnlyBranch]);
+
+    // Efecto para manejar el RUT cuando no se tiene
+    useEffect(() => {
+        const isPlaceholder = data.rut?.replace(/[.-]/g, '').startsWith('666666666');
+        if (data.no_rut) {
+            setData("rut", "66666666-6");
+        } else if (isPlaceholder) {
+            setData("rut", "");
+        }
+    }, [data.no_rut]);
 
     // Asegurar que regions y communes sean arrays (por si llegan como objetos de PHP/Cache)
     const regionsList = Array.isArray(regions) ? regions : Object.values(regions);
@@ -141,14 +164,21 @@ export default function QuickPatientModal({
                         {/* 1. Datos de Identidad */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase ml-1 text-gray-400 tracking-widest flex items-center gap-2">
-                                    <IdCard className="w-3 h-3" /> RUT / Documento
-                                </label>
+                                <div className="flex items-center justify-between pr-2">
+                                    <label className="text-[10px] font-black uppercase ml-1 text-gray-400 tracking-widest flex items-center gap-2">
+                                        <IdCard className="w-3 h-3" /> RUT / Documento
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-[8px] font-black uppercase ${data.no_rut ? 'text-brand-primary' : 'text-gray-300'}`}>Sin RUT</span>
+                                        <Switch checked={data.no_rut} onChange={e => setData("no_rut", e.target.checked)} />
+                                    </div>
+                                </div>
                                 <RutInput 
                                     value={data.rut} 
                                     onChange={v => setData("rut", v)} 
                                     className="w-full !py-4 !px-6 border-gray-100 rounded-2xl font-bold text-sm shadow-sm focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all" 
-                                    required
+                                    required={!data.no_rut}
+                                    disabled={data.no_rut}
                                 />
                                 <InputError message={localErrors.rut} />
                             </div>
@@ -156,13 +186,24 @@ export default function QuickPatientModal({
                                 <label className="text-[10px] font-black uppercase ml-1 text-gray-400 tracking-widest flex items-center gap-2">
                                     <CalendarIcon className="w-3 h-3" /> Fecha de Nacimiento
                                 </label>
-                                <input 
-                                    type="date" 
-                                    value={data.birth_date} 
-                                    onChange={e => setData("birth_date", e.target.value)} 
-                                    className="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm shadow-sm focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all" 
-                                    required
-                                />
+                                <div className="flex gap-4 items-center">
+                                    <input 
+                                        type="date" 
+                                        value={data.birth_date} 
+                                        onChange={e => setData("birth_date", e.target.value)} 
+                                        className="flex-1 px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm shadow-sm focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all" 
+                                        required
+                                    />
+                                    {isHybridBranch && (
+                                        <label className="flex items-center gap-3 px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl cursor-pointer hover:bg-white transition-all shadow-sm group">
+                                            <div className="flex flex-col">
+                                                <span className={`text-[7px] font-black uppercase leading-none ${data.is_home_care ? 'text-blue-600' : 'text-gray-400'}`}>Atención</span>
+                                                <span className={`text-[9px] font-black uppercase ${data.is_home_care ? 'text-blue-600' : 'text-brand-gray'}`}>Domicilio</span>
+                                            </div>
+                                            <Switch checked={data.is_home_care} onChange={e => setData("is_home_care", e.target.checked)} />
+                                        </label>
+                                    )}
+                                </div>
                                 <InputError message={localErrors.birth_date} />
                             </div>
                         </div>

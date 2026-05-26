@@ -390,23 +390,18 @@ class AgendaService
     {
         $doctorMaxCapacity = 3; 
 
-        $appointments = Appointment::where('doctor_id', $doctor->id)
+        // 1. Ocupación por Citas
+        $appointmentsCount = Appointment::where('doctor_id', $doctor->id)
             ->whereNotIn('status', [\App\Enums\AppointmentStatusEnum::CANCELLED, \App\Enums\AppointmentStatusEnum::NO_SHOW])
             ->where(function ($q) use ($start, $end) {
                 $q->where('start_at', '<', $end)
                   ->where('end_at', '>', $start);
             })
             ->when($excludeAppointmentId, fn($q) => $q->where('id', '!=', $excludeAppointmentId))
-            ->with('item.serviceDetail')
-            ->get();
+            ->count();
 
-        $totalWeight = 0;
-        foreach ($appointments as $app) {
-            $weight = ($app->item?->serviceDetail?->max_simultaneous_patients == 1) ? 3 : 1;
-            $totalWeight += $weight;
-        }
-
-        $manualSessions = \App\Models\TreatmentSession::where('doctor_id', $doctor->id)
+        // 2. Ocupación por Sesiones Manuales (sin cita)
+        $manualSessionsCount = \App\Models\TreatmentSession::where('doctor_id', $doctor->id)
             ->whereNull('appointment_id')
             ->whereNotIn('status', [\App\Enums\AppointmentStatusEnum::CANCELLED, \App\Enums\AppointmentStatusEnum::NO_SHOW])
             ->where('date', $start->toDateString())
@@ -414,24 +409,15 @@ class AgendaService
                 $q->whereTime('time', '<', $end->toTimeString())
                   ->where(DB::raw("ADDTIME(time, '00:45:00')"), '>', $start->toTimeString());
             })
-            ->with('item.serviceDetail')
-            ->get();
+            ->count();
 
-        foreach ($manualSessions as $ms) {
-            $weight = ($ms->item?->serviceDetail?->max_simultaneous_patients == 1) ? 3 : 1;
-            $totalWeight += $weight;
-        }
+        $totalDoctorOccupancy = $appointmentsCount + $manualSessionsCount;
 
-        // 🛑 VALIDACIÓN CON EL PESO DEL NUEVO SERVICIO SOLICITADO
-        // Para permitir agendar cuando totalWeight = 1 o 2, la suma con el nuevo
-        // peso no se evalúa aquí porque getSlotOccupancyStatus no recibe el item_id nuevo.
-        // Se asume que en el controller se valida si la suma sobrepasa, pero al menos
-        // no bloqueamos si el doctor tiene capacidad (ej. totalWeight < 3)
-        if ($validateDoctor && $totalWeight >= $doctorMaxCapacity) {
+        if ($validateDoctor && $totalDoctorOccupancy >= $doctorMaxCapacity) {
             return [
                 'is_available' => false, 
-                'reason' => 'Doctor a máxima capacidad operativa',
-                'occupancy' => $totalWeight, 
+                'reason' => 'Doctor a máxima capacidad operativa (3 pacientes)',
+                'occupancy' => $totalDoctorOccupancy, 
                 'capacity' => $doctorMaxCapacity
             ];
         }
@@ -461,7 +447,7 @@ class AgendaService
             if ($totalRoomOccupancy >= $room->capacity) {
                 return [
                     'is_available' => false, 
-                    'reason' => 'Box a máxima capacidad física',
+                    'reason' => 'Box a máxima capacidad física (' . $room->capacity . ')',
                     'occupancy' => $totalRoomOccupancy, 
                     'capacity' => $room->capacity
                 ];
@@ -470,9 +456,9 @@ class AgendaService
 
         return [
             'is_available' => true, 
-            'weight_occupancy' => $totalWeight, 
+            'weight_occupancy' => $totalDoctorOccupancy, 
             'max_weight' => $doctorMaxCapacity,
-            'available_spots' => floor($doctorMaxCapacity - $totalWeight)
+            'available_spots' => $doctorMaxCapacity - $totalDoctorOccupancy
         ];
     }
 

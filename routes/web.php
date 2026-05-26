@@ -439,8 +439,8 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
       Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
       Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
       Route::post('/roles/update-permissions', [UserManagementController::class, 'updateRoles'])->name('roles.update-permissions');
-  });
-});
+      Route::post('/roles/store-permission', [UserManagementController::class, 'storePermission'])->name('roles.store-permission');
+  });});
 
 // ============================================================================
 // AUTENTICACIÓN DE PACIENTES

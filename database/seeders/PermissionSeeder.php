@@ -18,7 +18,7 @@ class PermissionSeeder extends Seeder
 
         $permissions = [
             // Gestión de Pacientes
-            'patients.index', 'patients.create', 'patients.edit', 'patients.delete', 'patients.view',
+            'patients.index', 'patients.create', 'patients.edit', 'patients.edit_rut', 'patients.delete', 'patients.view',
             'agendas.index',
             'availabilities.index', 'availabilities.create', 'availabilities.edit', 'availabilities.delete',
             

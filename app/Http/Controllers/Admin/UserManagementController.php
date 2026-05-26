@@ -245,6 +245,27 @@ class UserManagementController extends Controller
         return back()->with('success', 'Permisos de roles actualizados.');
     }
 
+    public function storePermission(Request $request)
+    {
+        if (!auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Solo el superadmin puede crear nuevos permisos.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255|unique:permissions,name',
+        ]);
+
+        $permission = Permission::create(['name' => $request->name, 'guard_name' => 'web']);
+
+        // 🎯 AUTO-ASIGNACIÓN: El superadmin siempre debe tener acceso a todo
+        $superadmin = Role::where('name', 'superadmin')->first();
+        if ($superadmin) {
+            $superadmin->givePermissionTo($permission);
+        }
+
+        return back()->with('success', "Permiso '{$request->name}' creado y asignado a Superadmin.");
+    }
+
     public function updateCompanyModules(Request $request, Company $company)
     {
         $request->validate(['enabled_modules' => 'array']);

@@ -46,8 +46,11 @@ export default function ModalCreateEditPatient({
   const isClinical = business_type === "clinical";
   const entityLabel = isClinical ? "Paciente" : "Cliente";
 
-  const { current_branch } = usePage().props;
+  const { current_branch, auth } = usePage().props;
   const isHomeCareOnlyBranch = current_branch && !current_branch.allows_onsite;
+  const isOnsiteOnlyBranch = current_branch && !current_branch.allows_home;
+  const isHybridBranch = current_branch?.allows_onsite && current_branch?.allows_home;
+  const canEditRealRut = auth?.permissions?.includes('patients.edit_rut');
 
   const [isExistingInSystem, setIsExistingInSystem] = useState(false);
   const addPatient = usePatientStore((state) => state.addPatient);
@@ -69,6 +72,7 @@ export default function ModalCreateEditPatient({
     last_name: patient?.last_name || "",
     email: patient?.email || "",
     rut: patient?.rut || "",
+    no_rut: patient?.rut?.startsWith('66666666-6') || false,
     birth_date: patient?.birth_date
       ? moment.utc(patient.birth_date).format("YYYY-MM-DD")
       : moment().format("YYYY-MM-DD"),
@@ -90,7 +94,7 @@ export default function ModalCreateEditPatient({
     guardian_email: patient?.contact?.email || "",
     guardian_rut: patient?.contact?.rut || "",
     // Campos de dirección (Defaults: Las Condes, Santiago, RM)
-    is_home_care: isHomeCareOnlyBranch || !!patient?.address,
+    is_home_care: isHomeCareOnlyBranch || (isOnsiteOnlyBranch ? false : !!patient?.address),
     street: patient?.address?.street || "",
     number: patient?.address?.number || "",
     details: patient?.address?.details || "",
@@ -98,12 +102,23 @@ export default function ModalCreateEditPatient({
     commune_id: (patient?.address?.commune_id || "13114").toString(),
   });
 
-  // Lógica para forzar is_home_care si la sucursal es solo domicilio
+  // Lógica para forzar is_home_care según capacidades de la sucursal
   useEffect(() => {
-    if (isHomeCareOnlyBranch && isClinical) {
-        setData("is_home_care", true);
+    if (isClinical) {
+        if (isHomeCareOnlyBranch) setData("is_home_care", true);
+        else if (isOnsiteOnlyBranch) setData("is_home_care", false);
     }
-  }, [isHomeCareOnlyBranch, isClinical]);
+  }, [isHomeCareOnlyBranch, isOnsiteOnlyBranch, isClinical]);
+
+  // Efecto para manejar el RUT cuando no se tiene
+  useEffect(() => {
+    const isPlaceholder = data.rut?.replace(/[.-]/g, '').startsWith('666666666');
+    if (data.no_rut) {
+        setData("rut", "66666666-6");
+    } else if (isPlaceholder) {
+        setData("rut", "");
+    }
+  }, [data.no_rut]);
 
   // Filtrado dinámico de comunas (Aseguramos que data.X sea string para comparar)
   const filteredCommunes = useMemo(
@@ -194,29 +209,36 @@ export default function ModalCreateEditPatient({
 
   const handleRutBlur = async (e) => {
     const cleanRut = e.target.value.replace(/\./g, "");
-    if (data.id || cleanRut.length < 8) return;
+    // Si ya tiene ID y NO es un RUT temporal, no hacemos búsqueda de duplicados aquí (ya lo hace el backend)
+    const isPlaceholder = data.rut?.replace(/[.-]/g, '').startsWith('666666666');
+    if (data.id && !isPlaceholder) return;
+    if (cleanRut.length < 8) return;
+    
     try {
       const response = await axios.post(route("patients.check-existing"), {
         rut: cleanRut,
       });
       if (response.data.status === "exists") {
         const p = response.data.patient;
-        setData((prev) => ({
-          ...prev,
-          id: p.id,
-          name: p.name,
-          last_name: p.last_name,
-          email: p.email,
-          phone: p.phone,
-          birth_date: moment.utc(p.birth_date).format("YYYY-MM-DD"),
-          gender: p.gender,
-          occupation: p.occupation,
-          marital_status: p.marital_status,
-        }));
-        setIsExistingInSystem(true);
-        clearErrors();
+        // Solo autocompletamos si es un registro nuevo (no tiene ID)
+        if (!data.id) {
+            setData((prev) => ({
+              ...prev,
+              id: p.id,
+              name: p.name,
+              last_name: p.last_name,
+              email: p.email,
+              phone: p.phone,
+              birth_date: moment.utc(p.birth_date).format("YYYY-MM-DD"),
+              gender: p.gender,
+              occupation: p.occupation,
+              marital_status: p.marital_status,
+            }));
+            setIsExistingInSystem(true);
+            clearErrors();
+        }
       } else {
-        setIsExistingInSystem(false);
+        if (!data.id) setIsExistingInSystem(false);
       }
     } catch (e) {
       console.error(e);
@@ -316,11 +338,14 @@ export default function ModalCreateEditPatient({
               {/* INTERRUPTORES (SOLO CLÍNICO) */}
               {isClinical && (
                 <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-3 px-4 py-2 transition-all border border-gray-100 shadow-sm cursor-pointer bg-gray-50 rounded-xl hover:bg-white group">
-                    <Navigation className={`w-4 h-4 transition-colors ${data.is_home_care ? "text-blue-600" : "text-gray-300"}`} />
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${data.is_home_care ? "text-blue-600" : "text-brand-gray"}`}>A Domicilio</span>
-                    <Switch checked={data.is_home_care} onChange={(e) => !isHomeCareOnlyBranch && setData("is_home_care", e.target.checked)} disabled={isHomeCareOnlyBranch} />
-                    </label>
+                    {isHybridBranch && (
+                        <label className="flex items-center gap-3 px-4 py-2 transition-all border border-gray-100 shadow-sm cursor-pointer bg-gray-50 rounded-xl hover:bg-white group">
+                            <Navigation className={`w-4 h-4 transition-colors ${data.is_home_care ? "text-blue-600" : "text-gray-300"}`} />
+                            <span className={`text-[9px] font-black uppercase tracking-widest ${data.is_home_care ? "text-blue-600" : "text-brand-gray"}`}>A Domicilio</span>
+                            <Switch checked={data.is_home_care} onChange={(e) => setData("is_home_care", e.target.checked)} />
+                        </label>
+                    )}
+                    
                     <label className="flex items-center gap-3 px-4 py-2 transition-all border border-gray-100 shadow-sm cursor-pointer bg-gray-50 rounded-xl hover:bg-white group">
                     <Baby className={`w-4 h-4 transition-colors ${data.require_tutor ? "text-brand-primary" : "text-gray-300 group-hover:text-brand-primary"}`} />
                     <span className={`text-[9px] font-black uppercase tracking-widest ${data.require_tutor ? "text-brand-primary" : "text-brand-gray"}`}>Requiere Tutor</span>
@@ -332,8 +357,22 @@ export default function ModalCreateEditPatient({
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               <div className="space-y-1">
-                <label className="ml-1 enterprise-label opacity-60">RUT / Identificador</label>
-                <RutInput value={data.rut} onChange={(v) => setData("rut", v)} onBlur={handleRutBlur} disabled={!!data.id} className="w-full !rounded-2xl !py-1 font-black" />
+                <div className="flex items-center justify-between pr-1">
+                    <label className="ml-1 enterprise-label opacity-60">RUT / Identificador</label>
+                    {(!data.id || data.rut?.replace(/[.-]/g, '').startsWith('666666666')) && (
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[8px] font-black uppercase ${data.no_rut ? 'text-brand-primary' : 'text-gray-300'}`}>Sin RUT</span>
+                            <Switch checked={data.no_rut} onChange={(e) => setData("no_rut", e.target.checked)} />
+                        </div>
+                    )}
+                </div>
+                <RutInput 
+                    value={data.rut} 
+                    onChange={(v) => setData("rut", v)} 
+                    onBlur={handleRutBlur} 
+                    disabled={data.no_rut || (!!data.id && !data.rut?.replace(/[.-]/g, '').startsWith('666666666') && !canEditRealRut)} 
+                    className="w-full !rounded-2xl !py-1 font-black" 
+                />
                 <InputError message={errors.rut} />
               </div>
               <div className="space-y-1">
@@ -368,12 +407,6 @@ export default function ModalCreateEditPatient({
                 <h3 className="enterprise-label !text-blue-700 flex items-center gap-2">
                     <MapPin className="w-4 h-4" /> Localización & Dirección
                 </h3>
-                {isClinical && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-blue-100 shadow-sm">
-                        <span className="text-[10px] font-black uppercase text-blue-400">¿Atención a Domicilio?</span>
-                        <Switch checked={data.is_home_care} onChange={(e) => setData("is_home_care", e.target.checked)} />
-                    </div>
-                )}
             </div>
             
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

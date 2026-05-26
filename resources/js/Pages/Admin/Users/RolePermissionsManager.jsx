@@ -1,10 +1,15 @@
 import React, { useState } from "react";
-import { useForm } from "@inertiajs/react";
-import { Save, ShieldCheck, CheckSquare, Square, Info } from "lucide-react";
+import { useForm, usePage, router } from "@inertiajs/react";
+import { Save, ShieldCheck, CheckSquare, Square, Info, Plus, ShieldAlert } from "lucide-react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import Checkbox from "@/Components/Checkbox";
+import TextInput from "@/Components/TextInput";
+import Swal from "sweetalert2";
 
 export default function RolePermissionsManager({ roles, permissions }) {
+  const { auth } = usePage().props;
+  const isSuperAdmin = auth?.roles?.includes('superadmin');
+
   // Inicializar el formulario con los permisos actuales de cada rol
   const { data, setData, post, processing } = useForm({
     roles: roles.map(role => ({
@@ -14,7 +19,36 @@ export default function RolePermissionsManager({ roles, permissions }) {
     }))
   });
 
+  const [newPermissionName, setNewPermissionName] = useState("");
+  const [creatingPermission, setCreatingPermission] = useState(false);
+
   const [selectedRoleId, setSelectedRoleId] = useState(roles[0]?.id || null);
+
+  const handleCreatePermission = (e) => {
+    e.preventDefault();
+    if (!newPermissionName.trim()) return;
+
+    router.post(route("admin.users-management.roles.store-permission"), {
+        name: newPermissionName
+    }, {
+        onSuccess: () => {
+            setNewPermissionName("");
+            Swal.fire({
+                title: "¡Éxito!",
+                text: "Permiso creado y asignado a Superadmin correctamente.",
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        },
+        onError: (errors) => {
+            const msg = Object.values(errors)[0] || "No se pudo crear el permiso.";
+            Swal.fire("Error", msg, "error");
+        }
+    });
+  };
 
   const togglePermission = (roleId, permissionName) => {
     const updatedRoles = data.roles.map(role => {
@@ -37,7 +71,15 @@ export default function RolePermissionsManager({ roles, permissions }) {
     post(route("admin.users-management.roles.update-permissions"), {
       preserveScroll: true,
       onSuccess: () => {
-        // Podrías mostrar un toast aquí si no se muestra automáticamente
+        Swal.fire({
+            title: "Actualizado",
+            text: "Permisos de roles sincronizados.",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
       }
     });
   };
@@ -73,6 +115,29 @@ export default function RolePermissionsManager({ roles, permissions }) {
             <ShieldCheck className={`w-4 h-4 ${selectedRoleId === role.id ? "text-white/50" : "text-gray-300 group-hover:text-brand-primary/50"}`} />
           </button>
         ))}
+
+        {/* Herramienta de Superadmin para nuevos permisos */}
+        {isSuperAdmin && (
+            <div className="mt-10 pt-6 border-t border-gray-100">
+                <h3 className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <ShieldAlert className="w-3 h-3" /> Dev Lab
+                </h3>
+                <form onSubmit={handleCreatePermission} className="space-y-3">
+                    <TextInput 
+                        placeholder="ej: orders.void" 
+                        value={newPermissionName} 
+                        onChange={e => setNewPermissionName(e.target.value)}
+                        className="w-full !text-[10px] !py-2 !rounded-lg"
+                    />
+                    <button 
+                        type="submit"
+                        className="w-full py-2 bg-gray-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2"
+                    >
+                        <Plus className="w-3 h-3" /> Crear Permiso
+                    </button>
+                </form>
+            </div>
+        )}
       </div>
 
       {/* Panel de Permisos */}
@@ -117,6 +182,7 @@ export default function RolePermissionsManager({ roles, permissions }) {
                         checked={selectedRole?.permissions.includes(permission.name)}
                         onChange={() => togglePermission(selectedRoleId, permission.name)}
                         className="rounded-lg border-gray-300 text-brand-primary focus:ring-brand-primary"
+                        disabled={selectedRole?.name === 'superadmin'}
                       />
                       <span className="ml-3 text-[11px] font-bold uppercase tracking-tight flex-1">
                         {permission.name.replace(`${group}.`, "").replace("_", " ")}

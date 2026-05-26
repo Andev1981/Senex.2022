@@ -295,7 +295,7 @@ class PatientAdminController extends Controller
             $patient->update($data);
 
             // Actualizar o crear dirección principal
-            if ($request->filled('street')) {
+            if ($request->filled('street') || $request->filled('commune_id') || $request->is_home_care) {
                 $patient->primaryAddress()->updateOrCreate(
                     ['addressable_id' => $patient->id, 'addressable_type' => 'Patient'],
                     [

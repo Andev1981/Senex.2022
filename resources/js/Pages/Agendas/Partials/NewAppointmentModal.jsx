@@ -267,16 +267,7 @@ export default function NewAppointmentModal({
       return slotTotalMinutes >= (asH*60+asM) && slotTotalMinutes < (aeH*60+aeM);
     });
 
-    let totalWeight = 0;
-    activeAppts.forEach(apt => { totalWeight += (apt.item?.service_detail?.max_simultaneous_patients == 1) ? 3 : 1; });
-    
-    let newItemWeight = 1;
-    if (data.item_id) {
-      const selectedItem = items.find(i => i.id === Number(data.item_id));
-      if (selectedItem?.service_detail?.max_simultaneous_patients == 1) newItemWeight = 3;
-    }
-
-    if (totalWeight >= 3 || (totalWeight + newItemWeight > 3)) return 'doctor_full';
+    if (activeAppts.length >= 3) return 'doctor_full';
 
     if (data.modality === 'onsite' && data.room_id) {
       const roomAppts = appointments.filter(apt => {
@@ -335,10 +326,24 @@ export default function NewAppointmentModal({
     setData(prev => ({ ...prev, start_time: time, end_time: endObj.toTimeString().substring(0, 5) }));
   };
   
-  const handleCreateAppointment = (e) => { e?.preventDefault(); router.post(route('agendas.store'), { ...data, is_direct: false }, { onSuccess: () => { handleCloseModal(); } }); };
+  const handleCreateAppointment = (e) => { 
+    e?.preventDefault(); 
+    submitWithDirectFlag(false); 
+  };
   
   const submitWithDirectFlag = (isDirectValue) => {
-    router.post(route('agendas.store'), { ...data, is_direct: isDirectValue }, { onSuccess: () => { handleCloseModal(); } });
+    router.post(route('agendas.store'), { ...data, is_direct: isDirectValue }, { 
+      onSuccess: () => { handleCloseModal(); },
+      onError: (errors) => {
+        const errorMsg = Object.values(errors)[0] || "Ocurrió un error al agendar la cita.";
+        Swal.fire({
+          title: "No se pudo agendar",
+          text: errorMsg,
+          icon: "error",
+          confirmButtonColor: "#EF4444"
+        });
+      }
+    });
   };
 
   return (
@@ -367,10 +372,41 @@ export default function NewAppointmentModal({
                                 const st = getSlotStatus(t), durationBlocks = getDurationBlocks(data.start_time), isSelected = durationBlocks.includes(t), hoverBlocks = hoveredSlot ? getDurationBlocks(hoveredSlot) : [], isHoveredGhost = hoverBlocks.includes(t);
                                 const [h, m] = t.split(':').map(Number), slotMins = h * 60 + m;
                                 const activeInSlot = appointments.filter(apt => apt.date === data.date && apt.doctor_id === Number(data.doctor_id) && !['cancelled', 'not_show'].includes(apt.status) && slotMins >= (parseInt(apt.start_time.split(':')[0])*60+parseInt(apt.start_time.split(':')[1])) && slotMins < (parseInt(apt.end_time.split(':')[0])*60+parseInt(apt.end_time.split(':')[1])));
-                                let currentLoad = 0; activeInSlot.forEach(a => { currentLoad += (a.item?.service_detail?.max_simultaneous_patients == 1) ? 3 : 1; });
                                 const patientCount = activeInSlot.length;
-                                const styles = { 'free': "bg-white border-gray-100 text-gray-700 hover:border-emerald-400 hover:bg-emerald-50/30", 'past': "bg-gray-100 border-gray-100 text-gray-400 cursor-not-allowed opacity-60", 'outside': "bg-gray-200/40 border-gray-200 text-gray-300 cursor-not-allowed", 'occupied': "bg-orange-50 border-orange-200 text-orange-600 cursor-not-allowed", 'doctor_full': "bg-orange-50 border-orange-200 text-orange-600 cursor-not-allowed", 'room_full': "bg-orange-50 border-orange-200 text-orange-600 cursor-not-allowed", 'patient_conflict': "bg-red-50 border-red-200 text-red-600 cursor-not-allowed animate-pulse" };
-                                return (<button key={t} type="button" onMouseEnter={() => setHoveredSlot(t)} onMouseLeave={() => setHoveredSlot(null)} onClick={() => handleSlotClick(t)} className={`group relative py-5 rounded-3xl text-xs font-black transition-all border-2 flex flex-col items-center justify-center gap-1 ${isSelected ? "bg-brand-primary border-brand-primary text-white shadow-2xl scale-105 z-10" : isHoveredGhost && st === 'free' ? "bg-brand-primary/10 border-brand-primary/30 text-brand-primary" : styles[st]}`}><span>{t}</span>{(st === 'free' || st === 'doctor_full' || st === 'occupied' || isSelected) && (<span className={`text-[8px] px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : currentLoad >= 3 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}>{patientCount} {patientCount === 1 ? 'pac' : 'pacs'}</span>)}</button>);
+                                const isCompatible = patientCount < 3;
+                                
+                                const styles = { 
+                                    'free': isCompatible ? "bg-white border-gray-100 text-gray-700 hover:border-emerald-400 hover:bg-emerald-50/30" : "bg-orange-50/50 border-orange-200 text-orange-400 cursor-not-allowed opacity-70", 
+                                    'past': "bg-gray-100 border-gray-100 text-gray-400 cursor-not-allowed opacity-60", 
+                                    'outside': "bg-gray-200/40 border-gray-200 text-gray-300 cursor-not-allowed", 
+                                    'occupied': "bg-orange-50 border-orange-200 text-orange-600 cursor-not-allowed", 
+                                    'doctor_full': "bg-orange-50 border-orange-200 text-orange-600 cursor-not-allowed", 
+                                    'room_full': "bg-purple-50 border-purple-200 text-purple-600 cursor-not-allowed", 
+                                    'patient_conflict': "bg-red-50 border-red-200 text-red-600 cursor-not-allowed animate-pulse" 
+                                };
+
+                                return (
+                                    <button 
+                                        key={t} 
+                                        type="button" 
+                                        onMouseEnter={() => setHoveredSlot(t)} 
+                                        onMouseLeave={() => setHoveredSlot(null)} 
+                                        onClick={() => handleSlotClick(t)} 
+                                        className={`group relative py-5 rounded-3xl text-xs font-black transition-all border-2 flex flex-col items-center justify-center gap-1 ${isSelected ? "bg-brand-primary border-brand-primary text-white shadow-2xl scale-105 z-10" : isHoveredGhost && st === 'free' && isCompatible ? "bg-brand-primary/10 border-brand-primary/30 text-brand-primary" : styles[st]}`}
+                                    >
+                                        <span>{t}</span>
+                                        {(patientCount > 0 || st === 'doctor_full' || st === 'room_full' || isSelected) && (
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <span className={`text-[7px] px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : patientCount >= 3 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}>
+                                                    {patientCount}/3 pacientes
+                                                </span>
+                                                {st === 'room_full' && <span className="text-[6px] font-black uppercase text-purple-500">Box Lleno</span>}
+                                                {st === 'doctor_full' && patientCount >= 3 && <span className="text-[6px] font-black uppercase text-orange-500">Cupos Agotados</span>}
+                                            </div>
+                                        )}
+                                        {!isCompatible && st === 'free' && <span className="text-[6px] font-black uppercase text-orange-400">Sin Cupo</span>}
+                                    </button>
+                                );
                             })}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">

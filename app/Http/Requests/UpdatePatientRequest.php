@@ -38,10 +38,32 @@ class UpdatePatientRequest extends FormRequest
     {
         $patient = $this->route('patient');
         $patientId = $patient instanceof \App\Models\Patient ? $patient->id : $patient;
+        $patientModel = $patient instanceof \App\Models\Patient ? $patient : \App\Models\Patient::find($patientId);
 
         // Si por alguna razón no hay ID en la ruta, lo buscamos en el body
         if (!$patientId && $this->has('id')) {
             $patientId = $this->id;
+            if (!$patientModel) $patientModel = \App\Models\Patient::find($patientId);
+        }
+
+        // 🛡️ LÓGICA DE PROTECCIÓN DE RUT
+        // Si el RUT ya existe y NO es un RUT temporal/comodín, restringimos su edición por permisos
+        if ($patientModel && $this->has('rut')) {
+            $originalRut = $patientModel->getRawOriginal('rut');
+            $newRut = \App\Rules\ValidRut::clean($this->rut);
+            
+            // Solo evaluamos si el RUT está cambiando
+            if ($originalRut !== $newRut) {
+                $isOriginalPlaceholder = str_starts_with($originalRut ?? '', '66666666-6');
+                
+                // Si el original NO es un placeholder, requerimos permiso especial para editarlo
+                if (!$isOriginalPlaceholder && !auth()->user()->can('patients.edit_rut')) {
+                    // Inyectamos un error de validación inmediato
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'rut' => 'No tiene permisos para modificar el RUT de un paciente ya registrado. Contacte a un Superadmin.'
+                    ]);
+                }
+            }
         }
 
         // Verificar si la sucursal actual requiere atención a domicilio obligatoria

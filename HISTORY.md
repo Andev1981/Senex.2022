@@ -1,5 +1,17 @@
 # 📜 HISTORY: IMMUTABLE AUDIT TRAIL
 
+## 📌 [2026-05-25] Detalle de Atención Congruente y Vista Simplificada de Sesiones
+- **Action:** Upgraded the completed session detail view (`session-detail.jsx`) to conditionally render clinical blocks based on inputted data, and added support for a beautiful consolidated indications box for simplified clinical sessions.
+- **Changes:**
+  - **Session Detail View (`session-detail.jsx`):**
+    - Conditionalized **Rangos de Movimiento (ROM Display)**, rendering the metrics strictly if at least one value (flexion, abduction, rotation) has data.
+    - Conditionalized the **Body Pain Map**, hiding the card completely if no coordinates are registered.
+    - Embedded a new premium visual block for **Activos Clínicos Realizados** to list techniques/procedures and exercises from `activities_data`.
+    - Implemented a logical check to evaluate if structured SOAP data exists. If not, it replaces the empty 4-column SOAP grid with an elegant unifed **"Observaciones & Evolución"** block.
+- **Commits:**
+  - `81374698` - feat(mobile): show conditional visual sections in session detail and consolidated view for simplified session
+- **EVP Verification:** Verified clean React assets compilation using Vite (`npm run build` completed in 24.68s) and validated conditional layout states.
+
 ## 📌 [2026-05-25] Redirección Homóloga de Ficha Clínica General desde Calendario
 - **Action:** Updated the "Ver Ficha Clínica" action in the `AppointmentDetailModal.jsx` component to redirect to the general patient file history view (`kine.patient.show`) instead of the single session detail, unifying UX behaviors.
 - **Changes:**
