@@ -248,7 +248,7 @@ export default function BoxMapModal({
                                                                         {Array.from(new Set(occupancy.map(o => o.doctor?.id))).map((docId, idx) => {
                                                                             const doc = occupancy.find(o => o.doctor?.id === docId)?.doctor;
                                                                             return (
-                                                                                <div key={docId} title={doc?.name} className="w-7 h-7 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-[10px] font-black text-brand-primary shadow-sm hover:z-20 transition-all transform hover:scale-110">
+                                                                                <div key={docId} title={doc?.full_name || doc?.name} className="w-7 h-7 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-[10px] font-black text-brand-primary shadow-sm hover:z-20 transition-all transform hover:scale-110">
                                                                                     {doc?.name[0]}
                                                                                 </div>
                                                                             );
@@ -323,7 +323,7 @@ export default function BoxMapModal({
                                             options={doctors} 
                                             value={data.doctor_id} 
                                             onChange={v => setData("doctor_id", v)} 
-                                            config={{ valueKey:'id', displayKey:'name', searchKeys:['name'] }} 
+                                            config={{ valueKey:'id', displayKey:'full_name', searchKeys:['full_name', 'name', 'last_name'] }} 
                                         />
                                         {errors.doctor_id && <p className="text-red-500 text-[10px] font-bold uppercase mt-1">{errors.doctor_id}</p>}
                                     </div>

@@ -44,7 +44,7 @@ export default function SideModal({
 
   return (
     <Transition show={!!open} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Dialog as="div" className="relative z-[80]" onClose={onClose}>
         {/* Backdrop con desenfoque */}
         <TransitionChild
           as="div"

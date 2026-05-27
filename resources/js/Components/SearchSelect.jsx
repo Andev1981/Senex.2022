@@ -37,7 +37,7 @@ const SearchSelect = ({
   }, [options, searchTerm, searchKeys]);
 
   const selectedOption = useMemo(() => {
-    return options.find(option => option[valueKey] === value);
+    return options.find(option => option[valueKey] == value);
   }, [options, value, valueKey]);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const SearchSelect = ({
 
   const handleSelect = (optionValue) => {
     onChange(optionValue);
-    setSearchTerm(options.find(opt => opt[valueKey] === optionValue)?.[displayKey] || '');
+    setSearchTerm(options.find(opt => opt[valueKey] == optionValue)?.[displayKey] || '');
     setIsOpen(false);
   };
 

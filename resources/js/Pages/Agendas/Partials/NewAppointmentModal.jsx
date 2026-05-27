@@ -4,7 +4,7 @@ import { Plus, Clock, User, CheckCircle, XCircle, X, Activity, AlertCircle, Mess
 import Swal from "sweetalert2";
 import SearchSelect from "@/components/SearchSelect";
 import QuickPatientModal from "@/components/clinical/QuickPatientModal";
-import { formatLocalDate, getNextHourTimes, isToday } from "@/helpers/agenda";
+import { formatLocalDate, getNextHourTimes, isToday, formatLongDate } from "@/helpers/agenda";
 
 export default function NewAppointmentModal({ 
   isOpen, 
@@ -22,31 +22,52 @@ export default function NewAppointmentModal({
   appointments, 
   onPatientCreated, 
   regions, 
-  communes 
+  communes,
+  appointment = null // 👈 Prop para modo edición
 }) {
   if (!isOpen) return null;
 
+  const isEditing = !!appointment;
   const [showQuickPatient, setShowQuickPatient] = useState(false);
   const [hoveredSlot, setHoveredSlot] = useState(null);
   
-  const wildcardPatient = useMemo(() => patients.find(p => p.is_wildcard === true), [patients]);
-
   const defaultTimes = getNextHourTimes();
 
-  const { data, setData, post, processing, reset, errors, clearErrors } = useForm({
-    date: formatLocalDate(new Date()),
-    start_time: defaultTimes.start,
-    end_time: defaultTimes.end,
-    patient_id: "",
-    doctor_id: "",
-    item_id: "",
-    room_id: "",
-    modality: "onsite",
-    notes: "",
+  const { data, setData, post, patch, processing, reset, errors, clearErrors } = useForm({
+    date: appointment?.date || formatLocalDate(selectedDate || new Date()),
+    start_time: appointment?.start_time || (isToday(selectedDate) ? defaultTimes.start : ""),
+    end_time: appointment?.end_time || (isToday(selectedDate) ? defaultTimes.end : ""),
+    patient_id: appointment?.patient_id || "",
+    doctor_id: appointment?.doctor_id || "",
+    item_id: appointment?.item_id || "",
+    room_id: appointment?.room_id ? String(appointment.room_id) : "",
+    modality: appointment?.modality || "onsite",
+    notes: appointment?.notes || "",
     is_direct: false,
     send_mail: false,
     send_whatsapp: false,
   });
+
+  const longDate = useMemo(() => formatLongDate(data.date), [data.date]);
+  const wildcardPatient = useMemo(() => patients.find(p => p.is_wildcard === true), [patients]);
+
+  const patientAgenda = useMemo(() => {
+    if (!data.patient_id || !data.date) return [];
+    return appointments.filter(a => 
+        a.date === data.date && 
+        a.patient_id == data.patient_id && 
+        a.status !== 'cancelled'
+    );
+  }, [appointments, data.patient_id, data.date]);
+
+  const doctorAgenda = useMemo(() => {
+    if (!data.doctor_id || !data.date) return [];
+    return appointments.filter(a => 
+        a.date === data.date && 
+        a.doctor_id == data.doctor_id && 
+        !['cancelled', 'not_show'].includes(a.status)
+    );
+  }, [appointments, data.doctor_id, data.date]);
 
   const handleCloseModal = () => { reset(); clearErrors(); onClose(); };
 
@@ -58,18 +79,40 @@ export default function NewAppointmentModal({
     }
   }, [errors]);
 
+  // Sincronizar datos si cambia el appointment (edición)
   useEffect(() => {
-    setData(prev => ({ ...prev, date: formatLocalDate(selectedDate), ...(isToday(selectedDate) ? getNextHourTimes() : {}) }));
-  }, [isOpen, selectedDate]);
-
-  useEffect(() => {
-    if (isOpen && doctors.length === 1 && !data.doctor_id) {
-      setData("doctor_id", String(doctors[0].id));
+    if (appointment) {
+        setData({
+            date: appointment.date,
+            start_time: appointment.start_time.substring(0, 5),
+            end_time: appointment.end_time.substring(0, 5),
+            patient_id: appointment.patient_id,
+            doctor_id: appointment.doctor_id,
+            item_id: appointment.item_id,
+            room_id: appointment.room_id ? String(appointment.room_id) : "",
+            modality: appointment.modality || "onsite",
+            notes: appointment.notes || "",
+            is_direct: false,
+            send_mail: false,
+            send_whatsapp: false,
+        });
+    } else {
+        setData(prev => ({ 
+            ...prev, 
+            date: formatLocalDate(selectedDate), 
+            ...(isToday(selectedDate) && !prev.start_time ? getNextHourTimes() : {}) 
+        }));
     }
-  }, [isOpen, doctors]);
+  }, [appointment, isOpen, selectedDate]);
 
   useEffect(() => {
-    if (!data.doctor_id) return;
+    if (isOpen && !isEditing && doctors.length === 1 && !data.doctor_id) {
+      setData("doctor_id", doctors[0].id);
+    }
+  }, [isOpen, doctors, isEditing]);
+
+  useEffect(() => {
+    if (!data.doctor_id || isEditing) return; // No auto-asignar box en edición si ya tiene uno
     const dateStr = data.date;
     const dateObj = new Date(dateStr + 'T00:00:00');
     const dayOfWeek = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][dateObj.getDay()];
@@ -84,11 +127,14 @@ export default function NewAppointmentModal({
     });
 
     if (shift && shift.room_id) setData(prev => ({ ...prev, room_id: String(shift.room_id) }));
-  }, [data.doctor_id, data.date]);
+  }, [data.doctor_id, data.date, isEditing]);
 
+  // Limpiar horas si cambia doctor/servicio/fecha (solo en creación)
   useEffect(() => {
-    setData(prev => ({ ...prev, start_time: "", end_time: "" }));
-  }, [data.doctor_id, data.item_id, data.date]);
+    if (!isEditing) {
+        setData(prev => ({ ...prev, start_time: "", end_time: "" }));
+    }
+  }, [data.doctor_id, data.item_id, data.date, isEditing]);
 
   const allowedModalities = useMemo(() => {
     let onsite = currentBranch ? currentBranch.allows_onsite : true;
@@ -106,197 +152,104 @@ export default function NewAppointmentModal({
   }, [currentBranch, data.item_id, items]);
 
   useEffect(() => {
-    if (!data.modality || !allowedModalities[data.modality]) {
+    if (!allowedModalities[data.modality]) {
       if (allowedModalities.onsite) setData("modality", "onsite");
       else if (allowedModalities.home) setData("modality", "home");
       else if (allowedModalities.online) setData("modality", "online");
-      else setData("modality", "");
     }
-  }, [allowedModalities, data.modality]);
+  }, [allowedModalities]);
 
   const enrichedItems = useMemo(() => {
-    const selectedPatient = patients.find(p => p.id === Number(data.patient_id));
-    const insurance = selectedPatient?.insurance;
-    const planId = insurance?.plan_id;
-
-    return items.map(st => {
-      let agreementLabel = "";
-      if (planId && Array.isArray(agreements)) {
-        const allRules = agreements.flatMap(ag => ag.rules || ag.agreement_rules || []);
-        const specificRule = allRules.find(r => r.plan_id == planId && r.item_id == st.id);
-        
-        let finalRule = specificRule;
-        if (!finalRule) {
-          finalRule = allRules.find(r => !r.plan_id && r.item_id == st.id);
-        }
-
-        if (finalRule) {
-          agreementLabel = ` ➜ Conv: $${finalRule.patient_share_clp.toLocaleString('es-CL')}`;
-        }
+    const patientPlanId = patients.find(p => p.id === Number(data.patient_id))?.insurance?.plan_id;
+    return items.map(item => {
+      let convLabel = "";
+      if (patientPlanId && Array.isArray(agreements)) {
+        const rules = agreements.flatMap(a => a.rules || []);
+        let rule = rules.find(r => r.plan_id == patientPlanId && r.item_id == item.id);
+        if (!rule) rule = rules.find(r => !r.plan_id && r.item_id == item.id);
+        if (rule) convLabel = ` ➜ Conv: $${rule.patient_share_clp.toLocaleString('es-CL')}`;
       }
-      return { ...st, name_with_price: `${st.name} [$${Number(st.price).toLocaleString('es-CL')}]${agreementLabel}` };
+      return { ...item, name_with_price: `${item.name} [$${Number(item.price).toLocaleString('es-CL')}]${convLabel}` };
     });
   }, [items, agreements, data.patient_id, patients]);
 
   const timeSlots = useMemo(() => {
-    if (!data.date || !currentBranch?.schedule) {
-      const slots = [];
-      let current = new Date(); current.setHours(8, 0, 0, 0);
-      const end = new Date(); end.setHours(21, 30, 0, 0);
-      while (current <= end) { slots.push(current.toTimeString().substring(0, 5)); current.setMinutes(current.getMinutes() + 30); }
-      return slots;
-    }
-    const dateObj = new Date(data.date + 'T00:00:00');
-    const dayOfWeek = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][dateObj.getDay()];
-    const schedule = currentBranch.schedule[dayOfWeek];
-    let startHour = 8, startMin = 0;
-    let endHour = 21, endMin = 0;
-    if (schedule && schedule.open && schedule.close) {
-      [startHour, startMin] = schedule.open.split(':').map(Number);
-      [endHour, endMin] = schedule.close.split(':').map(Number);
-    }
-    const dayExceptions = Array.isArray(exceptions) ? exceptions.filter(ex => ex.date === data.date && ex.action === 'open') : [];
-    dayExceptions.forEach(ex => {
-      if (ex.override_start_time) {
-        const [h, m] = ex.override_start_time.split(':').map(Number);
-        if (h < startHour || (h === startHour && m < startMin)) { startHour = h; startMin = m; }
-      }
-      if (ex.override_end_time) {
-        const [h, m] = ex.override_end_time.split(':').map(Number);
-        if (h > endHour || (h === endHour && m > endMin)) { endHour = h; endMin = m; }
-      }
-    });
     const slots = [];
-    let current = new Date(); current.setHours(startHour, startMin, 0, 0);
-    const end = new Date(); end.setHours(endHour, endMin, 0, 0);
-    const operationalEnd = new Date(end); operationalEnd.setHours(end.getHours() - 1);
-    while (current <= operationalEnd) { slots.push(current.toTimeString().substring(0, 5)); current.setMinutes(current.getMinutes() + 30); }
+    let curr = new Date(); curr.setHours(8, 0, 0, 0);
+    const end = new Date(); end.setHours(21, 30, 0, 0);
+    while (curr <= end) { slots.push(curr.toTimeString().substring(0, 5)); curr.setMinutes(curr.getMinutes() + 30); }
     return slots;
-  }, [data.date, currentBranch, exceptions]);
-
-  const isFormValid = useMemo(() => {
-    return data.patient_id && data.item_id && data.doctor_id && data.start_time && data.end_time;
-  }, [data]);
+  }, []);
 
   const getSlotStatus = (time) => {
     const dateStr = data.date;
-    if (!dateStr || !data.doctor_id) return 'outside';
-    
-    const [slotHour, slotMin] = time.split(':').map(Number);
-    const slotTotalMinutes = (slotHour * 60) + slotMin;
-    
+    const [h, m] = time.split(':').map(Number);
+    const slotStart = new Date(dateStr + 'T' + time + ':00');
+    const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
     const now = new Date();
-    const todayStr = formatLocalDate(now);
-    if (dateStr === todayStr) {
-      if (slotTotalMinutes < (now.getHours() * 60 + now.getMinutes())) return 'past';
-    } else if (new Date(dateStr + 'T00:00:00') < new Date(todayStr + 'T00:00:00')) {
-      return 'past';
+    if (slotStart < now && !isEditing) return 'past'; // En edición permitimos el bloque actual
+    
+    const dayOfWeek = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][slotStart.getDay()];
+    const branchSched = currentBranch?.schedule?.[dayOfWeek];
+    if (branchSched && branchSched.open && branchSched.close) {
+      const [oH, oM] = branchSched.open.split(':').map(Number);
+      const [cH, cM] = branchSched.close.split(':').map(Number);
+      const startMin = h * 60 + m, openMin = oH * 60 + oM, closeMin = cH * 60 + cM;
+      if (startMin < openMin || startMin >= closeMin) return 'outside';
     }
 
-    const dateObj = new Date(dateStr + 'T00:00:00');
-    const dayOfWeek = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][dateObj.getDay()];
-    
-    const holiday = holidays.find(h => h.date === dateStr || (h.is_recurring && h.date.substring(5) === dateStr.substring(5)));
-    const hasSpecialOpening = Array.isArray(exceptions) && exceptions.some(ex => ex.date === dateStr && ex.action === 'open' && ex.doctor_id === Number(data.doctor_id));
-    
-    const doctorShifts = availabilities.filter(av => {
-      if (av.doctor_id !== Number(data.doctor_id)) return false;
-      if (currentBranch && av.branch_id !== currentBranch.id) return false;
-      const rrule = av.rrule || "";
-      if (!rrule.includes(`BYDAY=`)) return false;
-      const byDayPart = rrule.split('BYDAY=')[1].split(';')[0];
-      return byDayPart.split(',').includes(dayOfWeek);
+    const isHoliday = holidays.some(hol => {
+        const hDate = hol.date;
+        if (hol.is_recurring) return hDate.substring(5) === dateStr.substring(5);
+        return hDate === dateStr;
     });
-    
-    let isWithinShift = doctorShifts.some(shift => {
-      if (!shift.start_time || !shift.end_time) return false;
-      const [sH, sM] = shift.start_time.split(':').map(Number);
-      const [eH, eM] = shift.end_time.split(':').map(Number);
-      const shiftStartMins = (sH * 60) + sM;
-      const shiftEndMins = (eH * 60) + eM;
-      let inShift = slotTotalMinutes >= shiftStartMins && slotTotalMinutes < shiftEndMins;
-      if (inShift && shift.lunch_start_time && shift.lunch_end_time) {
-        const [lsH, lsM] = shift.lunch_start_time.split(':').map(Number);
-        const [leH, leM] = shift.lunch_end_time.split(':').map(Number);
-        if (slotTotalMinutes >= (lsH*60+lsM) && slotTotalMinutes < (leH*60+leM)) inShift = false;
-      }
-      return inShift;
+    if (isHoliday) return 'outside';
+
+    const slotMins = h * 60 + m;
+    const activeInSlot = appointments.filter(apt => {
+        // Excluir la cita actual si estamos editando
+        if (isEditing && apt.id === appointment.id) return false;
+        
+        if (apt.date !== dateStr || apt.doctor_id !== Number(data.doctor_id) || ['cancelled', 'not_show'].includes(apt.status)) return false;
+        const [asH, asM] = apt.start_time.split(':').map(Number);
+        const [aeH, aeM] = apt.end_time.split(':').map(Number);
+        return slotMins >= (asH*60+asM) && slotMins < (aeH*60+aeM);
     });
 
-    if (hasSpecialOpening) {
-      const openEx = exceptions.find(ex => ex.date === dateStr && ex.action === 'open' && ex.doctor_id === Number(data.doctor_id));
-      if (openEx?.override_start_time && openEx?.override_end_time) {
-        const [sH, sM] = openEx.override_start_time.split(':').map(Number);
-        const [eH, eM] = openEx.override_end_time.split(':').map(Number);
-        if (slotTotalMinutes >= (sH*60+sM) && slotTotalMinutes < (eH*60+eM)) isWithinShift = true;
-      }
-    }
+    if (activeInSlot.length >= 3) return 'doctor_full';
 
-    const hasCancellation = Array.isArray(exceptions) && exceptions.some(ex => {
-      if (ex.date !== dateStr || ex.action !== 'cancel' || ex.doctor_id !== Number(data.doctor_id)) return false;
-      if (!ex.override_start_time || !ex.override_end_time) return true;
-      const [sH, sM] = ex.override_start_time.split(':').map(Number);
-      const [eH, eM] = ex.override_end_time.split(':').map(Number);
-      return slotTotalMinutes >= (sH*60+sM) && slotTotalMinutes < (eH*60+eM);
-    });
-
-    if (hasCancellation || (holiday && !hasSpecialOpening) || !isWithinShift) return 'outside';
-
-    const selectedPatient = patients.find(p => p.id === Number(data.patient_id));
-    const isWildcardPatient = selectedPatient && (
-      selectedPatient.is_wildcard === true ||
-      selectedPatient.rut === '66.666.666-6' ||
-      selectedPatient.rut === '66666666-6' ||
-      (selectedPatient.rut && selectedPatient.rut.startsWith('66666666-6'))
-    );
-
-    if (data.patient_id && !isWildcardPatient) {
-      const pOverlap = appointments.find(apt => {
+    const patientConflict = appointments.find(apt => {
+        if (isEditing && apt.id === appointment.id) return false;
         if (apt.date !== dateStr || apt.patient_id !== Number(data.patient_id) || apt.status === 'cancelled') return false;
         const [asH, asM] = apt.start_time.split(':').map(Number);
         const [aeH, aeM] = apt.end_time.split(':').map(Number);
-        return slotTotalMinutes >= (asH*60+asM) && slotTotalMinutes < (aeH*60+aeM);
-      });
-      if (pOverlap) return 'patient_conflict';
-    }
-
-    const activeAppts = appointments.filter(apt => {
-      if (apt.date !== dateStr || ['cancelled', 'not_show'].includes(apt.status) || apt.doctor_id !== Number(data.doctor_id)) return false;
-      const [asH, asM] = apt.start_time.split(':').map(Number);
-      const [aeH, aeM] = apt.end_time.split(':').map(Number);
-      return slotTotalMinutes >= (asH*60+asM) && slotTotalMinutes < (aeH*60+aeM);
+        return slotMins >= (asH*60+asM) && slotMins < (aeH*60+aeM);
     });
-
-    if (activeAppts.length >= 3) return 'doctor_full';
-
-    if (data.modality === 'onsite' && data.room_id) {
-      const roomAppts = appointments.filter(apt => {
-        if (apt.date !== dateStr || ['cancelled', 'not_show'].includes(apt.status) || apt.room_id !== Number(data.room_id)) return false;
-        const [asH, asM] = apt.start_time.split(':').map(Number);
-        const [aeH, aeM] = apt.end_time.split(':').map(Number);
-        return slotTotalMinutes >= (asH*60+asM) && slotTotalMinutes < (aeH*60+aeM);
-      });
-      const selectedRoom = rooms.find(r => r.id === Number(data.room_id));
-      if (selectedRoom && (roomAppts.length + 1 > selectedRoom.capacity)) return 'room_full';
-    }
+    if (patientConflict && Number(data.patient_id) !== wildcardPatient?.id) return 'patient_conflict';
 
     return 'free';
   };
 
   const getDurationBlocks = (startTime) => {
-    if (!startTime || !data.item_id) return [];
-    const selectedItem = items.find(i => i.id === Number(data.item_id));
-    const duration = selectedItem?.service_detail?.duration_minutes || 60;
-    const blocksNeeded = Math.ceil(duration / 30);
-    const startIndex = timeSlots.indexOf(startTime);
-    return timeSlots.slice(startIndex, startIndex + blocksNeeded);
+    if (!startTime) return [];
+    const duration = items.find(i => i.id === Number(data.item_id))?.service_detail?.duration_minutes || 60;
+    const blocks = Math.ceil(duration / 30);
+    const result = [];
+    let [h, m] = startTime.split(':').map(Number);
+    for (let i = 0; i < blocks; i++) {
+      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      result.push(timeStr);
+      m += 30; if (m >= 60) { m = 0; h++; }
+    }
+    return result;
   };
+
+  const isFormValid = data.patient_id && data.doctor_id && data.item_id && data.start_time && data.end_time;
 
   const handleSlotClick = (time) => {
     const st = getSlotStatus(time);
-    if (st === 'patient_conflict') {
-      const [h, m] = time.split(':').map(Number);
-      const slotMins = h * 60 + m;
+    if (st === 'patient_conflict' && Number(data.patient_id) !== wildcardPatient?.id) {
+      const [h, m] = time.split(':').map(Number), slotMins = h * 60 + m;
       const overlap = appointments.find(apt => {
         if (apt.date !== data.date || apt.patient_id !== Number(data.patient_id) || apt.status === 'cancelled') return false;
         const [asH, asM] = apt.start_time.split(':').map(Number);
@@ -332,37 +285,92 @@ export default function NewAppointmentModal({
   };
   
   const submitWithDirectFlag = (isDirectValue) => {
-    router.post(route('agendas.store'), { ...data, is_direct: isDirectValue }, { 
-      onSuccess: () => { handleCloseModal(); },
-      onError: (errors) => {
-        const errorMsg = Object.values(errors)[0] || "Ocurrió un error al agendar la cita.";
-        Swal.fire({
-          title: "No se pudo agendar",
-          text: errorMsg,
-          icon: "error",
-          confirmButtonColor: "#EF4444"
-        });
-      }
+    const url = isEditing ? route('agendas.update', appointment.id) : route('agendas.store');
+    const method = isEditing ? 'patch' : 'post';
+
+    router[method](url, { ...data, is_direct: isDirectValue }, {
+        onSuccess: () => {
+            handleCloseModal();
+        },
+        onError: (errs) => {
+            const errorMsg = Object.values(errs)[0] || "Ocurrió un error al procesar la cita.";
+            Swal.fire({
+                title: isEditing ? "No se pudo actualizar" : "No se pudo agendar",
+                text: errorMsg,
+                icon: "error",
+                confirmButtonColor: "#EF4444"
+            });
+        }
     });
   };
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
         <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95">
-          <div className="p-6 border-b flex justify-between items-center shrink-0"><div><h2 className="text-lg font-black uppercase">Nueva Cita</h2><p className="text-[9px] font-black text-brand-primary uppercase mt-0.5">{formatLocalDate(selectedDate)}</p></div><button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X /></button></div>
+          <div className="p-6 border-b flex justify-between items-center shrink-0">
+            <div>
+                <h2 className="text-lg font-black uppercase">{isEditing ? 'Actualizar Cita' : 'Nueva Cita'}</h2>
+                <p className="text-[9px] font-black text-brand-primary uppercase mt-0.5">
+                    {isEditing ? `Modificando cita del ${longDate}` : `Está agendando cita para el ${longDate}`}
+                </p>
+            </div>
+            <button onClick={handleCloseModal} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X /></button>
+          </div>
           <form onSubmit={handleCreateAppointment} className="flex flex-col flex-1 overflow-hidden">
             <div className="p-6 space-y-8 overflow-y-auto flex-1 bg-gray-50/20">
               <div className="max-w-4xl mx-auto space-y-8">
                 <div className="space-y-6">
-                    <div className="space-y-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">1. Seleccione Paciente</label><div className="flex gap-2"><SearchSelect options={patients} value={data.patient_id} onChange={v => setData("patient_id", v)} className="flex-1" config={{ valueKey:'id', displayKey:'full_name', secondaryKeys:['rut'], searchKeys:['full_name','rut'] }} /><button type="button" onClick={() => setShowQuickPatient(true)} className="p-4 bg-brand-primary/10 text-brand-primary rounded-2xl h-[52px] flex items-center justify-center transition-all hover:bg-brand-primary hover:text-white"><Plus /></button></div></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="space-y-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">2. Servicio Solicitado</label><SearchSelect options={enrichedItems} value={data.item_id} onChange={v => setData("item_id", v)} config={{ valueKey:'id', displayKey:'name_with_price', secondaryKeys:['sku'], searchKeys:['name','sku'] }} /></div><div className="space-y-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">3. Kinesiólogo / Profesional</label><SearchSelect options={doctors} value={data.doctor_id} onChange={v => setData("doctor_id", v)} config={{ valueKey:'id', displayKey:'name', secondaryKeys:['speciality'], searchKeys:['name'] }} /></div></div>
-                    {(data.patient_id || data.doctor_id) && (<div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in zoom-in-95">{data.patient_id && (<div className="p-4 bg-blue-50/50 border border-blue-100 rounded-3xl space-y-2 shadow-sm"><p className="text-[9px] font-black uppercase text-blue-600 flex items-center gap-1.5"><User className="w-3 h-3"/> Agenda del Paciente</p><div className="space-y-1">{appointments.filter(a => a.date === data.date && a.patient_id === Number(data.patient_id) && a.status !== 'cancelled').length > 0 ? (appointments.filter(a => a.date === data.date && a.patient_id === Number(data.patient_id) && a.status !== 'cancelled').map(a => (
-                                                    <div key={a.id} className="text-[10px] font-bold text-blue-800 bg-white px-2 py-1.5 rounded-xl border border-blue-100 flex justify-between shadow-sm">
-                                                        <span>{a.item?.name}</span>
-                                                        <span className="font-black">{a.start_time.substring(0, 5)}</span>
-                                                    </div>
-                                                ))) : <p className="text-[9px] font-bold text-blue-400 uppercase">Sin citas previas para hoy</p>}</div></div>)}{data.doctor_id && (<div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-3xl space-y-2 shadow-sm"><p className="text-[9px] font-black uppercase text-indigo-600 flex items-center gap-1.5"><Activity className="w-3 h-3"/> Carga de {doctors.find(d => d.id === Number(data.doctor_id))?.name.split(' ')[0]}</p><div className="flex justify-between items-end"><p className="text-[10px] font-black text-indigo-900">{appointments.filter(a => a.date === data.date && a.doctor_id === Number(data.doctor_id) && !['cancelled','not_show'].includes(a.status)).length} Atenciones hoy</p><span className="text-[9px] font-bold text-indigo-400 uppercase">Límite: 15 / día</span></div><div className="w-full bg-indigo-100 h-2 rounded-full overflow-hidden"><div className="bg-indigo-500 h-full transition-all" style={{ width: `${Math.min(100, (appointments.filter(a => a.date === data.date && a.doctor_id === Number(data.doctor_id) && a.status !== 'cancelled').length / 15) * 100)}%` }}></div></div></div>)}</div>)}
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">1. Seleccione Paciente</label>
+                        <div className="flex gap-2">
+                            <SearchSelect 
+                                options={patients} 
+                                value={data.patient_id} 
+                                onChange={v => setData("patient_id", v)} 
+                                className="flex-1" 
+                                config={{ valueKey:'id', displayKey:'full_name', secondaryKeys:['rut'], searchKeys:['full_name','rut'] }} 
+                                disabled={isEditing} // No permitir cambiar de paciente en edición para evitar inconsistencias
+                            />
+                            {!isEditing && (
+                                <button type="button" onClick={() => setShowQuickPatient(true)} className="p-4 bg-brand-primary/10 text-brand-primary rounded-2xl h-[52px] flex items-center justify-center transition-all hover:bg-brand-primary hover:text-white"><Plus /></button>
+                            )}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="space-y-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">2. Servicio Solicitado</label><SearchSelect options={enrichedItems} value={data.item_id} onChange={v => setData("item_id", v)} config={{ valueKey:'id', displayKey:'name_with_price', secondaryKeys:['sku'], searchKeys:['name','sku'] }} /></div><div className="space-y-1"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">3. Kinesiólogo / Profesional</label><SearchSelect options={doctors} value={data.doctor_id} onChange={v => setData("doctor_id", v)} config={{ valueKey:'id', displayKey:'full_name', secondaryKeys:['speciality'], searchKeys:['full_name', 'name', 'last_name'] }} /></div></div>
+                    {(data.patient_id || data.doctor_id) && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in zoom-in-95">
+                            {data.patient_id && (
+                                <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-3xl space-y-2 shadow-sm">
+                                    <p className="text-[9px] font-black uppercase text-blue-600 flex items-center gap-1.5"><User className="w-3 h-3"/> Agenda del Paciente</p>
+                                    <div className="space-y-1">
+                                        {patientAgenda.length > 0 ? (
+                                            patientAgenda.map(a => (
+                                                <div key={a.id} className="text-[10px] font-bold text-blue-800 bg-white px-2 py-1.5 rounded-xl border border-blue-100 flex justify-between shadow-sm">
+                                                    <span>{a.item?.name}</span>
+                                                    <span className="font-black">{a.start_time.substring(0, 5)}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-[9px] font-bold text-blue-400 uppercase italic">Sin otras citas para hoy</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            {data.doctor_id && (
+                                <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-3xl space-y-2 shadow-sm">
+                                    <p className="text-[9px] font-black uppercase text-indigo-600 flex items-center gap-1.5"><Activity className="w-3 h-3"/> Carga de {doctors.find(d => d.id == data.doctor_id)?.full_name}</p>
+                                    <div className="flex justify-between items-end">
+                                        <p className="text-[10px] font-black text-indigo-900">{doctorAgenda.length} Atenciones hoy</p>
+                                        <span className="text-[9px] font-bold text-indigo-400 uppercase">Límite: 15 / día</span>
+                                    </div>
+                                    <div className="w-full bg-indigo-100 h-2 rounded-full overflow-hidden">
+                                        <div className="bg-indigo-500 h-full transition-all" style={{ width: `${Math.min(100, (doctorAgenda.length / 15) * 100)}%` }}></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
                 {data.doctor_id && (
                     <div className="space-y-5 pt-8 border-t animate-in fade-in slide-in-from-top-4">
@@ -371,7 +379,10 @@ export default function NewAppointmentModal({
                             {timeSlots.map(t => { 
                                 const st = getSlotStatus(t), durationBlocks = getDurationBlocks(data.start_time), isSelected = durationBlocks.includes(t), hoverBlocks = hoveredSlot ? getDurationBlocks(hoveredSlot) : [], isHoveredGhost = hoverBlocks.includes(t);
                                 const [h, m] = t.split(':').map(Number), slotMins = h * 60 + m;
-                                const activeInSlot = appointments.filter(apt => apt.date === data.date && apt.doctor_id === Number(data.doctor_id) && !['cancelled', 'not_show'].includes(apt.status) && slotMins >= (parseInt(apt.start_time.split(':')[0])*60+parseInt(apt.start_time.split(':')[1])) && slotMins < (parseInt(apt.end_time.split(':')[0])*60+parseInt(apt.end_time.split(':')[1])));
+                                const activeInSlot = appointments.filter(apt => {
+                                    if (isEditing && apt.id === appointment.id) return false;
+                                    return apt.date === data.date && apt.doctor_id === Number(data.doctor_id) && !['cancelled', 'not_show'].includes(apt.status) && slotMins >= (parseInt(apt.start_time.split(':')[0])*60+parseInt(apt.start_time.split(':')[1])) && slotMins < (parseInt(apt.end_time.split(':')[0])*60+parseInt(apt.end_time.split(':')[1]));
+                                });
                                 const patientCount = activeInSlot.length;
                                 const isCompatible = patientCount < 3;
                                 
@@ -418,7 +429,17 @@ export default function NewAppointmentModal({
                 <div className="space-y-2 pt-4 border-t"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Observaciones / Notas Internas</label><textarea value={data.notes} onChange={e => setData("notes", e.target.value)} rows="3" placeholder="Información relevante para el profesional..." className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-[2rem] font-medium text-sm focus:border-brand-primary outline-none transition-all shadow-sm"></textarea></div>
               </div>
             </div>
-            <div className="p-8 bg-gray-100 border-t flex flex-col gap-3 shrink-0"><div className="flex gap-4"><button type="button" onClick={() => submitWithDirectFlag(true)} disabled={processing || !isFormValid} className="flex-1 py-4 bg-orange-600 text-white font-black uppercase text-[10px] rounded-2xl shadow-xl hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Confirmar y Recibir (Check-in)</button><button type="button" onClick={() => submitWithDirectFlag(false)} disabled={processing || !isFormValid} className="flex-1 py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Solo Agendar Reserva</button></div><button type="button" onClick={handleCloseModal} className="w-full py-3 bg-white text-gray-400 font-black uppercase text-[10px] border rounded-xl hover:bg-gray-50">Cancelar y Cerrar</button></div>
+            <div className="p-8 bg-gray-100 border-t flex flex-col gap-3 shrink-0">
+                <div className="flex gap-4">
+                    {!isEditing && (
+                        <button type="button" onClick={() => submitWithDirectFlag(true)} disabled={processing || !isFormValid} className="flex-1 py-4 bg-orange-600 text-white font-black uppercase text-[10px] rounded-2xl shadow-xl hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">Confirmar y Recibir (Check-in)</button>
+                    )}
+                    <button type="button" onClick={() => submitWithDirectFlag(false)} disabled={processing || !isFormValid} className="flex-1 py-4 bg-brand-primary text-white font-black uppercase text-[10px] rounded-2xl shadow-xl hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {isEditing ? 'Guardar Cambios' : 'Solo Agendar Reserva'}
+                    </button>
+                </div>
+                <button type="button" onClick={handleCloseModal} className="w-full py-3 bg-white text-gray-400 font-black uppercase text-[10px] border rounded-xl hover:bg-gray-50">Cancelar y Cerrar</button>
+            </div>
           </form>
         </div>
       </div>

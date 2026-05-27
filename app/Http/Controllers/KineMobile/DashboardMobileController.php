@@ -15,9 +15,14 @@ class DashboardMobileController extends Controller
     /**
      * Dashboard principal del kinesiólogo con Agenda Calendario integrada
      */
-    public function index(): Response
+    public function index(): mixed
     {
         $doctor = Auth::user()->doctor;
+
+        if (!$doctor) {
+            return redirect()->route('dashboard')->with('warning', 'Su perfil de usuario no está vinculado a un registro de Profesional/Kinesiólogo.');
+        }
+
         $today = Carbon::today();
 
         $companyId = session('current_company_id') ?: Auth::user()->company_id;
@@ -181,9 +186,14 @@ class DashboardMobileController extends Controller
     /**
      * Listado de la Bitácora de Atenciones (Historial Reciente)
      */
-    public function pendingSessions(): Response
+    public function pendingSessions(): mixed
     {
         $doctor = Auth::user()->doctor;
+
+        if (!$doctor) {
+            return redirect()->route('dashboard')->with('warning', 'Su perfil de usuario no está vinculado a un registro de Profesional/Kinesiólogo.');
+        }
+
         $today = Carbon::today();
         $activeBranchId = session('active_branch_id');
 

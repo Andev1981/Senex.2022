@@ -48,7 +48,10 @@ import {
 // --- 🏷️ CONSTANTES ESTÁTICAS ---
 const hours = Array.from({ length: 12 }, (_, i) => i + 8);
 
-const getStatusColors = (status) => {
+const getStatusColors = (status, isStale = false) => {
+    if (isStale) {
+        return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500', isStale: true };
+    }
     switch (status?.toLowerCase()) {
         case 'scheduled':
         case 'programada':
@@ -95,6 +98,7 @@ export default function AgendaCalendar({
   const [viewMode, setViewMode] = useState("month"); // month, week, day
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showNewAppointment, setShowNewAppointment] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null); // 👈 Nuevo estado para edición
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [showQuickPatientModal, setShowQuickPatientModal] = useState(false);
@@ -105,6 +109,12 @@ export default function AgendaCalendar({
   const [localPatients, setLocalPatients] = useState(patients);
 
   // --- 🎯 UTILIDADES DE TIEMPO Y FECHA ---
+  const isAppointmentStale = (apt) => {
+    if (['completed', 'cancelled', 'not_show'].includes(apt.status)) return false;
+    const endDateTime = new Date(`${apt.date}T${apt.end_time}`);
+    return endDateTime < new Date();
+  };
+
   const getAppointmentsForDate = (date) => {
     return getAppointmentsForDateHelper(date, appointments);
   };
@@ -197,7 +207,31 @@ export default function AgendaCalendar({
                 <button key={m.id} onClick={() => setViewMode(m.id)} className={`px-4 py-2 rounded-lg font-bold text-xs ${viewMode === m.id ? "bg-white text-brand-primary shadow-sm" : "text-gray-500"}`}>{m.label}</button>
               ))}
             </div>
-            <div className="flex items-center gap-3"><button onClick={() => { if (viewMode === "month") setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth()-1))); else if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()-7))); else setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()-1))); }} className="p-2 hover:bg-gray-100 rounded-lg"><ChevronLeft /></button><h2 className="text-sm font-black uppercase tracking-widest min-w-[200px] text-center">{viewMode === "month" ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}` : viewMode === "week" ? `Semana ${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]}` : `${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]}`}</h2><button onClick={() => { if (viewMode === "month") setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth()+1))); else if (viewMode === "week") setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()+7))); else setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate()+1))); }} className="p-2 hover:bg-gray-100 rounded-lg"><ChevronRight /></button></div>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => { 
+                  if (viewMode === "month") setCurrentDate(prev => { const d = new Date(prev); d.setMonth(d.getMonth() - 1); return d; }); 
+                  else if (viewMode === "week") setSelectedDate(prev => { const d = new Date(prev); d.setDate(d.getDate() - 7); return d; }); 
+                  else setSelectedDate(prev => { const d = new Date(prev); d.setDate(d.getDate() - 1); return d; }); 
+                }} 
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ChevronLeft />
+              </button>
+              <h2 className="text-sm font-black uppercase tracking-widest min-w-[200px] text-center">
+                {viewMode === "month" ? `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}` : viewMode === "week" ? `Semana ${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]}` : `${selectedDate.getDate()} ${monthNames[selectedDate.getMonth()]}`}
+              </h2>
+              <button 
+                onClick={() => { 
+                  if (viewMode === "month") setCurrentDate(prev => { const d = new Date(prev); d.setMonth(d.getMonth() + 1); return d; }); 
+                  else if (viewMode === "week") setSelectedDate(prev => { const d = new Date(prev); d.setDate(d.getDate() + 7); return d; }); 
+                  else setSelectedDate(prev => { const d = new Date(prev); d.setDate(d.getDate() + 1); return d; }); 
+                }} 
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ChevronRight />
+              </button>
+            </div>
             <button onClick={() => setShowBoxMap(true)} className="px-4 py-2 text-[10px] font-black bg-white border rounded-lg hover:text-brand-primary flex items-center gap-2"><Layers className="w-4 h-4" />Boxes</button>
         </div>
 
@@ -231,12 +265,18 @@ export default function AgendaCalendar({
                         <div className="space-y-1 relative z-10">
                             {st.isHoliday && (<div className="py-1 px-2 rounded-lg bg-red-50 border border-red-100 mb-1"><p className="text-[8px] font-black text-red-600 uppercase truncate" title={st.holidayName}>🎉 {st.holidayName}</p></div>)}
                             {isClosed && appts.length === 0 && (<div className="py-1 px-2 rounded-lg bg-gray-100 border border-gray-200"><p className="text-[8px] font-black text-gray-400 uppercase">🚫 Cerrado</p></div>)}
-                            {appts.slice(0, 2).map(a => {
-                                const colors = getStatusColors(a.status);
+                                {appts.slice(0, 2).map(a => {
+                                const stale = isAppointmentStale(a);
+                                const colors = getStatusColors(a.status, stale);
                                 return (
-                                    <div key={a.id} className={`text-[8px] font-black uppercase p-1.5 rounded-lg ${colors.bg} ${colors.text} border ${colors.border} shadow-sm truncate flex items-center gap-1 group-hover:brightness-95 transition-all`}>
-                                        <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`}></div>
-                                        {a.patient?.name} {a.patient?.last_name}
+                                    <div key={a.id} className={`text-[7px] font-black uppercase p-1 rounded-lg ${colors.bg} ${colors.text} border ${colors.border} shadow-sm truncate flex flex-col gap-0.5 group-hover:brightness-95 transition-all`}>
+                                        <div className="flex items-center gap-1">
+                                            {stale ? <AlertCircle className="w-2 h-2 text-amber-600" /> : <div className={`w-1 h-1 rounded-full ${colors.dot}`}></div>}
+                                            <span className="truncate">{a.patient?.name} {a.patient?.last_name}</span>
+                                        </div>
+                                        <span className="text-[5px] opacity-70 border-t border-current/10 pt-0.5">
+                                            {stale ? "SIN ACCIÓN PROF." : getStatusLabel(a.status)}
+                                        </span>
                                     </div>
                                 );
                             })}
@@ -251,8 +291,50 @@ export default function AgendaCalendar({
 
             {viewMode === "week" && (
               <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-                <div className="p-6 border-b bg-gray-50/30 flex justify-between items-center"><h3 className="text-sm font-black text-gray-900 uppercase">Vista Semanal</h3><button onClick={() => { setIsDateLocked(false); setShowNewAppointment(true); }} className="px-6 py-3 bg-brand-primary text-white text-[10px] font-black uppercase rounded-2xl shadow-lg hover:brightness-110 flex items-center gap-2"><Plus className="w-4 h-4" />Agendar en esta semana</button></div>
-                <div className="grid grid-cols-8 border-b bg-gray-50/50"><div className="p-3"></div>{getWeekDays(selectedDate).map((d, i) => <div key={i} className="p-4 text-center border-l"><div className="text-[10px] font-black text-gray-400 uppercase">{dayNames[(d.getDay()+6)%7]}</div><div className={`text-xl font-black mt-1 ${isToday(d) ? "text-brand-primary" : "text-gray-900"}`}>{d.getDate()}</div></div>)}</div>
+                <div className="p-6 border-b bg-gray-50/30 flex justify-between items-center"><h3 className="text-sm font-black text-gray-900 uppercase">Vista Semanal</h3></div>
+                <div className="grid grid-cols-8 border-b bg-gray-50/50">
+                    <div className="p-3"></div>
+                    {getWeekDays(selectedDate).map((d, i) => {
+                        const dayStats = getDayCapacityStats(d);
+                        let canSchedule = !isDatePast(d) && dayStats.isOpen;
+                        
+                        // Refinar lógica para hoy: si ya cerró la clínica, no permitir agendar
+                        if (canSchedule && isToday(d)) {
+                            const dayOfWeek = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][d.getDay()];
+                            const branchSchedule = currentBranch?.schedule?.[dayOfWeek];
+                            if (branchSchedule?.close) {
+                                const [closeH, closeM] = branchSchedule.close.split(':').map(Number);
+                                const closeTime = new Date();
+                                closeTime.setHours(closeH, closeM, 0, 0);
+                                if (new Date() >= closeTime) {
+                                    canSchedule = false;
+                                }
+                            }
+                        }
+
+                        return (
+                            <div key={i} className="p-4 text-center border-l group relative">
+                                <div className="text-[10px] font-black text-gray-400 uppercase">{dayNames[(d.getDay()+6)%7]}</div>
+                                <div className="flex items-center justify-center gap-2 mt-1">
+                                    <div className={`text-xl font-black ${isToday(d) ? "text-brand-primary" : "text-gray-900"}`}>{d.getDate()}</div>
+                                    {canSchedule ? (
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); setSelectedDate(d); setIsDateLocked(true); setShowNewAppointment(true); }} 
+                                            className="p-1.5 bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white rounded-lg transition-all shadow-sm active:scale-90"
+                                            title="Agendar para este día"
+                                        >
+                                            <Plus className="w-3 h-3" />
+                                        </button>
+                                    ) : (
+                                        <div className="p-1.5 opacity-20 grayscale" title="Agenda cerrada o pasada">
+                                            <Plus className="w-3 h-3 text-gray-400" />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
                 <div className="grid grid-cols-8">
                   {hours.map(h => (
                     <React.Fragment key={h}><div className="p-4 text-[10px] font-black text-right text-gray-400 border-b uppercase">{h}:00</div>
@@ -261,14 +343,20 @@ export default function AgendaCalendar({
                         const dayStats = getDayCapacityStats(d);
                         const canSchedule = appts.length === 0 && !isDatePast(d) && dayStats.isOpen;
                         return (
-                            <div key={di} onClick={() => { if (canSchedule) { setSelectedDate(d); setData(p => ({ ...p, date: formatLocalDate(d), start_time: `${String(h).padStart(2, '0')}:00` })); setIsDateLocked(true); setShowNewAppointment(true); } }} className={`min-h-[80px] p-1 border-b border-l border-gray-50 transition-all relative group ${canSchedule ? 'hover:bg-brand-primary/5 cursor-pointer' : 'bg-gray-50/30 cursor-not-allowed'}`}>
+                            <div key={di} onClick={() => { if (canSchedule) { setSelectedDate(d); setIsDateLocked(true); setShowNewAppointment(true); } }} className={`min-h-[80px] p-1 border-b border-l border-gray-50 transition-all relative group ${canSchedule ? 'hover:bg-brand-primary/5 cursor-pointer' : 'bg-gray-50/30 cursor-not-allowed'}`}>
                                 {canSchedule && (<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Plus className="w-4 h-4 text-brand-primary/20" /></div>)}
                                 {appts.map(a => {
-                                    const colors = getStatusColors(a.status);
+                                    const stale = isAppointmentStale(a);
+                                    const colors = getStatusColors(a.status, stale);
                                     return (
-                                        <div key={a.id} onClick={(e) => { e.stopPropagation(); setSelectedAppointment(a); }} className={`p-2 rounded-xl text-[8px] font-black uppercase mb-1 ${colors.bg} ${colors.text} border ${colors.border} truncate shadow-sm hover:brightness-95 transition-all cursor-pointer flex items-center gap-1.5`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${colors.dot} flex-shrink-0`}></div>
-                                            <span className="truncate">{a.patient?.name} {a.patient?.last_name}</span>
+                                        <div key={a.id} onClick={(e) => { e.stopPropagation(); setSelectedAppointment(a); }} className={`p-1.5 rounded-xl text-[7px] font-black uppercase mb-1 ${colors.bg} ${colors.text} border ${colors.border} truncate shadow-sm hover:brightness-95 transition-all cursor-pointer flex flex-col gap-0.5`}>
+                                            <div className="flex items-center gap-1">
+                                                {stale ? <AlertCircle className="w-2 h-2 text-amber-600 flex-shrink-0" /> : <div className={`w-1 h-1 rounded-full ${colors.dot} flex-shrink-0`}></div>}
+                                                <span className="truncate">{a.patient?.name} {a.patient?.last_name}</span>
+                                            </div>
+                                            <span className="text-[5px] opacity-60 border-t border-current/10 pt-0.5">
+                                                {stale ? "SIN ACCIÓN PROF." : getStatusLabel(a.status)}
+                                            </span>
                                         </div>
                                     );
                                 })}
@@ -286,16 +374,28 @@ export default function AgendaCalendar({
                 {getDayCapacityStats(selectedDate).isOpen && !isDatePast(selectedDate) && <button onClick={() => { setIsDateLocked(true); setShowNewAppointment(true); }} className="px-6 py-3 bg-brand-primary text-white text-[10px] font-black uppercase rounded-2xl shadow-lg hover:brightness-110 flex items-center gap-2"><Plus className="w-4 h-4" />Agendar en este día</button>}</div>
                 <div className="p-8">
                   {todayAppointments.length === 0 ? <div className="py-20 text-center"><Calendar className="w-10 h-10 text-gray-200 mx-auto mb-4" /><p className="text-xs font-black text-gray-400 uppercase">Sin citas programadas</p></div> : <div className="space-y-4">{todayAppointments.sort((a,b) => a.start_time.localeCompare(b.start_time)).map(a => {
-                    const colors = getStatusColors(a.status);
+                    const stale = isAppointmentStale(a);
+                    const colors = getStatusColors(a.status, stale);
                     return (
                         <div key={a.id} onClick={() => setSelectedAppointment(a)} className={`flex items-center gap-6 p-6 border ${colors.border} cursor-pointer rounded-2xl ${colors.bg} hover:brightness-95 transition-all group shadow-sm`}>
-                            <div className={`text-center min-w-[80px] border-r ${colors.border.replace('border', 'border-r')} pr-6`}>
+                            <div className={`text-center min-w-[80px] border-r ${colors.border.replace('border', 'border-r')} pr-6 flex flex-col items-center justify-center`}>
+                                {stale && <AlertCircle className="w-4 h-4 text-amber-600 mb-1 animate-pulse" />}
                                 <div className={`text-sm font-black ${colors.text}`}>{a.start_time.substring(0, 5)}</div>
                                 <div className={`text-[10px] font-bold ${colors.text} opacity-50`}>{a.end_time.substring(0, 5)}</div>
                             </div>
                             <div className="flex-1">
-                                <h4 className={`text-sm font-black uppercase ${colors.text}`}>{a.patient?.name} {a.patient?.last_name}</h4>
-                                <p className="text-[10px] font-black text-brand-primary uppercase opacity-70">{a.item?.name}</p>
+                                <h4 className={`text-sm font-black uppercase ${colors.text} flex items-center gap-2`}>
+                                    {a.patient?.name} {a.patient?.last_name}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className={`px-2 py-0.5 text-[8px] font-black rounded-full ring-1 ${colors.bg} ${colors.text} ${stale ? 'bg-amber-100 text-amber-700 ring-amber-200 animate-pulse' : colors.border.replace('border', 'ring')}`}>
+                                        {stale ? "SIN ACCIÓN PROF." : getStatusLabel(a.status)}
+                                    </span>
+                                    <span className="text-[8px] font-medium text-gray-400 italic">
+                                        ({a.doctor?.full_name || a.doctor?.name})
+                                    </span>
+                                </div>
+                                <p className="text-[10px] font-black text-brand-primary uppercase opacity-70 mt-1">{a.item?.name}</p>
                             </div>
                             <ChevronRightIcon className={`${colors.text} opacity-30 group-hover:opacity-100 transition-opacity`} />
                         </div>
@@ -307,8 +407,8 @@ export default function AgendaCalendar({
         </div>
 
         <NewAppointmentModal
-          isOpen={showNewAppointment}
-          onClose={() => { setShowNewAppointment(false); setIsDateLocked(false); }}
+          isOpen={showNewAppointment || !!editingAppointment}
+          onClose={() => { setShowNewAppointment(false); setEditingAppointment(null); setIsDateLocked(false); }}
           selectedDate={selectedDate}
           patients={localPatients}
           doctors={doctors}
@@ -323,6 +423,7 @@ export default function AgendaCalendar({
           onPatientCreated={handlePatientCreated}
           regions={regions}
           communes={communes}
+          appointment={editingAppointment}
         />
 
         <AppointmentDetailModal
@@ -330,6 +431,10 @@ export default function AgendaCalendar({
           appointment={selectedAppointment}
           onClose={() => setSelectedAppointment(null)}
           onCheckIn={() => setShowCheckInModal(true)}
+          onEdit={() => {
+            setEditingAppointment(selectedAppointment);
+            setSelectedAppointment(null);
+          }}
         />
 
         <CheckInModal

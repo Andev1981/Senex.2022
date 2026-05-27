@@ -8,7 +8,8 @@ import {
     IdCard, 
     Calendar as CalendarIcon,
     MapPin,
-    Home
+    Home,
+    AlertCircle
 } from "lucide-react";
 import { useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
@@ -38,7 +39,7 @@ export default function QuickPatientModal({
         no_rut: false,
         phone: "",
         email: "",
-        birth_date: "",
+        birth_date: "2000-01-01",
         require_tutor: false,
         tutor_name: "",
         tutor_phone: "",
@@ -50,6 +51,17 @@ export default function QuickPatientModal({
         commune_id: "13114",
         is_home_care: isHomeCareOnlyBranch
     });
+
+    const [emailDuplicateWarning, setEmailDuplicateWarning] = useState(null);
+
+    // Resetear formulario al cerrar el modal
+    useEffect(() => {
+        if (!isOpen) {
+            reset();
+            setLocalErrors({});
+            setEmailDuplicateWarning(null);
+        }
+    }, [isOpen]);
 
     // Lógica para forzar is_home_care según capacidades de la sucursal
     useEffect(() => {
@@ -66,6 +78,28 @@ export default function QuickPatientModal({
             setData("rut", "");
         }
     }, [data.no_rut]);
+
+    const handleEmailBlur = async (e) => {
+        const email = e.target.value;
+        if (!email || email.length < 5) {
+            setEmailDuplicateWarning(null);
+            return;
+        }
+
+        try {
+            const response = await axios.post(route("patients.check-existing"), {
+                email: email,
+            });
+
+            if (response.data.status === "duplicate_email") {
+                setEmailDuplicateWarning(response.data.owner_name);
+            } else {
+                setEmailDuplicateWarning(null);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     // Asegurar que regions y communes sean arrays (por si llegan como objetos de PHP/Cache)
     const regionsList = Array.isArray(regions) ? regions : Object.values(regions);
@@ -168,10 +202,12 @@ export default function QuickPatientModal({
                                     <label className="text-[10px] font-black uppercase ml-1 text-gray-400 tracking-widest flex items-center gap-2">
                                         <IdCard className="w-3 h-3" /> RUT / Documento
                                     </label>
-                                    <div className="flex items-center gap-2">
-                                        <span className={`text-[8px] font-black uppercase ${data.no_rut ? 'text-brand-primary' : 'text-gray-300'}`}>Sin RUT</span>
-                                        <Switch checked={data.no_rut} onChange={e => setData("no_rut", e.target.checked)} />
-                                    </div>
+                                    {(!data.rut || data.rut?.replace(/[.-]/g, '').startsWith('66666666')) && (
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className={`text-[8px] font-black uppercase ${data.no_rut ? 'text-brand-primary' : 'text-gray-300'}`}>Sin RUT</span>
+                                            <Switch checked={data.no_rut} onChange={e => setData("no_rut", e.target.checked)} />
+                                        </div>
+                                    )}
                                 </div>
                                 <RutInput 
                                     value={data.rut} 
@@ -249,7 +285,7 @@ export default function QuickPatientModal({
                                 <ChilePhoneInput 
                                     value={data.phone} 
                                     onChange={v => setData("phone", v)} 
-                                    required
+                                    required={false}
                                 />
                                 <InputError message={localErrors.phone} />
                             </div>
@@ -261,10 +297,15 @@ export default function QuickPatientModal({
                                     type="email" 
                                     value={data.email} 
                                     onChange={e => setData("email", e.target.value)} 
+                                    onBlur={handleEmailBlur}
                                     placeholder="ejemplo@correo.cl"
-                                    className="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm shadow-sm focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all" 
-                                    required
+                                    className={`w-full px-6 py-4 bg-white border rounded-2xl font-bold text-sm shadow-sm focus:ring-4 focus:ring-brand-primary/10 transition-all ${emailDuplicateWarning ? 'border-orange-300 ring-1 ring-orange-200' : 'border-gray-100 focus:border-brand-primary'}`} 
                                 />
+                                {emailDuplicateWarning && (
+                                    <p className="text-[9px] font-black text-orange-600 uppercase mt-1 ml-1 flex items-center gap-1">
+                                        <AlertCircle className="w-3 h-3" /> En uso por: {emailDuplicateWarning} (Uso familiar permitido)
+                                    </p>
+                                )}
                                 <InputError message={localErrors.email} />
                             </div>
                         </div>
@@ -281,7 +322,7 @@ export default function QuickPatientModal({
                                     onChange={e => setData("street", e.target.value)} 
                                     className="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm shadow-sm focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all" 
                                     placeholder="Ej: Av. Las Condes" 
-                                    required
+                                    required={data.is_home_care}
                                 />
                                 <InputError message={localErrors.street} />
                             </div>
@@ -293,7 +334,7 @@ export default function QuickPatientModal({
                                     onChange={e => setData("number", e.target.value)} 
                                     className="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm shadow-sm focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all" 
                                     placeholder="123" 
-                                    required
+                                    required={data.is_home_care}
                                 />
                                 <InputError message={localErrors.number} />
                             </div>
@@ -367,7 +408,7 @@ export default function QuickPatientModal({
                                         <ChilePhoneInput 
                                             value={data.tutor_phone} 
                                             onChange={v => setData("tutor_phone", v)} 
-                                            required={data.require_tutor}
+                                            required={false}
                                         />
                                         <InputError message={localErrors.tutor_phone} />
                                     </div>
@@ -379,7 +420,7 @@ export default function QuickPatientModal({
                                             onChange={e => setData("tutor_email", e.target.value)} 
                                             className="w-full px-6 py-4 bg-white border border-brand-primary/10 rounded-2xl font-bold text-sm shadow-sm focus:ring-4 focus:ring-brand-primary/10" 
                                             placeholder="tutor@correo.cl" 
-                                            required={data.require_tutor}
+                                            required={false}
                                         />
                                         <InputError message={localErrors.tutor_email} />
                                     </div>

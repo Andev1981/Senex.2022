@@ -326,6 +326,7 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     Route::get('agendas/available-slots', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'getAvailableSlots'])->name('agendas.available-slots');
     Route::get('agendas', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'index'])->name('agendas.index');
     Route::post('agendas', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'store'])->name('agendas.store');
+    Route::patch('agendas/{appointment}', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'update'])->name('agendas.update');
     Route::post('agendas/{appointment}/checkin', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'checkin'])->name('agendas.checkin');
     Route::post('agendas/{appointment}/absent', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'absent'])->name('agendas.absent');
     Route::post('agendas/{appointment}/cancel', [\App\Http\Controllers\Admin\Calendars\AppointmentController::class, 'cancel'])->name('agendas.cancel');

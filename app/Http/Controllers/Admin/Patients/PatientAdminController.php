@@ -171,6 +171,7 @@ class PatientAdminController extends Controller
 
                 // Asegurar RUT limpio
                 $rut = \App\Rules\ValidRut::clean($data['rut']);
+                $data['rut'] = $rut;
 
                 // 1. Verificar si el paciente ya existe en el sistema (Globalmente)
                 $patient = Patient::withoutGlobalScopes()
@@ -395,13 +396,13 @@ class PatientAdminController extends Controller
             'name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'rut' => ['required', 'string', new \App\Rules\ValidRut],
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:255',
             'birth_date' => 'nullable|date',
             'require_tutor' => 'boolean',
             'tutor_name' => 'required_if:require_tutor,true|nullable|string|max:255',
-            'tutor_phone' => 'required_if:require_tutor,true|nullable|string|max:255',
-            'tutor_email' => 'required_if:require_tutor,true|nullable|email|max:255',
+            'tutor_phone' => 'nullable|string|max:255',
+            'tutor_email' => 'nullable|email|max:255',
             'tutor_relationship' => 'required_if:require_tutor,true|nullable|string|max:255',
             'street' => 'required|string|max:255',
             'number' => 'required|string|max:255',
@@ -497,11 +498,47 @@ class PatientAdminController extends Controller
 
     public function checkExisting(Request $request)
     {
-        $rut = $request->rut;
-        $exists = Patient::where('rut', $rut)
-            ->where('company_id', session('current_company_id'))
-            ->exists();
+        $currentCompanyId = session('current_company_id');
+        
+        if ($request->has('rut')) {
+            $rut = \App\Rules\ValidRut::clean($request->rut);
+            $patient = Patient::where('rut', $rut)
+                ->where('company_id', $currentCompanyId)
+                ->first();
 
-        return response()->json(['exists' => $exists]);
+            if ($patient) {
+                return response()->json([
+                    'status' => 'exists',
+                    'patient' => [
+                        'id' => $patient->id,
+                        'name' => $patient->name,
+                        'last_name' => $patient->last_name,
+                        'email' => $patient->email,
+                        'phone' => $patient->phone,
+                        'birth_date' => $patient->birth_date,
+                        'gender' => $patient->gender,
+                        'occupation' => $patient->occupation,
+                        'marital_status' => $patient->marital_status,
+                    ]
+                ]);
+            }
+        }
+
+        if ($request->has('email')) {
+            $email = $request->email;
+            $patient = Patient::where('email', $email)
+                ->where('company_id', $currentCompanyId)
+                ->first();
+
+            if ($patient) {
+                return response()->json([
+                    'status' => 'duplicate_email',
+                    'owner_name' => "{$patient->name} {$patient->last_name}",
+                    'patient_id' => $patient->id
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'available']);
     }
 }

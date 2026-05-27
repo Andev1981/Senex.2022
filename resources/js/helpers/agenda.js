@@ -41,16 +41,55 @@ export const getStatusLabel = (status) => {
     if (!status) return "";
     const cleanStatus = String(status).toLowerCase();
     const labels = { 
-        'scheduled': 'Programada', 
-        'confirmed': 'Confirmada', 
-        'checked_in': 'Llegó', 
-        'in_progress': 'Atención', 
-        'completed': 'Hecha', 
-        'cancelled': 'Anulada', 
-        'not_show': 'Ausente',
-        'no_show': 'Ausente' 
+        'scheduled': 'PROGRAMADA', 
+        'confirmed': 'CONFIRMADA', 
+        'checked_in': 'LLEGÓ', 
+        'in_progress': 'EN ATENCIÓN', 
+        'completed': 'REALIZADA', 
+        'cancelled': 'ANULADA', 
+        'not_show': 'AUSENTE',
+        'no_show': 'AUSENTE' 
     };
-    return labels[cleanStatus] || status;
+    return labels[cleanStatus] || String(status).toUpperCase();
+};
+
+export const getStatusColors = (status, isStale = false) => {
+    if (isStale) {
+        return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500', isStale: true };
+    }
+    switch (status?.toLowerCase()) {
+        case 'scheduled':
+        case 'programada':
+            return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100', dot: 'bg-blue-400' };
+        case 'confirmed':
+        case 'confirmada':
+            return { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100', dot: 'bg-brand-primary' };
+        case 'checked_in':
+        case 'llegó':
+            return { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-100', dot: 'bg-orange-400' };
+        case 'in_progress':
+        case 'en box':
+            return { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200', dot: 'bg-amber-500' };
+        case 'completed':
+        case 'realizada':
+            return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-100', dot: 'bg-green-500' };
+        case 'cancelled':
+        case 'anulada':
+            return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-100', dot: 'bg-red-500' };
+        case 'not_show':
+        case 'not-show':
+        case 'no asistió':
+            return { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-200', dot: 'bg-gray-400' };
+        default:
+            return { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100', dot: 'bg-brand-primary' };
+    }
+};
+
+export const formatLongDate = (date) => {
+    if (!date) return "";
+    const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : new Date(date);
+    if (isNaN(d.getTime())) return "";
+    return `${d.getDate()} de ${monthNames[d.getMonth()]} del ${d.getFullYear()}`;
 };
 
 export const getDaysInMonth = (date) => {

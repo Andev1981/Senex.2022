@@ -337,7 +337,7 @@ export default function Availability({
                                     <div className="flex items-center gap-4 px-4">
                                         <div className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-brand-primary shadow-sm"><User className="w-5 h-5" /></div>
                                         <div>
-                                            <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">{group.doctor.name}</h2>
+                                            <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight">{group.doctor.full_name || group.doctor.name}</h2>
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{group.items.length} Horarios de atención</p>
                                         </div>
                                     </div>
@@ -525,7 +525,7 @@ const ExceptionCard = ({ ex, onDelete }) => (
                     {ex.action === 'open' ? <CalendarCheck className="w-6 h-6" /> : <CalendarOff className="w-6 h-6" />}
                 </div>
                 <div>
-                    <p className="text-sm font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{ex.doctor?.name}</p>
+                    <p className="text-sm font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{ex.doctor?.full_name || ex.doctor?.name}</p>
                     <p className={`text-[9px] font-black uppercase tracking-widest ${ex.action === 'open' ? 'text-green-500' : 'text-red-400'}`}>
                         {ex.action === 'open' ? 'Apertura Especial' : (ex.action === 'cancel' ? 'Turno Cancelado' : 'Turno Modificado')}
                     </p>

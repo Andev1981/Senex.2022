@@ -43,6 +43,7 @@ class AppointmentController extends Controller
                     'end_time' => $apt->end_at->format('H:i'),
                     'patient_id' => $apt->patient_id,
                     'doctor_id' => $apt->doctor_id,
+                    'item_id' => $apt->item_id,
                     'room_id' => $apt->room_id,
                     'patient' => $apt->patient,
                     'doctor' => $apt->doctor,
@@ -69,6 +70,7 @@ class AppointmentController extends Controller
                     'end_time' => $sess->time->copy()->addMinutes(45)->format('H:i'), // Estimación 45m
                     'patient_id' => $sess->patient_id,
                     'doctor_id' => $sess->doctor_id,
+                    'item_id' => $sess->item_id,
                     'room_id' => $sess->room_id,
                     'patient' => $sess->patient,
                     'doctor' => $sess->doctor,
@@ -123,12 +125,6 @@ class AppointmentController extends Controller
             'patient_id' => [
                 'required',
                 'exists:patients,id',
-                function ($attribute, $value, $fail) {
-                    $patient = Patient::find($value);
-                    if ($patient && (empty($patient->rut) || empty($patient->email) || empty($patient->phone))) {
-                        $fail('El perfil del paciente está incompleto (RUT, Email o Teléfono faltante). Por favor actualícelo antes de agendar.');
-                    }
-                }
             ],
             'doctor_id' => 'required|exists:doctors,id',
             'item_id' => 'required|exists:items,id',
@@ -389,6 +385,114 @@ class AppointmentController extends Controller
         });
 
         return back()->with('success', 'Cita marcada como ausente.');
+    }
+
+    public function update(Request $request, Appointment $appointment)
+    {
+        if ($appointment->company_id !== (int)session('current_company_id')) {
+            abort(403);
+        }
+
+        // Bloqueo si ya está muy avanzada
+        if (in_array($appointment->status->value, ['completed', 'cancelled'])) {
+            return back()->withErrors(['patient_id' => 'No se puede editar una cita finalizada o anulada.']);
+        }
+
+        $validated = $request->validate([
+            'patient_id' => ['required', 'exists:patients,id'],
+            'doctor_id' => 'required|exists:doctors,id',
+            'item_id' => 'required|exists:items,id',
+            'room_id' => 'nullable|exists:rooms,id',
+            'modality' => 'required|in:onsite,home,online',
+            'date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'notes' => 'nullable|string',
+            'send_mail' => 'boolean',
+            'send_whatsapp' => 'boolean',
+        ]);
+
+        $start_at = Carbon::parse($validated['date'] . ' ' . $validated['start_time']);
+        $end_at = Carbon::parse($validated['date'] . ' ' . $validated['end_time']);
+
+        // 1. Bloquear Citas en el Pasado (Solo si cambió el horario)
+        if ($start_at->isPast() && $start_at->ne($appointment->start_at)) {
+             return back()->withErrors(['start_time' => 'No se puede mover la cita a un horario pasado.']);
+        }
+
+        // 1.5. Validar Modalidad contra Sucursal e Ítem
+        $branch = \App\Models\Branch::find($appointment->branch_id);
+        $item = Item::with('serviceDetail')->findOrFail($validated['item_id']);
+        
+        $modality = $validated['modality'];
+        if ($branch && !$branch->{"allows_{$modality}"}) {
+            return back()->withErrors(['modality' => 'Esta modalidad no está permitida en la sucursal.']);
+        }
+        
+        if ($item->serviceDetail && !$item->serviceDetail->{"allows_{$modality}"}) {
+            return back()->withErrors(['modality' => 'El servicio seleccionado no permite esta modalidad de atención.']);
+        }
+
+        // 1.8 Validar Disponibilidad del Paciente - Excluyendo esta cita
+        $patientStatus = $this->agendaService->isPatientAvailable($validated['patient_id'], $start_at, $end_at, $appointment->id);
+        if (!$patientStatus['is_available']) {
+            return back()->withErrors(['patient_id' => $patientStatus['reason']]);
+        }
+
+        // 2. Validar Capacidad - Excluyendo esta cita
+        $doctor = Doctor::findOrFail($validated['doctor_id']);
+        $room = $validated['room_id'] ? Room::find($validated['room_id']) : null;
+        
+        $capacityStatus = $this->agendaService->getSlotOccupancyStatus(
+            $doctor, 
+            $start_at, 
+            $end_at, 
+            $room, 
+            $validated['modality'],
+            $appointment->id
+        );
+
+        if (!$capacityStatus['is_available']) {
+            return back()->withErrors(['doctor_id' => "Capacidad excedida: {$capacityStatus['reason']}"]);
+        }
+
+        // 3. Validar que el Profesional esté de turno (Shift Check)
+        if (!$this->agendaService->isDoctorOnDuty($doctor, $start_at, $end_at, $appointment->branch_id)) {
+            return back()->withErrors(['start_time' => 'El profesional no tiene disponibilidad configurada en este horario.']);
+        }
+
+        DB::transaction(function () use ($appointment, $validated, $start_at, $end_at) {
+            $appointment->update([
+                'patient_id' => $validated['patient_id'],
+                'doctor_id' => $validated['doctor_id'],
+                'item_id' => $validated['item_id'],
+                'room_id' => $validated['room_id'] ?: null,
+                'modality' => $validated['modality'],
+                'start_at' => $start_at,
+                'end_at' => $end_at,
+                'notes' => $validated['notes'],
+            ]);
+
+            // Si hay sesión vinculada, actualizarla también
+            if ($appointment->treatmentSession) {
+                $appointment->treatmentSession->update([
+                    'patient_id' => $validated['patient_id'],
+                    'doctor_id' => $validated['doctor_id'],
+                    'item_id' => $validated['item_id'],
+                    'room_id' => $validated['room_id'] ?: null,
+                    'date' => $start_at->toDateString(),
+                    'time' => $start_at->toTimeString(),
+                ]);
+            }
+
+            // Asegurar asignación
+            \App\Models\DoctorPatientAssignment::updateOrCreate(
+                ['patient_id' => $appointment->patient_id, 'doctor_id' => $appointment->doctor_id, 'ended_at' => null],
+                ['company_id' => $appointment->company_id, 'branch_id' => $appointment->branch_id]
+            );
+        });
+
+        return back()->with('success', 'Cita actualizada correctamente.');
     }
 
     /**

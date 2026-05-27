@@ -60,7 +60,6 @@ class StorePatientRequest extends FormRequest
                 new \App\Rules\ValidRut,
             ],
             'email'     => [
-                'required_if:require_tutor,false',
                 'nullable',
                 'string',
                 'email',
@@ -87,8 +86,8 @@ class StorePatientRequest extends FormRequest
             // Datos del Tutor (Obligatorios solo si require_tutor es true)
             'guardian_name'         => ['required_if:require_tutor,true', 'nullable', 'string', 'max:255'],
             'guardian_relationship' => ['required_if:require_tutor,true', 'nullable', 'string', 'max:255'],
-            'guardian_phone'        => ['required_if:require_tutor,true', 'nullable', 'string', 'max:30'],
-            'guardian_email'        => ['required_if:require_tutor,true', 'nullable', 'email', 'max:255'],
+            'guardian_phone'        => ['nullable', 'string', 'max:30'],
+            'guardian_email'        => ['nullable', 'email', 'max:255'],
             'guardian_rut'          => ['required_if:require_tutor,true', 'nullable', 'string', 'max:20'],
 
             // Otros campos

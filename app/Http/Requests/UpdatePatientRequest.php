@@ -93,9 +93,6 @@ class UpdatePatientRequest extends FormRequest
                 'string',
                 'email',
                 'max:255',
-                Rule::unique('patients', 'email')
-                    ->where('company_id', session('current_company_id'))
-                    ->ignore($patientId)
             ],
             'phone'             => ['nullable', 'string', 'max:30'],
 

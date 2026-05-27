@@ -53,6 +53,7 @@ export default function ModalCreateEditPatient({
   const canEditRealRut = auth?.permissions?.includes('patients.edit_rut');
 
   const [isExistingInSystem, setIsExistingInSystem] = useState(false);
+  const [emailDuplicateWarning, setEmailDuplicateWarning] = useState(null);
   const addPatient = usePatientStore((state) => state.addPatient);
 
   const {
@@ -75,7 +76,7 @@ export default function ModalCreateEditPatient({
     no_rut: patient?.rut?.startsWith('66666666-6') || false,
     birth_date: patient?.birth_date
       ? moment.utc(patient.birth_date).format("YYYY-MM-DD")
-      : moment().format("YYYY-MM-DD"),
+      : "2000-01-01",
     gender: patient?.gender || "",
     occupation: patient?.occupation || "",
     marital_status: patient?.marital_status || "",
@@ -130,10 +131,14 @@ export default function ModalCreateEditPatient({
   useEffect(() => {
     if (patient) {
       const contact = patient.contacts?.find(c => c.is_primary) || patient.contacts?.[0] || patient.contact;
-      const addr = patient.address;
       
-      const regionId = (addr?.region_id || "").toString();
-      const communeId = (addr?.commune_id || "").toString();
+      // Soportar tanto relación 'address' como campos aplanados (del index)
+      const addr = patient.address;
+      const street = addr?.street || patient.street || "";
+      const number = addr?.number || patient.number || "";
+      const details = addr?.details || patient.details || "";
+      const regionId = (addr?.region_id || patient.region_id || "").toString();
+      const communeId = (addr?.commune_id || patient.commune_id || "").toString();
 
       setData({
         id: patient.id,
@@ -144,7 +149,7 @@ export default function ModalCreateEditPatient({
         rut: patient.rut || "",
         birth_date: patient.birth_date
           ? moment.utc(patient.birth_date).format("YYYY-MM-DD")
-          : moment().format("YYYY-MM-DD"),
+          : "2000-01-01",
         gender: patient.gender || "",
         occupation: patient.occupation || "",
         marital_status: patient.marital_status || "",
@@ -161,17 +166,20 @@ export default function ModalCreateEditPatient({
         guardian_phone: contact?.phone || "",
         guardian_email: contact?.email || "",
         guardian_rut: contact?.rut || "",
-        is_home_care: !!addr,
-        street: addr?.street || "",
-        number: addr?.number || "",
-        details: addr?.details || "",
+        is_home_care: !!addr || !!street,
+        street: street,
+        number: number,
+        details: details,
         region_id: regionId,
         commune_id: communeId,
       });
       setIsExistingInSystem(true);
+      setEmailDuplicateWarning(null);
     } else {
       reset();
+      setData("birth_date", "2000-01-01");
       setIsExistingInSystem(false);
+      setEmailDuplicateWarning(null);
     }
   }, [patient]);
 
@@ -242,6 +250,33 @@ export default function ModalCreateEditPatient({
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleEmailBlur = async (e) => {
+    const email = e.target.value;
+    if (!email || email.length < 5) {
+        setEmailDuplicateWarning(null);
+        return;
+    }
+
+    try {
+        const response = await axios.post(route("patients.check-existing"), {
+            email: email,
+        });
+
+        if (response.data.status === "duplicate_email") {
+            // Solo advertimos si el dueño es distinto al paciente actual
+            if (response.data.patient_id !== data.id) {
+                setEmailDuplicateWarning(response.data.owner_name);
+            } else {
+                setEmailDuplicateWarning(null);
+            }
+        } else {
+            setEmailDuplicateWarning(null);
+        }
+    } catch (e) {
+        console.error(e);
     }
   };
 
@@ -329,7 +364,7 @@ export default function ModalCreateEditPatient({
 
         <div className="p-10 space-y-10">
           {/* BLOQUE 1: IDENTIDAD */}
-          <div className="space-y-6">
+          <div className="space-y-6 relative z-40">
             <div className="flex items-center justify-between ml-1">
               <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 !mb-0">
                 <Database className="w-4 h-4" /> Datos de Identidad
@@ -359,7 +394,7 @@ export default function ModalCreateEditPatient({
               <div className="space-y-1">
                 <div className="flex items-center justify-between pr-1">
                     <label className="ml-1 enterprise-label opacity-60">RUT / Identificador</label>
-                    {(!data.id || data.rut?.replace(/[.-]/g, '').startsWith('666666666')) && (
+                    {(!data.id || !data.rut || data.rut?.replace(/[.-]/g, '').startsWith('666666666')) && (
                         <div className="flex items-center gap-2 mb-1">
                             <span className={`text-[8px] font-black uppercase ${data.no_rut ? 'text-brand-primary' : 'text-gray-300'}`}>Sin RUT</span>
                             <Switch checked={data.no_rut} onChange={(e) => setData("no_rut", e.target.checked)} />
@@ -370,7 +405,7 @@ export default function ModalCreateEditPatient({
                     value={data.rut} 
                     onChange={(v) => setData("rut", v)} 
                     onBlur={handleRutBlur} 
-                    disabled={data.no_rut || (!!data.id && !data.rut?.replace(/[.-]/g, '').startsWith('666666666') && !canEditRealRut)} 
+                    disabled={data.no_rut || (!!data.id && data.rut !== "" && !data.rut?.replace(/[.-]/g, '').startsWith('666666666') && !canEditRealRut)} 
                     className="w-full !rounded-2xl !py-1 font-black" 
                 />
                 <InputError message={errors.rut} />
@@ -402,7 +437,7 @@ export default function ModalCreateEditPatient({
           </div>
 
           {/* BLOQUE UBICACIÓN (Siempre Visible) */}
-          <div className="p-8 bg-blue-50/30 border border-blue-100 rounded-[2.5rem] space-y-8 animate-in slide-in-from-top-4 duration-500">
+          <div className="p-8 bg-blue-50/30 border border-blue-100 rounded-[2.5rem] space-y-8 animate-in slide-in-from-top-4 duration-500 relative z-30">
             <div className="flex items-center justify-between">
                 <h3 className="enterprise-label !text-blue-700 flex items-center gap-2">
                     <MapPin className="w-4 h-4" /> Localización & Dirección
@@ -445,7 +480,7 @@ export default function ModalCreateEditPatient({
           </div>
 
           {/* BLOQUE 2: CONTACTO & OCUPACIÓN */}
-          <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-8 relative overflow-hidden">
+          <div className="p-8 bg-gray-50/50 border border-gray-100 rounded-[2.5rem] space-y-8 relative overflow-hidden z-20">
             <div className="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 rounded-full bg-brand-primary/5 blur-3xl"></div>
             <h3 className="enterprise-label !text-brand-primary flex items-center gap-2 relative z-10">
               <Smartphone className="w-4 h-4" /> Contactabilidad & Profesión
@@ -458,7 +493,22 @@ export default function ModalCreateEditPatient({
               </div>
               <div className="space-y-1">
                 <label className="ml-1 enterprise-label opacity-60">Correo Electrónico</label>
-                <TextInput type="email" value={data.email} onChange={(e) => setData("email", e.target.value)} className="w-full !rounded-2xl !py-4 font-bold bg-white" placeholder="ejemplo@correo.com" />
+                <TextInput 
+                    type="email" 
+                    value={data.email} 
+                    onChange={(e) => setData("email", e.target.value)} 
+                    onBlur={handleEmailBlur}
+                    className={`w-full !rounded-2xl !py-4 font-bold bg-white ${emailDuplicateWarning ? 'border-orange-300 ring-1 ring-orange-200' : ''}`} 
+                    placeholder="ejemplo@correo.com" 
+                />
+                {emailDuplicateWarning && (
+                    <div className="flex items-center gap-2 mt-1 ml-1 text-orange-600 animate-in fade-in slide-in-from-top-1">
+                        <ShieldCheck className="w-3 h-3" />
+                        <span className="text-[9px] font-black uppercase tracking-tight">
+                            En uso por: {emailDuplicateWarning} (Uso familiar permitido)
+                        </span>
+                    </div>
+                )}
                 <InputError message={errors.email} />
               </div>
               <div className="space-y-1">
@@ -471,7 +521,7 @@ export default function ModalCreateEditPatient({
 
           {/* BLOQUE 3: TUTOR RESPONSABLE (Solo si se requiere) */}
           {isClinical && data.require_tutor && (
-            <div className="p-8 bg-brand-secondary/5 border border-brand-secondary/10 rounded-[2.5rem] space-y-8 animate-in slide-in-from-top-4 duration-500">
+            <div className="p-8 bg-brand-secondary/5 border border-brand-secondary/10 rounded-[2.5rem] space-y-8 animate-in slide-in-from-top-4 duration-500 relative z-10">
               <h3 className="enterprise-label !text-brand-primary flex items-center gap-2">
                 <Users className="w-4 h-4" /> Información del Tutor
               </h3>

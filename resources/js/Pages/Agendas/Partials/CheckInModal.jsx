@@ -44,7 +44,7 @@ export default function CheckInModal({ isOpen, onClose, onSuccess, appointment, 
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in zoom-in-95">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in zoom-in-95">
       <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full flex flex-col overflow-hidden">
         <div className="p-6 border-b flex justify-between items-start bg-brand-primary text-white">
           <div>
@@ -59,7 +59,7 @@ export default function CheckInModal({ isOpen, onClose, onSuccess, appointment, 
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Kinesiólogo que atenderá</label>
             <select value={checkInData.doctor_id} onChange={e => setCheckInData({...checkInData, doctor_id: e.target.value})} className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl font-bold text-sm shadow-sm">
-              {doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              {doctors.map(d => <option key={d.id} value={d.id}>{d.full_name || d.name}</option>)}
             </select>
           </div>
           <div className="space-y-2">
